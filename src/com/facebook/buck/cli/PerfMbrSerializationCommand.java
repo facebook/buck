@@ -21,7 +21,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.Serializer;
@@ -69,10 +68,9 @@ public class PerfMbrSerializationCommand
   @Override
   void runPerfTest(CommandRunnerParams params, PreparedState state) throws Exception {
     Cell rootCell = params.getCell();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(state.graphBuilder);
     Serializer serializer =
         new Serializer(
-            ruleFinder,
+            state.graphBuilder.getSourcePathRuleFinder(),
             rootCell.getCellPathResolver(),
             (instance, data, children) -> Hashing.md5().newHasher().putBytes(data).hash());
     for (BuildRule buildRule : state.rulesInGraph) {

@@ -39,7 +39,6 @@ import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.config.RuleKeyConfig;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.BuckEventBus;
@@ -226,8 +225,6 @@ public class LocalBuildExecutor implements BuildExecutor {
 
     CachingBuildEngineBuckConfig engineConfig =
         args.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
-    SourcePathRuleFinder sourcePathRuleFinder =
-        new SourcePathRuleFinder(actionGraphAndBuilder.getActionGraphBuilder());
 
     return new CachingBuildEngine(
         cachingBuildEngineDelegate,
@@ -247,8 +244,8 @@ public class LocalBuildExecutor implements BuildExecutor {
         engineConfig.getBuildMaxDepFileCacheEntries(),
         engineConfig.getBuildArtifactCacheSizeLimit(),
         actionGraphAndBuilder.getActionGraphBuilder(),
-        sourcePathRuleFinder,
-        DefaultSourcePathResolver.from(sourcePathRuleFinder),
+        DefaultSourcePathResolver.from(
+            actionGraphAndBuilder.getActionGraphBuilder().getSourcePathRuleFinder()),
         targetConfigurationSerializer,
         args.getBuildInfoStoreManager(),
         engineConfig.getResourceAwareSchedulingInfo(),

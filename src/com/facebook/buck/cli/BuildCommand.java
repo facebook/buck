@@ -37,7 +37,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -599,8 +598,8 @@ public class BuildCommand extends AbstractCommand {
 
     ActionGraphBuilder graphBuilder =
         graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     for (BuildTarget buildTarget : graphsAndBuildTargets.getBuildTargets()) {
       BuildRule rule = graphBuilder.requireRule(buildTarget);
@@ -626,8 +625,8 @@ public class BuildCommand extends AbstractCommand {
     Optional<DefaultRuleKeyFactory> ruleKeyFactory = Optional.empty();
     ActionGraphBuilder graphBuilder =
         graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     if (showRuleKey) {
       RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(params.getRuleKeyConfiguration());
       ruleKeyFactory =
@@ -636,7 +635,7 @@ public class BuildCommand extends AbstractCommand {
                   fieldLoader,
                   params.getFileHashCache(),
                   pathResolver,
-                  ruleFinder,
+                  graphBuilder.getSourcePathRuleFinder(),
                   ruleKeyCacheScope.getCache(),
                   Optional.empty()));
     }

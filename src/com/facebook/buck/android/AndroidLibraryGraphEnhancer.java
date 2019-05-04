@@ -21,7 +21,6 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
@@ -125,7 +124,6 @@ public class AndroidLibraryGraphEnhancer {
         graphBuilder.computeIfAbsent(
             dummyRDotJavaBuildTarget,
             ignored -> {
-              SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
               JavacOptions filteredOptions =
                   javacOptions.withExtraArguments(Collections.emptyList());
 
@@ -135,7 +133,7 @@ public class AndroidLibraryGraphEnhancer {
               return new DummyRDotJava(
                   dummyRDotJavaBuildTarget,
                   projectFilesystem,
-                  ruleFinder,
+                  graphBuilder.getSourcePathRuleFinder(),
                   androidResourceDeps,
                   compileToJarStepFactory,
                   forceFinalResourceIds,

@@ -21,7 +21,6 @@ import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.event.BuckEventBus;
 import com.google.common.cache.CacheBuilder;
@@ -74,7 +73,7 @@ public class UnskippedRulesTracker {
       // Add references to rule's runtime deps since they cannot be skipped now.
       ruleResolver
           .getAllRules(
-              ((HasRuntimeDeps) rule).getRuntimeDeps(new SourcePathRuleFinder(ruleResolver))
+              ((HasRuntimeDeps) rule).getRuntimeDeps(ruleResolver.getSourcePathRuleFinder())
                   ::iterator)
           .forEach(this::acquireReference);
     }

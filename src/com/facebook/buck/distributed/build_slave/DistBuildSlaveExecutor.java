@@ -137,8 +137,10 @@ public class DistBuildSlaveExecutor {
                   initializer.getDelegateAndGraphs(),
                   graphs -> {
                     SourcePathRuleFinder ruleFinder =
-                        new SourcePathRuleFinder(
-                            graphs.getActionGraphAndBuilder().getActionGraphBuilder());
+                        graphs
+                            .getActionGraphAndBuilder()
+                            .getActionGraphBuilder()
+                            .getSourcePathRuleFinder();
                     return new ParallelRuleKeyCalculator<RuleKey>(
                         args.getExecutorService(),
                         new DefaultRuleKeyFactory(

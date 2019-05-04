@@ -28,7 +28,6 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -138,8 +137,8 @@ public class CachingBuildEngineFactory {
   }
 
   public CachingBuildEngine build() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver sourcePathResolver =
+        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
     TargetConfigurationSerializer targetConfigurationSerializer =
         TargetConfigurationSerializerForTests.create(
             TestCellPathResolver.get(new FakeProjectFilesystem()));
@@ -155,7 +154,6 @@ public class CachingBuildEngineFactory {
           artifactCacheSizeLimit,
           buildRuleResolver,
           buildInfoStoreManager,
-          ruleFinder,
           sourcePathResolver,
           targetConfigurationSerializer,
           ruleKeyFactories.get(),
@@ -176,7 +174,6 @@ public class CachingBuildEngineFactory {
         maxDepFileCacheEntries,
         artifactCacheSizeLimit,
         buildRuleResolver,
-        ruleFinder,
         sourcePathResolver,
         targetConfigurationSerializer,
         buildInfoStoreManager,

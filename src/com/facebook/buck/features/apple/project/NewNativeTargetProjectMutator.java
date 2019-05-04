@@ -49,7 +49,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -750,7 +749,7 @@ class NewNativeTargetProjectMutator {
     SourcePath jsOutput = bundle.getSourcePathToOutput();
     SourcePath resOutput = bundle.getSourcePathToResources();
     SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
 
     template.add("built_bundle_path", sourcePathResolver.getAbsolutePath(jsOutput));
     template.add("built_resources_path", sourcePathResolver.getAbsolutePath(resOutput));
@@ -774,7 +773,7 @@ class NewNativeTargetProjectMutator {
         SourcePath jsOutput = bundle.getSourcePathToOutput();
         SourcePath resOutput = bundle.getSourcePathToResources();
         SourcePathResolver sourcePathResolver =
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+            DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
 
         Path jsOutputPath = sourcePathResolver.getAbsolutePath(jsOutput);
         builder.add(

@@ -25,7 +25,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -181,7 +180,7 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
               && ((SupportsDependencyFileRuleKey) rule).useDependencyFileRuleKeys()) {
             try {
               SourcePathResolver pathResolver =
-                  DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+                  DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
               usedInputs.put(
                   rule,
                   ImmutableSet.copyOf(
@@ -237,13 +236,13 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
       manifest.addEntry(
           getFileHashLoader(random.nextInt()),
           entry.getValue().getRuleKey(),
-          DefaultSourcePathResolver.from(new SourcePathRuleFinder(context.graphBuilder)),
+          DefaultSourcePathResolver.from(context.graphBuilder.getSourcePathRuleFinder()),
           entry.getValue().getInputs(),
           context.usedInputs.getOrDefault(entry.getKey(), ImmutableSet.of()));
       manifest.addEntry(
           getFileHashLoader(random.nextInt()),
           entry.getValue().getRuleKey(),
-          DefaultSourcePathResolver.from(new SourcePathRuleFinder(context.graphBuilder)),
+          DefaultSourcePathResolver.from(context.graphBuilder.getSourcePathRuleFinder()),
           entry.getValue().getInputs(),
           context.usedInputs.getOrDefault(entry.getKey(), ImmutableSet.of()));
 

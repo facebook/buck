@@ -45,7 +45,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -128,7 +127,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private final DepFiles depFiles;
   private final long maxDepFileCacheEntries;
   private final BuildRuleResolver resolver;
-  private final SourcePathRuleFinder ruleFinder;
   private final SourcePathResolver pathResolver;
   private final TargetConfigurationSerializer targetConfigurationSerializer;
   private final Optional<Long> artifactCacheSizeLimit;
@@ -163,7 +161,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
       BuildRuleResolver resolver,
-      SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       TargetConfigurationSerializer targetConfigurationSerializer,
       BuildInfoStoreManager buildInfoStoreManager,
@@ -183,7 +180,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         artifactCacheSizeLimit,
         resolver,
         buildInfoStoreManager,
-        ruleFinder,
         pathResolver,
         targetConfigurationSerializer,
         ruleKeyFactories,
@@ -215,7 +211,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       Optional<Long> artifactCacheSizeLimit,
       BuildRuleResolver resolver,
       BuildInfoStoreManager buildInfoStoreManager,
-      SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       TargetConfigurationSerializer targetConfigurationSerializer,
       RuleKeyFactories ruleKeyFactories,
@@ -235,7 +230,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
     this.resolver = resolver;
-    this.ruleFinder = ruleFinder;
     this.pathResolver = pathResolver;
     this.targetConfigurationSerializer = targetConfigurationSerializer;
 
@@ -385,7 +379,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
 
     // Collect any runtime deps we have into a list of futures.
-    Stream<BuildTarget> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps(ruleFinder);
+    Stream<BuildTarget> runtimeDepPaths =
+        ((HasRuntimeDeps) rule).getRuntimeDeps(resolver.getSourcePathRuleFinder());
     List<ListenableFuture<BuildResult>> runtimeDepResults = new ArrayList<>();
     ImmutableSet<BuildRule> runtimeDeps =
         resolver.getAllRules(runtimeDepPaths.collect(ImmutableSet.toImmutableSet()));

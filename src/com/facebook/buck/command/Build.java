@@ -31,7 +31,6 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -110,7 +109,7 @@ public class Build implements Closeable {
         .setBuildContext(
             BuildContext.builder()
                 .setSourcePathResolver(
-                    DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)))
+                    DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()))
                 .setBuildCellRootPath(rootCell.getRoot())
                 .setJavaPackageFinder(javaPackageFinder)
                 .setEventBus(executionContext.getBuckEventBus())
@@ -356,7 +355,7 @@ public class Build implements Closeable {
     int exitCode;
 
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     BuildReport buildReport = new BuildReport(buildExecutionResult, pathResolver, rootCell);
 
     if (buildContext.isKeepGoing()) {
@@ -450,7 +449,7 @@ public class Build implements Closeable {
     // Note that pathToBuildReport is an absolute path that may exist outside of the project
     // root, so it is not appropriate to use ProjectFilesystem to write the output.
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     BuildReport buildReport =
         new BuildReport(e.createBuildExecutionResult(), pathResolver, rootCell);
     try {

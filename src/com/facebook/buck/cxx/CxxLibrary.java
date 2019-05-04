@@ -350,7 +350,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
                         : CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
         if (linkWhole || forceLinkWhole) {
           SourcePathResolver pathResolver =
-              DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+              DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
           Linker linker =
               cxxPlatform.getLd().resolve(graphBuilder, getBuildTarget().getTargetConfiguration());
           linkerArgsBuilder.addAll(linker.linkWhole(archive.toArg(), pathResolver));

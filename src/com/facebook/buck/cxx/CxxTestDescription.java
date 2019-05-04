@@ -167,7 +167,6 @@ public class CxxTestDescription
     CxxPlatform cxxPlatform =
         getCxxPlatform(buildTarget, args)
             .resolve(graphBuilder, buildTarget.getTargetConfiguration());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
 
@@ -221,7 +220,8 @@ public class CxxTestDescription
         params
             .withDeclaredDeps(cxxLinkAndCompileRules.deps)
             .copyAppendingExtraDeps(
-                BuildableSupport.getDepsCollection(cxxLinkAndCompileRules.executable, ruleFinder));
+                BuildableSupport.getDepsCollection(
+                    cxxLinkAndCompileRules.executable, graphBuilder.getSourcePathRuleFinder()));
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.builder()

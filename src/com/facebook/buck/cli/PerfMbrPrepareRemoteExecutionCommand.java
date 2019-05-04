@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.remoteexecution.WorkerRequirementsProvider;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
@@ -107,14 +106,13 @@ public class PerfMbrPrepareRemoteExecutionCommand
   void runPerfTest(CommandRunnerParams params, PreparedState state) throws Exception {
     Cell rootCell = params.getCell();
     Protocol protocol = new GrpcProtocol();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(state.graphBuilder);
     ImmutableSet<Optional<String>> cellNames =
         ModernBuildRuleRemoteExecutionHelper.getCellNames(rootCell);
     ModernBuildRuleRemoteExecutionHelper helper =
         new ModernBuildRuleRemoteExecutionHelper(
             params.getBuckEventBus(),
             protocol,
-            ruleFinder,
+            state.graphBuilder.getSourcePathRuleFinder(),
             rootCell.getCellPathResolver(),
             rootCell,
             cellNames,

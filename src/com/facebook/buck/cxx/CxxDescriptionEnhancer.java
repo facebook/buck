@@ -1314,7 +1314,7 @@ public class CxxDescriptionEnhancer {
                         unstrippedBinaryRule.getSourcePathToOutput(),
                         "Cannot strip BuildRule with no output (%s)",
                         unstrippedBinaryRule.getBuildTarget()),
-                    new SourcePathRuleFinder(graphBuilder),
+                    graphBuilder.getSourcePathRuleFinder(),
                     stripStyle,
                     cxxPlatform.getStrip(),
                     isCacheable,
@@ -1336,15 +1336,17 @@ public class CxxDescriptionEnhancer {
                 .withAppendedFlavors(CxxCompilationDatabase.COMPILATION_DATABASE),
             CxxCompilationDatabaseDependencies.class);
     Preconditions.checkState(compilationDatabases.isPresent());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     return new JsonConcatenate(
         buildTarget,
         projectFilesystem,
         new BuildRuleParams(
             () ->
                 ImmutableSortedSet.copyOf(
-                    ruleFinder.filterBuildRuleInputs(compilationDatabases.get().getSourcePaths())),
+                    graphBuilder
+                        .getSourcePathRuleFinder()
+                        .filterBuildRuleInputs(compilationDatabases.get().getSourcePaths())),
             ImmutableSortedSet::of,
             ImmutableSortedSet.of()),
         pathResolver.getAllAbsolutePaths(compilationDatabases.get().getSourcePaths()),

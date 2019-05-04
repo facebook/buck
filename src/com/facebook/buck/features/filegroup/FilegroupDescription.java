@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTarg
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import org.immutables.value.Value;
@@ -42,9 +41,13 @@ public class FilegroupDescription implements DescriptionWithTargetGraph<FileGrou
       BuildRuleParams params,
       FileGroupDescriptionArg args) {
     String name = args.getName();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(context.getActionGraphBuilder());
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    return new Filegroup(buildTarget, projectFilesystem, ruleFinder, name, args.getSrcs());
+    return new Filegroup(
+        buildTarget,
+        projectFilesystem,
+        context.getActionGraphBuilder().getSourcePathRuleFinder(),
+        name,
+        args.getSrcs());
   }
 
   @Override

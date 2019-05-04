@@ -94,7 +94,6 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -347,11 +346,11 @@ public class ProjectGenerator {
     this.actionGraphBuilderForNode = actionGraphBuilderForNode;
     this.defaultPathResolver =
         DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(
-                new SingleThreadedActionGraphBuilder(
+            new SingleThreadedActionGraphBuilder(
                     TargetGraph.EMPTY,
                     new DefaultTargetNodeToBuildRuleTransformer(),
-                    cell.getCellProvider())));
+                    cell.getCellProvider())
+                .getSourcePathRuleFinder());
     this.buckEventBus = buckEventBus;
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
@@ -1049,7 +1048,7 @@ public class ProjectGenerator {
             return StringArg.of(
                 Arg.stringify(
                     super.expandFrom(target, cellNames, builderFromNode, input),
-                    DefaultSourcePathResolver.from(new SourcePathRuleFinder(builderFromNode))));
+                    DefaultSourcePathResolver.from(builderFromNode.getSourcePathRuleFinder())));
           }
         };
 
@@ -4618,8 +4617,8 @@ public class ProjectGenerator {
         TargetNodes.castArg(node, ExportFileDescriptionArg.class);
     if (!exportFileNode.isPresent()) {
       BuildRuleResolver resolver = actionGraphBuilderForNode.apply(node);
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+      SourcePathResolver pathResolver =
+          DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
       Path output = pathResolver.getAbsolutePath(sourcePath);
       if (output == null) {
         throw new HumanReadableException(
@@ -4725,8 +4724,7 @@ public class ProjectGenerator {
     BuildTarget pchTarget = pchTargetSourcePath.getTarget();
     TargetNode<?> node = targetGraph.get(pchTarget);
     BuildRuleResolver resolver = actionGraphBuilderForNode.apply(node);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    BuildRule rule = ruleFinder.getRule(pchTargetSourcePath);
+    BuildRule rule = resolver.getSourcePathRuleFinder().getRule(pchTargetSourcePath);
     Preconditions.checkArgument(rule instanceof CxxPrecompiledHeaderTemplate);
     CxxPrecompiledHeaderTemplate pch = (CxxPrecompiledHeaderTemplate) rule;
     return Optional.of(pch.getHeaderSourcePath());

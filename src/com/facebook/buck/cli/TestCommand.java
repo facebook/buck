@@ -41,7 +41,6 @@ import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
@@ -316,7 +315,6 @@ public class TestCommand extends BuildCommand {
 
     try (CommandThreadManager testPool =
         new CommandThreadManager("Test-Run", getTestConcurrencyLimit(params))) {
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(build.getGraphBuilder());
       int exitCodeInt =
           TestRunning.runTests(
               params,
@@ -327,7 +325,7 @@ public class TestCommand extends BuildCommand {
               testPool.getWeightedListeningExecutorService(),
               buildEngine,
               buildContext,
-              ruleFinder);
+              build.getGraphBuilder().getSourcePathRuleFinder());
       return ExitCode.map(exitCodeInt);
     }
   }
@@ -576,8 +574,6 @@ public class TestCommand extends BuildCommand {
                   actionGraphAndBuilder.getActionGraph()))) {
         LocalCachingBuildEngineDelegate localCachingBuildEngineDelegate =
             new LocalCachingBuildEngineDelegate(params.getFileHashCache());
-        SourcePathRuleFinder sourcePathRuleFinder =
-            new SourcePathRuleFinder(actionGraphAndBuilder.getActionGraphBuilder());
         try (CachingBuildEngine cachingBuildEngine =
                 new CachingBuildEngine(
                     localCachingBuildEngineDelegate,
@@ -597,8 +593,8 @@ public class TestCommand extends BuildCommand {
                     cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
                     cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
                     actionGraphAndBuilder.getActionGraphBuilder(),
-                    sourcePathRuleFinder,
-                    DefaultSourcePathResolver.from(sourcePathRuleFinder),
+                    DefaultSourcePathResolver.from(
+                        actionGraphAndBuilder.getActionGraphBuilder().getSourcePathRuleFinder()),
                     params.getTargetConfigurationSerializer(),
                     params.getBuildInfoStoreManager(),
                     cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
@@ -634,7 +630,12 @@ public class TestCommand extends BuildCommand {
               RichStream.from(testRules)
                   .filter(HasRuntimeDeps.class::isInstance)
                   .map(HasRuntimeDeps.class::cast)
-                  .flatMap(rule -> rule.getRuntimeDeps(sourcePathRuleFinder))
+                  .flatMap(
+                      rule ->
+                          rule.getRuntimeDeps(
+                              actionGraphAndBuilder
+                                  .getActionGraphBuilder()
+                                  .getSourcePathRuleFinder()))
                   .concat(RichStream.from(testRules).map(TestRule::getBuildTarget))
                   .toImmutableList();
           ExitCode exitCode =
@@ -662,7 +663,7 @@ public class TestCommand extends BuildCommand {
               BuildContext.builder()
                   .setSourcePathResolver(
                       DefaultSourcePathResolver.from(
-                          new SourcePathRuleFinder(actionGraphAndBuilder.getActionGraphBuilder())))
+                          actionGraphAndBuilder.getActionGraphBuilder().getSourcePathRuleFinder()))
                   .setBuildCellRootPath(params.getCell().getRoot())
                   .setJavaPackageFinder(params.getJavaPackageFinder())
                   .setEventBus(params.getBuckEventBus())

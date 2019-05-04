@@ -37,7 +37,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -975,9 +974,6 @@ public class TargetsCommand extends AbstractCommand {
         actionGraph = Optional.of(result.getActionGraph());
         graphBuilder = Optional.of(result.getActionGraphBuilder());
         if (isShowRuleKey) {
-          SourcePathRuleFinder ruleFinder =
-              new SourcePathRuleFinder(result.getActionGraphBuilder());
-
           try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
               getDefaultRuleKeyCacheScope(
                   params,
@@ -993,8 +989,9 @@ public class TargetsCommand extends AbstractCommand {
                         new DefaultRuleKeyFactory(
                             new RuleKeyFieldLoader(params.getRuleKeyConfiguration()),
                             params.getFileHashCache(),
-                            DefaultSourcePathResolver.from(ruleFinder),
-                            ruleFinder,
+                            DefaultSourcePathResolver.from(
+                                result.getActionGraphBuilder().getSourcePathRuleFinder()),
+                            result.getActionGraphBuilder().getSourcePathRuleFinder(),
                             ruleKeyCacheScope.getCache(),
                             Optional.ofNullable(ruleKeyLogger)),
                         new DefaultRuleDepsCache(graphBuilder.get()),
@@ -1066,7 +1063,7 @@ public class TargetsCommand extends AbstractCommand {
           builder.setRuleType(rule.getType());
           if (isShowOutput || isShowFullOutput) {
             SourcePathResolver sourcePathResolver =
-                DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+                DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
             getUserFacingOutputPath(
                     sourcePathResolver,
                     rule,

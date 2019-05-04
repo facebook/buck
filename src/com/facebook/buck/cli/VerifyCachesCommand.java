@@ -21,7 +21,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -73,10 +72,11 @@ public class VerifyCachesCommand extends AbstractCommand {
         new SingleThreadedActionGraphBuilder(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer(), cellProvider);
     contents.forEach(e -> graphBuilder.addToIndex(e.getKey()));
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     DefaultRuleKeyFactory defaultRuleKeyFactory =
-        new DefaultRuleKeyFactory(fieldLoader, fileHashCache, pathResolver, ruleFinder);
+        new DefaultRuleKeyFactory(
+            fieldLoader, fileHashCache, pathResolver, graphBuilder.getSourcePathRuleFinder());
     stdOut.println(String.format("Examining %d build rule keys.", contents.size()));
     ImmutableList<BuildRule> mismatches =
         RichStream.from(contents)

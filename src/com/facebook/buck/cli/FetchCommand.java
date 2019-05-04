@@ -34,7 +34,6 @@ import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.file.HttpArchive;
@@ -127,8 +126,6 @@ public class FetchCommand extends BuildCommand {
           params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
       LocalCachingBuildEngineDelegate localCachingBuildEngineDelegate =
           new LocalCachingBuildEngineDelegate(params.getFileHashCache());
-      SourcePathRuleFinder sourcePathRuleFinder =
-          new SourcePathRuleFinder(actionGraphAndBuilder.getActionGraphBuilder());
       try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
               getDefaultRuleKeyCacheScope(
                   params,
@@ -146,8 +143,8 @@ public class FetchCommand extends BuildCommand {
                   cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
                   cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
                   actionGraphAndBuilder.getActionGraphBuilder(),
-                  sourcePathRuleFinder,
-                  DefaultSourcePathResolver.from(sourcePathRuleFinder),
+                  DefaultSourcePathResolver.from(
+                      actionGraphAndBuilder.getActionGraphBuilder().getSourcePathRuleFinder()),
                   params.getTargetConfigurationSerializer(),
                   params.getBuildInfoStoreManager(),
                   cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),

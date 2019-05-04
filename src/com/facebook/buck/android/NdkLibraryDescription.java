@@ -185,7 +185,7 @@ public class NdkLibraryDescription
       ActionGraphBuilder graphBuilder,
       TargetConfiguration targetConfiguration) {
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     ImmutableList.Builder<String> outputLinesBuilder = ImmutableList.builder();
