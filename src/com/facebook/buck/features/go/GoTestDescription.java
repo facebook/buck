@@ -34,7 +34,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -202,8 +201,8 @@ public class GoTestDescription
         GoDescriptors.getPlatformForRule(getGoToolchain(), this.goBuckConfig, buildTarget, args);
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     GoTestCoverStep.Mode coverageMode;
@@ -233,7 +232,7 @@ public class GoTestDescription
                       new GoTestCoverSource(
                           target,
                           projectFilesystem,
-                          ruleFinder,
+                          graphBuilder.getSourcePathRuleFinder(),
                           pathResolver,
                           platform,
                           rawSrcs.build(),
@@ -423,14 +422,15 @@ public class GoTestDescription
                           .addAll(graphBuilder.getAllRules(libraryArg.getDeps()))
                           .build())
               .withExtraDeps(
-                  () -> {
-                    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-                    return ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(params.getExtraDeps().get())
-                        // Make sure to include dynamically generated sources as deps.
-                        .addAll(ruleFinder.filterBuildRuleInputs(libraryArg.getSrcs()))
-                        .build();
-                  });
+                  () ->
+                      ImmutableSortedSet.<BuildRule>naturalOrder()
+                          .addAll(params.getExtraDeps().get())
+                          // Make sure to include dynamically generated sources as deps.
+                          .addAll(
+                              graphBuilder
+                                  .getSourcePathRuleFinder()
+                                  .filterBuildRuleInputs(libraryArg.getSrcs()))
+                          .build());
       testLibrary =
           GoDescriptors.createGoCompileRule(
               buildTarget,

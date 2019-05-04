@@ -34,7 +34,6 @@ import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFa
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.AbstractBuildRuleResolver;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -317,13 +316,12 @@ public abstract class IsolatedBuildableBuilder {
           filesystem,
           reconstructed.target,
           reconstructed.buildable,
-          new SourcePathRuleFinder(
-              new AbstractBuildRuleResolver() {
-                @Override
-                public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
-                  throw new RuntimeException("Cannot resolve rules in deserialized MBR state.");
-                }
-              }));
+          new AbstractBuildRuleResolver() {
+            @Override
+            public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
+              throw new RuntimeException("Cannot resolve rules in deserialized MBR state.");
+            }
+          }.getSourcePathRuleFinder());
 
       final Instant deserializationComplete = Instant.now();
       LOG.info(

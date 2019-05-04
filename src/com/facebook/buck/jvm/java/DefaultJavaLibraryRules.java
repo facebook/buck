@@ -102,7 +102,7 @@ public abstract class DefaultJavaLibraryRules {
 
   @Value.Lazy
   SourcePathRuleFinder getSourcePathRuleFinder() {
-    return new SourcePathRuleFinder(getActionGraphBuilder());
+    return getActionGraphBuilder().getSourcePathRuleFinder();
   }
 
   @Value.Lazy

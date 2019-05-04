@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
@@ -57,7 +56,7 @@ public class ZipFileDescription
           "Illegal to define merge_source_zips when zip_srcs is present in " + buildTarget);
 
     return new Zip(
-        new SourcePathRuleFinder(context.getActionGraphBuilder()),
+        context.getActionGraphBuilder().getSourcePathRuleFinder(),
         buildTarget,
         context.getProjectFilesystem(),
         args.getOut(),

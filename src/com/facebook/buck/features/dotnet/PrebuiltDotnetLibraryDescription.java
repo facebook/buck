@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTarg
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -44,7 +43,7 @@ public class PrebuiltDotnetLibraryDescription
       BuildRuleParams params,
       PrebuiltDotnetLibraryDescriptionArg args) {
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(context.getActionGraphBuilder()));
+        DefaultSourcePathResolver.from(context.getActionGraphBuilder().getSourcePathRuleFinder());
     return new PrebuiltDotnetLibrary(
         buildTarget, context.getProjectFilesystem(), params, pathResolver, args.getAssembly());
   }

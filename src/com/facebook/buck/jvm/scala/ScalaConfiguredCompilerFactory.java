@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.scala;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
@@ -98,6 +97,6 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   }
 
   private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {
-    return javacFactory.create(new SourcePathRuleFinder(resolver), arg);
+    return javacFactory.create(resolver.getSourcePathRuleFinder(), arg);
   }
 }

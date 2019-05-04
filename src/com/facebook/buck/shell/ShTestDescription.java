@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTarg
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -78,7 +77,6 @@ public class ShTestDescription implements DescriptionWithTargetGraph<ShTestDescr
       BuildRuleParams params,
       ShTestDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(buildTarget, context.getCellPathResolver(), MACRO_EXPANDERS);
@@ -98,7 +96,9 @@ public class ShTestDescription implements DescriptionWithTargetGraph<ShTestDescr
                 FluentIterable.from(testArgs)
                     .append(testEnv.values())
                     .transformAndConcat(
-                        arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))),
+                        arg ->
+                            BuildableSupport.getDepsCollection(
+                                arg, graphBuilder.getSourcePathRuleFinder()))),
         testArgs,
         testEnv,
         args.getResources(),

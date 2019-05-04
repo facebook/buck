@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
@@ -43,19 +42,16 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
   private final ActionGraphBuilder graphBuilder;
   private final SourcePathResolver sourcePathResolver;
-  private final SourcePathRuleFinder ruleFinder;
   private final ProjectFilesystem projectFilesystem;
   private final Set<BuildTarget> requiredBuildTargets;
 
   DefaultIjModuleFactoryResolver(
       ActionGraphBuilder graphBuilder,
       SourcePathResolver sourcePathResolver,
-      SourcePathRuleFinder ruleFinder,
       ProjectFilesystem projectFilesystem,
       Set<BuildTarget> requiredBuildTargets) {
     this.graphBuilder = graphBuilder;
     this.sourcePathResolver = sourcePathResolver;
-    this.ruleFinder = ruleFinder;
     this.projectFilesystem = projectFilesystem;
     this.requiredBuildTargets = requiredBuildTargets;
   }
@@ -138,7 +134,11 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
   private Path getRelativePathAndRecordRule(SourcePath sourcePath) {
     requiredBuildTargets.addAll(
-        Optionals.toStream(ruleFinder.getRule(sourcePath).map(BuildRule::getBuildTarget))
+        Optionals.toStream(
+                graphBuilder
+                    .getSourcePathRuleFinder()
+                    .getRule(sourcePath)
+                    .map(BuildRule::getBuildTarget))
             .collect(Collectors.toList()));
     return sourcePathResolver.getRelativePath(sourcePath);
   }

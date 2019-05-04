@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
@@ -76,6 +75,6 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   }
 
   private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {
-    return javacFactory.create(new SourcePathRuleFinder(resolver), arg);
+    return javacFactory.create(resolver.getSourcePathRuleFinder(), arg);
   }
 }

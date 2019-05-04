@@ -111,7 +111,7 @@ public class JsBundleDescription
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
 
     // Source maps are exposed individually using a special flavor
     if (flavors.contains(JsFlavors.SOURCE_MAP)) {

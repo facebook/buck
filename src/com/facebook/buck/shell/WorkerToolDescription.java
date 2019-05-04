@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
@@ -156,7 +155,7 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
     return new DefaultWorkerToolRule(
         buildTarget,
         context.getProjectFilesystem(),
-        new SourcePathRuleFinder(graphBuilder),
+        graphBuilder.getSourcePathRuleFinder(),
         tool,
         maxWorkers,
         args.getPersistent()

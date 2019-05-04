@@ -28,7 +28,6 @@ import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTarg
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -83,8 +82,8 @@ public class OcamlLibraryDescription
     FlavorDomain<OcamlPlatform> ocamlPlatforms = ocamlToolchain.getOcamlPlatforms();
     Optional<OcamlPlatform> ocamlPlatform = ocamlPlatforms.getValue(buildTarget);
     if (ocamlPlatform.isPresent()) {
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(context.getActionGraphBuilder());
-      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+      SourcePathResolver pathResolver =
+          DefaultSourcePathResolver.from(context.getActionGraphBuilder().getSourcePathRuleFinder());
 
       ImmutableList<SourcePath> srcs =
           args.getSrcs().isPresent() ? args.getSrcs().get().getPaths() : ImmutableList.of();
@@ -128,7 +127,11 @@ public class OcamlLibraryDescription
             result.getBytecodeCompileDeps(),
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .add(result.getBytecodeLink())
-                .addAll(ruleFinder.filterBuildRuleInputs(result.getObjectFiles()))
+                .addAll(
+                    context
+                        .getActionGraphBuilder()
+                        .getSourcePathRuleFinder()
+                        .filterBuildRuleInputs(result.getObjectFiles()))
                 .build(),
             result.getRules().stream()
                 .map(BuildRule::getBuildTarget)

@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
@@ -84,7 +83,6 @@ public class GwtBinaryDescription
       GwtBinaryDescriptionArg args) {
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
     ImmutableSortedSet.Builder<BuildRule> extraDeps = ImmutableSortedSet.naturalOrder();
 
@@ -121,13 +119,15 @@ public class GwtBinaryDescription
                           .build();
                   ImmutableSortedSet<BuildRule> deps =
                       ImmutableSortedSet.copyOf(
-                          ruleFinder.filterBuildRuleInputs(filesForGwtModule));
+                          graphBuilder
+                              .getSourcePathRuleFinder()
+                              .filterBuildRuleInputs(filesForGwtModule));
 
                   return new GwtModule(
                       gwtModuleTarget,
                       context.getProjectFilesystem(),
                       params.withDeclaredDeps(deps).withoutExtraDeps(),
-                      ruleFinder,
+                      graphBuilder.getSourcePathRuleFinder(),
                       filesForGwtModule,
                       javaLibrary.getResourcesRoot());
                 });

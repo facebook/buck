@@ -19,7 +19,6 @@ package com.facebook.buck.features.project.intellij;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.features.project.intellij.aggregation.DefaultAggregationModuleFactory;
@@ -44,7 +43,6 @@ public class IjProject {
   private final JavaFileParser javaFileParser;
   private final ActionGraphBuilder graphBuilder;
   private final SourcePathResolver sourcePathResolver;
-  private final SourcePathRuleFinder ruleFinder;
   private final ProjectFilesystem projectFilesystem;
   private final IjProjectConfig projectConfig;
   private final ProjectFilesystem outFilesystem;
@@ -62,8 +60,8 @@ public class IjProject {
     this.javaPackageFinder = javaPackageFinder;
     this.javaFileParser = javaFileParser;
     this.graphBuilder = graphBuilder;
-    this.ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    this.sourcePathResolver = DefaultSourcePathResolver.from(this.ruleFinder);
+    this.sourcePathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     this.projectFilesystem = projectFilesystem;
     this.projectConfig = projectConfig;
     this.outFilesystem = outFilesystem;
@@ -111,11 +109,11 @@ public class IjProject {
                 projectFilesystem,
                 sourcePathResolver,
                 graphBuilder,
-                ruleFinder,
+                graphBuilder.getSourcePathRuleFinder(),
                 requiredBuildTargets));
     IjModuleFactoryResolver moduleFactoryResolver =
         new DefaultIjModuleFactoryResolver(
-            graphBuilder, sourcePathResolver, ruleFinder, projectFilesystem, requiredBuildTargets);
+            graphBuilder, sourcePathResolver, projectFilesystem, requiredBuildTargets);
     SupportedTargetTypeRegistry typeRegistry =
         new SupportedTargetTypeRegistry(
             projectFilesystem, moduleFactoryResolver, projectConfig, javaPackageFinder);

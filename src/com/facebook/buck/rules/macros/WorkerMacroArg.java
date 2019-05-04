@@ -20,7 +20,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -84,7 +83,7 @@ public class WorkerMacroArg extends ProxyArg {
     }
     WorkerTool workerTool = ((ProvidesWorkerTool) workerToolProvider).getWorkerTool();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
     Tool exe = workerTool.getTool();
     ImmutableList<String> startupCommand = exe.getCommandPrefix(pathResolver);
     ImmutableMap<String, String> startupEnvironment = exe.getEnvironment(pathResolver);

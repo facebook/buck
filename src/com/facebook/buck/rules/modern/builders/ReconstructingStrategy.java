@@ -114,14 +114,13 @@ class ReconstructingStrategy extends AbstractModernBuildRuleStrategy {
                         rule.getProjectFilesystem(),
                         rule.getBuildTarget(),
                         reconstructed,
-                        new SourcePathRuleFinder(
-                            new AbstractBuildRuleResolver() {
-                              @Override
-                              public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
-                                throw new RuntimeException(
-                                    "Cannot resolve rules in deserialized MBR state.");
-                              }
-                            }));
+                        new AbstractBuildRuleResolver() {
+                          @Override
+                          public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
+                            throw new RuntimeException(
+                                "Cannot resolve rules in deserialized MBR state.");
+                          }
+                        }.getSourcePathRuleFinder());
 
                     for (Step step :
                         ModernBuildRule.stepsForBuildable(

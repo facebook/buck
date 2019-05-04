@@ -31,7 +31,6 @@ import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -241,7 +240,7 @@ public class GoProjectCommandHelper {
     ActionGraphAndBuilder result =
         Objects.requireNonNull(getActionGraph(targetGraphAndTargets.getTargetGraph()));
     DefaultSourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(result.getActionGraphBuilder()));
+        DefaultSourcePathResolver.from(result.getActionGraphBuilder().getSourcePathRuleFinder());
 
     // cleanup files from previous runs
     for (BuildTargetSourcePath sourcePath : generatedPackages.keySet()) {

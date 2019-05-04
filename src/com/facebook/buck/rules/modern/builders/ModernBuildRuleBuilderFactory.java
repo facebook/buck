@@ -59,7 +59,7 @@ public class ModernBuildRuleBuilderFactory {
           return Optional.empty();
         case DEBUG_RECONSTRUCT:
           return Optional.of(
-              createReconstructing(new SourcePathRuleFinder(resolver), cellResolver, rootCell));
+              createReconstructing(resolver.getSourcePathRuleFinder(), cellResolver, rootCell));
         case DEBUG_PASSTHROUGH:
           return Optional.of(createPassthrough());
         case HYBRID_LOCAL:
@@ -82,7 +82,7 @@ public class ModernBuildRuleBuilderFactory {
                   eventBus,
                   remoteExecutionConfig.getStrategyConfig(),
                   remoteExecutionFactory.create(eventBus, metadataProvider),
-                  new SourcePathRuleFinder(resolver),
+                  resolver.getSourcePathRuleFinder(),
                   cellResolver,
                   rootCell,
                   hashLoader::get,

@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -72,8 +71,8 @@ public class ExportFileDescription
     }
 
     SourcePath src;
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(context.getActionGraphBuilder());
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(context.getActionGraphBuilder().getSourcePathRuleFinder());
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     if (args.getSrc().isPresent()) {
       if (mode == ExportFileDescription.Mode.REFERENCE
@@ -91,7 +90,13 @@ public class ExportFileDescription
     }
 
     return new ExportFile(
-        buildTarget, projectFilesystem, ruleFinder, name, mode, src, directoryAction);
+        buildTarget,
+        projectFilesystem,
+        context.getActionGraphBuilder().getSourcePathRuleFinder(),
+        name,
+        mode,
+        src,
+        directoryAction);
   }
 
   private static ExportFileDirectoryAction getDirectoryActionFromConfig(BuckConfig buckConfig) {

@@ -31,7 +31,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -115,13 +114,13 @@ public class JsBundleGenruleDescription
       }
 
       Path fileName =
-          DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder))
+          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder())
               .getRelativePath(output)
               .getFileName();
       return new ExportFile(
           buildTarget,
           projectFilesystem,
-          new SourcePathRuleFinder(graphBuilder),
+          graphBuilder.getSourcePathRuleFinder(),
           fileName.toString(),
           ExportFileDescription.Mode.REFERENCE,
           output,

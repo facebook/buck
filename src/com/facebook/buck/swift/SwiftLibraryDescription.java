@@ -34,7 +34,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -272,7 +271,6 @@ public class SwiftLibraryDescription
               inputs.getFrameworks());
       Preprocessor preprocessor =
           cxxPlatform.getCpp().resolve(graphBuilder, buildTarget.getTargetConfiguration());
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
       BuildTarget buildTargetCopy = buildTarget;
       return new SwiftCompile(
@@ -285,10 +283,12 @@ public class SwiftLibraryDescription
                   ImmutableSet.<BuildRule>builder()
                       .addAll(swiftCompileRules)
                       .addAll(implicitSwiftCompileRules)
-                      .addAll(cxxDeps.getDeps(ruleFinder))
+                      .addAll(cxxDeps.getDeps(graphBuilder.getSourcePathRuleFinder()))
                       // This is only used for generating include args and may not be actually
                       // needed.
-                      .addAll(BuildableSupport.getDepsCollection(preprocessor, ruleFinder))
+                      .addAll(
+                          BuildableSupport.getDepsCollection(
+                              preprocessor, graphBuilder.getSourcePathRuleFinder()))
                       .build()),
           swiftPlatform.get().getSwiftc(),
           args.getFrameworks(),
@@ -401,7 +401,7 @@ public class SwiftLibraryDescription
     if (!isSwiftTarget(buildTarget)) {
       boolean hasSwiftSource =
           !SwiftDescriptions.filterSwiftSources(
-                  DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)),
+                  DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()),
                   args.getSrcs())
               .isEmpty();
       return hasSwiftSource
@@ -413,7 +413,7 @@ public class SwiftLibraryDescription
     SwiftLibraryDescriptionArg.Builder delegateArgsBuilder = SwiftLibraryDescriptionArg.builder();
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
         swiftBuckConfig,
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)),
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()),
         delegateArgsBuilder,
         args,
         buildTarget);

@@ -201,7 +201,7 @@ public class OcamlRuleBuilder {
                 graphBuilder,
                 FluentIterable.from(deps).filter(CxxPreprocessorDep.class::isInstance)));
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     ImmutableList<String> nativeIncludes =
@@ -333,7 +333,7 @@ public class OcamlRuleBuilder {
                 graphBuilder,
                 FluentIterable.from(deps).filter(CxxPreprocessorDep.class::isInstance)));
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     ImmutableList<String> nativeIncludes =

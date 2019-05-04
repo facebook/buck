@@ -132,7 +132,7 @@ abstract class GoDescriptors {
       Iterable<BuildTarget> deps,
       Iterable<BuildTarget> cgoDeps,
       List<ListType> goListTypes) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     Preconditions.checkState(buildTarget.getFlavors().contains(platform.getFlavor()));
@@ -336,7 +336,7 @@ abstract class GoDescriptors {
     graphBuilder.addToIndex(library);
     extraDeps.add(library);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = createTransitiveSymlinkTreeTarget(buildTarget);
     SymlinkTree symlinkTree =

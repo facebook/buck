@@ -34,7 +34,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -105,8 +104,8 @@ public class JsLibraryDescription
       JsLibraryDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver sourcePathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor> sourcesToFlavors;
     try {
       sourcesToFlavors =
@@ -146,11 +145,10 @@ public class JsLibraryDescription
     if (file.isPresent()) {
       return buildTarget.getFlavors().contains(JsFlavors.RELEASE)
           ? createReleaseFileRule(
-              buildTarget, projectFilesystem, ruleFinder, graphBuilder, cellRoots, args, worker)
+              buildTarget, projectFilesystem, graphBuilder, cellRoots, args, worker)
           : createDevFileRule(
               buildTarget,
               projectFilesystem,
-              ruleFinder,
               sourcePathResolver,
               graphBuilder,
               cellRoots,
@@ -341,7 +339,6 @@ public class JsLibraryDescription
   private static BuildRule createReleaseFileRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       JsLibraryDescriptionArg args,
@@ -351,7 +348,7 @@ public class JsLibraryDescription
     return JsFile.create(
         buildTarget,
         projectFilesystem,
-        ruleFinder,
+        graphBuilder.getSourcePathRuleFinder(),
         JsUtil.getExtraJson(args, buildTarget, graphBuilder, cellRoots),
         worker,
         graphBuilder.getRuleWithType(devTarget, JsFile.class).getSourcePathToOutput());
@@ -360,7 +357,6 @@ public class JsLibraryDescription
   private static <A extends AbstractJsLibraryDescriptionArg> BuildRule createDevFileRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
       SourcePathResolver sourcePathResolver,
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
@@ -386,7 +382,7 @@ public class JsLibraryDescription
     return JsFile.create(
         buildTarget,
         projectFilesystem,
-        ruleFinder,
+        graphBuilder.getSourcePathRuleFinder(),
         JsUtil.getExtraJson(args, buildTarget, graphBuilder, cellRoots),
         worker,
         sourcePath,

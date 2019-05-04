@@ -31,7 +31,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -94,7 +93,6 @@ public class JavaLibraryDescription
       BuildRuleParams params,
       JavaLibraryDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     // We know that the flavour we're being asked to create is valid, since the check is done when
     // creating the action graph from the target graph.
 
@@ -125,7 +123,7 @@ public class JavaLibraryDescription
       // Might as well add them as deps. *sigh*
       ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
       // Sourcepath deps
-      deps.addAll(ruleFinder.filterBuildRuleInputs(sources));
+      deps.addAll(graphBuilder.getSourcePathRuleFinder().filterBuildRuleInputs(sources));
       // Classpath deps
       deps.add(baseLibrary);
       deps.addAll(

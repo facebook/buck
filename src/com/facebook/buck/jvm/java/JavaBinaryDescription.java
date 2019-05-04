@@ -98,7 +98,6 @@ public class JavaBinaryDescription
       JavaBinaryDescriptionArg args) {
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ImmutableMap<String, SourcePath> nativeLibraries =
         JavaLibraryRules.getNativeLibraries(
             params.getBuildDeps(),
@@ -145,6 +144,7 @@ public class JavaBinaryDescription
       rule = javaBinary;
     } else {
       graphBuilder.addToIndex(javaBinary);
+      SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
       SourcePath innerJar = javaBinary.getSourcePathToOutput();
       JavacFactory javacFactory = JavacFactory.getDefault(toolchainProvider);
       rule =
