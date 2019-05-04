@@ -36,8 +36,8 @@ import com.google.common.collect.Iterables;
 public class Composition {
 
   /**
-   * Creates a composed computation from a base composed computation used for chaining multiple
-   * {@link GraphComputation} together.
+   * Creates a {@link ComposedComputation} from a base {@link ComposedComputation} used for chaining
+   * multiple {@link GraphComputation} together.
    *
    * @param resultClass the result class of this composition
    * @param baseComputation the base computation
@@ -66,5 +66,23 @@ public class Composition {
         resultClass,
         composer,
         identity -> (Result2) Iterables.getOnlyElement(identity.values()));
+  }
+
+  /**
+   * Creates a {@link ComposedComputation} from a normal {@link GraphComputation} for performing
+   * compositions. The composition created is just a wrapper around the existing {@link
+   * GraphComputation} and doesn't do anything.
+   *
+   * @param resultClass the class of the result of the wrapped computation
+   * @param baseComputation the computation to wrap as {@link ComposedComputation}
+   * @param <Key1> the key type of the computation
+   * @param <Result1> the result type of the computation
+   * @return a {@link ComposedComputation} wrapping the given {@link GraphComputation}
+   */
+  public static <Key1 extends ComputeKey<Result1>, Result1 extends ComputeResult>
+      ComposedComputation<Key1, Result1, Result1> asComposition(
+          Class<Result1> resultClass, GraphComputation<Key1, Result1> baseComputation) {
+
+    return new ComposedWrapperComputation<>(resultClass, baseComputation.getIdentifier());
   }
 }

@@ -17,6 +17,7 @@ package com.facebook.buck.core.graph.transformation.composition;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.graph.transformation.impl.ChildrenAdder;
 import com.facebook.buck.core.graph.transformation.impl.ChildrenAdder.LongNode;
 import com.facebook.buck.core.graph.transformation.impl.ChildrenSumMultiplier.LongMultNode;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
@@ -30,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.graph.GraphBuilder;
 import org.junit.Test;
 
 public class CompositionTest {
@@ -122,5 +124,31 @@ public class CompositionTest {
             ImmutableList.of(ImmutableLongMultNode.of(1), ImmutableLongMultNode.of(2))),
         composedComputation.transform(
             ImmutableComposedKey.of(ImmutableLongNode.of(1), LongMultNode.class), environment));
+  }
+
+  @Test
+  public void asCompositionCreatesComposedThatDelegatesToStandardComputation() throws Exception {
+    FakeComputationEnvironment environment =
+        new FakeComputationEnvironment(
+            ImmutableMap.of(ImmutableLongNode.of(1), ImmutableLongNode.of(1)));
+
+    ComposedComputation<LongNode, LongNode, LongNode> baseComputation =
+        Composition.asComposition(
+            LongNode.class, new ChildrenAdder(GraphBuilder.directed().build()));
+
+    assertEquals(
+        ImmutableSet.of(ImmutableLongNode.of(1)),
+        baseComputation.discoverPreliminaryDeps(
+            ImmutableComposedKey.of(ImmutableLongNode.of(1), LongNode.class)));
+
+    assertEquals(
+        ImmutableSet.of(),
+        baseComputation.discoverDeps(
+            ImmutableComposedKey.of(ImmutableLongNode.of(1), LongNode.class), environment));
+
+    assertEquals(
+        ImmutableComposedResult.of(ImmutableList.of(ImmutableLongNode.of(1))),
+        baseComputation.transform(
+            ImmutableComposedKey.of(ImmutableLongNode.of(1), LongNode.class), environment));
   }
 }
