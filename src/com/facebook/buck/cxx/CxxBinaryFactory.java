@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -158,11 +157,12 @@ public class CxxBinaryFactory {
             flavoredStripStyle,
             flavoredLinkerMapMode);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-
     if (target.getFlavors().contains(CxxDescriptionEnhancer.CXX_LINK_MAP_FLAVOR)) {
       return CxxDescriptionEnhancer.createLinkMap(
-          target, projectFilesystem, ruleFinder, cxxLinkAndCompileRules);
+          target,
+          projectFilesystem,
+          graphBuilder.getSourcePathRuleFinder(),
+          cxxLinkAndCompileRules);
     }
 
     // Return a CxxBinary rule as our representative in the action graph, rather than the CxxLink
@@ -186,7 +186,7 @@ public class CxxBinaryFactory {
             () ->
                 ImmutableSortedSet.copyOf(
                     BuildableSupport.getDepsCollection(
-                        cxxLinkAndCompileRules.executable, ruleFinder)),
+                        cxxLinkAndCompileRules.executable, graphBuilder.getSourcePathRuleFinder())),
             ImmutableSortedSet.of()),
         cxxPlatform,
         cxxLinkAndCompileRules.getBinaryRule(),
@@ -209,16 +209,15 @@ public class CxxBinaryFactory {
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       CxxBinaryDescriptionArg args) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
-        ruleFinder,
         graphBuilder,
         cxxPlatform,
         CxxDescriptionEnhancer.parseHeaders(
-            buildTarget, graphBuilder, ruleFinder, pathResolver, Optional.of(cxxPlatform), args),
+            buildTarget, graphBuilder, pathResolver, Optional.of(cxxPlatform), args),
         HeaderVisibility.PRIVATE,
         true);
   }

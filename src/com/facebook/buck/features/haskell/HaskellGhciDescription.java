@@ -28,7 +28,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -302,7 +301,6 @@ public class HaskellGhciDescription
               cxxPlatform,
               projectFilesystem,
               graphBuilder,
-              new SourcePathRuleFinder(graphBuilder),
               ruleTarget,
               BuildTargetPaths.getGenPath(projectFilesystem, ruleTarget, "%s")
                   .resolve("libghci_dependencies.so"),

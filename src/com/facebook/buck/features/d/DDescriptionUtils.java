@@ -124,8 +124,8 @@ abstract class DDescriptionUtils {
       ImmutableList<String> linkerFlags,
       DIncludes includes) {
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver sourcePathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     ImmutableList<SourcePath> sourcePaths =
         sourcePathsForCompiledSources(
@@ -134,7 +134,6 @@ abstract class DDescriptionUtils {
             params,
             graphBuilder,
             sourcePathResolver,
-            ruleFinder,
             cxxPlatform,
             dBuckConfig,
             compilerFlags,
@@ -149,7 +148,6 @@ abstract class DDescriptionUtils {
         projectFilesystem,
         graphBuilder,
         sourcePathResolver,
-        ruleFinder,
         buildTarget,
         Linker.LinkType.EXECUTABLE,
         Optional.empty(),
@@ -249,7 +247,6 @@ abstract class DDescriptionUtils {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       DBuckConfig dBuckConfig,
       ImmutableList<String> compilerFlags,
       String name,
@@ -267,6 +264,7 @@ abstract class DDescriptionUtils {
                   getTransitiveDLibraryRules(baseParams.getBuildDeps()).entrySet()) {
                 transitiveIncludes.put(library.getKey(), library.getValue().getIncludes());
               }
+              SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
 
               ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
               depsBuilder.addAll(BuildableSupport.getDepsCollection(compiler, ruleFinder));
@@ -310,7 +308,6 @@ abstract class DDescriptionUtils {
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver sourcePathResolver,
-      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       DBuckConfig dBuckConfig,
       ImmutableList<String> compilerFlags,
@@ -328,7 +325,6 @@ abstract class DDescriptionUtils {
               projectFilesystem,
               baseParams,
               graphBuilder,
-              ruleFinder,
               dBuckConfig,
               compilerFlags,
               source.getKey(),

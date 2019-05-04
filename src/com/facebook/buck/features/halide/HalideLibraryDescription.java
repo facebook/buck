@@ -212,7 +212,6 @@ public class HalideLibraryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       CxxPlatform platform,
       HalideLibraryDescriptionArg args) {
 
@@ -229,7 +228,6 @@ public class HalideLibraryDescription
         buildTarget,
         projectFilesystem,
         graphBuilder,
-        ruleFinder,
         platform,
         CxxDescriptionEnhancer.getStaticLibraryName(
             buildTarget,
@@ -292,7 +290,7 @@ public class HalideLibraryDescription
         cxxPlatformsProvider.getUnresolvedCxxPlatforms();
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(buildTarget.getFlavors());
     // TODO(cjhopman): This description doesn't handle parse time deps correctly.
@@ -316,7 +314,6 @@ public class HalideLibraryDescription
       return CxxDescriptionEnhancer.createHeaderSymlinkTree(
           buildTarget,
           projectFilesystem,
-          ruleFinder,
           graphBuilder,
           cxxPlatform,
           headersBuilder.build(),
@@ -354,7 +351,7 @@ public class HalideLibraryDescription
       // Halide always output PIC, so it's output can be used for both cases.
       // See: https://github.com/halide/Halide/blob/e3c301f3/src/LLVM_Output.cpp#L152
       return createHalideStaticLibrary(
-          buildTarget, projectFilesystem, params, graphBuilder, ruleFinder, cxxPlatform, args);
+          buildTarget, projectFilesystem, params, graphBuilder, cxxPlatform, args);
     } else if (flavors.contains(CxxDescriptionEnhancer.SHARED_FLAVOR)) {
       throw new HumanReadableException(
           "halide_library '%s' does not support shared libraries as output", buildTarget);

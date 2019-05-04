@@ -998,7 +998,6 @@ class NativeLibraryMergeEnhancer {
                       projectFilesystem,
                       graphBuilder,
                       pathResolver,
-                      ruleFinder,
                       target,
                       Linker.LinkType.SHARED,
                       Optional.of(soname),

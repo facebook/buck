@@ -104,25 +104,19 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
       Iterable<BuildTarget> cxxDeps,
       Tool cgo) {
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(cxxDeps).addPlatformDeps(args.getPlatformDeps()).build();
 
     // generate C sources with cgo tool (go build writes c files to _obj dir)
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
-            buildTarget,
-            graphBuilder,
-            ruleFinder,
-            pathResolver,
-            Optional.of(platform.getCxxPlatform()),
-            args);
+            buildTarget, graphBuilder, pathResolver, Optional.of(platform.getCxxPlatform()), args);
 
     HeaderSymlinkTree headerSymlinkTree =
         getHeaderSymlinkTree(
             buildTarget,
             projectFilesystem,
-            ruleFinder,
             graphBuilder,
             platform.getCxxPlatform(),
             cxxDeps,
@@ -252,7 +246,6 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                         platform.getCxxPlatform(),
                         projectFilesystem,
                         graphBuilder,
-                        ruleFinder,
                         target,
                         BuildTargetPaths.getGenPath(projectFilesystem, target, "%s/_all.o"),
                         ImmutableMap.of(),
@@ -300,7 +293,6 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
   private static HeaderSymlinkTree getHeaderSymlinkTree(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       Iterable<BuildTarget> cxxDeps,
@@ -332,7 +324,6 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
-        ruleFinder,
         graphBuilder,
         cxxPlatform,
         allHeaders.build(),

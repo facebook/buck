@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -120,7 +119,6 @@ public class RobolectricTestDescription
       BuildRuleParams params,
       RobolectricTestDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (JavaAbis.isClassAbiTarget(buildTarget)) {
@@ -130,7 +128,7 @@ public class RobolectricTestDescription
       BuildRule testRule = graphBuilder.requireRule(testTarget);
       return CalculateClassAbi.of(
           buildTarget,
-          ruleFinder,
+          graphBuilder.getSourcePathRuleFinder(),
           projectFilesystem,
           params,
           Objects.requireNonNull(testRule.getSourcePathToOutput()));
@@ -146,7 +144,7 @@ public class RobolectricTestDescription
             ImmutableSortedSet.copyOf(
                 Iterables.concat(
                     params.getBuildDeps(), graphBuilder.getAllRules(args.getExportedDeps()))),
-            javacFactory.create(ruleFinder, args),
+            javacFactory.create(graphBuilder.getSourcePathRuleFinder(), args),
             javacOptions,
             DependencyMode.TRANSITIVE,
             args.isForceFinalResourceIds(),
@@ -193,7 +191,6 @@ public class RobolectricTestDescription
             args.getUseCxxLibraries(),
             args.getCxxLibraryWhitelist(),
             graphBuilder,
-            ruleFinder,
             getCxxPlatform(args).resolve(graphBuilder, buildTarget.getTargetConfiguration()));
     params = cxxLibraryEnhancement.updatedParams;
 

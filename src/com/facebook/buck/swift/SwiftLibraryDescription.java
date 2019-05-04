@@ -336,8 +336,8 @@ public class SwiftLibraryDescription
       CxxPlatform cxxPlatform,
       Optional<String> soname) {
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver sourcePathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     String sharedLibrarySoname =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
             soname, buildTarget.withoutFlavors(SUPPORTED_FLAVORS), cxxPlatform);
@@ -372,7 +372,6 @@ public class SwiftLibraryDescription
             projectFilesystem,
             graphBuilder,
             sourcePathResolver,
-            ruleFinder,
             buildTarget,
             Linker.LinkType.SHARED,
             Optional.of(sharedLibrarySoname),

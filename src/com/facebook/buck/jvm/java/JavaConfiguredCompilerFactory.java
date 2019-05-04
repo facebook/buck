@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -86,6 +85,6 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   }
 
   private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {
-    return javacFactory.create(new SourcePathRuleFinder(resolver), arg);
+    return javacFactory.create(resolver.getSourcePathRuleFinder(), arg);
   }
 }

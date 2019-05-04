@@ -103,7 +103,6 @@ public class HaskellDescriptionUtils {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       ImmutableSet<BuildRule> deps,
       HaskellPlatform platform,
       Linker.LinkableDepType depType,
@@ -181,7 +180,7 @@ public class HaskellDescriptionUtils {
         target,
         projectFilesystem,
         baseParams,
-        ruleFinder,
+        graphBuilder.getSourcePathRuleFinder(),
         platform.getCompiler().resolve(graphBuilder, target.getTargetConfiguration()),
         platform.getHaskellVersion(),
         platform.shouldUseArgsfile(),
@@ -223,7 +222,6 @@ public class HaskellDescriptionUtils {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       ImmutableSet<BuildRule> deps,
       HaskellPlatform platform,
       Linker.LinkableDepType depType,
@@ -242,7 +240,6 @@ public class HaskellDescriptionUtils {
                     projectFilesystem,
                     params,
                     graphBuilder,
-                    ruleFinder,
                     deps,
                     platform,
                     depType,
@@ -262,7 +259,6 @@ public class HaskellDescriptionUtils {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       HaskellPlatform platform,
       Linker.LinkType linkType,
       ImmutableList<Arg> linkerFlags,
@@ -337,7 +333,6 @@ public class HaskellDescriptionUtils {
                 projectFilesystem,
                 baseParams,
                 graphBuilder,
-                ruleFinder,
                 // TODO(agallagher): We shouldn't need any deps to compile an empty module, but ghc
                 // implicitly tries to load the prelude and in some setups this is provided via a
                 // Buck dependency.
@@ -360,7 +355,6 @@ public class HaskellDescriptionUtils {
                 emptyArchiveTarget,
                 projectFilesystem,
                 graphBuilder,
-                ruleFinder,
                 platform.getCxxPlatform(),
                 "libempty.a",
                 emptyCompiledModule.getObjects(),
@@ -377,11 +371,16 @@ public class HaskellDescriptionUtils {
             baseParams
                 .withDeclaredDeps(
                     ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(BuildableSupport.getDepsCollection(linker, ruleFinder))
+                        .addAll(
+                            BuildableSupport.getDepsCollection(
+                                linker, graphBuilder.getSourcePathRuleFinder()))
                         .addAll(
                             Stream.of(args, linkerArgs)
                                 .flatMap(Collection::stream)
-                                .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
+                                .flatMap(
+                                    arg ->
+                                        BuildableSupport.getDeps(
+                                            arg, graphBuilder.getSourcePathRuleFinder()))
                                 .iterator())
                         .build())
                 .withoutExtraDeps(),

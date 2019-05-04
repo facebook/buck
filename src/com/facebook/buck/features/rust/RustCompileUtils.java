@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.rules.tool.BinaryWrapperRule;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
@@ -97,7 +96,6 @@ public class RustCompileUtils {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       RustPlatform rustPlatform,
       RustBuckConfig rustConfig,
       ImmutableList<String> extraFlags,
@@ -262,7 +260,7 @@ public class RustCompileUtils {
     }
 
     return RustCompileRule.from(
-        ruleFinder,
+        graphBuilder.getSourcePathRuleFinder(),
         target,
         projectFilesystem,
         params,
@@ -282,7 +280,6 @@ public class RustCompileUtils {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       RustPlatform rustPlatform,
       RustBuckConfig rustConfig,
       ImmutableList<String> extraFlags,
@@ -309,7 +306,6 @@ public class RustCompileUtils {
                     projectFilesystem,
                     params,
                     graphBuilder,
-                    ruleFinder,
                     rustPlatform,
                     rustConfig,
                     extraFlags,
@@ -393,8 +389,8 @@ public class RustCompileUtils {
       ImmutableSet<String> defaultRoots,
       CrateType crateType,
       Iterable<BuildRule> deps) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     ImmutableList.Builder<String> rustcArgs = ImmutableList.builder();
 
@@ -447,7 +443,6 @@ public class RustCompileUtils {
                           target,
                           projectFilesystem,
                           graphBuilder,
-                          ruleFinder,
                           cxxPlatform,
                           deps,
                           r ->
@@ -498,7 +493,6 @@ public class RustCompileUtils {
                         projectFilesystem,
                         params,
                         graphBuilder,
-                        ruleFinder,
                         rustPlatform,
                         rustBuckConfig,
                         rustcArgs.build(),

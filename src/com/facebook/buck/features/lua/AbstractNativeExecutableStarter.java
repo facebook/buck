@@ -261,7 +261,6 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                     getProjectFilesystem(),
                     getActionGraphBuilder(),
                     getPathResolver(),
-                    getRuleFinder(),
                     linkTarget,
                     Linker.LinkType.EXECUTABLE,
                     Optional.empty(),

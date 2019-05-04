@@ -219,7 +219,7 @@ public class AndroidBinaryGraphEnhancer {
     this.originalBuildTarget = originalBuildTarget;
     this.originalDeps = originalParams.getBuildDeps();
     this.graphBuilder = graphBuilder;
-    this.ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    this.ruleFinder = graphBuilder.getSourcePathRuleFinder();
     this.cellPathResolver = cellPathResolver;
     this.packageType = packageType;
     this.shouldPreDex = shouldPreDex;

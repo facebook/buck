@@ -118,8 +118,8 @@ public class CxxLibraryFactory {
     if (buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       CxxPlatform cxxPlatformOrDefault = cxxPlatformOrDefaultSupplier.get();
       // XXX: This needs bundleLoader for tests..
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-      SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+      SourcePathResolver sourcePathResolver =
+          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
       // TODO(T21900763): We should be using `requireObjects` instead but those would not
       // necessarily be `CxxPreprocessAndCompile` rules (e.g., Swift in `apple_library`).
       ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
@@ -128,7 +128,6 @@ public class CxxLibraryFactory {
               projectFilesystem,
               graphBuilder,
               sourcePathResolver,
-              ruleFinder,
               cellRoots,
               cxxBuckConfig,
               cxxPlatformOrDefault,
@@ -319,7 +318,6 @@ public class CxxLibraryFactory {
                 projectFilesystem,
                 ruleResolverInner,
                 pathResolverInner,
-                ruleFinderInner,
                 cellRoots,
                 cxxBuckConfig,
                 cxxPlatform,
@@ -377,7 +375,6 @@ public class CxxLibraryFactory {
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver sourcePathResolver,
-      SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
@@ -395,7 +392,6 @@ public class CxxLibraryFactory {
             projectFilesystem,
             graphBuilder,
             sourcePathResolver,
-            ruleFinder,
             cellRoots,
             cxxBuckConfig,
             cxxPlatform,
@@ -419,7 +415,6 @@ public class CxxLibraryFactory {
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver sourcePathResolver,
-      SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
@@ -437,16 +432,10 @@ public class CxxLibraryFactory {
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             buildTarget,
             projectFilesystem,
-            ruleFinder,
             graphBuilder,
             cxxPlatform,
             CxxDescriptionEnhancer.parseHeaders(
-                buildTarget,
-                graphBuilder,
-                ruleFinder,
-                sourcePathResolver,
-                Optional.of(cxxPlatform),
-                args),
+                buildTarget, graphBuilder, sourcePathResolver, Optional.of(cxxPlatform), args),
             HeaderVisibility.PRIVATE,
             shouldCreatePrivateHeadersSymlinks);
 
@@ -475,7 +464,7 @@ public class CxxLibraryFactory {
             buildTarget,
             graphBuilder,
             sourcePathResolver,
-            ruleFinder,
+            graphBuilder.getSourcePathRuleFinder(),
             cxxBuckConfig,
             cxxPlatform,
             CxxLibraryDescription.getPreprocessorInputsForBuildingLibrarySources(
@@ -503,7 +492,6 @@ public class CxxLibraryFactory {
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
@@ -526,7 +514,6 @@ public class CxxLibraryFactory {
             projectFilesystem,
             graphBuilder,
             pathResolver,
-            ruleFinder,
             cellRoots,
             cxxBuckConfig,
             cxxPlatform,
@@ -576,7 +563,6 @@ public class CxxLibraryFactory {
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
@@ -607,7 +593,6 @@ public class CxxLibraryFactory {
             projectFilesystem,
             graphBuilder,
             pathResolver,
-            ruleFinder,
             cellRoots,
             cxxBuckConfig,
             cxxPlatform,
@@ -651,7 +636,6 @@ public class CxxLibraryFactory {
         projectFilesystem,
         graphBuilder,
         pathResolver,
-        ruleFinder,
         sharedTarget,
         linkType,
         Optional.of(sharedLibrarySoname),
@@ -697,16 +681,15 @@ public class CxxLibraryFactory {
     boolean shouldCreatePrivateHeaderSymlinks =
         args.getXcodePrivateHeadersSymlinks()
             .orElse(cxxPlatform.getPrivateHeadersSymlinksEnabled());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
-        ruleFinder,
         graphBuilder,
         cxxPlatform,
         CxxDescriptionEnhancer.parseHeaders(
-            buildTarget, graphBuilder, ruleFinder, pathResolver, Optional.of(cxxPlatform), args),
+            buildTarget, graphBuilder, pathResolver, Optional.of(cxxPlatform), args),
         HeaderVisibility.PRIVATE,
         shouldCreatePrivateHeaderSymlinks);
   }
@@ -718,15 +701,15 @@ public class CxxLibraryFactory {
       ActionGraphBuilder graphBuilder,
       HeaderMode mode,
       CxxLibraryDescriptionArg args) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
-        ruleFinder,
+        graphBuilder.getSourcePathRuleFinder(),
         mode,
         CxxDescriptionEnhancer.parseExportedHeaders(
-            buildTarget, graphBuilder, ruleFinder, pathResolver, Optional.empty(), args),
+            buildTarget, graphBuilder, pathResolver, Optional.empty(), args),
         HeaderVisibility.PUBLIC);
   }
 
@@ -739,16 +722,15 @@ public class CxxLibraryFactory {
       CxxLibraryDescriptionArg args) {
     boolean shouldCreatePublicHeaderSymlinks =
         args.getXcodePublicHeadersSymlinks().orElse(cxxPlatform.getPublicHeadersSymlinksEnabled());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
-        ruleFinder,
         graphBuilder,
         cxxPlatform,
         CxxDescriptionEnhancer.parseExportedPlatformHeaders(
-            buildTarget, graphBuilder, ruleFinder, pathResolver, cxxPlatform, args),
+            buildTarget, graphBuilder, pathResolver, cxxPlatform, args),
         HeaderVisibility.PUBLIC,
         shouldCreatePublicHeaderSymlinks);
   }
@@ -771,8 +753,8 @@ public class CxxLibraryFactory {
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction
           transitiveCxxPreprocessorInputFunction,
       Optional<CxxLibraryDescriptionDelegate> delegate) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver sourcePathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     // Create rules for compiling the object files.
     ImmutableList<SourcePath> objects =
@@ -781,7 +763,6 @@ public class CxxLibraryFactory {
             projectFilesystem,
             graphBuilder,
             sourcePathResolver,
-            ruleFinder,
             cellRoots,
             cxxBuckConfig,
             cxxPlatform,
@@ -810,7 +791,6 @@ public class CxxLibraryFactory {
         staticTarget,
         projectFilesystem,
         graphBuilder,
-        ruleFinder,
         cxxPlatform,
         staticLibraryName,
         ImmutableList.copyOf(objects),
@@ -856,14 +836,13 @@ public class CxxLibraryFactory {
             args.getExportedPostPlatformLinkerFlags(),
             cxxPlatform));
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver sourcePathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     return createSharedLibrary(
         buildTarget,
         projectFilesystem,
         graphBuilder,
         sourcePathResolver,
-        ruleFinder,
         cellRoots,
         cxxBuckConfig,
         cxxPlatform,

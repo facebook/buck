@@ -321,12 +321,12 @@ public final class CxxInferEnhancer {
 
     InferFlavors.checkNoInferFlavors(target.getFlavors());
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
-            target, graphBuilder, ruleFinder, pathResolver, Optional.of(cxxPlatform), args);
+            target, graphBuilder, pathResolver, Optional.of(cxxPlatform), args);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
@@ -342,7 +342,6 @@ public final class CxxInferEnhancer {
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             target,
             filesystem,
-            ruleFinder,
             graphBuilder,
             cxxPlatform,
             headers,
@@ -383,7 +382,7 @@ public final class CxxInferEnhancer {
             target,
             graphBuilder,
             pathResolver,
-            ruleFinder,
+            graphBuilder.getSourcePathRuleFinder(),
             cxxBuckConfig,
             cxxPlatform,
             preprocessorInputs,

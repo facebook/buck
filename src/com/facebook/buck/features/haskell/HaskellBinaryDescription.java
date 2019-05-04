@@ -32,7 +32,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -156,8 +155,8 @@ public class HaskellBinaryDescription
           args.isEnableProfiling());
     }
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     Linker.LinkableDepType depType = getLinkStyle(args, type);
 
     // The target to use for the link rule.
@@ -214,7 +213,6 @@ public class HaskellBinaryDescription
                   buildTarget,
                   projectFilesystem,
                   graphBuilder,
-                  ruleFinder,
                   platform.getCxxPlatform(),
                   deps,
                   r -> Optional.empty()));
@@ -259,7 +257,6 @@ public class HaskellBinaryDescription
                 projectFilesystem,
                 params,
                 graphBuilder,
-                ruleFinder,
                 RichStream.from(deps)
                     .filter(
                         dep ->
@@ -285,7 +282,6 @@ public class HaskellBinaryDescription
             projectFilesystem,
             params,
             graphBuilder,
-            ruleFinder,
             platform,
             Linker.LinkType.EXECUTABLE,
             linkFlags,

@@ -371,7 +371,6 @@ abstract class GoDescriptors {
                   buildTarget,
                   projectFilesystem,
                   graphBuilder,
-                  ruleFinder,
                   platform.getCxxPlatform(),
                   cgoLinkables,
                   r -> Optional.empty()));

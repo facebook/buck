@@ -911,7 +911,6 @@ public class AppleCxxPlatformsTest {
               new FakeProjectFilesystem(),
               graphBuilder,
               pathResolver,
-              ruleFinder,
               target,
               Linker.LinkType.EXECUTABLE,
               Optional.empty(),

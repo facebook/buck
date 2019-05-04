@@ -227,7 +227,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               libraryTarget,
               projectFilesystem,
               ImmutableSortedSet.copyOf(Iterables.concat(deps.getDeps(), deps.getProvidedDeps())),
-              javacFactory.create(new SourcePathRuleFinder(graphBuilder), args),
+              javacFactory.create(graphBuilder.getSourcePathRuleFinder(), args),
               javacOptions,
               DependencyMode.FIRST_ORDER,
               /* forceFinalResourceIds */ false,

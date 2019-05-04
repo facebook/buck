@@ -2522,8 +2522,8 @@ public class ProjectGenerator {
       return convertMapKeysToPaths(fullExportedHeaders);
     } else {
       ActionGraphBuilder graphBuilder = actionGraphBuilderForNode.apply(targetNode);
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+      SourcePathResolver pathResolver =
+          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
       ImmutableSortedMap.Builder<Path, SourcePath> allHeadersBuilder =
           ImmutableSortedMap.naturalOrder();
       String platform = defaultCxxPlatform.getFlavor().toString();
@@ -2533,12 +2533,7 @@ public class ProjectGenerator {
       return allHeadersBuilder
           .putAll(
               CxxDescriptionEnhancer.parseExportedHeaders(
-                  targetNode.getBuildTarget(),
-                  graphBuilder,
-                  ruleFinder,
-                  pathResolver,
-                  Optional.empty(),
-                  arg))
+                  targetNode.getBuildTarget(), graphBuilder, pathResolver, Optional.empty(), arg))
           .putAll(
               ProjectGenerator.parseAllPlatformHeaders(
                   targetNode.getBuildTarget(), pathResolver, platformHeaders, true, arg))
@@ -2590,8 +2585,8 @@ public class ProjectGenerator {
       return convertMapKeysToPaths(fullHeaders);
     } else {
       ActionGraphBuilder graphBuilder = actionGraphBuilderForNode.apply(targetNode);
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+      SourcePathResolver pathResolver =
+          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
       ImmutableSortedMap.Builder<Path, SourcePath> allHeadersBuilder =
           ImmutableSortedMap.naturalOrder();
       String platform = defaultCxxPlatform.getFlavor().toString();
@@ -2601,12 +2596,7 @@ public class ProjectGenerator {
       return allHeadersBuilder
           .putAll(
               CxxDescriptionEnhancer.parseHeaders(
-                  targetNode.getBuildTarget(),
-                  graphBuilder,
-                  ruleFinder,
-                  pathResolver,
-                  Optional.empty(),
-                  arg))
+                  targetNode.getBuildTarget(), graphBuilder, pathResolver, Optional.empty(), arg))
           .putAll(
               ProjectGenerator.parseAllPlatformHeaders(
                   targetNode.getBuildTarget(), pathResolver, platformHeaders, false, arg))

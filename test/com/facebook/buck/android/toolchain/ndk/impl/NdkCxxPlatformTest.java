@@ -188,7 +188,6 @@ public class NdkCxxPlatformTest {
               filesystem,
               graphBuilder,
               pathResolver,
-              ruleFinder,
               target,
               Linker.LinkType.EXECUTABLE,
               Optional.empty(),

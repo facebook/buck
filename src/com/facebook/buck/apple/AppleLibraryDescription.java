@@ -43,7 +43,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -474,7 +473,7 @@ public class AppleLibraryDescription
         CxxStrip.removeStripStyleFlavorInTarget(buildTarget, flavoredStripStyle);
 
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     BuildRule unstrippedBinaryRule =
         requireUnstrippedBuildRule(
@@ -700,8 +699,8 @@ public class AppleLibraryDescription
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       AppleNativeTargetDescriptionArg args) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(args, buildTarget);
     ImmutableSortedMap.Builder<Path, SourcePath> headers = ImmutableSortedMap.naturalOrder();
@@ -722,7 +721,7 @@ public class AppleLibraryDescription
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
-        ruleFinder,
+        graphBuilder.getSourcePathRuleFinder(),
         HeaderMode.SYMLINK_TREE_WITH_MODULEMAP,
         headers.build(),
         HeaderVisibility.PUBLIC);
@@ -733,8 +732,8 @@ public class AppleLibraryDescription
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       AppleNativeTargetDescriptionArg args) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(args, buildTarget);
     ImmutableMap<Path, SourcePath> headers =
@@ -750,7 +749,7 @@ public class AppleLibraryDescription
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
         buildTarget,
         projectFilesystem,
-        ruleFinder,
+        graphBuilder.getSourcePathRuleFinder(),
         root,
         headers,
         HeaderMode.SYMLINK_TREE_WITH_MODULEMAP);
@@ -764,7 +763,7 @@ public class AppleLibraryDescription
       Class<U> metadataClass) {
 
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     if (CxxLibraryDescription.METADATA_TYPE.containsAnyOf(buildTarget.getFlavors())) {
       // Modules are always platform specific so we need to only have one platform specific

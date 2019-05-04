@@ -21,7 +21,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -80,7 +79,6 @@ public class CxxLinkableEnhancer {
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver resolver,
-      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Path output,
       Linker.LinkableDepType depType,
@@ -144,7 +142,7 @@ public class CxxLinkableEnhancer {
     return new CxxThinLTOIndex(
         target,
         projectFilesystem,
-        ruleFinder,
+        graphBuilder.getSourcePathRuleFinder(),
         linker,
         output,
         ldArgs,
@@ -158,7 +156,6 @@ public class CxxLinkableEnhancer {
       CxxPlatform cxxPlatform,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Path output,
       ImmutableMap<String, Path> extraOutputs,
@@ -208,7 +205,10 @@ public class CxxLinkableEnhancer {
           extraOutputsDeriver
               .get()
               .deriveExtraOutputsFromArgs(
-                  Arg.stringify(ldArgs, DefaultSourcePathResolver.from(ruleFinder)), output);
+                  Arg.stringify(
+                      ldArgs,
+                      DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder())),
+                  output);
       if (!derivedExtraOutputs.isEmpty()) {
         allExtraOutputs =
             ImmutableMap.<String, Path>builder()
@@ -221,7 +221,7 @@ public class CxxLinkableEnhancer {
     return new CxxLink(
         target,
         projectFilesystem,
-        ruleFinder,
+        ruleResolver.getSourcePathRuleFinder(),
         cellPathResolver,
         linker,
         output,
@@ -347,7 +347,6 @@ public class CxxLinkableEnhancer {
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver resolver,
-      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Linker.LinkType linkType,
       Optional<String> soname,
@@ -390,7 +389,6 @@ public class CxxLinkableEnhancer {
         cxxPlatform,
         projectFilesystem,
         graphBuilder,
-        ruleFinder,
         target,
         output,
         deriveSupplementaryOutputPathsFromMainOutputPath(output, extraOutputNames),
@@ -434,7 +432,6 @@ public class CxxLinkableEnhancer {
       CxxPlatform cxxPlatform,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Path output,
       ImmutableMap<String, Path> extraOutputs,
@@ -463,7 +460,6 @@ public class CxxLinkableEnhancer {
         cxxPlatform,
         projectFilesystem,
         ruleResolver,
-        ruleFinder,
         target,
         output,
         extraOutputs,

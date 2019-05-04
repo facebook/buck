@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -74,13 +73,17 @@ public class DLibraryDescription
       BuildRuleParams params,
       DLibraryDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (buildTarget.getFlavors().contains(DDescriptionUtils.SOURCE_LINK_TREE)) {
       return DDescriptionUtils.createSourceSymlinkTree(
-          buildTarget, projectFilesystem, pathResolver, ruleFinder, args.getSrcs());
+          buildTarget,
+          projectFilesystem,
+          pathResolver,
+          graphBuilder.getSourcePathRuleFinder(),
+          args.getSrcs());
     }
 
     BuildTarget sourceTreeTarget =
@@ -99,7 +102,6 @@ public class DLibraryDescription
           params,
           graphBuilder,
           pathResolver,
-          ruleFinder,
           /* compilerFlags */ ImmutableList.of(),
           args.getSrcs(),
           dIncludes,
@@ -116,7 +118,6 @@ public class DLibraryDescription
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       ImmutableList<String> compilerFlags,
       SourceSortedSet sources,
       DIncludes dIncludes,
@@ -133,7 +134,6 @@ public class DLibraryDescription
             params,
             graphBuilder,
             pathResolver,
-            ruleFinder,
             cxxPlatform,
             dBuckConfig,
             compilerFlags,
@@ -156,7 +156,6 @@ public class DLibraryDescription
         staticTarget,
         projectFilesystem,
         graphBuilder,
-        ruleFinder,
         cxxPlatform,
         staticLibraryName,
         compiledSources,

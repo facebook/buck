@@ -79,7 +79,6 @@ public class CxxCompilationDatabaseTest {
         CxxDescriptionEnhancer.createHeaderSymlinkTree(
             testBuildTarget,
             filesystem,
-            ruleFinder,
             graphBuilder,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableMap.of(),
@@ -90,7 +89,6 @@ public class CxxCompilationDatabaseTest {
         CxxDescriptionEnhancer.createHeaderSymlinkTree(
             testBuildTarget,
             filesystem,
-            ruleFinder,
             graphBuilder,
             CxxPlatformUtils.DEFAULT_PLATFORM,
             ImmutableMap.of(),

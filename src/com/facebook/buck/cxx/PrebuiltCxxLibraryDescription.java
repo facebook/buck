@@ -167,14 +167,12 @@ public class PrebuiltCxxLibraryDescription
   private static HeaderSymlinkTree createExportedHeaderSymlinkTreeBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       PrebuiltCxxLibraryDescriptionArg args) {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
-        ruleFinder,
         graphBuilder,
         cxxPlatform,
         parseExportedHeaders(buildTarget, graphBuilder, cxxPlatform, args),
@@ -188,16 +186,19 @@ public class PrebuiltCxxLibraryDescription
       CxxPlatform cxxPlatform,
       PrebuiltCxxLibraryDescriptionArg args) {
     ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     headers.putAll(
         CxxDescriptionEnhancer.parseOnlyHeaders(
-            buildTarget, ruleFinder, pathResolver, "exported_headers", args.getExportedHeaders()));
+            buildTarget,
+            graphBuilder.getSourcePathRuleFinder(),
+            pathResolver,
+            "exported_headers",
+            args.getExportedHeaders()));
     headers.putAll(
         CxxDescriptionEnhancer.parseOnlyPlatformHeaders(
             buildTarget,
             graphBuilder,
-            ruleFinder,
             pathResolver,
             cxxPlatform,
             "exported_headers",
@@ -220,8 +221,8 @@ public class PrebuiltCxxLibraryDescription
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       PrebuiltCxxLibraryDescriptionArg args) {
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     PrebuiltCxxLibraryPaths paths = getPaths(buildTarget, args);
 
     String soname = getSoname(buildTarget, cxxPlatform, args.getSoname());
@@ -254,7 +255,6 @@ public class PrebuiltCxxLibraryDescription
         projectFilesystem,
         graphBuilder,
         pathResolver,
-        ruleFinder,
         sharedTarget,
         Linker.LinkType.SHARED,
         Optional.of(soname),
@@ -394,12 +394,7 @@ public class PrebuiltCxxLibraryDescription
           platform.get().getValue().resolve(graphBuilder, buildTarget.getTargetConfiguration());
       if (type.get().getValue() == Type.EXPORTED_HEADERS) {
         return createExportedHeaderSymlinkTreeBuildRule(
-            buildTarget,
-            projectFilesystem,
-            new SourcePathRuleFinder(graphBuilder),
-            graphBuilder,
-            cxxPlatform,
-            args);
+            buildTarget, projectFilesystem, graphBuilder, cxxPlatform, args);
       } else if (type.get().getValue() == Type.SHARED) {
         return createSharedLibraryBuildRule(
             buildTarget,

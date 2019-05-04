@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -121,7 +120,6 @@ public class JavaTestDescription
             graphBuilder,
             args);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     CxxLibraryEnhancement cxxLibraryEnhancement =
         new CxxLibraryEnhancement(
             buildTarget,
@@ -130,7 +128,6 @@ public class JavaTestDescription
             args.getUseCxxLibraries(),
             args.getCxxLibraryWhitelist(),
             graphBuilder,
-            ruleFinder,
             getUnresolvedCxxPlatform(args)
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration()));
     params = cxxLibraryEnhancement.updatedParams;
@@ -257,12 +254,11 @@ public class JavaTestDescription
         Optional<Boolean> useCxxLibraries,
         ImmutableSet<BuildTarget> cxxLibraryWhitelist,
         ActionGraphBuilder graphBuilder,
-        SourcePathRuleFinder ruleFinder,
         CxxPlatform cxxPlatform) {
       if (useCxxLibraries.orElse(false)) {
         SymlinkTree nativeLibsSymlinkTree =
             buildNativeLibsSymlinkTreeRule(
-                buildTarget, projectFilesystem, graphBuilder, ruleFinder, params, cxxPlatform);
+                buildTarget, projectFilesystem, graphBuilder, params, cxxPlatform);
 
         // If the cxxLibraryWhitelist is present, remove symlinks that were not requested.
         // They could point to old, invalid versions of the library in question.
@@ -288,7 +284,7 @@ public class JavaTestDescription
                       .relativize(nativeLibsSymlinkTree.getRoot()),
                   filteredLinks.build(),
                   ImmutableMultimap.of(),
-                  ruleFinder);
+                  graphBuilder.getSourcePathRuleFinder());
         }
 
         graphBuilder.addToIndex(nativeLibsSymlinkTree);
@@ -302,7 +298,9 @@ public class JavaTestDescription
                     // (2) They affect the JavaTest's RuleKey, so changing them will invalidate
                     // the test results cache.
                     .addAll(
-                        ruleFinder.filterBuildRuleInputs(nativeLibsSymlinkTree.getLinks().values()))
+                        graphBuilder
+                            .getSourcePathRuleFinder()
+                            .filterBuildRuleInputs(nativeLibsSymlinkTree.getLinks().values()))
                     .build());
         nativeLibsEnvironment =
             ImmutableMap.of(
@@ -321,7 +319,6 @@ public class JavaTestDescription
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         ActionGraphBuilder graphBuilder,
-        SourcePathRuleFinder ruleFinder,
         BuildRuleParams buildRuleParams,
         CxxPlatform cxxPlatform) {
       // TODO(cjhopman): The behavior of this doesn't really make sense. This should use a
@@ -331,7 +328,6 @@ public class JavaTestDescription
           buildTarget,
           projectFilesystem,
           graphBuilder,
-          ruleFinder,
           cxxPlatform,
           buildRuleParams.getBuildDeps(),
           r ->

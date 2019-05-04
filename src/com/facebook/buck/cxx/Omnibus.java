@@ -246,7 +246,6 @@ public class Omnibus {
       ProjectFilesystem projectFilesystem,
       CellPathResolver cellPathResolver,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags) {
@@ -259,7 +258,6 @@ public class Omnibus {
                 cxxPlatform,
                 projectFilesystem,
                 graphBuilder,
-                ruleFinder,
                 dummyOmnibusTarget,
                 BuildTargetPaths.getGenPath(projectFilesystem, dummyOmnibusTarget, "%s")
                     .resolve(omnibusSoname),
@@ -383,7 +381,6 @@ public class Omnibus {
                   cxxPlatform,
                   projectFilesystem,
                   graphBuilder,
-                  ruleFinder,
                   rootTarget,
                   output.orElse(
                       BuildTargetPaths.getGenPath(projectFilesystem, rootTarget, "%s")
@@ -410,7 +407,6 @@ public class Omnibus {
                   cxxPlatform,
                   projectFilesystem,
                   graphBuilder,
-                  ruleFinder,
                   rootTarget,
                   output.orElse(
                       BuildTargetPaths.getGenPath(projectFilesystem, rootTarget, "%s")
@@ -618,7 +614,6 @@ public class Omnibus {
                 cxxPlatform,
                 projectFilesystem,
                 graphBuilder,
-                ruleFinder,
                 omnibusTarget,
                 BuildTargetPaths.getGenPath(projectFilesystem, omnibusTarget, "%s")
                     .resolve(omnibusSoname),
@@ -669,7 +664,6 @@ public class Omnibus {
             projectFilesystem,
             cellPathResolver,
             graphBuilder,
-            ruleFinder,
             cxxBuckConfig,
             cxxPlatform,
             extraOmnibusLdflags);

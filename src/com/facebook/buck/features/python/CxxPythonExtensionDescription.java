@@ -158,7 +158,6 @@ public class CxxPythonExtensionDescription
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       CxxPythonExtensionDescriptionArg args,
@@ -170,7 +169,7 @@ public class CxxPythonExtensionDescription
             target, graphBuilder, pathResolver, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
-            target, graphBuilder, ruleFinder, pathResolver, Optional.of(cxxPlatform), args);
+            target, graphBuilder, pathResolver, Optional.of(cxxPlatform), args);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
@@ -178,7 +177,6 @@ public class CxxPythonExtensionDescription
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             target,
             projectFilesystem,
-            ruleFinder,
             graphBuilder,
             cxxPlatform,
             headers,
@@ -228,7 +226,7 @@ public class CxxPythonExtensionDescription
             target,
             graphBuilder,
             pathResolver,
-            ruleFinder,
+            graphBuilder.getSourcePathRuleFinder(),
             cxxBuckConfig,
             cxxPlatform,
             cxxPreprocessorInput,
@@ -244,7 +242,6 @@ public class CxxPythonExtensionDescription
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       CxxPythonExtensionDescriptionArg args,
@@ -279,7 +276,6 @@ public class CxxPythonExtensionDescription
             projectFilesystem,
             graphBuilder,
             pathResolver,
-            ruleFinder,
             cellRoots,
             cxxPlatform,
             args,
@@ -322,8 +318,8 @@ public class CxxPythonExtensionDescription
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       CxxPythonExtensionDescriptionArg args) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     String moduleName = args.getModuleName().orElse(buildTarget.getShortName());
     String extensionName = getExtensionName(moduleName);
     Path extensionPath =
@@ -340,7 +336,6 @@ public class CxxPythonExtensionDescription
         projectFilesystem,
         graphBuilder,
         pathResolver,
-        ruleFinder,
         getExtensionTarget(buildTarget, pythonPlatform.getFlavor(), cxxPlatform.getFlavor()),
         Linker.LinkType.SHARED,
         Optional.of(extensionName),
@@ -360,7 +355,6 @@ public class CxxPythonExtensionDescription
                     projectFilesystem,
                     graphBuilder,
                     pathResolver,
-                    ruleFinder,
                     cellRoots,
                     cxxPlatform,
                     args,
@@ -380,8 +374,8 @@ public class CxxPythonExtensionDescription
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       CxxPythonExtensionDescriptionArg args) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     ImmutableSet<BuildRule> deps = getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args);
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
         requireCxxObjects(
@@ -389,7 +383,6 @@ public class CxxPythonExtensionDescription
             projectFilesystem,
             graphBuilder,
             pathResolver,
-            ruleFinder,
             cellRoots,
             cxxPlatform,
             args,
@@ -548,7 +541,6 @@ public class CxxPythonExtensionDescription
                         projectFilesystem,
                         graphBuilder,
                         pathResolver,
-                        ruleFinder,
                         cellRoots,
                         cxxPlatform,
                         args,

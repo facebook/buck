@@ -112,7 +112,6 @@ public class CxxLuaExtensionDescription
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
       LuaPlatform luaPlatform,
       CxxLuaExtensionDescriptionArg args) {
@@ -125,7 +124,7 @@ public class CxxLuaExtensionDescription
             buildTarget, graphBuilder, pathResolver, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
-            buildTarget, graphBuilder, ruleFinder, pathResolver, Optional.of(cxxPlatform), args);
+            buildTarget, graphBuilder, pathResolver, Optional.of(cxxPlatform), args);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
@@ -133,7 +132,6 @@ public class CxxLuaExtensionDescription
         CxxDescriptionEnhancer.requireHeaderSymlinkTree(
             buildTarget,
             projectFilesystem,
-            ruleFinder,
             graphBuilder,
             cxxPlatform,
             headers,
@@ -191,7 +189,7 @@ public class CxxLuaExtensionDescription
                 buildTarget,
                 graphBuilder,
                 pathResolver,
-                ruleFinder,
+                graphBuilder.getSourcePathRuleFinder(),
                 cxxBuckConfig,
                 cxxPlatform,
                 cxxPreprocessorInput,
@@ -225,8 +223,8 @@ public class CxxLuaExtensionDescription
       LuaPlatform luaPlatform,
       CxxLuaExtensionDescriptionArg args) {
     CxxPlatform cxxPlatform = luaPlatform.getCxxPlatform();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     String extensionName = getExtensionName(buildTarget, cxxPlatform);
     Path extensionPath = getExtensionPath(projectFilesystem, buildTarget, cxxPlatform);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
@@ -235,7 +233,6 @@ public class CxxLuaExtensionDescription
         projectFilesystem,
         graphBuilder,
         pathResolver,
-        ruleFinder,
         getExtensionTarget(buildTarget, cxxPlatform.getFlavor()),
         Linker.LinkType.SHARED,
         Optional.of(extensionName),
@@ -261,7 +258,6 @@ public class CxxLuaExtensionDescription
                     projectFilesystem,
                     graphBuilder,
                     pathResolver,
-                    ruleFinder,
                     cellRoots,
                     luaPlatform,
                     args))
@@ -340,7 +336,6 @@ public class CxxLuaExtensionDescription
                     projectFilesystem,
                     graphBuilder,
                     pathResolver,
-                    ruleFinder,
                     cellRoots,
                     luaPlatforms.getValue(cxxPlatform.getFlavor()),
                     args))
