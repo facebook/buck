@@ -16,6 +16,8 @@
 package com.facebook.buck.core.graph.transformation.composition;
 
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
+import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
+import com.facebook.buck.core.graph.transformation.impl.NoOpGraphEngineCache;
 import com.facebook.buck.core.graph.transformation.model.ComposedComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComposedKey;
 import com.facebook.buck.core.graph.transformation.model.ComposedResult;
@@ -70,5 +72,10 @@ class ComposedWrapperComputation<Key1 extends ComputeKey<Result>, Result extends
   public ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverPreliminaryDeps(
       ComposedKey<Key1, Result> key) {
     return ImmutableSet.of(key.getOriginKey());
+  }
+
+  @Override
+  public GraphComputationStage<ComposedKey<Key1, Result>, ComposedResult<Result>> asStage() {
+    return new GraphComputationStage<>(this, new NoOpGraphEngineCache<>());
   }
 }

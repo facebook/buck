@@ -17,6 +17,7 @@ package com.facebook.buck.core.graph.transformation.composition;
 
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
+import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
 import com.facebook.buck.core.graph.transformation.model.ComposedComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComposedKey;
 import com.facebook.buck.core.graph.transformation.model.ComposedResult;
@@ -60,4 +61,10 @@ public interface ComposedComputation<
   @Override
   ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverPreliminaryDeps(
       ComposedKey<Key1, Result2> key);
+
+  /**
+   * @return a non caching {@link GraphComputationStage} for registering this computation with the
+   *     {@link com.facebook.buck.core.graph.transformation.GraphTransformationEngine}
+   */
+  GraphComputationStage<ComposedKey<Key1, Result2>, ComposedResult<Result2>> asStage();
 }
