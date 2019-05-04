@@ -137,7 +137,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
               depsBuilder.addAll(
                   graphBuilder.getAllRules(
                       ((HasRuntimeDeps) rule)
-                          .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
+                          .getRuntimeDeps(graphBuilder)
                           .collect(Collectors.toList())));
             }
             return depsBuilder.build();

@@ -379,8 +379,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
 
     // Collect any runtime deps we have into a list of futures.
-    Stream<BuildTarget> runtimeDepPaths =
-        ((HasRuntimeDeps) rule).getRuntimeDeps(resolver.getSourcePathRuleFinder());
+    Stream<BuildTarget> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps(resolver);
     List<ListenableFuture<BuildResult>> runtimeDepResults = new ArrayList<>();
     ImmutableSet<BuildRule> runtimeDeps =
         resolver.getAllRules(runtimeDepPaths.collect(ImmutableSet.toImmutableSet()));

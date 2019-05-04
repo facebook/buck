@@ -72,9 +72,7 @@ public class UnskippedRulesTracker {
     if (rule instanceof HasRuntimeDeps) {
       // Add references to rule's runtime deps since they cannot be skipped now.
       ruleResolver
-          .getAllRules(
-              ((HasRuntimeDeps) rule).getRuntimeDeps(ruleResolver.getSourcePathRuleFinder())
-                  ::iterator)
+          .getAllRules(((HasRuntimeDeps) rule).getRuntimeDeps(ruleResolver)::iterator)
           .forEach(this::acquireReference);
     }
 

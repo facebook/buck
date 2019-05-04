@@ -216,7 +216,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
                   // reflect reality.
                   if (node instanceof HasRuntimeDeps) {
                     ((HasRuntimeDeps) node)
-                        .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
+                        .getRuntimeDeps(graphBuilder)
                         .map(graphBuilder::getRule)
                         .forEach(depsBuilder::add);
                   }

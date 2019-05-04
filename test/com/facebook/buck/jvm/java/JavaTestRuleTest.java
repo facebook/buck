@@ -129,8 +129,7 @@ public class JavaTestRuleTest {
             .build(graphBuilder);
 
     assertThat(
-        rule.getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
-            .collect(ImmutableSet.toImmutableSet()),
+        rule.getRuntimeDeps(graphBuilder).collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItems(
             rule.getCompiledTestsLibrary().getBuildTarget(),
             firstOrderDep.getBuildTarget(),

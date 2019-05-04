@@ -59,7 +59,6 @@ public class DefaultRuleDepsCache implements RuleDepsCache {
     }
 
     return resolver.getAllRules(
-        RichStream.from(((HasRuntimeDeps) rule).getRuntimeDeps(resolver.getSourcePathRuleFinder()))
-            .toOnceIterable());
+        RichStream.from(((HasRuntimeDeps) rule).getRuntimeDeps(resolver)).toOnceIterable());
   }
 }

@@ -106,15 +106,14 @@ public class BuildRules {
     ImmutableSet.Builder<BuildTarget> runtimeDeps = ImmutableSet.builder();
     AbstractBreadthFirstTraversal<BuildTarget> visitor =
         new AbstractBreadthFirstTraversal<BuildTarget>(
-            rule.getRuntimeDeps(resolver.getSourcePathRuleFinder())
-                .collect(ImmutableSet.toImmutableSet())) {
+            rule.getRuntimeDeps(resolver).collect(ImmutableSet.toImmutableSet())) {
           @Override
           public Iterable<BuildTarget> visit(BuildTarget runtimeDep) {
             runtimeDeps.add(runtimeDep);
             Optional<BuildRule> rule = resolver.getRuleOptional(runtimeDep);
             if (rule.isPresent() && rule.get() instanceof HasRuntimeDeps) {
               return ((HasRuntimeDeps) rule.get())
-                  .getRuntimeDeps(resolver.getSourcePathRuleFinder())
+                  .getRuntimeDeps(resolver)
                   .collect(ImmutableSet.toImmutableSet());
             }
             return ImmutableSet.of();

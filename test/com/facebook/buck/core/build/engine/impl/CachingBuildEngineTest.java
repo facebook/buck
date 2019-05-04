@@ -87,6 +87,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
@@ -4376,7 +4377,7 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+    public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
       return runtimeDeps.stream().map(BuildRule::getBuildTarget);
     }
   }

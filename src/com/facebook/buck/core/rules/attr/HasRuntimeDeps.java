@@ -18,7 +18,7 @@ package com.facebook.buck.core.rules.attr;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import java.util.stream.Stream;
 
 /**
@@ -38,5 +38,5 @@ import java.util.stream.Stream;
  * the future.
  */
 public interface HasRuntimeDeps extends BuildRule {
-  Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder);
+  Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver);
 }

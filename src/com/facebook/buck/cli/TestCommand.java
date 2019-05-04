@@ -631,11 +631,7 @@ public class TestCommand extends BuildCommand {
                   .filter(HasRuntimeDeps.class::isInstance)
                   .map(HasRuntimeDeps.class::cast)
                   .flatMap(
-                      rule ->
-                          rule.getRuntimeDeps(
-                              actionGraphAndBuilder
-                                  .getActionGraphBuilder()
-                                  .getSourcePathRuleFinder()))
+                      rule -> rule.getRuntimeDeps(actionGraphAndBuilder.getActionGraphBuilder()))
                   .concat(RichStream.from(testRules).map(TestRule::getBuildTarget))
                   .toImmutableList();
           ExitCode exitCode =

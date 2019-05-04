@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -105,16 +104,15 @@ public class AuditActionGraphCommand extends AbstractCommand {
           params
               .getActionGraphProvider()
               .getActionGraph(targetGraphAndBuildTargets.getTargetGraph());
-      SourcePathRuleFinder ruleFinder =
-          actionGraphAndBuilder.getActionGraphBuilder().getSourcePathRuleFinder();
-      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+      SourcePathResolver pathResolver =
+          DefaultSourcePathResolver.from(
+              actionGraphAndBuilder.getActionGraphBuilder().getSourcePathRuleFinder());
 
       // Dump the action graph.
       if (generateDotOutput) {
         dumpAsDot(
             actionGraphAndBuilder.getActionGraph(),
             actionGraphAndBuilder.getActionGraphBuilder(),
-            ruleFinder,
             includeRuntimeDeps,
             nodeView,
             params.getConsole().getStdOut());
@@ -122,7 +120,6 @@ public class AuditActionGraphCommand extends AbstractCommand {
         dumpAsJson(
             actionGraphAndBuilder.getActionGraph(),
             actionGraphAndBuilder.getActionGraphBuilder(),
-            ruleFinder,
             pathResolver,
             includeRuntimeDeps,
             nodeView,
@@ -157,7 +154,6 @@ public class AuditActionGraphCommand extends AbstractCommand {
   private static void dumpAsJson(
       ActionGraph graph,
       ActionGraphBuilder actionGraphBuilder,
-      SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       boolean includeRuntimeDeps,
       NodeView nodeView,
@@ -170,7 +166,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
       json.writeStartArray();
       for (BuildRule node : graph.getNodes()) {
         writeJsonObjectForBuildRule(
-            json, node, actionGraphBuilder, ruleFinder, pathResolver, includeRuntimeDeps, nodeView);
+            json, node, actionGraphBuilder, pathResolver, includeRuntimeDeps, nodeView);
       }
       json.writeEndArray();
     }
@@ -180,7 +176,6 @@ public class AuditActionGraphCommand extends AbstractCommand {
       JsonGenerator json,
       BuildRule node,
       ActionGraphBuilder actionGraphBuilder,
-      SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       boolean includeRuntimeDeps,
       NodeView nodeView)
@@ -196,7 +191,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
       json.writeEndArray();
       if (includeRuntimeDeps) {
         json.writeArrayFieldStart("runtimeDeps");
-        for (BuildRule dep : getRuntimeDeps(node, actionGraphBuilder, ruleFinder)) {
+        for (BuildRule dep : getRuntimeDeps(node, actionGraphBuilder)) {
           json.writeString(dep.getFullyQualifiedName());
         }
         json.writeEndArray();
@@ -220,7 +215,6 @@ public class AuditActionGraphCommand extends AbstractCommand {
   private static void dumpAsDot(
       ActionGraph graph,
       ActionGraphBuilder actionGraphBuilder,
-      SourcePathRuleFinder ruleFinder,
       boolean includeRuntimeDeps,
       NodeView nodeView,
       DirtyPrintStreamDecorator out)
@@ -233,8 +227,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
           .getNodes()
           .forEach(
               from ->
-                  getRuntimeDeps(from, actionGraphBuilder, ruleFinder)
-                      .forEach(to -> dag.addEdge(from, to)));
+                  getRuntimeDeps(from, actionGraphBuilder).forEach(to -> dag.addEdge(from, to)));
     }
     Dot.Builder<BuildRule> builder =
         Dot.builder(new DirectedAcyclicGraph<>(dag), "action_graph")
@@ -259,11 +252,12 @@ public class AuditActionGraphCommand extends AbstractCommand {
   }
 
   private static SortedSet<BuildRule> getRuntimeDeps(
-      BuildRule buildRule, ActionGraphBuilder actionGraphBuilder, SourcePathRuleFinder ruleFinder) {
+      BuildRule buildRule, ActionGraphBuilder actionGraphBuilder) {
     if (!(buildRule instanceof HasRuntimeDeps)) {
       return ImmutableSortedSet.of();
     }
     return actionGraphBuilder.getAllRules(
-        RichStream.from(((HasRuntimeDeps) buildRule).getRuntimeDeps(ruleFinder)).toOnceIterable());
+        RichStream.from(((HasRuntimeDeps) buildRule).getRuntimeDeps(actionGraphBuilder))
+            .toOnceIterable());
   }
 }

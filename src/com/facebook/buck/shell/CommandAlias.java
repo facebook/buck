@@ -20,6 +20,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.common.BuildableSupport;
@@ -105,16 +106,17 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     Stream<BuildTarget> deps =
         Stream.of(
                 exe != null ? Stream.of(exe) : Stream.<BuildRule>empty(),
-                extractDepsFromArgs(args.stream(), ruleFinder),
-                extractDepsFromArgs(env.values().stream(), ruleFinder))
+                extractDepsFromArgs(args.stream(), buildRuleResolver.getSourcePathRuleFinder()),
+                extractDepsFromArgs(
+                    env.values().stream(), buildRuleResolver.getSourcePathRuleFinder()))
             .flatMap(Function.identity())
             .map(BuildRule::getBuildTarget);
     return exe instanceof HasRuntimeDeps
-        ? Stream.concat(deps, ((HasRuntimeDeps) exe).getRuntimeDeps(ruleFinder))
+        ? Stream.concat(deps, ((HasRuntimeDeps) exe).getRuntimeDeps(buildRuleResolver))
         : deps;
   }
 

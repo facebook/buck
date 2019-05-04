@@ -139,7 +139,7 @@ public class JsBundleGenruleDescriptionTest {
   public void underlyingJsBundleIsARuntimeDep() {
     assertArrayEquals(
         new BuildTarget[] {defaultBundleTarget},
-        setup.genrule().getRuntimeDeps(setup.graphBuilder().getSourcePathRuleFinder()).toArray());
+        setup.genrule().getRuntimeDeps(setup.graphBuilder()).toArray());
   }
 
   @Test

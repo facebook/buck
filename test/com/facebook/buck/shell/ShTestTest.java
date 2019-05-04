@@ -63,9 +63,7 @@ public class ShTestTest {
             /* contacts */ ImmutableSet.of());
 
     assertThat(
-        shTest
-            .getRuntimeDeps(resolver.getSourcePathRuleFinder())
-            .collect(ImmutableSet.toImmutableSet()),
+        shTest.getRuntimeDeps(resolver).collect(ImmutableSet.toImmutableSet()),
         containsInAnyOrder(dep.getBuildTarget(), extraDep.getBuildTarget()));
   }
 }

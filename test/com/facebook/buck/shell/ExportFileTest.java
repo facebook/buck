@@ -322,9 +322,7 @@ public class ExportFileTest {
 
     assertEquals(
         ImmutableList.of(genrule.getBuildTarget()),
-        exportFile
-            .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
-            .collect(Collectors.toList()));
+        exportFile.getRuntimeDeps(graphBuilder).collect(Collectors.toList()));
   }
 
   @Test

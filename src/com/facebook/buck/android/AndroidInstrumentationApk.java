@@ -22,6 +22,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -111,7 +112,8 @@ public class AndroidInstrumentationApk extends AndroidBinary {
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-    return RichStream.of(apkUnderTest.getBuildTarget()).concat(super.getRuntimeDeps(ruleFinder));
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
+    return RichStream.of(apkUnderTest.getBuildTarget())
+        .concat(super.getRuntimeDeps(buildRuleResolver));
   }
 }

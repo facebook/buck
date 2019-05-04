@@ -234,13 +234,14 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   // a {@link PythonBinary} rule, which is the actual test binary.  Therefore, we *need* this
   // rule around to run this test, so model this via the {@link HasRuntimeDeps} interface.
   @Override
-  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return RichStream.<BuildTarget>empty()
         .concat(originalDeclaredDeps.get().stream().map(BuildRule::getBuildTarget))
         .concat(originalExtraDeps.get().stream().map(BuildRule::getBuildTarget))
-        .concat(binary.getRuntimeDeps(ruleFinder))
+        .concat(binary.getRuntimeDeps(buildRuleResolver))
         .concat(
-            BuildableSupport.getDeps(binary.getExecutableCommand(), ruleFinder)
+            BuildableSupport.getDeps(
+                    binary.getExecutableCommand(), buildRuleResolver.getSourcePathRuleFinder())
                 .map(BuildRule::getBuildTarget));
   }
 

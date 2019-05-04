@@ -154,9 +154,7 @@ public class CxxCompilationDatabaseTest {
     graphBuilder.addToIndex(compilationDatabase);
 
     assertThat(
-        compilationDatabase
-            .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
-            .collect(ImmutableSet.toImmutableSet()),
+        compilationDatabase.getRuntimeDeps(graphBuilder).collect(ImmutableSet.toImmutableSet()),
         Matchers.contains(aggregatedDeps));
 
     assertEquals(

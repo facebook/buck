@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.common.BuildableSupport;
@@ -168,11 +169,12 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return RichStream.<BuildTarget>empty()
-        .concat(super.getRuntimeDeps(ruleFinder))
+        .concat(super.getRuntimeDeps(buildRuleResolver))
         .concat(
-            BuildableSupport.getDeps(pathToPexExecuter, ruleFinder).map(BuildRule::getBuildTarget));
+            BuildableSupport.getDeps(pathToPexExecuter, buildRuleResolver.getSourcePathRuleFinder())
+                .map(BuildRule::getBuildTarget));
   }
 
   @Override

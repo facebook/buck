@@ -424,7 +424,7 @@ public class PythonTestDescription
         additionalCoverageTargets.isEmpty()
             ? ImmutableSortedSet.of()
             : binary
-                .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
+                .getRuntimeDeps(graphBuilder)
                 .filter(
                     target -> additionalCoverageTargets.contains(target.getUnflavoredBuildTarget()))
                 .map(target -> DefaultBuildTargetSourcePath.of(target))

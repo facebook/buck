@@ -29,7 +29,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -238,7 +238,7 @@ public class UnskippedRulesTrackerTest {
     }
 
     @Override
-    public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+    public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
       return runtimeDeps.stream().map(BuildRule::getBuildTarget);
     }
   }

@@ -22,7 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
@@ -165,9 +165,10 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   // This rule just delegates to the output of the `CxxLink` rule and so needs that available at
   // runtime.  Model this via `HasRuntimeDeps`.
   @Override
-  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return Stream.concat(
-            getDeclaredDeps().stream(), BuildableSupport.getDeps(executable, ruleFinder))
+            getDeclaredDeps().stream(),
+            BuildableSupport.getDeps(executable, buildRuleResolver.getSourcePathRuleFinder()))
         .map(BuildRule::getBuildTarget);
   }
 

@@ -317,9 +317,7 @@ public class LuaBinaryDescriptionTest {
     pythonLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
     LuaBinary luaBinary = luaBinaryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
-        luaBinary
-            .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
-            .collect(ImmutableSet.toImmutableSet()),
+        luaBinary.getRuntimeDeps(graphBuilder).collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItem(PythonBinaryDescription.getEmptyInitTarget(luaBinary.getBuildTarget())));
   }
 

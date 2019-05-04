@@ -426,9 +426,7 @@ public class RobolectricTestRuleTest {
     BuildRule assetsGenRule = graphBuilder.requireRule(assetsGenRuleTarget);
 
     assertThat(
-        robolectricTest
-            .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
-            .collect(ImmutableSet.toImmutableSet()),
+        robolectricTest.getRuntimeDeps(graphBuilder).collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItems(resGenRule.getBuildTarget(), assetsGenRule.getBuildTarget()));
   }
 }

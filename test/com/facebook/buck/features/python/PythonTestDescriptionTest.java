@@ -318,9 +318,7 @@ public class PythonTestDescriptionTest {
     ShBinary pexExecutor = pexExecutorBuilder.build(graphBuilder);
     PythonTest binary = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
-        binary
-            .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
-            .collect(ImmutableSet.toImmutableSet()),
+        binary.getRuntimeDeps(graphBuilder).collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItem(pexExecutor.getBuildTarget()));
   }
 

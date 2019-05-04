@@ -497,7 +497,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     // We export all declared deps as runtime deps, to setup a transitive runtime dep chain which
     // will pull in runtime deps (e.g. other binaries) or transitive C/C++ libraries.  Since the
     // `CxxLibrary` rules themselves are noop meta rules, they shouldn't add any unnecessary
@@ -507,7 +507,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
         // holding, since we need to access nodes already created by the previous build rule
         // ruleFinder in the incremental action graph scenario, and {@see #updateBuildRuleResolver}
         // may already have been called.
-        .concat(exportedDeps.getForAllPlatforms(ruleFinder.getRuleResolver()).stream())
+        .concat(exportedDeps.getForAllPlatforms(buildRuleResolver).stream())
         .map(BuildRule::getBuildTarget);
   }
 

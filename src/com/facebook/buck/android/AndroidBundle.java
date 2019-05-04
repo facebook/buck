@@ -33,6 +33,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.attr.HasInstallHelpers;
@@ -384,9 +385,11 @@ public class AndroidBundle extends AbstractBuildRule
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return RichStream.from(moduleVerification)
         .map(BuildRule::getBuildTarget)
-        .concat(HasInstallableApkSupport.getRuntimeDepsForInstallableApk(this, ruleFinder));
+        .concat(
+            HasInstallableApkSupport.getRuntimeDepsForInstallableApk(
+                this, buildRuleResolver.getSourcePathRuleFinder()));
   }
 }

@@ -1162,9 +1162,7 @@ public class CxxLibraryDescriptionTest {
     cxxBinaryBuilder.build(graphBuilder, filesystem);
     CxxLibrary cxxLibrary = (CxxLibrary) cxxLibraryBuilder.build(graphBuilder, filesystem);
     assertThat(
-        cxxLibrary
-            .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
-            .collect(ImmutableSet.toImmutableSet()),
+        cxxLibrary.getRuntimeDeps(graphBuilder).collect(ImmutableSet.toImmutableSet()),
         hasItem(cxxBinaryBuilder.getTarget()));
   }
 

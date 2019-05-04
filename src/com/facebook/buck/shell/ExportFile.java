@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.HasOutputName;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
@@ -208,10 +209,10 @@ public class ExportFile extends AbstractBuildRule
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     // When using reference mode, we need to make sure that any build rule that builds the source
     // is built when we are, so accomplish this by exporting it as a runtime dep.
-    Optional<BuildRule> rule = ruleFinder.getRule(src);
+    Optional<BuildRule> rule = buildRuleResolver.getSourcePathRuleFinder().getRule(src);
     return mode == ExportFileDescription.Mode.REFERENCE
         ? RichStream.from(rule).map(BuildRule::getBuildTarget)
         : Stream.empty();

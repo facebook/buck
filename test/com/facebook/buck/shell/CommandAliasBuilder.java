@@ -228,7 +228,7 @@ public class CommandAliasBuilder
     }
 
     public Iterable<BuildTarget> getRuntimeDeps() {
-      return commandAlias.getRuntimeDeps(ruleFinder).collect(ImmutableList.toImmutableList());
+      return commandAlias.getRuntimeDeps(graphBuilder).collect(ImmutableList.toImmutableList());
     }
   }
 }

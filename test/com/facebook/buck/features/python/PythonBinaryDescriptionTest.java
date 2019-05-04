@@ -807,9 +807,7 @@ public class PythonBinaryDescriptionTest {
             .setPackageStyle(PythonBuckConfig.PackageStyle.STANDALONE)
             .build(graphBuilder);
     assertThat(
-        standaloneBinary
-            .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
-            .collect(ImmutableSet.toImmutableSet()),
+        standaloneBinary.getRuntimeDeps(graphBuilder).collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItem(pyTool.getBuildTarget()));
   }
 

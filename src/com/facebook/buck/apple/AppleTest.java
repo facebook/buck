@@ -26,7 +26,7 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
@@ -489,14 +489,14 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   // This test rule just executes the test bundle, so we need it available locally.
   @Override
-  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return Stream.concat(
         Stream.concat(
                 Stream.of(testBundle),
                 Stream.concat(Optionals.toStream(testHostApp), Optionals.toStream(uiTestTargetApp)))
             .map(BuildRule::getBuildTarget),
         Optionals.toStream(xctool)
-            .map(ruleFinder::filterBuildRuleInputs)
+            .map(buildRuleResolver.getSourcePathRuleFinder()::filterBuildRuleInputs)
             .flatMap(ImmutableSet::stream)
             .map(BuildRule::getBuildTarget));
   }

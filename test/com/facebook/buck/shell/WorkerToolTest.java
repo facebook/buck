@@ -117,9 +117,7 @@ public class WorkerToolTest {
         Matchers.hasItem(exportFileRule.getBuildTarget()));
     assertThat(workerToolRule.getBuildDeps(), Matchers.hasItems(shBinaryRule, exportFileRule));
     assertThat(
-        workerToolRule
-            .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
-            .collect(ImmutableSet.toImmutableSet()),
+        workerToolRule.getRuntimeDeps(graphBuilder).collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItems(shBinaryRule.getBuildTarget(), exportFileRule.getBuildTarget()));
     assertThat(
         Joiner.on(' ')
@@ -159,9 +157,7 @@ public class WorkerToolTest {
         Matchers.hasItem(exportFileRule.getBuildTarget()));
     assertThat(workerToolRule.getBuildDeps(), Matchers.hasItems(shBinaryRule, exportFileRule));
     assertThat(
-        workerToolRule
-            .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
-            .collect(ImmutableSet.toImmutableSet()),
+        workerToolRule.getRuntimeDeps(graphBuilder).collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItems(shBinaryRule.getBuildTarget(), exportFileRule.getBuildTarget()));
     assertThat(
         workerToolRule.getWorkerTool().getTool().getEnvironment(pathResolver),
