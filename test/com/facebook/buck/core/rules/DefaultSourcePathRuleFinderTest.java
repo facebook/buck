@@ -34,7 +34,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import org.junit.Test;
 
-public class SourcePathRuleFinderTest {
+public class DefaultSourcePathRuleFinderTest {
   @Test
   public void getRuleCanGetRuleOfBuildTargetSoucePath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
@@ -50,7 +50,7 @@ public class SourcePathRuleFinderTest {
   @Test
   public void getRuleCannotGetRuleOfPathSoucePath() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new DefaultSourcePathRuleFinder(new TestActionGraphBuilder());
     SourcePath sourcePath = PathSourcePath.of(projectFilesystem, Paths.get("foo"));
 
     assertEquals(Optional.empty(), ruleFinder.getRule(sourcePath));

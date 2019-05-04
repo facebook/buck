@@ -29,7 +29,7 @@ public abstract class AbstractBuildRuleResolver implements BuildRuleResolver {
   private final SourcePathRuleFinder sourcePathRuleFinder;
 
   protected AbstractBuildRuleResolver() {
-    sourcePathRuleFinder = new SourcePathRuleFinder(this);
+    sourcePathRuleFinder = new DefaultSourcePathRuleFinder(this);
   }
 
   @Override

@@ -18,60 +18,29 @@ package com.facebook.buck.core.rules;
 
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.util.Optionals;
-import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSet;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class SourcePathRuleFinder {
+public interface SourcePathRuleFinder {
 
-  private final BuildRuleResolver ruleResolver;
+  BuildRuleResolver getRuleResolver();
 
-  SourcePathRuleFinder(BuildRuleResolver ruleResolver) {
-    this.ruleResolver = ruleResolver;
-  }
+  ImmutableSet<BuildRule> filterBuildRuleInputs(Iterable<? extends SourcePath> sources);
 
-  public BuildRuleResolver getRuleResolver() {
-    return ruleResolver;
-  }
+  ImmutableSet<BuildRule> filterBuildRuleInputs(SourcePath... sources);
 
-  public ImmutableSet<BuildRule> filterBuildRuleInputs(Iterable<? extends SourcePath> sources) {
-    return RichStream.from(sources)
-        .map(this::getRule)
-        .filter(Optional::isPresent)
-        .map(Optional::get)
-        .collect(ImmutableSet.toImmutableSet());
-  }
+  Stream<BuildRule> filterBuildRuleInputs(Stream<SourcePath> sources);
 
-  public ImmutableSet<BuildRule> filterBuildRuleInputs(SourcePath... sources) {
-    return filterBuildRuleInputs(Arrays.asList(sources));
-  }
-
-  public Stream<BuildRule> filterBuildRuleInputs(Stream<SourcePath> sources) {
-    return sources.map(this::getRule).filter(Optional::isPresent).map(Optional::get);
-  }
-
-  public Stream<BuildRule> filterBuildRuleInputs(Optional<SourcePath> sourcePath) {
-    return filterBuildRuleInputs(Optionals.toStream(sourcePath));
-  }
+  Stream<BuildRule> filterBuildRuleInputs(Optional<SourcePath> sourcePath);
 
   /**
    * @return An {@link Optional} containing the {@link BuildRule} whose output {@code sourcePath}
    *     refers to, or {@code absent} if {@code sourcePath} doesn't refer to the output of a {@link
    *     BuildRule}.
    */
-  public Optional<BuildRule> getRule(SourcePath sourcePath) {
-    if (sourcePath instanceof BuildTargetSourcePath) {
-      return Optional.of(getRule((BuildTargetSourcePath) sourcePath));
-    } else {
-      return Optional.empty();
-    }
-  }
+  Optional<BuildRule> getRule(SourcePath sourcePath);
 
   /** @return The {@link BuildRule} whose output {@code sourcePath} refers to its output. */
-  public BuildRule getRule(BuildTargetSourcePath sourcePath) {
-    return ruleResolver.getRule(sourcePath.getTarget());
-  }
+  BuildRule getRule(BuildTargetSourcePath sourcePath);
 }
