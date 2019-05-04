@@ -1,10 +1,10 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 java_immutables_library(
-    name = "model",
+    name = "composition",
     srcs = glob(["*.java"]),
-    tests = [
-        "//test/com/facebook/buck/core/graph/transformation/model:model",
+    exported_deps = [
+        "//src/com/facebook/buck/core/graph/transformation:transformation",
     ],
     visibility = ["PUBLIC"],
     deps = [
