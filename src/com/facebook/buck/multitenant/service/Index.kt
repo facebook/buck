@@ -179,24 +179,25 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
     }
 
     /**
-     * @param indexReadLock caller is responsible for ensuring this lock is still held, i.e., that
-     * `close()` has not been invoked.
+     * Note this method does not take an [IndexReadLock] because it does its own synchronization
+     * internally.
+     *
      * @param commit at which to enumerate all build targets
      */
-    fun getTargets(indexReadLock: IndexReadLock, commit: Commit): List<UnconfiguredBuildTarget> {
-        checkReadLock(indexReadLock)
-        val targetIds: MutableList<BuildTargetId> = mutableListOf()
-
-        rwLock.readLock().withLock {
+    fun getTargets(commit: Commit): List<UnconfiguredBuildTarget> {
+        val pairs = rwLock.readLock().withLock {
             val generation = requireNotNull(commitToGeneration[commit]) {
                 "No generation found for $commit"
             }
-            ruleMap.getAllInfoValuePairsForGeneration(generation).mapTo(targetIds) { it.first }
+            ruleMap.getAllInfoValuePairsForGeneration(generation)
         }
 
         // Note that we release the read lock before making a bunch of requests to the
-        // buildTargetCache.
-        return targetIds.map { buildTargetCache.getByIndex(it) }
+        // buildTargetCache. As this is going to do a LOT of lookups to the buildTargetCache, we
+        // should probably see whether we can do some sort of "multi-get" operation that requires
+        // less locking, or potentially change the locking strategy for AppendOnlyBidirectionalCache
+        // completely so that it is not thread-safe internally, but is guarded by its own lock.
+        return pairs.map { buildTargetCache.getByIndex(it.first) }.toList()
     }
 
     /**

@@ -39,33 +39,33 @@ class IndexTest {
         val commit4 = commits[3]
         val commit5 = commits[4]
 
-        index.acquireReadLock().use {
-            assertEquals(
-                    setOf(bt("//java/com/facebook/buck/base:base")),
-                    index.getTargets(it, commit1).toSet())
-            assertEquals(
-                    setOf(
-                            bt("//java/com/facebook/buck/base:base"),
-                            bt("//java/com/facebook/buck/model:model")),
-                    index.getTargets(it, commit2).toSet())
-            assertEquals(
-                    setOf(
-                            bt("//java/com/facebook/buck/base:base"),
-                            bt("//java/com/facebook/buck/model:model"),
-                            bt("//java/com/facebook/buck/util:util")),
-                    index.getTargets(it, commit3).toSet())
-            assertEquals(
-                    setOf(
-                            bt("//java/com/facebook/buck/base:base"),
-                            bt("//java/com/facebook/buck/model:model"),
-                            bt("//java/com/facebook/buck/util:util")),
-                    index.getTargets(it, commit4).toSet())
-            assertEquals(
-                    setOf(
-                            bt("//java/com/facebook/buck/base:base"),
-                            bt("//java/com/facebook/buck/util:util")),
-                    index.getTargets(it, commit5).toSet())
+        assertEquals(
+                setOf(bt("//java/com/facebook/buck/base:base")),
+                index.getTargets(commit1).toSet())
+        assertEquals(
+                setOf(
+                        bt("//java/com/facebook/buck/base:base"),
+                        bt("//java/com/facebook/buck/model:model")),
+                index.getTargets(commit2).toSet())
+        assertEquals(
+                setOf(
+                        bt("//java/com/facebook/buck/base:base"),
+                        bt("//java/com/facebook/buck/model:model"),
+                        bt("//java/com/facebook/buck/util:util")),
+                index.getTargets(commit3).toSet())
+        assertEquals(
+                setOf(
+                        bt("//java/com/facebook/buck/base:base"),
+                        bt("//java/com/facebook/buck/model:model"),
+                        bt("//java/com/facebook/buck/util:util")),
+                index.getTargets(commit4).toSet())
+        assertEquals(
+                setOf(
+                        bt("//java/com/facebook/buck/base:base"),
+                        bt("//java/com/facebook/buck/util:util")),
+                index.getTargets(commit5).toSet())
 
+        index.acquireReadLock().use {
             assertEquals(
                     setOf(
                             bt("//java/com/facebook/buck/base:base")
