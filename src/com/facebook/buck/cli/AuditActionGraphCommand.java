@@ -24,8 +24,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.log.Logger;
@@ -104,8 +102,6 @@ public class AuditActionGraphCommand extends AbstractCommand {
           params
               .getActionGraphProvider()
               .getActionGraph(targetGraphAndBuildTargets.getTargetGraph());
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(actionGraphAndBuilder.getActionGraphBuilder());
 
       // Dump the action graph.
       if (generateDotOutput) {
@@ -119,7 +115,6 @@ public class AuditActionGraphCommand extends AbstractCommand {
         dumpAsJson(
             actionGraphAndBuilder.getActionGraph(),
             actionGraphAndBuilder.getActionGraphBuilder(),
-            pathResolver,
             includeRuntimeDeps,
             nodeView,
             params.getConsole().getStdOut());
@@ -153,7 +148,6 @@ public class AuditActionGraphCommand extends AbstractCommand {
   private static void dumpAsJson(
       ActionGraph graph,
       ActionGraphBuilder actionGraphBuilder,
-      SourcePathResolver pathResolver,
       boolean includeRuntimeDeps,
       NodeView nodeView,
       OutputStream out)
@@ -164,8 +158,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
             .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)) {
       json.writeStartArray();
       for (BuildRule node : graph.getNodes()) {
-        writeJsonObjectForBuildRule(
-            json, node, actionGraphBuilder, pathResolver, includeRuntimeDeps, nodeView);
+        writeJsonObjectForBuildRule(json, node, actionGraphBuilder, includeRuntimeDeps, nodeView);
       }
       json.writeEndArray();
     }
@@ -175,7 +168,6 @@ public class AuditActionGraphCommand extends AbstractCommand {
       JsonGenerator json,
       BuildRule node,
       ActionGraphBuilder actionGraphBuilder,
-      SourcePathResolver pathResolver,
       boolean includeRuntimeDeps,
       NodeView nodeView)
       throws IOException {
@@ -197,7 +189,8 @@ public class AuditActionGraphCommand extends AbstractCommand {
       }
       SourcePath sourcePathToOutput = node.getSourcePathToOutput();
       if (sourcePathToOutput != null) {
-        Path outputPath = pathResolver.getAbsolutePath(sourcePathToOutput);
+        Path outputPath =
+            actionGraphBuilder.getSourcePathResolver().getAbsolutePath(sourcePathToOutput);
         json.writeStringField("outputPath", outputPath.toString());
       }
     }

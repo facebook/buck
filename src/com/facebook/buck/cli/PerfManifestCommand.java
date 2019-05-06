@@ -27,8 +27,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyAndInputs;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
@@ -179,7 +177,6 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
           if (rule instanceof SupportsDependencyFileRuleKey
               && ((SupportsDependencyFileRuleKey) rule).useDependencyFileRuleKeys()) {
             try {
-              SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
               usedInputs.put(
                   rule,
                   ImmutableSet.copyOf(
@@ -190,7 +187,7 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
                                   .setBuildCellRootPath(params.getCell().getRoot())
                                   .setEventBus(params.getBuckEventBus())
                                   .setJavaPackageFinder(params.getJavaPackageFinder())
-                                  .setSourcePathResolver(pathResolver)
+                                  .setSourcePathResolver(graphBuilder.getSourcePathResolver())
                                   .build(),
                               params.getCell().getCellPathResolver())));
             } catch (Exception e) {
@@ -235,13 +232,13 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
       manifest.addEntry(
           getFileHashLoader(random.nextInt()),
           entry.getValue().getRuleKey(),
-          DefaultSourcePathResolver.from(context.graphBuilder),
+          context.graphBuilder.getSourcePathResolver(),
           entry.getValue().getInputs(),
           context.usedInputs.getOrDefault(entry.getKey(), ImmutableSet.of()));
       manifest.addEntry(
           getFileHashLoader(random.nextInt()),
           entry.getValue().getRuleKey(),
-          DefaultSourcePathResolver.from(context.graphBuilder),
+          context.graphBuilder.getSourcePathResolver(),
           entry.getValue().getInputs(),
           context.usedInputs.getOrDefault(entry.getKey(), ImmutableSet.of()));
 

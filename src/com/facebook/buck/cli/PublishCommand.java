@@ -24,7 +24,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.maven.Publisher;
 import com.facebook.buck.parser.BuildTargetSpec;
@@ -178,7 +177,7 @@ public class PublishCommand extends BuildCommand {
     try {
       ImmutableSet<DeployResult> deployResults =
           publisher.publish(
-              DefaultSourcePathResolver.from(getBuild().getGraphBuilder()), publishables.build());
+              getBuild().getGraphBuilder().getSourcePathResolver(), publishables.build());
       for (DeployResult deployResult : deployResults) {
         printArtifactsInformation(params, deployResult);
       }

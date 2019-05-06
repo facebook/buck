@@ -31,8 +31,6 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -108,7 +106,7 @@ public class Build implements Closeable {
     return BuildEngineBuildContext.builder()
         .setBuildContext(
             BuildContext.builder()
-                .setSourcePathResolver(DefaultSourcePathResolver.from(graphBuilder))
+                .setSourcePathResolver(graphBuilder.getSourcePathResolver())
                 .setBuildCellRootPath(rootCell.getRoot())
                 .setJavaPackageFinder(javaPackageFinder)
                 .setEventBus(executionContext.getBuckEventBus())
@@ -353,8 +351,8 @@ public class Build implements Closeable {
       throws IOException {
     int exitCode;
 
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-    BuildReport buildReport = new BuildReport(buildExecutionResult, pathResolver, rootCell);
+    BuildReport buildReport =
+        new BuildReport(buildExecutionResult, graphBuilder.getSourcePathResolver(), rootCell);
 
     if (buildContext.isKeepGoing()) {
       String buildReportText = buildReport.generateForConsole(console);
@@ -446,9 +444,9 @@ public class Build implements Closeable {
       BuckEventBus eventBus, Path pathToBuildReport, BuildExecutionException e) {
     // Note that pathToBuildReport is an absolute path that may exist outside of the project
     // root, so it is not appropriate to use ProjectFilesystem to write the output.
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     BuildReport buildReport =
-        new BuildReport(e.createBuildExecutionResult(), pathResolver, rootCell);
+        new BuildReport(
+            e.createBuildExecutionResult(), graphBuilder.getSourcePathResolver(), rootCell);
     try {
       String jsonBuildReport = buildReport.generateJsonBuildReport();
       eventBus.post(BuildEvent.buildReport(jsonBuildReport));

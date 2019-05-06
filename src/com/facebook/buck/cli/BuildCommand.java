@@ -40,7 +40,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.event.BuckEventListener;
@@ -546,8 +545,7 @@ public class BuildCommand extends AbstractCommand {
 
         ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
         SourcePathResolver pathResolver =
-            DefaultSourcePathResolver.from(
-                graphs.getActionGraphAndBuilder().getActionGraphBuilder());
+            graphs.getActionGraphAndBuilder().getActionGraphBuilder().getSourcePathResolver();
 
         Path outputPath;
         if (Files.isDirectory(outputPathForSingleBuildTarget)) {
@@ -595,7 +593,7 @@ public class BuildCommand extends AbstractCommand {
 
     ActionGraphBuilder graphBuilder =
         graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
 
     for (BuildTarget buildTarget : graphsAndBuildTargets.getBuildTargets()) {
       BuildRule rule = graphBuilder.requireRule(buildTarget);
@@ -621,7 +619,6 @@ public class BuildCommand extends AbstractCommand {
     Optional<DefaultRuleKeyFactory> ruleKeyFactory = Optional.empty();
     ActionGraphBuilder graphBuilder =
         graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     if (showRuleKey) {
       RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(params.getRuleKeyConfiguration());
       ruleKeyFactory =
@@ -637,7 +634,7 @@ public class BuildCommand extends AbstractCommand {
       BuildRule rule = graphBuilder.requireRule(buildTarget);
       Optional<Path> outputPath =
           TargetsCommand.getUserFacingOutputPath(
-                  pathResolver,
+                  graphBuilder.getSourcePathResolver(),
                   rule,
                   params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink())
               .map(

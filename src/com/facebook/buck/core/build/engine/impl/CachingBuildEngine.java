@@ -47,7 +47,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
@@ -127,7 +126,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private final DepFiles depFiles;
   private final long maxDepFileCacheEntries;
   private final BuildRuleResolver resolver;
-  private final SourcePathResolver pathResolver;
   private final TargetConfigurationSerializer targetConfigurationSerializer;
   private final Optional<Long> artifactCacheSizeLimit;
   private final FileHashCache fileHashCache;
@@ -161,7 +159,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
       TargetConfigurationSerializer targetConfigurationSerializer,
       BuildInfoStoreManager buildInfoStoreManager,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
@@ -180,7 +177,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         artifactCacheSizeLimit,
         resolver,
         buildInfoStoreManager,
-        pathResolver,
         targetConfigurationSerializer,
         ruleKeyFactories,
         remoteBuildRuleCompletionWaiter,
@@ -211,7 +207,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       Optional<Long> artifactCacheSizeLimit,
       BuildRuleResolver resolver,
       BuildInfoStoreManager buildInfoStoreManager,
-      SourcePathResolver pathResolver,
       TargetConfigurationSerializer targetConfigurationSerializer,
       RuleKeyFactories ruleKeyFactories,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
@@ -230,7 +225,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
     this.resolver = resolver;
-    this.pathResolver = pathResolver;
     this.targetConfigurationSerializer = targetConfigurationSerializer;
 
     this.fileHashCache = cachingBuildEngineDelegate.getFileHashCache();
@@ -515,7 +509,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             fileHashCache,
             maxDepFileCacheEntries,
             metadataStorage,
-            pathResolver,
+            resolver.getSourcePathResolver(),
             targetConfigurationSerializer,
             resourceAwareSchedulingInfo,
             ruleKeyFactories,

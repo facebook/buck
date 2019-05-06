@@ -34,7 +34,6 @@ import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.file.HttpArchive;
 import com.facebook.buck.file.HttpFile;
@@ -143,7 +142,6 @@ public class FetchCommand extends BuildCommand {
                   cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
                   cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
                   actionGraphAndBuilder.getActionGraphBuilder(),
-                  DefaultSourcePathResolver.from(actionGraphAndBuilder.getActionGraphBuilder()),
                   params.getTargetConfigurationSerializer(),
                   params.getBuildInfoStoreManager(),
                   cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),

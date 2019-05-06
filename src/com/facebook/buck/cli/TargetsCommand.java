@@ -39,7 +39,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
@@ -1058,7 +1057,7 @@ public class TargetsCommand extends AbstractCommand {
           BuildRule rule = graphBuilder.requireRule(target);
           builder.setRuleType(rule.getType());
           if (isShowOutput || isShowFullOutput) {
-            SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
+            SourcePathResolver sourcePathResolver = graphBuilder.getSourcePathResolver();
             getUserFacingOutputPath(
                     sourcePathResolver,
                     rule,

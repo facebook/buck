@@ -39,7 +39,6 @@ import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.config.RuleKeyConfig;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -244,7 +243,6 @@ public class LocalBuildExecutor implements BuildExecutor {
         engineConfig.getBuildMaxDepFileCacheEntries(),
         engineConfig.getBuildArtifactCacheSizeLimit(),
         actionGraphAndBuilder.getActionGraphBuilder(),
-        DefaultSourcePathResolver.from(actionGraphAndBuilder.getActionGraphBuilder()),
         targetConfigurationSerializer,
         args.getBuildInfoStoreManager(),
         engineConfig.getResourceAwareSchedulingInfo(),

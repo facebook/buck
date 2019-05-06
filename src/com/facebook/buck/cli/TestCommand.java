@@ -42,7 +42,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.TestRule;
@@ -593,7 +592,6 @@ public class TestCommand extends BuildCommand {
                     cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
                     cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
                     actionGraphAndBuilder.getActionGraphBuilder(),
-                    DefaultSourcePathResolver.from(actionGraphAndBuilder.getActionGraphBuilder()),
                     params.getTargetConfigurationSerializer(),
                     params.getBuildInfoStoreManager(),
                     cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
@@ -657,7 +655,7 @@ public class TestCommand extends BuildCommand {
           BuildContext buildContext =
               BuildContext.builder()
                   .setSourcePathResolver(
-                      DefaultSourcePathResolver.from(actionGraphAndBuilder.getActionGraphBuilder()))
+                      actionGraphAndBuilder.getActionGraphBuilder().getSourcePathResolver())
                   .setBuildCellRootPath(params.getCell().getRoot())
                   .setJavaPackageFinder(params.getJavaPackageFinder())
                   .setEventBus(params.getBuckEventBus())

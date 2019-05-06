@@ -51,7 +51,6 @@ import com.facebook.buck.core.rules.attr.NoopInstallable;
 import com.facebook.buck.core.rules.common.InstallTrigger;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
@@ -274,10 +273,10 @@ public class InstallCommand extends BuildCommand {
     Build build = getBuild();
     ExitCode exitCode = ExitCode.SUCCESS;
 
+    SourcePathResolver pathResolver = build.getGraphBuilder().getSourcePathResolver();
     for (BuildTarget buildTarget : buildRunResult.getBuildTargets()) {
 
       BuildRule buildRule = build.getGraphBuilder().requireRule(buildTarget);
-      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(build.getGraphBuilder());
 
       if (buildRule instanceof HasInstallableApk) {
         exitCode =
