@@ -3600,17 +3600,16 @@ int run_starter(
   central = https://repo1.maven.org/maven2
   m2 = ~/.m2/repository
 </pre>{/literal}
-  {/param}
-{/call}
-
 <p>
-Note that if you using Buck to talk to Maven and you are using IPv6, you
+Note that if you are using Buck to talk to Maven and you are using IPv6, you
 might need to <a href="./buckjavaargs.html">add the following option to
 your <code>.buckjavaargs</code> file</a>:
 </p>
-
 {literal}<pre>
 -Djava.net.preferIPv6Addresses=true</pre>{/literal}
+  {/param}
+{/call}
+
 
 {call buckconfig.section}
   {param name: 'ndk' /}
@@ -4153,7 +4152,7 @@ buck project --config project.ide_force_kill=always
   {/param}
 
 {/call}
- {call buckconfig.entry}
+{call buckconfig.entry}
   {param section: 'project' /}
   {param name: 'initial_targets' /}
   {param example_value: '//java/com/facebook/schema:generate_thrift_jar' /}
