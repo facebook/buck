@@ -16,18 +16,16 @@
 
 package com.facebook.buck.rules.keys;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
 /**
  * Represents some input to rule key calculation that can change between runs, and currently wraps a
  * path from a filesystem.
  */
-@Value.Immutable
-@BuckStyleTuple
-interface AbstractRuleKeyInput {
+@BuckStyleValue
+interface RuleKeyInput {
 
   /** @return the {@link ProjectFilesystem} the input is from. */
   ProjectFilesystem getFilesystem();

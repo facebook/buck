@@ -194,7 +194,9 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
         // Add `PathSourcePath`s to our tracked inputs.
         PathSourcePath.from(sourcePath)
             .ifPresent(
-                path -> inputs.add(RuleKeyInput.of(path.getFilesystem(), path.getRelativePath())));
+                path ->
+                    inputs.add(
+                        new ImmutableRuleKeyInput(path.getFilesystem(), path.getRelativePath())));
         return setSourcePathDirectly(sourcePath);
       }
     }
