@@ -32,8 +32,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -49,7 +47,6 @@ public class AndroidInstrumentationApkTest {
   @Test
   public void testAndroidInstrumentationApkExcludesClassesFromInstrumentedApk() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     BuildTarget javaLibrary1Target = BuildTargetFactory.newInstance("//java/com/example:lib1");
     FakeJavaLibrary javaLibrary1 = new FakeJavaLibrary(javaLibrary1Target);
 
@@ -145,7 +142,7 @@ public class AndroidInstrumentationApkTest {
             BuildTargetPaths.getGenPath(
                 javaLibrary3.getProjectFilesystem(), javaLibrary3.getBuildTarget(), "%s.jar")),
         androidBinary.getAndroidPackageableCollection().getClasspathEntriesToDex().stream()
-            .map(pathResolver::getRelativePath)
+            .map(graphBuilder.getSourcePathResolver()::getRelativePath)
             .collect(ImmutableSet.toImmutableSet()));
     assertEquals(
         "//apps:instrumentation should have one JAR file to dex.",
@@ -154,7 +151,7 @@ public class AndroidInstrumentationApkTest {
                 javaLibrary4.getProjectFilesystem(), javaLibrary4.getBuildTarget(), "%s.jar")),
         androidInstrumentationApk.getAndroidPackageableCollection().getClasspathEntriesToDex()
             .stream()
-            .map(pathResolver::getRelativePath)
+            .map(graphBuilder.getSourcePathResolver()::getRelativePath)
             .collect(ImmutableSet.toImmutableSet()));
   }
 }

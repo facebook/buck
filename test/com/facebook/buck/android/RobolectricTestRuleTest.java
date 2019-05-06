@@ -34,8 +34,6 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -121,12 +119,13 @@ public class RobolectricTestRuleTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     RobolectricTest robolectricTest =
         (RobolectricTest) graphBuilder.requireRule(robolectricBuildTarget);
 
-    String result = robolectricTest.getRobolectricResourceDirectoriesArg(pathResolver, resDeps);
+    String result =
+        robolectricTest.getRobolectricResourceDirectoriesArg(
+            graphBuilder.getSourcePathResolver(), resDeps);
     for (HasAndroidResourceDeps dep : resDeps) {
       // Every value should be a PathSourcePath
       assertTrue(
@@ -165,14 +164,15 @@ public class RobolectricTestRuleTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     RobolectricTest robolectricTest =
         (RobolectricTest) graphBuilder.requireRule(robolectricBuildTarget);
 
     Path resDirectoriesPath =
         RobolectricTest.getResourceDirectoriesPath(filesystem, robolectricBuildTarget);
-    String result = robolectricTest.getRobolectricResourceDirectoriesArg(pathResolver, resDeps);
+    String result =
+        robolectricTest.getRobolectricResourceDirectoriesArg(
+            graphBuilder.getSourcePathResolver(), resDeps);
     assertEquals(
         "-Dbuck.robolectric_res_directories=@" + filesystem.resolve(resDirectoriesPath), result);
   }
@@ -208,14 +208,15 @@ public class RobolectricTestRuleTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     RobolectricTest robolectricTest =
         (RobolectricTest) graphBuilder.requireRule(robolectricBuildTarget);
 
     Path assetDirectoriesPath =
         RobolectricTest.getAssetDirectoriesPath(filesystem, robolectricBuildTarget);
-    String result = robolectricTest.getRobolectricAssetsDirectories(pathResolver, resDeps);
+    String result =
+        robolectricTest.getRobolectricAssetsDirectories(
+            graphBuilder.getSourcePathResolver(), resDeps);
     assertEquals(
         "-Dbuck.robolectric_assets_directories=@" + filesystem.resolve(assetDirectoriesPath),
         result);
@@ -245,14 +246,13 @@ public class RobolectricTestRuleTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     RobolectricTest robolectricTest =
         (RobolectricTest) graphBuilder.requireRule(robolectricBuildTarget);
 
     String result =
         robolectricTest.getRobolectricResourceDirectoriesArg(
-            pathResolver,
+            graphBuilder.getSourcePathResolver(),
             ImmutableList.of(
                 new ResourceRule(FakeSourcePath.of(filesystem, resDep1)),
                 new ResourceRule(FakeSourcePath.of(filesystem, resDep2)),
@@ -286,14 +286,13 @@ public class RobolectricTestRuleTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     RobolectricTest robolectricTest =
         (RobolectricTest) graphBuilder.requireRule(robolectricBuildTarget);
 
     try {
       robolectricTest.getRobolectricResourceDirectoriesArg(
-          pathResolver,
+          graphBuilder.getSourcePathResolver(),
           ImmutableList.of(new ResourceRule(FakeSourcePath.of(filesystem, "not_there_res"))));
       fail("Expected FileNotFoundException");
     } catch (RuntimeException e) {
@@ -323,14 +322,13 @@ public class RobolectricTestRuleTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     RobolectricTest robolectricTest =
         (RobolectricTest) graphBuilder.requireRule(robolectricBuildTarget);
 
     String result =
         robolectricTest.getRobolectricAssetsDirectories(
-            pathResolver,
+            graphBuilder.getSourcePathResolver(),
             ImmutableList.of(
                 new ResourceRule(null, FakeSourcePath.of(filesystem, assetsDep1)),
                 new ResourceRule(null, null),
@@ -361,14 +359,13 @@ public class RobolectricTestRuleTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     RobolectricTest robolectricTest =
         (RobolectricTest) graphBuilder.requireRule(robolectricBuildTarget);
 
     try {
       robolectricTest.getRobolectricResourceDirectoriesArg(
-          pathResolver,
+          graphBuilder.getSourcePathResolver(),
           ImmutableList.of(new ResourceRule(FakeSourcePath.of(filesystem, "not_there_assets"))));
       fail("Expected FileNotFoundException");
     } catch (RuntimeException e) {

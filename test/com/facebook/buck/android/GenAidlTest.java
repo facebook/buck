@@ -35,7 +35,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -65,7 +65,7 @@ public class GenAidlTest {
   private ProjectFilesystem stubFilesystem;
   private PathSourcePath pathToAidl;
   private BuildTarget target;
-  private DefaultSourcePathResolver pathResolver;
+  private SourcePathResolver pathResolver;
   private String pathToAidlExecutable;
   private String pathToFrameworkAidl;
   private String importPath;
@@ -101,7 +101,7 @@ public class GenAidlTest {
     target =
         BuildTargetFactory.newInstance(
             stubFilesystem.getRootPath(), "//java/com/example/base:IWhateverService");
-    pathResolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
+    pathResolver = new TestActionGraphBuilder().getSourcePathResolver();
   }
 
   private GenAidl createGenAidlRule(ImmutableSortedSet<SourcePath> aidlSourceDeps) {

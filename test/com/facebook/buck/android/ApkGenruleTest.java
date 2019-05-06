@@ -36,8 +36,6 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -116,7 +114,6 @@ public class ApkGenruleTest {
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(
             projectFilesystem.getRootPath(), "//src/com/facebook:sign_fb4a");
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
 
@@ -162,10 +159,12 @@ public class ApkGenruleTest {
             .map(Object::toString)
             .collect(ImmutableSet.toImmutableSet()));
     BuildContext buildContext =
-        FakeBuildContext.withSourcePathResolver(pathResolver)
+        FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
             .withBuildCellRootPath(projectFilesystem.getRootPath());
     assertThat(
-        pathResolver.filterInputsToCompareToOutput(apkGenrule.getSrcs().getPaths()),
+        graphBuilder
+            .getSourcePathResolver()
+            .filterInputsToCompareToOutput(apkGenrule.getSrcs().getPaths()),
         Matchers.containsInAnyOrder(
             fileSystem.getPath("src/com/facebook/signer.py"),
             fileSystem.getPath("src/com/facebook/key.properties")));

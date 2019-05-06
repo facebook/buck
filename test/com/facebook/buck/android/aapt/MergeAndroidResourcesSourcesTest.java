@@ -27,8 +27,6 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.Step;
@@ -107,13 +105,13 @@ public class MergeAndroidResourcesSourcesTest {
         ImmutableList.of(
             FakeSourcePath.of(filesystem, "res_in_1"), FakeSourcePath.of(filesystem, "res_in_2"));
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     MergeAndroidResourceSources mergeAndroidResourceSourcesStep =
         new MergeAndroidResourceSources(target, filesystem, ruleFinder, directories);
 
     ImmutableList<Step> steps =
         mergeAndroidResourceSourcesStep.getBuildSteps(
-            FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
+            FakeBuildContext.withSourcePathResolver(ruleFinder.getSourcePathResolver()),
+            new FakeBuildableContext());
     assertThat(
         steps,
         Matchers.contains(

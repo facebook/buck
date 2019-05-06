@@ -34,7 +34,6 @@ import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
@@ -112,7 +111,7 @@ public class AndroidResourceTest {
             projectFilesystem.getRootPath(), "//java/src/com/facebook/base:res");
     BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver resolver = ruleFinder.getSourcePathResolver();
     AndroidResource androidResource =
         new AndroidResource(
             buildTarget,
@@ -143,7 +142,7 @@ public class AndroidResourceTest {
             projectFilesystem.getRootPath(), "//java/src/com/facebook/base:res");
     BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver resolver = ruleFinder.getSourcePathResolver();
     AndroidResource androidResource =
         new AndroidResource(
             buildTarget,
@@ -187,18 +186,19 @@ public class AndroidResourceTest {
     AndroidResource resource =
         (AndroidResource) graphBuilder.requireRule(resourceNode.getBuildTarget());
 
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     FileHashCache fileHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     filesystem.writeContentsToPath(
-        "something", pathResolver.getRelativePath(dep.getPathToTextSymbolsFile()));
+        "something",
+        graphBuilder.getSourcePathResolver().getRelativePath(dep.getPathToTextSymbolsFile()));
     RuleKey original =
         new TestInputBasedRuleKeyFactory(fileHashCache, graphBuilder).build(resource);
 
     fileHashCache.invalidateAll();
 
     filesystem.writeContentsToPath(
-        "something else", pathResolver.getRelativePath(dep.getPathToTextSymbolsFile()));
+        "something else",
+        graphBuilder.getSourcePathResolver().getRelativePath(dep.getPathToTextSymbolsFile()));
     RuleKey changed = new TestInputBasedRuleKeyFactory(fileHashCache, graphBuilder).build(resource);
 
     assertThat(original, Matchers.not(Matchers.equalTo(changed)));

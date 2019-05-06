@@ -22,8 +22,6 @@ import com.facebook.buck.android.KeystoreProperties;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.TestExecutionContext;
@@ -58,8 +56,6 @@ public class ReDexStepTest {
     Path proguardConfig = Paths.get("app.proguard.config");
     Path seeds = Paths.get("buck-out/gen/app/__proguard__/seeds.txt");
 
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
-
     Path sdkDirectory = Paths.get("/Users/user/android-sdk-macosx");
 
     ReDexStep redex =
@@ -76,7 +72,7 @@ public class ReDexStepTest {
             proguardMap,
             proguardConfig,
             seeds,
-            pathResolver);
+            new TestActionGraphBuilder().getSourcePathResolver());
 
     assertEquals("redex", redex.getShortName());
 

@@ -36,7 +36,6 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
@@ -74,7 +73,7 @@ public class AndroidBinaryTest {
   @Test
   public void testAndroidBinaryNoDx() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
 
     // Two android_library deps, neither with an assets directory.
@@ -250,7 +249,7 @@ public class AndroidBinaryTest {
   @Test
   public void testGetUnsignedApkPath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     Keystore keystore = addKeystoreRule(graphBuilder);
 
     BuildTarget targetInRootDirectory = BuildTargetFactory.newInstance("//:fb4a");
@@ -354,7 +353,7 @@ public class AndroidBinaryTest {
             Optional.empty(),
             Optional.empty(),
             /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
-            FakeBuildContext.withSourcePathResolver(DefaultSourcePathResolver.from(graphBuilder)));
+            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()));
 
     assertEquals(
         "Expected 2 new assets paths (one for metadata.txt and the other for the "
@@ -407,7 +406,7 @@ public class AndroidBinaryTest {
             Optional.of(reorderTool),
             Optional.of(reorderData),
             /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
-            FakeBuildContext.withSourcePathResolver(DefaultSourcePathResolver.from(graphBuilder)));
+            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()));
 
     assertEquals(
         "Expected 2 new assets paths (one for metadata.txt and the other for the "
@@ -422,7 +421,6 @@ public class AndroidBinaryTest {
   @Test
   public void testAddPostFilterCommandSteps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     BuildRule keystoreRule = addKeystoreRule(graphBuilder);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     AndroidBinaryBuilder builder =
@@ -438,7 +436,8 @@ public class AndroidBinaryTest {
     ResourcesFilter resourcesFilter =
         (ResourcesFilter) ((AaptPackageResources) aaptPackageRule).getFilteredResourcesProvider();
     ImmutableList.Builder<Step> stepsBuilder = new ImmutableList.Builder<>();
-    resourcesFilter.addPostFilterCommandSteps(StringArg.of("cmd"), pathResolver, stepsBuilder);
+    resourcesFilter.addPostFilterCommandSteps(
+        StringArg.of("cmd"), graphBuilder.getSourcePathResolver(), stepsBuilder);
     ImmutableList<Step> steps = stepsBuilder.build();
 
     Path dataPath =

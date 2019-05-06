@@ -28,7 +28,6 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
@@ -51,8 +50,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class AndroidResourceIndexMiniAaptTest {
-  private final SourcePathResolver resolver =
-      DefaultSourcePathResolver.from(new TestActionGraphBuilder());
+  private final SourcePathResolver resolver = new TestActionGraphBuilder().getSourcePathResolver();
 
   @Rule public ExpectedException thrown = ExpectedException.none();
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
