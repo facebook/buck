@@ -17,6 +17,9 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
+import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -32,11 +35,20 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractCxxIncludes extends CxxHeaders {
-
   @Override
   @Value.Parameter
   @AddToRuleKey
   public abstract CxxPreprocessables.IncludeType getIncludeType();
+
+  // TODO(cjhopman): The connection between this path and the corresponding headers and how the
+  // rulekey is correctly handled shouldn't be so implicit, they should be next to each other.
+  @Value.Parameter
+  @ExcludeFromRuleKey(
+      reason =
+          "This includeDir is used for constructing an include arg that likely points into the repo. The corresponding headers are added to rulekeys separately.",
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
+  abstract PathSourcePath getIncludeDir();
 
   @Nullable
   @Override
@@ -57,9 +69,6 @@ abstract class AbstractCxxIncludes extends CxxHeaders {
     return Optional.of(
         resolver.getAbsolutePath(Preconditions.checkNotNull(getIncludeDir())).normalize());
   }
-
-  @Value.Parameter
-  abstract PathSourcePath getIncludeDir();
 
   @AddToRuleKey
   @Value.Derived
