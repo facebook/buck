@@ -164,7 +164,6 @@ public class CommandRunnerParamsForTesting {
         new ExecutableFinder(),
         pluginManager,
         TestBuckModuleManagerFactory.create(pluginManager),
-        MainRunner.getForkJoinPoolSupplier(config),
         MetadataProviderFactory.emptyMetadataProvider(),
         getManifestSupplier());
   }

@@ -42,7 +42,6 @@ import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
-import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
@@ -62,7 +61,6 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 import org.immutables.value.Value;
@@ -178,9 +176,6 @@ public abstract class AbstractCommandRunnerParams {
 
   @Value.Parameter
   public abstract BuckModuleManager getBuckModuleManager();
-
-  @Value.Parameter
-  public abstract CloseableMemoizedSupplier<ForkJoinPool> getPoolSupplier();
 
   @Value.Parameter
   public abstract MetadataProvider getMetadataProvider();
