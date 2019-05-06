@@ -11,6 +11,17 @@ python_test(
 )
 
 python_library(
+    name = "alphabetize_buckconfig-lib",
+    srcs = ["alphabetize_buckconfig.py"],
+)
+
+python_binary(
+    name = "alphabetize_buckconfig",
+    main_module = "docs.alphabetize_buckconfig",
+    deps = [":alphabetize_buckconfig-lib"],
+)
+
+python_library(
     name = "generate_buckconfig_aliases-lib",
     srcs = ["generate_buckconfig_aliases.py"],
 )
