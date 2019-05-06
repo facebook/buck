@@ -62,7 +62,6 @@ import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.cxx.CxxLinkOptions;
@@ -209,7 +208,7 @@ public class AppleCxxPlatformsTest {
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleResolver);
+    SourcePathResolver resolver = ruleResolver.getSourcePathResolver();
 
     assertEquals(
         ImmutableList.of("/Developer/usr/bin/actool"),
@@ -320,7 +319,7 @@ public class AppleCxxPlatformsTest {
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleResolver);
+    SourcePathResolver resolver = ruleResolver.getSourcePathResolver();
 
     assertEquals(
         ImmutableList.of("/Developer/usr/bin/actool"),
@@ -427,7 +426,7 @@ public class AppleCxxPlatformsTest {
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleResolver);
+    SourcePathResolver resolver = ruleResolver.getSourcePathResolver();
 
     assertEquals(
         ImmutableList.of("/Developer/usr/bin/actool"),
@@ -493,11 +492,10 @@ public class AppleCxxPlatformsTest {
             .build();
     AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatformWithConfig(buckConfig);
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleResolver);
     assertEquals(
         ImmutableList.of(
             "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil", "-num-threads=1"),
-        appleCxxPlatform.getDsymutil().getCommandPrefix(resolver));
+        appleCxxPlatform.getDsymutil().getCommandPrefix(ruleResolver.getSourcePathResolver()));
   }
 
   @Test
@@ -970,12 +968,11 @@ public class AppleCxxPlatformsTest {
   public void byDefaultCodesignToolIsConstant() {
     AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatform();
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(buildRuleResolver);
     assertThat(
         appleCxxPlatform
             .getCodesignProvider()
             .resolve(buildRuleResolver, EmptyTargetConfiguration.INSTANCE)
-            .getCommandPrefix(sourcePathResolver),
+            .getCommandPrefix(buildRuleResolver.getSourcePathResolver()),
         is(Collections.singletonList("/usr/bin/codesign")));
   }
 
@@ -1038,12 +1035,11 @@ public class AppleCxxPlatformsTest {
                 .setSections("[apple]", "codesign = " + codesignPath)
                 .build());
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(buildRuleResolver);
     assertThat(
         appleCxxPlatform
             .getCodesignProvider()
             .resolve(buildRuleResolver, EmptyTargetConfiguration.INSTANCE)
-            .getCommandPrefix(sourcePathResolver),
+            .getCommandPrefix(buildRuleResolver.getSourcePathResolver()),
         is(Collections.singletonList(codesignPath.toString())));
   }
 

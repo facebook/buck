@@ -107,7 +107,6 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -303,7 +302,7 @@ public class CachingBuildEngineTest {
               .build();
       buildContext.getEventBus().register(listener);
       graphBuilder = new TestActionGraphBuilder();
-      pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+      pathResolver = graphBuilder.getSourcePathResolver();
       defaultRuleKeyFactory = new DefaultRuleKeyFactory(FIELD_LOADER, fileHashCache, graphBuilder);
       inputBasedRuleKeyFactory =
           new TestInputBasedRuleKeyFactory(

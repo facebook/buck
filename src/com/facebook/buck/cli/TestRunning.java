@@ -29,7 +29,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.test.event.IndividualTestEvent;
 import com.facebook.buck.core.test.event.TestRunEvent;
 import com.facebook.buck.core.test.event.TestStatusMessageEvent;
@@ -425,7 +424,6 @@ public class TestRunning {
                 defaultJavaPackageFinder,
                 javaRuntimeProvider.resolve(ruleResolver, params.getTargetConfiguration()),
                 params.getCell().getFilesystem(),
-                buildContext.getSourcePathResolver(),
                 ruleFinder,
                 JacocoConstants.getJacocoOutputDir(params.getCell().getFilesystem()),
                 options.getCoverageReportFormats(),
@@ -713,7 +711,6 @@ public class TestRunning {
       DefaultJavaPackageFinder defaultJavaPackageFinder,
       Tool javaRuntimeLauncher,
       ProjectFilesystem filesystem,
-      SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       Path outputDirectory,
       Set<CoverageReportFormat> formats,
@@ -727,7 +724,7 @@ public class TestRunning {
     // Add all source directories of java libraries that we are testing to -sourcepath.
     for (JavaLibrary rule : rulesUnderTest) {
       ImmutableSet<String> sourceFolderPath =
-          getPathToSourceFolders(rule, sourcePathResolver, ruleFinder, defaultJavaPackageFinder);
+          getPathToSourceFolders(rule, ruleFinder, defaultJavaPackageFinder);
       if (!sourceFolderPath.isEmpty()) {
         srcDirectories.addAll(sourceFolderPath);
       }
@@ -738,7 +735,7 @@ public class TestRunning {
       } else {
         SourcePath path = rule.getSourcePathToOutput();
         if (path != null) {
-          classesItem = sourcePathResolver.getRelativePath(path);
+          classesItem = ruleFinder.getSourcePathResolver().getRelativePath(path);
         }
       }
       if (classesItem == null) {
@@ -748,7 +745,7 @@ public class TestRunning {
     }
 
     return new GenerateCodeCoverageReportStep(
-        javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
+        javaRuntimeLauncher.getCommandPrefix(ruleFinder.getSourcePathResolver()),
         filesystem,
         srcDirectories.build(),
         pathsToJars.build(),
@@ -763,7 +760,6 @@ public class TestRunning {
   @VisibleForTesting
   static ImmutableSet<String> getPathToSourceFolders(
       JavaLibrary rule,
-      SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       DefaultJavaPackageFinder defaultJavaPackageFinder) {
     ImmutableSet<SourcePath> javaSrcs = rule.getJavaSrcs();
@@ -782,7 +778,7 @@ public class TestRunning {
         continue;
       }
 
-      Path javaSrcRelativePath = sourcePathResolver.getRelativePath(javaSrcPath);
+      Path javaSrcRelativePath = ruleFinder.getSourcePathResolver().getRelativePath(javaSrcPath);
 
       // If the source path is already under a known source folder, then we can skip this
       // source path.
@@ -805,7 +801,7 @@ public class TestRunning {
       // Traverse the file system from the parent directory of the java file until we hit the
       // parent of the src root directory.
       ImmutableSet<String> pathElements = defaultJavaPackageFinder.getPathElements();
-      Path directory = sourcePathResolver.getAbsolutePath(javaSrcPath).getParent();
+      Path directory = ruleFinder.getSourcePathResolver().getAbsolutePath(javaSrcPath).getParent();
       if (pathElements.isEmpty()) {
         continue;
       }

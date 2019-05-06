@@ -34,7 +34,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Ansi;
@@ -58,7 +57,7 @@ public class BuildCommandTest {
   @Before
   public void setUp() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    resolver = DefaultSourcePathResolver.from(graphBuilder);
+    resolver = graphBuilder.getSourcePathResolver();
 
     rootCell = new TestCellBuilder().build();
 

@@ -36,7 +36,6 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -122,7 +121,7 @@ public class SymlinkTreeTest {
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
 
     graphBuilder = new TestActionGraphBuilder();
-    pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    pathResolver = graphBuilder.getSourcePathResolver();
 
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule =
@@ -479,18 +478,20 @@ public class SymlinkTreeTest {
   @Test
   public void resolveDuplicateRelativePathsIsNoopWhenThereAreNoDuplicates() {
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleResolver);
 
     ImmutableSortedSet<SourcePath> sourcePaths =
         ImmutableSortedSet.of(
             FakeSourcePath.of("one"), FakeSourcePath.of("two/two"), FakeSourcePath.of("three"));
 
     ImmutableBiMap<SourcePath, Path> resolvedDuplicates =
-        SymlinkTree.resolveDuplicateRelativePaths(sourcePaths, resolver);
+        SymlinkTree.resolveDuplicateRelativePaths(
+            sourcePaths, ruleResolver.getSourcePathResolver());
 
     assertThat(
         resolvedDuplicates.inverse(),
-        Matchers.equalTo(FluentIterable.from(sourcePaths).uniqueIndex(resolver::getRelativePath)));
+        Matchers.equalTo(
+            FluentIterable.from(sourcePaths)
+                .uniqueIndex(ruleResolver.getSourcePathResolver()::getRelativePath)));
   }
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -498,7 +499,6 @@ public class SymlinkTreeTest {
   @Test
   public void resolveDuplicateRelativePaths() {
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleResolver);
     tmp.getRoot().resolve("one").toFile().mkdir();
     tmp.getRoot().resolve("two").toFile().mkdir();
     ProjectFilesystem fsOne =
@@ -515,7 +515,7 @@ public class SymlinkTreeTest {
 
     ImmutableBiMap<SourcePath, Path> resolvedDuplicates =
         SymlinkTree.resolveDuplicateRelativePaths(
-            ImmutableSortedSet.copyOf(expected.keySet()), resolver);
+            ImmutableSortedSet.copyOf(expected.keySet()), ruleResolver.getSourcePathResolver());
 
     assertThat(resolvedDuplicates, Matchers.equalTo(expected));
   }
@@ -523,7 +523,6 @@ public class SymlinkTreeTest {
   @Test
   public void resolveDuplicateRelativePathsWithConflicts() {
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleResolver);
     tmp.getRoot().resolve("a-fs").toFile().mkdir();
     tmp.getRoot().resolve("b-fs").toFile().mkdir();
     tmp.getRoot().resolve("c-fs").toFile().mkdir();
@@ -546,7 +545,7 @@ public class SymlinkTreeTest {
 
     ImmutableBiMap<SourcePath, Path> resolvedDuplicates =
         SymlinkTree.resolveDuplicateRelativePaths(
-            ImmutableSortedSet.copyOf(expected.keySet()), resolver);
+            ImmutableSortedSet.copyOf(expected.keySet()), ruleResolver.getSourcePathResolver());
 
     assertThat(resolvedDuplicates, Matchers.equalTo(expected));
   }

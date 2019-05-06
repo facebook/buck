@@ -34,8 +34,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -81,7 +79,6 @@ public class ExternallyBuiltApplePackageTest {
 
   @Test
   public void sdkrootEnvironmentVariableIsSet() {
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ExternallyBuiltApplePackage rule =
         new ExternallyBuiltApplePackage(
             buildTarget,
@@ -101,7 +98,7 @@ public class ExternallyBuiltApplePackageTest {
         Iterables.getOnlyElement(
             Iterables.filter(
                 rule.getBuildSteps(
-                    FakeBuildContext.withSourcePathResolver(pathResolver),
+                    FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
                     new FakeBuildableContext()),
                 AbstractGenruleStep.class));
     assertThat(
@@ -116,7 +113,6 @@ public class ExternallyBuiltApplePackageTest {
 
   @Test
   public void outputContainsCorrectExtension() {
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ExternallyBuiltApplePackage rule =
         new ExternallyBuiltApplePackage(
             buildTarget,
@@ -133,7 +129,8 @@ public class ExternallyBuiltApplePackageTest {
             Optional.empty());
     graphBuilder.addToIndex(rule);
     assertThat(
-        pathResolver
+        graphBuilder
+            .getSourcePathResolver()
             .getRelativePath(Objects.requireNonNull(rule.getSourcePathToOutput()))
             .toString(),
         endsWith(".api"));
@@ -141,7 +138,6 @@ public class ExternallyBuiltApplePackageTest {
 
   @Test
   public void commandContainsCorrectCommand() {
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ExternallyBuiltApplePackage rule =
         new ExternallyBuiltApplePackage(
             buildTarget,
@@ -161,7 +157,7 @@ public class ExternallyBuiltApplePackageTest {
         Iterables.getOnlyElement(
             Iterables.filter(
                 rule.getBuildSteps(
-                    FakeBuildContext.withSourcePathResolver(pathResolver),
+                    FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
                     new FakeBuildableContext()),
                 AbstractGenruleStep.class));
     assertThat(

@@ -25,8 +25,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
@@ -38,14 +36,13 @@ public class DefaultBuildTargetSourcePathTest {
   @Test
   public void shouldThrowAnExceptionIfRuleDoesNotHaveAnOutput() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     FakeBuildRule rule = new FakeBuildRule(target);
     rule.setOutputFile(null);
     graphBuilder.addToIndex(rule);
     SourcePath path = DefaultBuildTargetSourcePath.of(target);
 
     try {
-      pathResolver.getRelativePath(path);
+      graphBuilder.getSourcePathResolver().getRelativePath(path);
       fail();
     } catch (HumanReadableException e) {
       assertEquals("No known output for: " + target.getFullyQualifiedName(), e.getMessage());
@@ -55,14 +52,13 @@ public class DefaultBuildTargetSourcePathTest {
   @Test
   public void mustUseProjectFilesystemToResolvePathToFile() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     FakeBuildRule rule = new FakeBuildRule(target);
     rule.setOutputFile("cheese");
     graphBuilder.addToIndex(rule);
 
     SourcePath path = rule.getSourcePathToOutput();
 
-    Path resolved = pathResolver.getRelativePath(path);
+    Path resolved = graphBuilder.getSourcePathResolver().getRelativePath(path);
 
     assertEquals(Paths.get("cheese"), resolved);
   }

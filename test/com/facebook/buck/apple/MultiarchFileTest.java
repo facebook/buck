@@ -43,8 +43,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxInferEnhancer;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
@@ -136,7 +134,6 @@ public class MultiarchFileTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(target).build()));
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRule multiarchRule =
         nodeBuilderFactory.getNodeBuilder(target).build(graphBuilder, filesystem);
@@ -145,7 +142,8 @@ public class MultiarchFileTest {
 
     ImmutableList<? extends Step> steps =
         multiarchRule.getBuildSteps(
-            FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
+            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
+            new FakeBuildableContext());
 
     ShellStep step = Iterables.getLast(Iterables.filter(steps, ShellStep.class));
 

@@ -35,8 +35,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.CxxLink;
@@ -72,7 +70,6 @@ public class AppleLibraryDescriptionTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(sandboxTarget).build()));
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     BuildTarget target =
         BuildTargetFactory.newInstance("//:rule")
             .withFlavors(DefaultCxxPlatforms.FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR);
@@ -91,7 +88,7 @@ public class AppleLibraryDescriptionTest {
     BuildRule binary = builder.build(graphBuilder);
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
-        Arg.stringify(((CxxLink) binary).getArgs(), pathResolver),
+        Arg.stringify(((CxxLink) binary).getArgs(), graphBuilder.getSourcePathResolver()),
         Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
     assertThat(binary.getBuildDeps(), Matchers.hasItem(dep));
   }
@@ -143,13 +140,14 @@ public class AppleLibraryDescriptionTest {
     BuildRuleResolver buildRuleResolver =
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(libNode));
 
-    final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(buildRuleResolver);
-
     CxxLibraryDescriptionArg.Builder delegateArgBuilder =
         CxxLibraryDescriptionArg.builder().from(libNode.getConstructorArg());
 
     AppleDescriptions.populateCxxLibraryDescriptionArg(
-        pathResolver, delegateArgBuilder, libNode.getConstructorArg(), libTarget);
+        buildRuleResolver.getSourcePathResolver(),
+        delegateArgBuilder,
+        libNode.getConstructorArg(),
+        libTarget);
     CxxLibraryDescriptionArg delegateArg = delegateArgBuilder.build();
     assertThat(
         delegateArg.getCompilerFlags(),
