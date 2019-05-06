@@ -21,7 +21,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
 import com.facebook.buck.core.model.impl.HostTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.Serializer;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -96,7 +97,7 @@ public abstract class AbstractValueVisitor<E extends Exception> implements Value
       Field field,
       T value,
       ValueTypeInfo<T> valueTypeInfo,
-      Optional<CustomFieldBehavior> customBehavior)
+      List<Class<? extends CustomFieldBehaviorTag>> customBehavior)
       throws E {
     try {
       valueTypeInfo.visit(value, this);

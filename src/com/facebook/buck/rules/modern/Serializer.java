@@ -23,10 +23,11 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
 import com.facebook.buck.core.model.impl.HostTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
+import com.facebook.buck.core.rulekey.CustomFieldSerializationTag;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehaviorTag;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
-import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
@@ -55,6 +56,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -257,12 +259,14 @@ public class Serializer {
         Field field,
         T value,
         ValueTypeInfo<T> valueTypeInfo,
-        Optional<CustomFieldBehavior> behavior)
+        List<Class<? extends CustomFieldBehaviorTag>> behavior)
         throws IOException {
       try {
-        if (behavior.isPresent()) {
-          if (CustomBehaviorUtils.get(behavior.get(), DefaultFieldSerialization.class)
-              .isPresent()) {
+        Optional<CustomFieldSerializationTag> serializerTag =
+            CustomBehaviorUtils.get(CustomFieldSerializationTag.class, behavior);
+
+        if (serializerTag.isPresent()) {
+          if (serializerTag.get() instanceof DefaultFieldSerialization) {
             @SuppressWarnings("unchecked")
             ValueTypeInfo<T> typeInfo =
                 (ValueTypeInfo<T>)
@@ -272,15 +276,16 @@ public class Serializer {
             return;
           }
 
-          Optional<?> serializerTag =
-              CustomBehaviorUtils.get(behavior.get(), CustomFieldSerialization.class);
-          if (serializerTag.isPresent()) {
-            @SuppressWarnings("unchecked")
-            CustomFieldSerialization<T> customSerializer =
-                (CustomFieldSerialization<T>) serializerTag.get();
-            customSerializer.serialize(value, this);
-            return;
-          }
+          Verify.verify(
+              serializerTag.get() instanceof CustomFieldSerialization,
+              "Unrecognized serialization behavior %s.",
+              serializerTag.get().getClass().getName());
+
+          @SuppressWarnings("unchecked")
+          CustomFieldSerialization<T> customSerializer =
+              (CustomFieldSerialization<T>) serializerTag.get();
+          customSerializer.serialize(value, this);
+          return;
         }
 
         Verify.verify(

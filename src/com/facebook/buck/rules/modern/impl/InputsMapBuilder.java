@@ -16,20 +16,24 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
+import com.facebook.buck.core.rulekey.CustomFieldInputsTag;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.rules.modern.HasCustomInputsLogic;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.CustomBehaviorUtils;
 import com.facebook.buck.rules.modern.CustomFieldInputs;
-import com.facebook.buck.rules.modern.DefaultFieldInputs;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -122,10 +126,12 @@ public class InputsMapBuilder {
         Field field,
         T value,
         ValueTypeInfo<T> valueTypeInfo,
-        Optional<CustomFieldBehavior> behavior)
+        List<Class<? extends CustomFieldBehaviorTag>> behavior)
         throws RuntimeException {
-      if (behavior.isPresent()) {
-        if (CustomBehaviorUtils.get(behavior.get(), DefaultFieldInputs.class).isPresent()) {
+      Optional<CustomFieldInputsTag> inputsBehavior =
+          CustomBehaviorUtils.get(CustomFieldInputsTag.class, behavior);
+      if (inputsBehavior.isPresent()) {
+        if (inputsBehavior.get() instanceof DefaultFieldInputs) {
           @SuppressWarnings("unchecked")
           ValueTypeInfo<T> typeInfo =
               (ValueTypeInfo<T>)
@@ -135,13 +141,19 @@ public class InputsMapBuilder {
           return;
         }
 
-        Optional<?> inputsTag = CustomBehaviorUtils.get(behavior.get(), CustomFieldInputs.class);
-        if (inputsTag.isPresent()) {
-          @SuppressWarnings("unchecked")
-          CustomFieldInputs<T> customInputs = (CustomFieldInputs<T>) inputsTag.get();
-          customInputs.getInputs(value, paths::add);
+        if (inputsBehavior.get() instanceof IgnoredFieldInputs) {
           return;
         }
+
+        Verify.verify(
+            inputsBehavior.get() instanceof CustomFieldInputs,
+            "Unrecognized field inputs behavior %s.",
+            inputsBehavior.get().getClass().getName());
+
+        @SuppressWarnings("unchecked")
+        CustomFieldInputs<T> customInputs = (CustomFieldInputs<T>) inputsBehavior.get();
+        customInputs.getInputs(value, paths::add);
+        return;
       }
 
       valueTypeInfo.visit(value, this);

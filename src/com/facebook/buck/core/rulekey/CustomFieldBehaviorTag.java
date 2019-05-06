@@ -14,13 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.modern;
+package com.facebook.buck.core.rulekey;
 
-import com.facebook.buck.core.rulekey.CustomFieldInputsTag;
-import com.facebook.buck.core.sourcepath.SourcePath;
-import java.util.function.Consumer;
-
-/** Allows custom derivation of the inputs corresponding to a field. */
-public interface CustomFieldInputs<T> extends CustomFieldInputsTag {
-  void getInputs(T value, Consumer<SourcePath> consumer);
-}
+/** Root interface for any CustomFieldBehavior values. */
+public interface CustomFieldBehaviorTag {}

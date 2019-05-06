@@ -26,15 +26,15 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rules.modern.HasCustomInputsLogic;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.CustomFieldInputs;
-import com.facebook.buck.rules.modern.DefaultFieldInputs;
 import com.facebook.buck.util.function.ThrowingConsumer;
 import com.google.common.collect.ImmutableList;
 import java.util.function.BiConsumer;
@@ -170,6 +170,14 @@ public class InputsMapBuilderTest extends AbstractValueVisitorTest {
   public void wildcards() {
     inputsConsumer.accept(anyObject());
     apply(new WithWildcards());
+  }
+
+  @Override
+  @Test
+  public void withExcludeFromRuleKey() throws Exception {
+    WithExcludeFromRuleKey value = new WithExcludeFromRuleKey();
+    inputsConsumer.accept(value.sourcePath);
+    apply(value);
   }
 
   static class WithSourcePathList implements FakeBuildable {

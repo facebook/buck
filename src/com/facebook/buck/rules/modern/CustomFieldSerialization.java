@@ -16,13 +16,13 @@
 
 package com.facebook.buck.rules.modern;
 
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehaviorTag;
+import com.facebook.buck.core.rulekey.CustomFieldSerializationTag;
 
 /**
  * Allows the serialization/deserialization of a specific field to be specified in terms of calls to
  * the ValueVisitor/Creator.
  */
-public interface CustomFieldSerialization<T> extends CustomFieldBehaviorTag {
+public interface CustomFieldSerialization<T> extends CustomFieldSerializationTag {
   <E extends Exception> void serialize(T value, ValueVisitor<E> serializer) throws E;
 
   <E extends Exception> T deserialize(ValueCreator<E> deserializer) throws E;

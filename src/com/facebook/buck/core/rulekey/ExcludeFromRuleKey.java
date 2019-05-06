@@ -34,7 +34,21 @@ public @interface ExcludeFromRuleKey {
    * This indicates the reason we exclude a value from rulekeys. It's currently only used for
    * logging.
    */
-  String value() default "";
+  String reason() default "";
+
+  /**
+   * Indicates how serialization of this field should be handled. For default serialization, use
+   * {@link DefaultFieldSerialization} If serialization cannot possibly be supported, use {@link
+   * ThrowingSerialization}.
+   */
+  Class<? extends CustomFieldSerializationTag> serialization();
+
+  /**
+   * Indicates how inputs should be derived from this field. For default inputs derivation, use
+   * {@link DefaultFieldInputs}. If this field should not contribute to inputs, use {@link
+   * IgnoredFieldInputs}.
+   */
+  Class<? extends CustomFieldInputsTag> inputs();
 
   /**
    * We really do think that using this annotation indicates a likely source of problems. By

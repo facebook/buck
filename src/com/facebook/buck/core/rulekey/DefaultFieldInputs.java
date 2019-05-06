@@ -14,11 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.core.rules.modern.annotations;
+package com.facebook.buck.core.rulekey;
 
 /**
- * This indicates that a field that is not annotated with @AddToRuleKey should still be
- * serialized/deserialized as if it were added to the rule key (i.e. it can just use the default
- * serialization for its type).
+ * This indicates that a field that is not annotated with @AddToRuleKey should still have its inputs
+ * derived as if it were added to the rule key.
  */
-public final class DefaultFieldSerialization implements CustomFieldBehaviorTag {}
+public final class DefaultFieldInputs implements CustomFieldInputsTag {}

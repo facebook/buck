@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.modern.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.rules.modern.Buildable;
 import org.junit.Test;
@@ -369,5 +369,11 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
             + "  >\n"
             + ">",
         stringify(new WithWildcards()));
+  }
+
+  @Override
+  @Test
+  public void withExcludeFromRuleKey() throws Exception {
+    assertEquals("sourcePath:\n" + "otherPath:", stringify(new WithExcludeFromRuleKey()));
   }
 }

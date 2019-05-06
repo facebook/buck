@@ -16,10 +16,9 @@
 
 package com.facebook.buck.rules.modern;
 
+import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehaviorTag;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehaviorTag;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import java.lang.reflect.Constructor;
@@ -62,21 +61,9 @@ public class CustomBehaviorUtils {
 
   /** Returns the field behavior behavior of the requested type (if there is one). */
   public static <U extends CustomFieldBehaviorTag> Optional<U> get(
-      Optional<CustomFieldBehavior> behavior, Class<U> behaviorClass) {
-    return behavior.flatMap(b -> get(b, behaviorClass));
-  }
-
-  /** Returns the field behavior behavior of the requested type (if there is one). */
-  public static <U extends CustomFieldBehaviorTag> Optional<U> get(
-      CustomFieldBehavior behavior, Class<U> behaviorClass) {
-    if (behavior == null) {
-      return Optional.empty();
-    }
-
+      Class<U> behaviorClass, List<Class<? extends CustomFieldBehaviorTag>> behaviors) {
     List<Class<? extends CustomFieldBehaviorTag>> matches =
-        RichStream.from(behavior.value())
-            .filter(behaviorClass::isAssignableFrom)
-            .collect(Collectors.toList());
+        behaviors.stream().filter(behaviorClass::isAssignableFrom).collect(Collectors.toList());
     if (matches.isEmpty()) {
       return Optional.empty();
     }

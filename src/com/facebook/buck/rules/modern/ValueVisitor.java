@@ -18,7 +18,7 @@ package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -60,7 +61,7 @@ public interface ValueVisitor<E extends Exception> {
       Field field,
       T value,
       ValueTypeInfo<T> valueTypeInfo,
-      Optional<CustomFieldBehavior> customBehavior)
+      List<Class<? extends CustomFieldBehaviorTag>> customBehavior)
       throws E;
 
   <T extends AddsToRuleKey> void visitDynamic(T value, ClassInfo<T> classInfo) throws E;

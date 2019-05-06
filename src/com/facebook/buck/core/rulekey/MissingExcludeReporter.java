@@ -89,7 +89,7 @@ public class MissingExcludeReporter {
           declaringClass.getName(),
           field.getName(),
           maybeGetAddedFromInstanceMessage(declaringClass, instanceClass),
-          annotation.value());
+          annotation.reason());
     }
   }
 
@@ -110,7 +110,7 @@ public class MissingExcludeReporter {
       LOG.debug(
           "Method %s.%s is excluded from rulekeys (added from instance of %s). This is generally "
               + "bad practice and may cause correctness issues. Reason provided: %s",
-          declaringClass.getName(), method.getName(), instanceClass.getName(), annotation.value());
+          declaringClass.getName(), method.getName(), instanceClass.getName(), annotation.reason());
     }
   }
 

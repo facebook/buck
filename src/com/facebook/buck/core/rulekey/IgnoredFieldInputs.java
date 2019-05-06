@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright 2019-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,14 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.facebook.buck.core.rulekey;
 
-package com.facebook.buck.rules.modern;
-
-import com.facebook.buck.core.rulekey.CustomFieldInputsTag;
-import com.facebook.buck.core.sourcepath.SourcePath;
-import java.util.function.Consumer;
-
-/** Allows custom derivation of the inputs corresponding to a field. */
-public interface CustomFieldInputs<T> extends CustomFieldInputsTag {
-  void getInputs(T value, Consumer<SourcePath> consumer);
-}
+/** Used to indicate that this field should be ignored for inputs derivation. */
+public class IgnoredFieldInputs implements CustomFieldInputsTag {}

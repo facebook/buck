@@ -177,6 +177,12 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
     apply(new WithWildcards());
   }
 
+  @Override
+  @Test
+  public void withExcludeFromRuleKey() throws Exception {
+    apply(new WithExcludeFromRuleKey());
+  }
+
   static class WithSourcePathList implements FakeBuildable {
     @AddToRuleKey private final ImmutableList<SourcePath> inputs;
 

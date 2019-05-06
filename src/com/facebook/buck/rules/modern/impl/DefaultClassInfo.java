@@ -18,9 +18,10 @@ package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.MissingExcludeReporter;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
@@ -33,9 +34,11 @@ import com.facebook.buck.rules.modern.ValueVisitor;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import com.google.common.reflect.TypeToken;
 import java.lang.reflect.Field;
@@ -107,7 +110,7 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
               } else {
                 MissingExcludeReporter.reportExcludedMethod(clazz, method, excludeAnnotation);
               }
-              fieldsBuilder.add(excludedField(field, customBehavior));
+              fieldsBuilder.add(excludedField(field, customBehavior, excludeAnnotation));
             }
           });
     } else {
@@ -141,7 +144,7 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
             MissingExcludeReporter.reportExcludedField(clazz, field, excludeAnnotation);
           }
 
-          fieldsBuilder.add(excludedField(field, customBehavior));
+          fieldsBuilder.add(excludedField(field, customBehavior, excludeAnnotation));
         }
       }
     }
@@ -303,10 +306,28 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
     if (isNullable) {
       valueTypeInfo = new NullableValueTypeInfo<>(valueTypeInfo);
     }
-    return new FieldInfo<>(field, valueTypeInfo, customBehavior);
+    return new FieldInfo<>(field, valueTypeInfo, extractCustomBehavior(customBehavior));
   }
 
-  public static FieldInfo<?> excludedField(Field field, Optional<CustomFieldBehavior> behavior) {
-    return new FieldInfo<>(field, ValueTypeInfos.ExcludedValueTypeInfo.INSTANCE, behavior);
+  private static List<Class<? extends CustomFieldBehaviorTag>> extractCustomBehavior(
+      Optional<CustomFieldBehavior> customBehavior) {
+    return customBehavior
+        .map(customFieldBehavior -> Arrays.asList(customFieldBehavior.value()))
+        .orElse(ImmutableList.of());
+  }
+
+  private static FieldInfo<?> excludedField(
+      Field field, Optional<CustomFieldBehavior> behavior, ExcludeFromRuleKey annotation) {
+    Verify.verify(
+        annotation == null || !behavior.isPresent(),
+        "When using ExcludeFromRuleKey, custom behavior should be specified with that, not CustomFieldBehavior.");
+    return new FieldInfo<>(
+        field,
+        ValueTypeInfos.ExcludedValueTypeInfo.INSTANCE,
+        // We allow the inputs and serialization behavior to be implemented by the same class, but
+        // later on we expect to have only one entry for each custom behavior.
+        annotation == null
+            ? extractCustomBehavior(behavior)
+            : ImmutableSet.of(annotation.inputs(), annotation.serialization()).asList());
   }
 }

@@ -31,11 +31,11 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
-import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -98,6 +98,12 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     expect(cellResolver.getCellPathOrThrow(Optional.empty()))
         .andReturn(rootFilesystem.getRootPath())
         .anyTimes();
+  }
+
+  @Override
+  @Test
+  public void withExcludeFromRuleKey() throws Exception {
+    test(new WithExcludeFromRuleKey());
   }
 
   class CustomToolchainProvider extends BaseToolchainProvider {

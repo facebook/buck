@@ -7,4 +7,7 @@ java_library(
         "//src/com/facebook/buck/cxx/...",
         "//src/com/facebook/buck/rules/modern/...",
     ],
+    deps = [
+        "//src/com/facebook/buck/core/rulekey:rulekey",
+    ],
 )

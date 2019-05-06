@@ -16,7 +16,7 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableBiMap;

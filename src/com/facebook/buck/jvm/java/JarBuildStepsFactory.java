@@ -21,13 +21,13 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasCustomDepsLogic;
 import com.facebook.buck.core.rules.common.RecordArtifactVerifier;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
-import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -106,11 +106,13 @@ public class JarBuildStepsFactory
     // TODO(cjhopman): This is pretty much all due to these things caching all AddsToRuleKey things,
     // but we don't want that for these things because nobody else uses them. We should improve the
     // rulekey and similar stuff to better handle this.
-    @CustomFieldBehavior(InfosBehavior.class)
     @ExcludeFromRuleKey(
-        "Adding this to the rulekey is slow for large projects and the abiClasspath already "
-            + " reflects all the inputs. For the same reason, we need to do custom inputs"
-            + " derivation and custom serialization.")
+        reason =
+            "Adding this to the rulekey is slow for large projects and the abiClasspath already "
+                + " reflects all the inputs. For the same reason, we need to do custom inputs"
+                + " derivation and custom serialization.",
+        serialization = InfosBehavior.class,
+        inputs = InfosBehavior.class)
     private final ImmutableList<JavaDependencyInfo> infos;
 
     public DependencyInfoHolder(ImmutableList<JavaDependencyInfo> infos) {
