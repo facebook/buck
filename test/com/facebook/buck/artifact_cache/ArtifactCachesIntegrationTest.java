@@ -17,9 +17,11 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
-import com.facebook.buck.artifact_cache.thrift.BuckCacheFetchResponse;
+import com.facebook.buck.artifact_cache.thrift.BuckCacheMultiFetchResponse;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheResponse;
 import com.facebook.buck.artifact_cache.thrift.BuckCacheStoreResponse;
+import com.facebook.buck.artifact_cache.thrift.FetchResult;
+import com.facebook.buck.artifact_cache.thrift.FetchResultType;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildId;
@@ -496,9 +498,11 @@ public class ArtifactCachesIntegrationTest {
           BuckCacheStoreResponse storeResponse = new BuckCacheStoreResponse();
           response.setStoreResponse(storeResponse);
         } else {
-          BuckCacheFetchResponse fetchResponse = new BuckCacheFetchResponse();
-          fetchResponse.setArtifactExists(false);
-          response.setFetchResponse(fetchResponse);
+          BuckCacheMultiFetchResponse multiFetchResponse = new BuckCacheMultiFetchResponse();
+          List<FetchResult> fetchResults = new ArrayList<>();
+          fetchResults.add(new FetchResult().setResultType(FetchResultType.MISS));
+          multiFetchResponse.setResults(fetchResults);
+          response.setMultiFetchResponse(multiFetchResponse);
         }
 
         byte[] serialized = ThriftUtil.serialize(ThriftArtifactCache.PROTOCOL, response);

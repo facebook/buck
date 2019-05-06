@@ -33,7 +33,6 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.event.NetworkEvent.BytesReceivedEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.slb.HttpLoadBalancer;
@@ -46,7 +45,6 @@ import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.bgtasks.Timeout;
-import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
@@ -382,7 +380,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
                       buckConfig.getHybridThriftEndpoint().get(),
                       distributedBuildModeEnabled,
                       buckEventBus.getBuildId(),
-                      getMultiFetchLimit(buckConfig, buckEventBus),
+                      getMultiFetchLimit(buckConfig),
                       buckConfig.getHttpFetchConcurrency(),
                       buckConfig.getMultiCheckEnabled(),
                       producerId,
@@ -761,33 +759,10 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
         .writeTimeout(writeTimeoutSeconds, TimeUnit.SECONDS);
   }
 
-  private static int getMultiFetchLimit(ArtifactCacheBuckConfig buckConfig, BuckEventBus eventBus) {
-    return getAndRecordMultiFetchEnabled(buckConfig, eventBus)
+  private static int getMultiFetchLimit(ArtifactCacheBuckConfig buckConfig) {
+    return buckConfig.getMultiFetchType() == MultiFetchType.ENABLED
         ? buckConfig.getMultiFetchLimit()
         : 0;
-  }
-
-  private static boolean getAndRecordMultiFetchEnabled(
-      ArtifactCacheBuckConfig buckConfig, BuckEventBus eventBus) {
-    MultiFetchType multiFetchType = buckConfig.getMultiFetchType();
-    if (multiFetchType == MultiFetchType.EXPERIMENT) {
-      multiFetchType =
-          RandomizedTrial.getGroup(
-              ArtifactCacheBuckConfig.MULTI_FETCH,
-              eventBus.getBuildId().toString(),
-              MultiFetchType.class);
-      switch (multiFetchType) {
-        case DISABLED:
-        case ENABLED:
-          eventBus.post(
-              new ExperimentEvent(
-                  ArtifactCacheBuckConfig.MULTI_FETCH, multiFetchType.toString(), "", null, null));
-          break;
-        case EXPERIMENT:
-          throw new RuntimeException("RandomizedTrial picked invalid MultiFetchType.");
-      }
-    }
-    return multiFetchType == MultiFetchType.ENABLED;
   }
 
   private static class ProgressResponseBody extends ResponseBody {

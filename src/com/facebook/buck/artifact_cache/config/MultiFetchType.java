@@ -16,22 +16,9 @@
 
 package com.facebook.buck.artifact_cache.config;
 
-import com.facebook.buck.util.randomizedtrial.WithProbability;
+public enum MultiFetchType {
+  ENABLED,
+  DISABLED;
 
-public enum MultiFetchType implements WithProbability {
-  ENABLED(0.5),
-  DISABLED(0.5),
-  EXPERIMENT(0.0);
-  public static final MultiFetchType DEFAULT = DISABLED;
-
-  private final double probability;
-
-  MultiFetchType(double probability) {
-    this.probability = probability;
-  }
-
-  @Override
-  public double getProbability() {
-    return probability;
-  }
+  public static final MultiFetchType DEFAULT = ENABLED;
 }
