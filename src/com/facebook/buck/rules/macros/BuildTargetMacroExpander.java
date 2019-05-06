@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import java.util.Optional;
 
@@ -50,7 +49,6 @@ public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
   public Arg expandFrom(
       BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, M input)
       throws MacroException {
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-    return expand(pathResolver, input, resolve(graphBuilder, input));
+    return expand(graphBuilder.getSourcePathResolver(), input, resolve(graphBuilder, input));
   }
 }

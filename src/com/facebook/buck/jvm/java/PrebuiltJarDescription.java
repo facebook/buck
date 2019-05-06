@@ -31,8 +31,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -72,14 +70,12 @@ public class PrebuiltJarDescription
           buildTarget, graphBuilder, projectFilesystem, params, args.getBinaryJar());
     }
 
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-
     BuildRule prebuilt =
         new PrebuiltJar(
             buildTarget,
             projectFilesystem,
             params,
-            pathResolver,
+            graphBuilder.getSourcePathResolver(),
             args.getBinaryJar(),
             args.getSourceJar(),
             args.getGwtJar(),

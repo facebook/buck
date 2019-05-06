@@ -93,7 +93,6 @@ public class PythonUtil {
   public static ImmutableMap<Path, SourcePath> getModules(
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       String parameter,
@@ -108,11 +107,15 @@ public class PythonUtil {
         ImmutableMap.<Path, SourcePath>builder()
             .putAll(
                 PythonUtil.toModuleMap(
-                    target, pathResolver, parameter, baseModule, ImmutableList.of(items)))
+                    target,
+                    graphBuilder.getSourcePathResolver(),
+                    parameter,
+                    baseModule,
+                    ImmutableList.of(items)))
             .putAll(
                 PythonUtil.toModuleMap(
                     target,
-                    pathResolver,
+                    graphBuilder.getSourcePathResolver(),
                     "platform" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
                     baseModule,
                     Iterables.concat(
@@ -121,7 +124,7 @@ public class PythonUtil {
             .putAll(
                 PythonUtil.toModuleMap(
                     target,
-                    pathResolver,
+                    graphBuilder.getSourcePathResolver(),
                     "versioned" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
                     baseModule,
                     versions.isPresent() && versionItems.isPresent()

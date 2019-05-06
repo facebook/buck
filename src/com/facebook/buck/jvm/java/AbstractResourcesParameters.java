@@ -24,8 +24,6 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -58,18 +56,12 @@ abstract class AbstractResourcesParameters implements AddsToRuleKey {
       ImmutableCollection<SourcePath> resources,
       Optional<Path> resourcesRoot) {
     return ResourcesParameters.builder()
-        .setResources(
-            getNamedResources(
-                DefaultSourcePathResolver.from(ruleFinder),
-                ruleFinder,
-                projectFilesystem,
-                resources))
+        .setResources(getNamedResources(ruleFinder, projectFilesystem, resources))
         .setResourcesRoot(resourcesRoot.map(Path::toString))
         .build();
   }
 
   public static ImmutableSortedMap<String, SourcePath> getNamedResources(
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem filesystem,
       ImmutableCollection<SourcePath> resources) {
@@ -91,7 +83,7 @@ abstract class AbstractResourcesParameters implements AddsToRuleKey {
       // Therefore, some path-wrangling is required to produce the correct string.
 
       Optional<BuildRule> underlyingRule = ruleFinder.getRule(rawResource);
-      Path relativePathToResource = pathResolver.getRelativePath(rawResource);
+      Path relativePathToResource = ruleFinder.getSourcePathResolver().getRelativePath(rawResource);
 
       String resource;
 

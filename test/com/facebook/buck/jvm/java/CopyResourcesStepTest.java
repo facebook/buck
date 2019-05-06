@@ -68,7 +68,6 @@ public class CopyResourcesStepTest {
             ResourcesParameters.builder()
                 .setResources(
                     ResourcesParameters.getNamedResources(
-                        resolver,
                         ruleFinder,
                         filesystem,
                         ImmutableSortedSet.of(
@@ -140,7 +139,6 @@ public class CopyResourcesStepTest {
             ResourcesParameters.builder()
                 .setResources(
                     ResourcesParameters.getNamedResources(
-                        resolver,
                         ruleFinder,
                         filesystem,
                         ImmutableSortedSet.of(
@@ -214,7 +212,6 @@ public class CopyResourcesStepTest {
             ResourcesParameters.builder()
                 .setResources(
                     ResourcesParameters.getNamedResources(
-                        resolver,
                         ruleFinder,
                         filesystem,
                         ImmutableSortedSet.of(

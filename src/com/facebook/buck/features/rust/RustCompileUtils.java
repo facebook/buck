@@ -32,7 +32,6 @@ import com.facebook.buck.core.rules.tool.BinaryWrapperRule;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
@@ -389,8 +388,6 @@ public class RustCompileUtils {
       ImmutableSet<String> defaultRoots,
       CrateType crateType,
       Iterable<BuildRule> deps) {
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-
     ImmutableList.Builder<String> rustcArgs = ImmutableList.builder();
 
     RustCompileUtils.addFeatures(buildTarget, features, rustcArgs);
@@ -407,14 +404,7 @@ public class RustCompileUtils {
 
     Pair<SourcePath, ImmutableSortedSet<SourcePath>> rootModuleAndSources =
         getRootModuleAndSources(
-            buildTarget,
-            graphBuilder,
-            pathResolver,
-            cxxPlatform,
-            crate,
-            crateRoot,
-            defaultRoots,
-            srcs);
+            buildTarget, graphBuilder, cxxPlatform, crate, crateRoot, defaultRoots, srcs);
 
     // The target to use for the link rule.
     BuildTarget binaryTarget = buildTarget.withAppendedFlavors(crateType.getFlavor());
@@ -614,7 +604,6 @@ public class RustCompileUtils {
   static Pair<SourcePath, ImmutableSortedSet<SourcePath>> getRootModuleAndSources(
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       String crate,
       Optional<SourcePath> crateRoot,
@@ -627,7 +616,9 @@ public class RustCompileUtils {
     Optional<SourcePath> rootModule =
         crateRoot
             .map(Optional::of)
-            .orElse(getCrateRoot(pathResolver, crate, defaultRoots, fixedSrcs.stream()));
+            .orElse(
+                getCrateRoot(
+                    graphBuilder.getSourcePathResolver(), crate, defaultRoots, fixedSrcs.stream()));
 
     return new Pair<>(
         rootModule.orElseThrow(

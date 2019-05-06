@@ -36,7 +36,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -395,7 +394,7 @@ public class SwiftLibraryDescription
     if (!isSwiftTarget(buildTarget)) {
       boolean hasSwiftSource =
           !SwiftDescriptions.filterSwiftSources(
-                  DefaultSourcePathResolver.from(graphBuilder), args.getSrcs())
+                  graphBuilder.getSourcePathResolver(), args.getSrcs())
               .isEmpty();
       return hasSwiftSource
           ? Optional.of(
@@ -406,7 +405,7 @@ public class SwiftLibraryDescription
     SwiftLibraryDescriptionArg.Builder delegateArgsBuilder = SwiftLibraryDescriptionArg.builder();
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
         swiftBuckConfig,
-        DefaultSourcePathResolver.from(graphBuilder),
+        graphBuilder.getSourcePathResolver(),
         delegateArgsBuilder,
         args,
         buildTarget);

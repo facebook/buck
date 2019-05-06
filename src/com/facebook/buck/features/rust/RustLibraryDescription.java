@@ -37,8 +37,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -94,7 +92,6 @@ public class RustLibraryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       RustPlatform rustPlatform,
       RustBuckConfig rustBuckConfig,
       ImmutableList<String> extraFlags,
@@ -110,7 +107,6 @@ public class RustLibraryDescription
         RustCompileUtils.getRootModuleAndSources(
             buildTarget,
             graphBuilder,
-            pathResolver,
             rustPlatform.getCxxPlatform(),
             crate,
             args.getCrateRoot(),
@@ -145,7 +141,6 @@ public class RustLibraryDescription
       BuildRuleParams params,
       RustLibraryDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
@@ -200,7 +195,6 @@ public class RustLibraryDescription
           projectFilesystem,
           params,
           graphBuilder,
-          pathResolver,
           platform,
           rustBuckConfig,
           getRustcArgs.apply(platform),
@@ -272,7 +266,6 @@ public class RustLibraryDescription
                 projectFilesystem,
                 params,
                 graphBuilder,
-                pathResolver,
                 rustPlatform,
                 rustBuckConfig,
                 getRustcArgs.apply(rustPlatform),
@@ -311,7 +304,6 @@ public class RustLibraryDescription
                 projectFilesystem,
                 params,
                 graphBuilder,
-                pathResolver,
                 rustPlatform,
                 rustBuckConfig,
                 getRustcArgs.apply(rustPlatform),
@@ -411,7 +403,6 @@ public class RustLibraryDescription
                 projectFilesystem,
                 params,
                 graphBuilder,
-                pathResolver,
                 rustPlatform,
                 rustBuckConfig,
                 getRustcArgs.apply(rustPlatform),
@@ -452,7 +443,6 @@ public class RustLibraryDescription
                 projectFilesystem,
                 params,
                 graphBuilder,
-                pathResolver,
                 rustPlatform,
                 rustBuckConfig,
                 getRustcArgs.apply(rustPlatform),

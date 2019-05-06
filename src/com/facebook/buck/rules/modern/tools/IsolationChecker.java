@@ -28,7 +28,6 @@ import com.facebook.buck.core.rules.modern.annotations.CustomClassBehaviorTag;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.CustomBehaviorUtils;
@@ -92,7 +91,7 @@ public class IsolationChecker {
 
   public IsolationChecker(
       SourcePathRuleFinder ruleFinder, CellPathResolver cellResolver, FailureReporter reporter) {
-    this.pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    this.pathResolver = ruleFinder.getSourcePathResolver();
     this.rootCellPath = cellResolver.getCellPathOrThrow(Optional.empty());
     this.cellMap =
         cellResolver.getKnownRoots().stream()

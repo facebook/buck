@@ -27,8 +27,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -71,12 +69,14 @@ public class ExportFileDescription
     }
 
     SourcePath src;
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(context.getActionGraphBuilder());
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     if (args.getSrc().isPresent()) {
       if (mode == ExportFileDescription.Mode.REFERENCE
-          && !pathResolver.getFilesystem(args.getSrc().get()).equals(projectFilesystem)) {
+          && !context
+              .getActionGraphBuilder()
+              .getSourcePathResolver()
+              .getFilesystem(args.getSrc().get())
+              .equals(projectFilesystem)) {
         throw new HumanReadableException(
             "%s: must use `COPY` mode for `export_file` when source (%s) uses a different cell",
             buildTarget, args.getSrc().get());

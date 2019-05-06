@@ -39,8 +39,6 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -248,7 +246,6 @@ public class PythonTestDescription
     CxxPlatform cxxPlatform =
         getCxxPlatform(buildTarget, args)
             .resolve(graphBuilder, buildTarget.getTargetConfiguration());
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     Path baseModule = PythonUtil.getBasePath(buildTarget, args.getBaseModule());
     Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
         context.getTargetGraph().get(buildTarget).getSelectedVersions();
@@ -257,7 +254,6 @@ public class PythonTestDescription
         PythonUtil.getModules(
             buildTarget,
             graphBuilder,
-            pathResolver,
             pythonPlatform,
             cxxPlatform,
             "srcs",
@@ -271,7 +267,6 @@ public class PythonTestDescription
         PythonUtil.getModules(
             buildTarget,
             graphBuilder,
-            pathResolver,
             pythonPlatform,
             cxxPlatform,
             "resources",

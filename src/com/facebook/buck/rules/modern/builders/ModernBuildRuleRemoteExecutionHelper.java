@@ -23,7 +23,6 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
@@ -194,7 +193,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
     this.protocol = protocol;
 
     this.cellResolver = cellResolver;
-    this.pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    this.pathResolver = ruleFinder.getSourcePathResolver();
 
     this.cellPathPrefix = cellPathPrefix;
     this.projectRoot = cellPathPrefix.relativize(rootCell.getRoot());
