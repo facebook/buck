@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactoryResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -32,17 +31,14 @@ import java.util.Set;
 
 class DefaultIjLibraryFactoryResolver implements IjLibraryFactoryResolver {
   private final ProjectFilesystem projectFilesystem;
-  private final SourcePathResolver sourcePathResolver;
   private final BuildRuleResolver buildRuleResolver;
   private final Set<BuildTarget> requiredBuildTargets;
 
   DefaultIjLibraryFactoryResolver(
       ProjectFilesystem projectFilesystem,
-      SourcePathResolver sourcePathResolver,
       BuildRuleResolver buildRuleResolver,
       Set<BuildTarget> requiredBuildTargets) {
     this.projectFilesystem = projectFilesystem;
-    this.sourcePathResolver = sourcePathResolver;
     this.buildRuleResolver = buildRuleResolver;
     this.requiredBuildTargets = requiredBuildTargets;
   }
@@ -53,7 +49,9 @@ class DefaultIjLibraryFactoryResolver implements IjLibraryFactoryResolver {
     if (rule.isPresent()) {
       requiredBuildTargets.add(rule.get().getBuildTarget());
     }
-    return projectFilesystem.getRootPath().relativize(sourcePathResolver.getAbsolutePath(path));
+    return projectFilesystem
+        .getRootPath()
+        .relativize(buildRuleResolver.getSourcePathResolver().getAbsolutePath(path));
   }
 
   @Override

@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
@@ -41,17 +40,14 @@ import java.util.stream.Collectors;
 class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
   private final ActionGraphBuilder graphBuilder;
-  private final SourcePathResolver sourcePathResolver;
   private final ProjectFilesystem projectFilesystem;
   private final Set<BuildTarget> requiredBuildTargets;
 
   DefaultIjModuleFactoryResolver(
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver sourcePathResolver,
       ProjectFilesystem projectFilesystem,
       Set<BuildTarget> requiredBuildTargets) {
     this.graphBuilder = graphBuilder;
-    this.sourcePathResolver = sourcePathResolver;
     this.projectFilesystem = projectFilesystem;
     this.requiredBuildTargets = requiredBuildTargets;
   }
@@ -81,14 +77,16 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
               + targetNode.getBuildTarget()
               + " did not specify manifest or manifest_skeleton");
     }
-    return sourcePathResolver.getAbsolutePath(manifestSourcePath.get());
+    return graphBuilder.getSourcePathResolver().getAbsolutePath(manifestSourcePath.get());
   }
 
   @Override
   public Optional<Path> getLibraryAndroidManifestPath(
       TargetNode<AndroidLibraryDescription.CoreArg> targetNode) {
     Optional<SourcePath> manifestPath = targetNode.getConstructorArg().getManifest();
-    return manifestPath.map(sourcePathResolver::getAbsolutePath).map(projectFilesystem::relativize);
+    return manifestPath
+        .map(graphBuilder.getSourcePathResolver()::getAbsolutePath)
+        .map(projectFilesystem::relativize);
   }
 
   @Override
@@ -136,6 +134,6 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
     requiredBuildTargets.addAll(
         RichStream.from(graphBuilder.getRule(sourcePath).map(BuildRule::getBuildTarget))
             .collect(Collectors.toList()));
-    return sourcePathResolver.getRelativePath(sourcePath);
+    return graphBuilder.getSourcePathResolver().getRelativePath(sourcePath);
   }
 }

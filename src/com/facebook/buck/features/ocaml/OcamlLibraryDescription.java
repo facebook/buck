@@ -31,8 +31,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDeps;
@@ -83,9 +81,6 @@ public class OcamlLibraryDescription
     FlavorDomain<OcamlPlatform> ocamlPlatforms = ocamlToolchain.getOcamlPlatforms();
     Optional<OcamlPlatform> ocamlPlatform = ocamlPlatforms.getValue(buildTarget);
     if (ocamlPlatform.isPresent()) {
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(context.getActionGraphBuilder());
-
       ImmutableList<SourcePath> srcs =
           args.getSrcs().isPresent() ? args.getSrcs().get().getPaths() : ImmutableList.of();
 
@@ -156,7 +151,7 @@ public class OcamlLibraryDescription
             params,
             args.getLinkerFlags(),
             srcs.stream()
-                .map(pathResolver::getAbsolutePath)
+                .map(context.getActionGraphBuilder().getSourcePathResolver()::getAbsolutePath)
                 .filter(OcamlUtil.ext(OcamlCompilables.OCAML_C))
                 .map(ocamlLibraryBuild.getOcamlContext()::getCOutput)
                 .map(input -> ExplicitBuildTargetSourcePath.of(compileBuildTarget, input))

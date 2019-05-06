@@ -37,7 +37,6 @@ import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
@@ -158,7 +157,6 @@ public class LuaBinaryDescription
       BuildTarget baseTarget,
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       LuaPlatform luaPlatform,
       BuildTarget target,
       Path output,
@@ -179,7 +177,7 @@ public class LuaBinaryDescription
             baseTarget,
             baseParams,
             graphBuilder,
-            pathResolver,
+            graphBuilder.getSourcePathResolver(),
             luaPlatform,
             target,
             output,
@@ -192,7 +190,7 @@ public class LuaBinaryDescription
             baseTarget,
             baseParams,
             graphBuilder,
-            pathResolver,
+            graphBuilder.getSourcePathResolver(),
             cellPathResolver,
             luaPlatform,
             cxxBuckConfig,
@@ -221,7 +219,6 @@ public class LuaBinaryDescription
       BuildTarget baseTarget,
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       LuaPlatform luaPlatform,
       Optional<BuildTarget> nativeStarterLibrary,
       String mainModule,
@@ -266,7 +263,6 @@ public class LuaBinaryDescription
         baseTarget,
         baseParams,
         graphBuilder,
-        pathResolver,
         luaPlatform,
         baseTarget.withAppendedFlavors(
             packageStyle == LuaPlatform.PackageStyle.STANDALONE
@@ -288,7 +284,6 @@ public class LuaBinaryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       LuaPlatform luaPlatform,
       PythonPlatform pythonPlatform,
       Optional<BuildTarget> nativeStarterLibrary,
@@ -316,7 +311,8 @@ public class LuaBinaryDescription
         Iterable<BuildRule> deps = empty;
         if (rule instanceof LuaPackageable) {
           LuaPackageable packageable = (LuaPackageable) rule;
-          LuaPackageComponents components = packageable.getLuaPackageComponents(pathResolver);
+          LuaPackageComponents components =
+              packageable.getLuaPackageComponents(graphBuilder.getSourcePathResolver());
           LuaPackageComponents.addComponents(builder, components);
           deps = packageable.getLuaPackageDeps(cxxPlatform, graphBuilder);
           if (components.hasNativeCode(cxxPlatform)) {
@@ -372,7 +368,6 @@ public class LuaBinaryDescription
             buildTarget,
             baseParams,
             graphBuilder,
-            pathResolver,
             luaPlatform,
             nativeStarterLibrary,
             mainModule,
@@ -754,7 +749,6 @@ public class LuaBinaryDescription
       BuildRuleParams params,
       LuaBinaryDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     LuaPlatform luaPlatform = getPlatform(buildTarget, args);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     FlavorDomain<PythonPlatform> pythonPlatforms =
@@ -775,7 +769,6 @@ public class LuaBinaryDescription
             projectFilesystem,
             params,
             graphBuilder,
-            pathResolver,
             luaPlatform,
             pythonPlatform,
             args.getNativeStarterLibrary()

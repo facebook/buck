@@ -30,7 +30,6 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
@@ -102,12 +101,13 @@ public class OcamlRuleBuilder {
 
   static boolean shouldUseFineGrainedRules(
       BuildRuleResolver resolver, ImmutableList<SourcePath> srcs) {
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
     boolean noYaccOrLexSources =
         srcs.stream()
             .noneMatch(
                 OcamlUtil.sourcePathExt(
-                    pathResolver, OcamlCompilables.OCAML_MLL, OcamlCompilables.OCAML_MLY));
+                    resolver.getSourcePathResolver(),
+                    OcamlCompilables.OCAML_MLL,
+                    OcamlCompilables.OCAML_MLY));
     boolean noGeneratedSources =
         FluentIterable.from(srcs).filter(BuildTargetSourcePath.class).isEmpty();
     return noYaccOrLexSources && noGeneratedSources;
@@ -203,8 +203,6 @@ public class OcamlRuleBuilder {
                 graphBuilder,
                 FluentIterable.from(deps).filter(CxxPreprocessorDep.class::isInstance)));
 
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-
     ImmutableList<String> nativeIncludes =
         FluentIterable.from(deps)
             .transformAndConcat(getLibInclude(ocamlPlatform, false)::apply)
@@ -278,7 +276,7 @@ public class OcamlRuleBuilder {
     OcamlBuildContext ocamlContext =
         OcamlBuildContext.builder(ocamlPlatform, graphBuilder, buildTarget.getTargetConfiguration())
             .setProjectFilesystem(projectFilesystem)
-            .setSourcePathResolver(pathResolver)
+            .setSourcePathResolver(graphBuilder.getSourcePathResolver())
             .setFlags(flagsBuilder.build())
             .setOcamlDepFlags(ocamlDepFlags)
             .setNativeIncludes(nativeIncludes)
@@ -336,8 +334,6 @@ public class OcamlRuleBuilder {
                 ocamlPlatform.getCxxPlatform(),
                 graphBuilder,
                 FluentIterable.from(deps).filter(CxxPreprocessorDep.class::isInstance)));
-
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     ImmutableList<String> nativeIncludes =
         FluentIterable.from(deps)
@@ -408,7 +404,7 @@ public class OcamlRuleBuilder {
     OcamlBuildContext ocamlContext =
         OcamlBuildContext.builder(ocamlPlatform, graphBuilder, buildTarget.getTargetConfiguration())
             .setProjectFilesystem(projectFilesystem)
-            .setSourcePathResolver(pathResolver)
+            .setSourcePathResolver(graphBuilder.getSourcePathResolver())
             .setFlags(flagsBuilder.build())
             .setOcamlDepFlags(ocamlDepFlags)
             .setNativeIncludes(nativeIncludes)
@@ -433,14 +429,13 @@ public class OcamlRuleBuilder {
     Path baseDir = projectFilesystem.getRootPath().toAbsolutePath();
     ImmutableMap<Path, ImmutableList<Path>> mlInput = getMLInputWithDeps(baseDir, ocamlContext);
 
-    ImmutableList<SourcePath> cInput = getCInput(pathResolver, srcs);
+    ImmutableList<SourcePath> cInput = getCInput(graphBuilder.getSourcePathResolver(), srcs);
 
     OcamlBuildRulesGenerator generator =
         new OcamlBuildRulesGenerator(
             compileBuildTarget,
             projectFilesystem,
             compileParams,
-            pathResolver,
             graphBuilder,
             ocamlContext,
             mlInput,

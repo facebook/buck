@@ -33,8 +33,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
@@ -279,14 +277,14 @@ public class PythonBinaryDescription
     String mainModule;
     ImmutableMap.Builder<Path, SourcePath> modules = ImmutableMap.builder();
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     // If `main` is set, add it to the map of modules for this binary and also set it as the
     // `mainModule`, otherwise, use the explicitly set main module.
     if (args.getMain().isPresent()) {
       LOG.warn(
           "%s: parameter `main` is deprecated, please use `main_module` instead.", buildTarget);
-      String mainName = pathResolver.getSourcePathName(buildTarget, args.getMain().get());
+      String mainName =
+          graphBuilder.getSourcePathResolver().getSourcePathName(buildTarget, args.getMain().get());
       Path main = baseModule.resolve(mainName);
       modules.put(baseModule.resolve(mainName), args.getMain().get());
       mainModule = PythonUtil.toModuleName(buildTarget, main.toString());

@@ -71,7 +71,6 @@ public class OcamlBuildRulesGenerator {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathResolver pathResolver,
       ActionGraphBuilder graphBuilder,
       OcamlBuildContext ocamlContext,
       ImmutableMap<Path, ImmutableList<Path>> mlInput,
@@ -83,7 +82,7 @@ public class OcamlBuildRulesGenerator {
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
     this.params = params;
-    this.pathResolver = pathResolver;
+    this.pathResolver = graphBuilder.getSourcePathResolver();
     this.graphBuilder = graphBuilder;
     this.ocamlContext = ocamlContext;
     this.mlInput = mlInput;
