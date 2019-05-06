@@ -19,9 +19,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.rules.AbstractBuildRuleResolver;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.impl.AbstractBuildRuleResolver;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;

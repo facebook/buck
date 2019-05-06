@@ -17,9 +17,9 @@
 package com.facebook.buck.core.rules.resolver.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.AbstractBuildRuleResolver;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.impl.AbstractBuildRuleResolver;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;

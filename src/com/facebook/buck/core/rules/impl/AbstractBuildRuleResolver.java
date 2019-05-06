@@ -14,10 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.core.rules;
+package com.facebook.buck.core.rules.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableSet;

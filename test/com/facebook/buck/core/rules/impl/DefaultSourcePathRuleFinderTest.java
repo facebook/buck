@@ -13,12 +13,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.core.rules;
+package com.facebook.buck.core.rules.impl;
 
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
