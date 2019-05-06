@@ -373,6 +373,8 @@ public final class MainRunner {
 
   private final BuildId buildId;
 
+  private final CommandMode commandMode;
+
   private final BackgroundTaskManager bgTaskManager;
 
   private Optional<BuckConfig> parsedRootConfig = Optional.empty();
@@ -406,6 +408,7 @@ public final class MainRunner {
       PluginManager pluginManager,
       BuckModuleManager moduleManager,
       BackgroundTaskManager bgTaskManager,
+      CommandMode commandMode,
       Optional<NGContext> context) {
     this.console = console;
     this.stdIn = stdIn;
@@ -418,6 +421,7 @@ public final class MainRunner {
     this.clientEnvironment = clientEnvironment;
     this.platform = platform;
     this.context = context;
+    this.commandMode = commandMode;
   }
 
   @VisibleForTesting
@@ -430,6 +434,7 @@ public final class MainRunner {
       PluginManager pluginManager,
       BuckModuleManager moduleManager,
       BackgroundTaskManager bgTaskManager,
+      CommandMode commandMode,
       Optional<NGContext> context) {
     this(
         console,
@@ -441,6 +446,7 @@ public final class MainRunner {
         pluginManager,
         moduleManager,
         bgTaskManager,
+        commandMode,
         context);
   }
 
@@ -461,15 +467,9 @@ public final class MainRunner {
               ? WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT
               : WatchmanWatcher.FreshInstanceAction.NONE;
 
-      CommandMode commandMode = CommandMode.RELEASE;
-
       exitCode =
           runMainWithExitCode(
-              projectRoot,
-              commandMode,
-              watchmanFreshInstanceAction,
-              initTimestamp,
-              ImmutableList.copyOf(args));
+              projectRoot, watchmanFreshInstanceAction, initTimestamp, ImmutableList.copyOf(args));
     } catch (Throwable t) {
 
       HumanReadableExceptionAugmentor augmentor;
@@ -519,8 +519,7 @@ public final class MainRunner {
     }
   }
 
-  private void setupLogging(
-      CommandMode commandMode, BuckCommand command, ImmutableList<String> args) throws IOException {
+  private void setupLogging(BuckCommand command, ImmutableList<String> args) throws IOException {
     // Setup logging.
     if (commandMode.isLoggingEnabled()) {
       // Reset logging each time we run a command while daemonized.
@@ -588,7 +587,6 @@ public final class MainRunner {
   @SuppressWarnings("PMD.PrematureDeclaration")
   public ExitCode runMainWithExitCode(
       Path projectRoot,
-      CommandMode commandMode,
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
       long initTimestamp,
       ImmutableList<String> unexpandedCommandLineArgs)
@@ -647,7 +645,7 @@ public final class MainRunner {
 
       // statically configure Buck logging environment based on Buck config, usually buck-x.log
       // files
-      setupLogging(commandMode, command, args);
+      setupLogging(command, args);
 
       ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
       UnconfiguredBuildTargetFactory buildTargetFactory =

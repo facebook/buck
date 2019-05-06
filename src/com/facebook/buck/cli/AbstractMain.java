@@ -25,6 +25,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.nailgun.NGContext;
 import com.google.common.collect.ImmutableMap;
@@ -57,6 +58,7 @@ abstract class AbstractMain {
 
   private final Optional<NGContext> optionalNGContext; // TODO(bobyf): remove this dependency.
   private final Console defaultConsole;
+  private final CommandMode commandMode;
 
   protected AbstractMain(
       PrintStream stdOut,
@@ -82,6 +84,8 @@ abstract class AbstractMain {
             new Ansi(
                 AnsiEnvironmentChecking.environmentSupportsAnsiEscapes(
                     platform, clientEnvironment)));
+
+    this.commandMode = CommandMode.RELEASE;
   }
 
   /**
@@ -99,6 +103,7 @@ abstract class AbstractMain {
         pluginManager,
         moduleManager,
         bgTaskManager,
+        commandMode,
         optionalNGContext);
   }
 

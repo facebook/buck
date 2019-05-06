@@ -534,6 +534,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
                   pluginManager,
                   moduleManager,
                   manager,
+                  CommandMode.TEST,
                   context)
               : new MainRunner(
                   testConsole,
@@ -545,6 +546,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
                   pluginManager,
                   moduleManager,
                   manager,
+                  CommandMode.TEST,
                   context);
       ExitCode exitCode;
 
@@ -578,7 +580,6 @@ public class ProjectWorkspace extends AbstractWorkspace {
         exitCode =
             main.runMainWithExitCode(
                 repoRoot,
-                CommandMode.TEST,
                 WatchmanWatcher.FreshInstanceAction.NONE,
                 System.nanoTime(),
                 ImmutableList.copyOf(args));

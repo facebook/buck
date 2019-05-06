@@ -186,11 +186,11 @@ public class DaemonIntegrationTest {
                 pluginManager,
                 moduleManager,
                 manager,
+                CommandMode.TEST,
                 Optional.of(new TestContext()));
         ExitCode exitCode =
             main.runMainWithExitCode(
                 tmp.getRoot(),
-                CommandMode.TEST,
                 WatchmanWatcher.FreshInstanceAction.NONE,
                 System.nanoTime(),
                 ImmutableList.copyOf(args));
