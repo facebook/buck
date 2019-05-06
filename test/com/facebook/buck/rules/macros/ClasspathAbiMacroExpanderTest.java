@@ -32,7 +32,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -153,8 +152,8 @@ public class ClasspathAbiMacroExpanderTest {
   private void assertExpandsTo(
       BuildRule rule, ActionGraphBuilder graphBuilder, String expectedClasspath)
       throws MacroException {
-    DefaultSourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-    String classpath = Arg.stringify(expander.expand(graphBuilder, rule), pathResolver);
+    String classpath =
+        Arg.stringify(expander.expand(graphBuilder, rule), graphBuilder.getSourcePathResolver());
 
     assertEquals(expectedClasspath, classpath);
   }

@@ -30,7 +30,6 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
@@ -40,7 +39,7 @@ public class SwiftDescriptionsTest {
   @Test
   public void testPopulateSwiftLibraryDescriptionArg() {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
+    SourcePathResolver pathResolver = resolver.getSourcePathResolver();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
 
     SwiftLibraryDescriptionArg.Builder outputBuilder = SwiftLibraryDescriptionArg.builder();

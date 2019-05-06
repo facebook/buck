@@ -32,7 +32,6 @@ import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool.Builder;
@@ -157,7 +156,7 @@ public class ExecutableMacroExpanderTest {
                     EmptyTargetConfiguration.INSTANCE,
                     input);
     Arg arg = converter.convert(stringWithMacros, graphBuilder);
-    return Arg.stringify(arg, DefaultSourcePathResolver.from(graphBuilder));
+    return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
   }
 
   @Test

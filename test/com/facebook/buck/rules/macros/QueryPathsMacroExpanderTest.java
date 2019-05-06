@@ -28,7 +28,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -95,14 +94,12 @@ public class QueryPathsMacroExpanderTest {
         coerceAndStringify(filesystem, cellPathResolver, graphBuilder, converter, input, rule);
 
     // Expand the expected results
-    DefaultSourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-
     String expected =
         Stream.of(depNode, targetNode)
             .map(TargetNode::getBuildTarget)
             .map(graphBuilder::requireRule)
             .map(BuildRule::getSourcePathToOutput)
-            .map(pathResolver::getAbsolutePath)
+            .map(graphBuilder.getSourcePathResolver()::getAbsolutePath)
             .map(Object::toString)
             .collect(Collectors.joining(" "));
 
@@ -159,6 +156,6 @@ public class QueryPathsMacroExpanderTest {
                     EmptyTargetConfiguration.INSTANCE,
                     input);
     Arg arg = converter.convert(stringWithMacros, graphBuilder);
-    return Arg.stringify(arg, DefaultSourcePathResolver.from(graphBuilder));
+    return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
   }
 }

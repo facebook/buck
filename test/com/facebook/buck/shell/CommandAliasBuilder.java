@@ -27,7 +27,6 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.MacroContainer;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -178,7 +177,7 @@ public class CommandAliasBuilder
       this.arg = arg;
       ruleFinder = graphBuilder;
       this.cellRoots = cellRoots;
-      sourcePathResolver = DefaultSourcePathResolver.from(this.ruleFinder);
+      sourcePathResolver = this.ruleFinder.getSourcePathResolver();
       this.graphBuilder = graphBuilder;
     }
 

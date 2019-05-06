@@ -28,7 +28,6 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
@@ -44,7 +43,6 @@ public class WorkerToolTest {
   @Test
   public void testCreateWorkerTool() throws NoSuchBuildTargetException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
@@ -64,7 +62,7 @@ public class WorkerToolTest {
             ((ProvidesWorkerTool) workerRule)
                 .getWorkerTool()
                 .getTool()
-                .getCommandPrefix(pathResolver)
+                .getCommandPrefix(graphBuilder.getSourcePathResolver())
                 .subList(1, 3)));
   }
 
@@ -90,7 +88,7 @@ public class WorkerToolTest {
   @Test
   public void testArgsWithLocationMacroAffectDependenciesAndExpands() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
@@ -127,7 +125,7 @@ public class WorkerToolTest {
   @Test
   public void testEnvWithLocationMacroAffectDependenciesAndExpands() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))

@@ -27,7 +27,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -45,7 +44,7 @@ public class ShTestDescriptionTest {
   @Test
   public void argsWithLocationMacro() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     BuildRule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -67,7 +66,7 @@ public class ShTestDescriptionTest {
   @Test
   public void envWithLocationMacro() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     BuildRule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")

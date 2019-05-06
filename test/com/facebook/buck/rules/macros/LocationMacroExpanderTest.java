@@ -35,8 +35,6 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
@@ -110,8 +108,8 @@ public class LocationMacroExpanderTest {
     String transformedString = coerceAndStringify(originalCmd, javaRule);
 
     // Verify that the correct cmd was created.
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-    Path absolutePath = pathResolver.getAbsolutePath(javaRule.getSourcePathToOutput());
+    Path absolutePath =
+        graphBuilder.getSourcePathResolver().getAbsolutePath(javaRule.getSourcePathToOutput());
     String expectedCmd = String.format("%s %s $OUT", absolutePath, absolutePath);
 
     assertEquals(expectedCmd, transformedString);
@@ -195,6 +193,6 @@ public class LocationMacroExpanderTest {
                     EmptyTargetConfiguration.INSTANCE,
                     input);
     Arg arg = converter.convert(stringWithMacros, graphBuilder);
-    return Arg.stringify(arg, DefaultSourcePathResolver.from(graphBuilder));
+    return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
   }
 }

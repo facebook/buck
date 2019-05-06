@@ -38,7 +38,6 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
@@ -82,7 +81,7 @@ public class ExportFileTest {
   @Test
   public void shouldSetSrcAndOutToNameParameterIfNeitherAreSet() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     ExportFile exportFile = new ExportFileBuilder(target).build(graphBuilder, projectFilesystem);
 
     List<Step> steps =
@@ -110,7 +109,7 @@ public class ExportFileTest {
   @Test
   public void shouldSetOutToNameParamValueIfSrcIsSet() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     ExportFile exportFile =
         new ExportFileBuilder(target).setOut("fish").build(graphBuilder, projectFilesystem);
 
@@ -139,7 +138,7 @@ public class ExportFileTest {
   @Test
   public void shouldSetOutAndSrcAndNameParametersSeparately() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     ExportFile exportFile =
         new ExportFileBuilder(target)
             .setSrc(PathSourcePath.of(projectFilesystem, Paths.get("chips")))
@@ -174,16 +173,16 @@ public class ExportFileTest {
         new ExportFileBuilder(target).setSrc(FakeSourcePath.of("chips")).setOut("cake");
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     ExportFile exportFile = builder.build(graphBuilder, projectFilesystem);
 
     assertIterablesEquals(
         singleton(Paths.get("chips")),
-        pathResolver.filterInputsToCompareToOutput(singleton(exportFile.getSource())));
+        graphBuilder
+            .getSourcePathResolver()
+            .filterInputsToCompareToOutput(singleton(exportFile.getSource())));
 
     graphBuilder = new TestActionGraphBuilder();
-    pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     FakeBuildRule rule =
         graphBuilder.addToIndex(new FakeBuildRule(BuildTargetFactory.newInstance("//example:one")));
@@ -191,17 +190,20 @@ public class ExportFileTest {
     builder.setSrc(DefaultBuildTargetSourcePath.of(rule.getBuildTarget()));
     exportFile = builder.build(graphBuilder, projectFilesystem);
     assertThat(
-        pathResolver.filterInputsToCompareToOutput(singleton(exportFile.getSource())),
+        graphBuilder
+            .getSourcePathResolver()
+            .filterInputsToCompareToOutput(singleton(exportFile.getSource())),
         Matchers.empty());
 
     graphBuilder = new TestActionGraphBuilder();
-    pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     builder.setSrc(null);
     exportFile = builder.build(graphBuilder, projectFilesystem);
     assertIterablesEquals(
         singleton(projectFilesystem.getPath("example.html")),
-        pathResolver.filterInputsToCompareToOutput(singleton(exportFile.getSource())));
+        graphBuilder
+            .getSourcePathResolver()
+            .filterInputsToCompareToOutput(singleton(exportFile.getSource())));
   }
 
   @Test
@@ -259,7 +261,7 @@ public class ExportFileTest {
   @Test
   public void referenceModeUsesUnderlyingSourcePath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     SourcePath src = FakeSourcePath.of(projectFilesystem, "source");
     ExportFile exportFile =
         new ExportFileBuilder(target)
@@ -335,10 +337,9 @@ public class ExportFileTest {
             .setOut("out")
             .setSrc(FakeSourcePath.of(projectFilesystem, sourceDir))
             .build(graphBuilder, projectFilesystem);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     exportFile.getBuildSteps(
-        FakeBuildContext.withSourcePathResolver(pathResolver)
+        FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
             .withBuildCellRootPath(projectFilesystem.getRootPath()),
         new FakeBuildableContext());
   }
@@ -358,14 +359,13 @@ public class ExportFileTest {
             .setOut("out")
             .setSrc(FakeSourcePath.of(projectFilesystem, sourceDir))
             .build(graphBuilder, projectFilesystem);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     CapturingConsoleEventListener listener = new CapturingConsoleEventListener();
     buckEventBus.register(listener);
 
     exportFile.getBuildSteps(
-        FakeBuildContext.create(pathResolver, buckEventBus)
+        FakeBuildContext.create(graphBuilder.getSourcePathResolver(), buckEventBus)
             .withBuildCellRootPath(projectFilesystem.getRootPath()),
         new FakeBuildableContext());
 
@@ -385,14 +385,13 @@ public class ExportFileTest {
             .setOut("out")
             .setSrc(FakeSourcePath.of(projectFilesystem, sourceDir))
             .build(graphBuilder, projectFilesystem);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     CapturingConsoleEventListener listener = new CapturingConsoleEventListener();
     buckEventBus.register(listener);
 
     exportFile.getBuildSteps(
-        FakeBuildContext.create(pathResolver, buckEventBus)
+        FakeBuildContext.create(graphBuilder.getSourcePathResolver(), buckEventBus)
             .withBuildCellRootPath(projectFilesystem.getRootPath()),
         new FakeBuildableContext());
   }
