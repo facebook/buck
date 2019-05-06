@@ -29,7 +29,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxInferEnhancer;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -164,8 +163,8 @@ public class MultiarchFileInfos {
     // If any thin rule exists with output, use `MultiarchFile` to generate binary. Otherwise,
     // use a `NoopBuildRule` to handle inputs like those without any sources.
     if (!inputs.isEmpty()) {
-      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-      String multiarchOutputPathFormat = getMultiarchOutputFormatString(pathResolver, inputs);
+      String multiarchOutputPathFormat =
+          getMultiarchOutputFormatString(graphBuilder.getSourcePathResolver(), inputs);
 
       MultiarchFile multiarchFile =
           new MultiarchFile(

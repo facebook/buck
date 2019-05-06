@@ -24,7 +24,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
@@ -64,11 +63,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
 
     SwiftLibraryDescriptionArg.Builder delegateArgsBuilder = SwiftLibraryDescriptionArg.builder();
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
-        swiftBuckConfig,
-        DefaultSourcePathResolver.from(graphBuilder),
-        delegateArgsBuilder,
-        args,
-        target);
+        swiftBuckConfig, graphBuilder.getSourcePathResolver(), delegateArgsBuilder, args, target);
     SwiftLibraryDescriptionArg swiftArgs = delegateArgsBuilder.build();
 
     Preprocessor preprocessor =

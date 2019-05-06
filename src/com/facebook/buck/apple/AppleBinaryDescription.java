@@ -42,8 +42,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxBinaryDescription;
@@ -502,8 +500,6 @@ public class AppleBinaryDescription
             extraCxxDeps = ImmutableSortedSet.of();
           }
 
-          SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-
           Optional<Path> stubBinaryPath =
               getStubBinaryPath(buildTarget, appleCxxPlatformsFlavorDomain, args);
           if (shouldUseStubBinary(buildTarget, args) && stubBinaryPath.isPresent()) {
@@ -522,7 +518,7 @@ public class AppleBinaryDescription
             CxxBinaryDescriptionArg.Builder delegateArg =
                 CxxBinaryDescriptionArg.builder().from(args);
             AppleDescriptions.populateCxxBinaryDescriptionArg(
-                pathResolver, delegateArg, args, buildTarget);
+                graphBuilder.getSourcePathResolver(), delegateArg, args, buildTarget);
 
             Optional<ApplePlatform> applePlatform =
                 getApplePlatformForTarget(buildTarget, appleCxxPlatformsFlavorDomain, graphBuilder);
@@ -539,7 +535,10 @@ public class AppleBinaryDescription
                         "-Xlinker",
                         "__entitlements",
                         "-Xlinker",
-                        pathResolver.getAbsolutePath(entitlements.get()).toString());
+                        graphBuilder
+                            .getSourcePathResolver()
+                            .getAbsolutePath(entitlements.get())
+                            .toString());
                 delegateArg.addAllLinkerFlags(
                     Iterables.transform(
                         flags, flag -> StringWithMacros.of(ImmutableList.of(Either.ofLeft(flag)))));
@@ -623,7 +622,7 @@ public class AppleBinaryDescription
     if (!metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
       CxxBinaryDescriptionArg.Builder delegateArg = CxxBinaryDescriptionArg.builder().from(args);
       AppleDescriptions.populateCxxBinaryDescriptionArg(
-          DefaultSourcePathResolver.from(graphBuilder), delegateArg, args, buildTarget);
+          graphBuilder.getSourcePathResolver(), delegateArg, args, buildTarget);
       return cxxBinaryMetadataFactory.createMetadata(
           buildTarget, graphBuilder, delegateArg.build().getDeps(), metadataClass);
     }

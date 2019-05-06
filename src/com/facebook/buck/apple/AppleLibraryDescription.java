@@ -44,8 +44,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
@@ -472,8 +470,6 @@ public class AppleLibraryDescription
     BuildTarget unstrippedBuildTarget =
         CxxStrip.removeStripStyleFlavorInTarget(buildTarget, flavoredStripStyle);
 
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-
     BuildRule unstrippedBinaryRule =
         requireUnstrippedBuildRule(
             context,
@@ -484,7 +480,6 @@ public class AppleLibraryDescription
             linkableDepType,
             bundleLoader,
             blacklist,
-            pathResolver,
             extraCxxDeps,
             transitiveCxxPreprocessorInput);
 
@@ -546,7 +541,6 @@ public class AppleLibraryDescription
       Optional<Linker.LinkableDepType> linkableDepType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
-      SourcePathResolver pathResolver,
       ImmutableSortedSet<BuildTarget> extraCxxDeps,
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInput) {
     Optional<MultiarchFileInfo> multiarchFileInfo =
@@ -564,7 +558,6 @@ public class AppleLibraryDescription
                 linkableDepType,
                 bundleLoader,
                 blacklist,
-                pathResolver,
                 extraCxxDeps,
                 transitiveCxxPreprocessorInput));
       }
@@ -590,7 +583,6 @@ public class AppleLibraryDescription
           linkableDepType,
           bundleLoader,
           blacklist,
-          pathResolver,
           extraCxxDeps,
           transitiveCxxPreprocessorInput);
     }
@@ -606,13 +598,12 @@ public class AppleLibraryDescription
           Optional<Linker.LinkableDepType> linkableDepType,
           Optional<SourcePath> bundleLoader,
           ImmutableSet<BuildTarget> blacklist,
-          SourcePathResolver pathResolver,
           ImmutableSortedSet<BuildTarget> extraCxxDeps,
           CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitiveCxxDeps) {
 
     CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
     AppleDescriptions.populateCxxLibraryDescriptionArg(
-        pathResolver, delegateArg, args, buildTarget);
+        graphBuilder.getSourcePathResolver(), delegateArg, args, buildTarget);
 
     BuildRuleParams newParams;
     Optional<BuildRule> swiftCompanionBuildRule =
@@ -698,8 +689,6 @@ public class AppleLibraryDescription
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       AppleNativeTargetDescriptionArg args) {
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-
     Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(args, buildTarget);
     ImmutableSortedMap.Builder<Path, SourcePath> headers = ImmutableSortedMap.naturalOrder();
     headers.putAll(
@@ -707,7 +696,7 @@ public class AppleLibraryDescription
             Paths.get(""),
             AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
                 buildTarget,
-                pathResolver::getRelativePath,
+                graphBuilder.getSourcePathResolver()::getRelativePath,
                 headerPathPrefix,
                 args.getExportedHeaders())));
     if (targetContainsSwift(buildTarget, graphBuilder)) {
@@ -730,15 +719,13 @@ public class AppleLibraryDescription
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       AppleNativeTargetDescriptionArg args) {
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-
     Path headerPathPrefix = AppleDescriptions.getHeaderPathPrefix(args, buildTarget);
     ImmutableMap<Path, SourcePath> headers =
         CxxPreprocessables.resolveHeaderMap(
             Paths.get(""),
             AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
                 buildTarget,
-                pathResolver::getRelativePath,
+                graphBuilder.getSourcePathResolver()::getRelativePath,
                 headerPathPrefix,
                 args.getExportedHeaders()));
 
@@ -759,8 +746,6 @@ public class AppleLibraryDescription
       AppleNativeTargetDescriptionArg args,
       Class<U> metadataClass) {
 
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-
     if (CxxLibraryDescription.METADATA_TYPE.containsAnyOf(buildTarget.getFlavors())) {
       // Modules are always platform specific so we need to only have one platform specific
       // headersymlinktree with a modulemap. We cannot forward the metadata to a cxxlibrary
@@ -780,7 +765,7 @@ public class AppleLibraryDescription
         }
       } else {
         return forwardMetadataToCxxLibraryDescription(
-            buildTarget, graphBuilder, cellRoots, args, metadataClass, pathResolver);
+            buildTarget, graphBuilder, cellRoots, args, metadataClass);
       }
     }
 
@@ -820,7 +805,8 @@ public class AppleLibraryDescription
         case APPLE_SWIFT_METADATA:
           {
             AppleLibrarySwiftMetadata metadata =
-                AppleLibrarySwiftMetadata.from(args.getSrcs(), pathResolver);
+                AppleLibrarySwiftMetadata.from(
+                    args.getSrcs(), graphBuilder.getSourcePathResolver());
             return Optional.of(metadata).map(metadataClass::cast);
           }
 
@@ -970,11 +956,10 @@ public class AppleLibraryDescription
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       AppleNativeTargetDescriptionArg args,
-      Class<U> metadataClass,
-      SourcePathResolver pathResolver) {
+      Class<U> metadataClass) {
     CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
     AppleDescriptions.populateCxxLibraryDescriptionArg(
-        pathResolver, delegateArg, args, buildTarget);
+        graphBuilder.getSourcePathResolver(), delegateArg, args, buildTarget);
     return cxxLibraryMetadataFactory.createMetadata(
         buildTarget, graphBuilder, cellRoots, delegateArg.build(), metadataClass);
   }

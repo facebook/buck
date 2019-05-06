@@ -31,7 +31,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxFlags;
@@ -114,7 +113,7 @@ public class PrebuiltAppleFrameworkDescription
         buildTarget,
         context.getProjectFilesystem(),
         params,
-        DefaultSourcePathResolver.from(context.getActionGraphBuilder()),
+        context.getActionGraphBuilder().getSourcePathResolver(),
         args.getFramework(),
         args.getPreferredLinkage(),
         args.getFrameworks(),

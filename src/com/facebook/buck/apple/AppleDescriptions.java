@@ -45,7 +45,6 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
@@ -370,7 +369,6 @@ public class AppleDescriptions {
       TargetGraph targetGraph,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       ApplePlatform applePlatform,
       String targetSDKVersion,
@@ -426,7 +424,7 @@ public class AppleDescriptions {
         assetCatalogDirs,
         buildTarget,
         projectFilesystem,
-        sourcePathResolver,
+        ruleFinder.getSourcePathResolver(),
         assetCatalogValidation);
 
     BuildTarget assetCatalogBuildTarget = buildTarget.withAppendedFlavors(AppleAssetCatalog.FLAVOR);
@@ -699,7 +697,6 @@ public class AppleDescriptions {
     }
     ImmutableSet<SourcePath> frameworks = frameworksBuilder.build();
 
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
     BuildTarget buildTargetWithoutBundleSpecificFlavors = stripBundleSpecificFlavors(buildTarget);
 
     Optional<AppleAssetCatalog> assetCatalog =
@@ -708,7 +705,6 @@ public class AppleDescriptions {
             targetGraph,
             buildTargetWithoutBundleSpecificFlavors,
             projectFilesystem,
-            sourcePathResolver,
             graphBuilder,
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
             appleCxxPlatform.getMinVersion(),
