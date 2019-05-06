@@ -49,7 +49,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.distributed.BuildSlaveEventWrapper;
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildService;
@@ -300,7 +299,6 @@ public class BuildPhaseTest {
                 new DefaultRuleKeyFactory(
                     new RuleKeyFieldLoader(executorArgs.getRuleKeyConfiguration()),
                     fileHashCache,
-                    DefaultSourcePathResolver.from(ruleFinder),
                     ruleFinder,
                     new TrackedRuleKeyCache<RuleKey>(
                         new DefaultRuleKeyCache<>(), new NoOpCacheStatsTracker()),

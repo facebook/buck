@@ -194,11 +194,9 @@ public class HeaderSymlinkTreeWithModuleMapTest {
             FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     RuleKey key1 =
-        new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleResolver)
-            .build(symlinkTreeBuildRule);
+        new TestDefaultRuleKeyFactory(hashLoader, ruleResolver).build(symlinkTreeBuildRule);
     RuleKey key2 =
-        new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleResolver)
-            .build(modifiedSymlinkTreeBuildRule);
+        new TestDefaultRuleKeyFactory(hashLoader, ruleResolver).build(modifiedSymlinkTreeBuildRule);
     assertNotEquals(key1, key2);
   }
 }

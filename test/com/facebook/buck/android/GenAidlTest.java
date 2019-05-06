@@ -35,7 +35,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
@@ -164,12 +163,10 @@ public class GenAidlTest {
   @Test
   public void testTransitiveAidlDependenciesAffectTheRuleKey() throws IOException {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     StackedFileHashCache hashCache =
         StackedFileHashCache.createDefaultHashCaches(
             stubFilesystem, FileHashCacheMode.LOADING_CACHE);
-    DefaultRuleKeyFactory factory =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder);
+    DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(hashCache, ruleFinder);
     stubFilesystem.touch(stubFilesystem.getRootPath().resolve(pathToAidl.getRelativePath()));
 
     GenAidl genAidlRuleNoDeps = createGenAidlRule(ImmutableSortedSet.of());

@@ -45,8 +45,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
@@ -1305,11 +1303,9 @@ public class IncrementalActionGraphScenarioTest {
   }
 
   private ImmutableMap<BuildRule, RuleKey> getRuleKeys(ActionGraphAndBuilder result) {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(result.getActionGraphBuilder());
     ContentAgnosticRuleKeyFactory factory =
         new ContentAgnosticRuleKeyFactory(
-            fieldLoader, pathResolver, result.getActionGraphBuilder(), Optional.empty());
+            fieldLoader, result.getActionGraphBuilder(), Optional.empty());
 
     ImmutableMap.Builder<BuildRule, RuleKey> builder = ImmutableMap.builder();
     for (BuildRule rule : result.getActionGraph().getNodes()) {

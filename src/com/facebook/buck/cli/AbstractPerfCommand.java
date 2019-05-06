@@ -24,7 +24,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.event.FlushConsoleEvent;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
@@ -192,8 +191,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
       ActionGraphBuilder graphBuilder, ImmutableList<BuildRule> rulesInGraph) throws IOException {
     for (BuildRule rule : rulesInGraph) {
       if (rule instanceof InitializableFromDisk) {
-        ((InitializableFromDisk<?>) rule)
-            .initializeFromDisk(DefaultSourcePathResolver.from(graphBuilder));
+        ((InitializableFromDisk<?>) rule).initializeFromDisk(graphBuilder.getSourcePathResolver());
       }
     }
   }

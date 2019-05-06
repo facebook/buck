@@ -46,8 +46,6 @@ import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -383,7 +381,6 @@ public class DistBuildStateTest {
   private DistBuildFileHashes emptyActionGraph() throws IOException, InterruptedException {
     ActionGraph actionGraph = new ActionGraph(ImmutableList.of());
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleResolver);
     ProjectFilesystem projectFilesystem = createJavaOnlyFilesystem("/opt/buck");
     Cell rootCell =
         new TestCellBuilder()
@@ -392,7 +389,6 @@ public class DistBuildStateTest {
             .build();
     return new DistBuildFileHashes(
         actionGraph,
-        sourcePathResolver,
         ruleResolver,
         new StackedFileHashCache(
             ImmutableList.of(

@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -115,14 +114,10 @@ public class CommandAliasIntegrationTest {
   }
 
   private static RuleKey ruleKey(CommandAliasBuilder.BuildResult result, BuildTarget target) {
-    SourcePathResolver pathResolver = result.sourcePathResolver();
     SourcePathRuleFinder ruleFinder = result.ruleFinder();
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
     return new UncachedRuleKeyBuilder(
-            ruleFinder,
-            pathResolver,
-            hashCache,
-            new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder))
+            ruleFinder, hashCache, new TestDefaultRuleKeyFactory(hashCache, ruleFinder))
         .setReflectively("key", result.graphBuilder().requireRule(target))
         .build(RuleKey::new);
   }

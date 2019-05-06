@@ -32,7 +32,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.macros.LocationMacro;
@@ -218,14 +217,16 @@ public class JsBundleDescriptionTest {
               "//:bundle",
               builder -> builder.setExtraJson("[\"1 %s 2\"]", LocationMacro.of(referencedTarget)));
 
-      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(scenario.graphBuilder);
-
       Function<HashCode, RuleKey> calc =
           (refHash) ->
               new TestDefaultRuleKeyFactory(
                       new FakeFileHashCache(
-                          ImmutableMap.of(pathResolver.getAbsolutePath(referencedSource), refHash)),
-                      pathResolver,
+                          ImmutableMap.of(
+                              scenario
+                                  .graphBuilder
+                                  .getSourcePathResolver()
+                                  .getAbsolutePath(referencedSource),
+                              refHash)),
                       scenario.graphBuilder)
                   .build(bundle);
 

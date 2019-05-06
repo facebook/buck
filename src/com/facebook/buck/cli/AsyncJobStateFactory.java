@@ -22,8 +22,6 @@ import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.ClientStatsTracker;
 import com.facebook.buck.distributed.DistBuildCellIndexer;
@@ -65,13 +63,11 @@ public class AsyncJobStateFactory {
     ActionGraphAndBuilder actionGraphAndBuilder =
         graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder();
     SourcePathRuleFinder ruleFinder = actionGraphAndBuilder.getActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     clientStatsTracker.ifPresent(tracker -> tracker.startTimer(LOCAL_FILE_HASH_COMPUTATION));
     DistBuildFileHashes distributedBuildFileHashes =
         new DistBuildFileHashes(
             actionGraphAndBuilder.getActionGraph(),
-            pathResolver,
             ruleFinder,
             params.getFileHashCache(),
             cellIndexer,

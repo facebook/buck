@@ -182,9 +182,7 @@ public class CalculateSourceAbi
 
   @Override
   public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
-    return getBuildable()
-        .jarBuildStepsFactory
-        .getCoveredByDepFilePredicate(pathResolver, ruleFinder);
+    return getBuildable().jarBuildStepsFactory.getCoveredByDepFilePredicate(ruleFinder);
   }
 
   @Override

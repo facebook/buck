@@ -829,7 +829,6 @@ public class AppleCxxPlatformsTest {
   private ImmutableMap<Flavor, RuleKey> constructCompileRuleKeys(
       Operation operation, ImmutableMap<Flavor, AppleCxxPlatform> cxxPlatforms) {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     String source = "source.cpp";
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(
@@ -837,7 +836,6 @@ public class AppleCxxPlatformsTest {
                 ImmutableMap.<Path, HashCode>builder()
                     .put(projectFilesystem.resolve("source.cpp"), HashCode.fromInt(0))
                     .build()),
-            pathResolver,
             graphBuilder);
     BuildTarget target =
         BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:target");
@@ -848,7 +846,7 @@ public class AppleCxxPlatformsTest {
               .setProjectFilesystem(projectFilesystem)
               .setBaseBuildTarget(target)
               .setActionGraphBuilder(graphBuilder)
-              .setPathResolver(pathResolver)
+              .setPathResolver(graphBuilder.getSourcePathResolver())
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(entry.getValue().getCxxPlatform())
               .setPicType(PicType.PIC)
@@ -891,7 +889,6 @@ public class AppleCxxPlatformsTest {
                 ImmutableMap.<String, String>builder()
                     .put("input.o", Strings.repeat("a", 40))
                     .build()),
-            graphBuilder.getSourcePathResolver(),
             graphBuilder);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     ImmutableMap.Builder<Flavor, RuleKey> ruleKeys = ImmutableMap.builder();
@@ -1197,17 +1194,16 @@ public class AppleCxxPlatformsTest {
                 .build());
 
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
 
     RuleKey actoolRuleKey1 =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .newBuilderForTesting(new FakeBuildRule("//:test"))
             .setReflectively("tool", appleCxxPlatform1.getActool())
             .build(RuleKey::new);
 
     RuleKey actoolRuleKey2 =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .newBuilderForTesting(new FakeBuildRule("//:test"))
             .setReflectively("tool", appleCxxPlatform2.getActool())
             .build(RuleKey::new);
@@ -1215,13 +1211,13 @@ public class AppleCxxPlatformsTest {
     assertEquals(actoolRuleKey1, actoolRuleKey2);
 
     RuleKey ibtoolRuleKey1 =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .newBuilderForTesting(new FakeBuildRule("//:test"))
             .setReflectively("tool", appleCxxPlatform1.getIbtool())
             .build(RuleKey::new);
 
     RuleKey ibtoolRuleKey2 =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .newBuilderForTesting(new FakeBuildRule("//:test"))
             .setReflectively("tool", appleCxxPlatform2.getIbtool())
             .build(RuleKey::new);

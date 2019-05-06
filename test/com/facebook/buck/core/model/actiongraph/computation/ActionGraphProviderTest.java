@@ -38,8 +38,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -536,10 +534,8 @@ public class ActionGraphProviderTest {
       Iterable<BuildRule> buildRules, BuildRuleResolver buildRuleResolver) {
     RuleKeyFieldLoader ruleKeyFieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(buildRuleResolver);
     ContentAgnosticRuleKeyFactory factory =
-        new ContentAgnosticRuleKeyFactory(
-            ruleKeyFieldLoader, pathResolver, buildRuleResolver, Optional.empty());
+        new ContentAgnosticRuleKeyFactory(ruleKeyFieldLoader, buildRuleResolver, Optional.empty());
 
     HashMap<BuildRule, RuleKey> ruleKeysMap = new HashMap<>();
 

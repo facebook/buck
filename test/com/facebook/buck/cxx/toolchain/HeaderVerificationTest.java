@@ -23,8 +23,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyBuilder;
@@ -43,16 +41,14 @@ public class HeaderVerificationTest {
 
   private RuleKey getRuleKey(HeaderVerification headerVerification) {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     FileHashCache fileHashCache =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
                     new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT)));
-    DefaultRuleKeyFactory factory =
-        new TestDefaultRuleKeyFactory(fileHashCache, resolver, ruleFinder);
+    DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashCache, ruleFinder);
     RuleKeyBuilder<HashCode> builder =
-        new UncachedRuleKeyBuilder(ruleFinder, resolver, fileHashCache, factory);
+        new UncachedRuleKeyBuilder(ruleFinder, fileHashCache, factory);
     builder.setReflectively("headerVerification", headerVerification);
     return builder.build(RuleKey::new);
   }

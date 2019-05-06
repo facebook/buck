@@ -17,26 +17,20 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.util.hashing.FileHashLoader;
 
 public class TestDefaultRuleKeyFactory extends DefaultRuleKeyFactory {
 
-  public TestDefaultRuleKeyFactory(
-      FileHashLoader hashLoader, SourcePathResolver pathResolver, SourcePathRuleFinder ruleFinder) {
-    this(0, hashLoader, pathResolver, ruleFinder);
+  public TestDefaultRuleKeyFactory(FileHashLoader hashLoader, SourcePathRuleFinder ruleFinder) {
+    this(0, hashLoader, ruleFinder);
   }
 
   public TestDefaultRuleKeyFactory(
-      int seed,
-      FileHashLoader hashLoader,
-      SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder) {
+      int seed, FileHashLoader hashLoader, SourcePathRuleFinder ruleFinder) {
     super(
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.createWithSeed(seed)),
         hashLoader,
-        pathResolver,
         ruleFinder);
   }
 }

@@ -24,8 +24,6 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.rules.args.SanitizedArg;
@@ -97,7 +95,6 @@ public class PreprocessorFlagsTest {
     @Test
     public void shouldAffectRuleKey() {
       SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       FakeFileHashCache hashCache =
           FakeFileHashCache.createFromStrings(
@@ -106,14 +103,12 @@ public class PreprocessorFlagsTest {
 
       DefaultRuleKeyFactory.Builder<HashCode> builder;
       builder =
-          new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
-              .newBuilderForTesting(fakeBuildRule);
+          new TestDefaultRuleKeyFactory(hashCache, ruleFinder).newBuilderForTesting(fakeBuildRule);
       builder.setReflectively("flags", defaultFlags);
       RuleKey defaultRuleKey = builder.build(RuleKey::new);
 
       builder =
-          new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
-              .newBuilderForTesting(fakeBuildRule);
+          new TestDefaultRuleKeyFactory(hashCache, ruleFinder).newBuilderForTesting(fakeBuildRule);
       builder.setReflectively("flags", alteredFlags);
       RuleKey alteredRuleKey = builder.build(RuleKey::new);
 
@@ -129,7 +124,6 @@ public class PreprocessorFlagsTest {
     @Test
     public void flagsAreSanitized() {
       SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
       BuildRule fakeBuildRule = new FakeBuildRule(target);
@@ -152,7 +146,7 @@ public class PreprocessorFlagsTest {
                   .build();
 
           DefaultRuleKeyFactory.Builder<HashCode> builder =
-              new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+              new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
                   .newBuilderForTesting(fakeBuildRule);
           builder.setReflectively(
               "flags", PreprocessorFlags.builder().setOtherFlags(flags).build());

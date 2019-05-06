@@ -184,7 +184,6 @@ public class SymlinkTreeTest {
             ImmutableMultimap.of(),
             graphBuilder);
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =
@@ -193,10 +192,9 @@ public class SymlinkTreeTest {
             FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     RuleKey key1 =
-        new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder).build(symlinkTreeBuildRule);
+        new TestDefaultRuleKeyFactory(hashLoader, ruleFinder).build(symlinkTreeBuildRule);
     RuleKey key2 =
-        new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder)
-            .build(modifiedSymlinkTreeBuildRule);
+        new TestDefaultRuleKeyFactory(hashLoader, ruleFinder).build(modifiedSymlinkTreeBuildRule);
     assertNotEquals(key1, key2);
   }
 
@@ -264,8 +262,6 @@ public class SymlinkTreeTest {
             ImmutableSetMultimap.of(Paths.get("other_subdir"), exportFile2.getSourcePathToOutput()),
             graphBuilder);
 
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(graphBuilder);
-
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =
         DefaultFileHashCache.createDefaultFileHashCache(
@@ -273,14 +269,11 @@ public class SymlinkTreeTest {
             FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     RuleKey key1 =
-        new TestDefaultRuleKeyFactory(hashLoader, resolver, graphBuilder)
-            .build(firstSymLinkTreeBuildRule);
+        new TestDefaultRuleKeyFactory(hashLoader, graphBuilder).build(firstSymLinkTreeBuildRule);
     RuleKey key2 =
-        new TestDefaultRuleKeyFactory(hashLoader, resolver, graphBuilder)
-            .build(secondSymLinkTreeBuildRule);
+        new TestDefaultRuleKeyFactory(hashLoader, graphBuilder).build(secondSymLinkTreeBuildRule);
     RuleKey key3 =
-        new TestDefaultRuleKeyFactory(hashLoader, resolver, graphBuilder)
-            .build(thirdSymLinkTreeBuildRule);
+        new TestDefaultRuleKeyFactory(hashLoader, graphBuilder).build(thirdSymLinkTreeBuildRule);
 
     assertNotEquals(key1, key2);
     assertNotEquals(key1, key3);
@@ -360,8 +353,6 @@ public class SymlinkTreeTest {
             secondMergeDirectories,
             graphBuilder);
 
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(graphBuilder);
-
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =
         DefaultFileHashCache.createDefaultFileHashCache(
@@ -369,11 +360,9 @@ public class SymlinkTreeTest {
             FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     RuleKey key1 =
-        new TestDefaultRuleKeyFactory(hashLoader, resolver, graphBuilder)
-            .build(firstSymLinkTreeBuildRule);
+        new TestDefaultRuleKeyFactory(hashLoader, graphBuilder).build(firstSymLinkTreeBuildRule);
     RuleKey key2 =
-        new TestDefaultRuleKeyFactory(hashLoader, resolver, graphBuilder)
-            .build(secondSymLinkTreeBuildRule);
+        new TestDefaultRuleKeyFactory(hashLoader, graphBuilder).build(secondSymLinkTreeBuildRule);
 
     assertNotEquals(firstMergeDirectories, secondMergeDirectories);
     assertEquals(key1, key2);
@@ -385,7 +374,7 @@ public class SymlinkTreeTest {
 
     InputBasedRuleKeyFactory ruleKeyFactory =
         new TestInputBasedRuleKeyFactory(
-            FakeFileHashCache.createFromStrings(ImmutableMap.of()), pathResolver, graphBuilder);
+            FakeFileHashCache.createFromStrings(ImmutableMap.of()), graphBuilder);
 
     // Calculate the rule key
     RuleKey key1 = ruleKeyFactory.build(symlinkTreeBuildRule);
@@ -408,7 +397,6 @@ public class SymlinkTreeTest {
     // rulekey must change when the link contents change.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     graphBuilder.addToIndex(symlinkTreeBuildRule);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     Genrule genrule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
@@ -421,15 +409,14 @@ public class SymlinkTreeTest {
             TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
             FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
-    RuleKey ruleKey1 =
-        new TestDefaultRuleKeyFactory(hashLoader, pathResolver, graphBuilder).build(genrule);
+    RuleKey ruleKey1 = new TestDefaultRuleKeyFactory(hashLoader, graphBuilder).build(genrule);
 
-    Path existingFile = pathResolver.getAbsolutePath(links.values().asList().get(0));
+    Path existingFile =
+        graphBuilder.getSourcePathResolver().getAbsolutePath(links.values().asList().get(0));
     Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
     hashCache.invalidateAll();
 
-    RuleKey ruleKey2 =
-        new TestDefaultRuleKeyFactory(hashLoader, pathResolver, graphBuilder).build(genrule);
+    RuleKey ruleKey2 = new TestDefaultRuleKeyFactory(hashLoader, graphBuilder).build(genrule);
 
     // Verify that the rules keys are different.
     assertNotEquals(ruleKey1, ruleKey2);
@@ -457,14 +444,13 @@ public class SymlinkTreeTest {
     FakeFileHashCache hashCache =
         FakeFileHashCache.createFromStrings(ImmutableMap.of("out", "aaaa"));
     InputBasedRuleKeyFactory inputBasedRuleKeyFactory =
-        new TestInputBasedRuleKeyFactory(hashCache, pathResolver, graphBuilder);
+        new TestInputBasedRuleKeyFactory(hashCache, graphBuilder);
     RuleKey ruleKey1 = inputBasedRuleKeyFactory.build(symlinkTreeBuildRule);
 
     // Generate an input-based rule key for the symlink tree with the contents of the link
     // target hashing to a different value: "bbbb".
     hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of("out", "bbbb"));
-    inputBasedRuleKeyFactory =
-        new TestInputBasedRuleKeyFactory(hashCache, pathResolver, graphBuilder);
+    inputBasedRuleKeyFactory = new TestInputBasedRuleKeyFactory(hashCache, graphBuilder);
     RuleKey ruleKey2 = inputBasedRuleKeyFactory.build(symlinkTreeBuildRule);
 
     // Verify that the rules keys are the same.

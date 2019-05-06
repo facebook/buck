@@ -400,14 +400,12 @@ public class CxxTestDescriptionTest {
   }
 
   private RuleKey getRuleKey(BuildRuleResolver resolver, BuildRule rule) {
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
     FileHashCache fileHashCache =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
                     rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT)));
-    DefaultRuleKeyFactory factory =
-        new TestDefaultRuleKeyFactory(fileHashCache, pathResolver, resolver);
+    DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashCache, resolver);
     return factory.build(rule);
   }
 }

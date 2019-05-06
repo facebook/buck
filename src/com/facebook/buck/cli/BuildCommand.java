@@ -629,7 +629,6 @@ public class BuildCommand extends AbstractCommand {
               new DefaultRuleKeyFactory(
                   fieldLoader,
                   params.getFileHashCache(),
-                  pathResolver,
                   graphBuilder,
                   ruleKeyCacheScope.getCache(),
                   Optional.empty()));

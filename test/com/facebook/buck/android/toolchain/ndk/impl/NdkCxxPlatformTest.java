@@ -47,8 +47,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
@@ -111,7 +109,6 @@ public class NdkCxxPlatformTest {
   private ImmutableMap<TargetCpuType, RuleKey> constructCompileRuleKeys(
       Operation operation, ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> cxxPlatforms) {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     String source = "source.cpp";
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(
@@ -119,7 +116,6 @@ public class NdkCxxPlatformTest {
                 ImmutableMap.<String, String>builder()
                     .put("source.cpp", Strings.repeat("a", 40))
                     .build()),
-            pathResolver,
             graphBuilder);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     ImmutableMap.Builder<TargetCpuType, RuleKey> ruleKeys = ImmutableMap.builder();
@@ -129,7 +125,7 @@ public class NdkCxxPlatformTest {
               .setBaseBuildTarget(target)
               .setProjectFilesystem(new FakeProjectFilesystem())
               .setActionGraphBuilder(graphBuilder)
-              .setPathResolver(pathResolver)
+              .setPathResolver(graphBuilder.getSourcePathResolver())
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(entry.getValue().resolve(graphBuilder).getCxxPlatform())
               .setPicType(PicType.PIC)
@@ -170,7 +166,6 @@ public class NdkCxxPlatformTest {
                 ImmutableMap.<String, String>builder()
                     .put("input.o", Strings.repeat("a", 40))
                     .build()),
-            graphBuilder.getSourcePathResolver(),
             graphBuilder);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     ImmutableMap.Builder<TargetCpuType, RuleKey> ruleKeys = ImmutableMap.builder();

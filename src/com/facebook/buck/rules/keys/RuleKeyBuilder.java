@@ -85,28 +85,22 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
   private static final Logger logger = Logger.get(RuleKeyBuilder.class);
 
   private final SourcePathRuleFinder ruleFinder;
-  private final SourcePathResolver resolver;
   private final FileHashLoader hashLoader;
   private final CountingRuleKeyHasher<RULE_KEY> hasher;
 
   public RuleKeyBuilder(
       SourcePathRuleFinder ruleFinder,
-      SourcePathResolver resolver,
       FileHashLoader hashLoader,
       CountingRuleKeyHasher<RULE_KEY> hasher) {
     super(new DefaultRuleKeyScopedHasher<>(hasher));
     this.ruleFinder = ruleFinder;
-    this.resolver = resolver;
     this.hashLoader = hashLoader;
     this.hasher = hasher;
   }
 
   public RuleKeyBuilder(
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver resolver,
-      FileHashLoader hashLoader,
-      RuleKeyHasher<RULE_KEY> hasher) {
-    this(ruleFinder, resolver, hashLoader, new CountingRuleKeyHasher<>(hasher));
+      SourcePathRuleFinder ruleFinder, FileHashLoader hashLoader, RuleKeyHasher<RULE_KEY> hasher) {
+    this(ruleFinder, hashLoader, new CountingRuleKeyHasher<>(hasher));
   }
 
   @VisibleForTesting
@@ -162,6 +156,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
    * {@link #setSourcePathAsRule}.
    */
   final RuleKeyBuilder<RULE_KEY> setSourcePathDirectly(SourcePath sourcePath) throws IOException {
+    SourcePathResolver resolver = ruleFinder.getSourcePathResolver();
     if (sourcePath instanceof BuildTargetSourcePath) {
       Path relativePath = resolver.getRelativePath(sourcePath);
       Optional<HashCode> precomputedHash =
@@ -242,6 +237,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
   }
 
   final RuleKeyBuilder<RULE_KEY> setNonHashingSourcePathDirectly(SourcePath sourcePath) {
+    SourcePathResolver resolver = ruleFinder.getSourcePathResolver();
     if (sourcePath instanceof BuildTargetSourcePath) {
       hasher.putNonHashingPath(resolver.getRelativePath(sourcePath).toString());
     } else if (sourcePath instanceof PathSourcePath) {

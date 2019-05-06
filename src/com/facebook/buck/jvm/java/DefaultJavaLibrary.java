@@ -443,7 +443,7 @@ public class DefaultJavaLibrary
 
   @Override
   public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
-    return getBuildable().getCoveredByDepFilePredicate(pathResolver, ruleFinder);
+    return getBuildable().getCoveredByDepFilePredicate(ruleFinder);
   }
 
   @Override

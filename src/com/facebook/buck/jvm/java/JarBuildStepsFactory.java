@@ -257,14 +257,11 @@ public class JarBuildStepsFactory
   }
 
   /** Returns a predicate indicating whether a SourcePath is covered by the depfile. */
-  public Predicate<SourcePath> getCoveredByDepFilePredicate(
-      SourcePathResolver pathResolver, SourcePathRuleFinder ruleFinder) {
+  public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathRuleFinder ruleFinder) {
     // a hash set is intentionally used to achieve constant time look-up
     // TODO(cjhopman): This could probably be changed to be a 2-level check of archivepath->inner,
     // withinarchivepath->boolean.
-    return abiClasspath
-            .getArchiveMembers(pathResolver, ruleFinder)
-            .collect(ImmutableSet.toImmutableSet())
+    return abiClasspath.getArchiveMembers(ruleFinder).collect(ImmutableSet.toImmutableSet())
         ::contains;
   }
 

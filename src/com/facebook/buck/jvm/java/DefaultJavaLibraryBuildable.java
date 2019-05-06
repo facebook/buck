@@ -185,9 +185,8 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     return jarBuildStepsFactory.useDependencyFileRuleKeys();
   }
 
-  public Predicate<SourcePath> getCoveredByDepFilePredicate(
-      SourcePathResolver pathResolver, SourcePathRuleFinder ruleFinder) {
-    return jarBuildStepsFactory.getCoveredByDepFilePredicate(pathResolver, ruleFinder);
+  public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathRuleFinder ruleFinder) {
+    return jarBuildStepsFactory.getCoveredByDepFilePredicate(ruleFinder);
   }
 
   public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {

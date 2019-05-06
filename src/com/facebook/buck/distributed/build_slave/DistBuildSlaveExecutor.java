@@ -29,7 +29,6 @@ import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFa
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.BuildStatusUtil;
 import com.facebook.buck.distributed.DistBuildMode;
@@ -143,7 +142,6 @@ public class DistBuildSlaveExecutor {
                         new DefaultRuleKeyFactory(
                             new RuleKeyFieldLoader(args.getRuleKeyConfiguration()),
                             graphs.getCachingBuildEngineDelegate().getFileHashCache(),
-                            DefaultSourcePathResolver.from(ruleFinder),
                             ruleFinder,
                             args.getRuleKeyCacheScope().getCache(),
                             Optional.empty()),

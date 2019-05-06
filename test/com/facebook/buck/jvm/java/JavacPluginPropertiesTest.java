@@ -186,7 +186,7 @@ public class JavacPluginPropertiesTest {
     }
     FakeFileHashCache hashCache = new FakeFileHashCache(builder.build());
 
-    return new TestInputBasedRuleKeyFactory(hashCache, pathResolver, graphBuilder).build(processor);
+    return new TestInputBasedRuleKeyFactory(hashCache, graphBuilder).build(processor);
   }
 
   @Test

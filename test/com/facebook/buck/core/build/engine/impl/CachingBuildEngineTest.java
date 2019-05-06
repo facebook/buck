@@ -243,30 +243,17 @@ public class CachingBuildEngineTest {
   private static final BuildTarget BUILD_TARGET =
       BuildTargetFactory.newInstance("//src/com/facebook/orca:orca");
   private static final SourcePathRuleFinder DEFAULT_RULE_FINDER = new TestActionGraphBuilder();
-  private static final SourcePathResolver DEFAULT_SOURCE_PATH_RESOLVER =
-      DefaultSourcePathResolver.from(DEFAULT_RULE_FINDER);
   public static final long NO_INPUT_FILE_SIZE_LIMIT = Long.MAX_VALUE;
   public static final RuleKeyFieldLoader FIELD_LOADER =
       new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
   private static final DefaultRuleKeyFactory NOOP_RULE_KEY_FACTORY =
-      new DefaultRuleKeyFactory(
-          FIELD_LOADER,
-          new DummyFileHashCache(),
-          DEFAULT_SOURCE_PATH_RESOLVER,
-          DEFAULT_RULE_FINDER);
+      new DefaultRuleKeyFactory(FIELD_LOADER, new DummyFileHashCache(), DEFAULT_RULE_FINDER);
   private static final InputBasedRuleKeyFactory NOOP_INPUT_BASED_RULE_KEY_FACTORY =
       new TestInputBasedRuleKeyFactory(
-          FIELD_LOADER,
-          new DummyFileHashCache(),
-          DEFAULT_SOURCE_PATH_RESOLVER,
-          DEFAULT_RULE_FINDER,
-          NO_INPUT_FILE_SIZE_LIMIT);
+          FIELD_LOADER, new DummyFileHashCache(), DEFAULT_RULE_FINDER, NO_INPUT_FILE_SIZE_LIMIT);
   private static final DependencyFileRuleKeyFactory NOOP_DEP_FILE_RULE_KEY_FACTORY =
       new DefaultDependencyFileRuleKeyFactory(
-          FIELD_LOADER,
-          new DummyFileHashCache(),
-          DEFAULT_SOURCE_PATH_RESOLVER,
-          DEFAULT_RULE_FINDER);
+          FIELD_LOADER, new DummyFileHashCache(), DEFAULT_RULE_FINDER);
 
   @RunWith(Parameterized.class)
   public abstract static class CommonFixture extends EasyMockSupport {
@@ -317,11 +304,10 @@ public class CachingBuildEngineTest {
       buildContext.getEventBus().register(listener);
       graphBuilder = new TestActionGraphBuilder();
       pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-      defaultRuleKeyFactory =
-          new DefaultRuleKeyFactory(FIELD_LOADER, fileHashCache, pathResolver, graphBuilder);
+      defaultRuleKeyFactory = new DefaultRuleKeyFactory(FIELD_LOADER, fileHashCache, graphBuilder);
       inputBasedRuleKeyFactory =
           new TestInputBasedRuleKeyFactory(
-              FIELD_LOADER, fileHashCache, pathResolver, graphBuilder, NO_INPUT_FILE_SIZE_LIMIT);
+              FIELD_LOADER, fileHashCache, graphBuilder, NO_INPUT_FILE_SIZE_LIMIT);
       durationTracker = new BuildRuleDurationTracker();
     }
 
@@ -2415,8 +2401,7 @@ public class CachingBuildEngineTest {
     @Before
     public void setUpDepFileFixture() {
       depFileFactory =
-          new DefaultDependencyFileRuleKeyFactory(
-              FIELD_LOADER, fileHashCache, pathResolver, graphBuilder);
+          new DefaultDependencyFileRuleKeyFactory(FIELD_LOADER, fileHashCache, graphBuilder);
     }
 
     @Test
@@ -2970,8 +2955,7 @@ public class CachingBuildEngineTest {
     @Test
     public void manifestIsWrittenWhenBuiltLocally() throws Exception {
       DefaultDependencyFileRuleKeyFactory depFilefactory =
-          new DefaultDependencyFileRuleKeyFactory(
-              FIELD_LOADER, fileHashCache, pathResolver, graphBuilder);
+          new DefaultDependencyFileRuleKeyFactory(FIELD_LOADER, fileHashCache, graphBuilder);
 
       // Use a genrule to produce the input file.
       Genrule genrule =
@@ -3083,8 +3067,7 @@ public class CachingBuildEngineTest {
     @Test
     public void manifestIsUpdatedWhenBuiltLocally() throws Exception {
       DefaultDependencyFileRuleKeyFactory depFilefactory =
-          new DefaultDependencyFileRuleKeyFactory(
-              FIELD_LOADER, fileHashCache, pathResolver, graphBuilder);
+          new DefaultDependencyFileRuleKeyFactory(FIELD_LOADER, fileHashCache, graphBuilder);
 
       // Use a genrule to produce the input file.
       Genrule genrule =
@@ -3206,8 +3189,7 @@ public class CachingBuildEngineTest {
     @Test
     public void manifestIsTruncatedWhenGrowingPastSizeLimit() throws Exception {
       DefaultDependencyFileRuleKeyFactory depFilefactory =
-          new DefaultDependencyFileRuleKeyFactory(
-              FIELD_LOADER, fileHashCache, pathResolver, graphBuilder);
+          new DefaultDependencyFileRuleKeyFactory(FIELD_LOADER, fileHashCache, graphBuilder);
 
       // Use a genrule to produce the input file.
       Genrule genrule =
@@ -3323,8 +3305,7 @@ public class CachingBuildEngineTest {
     @Test
     public void manifestBasedCacheHit() throws Exception {
       DefaultDependencyFileRuleKeyFactory depFilefactory =
-          new DefaultDependencyFileRuleKeyFactory(
-              FIELD_LOADER, fileHashCache, pathResolver, graphBuilder);
+          new DefaultDependencyFileRuleKeyFactory(FIELD_LOADER, fileHashCache, graphBuilder);
 
       // Create a simple rule which just writes a file.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -3472,8 +3453,7 @@ public class CachingBuildEngineTest {
     @Test
     public void staleExistingManifestIsIgnored() throws Exception {
       DefaultDependencyFileRuleKeyFactory depFilefactory =
-          new DefaultDependencyFileRuleKeyFactory(
-              FIELD_LOADER, fileHashCache, pathResolver, graphBuilder);
+          new DefaultDependencyFileRuleKeyFactory(FIELD_LOADER, fileHashCache, graphBuilder);
 
       // Create a simple rule which just writes a file.
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");

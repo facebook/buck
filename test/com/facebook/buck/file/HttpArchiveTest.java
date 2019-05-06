@@ -23,8 +23,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
@@ -74,9 +72,8 @@ public class HttpArchiveTest {
             target, filesystem, params, httpFile, out, format, stripPrefix.map(Paths::get));
 
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
-    return new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(httpArchive);
+    return new TestDefaultRuleKeyFactory(hashCache, ruleFinder).build(httpArchive);
   }
 
   @Test

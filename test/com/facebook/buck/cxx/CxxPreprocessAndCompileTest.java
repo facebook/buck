@@ -150,7 +150,6 @@ public class CxxPreprocessAndCompileTest {
   @Test
   public void inputChangesCauseRuleKeyChangesForCompilation() {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     FakeFileHashCache hashCache =
         FakeFileHashCache.createFromStrings(
@@ -187,7 +186,7 @@ public class CxxPreprocessAndCompileTest {
     // Generate a rule key for the defaults.
 
     RuleKey defaultRuleKey =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
                 CxxPreprocessAndCompile.compile(
                     target,
@@ -206,7 +205,7 @@ public class CxxPreprocessAndCompileTest {
     // Verify that changing the compiler causes a rulekey change.
 
     RuleKey compilerChange =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
                 CxxPreprocessAndCompile.compile(
                     target,
@@ -233,7 +232,7 @@ public class CxxPreprocessAndCompileTest {
     // Verify that changing the operation causes a rulekey change.
 
     RuleKey operationChange =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
                 CxxPreprocessAndCompile.preprocessAndCompile(
                     target,
@@ -264,7 +263,7 @@ public class CxxPreprocessAndCompileTest {
     // Verify that changing the platform flags causes a rulekey change.
 
     RuleKey platformFlagsChange =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
                 CxxPreprocessAndCompile.compile(
                     target,
@@ -287,7 +286,7 @@ public class CxxPreprocessAndCompileTest {
     // Verify that changing the rule flags causes a rulekey change.
 
     RuleKey ruleFlagsChange =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
                 CxxPreprocessAndCompile.compile(
                     target,
@@ -310,7 +309,7 @@ public class CxxPreprocessAndCompileTest {
     // Verify that changing the input causes a rulekey change.
 
     RuleKey inputChange =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
                 CxxPreprocessAndCompile.compile(
                     target,
@@ -332,7 +331,6 @@ public class CxxPreprocessAndCompileTest {
   @Test
   public void preprocessorFlagsRuleKeyChangesCauseRuleKeyChangesForPreprocessing() {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     FakeFileHashCache hashCache =
         FakeFileHashCache.createFromStrings(
@@ -368,7 +366,7 @@ public class CxxPreprocessAndCompileTest {
 
     class TestData {
       public RuleKey generate(PreprocessorFlags flags) {
-        return new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        return new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
                 CxxPreprocessAndCompile.preprocessAndCompile(
                     target,

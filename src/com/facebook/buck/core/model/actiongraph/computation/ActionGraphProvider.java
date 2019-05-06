@@ -25,8 +25,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -228,10 +226,8 @@ public class ActionGraphProvider {
       BuildRuleResolver buildRuleResolver,
       RuleKeyFieldLoader fieldLoader,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(buildRuleResolver);
     ContentAgnosticRuleKeyFactory factory =
-        new ContentAgnosticRuleKeyFactory(
-            fieldLoader, pathResolver, buildRuleResolver, ruleKeyLogger);
+        new ContentAgnosticRuleKeyFactory(fieldLoader, buildRuleResolver, ruleKeyLogger);
 
     HashMap<BuildRule, RuleKey> ruleKeysMap = new HashMap<>();
     for (BuildRule rule : buildRules) {

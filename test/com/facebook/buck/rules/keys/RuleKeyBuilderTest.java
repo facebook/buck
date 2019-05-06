@@ -227,10 +227,7 @@ public class RuleKeyBuilderTest {
             ImmutableMap.of());
 
     return new RuleKeyBuilder<HashCode>(
-        ruleResolver,
-        pathResolver,
-        hashCache,
-        RuleKeyBuilder.createDefaultHasher(Optional.empty())) {
+        ruleResolver, hashCache, RuleKeyBuilder.createDefaultHasher(Optional.empty())) {
 
       @Override
       protected RuleKeyBuilder<HashCode> setBuildRule(BuildRule rule) {

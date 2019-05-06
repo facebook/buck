@@ -78,7 +78,6 @@ public class ArchiveTest {
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     FakeFileHashCache hashCache =
         FakeFileHashCache.createFromStrings(
@@ -93,7 +92,7 @@ public class ArchiveTest {
 
     // Generate a rule key for the defaults.
     RuleKey defaultRuleKey =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
                 new Archive(
                     target,
@@ -110,7 +109,7 @@ public class ArchiveTest {
 
     // Verify that changing the archiver causes a rulekey change.
     RuleKey archiverChange =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
                 new Archive(
                     target,
@@ -130,7 +129,7 @@ public class ArchiveTest {
 
     // Verify that changing the output path causes a rulekey change.
     RuleKey outputChange =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
                 new Archive(
                     target,
@@ -148,7 +147,7 @@ public class ArchiveTest {
 
     // Verify that changing the inputs causes a rulekey change.
     RuleKey inputChange =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
                 new Archive(
                     target,
@@ -166,7 +165,7 @@ public class ArchiveTest {
 
     // Verify that changing the type of archiver causes a rulekey change.
     RuleKey archiverTypeChange =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
                 new Archive(
                     target,

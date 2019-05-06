@@ -22,8 +22,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.AlterRuleKeys;
@@ -44,16 +42,13 @@ public class CxxHeadersDirTest {
 
   private RuleKey getRuleKey(ProjectFilesystem filesystem, CxxHeaders cxxHeaders) {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FileHashCache fileHashCache =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
                     filesystem, FileHashCacheMode.DEFAULT)));
-    DefaultRuleKeyFactory factory =
-        new TestDefaultRuleKeyFactory(fileHashCache, pathResolver, ruleFinder);
-    UncachedRuleKeyBuilder builder =
-        new UncachedRuleKeyBuilder(ruleFinder, pathResolver, fileHashCache, factory);
+    DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashCache, ruleFinder);
+    UncachedRuleKeyBuilder builder = new UncachedRuleKeyBuilder(ruleFinder, fileHashCache, factory);
     AlterRuleKeys.amendKey(builder, cxxHeaders);
     return builder.build(RuleKey::new);
   }

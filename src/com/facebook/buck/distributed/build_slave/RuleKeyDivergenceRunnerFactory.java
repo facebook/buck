@@ -25,7 +25,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.DistBuildService;
 import com.facebook.buck.distributed.DistBuildState;
@@ -173,7 +172,6 @@ public class RuleKeyDivergenceRunnerFactory {
             new DefaultRuleKeyFactory(
                 new RuleKeyFieldLoader(ruleKeyConfiguration),
                 graphs.getCachingBuildEngineDelegate().getFileHashCache(),
-                DefaultSourcePathResolver.from(actionGraphBuilder),
                 actionGraphBuilder,
                 ruleKeyCacheScope.getCache(),
                 Optional.empty()),

@@ -220,7 +220,6 @@ public class ExternallyBuiltApplePackageTest {
     return new TestDefaultRuleKeyFactory(
         new FakeFileHashCache(
             ImmutableMap.of(Paths.get(bundleLocation).toAbsolutePath(), HashCode.fromInt(5))),
-        DefaultSourcePathResolver.from(graphBuilder),
         graphBuilder);
   }
 }

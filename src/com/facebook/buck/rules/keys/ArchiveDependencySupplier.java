@@ -18,7 +18,6 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import java.util.stream.Stream;
 
 /**
@@ -27,6 +26,5 @@ import java.util.stream.Stream;
  * set of {@link SourcePath}s, one for each member of the archive.
  */
 public interface ArchiveDependencySupplier extends AddsToRuleKey {
-  Stream<SourcePath> getArchiveMembers(
-      SourcePathResolver resolver, SourcePathRuleFinder ruleFinder);
+  Stream<SourcePath> getArchiveMembers(SourcePathRuleFinder ruleFinder);
 }

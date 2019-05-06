@@ -48,12 +48,8 @@ public class SanitizedArgTest {
                 DefaultFileHashCache.createDefaultFileHashCache(
                     projectFilesystem, FileHashCacheMode.DEFAULT)));
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     return new UncachedRuleKeyBuilder(
-        ruleFinder,
-        resolver,
-        fileHashCache,
-        new TestDefaultRuleKeyFactory(fileHashCache, resolver, ruleFinder));
+        ruleFinder, fileHashCache, new TestDefaultRuleKeyFactory(fileHashCache, ruleFinder));
   }
 
   private void amendKeyList(

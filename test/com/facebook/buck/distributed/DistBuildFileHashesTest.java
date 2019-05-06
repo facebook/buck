@@ -38,7 +38,6 @@ import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.distributed.testutil.FakeFileContentsProvider;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
@@ -97,7 +96,6 @@ public class DistBuildFileHashesTest {
 
     protected final ActionGraph actionGraph;
     protected final ActionGraphBuilder graphBuilder;
-    protected final SourcePathResolver sourcePathResolver;
     protected final DistBuildFileHashes distributedBuildFileHashes;
 
     public Fixture(ProjectFilesystem first, ProjectFilesystem second)
@@ -109,8 +107,7 @@ public class DistBuildFileHashesTest {
       secondJavaFs = secondProjectFilesystem.getRootPath().getFileSystem();
 
       graphBuilder = new TestActionGraphBuilder();
-      sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
-      setUpRules(graphBuilder, sourcePathResolver);
+      setUpRules(graphBuilder, graphBuilder.getSourcePathResolver());
       actionGraph = new ActionGraph(graphBuilder.getBuildRules());
       BuckConfig buckConfig = createBuckConfig();
       Cell rootCell =
@@ -119,7 +116,6 @@ public class DistBuildFileHashesTest {
       distributedBuildFileHashes =
           new DistBuildFileHashes(
               actionGraph,
-              sourcePathResolver,
               graphBuilder,
               createFileHashCache(),
               new DistBuildCellIndexer(rootCell),

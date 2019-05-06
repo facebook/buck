@@ -22,7 +22,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
@@ -46,7 +45,6 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
 
   private final RuleKeyFieldLoader ruleKeyFieldLoader;
   private final FileHashLoader fileHashLoader;
-  private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
   private final long inputSizeLimit;
   private final Optional<ThriftRuleKeyLogger> ruleKeyLogger;
@@ -54,13 +52,11 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
   private DefaultDependencyFileRuleKeyFactory(
       RuleKeyFieldLoader ruleKeyFieldLoader,
       FileHashLoader hashLoader,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       long inputSizeLimit,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     this.ruleKeyFieldLoader = ruleKeyFieldLoader;
     this.fileHashLoader = hashLoader;
-    this.pathResolver = pathResolver;
     this.ruleFinder = ruleFinder;
     this.inputSizeLimit = inputSizeLimit;
     this.ruleKeyLogger = ruleKeyLogger;
@@ -69,19 +65,16 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
   public DefaultDependencyFileRuleKeyFactory(
       RuleKeyFieldLoader ruleKeyFieldLoader,
       FileHashLoader hashLoader,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
-    this(ruleKeyFieldLoader, hashLoader, pathResolver, ruleFinder, Long.MAX_VALUE, ruleKeyLogger);
+    this(ruleKeyFieldLoader, hashLoader, ruleFinder, Long.MAX_VALUE, ruleKeyLogger);
   }
 
   public DefaultDependencyFileRuleKeyFactory(
       RuleKeyFieldLoader ruleKeyFieldLoader,
       FileHashLoader hashLoader,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder) {
-    this(
-        ruleKeyFieldLoader, hashLoader, pathResolver, ruleFinder, Long.MAX_VALUE, Optional.empty());
+    this(ruleKeyFieldLoader, hashLoader, ruleFinder, Long.MAX_VALUE, Optional.empty());
   }
 
   @Override
@@ -108,8 +101,8 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
             rule,
             keyType,
             depFileEntries,
-            rule.getCoveredByDepFilePredicate(pathResolver),
-            rule.getExistenceOfInterestPredicate(pathResolver),
+            rule.getCoveredByDepFilePredicate(ruleFinder.getSourcePathResolver()),
+            rule.getExistenceOfInterestPredicate(ruleFinder.getSourcePathResolver()),
             RuleKeyBuilder.createDefaultHasher(ruleKeyLogger));
     ruleKeyFieldLoader.setFields(builder, rule, keyType.toRuleKeyType());
     Result<RuleKey> result = builder.buildResult(RuleKey::new);
@@ -137,7 +130,7 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
         Predicate<SourcePath> coveredPathPredicate,
         Predicate<SourcePath> interestingPathPredicate,
         RuleKeyHasher<RULE_KEY> hasher) {
-      super(ruleFinder, pathResolver, fileHashLoader, hasher);
+      super(ruleFinder, fileHashLoader, hasher);
       this.keyType = keyType;
       this.rule = rule;
       this.depFileEntriesSet = ImmutableSet.copyOf(depFileEntries);
@@ -173,7 +166,7 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
     protected Builder<RULE_KEY> setReflectively(@Nullable Object val) throws IOException {
       if (val instanceof ArchiveDependencySupplier) {
         Iterable<SourcePath> members =
-            ((ArchiveDependencySupplier) val).getArchiveMembers(pathResolver, ruleFinder)::iterator;
+            ((ArchiveDependencySupplier) val).getArchiveMembers(ruleFinder)::iterator;
         super.setReflectively(members);
       } else {
         super.setReflectively(val);
@@ -218,7 +211,8 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
           this.setSourcePathDirectly(input);
         } else {
           // 2,3,4: This input path is covered by the dep-file
-          DependencyFileEntry entry = DependencyFileEntry.fromSourcePath(input, pathResolver);
+          DependencyFileEntry entry =
+              DependencyFileEntry.fromSourcePath(input, ruleFinder.getSourcePathResolver());
           if (depFileEntriesSet.contains(entry)) {
             // 2: input was declared as a real dependency by the dep-file entries so add to key
             this.setSourcePathDirectly(input);

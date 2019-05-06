@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.DistBuildCachingEngineDelegate;
 import com.facebook.buck.distributed.DistBuildConfig;
@@ -169,7 +168,6 @@ public class DelegateAndGraphsInitializer {
           Objects.requireNonNull(actionGraphAndBuilder).getActionGraphBuilder();
       cachingBuildEngineDelegate =
           new DistBuildCachingEngineDelegate(
-              DefaultSourcePathResolver.from(ruleFinder),
               ruleFinder,
               caches.remoteStateCache,
               caches.materializingCache,

@@ -486,7 +486,6 @@ public class TargetsCommand extends AbstractCommand {
           new DefaultRuleKeyFactory(
               new RuleKeyFieldLoader(params.getRuleKeyConfiguration()),
               params.getFileHashCache(),
-              DefaultSourcePathResolver.from(result.getActionGraphBuilder()),
               result.getActionGraphBuilder(),
               ruleKeyCacheScope.getCache(),
               Optional.empty());
@@ -988,7 +987,6 @@ public class TargetsCommand extends AbstractCommand {
                         new DefaultRuleKeyFactory(
                             new RuleKeyFieldLoader(params.getRuleKeyConfiguration()),
                             params.getFileHashCache(),
-                            DefaultSourcePathResolver.from(result.getActionGraphBuilder()),
                             result.getActionGraphBuilder(),
                             ruleKeyCacheScope.getCache(),
                             Optional.ofNullable(ruleKeyLogger)),

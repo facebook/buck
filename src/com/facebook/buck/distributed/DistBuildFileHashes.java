@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
@@ -75,7 +74,6 @@ public class DistBuildFileHashes {
 
   public DistBuildFileHashes(
       ActionGraph actionGraph,
-      SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       StackedFileHashCache originalHashCache,
       DistBuildCellIndexer cellIndexer,
@@ -105,8 +103,7 @@ public class DistBuildFileHashes {
             });
 
     this.ruleKeyFactories =
-        createRuleKeyFactories(
-            sourcePathResolver, ruleFinder, recordingHashCache, ruleKeyConfiguration);
+        createRuleKeyFactories(ruleFinder, recordingHashCache, ruleKeyConfiguration);
     this.ruleKeys = ruleKeyComputation(actionGraph, this.ruleKeyFactories, executorService);
     this.fileHashes =
         fileHashesComputation(
@@ -126,7 +123,6 @@ public class DistBuildFileHashes {
   }
 
   public static LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory> createRuleKeyFactories(
-      SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       FileHashCache fileHashCache,
       RuleKeyConfiguration ruleKeyConfiguration) {
@@ -139,10 +135,7 @@ public class DistBuildFileHashes {
                 // Create a new RuleKeyCache to make computation visit the
                 // RecordingProjectFileHashCache
                 return new DefaultRuleKeyFactory(
-                    new RuleKeyFieldLoader(ruleKeyConfiguration),
-                    fileHashCache,
-                    sourcePathResolver,
-                    ruleFinder);
+                    new RuleKeyFieldLoader(ruleKeyConfiguration), fileHashCache, ruleFinder);
               }
             });
   }

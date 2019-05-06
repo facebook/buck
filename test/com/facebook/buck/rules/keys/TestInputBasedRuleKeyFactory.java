@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import java.util.Optional;
@@ -27,19 +26,15 @@ public class TestInputBasedRuleKeyFactory extends InputBasedRuleKeyFactory {
   public TestInputBasedRuleKeyFactory(
       RuleKeyFieldLoader ruleKeyFieldLoader,
       FileHashLoader hashLoader,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       long inputSizeLimit) {
-    super(
-        ruleKeyFieldLoader, hashLoader, pathResolver, ruleFinder, inputSizeLimit, Optional.empty());
+    super(ruleKeyFieldLoader, hashLoader, ruleFinder, inputSizeLimit, Optional.empty());
   }
 
-  public TestInputBasedRuleKeyFactory(
-      FileHashLoader hashLoader, SourcePathResolver pathResolver, SourcePathRuleFinder ruleFinder) {
+  public TestInputBasedRuleKeyFactory(FileHashLoader hashLoader, SourcePathRuleFinder ruleFinder) {
     super(
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create()),
         hashLoader,
-        pathResolver,
         ruleFinder,
         Long.MAX_VALUE,
         Optional.empty());

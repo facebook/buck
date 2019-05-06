@@ -19,7 +19,6 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.core.build.engine.delegate.CachingBuildEngineDelegate;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
@@ -47,7 +46,6 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
   private final long pendingFileMaterializationTimeoutSeconds;
 
   public DistBuildCachingEngineDelegate(
-      SourcePathResolver sourcePathResolver,
       SourcePathRuleFinder ruleFinder,
       StackedFileHashCache remoteStackedFileHashCache,
       StackedFileHashCache materializingStackedFileHashCache,
@@ -57,10 +55,7 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
     this.pendingFileMaterializationTimeoutSeconds = pendingFileMaterializationTimeoutSeconds;
     this.materializingRuleKeyFactories =
         DistBuildFileHashes.createRuleKeyFactories(
-            sourcePathResolver,
-            ruleFinder,
-            materializingStackedFileHashCache,
-            ruleKeyConfiguration);
+            ruleFinder, materializingStackedFileHashCache, ruleKeyConfiguration);
 
     this.materializerFileHashCaches =
         materializingStackedFileHashCache.getCaches().stream()

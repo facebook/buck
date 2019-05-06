@@ -226,9 +226,7 @@ public class ExportFileTest {
                 DefaultFileHashCache.createDefaultFileHashCache(
                     filesystem, FileHashCacheMode.DEFAULT)));
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
-    DefaultRuleKeyFactory ruleKeyFactory =
-        new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder);
+    DefaultRuleKeyFactory ruleKeyFactory = new TestDefaultRuleKeyFactory(hashCache, ruleFinder);
 
     filesystem.writeContentsToPath("I like cheese", temp);
 
@@ -252,8 +250,7 @@ public class ExportFileTest {
                 DefaultFileHashCache.createDefaultFileHashCache(
                     filesystem, FileHashCacheMode.DEFAULT)));
     ruleFinder = new TestActionGraphBuilder();
-    resolver = DefaultSourcePathResolver.from(ruleFinder);
-    ruleKeyFactory = new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder);
+    ruleKeyFactory = new TestDefaultRuleKeyFactory(hashCache, ruleFinder);
     RuleKey refreshed = ruleKeyFactory.build(rule);
 
     assertNotEquals(original, refreshed);

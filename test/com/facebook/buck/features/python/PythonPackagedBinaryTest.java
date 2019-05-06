@@ -25,8 +25,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
@@ -110,7 +108,6 @@ public class PythonPackagedBinaryTest {
   @Test
   public void testRuleKeysFromModuleLayouts() throws IOException {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Create two different sources, which we'll swap in as different modules.
     Path main = tmpDir.newFile().toPath();
@@ -136,7 +133,7 @@ public class PythonPackagedBinaryTest {
     // across different python libraries.
     RuleKey pair1 =
         getRuleKeyForModuleLayout(
-            new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder),
+            new TestDefaultRuleKeyFactory(hashCache, ruleFinder),
             ruleFinder,
             "main.py",
             mainRelative,
@@ -146,7 +143,7 @@ public class PythonPackagedBinaryTest {
             source2Relative);
     RuleKey pair2 =
         getRuleKeyForModuleLayout(
-            new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder),
+            new TestDefaultRuleKeyFactory(hashCache, ruleFinder),
             ruleFinder,
             "main.py",
             mainRelative,
@@ -156,7 +153,7 @@ public class PythonPackagedBinaryTest {
             source1Relative);
     RuleKey pair3 =
         getRuleKeyForModuleLayout(
-            new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder),
+            new TestDefaultRuleKeyFactory(hashCache, ruleFinder),
             ruleFinder,
             "main.py",
             mainRelative,
@@ -166,7 +163,7 @@ public class PythonPackagedBinaryTest {
             source1Relative);
     RuleKey pair4 =
         getRuleKeyForModuleLayout(
-            new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder),
+            new TestDefaultRuleKeyFactory(hashCache, ruleFinder),
             ruleFinder,
             "main.py",
             mainRelative,

@@ -23,8 +23,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import java.util.HashMap;
@@ -37,7 +35,6 @@ public class RuleKeyDiagnosticsTest {
   @Test
   public void testTraversal() {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     AddsToRuleKey app0 =
         new AddsToRuleKey() {
@@ -75,7 +72,7 @@ public class RuleKeyDiagnosticsTest {
         };
 
     RuleKeyFactoryWithDiagnostics<RuleKey> factory =
-        new TestDefaultRuleKeyFactory(new DummyFileHashCache(), sourcePathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(new DummyFileHashCache(), ruleFinder);
 
     RuleKeyDiagnostics<RuleKey, String> ruleKeyDiagnostics1 =
         new RuleKeyDiagnostics<>(

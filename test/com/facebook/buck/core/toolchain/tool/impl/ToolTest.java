@@ -26,8 +26,6 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -46,7 +44,6 @@ public class ToolTest {
   @Test
   public void hashFileToolsCreatedWithTheSamePathAreEqual() {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(
             FakeFileHashCache.createFromStrings(
@@ -55,7 +52,6 @@ public class ToolTest {
                     .put("other-path", Strings.repeat("b", 40))
                     .put("same", Strings.repeat("a", 40))
                     .build()),
-            pathResolver,
             ruleFinder);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -92,10 +88,9 @@ public class ToolTest {
   @Test
   public void customVersion() {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(
-            FakeFileHashCache.createFromStrings(ImmutableMap.of()), pathResolver, ruleFinder);
+            FakeFileHashCache.createFromStrings(ImmutableMap.of()), ruleFinder);
 
     String tool = "tool";
     String version = "version";
@@ -122,7 +117,6 @@ public class ToolTest {
         new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("/usr/local/bin/python2.7")));
 
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(
             FakeFileHashCache.createFromStrings(
@@ -131,7 +125,6 @@ public class ToolTest {
                     .put("/usr/local/bin/python2.7", Strings.repeat("a", 40))
                     .put("/opt/bin/python2.7", Strings.repeat("a", 40))
                     .build()),
-            pathResolver,
             ruleFinder);
 
     RuleKey tool1RuleKey =

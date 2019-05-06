@@ -28,8 +28,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -64,11 +62,11 @@ public class PrebuiltCxxLibraryTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(genSrcBuilder.build(), builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     BuildRule genSrc = genSrcBuilder.build(graphBuilder, filesystem, targetGraph);
     filesystem.writeContentsToPath(
-        "class Test {}", pathResolver.getAbsolutePath(genSrc.getSourcePathToOutput()));
+        "class Test {}",
+        graphBuilder.getSourcePathResolver().getAbsolutePath(genSrc.getSourcePathToOutput()));
 
     PrebuiltCxxLibrary lib =
         (PrebuiltCxxLibrary) builder.build(graphBuilder, filesystem, targetGraph);
@@ -80,8 +78,7 @@ public class PrebuiltCxxLibraryTest {
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
                     filesystem, FileHashCacheMode.DEFAULT)));
-    DefaultRuleKeyFactory factory =
-        new TestDefaultRuleKeyFactory(originalHashCache, pathResolver, graphBuilder);
+    DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(originalHashCache, graphBuilder);
 
     RuleKey ruleKey = factory.build(lib);
     assertNotNull(ruleKey);

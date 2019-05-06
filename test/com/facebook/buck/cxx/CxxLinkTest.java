@@ -27,8 +27,6 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
@@ -74,7 +72,6 @@ public class CxxLinkTest {
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     FakeFileHashCache hashCache =
@@ -89,7 +86,7 @@ public class CxxLinkTest {
     // Generate a rule key for the defaults.
 
     RuleKey defaultRuleKey =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
                 new CxxLink(
                     target,
@@ -109,7 +106,7 @@ public class CxxLinkTest {
     // Verify that changing the archiver causes a rulekey change.
 
     RuleKey linkerChange =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
                 new CxxLink(
                     target,
@@ -132,7 +129,7 @@ public class CxxLinkTest {
     // Verify that changing the output path causes a rulekey change.
 
     RuleKey outputChange =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
                 new CxxLink(
                     target,
@@ -153,7 +150,7 @@ public class CxxLinkTest {
     // Verify that changing the flags causes a rulekey change.
 
     RuleKey flagsChange =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
                 new CxxLink(
                     target,
@@ -175,7 +172,6 @@ public class CxxLinkTest {
   @Test
   public void sanitizedPathsInFlagsDoNotAffectRuleKey() {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     DefaultRuleKeyFactory ruleKeyFactory =
@@ -187,7 +183,6 @@ public class CxxLinkTest {
                     "b.o", Strings.repeat("b", 40),
                     "libc.a", Strings.repeat("c", 40),
                     "different", Strings.repeat("d", 40))),
-            pathResolver,
             ruleFinder);
 
     // Set up a map to sanitize the differences in the flags.

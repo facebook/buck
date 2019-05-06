@@ -29,8 +29,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -50,7 +48,6 @@ import org.junit.Test;
 public class AaptPackageResourcesTest {
 
   private ActionGraphBuilder graphBuilder;
-  private SourcePathResolver pathResolver;
   private BuildTarget aaptTarget;
   private FakeProjectFilesystem filesystem;
 
@@ -96,7 +93,6 @@ public class AaptPackageResourcesTest {
     resource1 = (AndroidResource) graphBuilder.requireRule(resourceNode.getBuildTarget());
     resource2 = (AndroidResource) graphBuilder.requireRule(resourceNode2.getBuildTarget());
 
-    pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     aaptTarget = BuildTargetFactory.newInstance("//foo:bar");
 
     hashCache = new FakeFileHashCache(new HashMap<>());
@@ -252,7 +248,7 @@ public class AaptPackageResourcesTest {
   }
 
   private RuleKey calculateRuleKey(AaptConstructorArgs constructorArgs) {
-    return new TestDefaultRuleKeyFactory(hashCache, pathResolver, graphBuilder)
+    return new TestDefaultRuleKeyFactory(hashCache, graphBuilder)
         .build(
             new AaptPackageResources(
                 aaptTarget,
