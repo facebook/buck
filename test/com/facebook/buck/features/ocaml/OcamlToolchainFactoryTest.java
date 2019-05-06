@@ -26,8 +26,6 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
@@ -92,7 +90,6 @@ public class OcamlToolchainFactoryTest {
   @Test
   public void customPlatforms() {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
 
     Flavor custom = InternalFlavor.of("custom");
     UnresolvedCxxPlatform cxxPlatform =
@@ -135,7 +132,7 @@ public class OcamlToolchainFactoryTest {
             .getValue(custom)
             .getOcamlCompiler()
             .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
-            .getCommandPrefix(pathResolver),
+            .getCommandPrefix(resolver.getSourcePathResolver()),
         Matchers.equalTo(ImmutableList.of(filesystem.resolve(compiler).toString())));
   }
 }

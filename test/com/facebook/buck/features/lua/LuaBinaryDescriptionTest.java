@@ -32,8 +32,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
@@ -106,7 +104,6 @@ public class LuaBinaryDescriptionTest {
   @Test
   public void extensionOverride() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     LuaBinary binary =
         new LuaBinaryBuilder(
                 BuildTargetFactory.newInstance("//:rule"),
@@ -114,7 +111,10 @@ public class LuaBinaryDescriptionTest {
             .setMainModule("main")
             .build(graphBuilder);
     assertThat(
-        pathResolver.getRelativePath(binary.getSourcePathToOutput()).toString(),
+        graphBuilder
+            .getSourcePathResolver()
+            .getRelativePath(binary.getSourcePathToOutput())
+            .toString(),
         Matchers.endsWith(".override"));
   }
 

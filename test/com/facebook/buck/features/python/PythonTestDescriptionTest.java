@@ -36,8 +36,6 @@ import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -148,12 +146,12 @@ public class PythonTestDescriptionTest {
     PythonTestBuilder builder = PythonTestBuilder.create(target).setBuildArgs(buildArgs);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     PythonTest test = builder.build(graphBuilder, filesystem, targetGraph);
     PythonBinary binary = test.getBinary();
     ImmutableList<? extends Step> buildSteps =
         binary.getBuildSteps(
-            FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
+            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
+            new FakeBuildableContext());
     PexStep pexStep = RichStream.from(buildSteps).filter(PexStep.class).toImmutableList().get(0);
     assertThat(pexStep.getCommandPrefix(), Matchers.hasItems(buildArgs.toArray(new String[0])));
   }

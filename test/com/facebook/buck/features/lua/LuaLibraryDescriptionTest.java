@@ -27,8 +27,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -50,10 +48,9 @@ public class LuaLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     LuaLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
-        library.getLuaPackageComponents(pathResolver).getModules(),
+        library.getLuaPackageComponents(graphBuilder.getSourcePathResolver()).getModules(),
         Matchers.equalTo(
             ImmutableSortedMap.<String, SourcePath>of(
                 "some/foo.lua", FakeSourcePath.of("some/foo.lua"))));
@@ -67,10 +64,9 @@ public class LuaLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     LuaLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
-        library.getLuaPackageComponents(pathResolver).getModules(),
+        library.getLuaPackageComponents(graphBuilder.getSourcePathResolver()).getModules(),
         Matchers.equalTo(
             ImmutableSortedMap.<String, SourcePath>of(
                 "some/bar.lua", FakeSourcePath.of("foo.lua"))));
@@ -84,11 +80,10 @@ public class LuaLibraryDescriptionTest {
             .setBaseModule("blah");
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     LuaLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
-        library.getLuaPackageComponents(pathResolver).getModules(),
+        library.getLuaPackageComponents(graphBuilder.getSourcePathResolver()).getModules(),
         Matchers.equalTo(
             ImmutableSortedMap.<String, SourcePath>of(
                 "blah/foo.lua", FakeSourcePath.of("some/foo.lua"))));

@@ -35,7 +35,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxLibrary;
@@ -297,7 +296,7 @@ public class CxxPythonExtensionDescriptionTest {
         TargetGraphFactory.newInstance(
             python2Builder.build(), python3Builder.build(), builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
 
     python2Builder.build(graphBuilder, filesystem, targetGraph);
     python3Builder.build(graphBuilder, filesystem, targetGraph);
@@ -391,7 +390,7 @@ public class CxxPythonExtensionDescriptionTest {
     builder.setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("--flag")));
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(builder.build()));
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     CxxPythonExtension rule = builder.build(graphBuilder);
     NativeLinkTarget nativeLinkTarget = rule.getNativeLinkTarget(PY2);
     NativeLinkableInput input =

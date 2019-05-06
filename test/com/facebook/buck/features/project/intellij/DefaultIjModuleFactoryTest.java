@@ -41,7 +41,6 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.features.project.intellij.model.DependencyType;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
@@ -638,7 +637,7 @@ public class DefaultIjModuleFactoryTest {
             .build();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(buildRuleResolver);
+    SourcePathResolver sourcePathResolver = buildRuleResolver.getSourcePathResolver();
     IjLibraryFactoryResolver ijLibraryFactoryResolver =
         new IjLibraryFactoryResolver() {
           @Override

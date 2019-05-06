@@ -31,7 +31,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.file.FileScrubber;
@@ -237,11 +236,9 @@ public class RustCompileTest {
 
       SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
 
-      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-
       Optional<SourcePath> root =
           RustCompileUtils.getCrateRoot(
-              pathResolver,
+              ruleFinder.getSourcePathResolver(),
               buildTarget.getShortName(),
               ImmutableSet.of("main.rs", "lib.rs"),
               srcs.stream());

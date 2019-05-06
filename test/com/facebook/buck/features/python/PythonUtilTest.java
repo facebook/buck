@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -39,7 +38,7 @@ public class PythonUtilTest {
     ImmutableMap<Path, SourcePath> srcs =
         PythonUtil.toModuleMap(
             target,
-            DefaultSourcePathResolver.from(new TestActionGraphBuilder()),
+            new TestActionGraphBuilder().getSourcePathResolver(),
             "srcs",
             target.getBasePath(),
             ImmutableList.of(

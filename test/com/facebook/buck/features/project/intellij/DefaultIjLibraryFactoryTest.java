@@ -26,7 +26,6 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactory;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactoryResolver;
@@ -58,7 +57,7 @@ public class DefaultIjLibraryFactoryTest {
 
   @Before
   public void setUp() {
-    sourcePathResolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
+    sourcePathResolver = new TestActionGraphBuilder().getSourcePathResolver();
     guavaJarPath = Paths.get("third_party/java/guava.jar");
     guava =
         PrebuiltJarBuilder.createBuilder(

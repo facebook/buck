@@ -33,8 +33,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
@@ -125,12 +123,11 @@ public class OCamlIntegrationTest {
         toolchain.orElseThrow(AssertionError::new).getDefaultOcamlPlatform();
 
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
     try {
       ocamlPlatform
           .getOcamlCompiler()
           .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
-          .getCommandPrefix(pathResolver);
+          .getCommandPrefix(resolver.getSourcePathResolver());
     } catch (HumanReadableException e) {
       assumeNoException(e);
     }

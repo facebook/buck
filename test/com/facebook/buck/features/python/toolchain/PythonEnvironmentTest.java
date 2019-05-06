@@ -21,7 +21,6 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.impl.ImmutableDefaultCellPathResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.rules.modern.SerializationTestHelper;
 import com.google.common.base.Preconditions;
@@ -50,7 +49,7 @@ public class PythonEnvironmentTest {
             PythonEnvironment.class,
             ruleFinder,
             cellResolver,
-            DefaultSourcePathResolver.from(ruleFinder),
+            ruleFinder.getSourcePathResolver(),
             new ToolchainProviderBuilder()
                 .withToolchain(
                     PythonInterpreter.DEFAULT_NAME,

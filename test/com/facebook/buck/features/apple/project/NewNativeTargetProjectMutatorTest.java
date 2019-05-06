@@ -58,7 +58,6 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.features.js.JsBundleGenruleBuilder;
 import com.facebook.buck.features.js.JsTestScenario;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -87,7 +86,7 @@ public class NewNativeTargetProjectMutatorTest {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     generatedProject = new PBXProject("TestProject");
     buildRuleResolver = new TestActionGraphBuilder();
-    sourcePathResolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
+    sourcePathResolver = buildRuleResolver.getSourcePathResolver();
     pathRelativizer =
         new PathRelativizer(Paths.get("_output"), sourcePathResolver::getRelativePath);
   }
@@ -377,8 +376,7 @@ public class NewNativeTargetProjectMutatorTest {
     JsTestScenario scenario =
         JsTestScenario.builder().bundle(depBuildTarget, ImmutableSortedSet.of()).build();
 
-    NewNativeTargetProjectMutator mutator =
-        mutator(DefaultSourcePathResolver.from(scenario.graphBuilder));
+    NewNativeTargetProjectMutator mutator = mutator(scenario.graphBuilder.getSourcePathResolver());
 
     TargetNode<?> jsBundleNode = scenario.targetGraph.get(depBuildTarget);
 
@@ -411,8 +409,7 @@ public class NewNativeTargetProjectMutatorTest {
             .bundleGenrule(JsBundleGenruleBuilder.Options.of(depBuildTarget, bundleBuildTarget))
             .build();
 
-    NewNativeTargetProjectMutator mutator =
-        mutator(DefaultSourcePathResolver.from(scenario.graphBuilder));
+    NewNativeTargetProjectMutator mutator = mutator(scenario.graphBuilder.getSourcePathResolver());
 
     TargetNode<?> jsBundleGenruleNode = scenario.targetGraph.get(depBuildTarget);
 

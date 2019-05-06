@@ -34,7 +34,6 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -101,14 +100,13 @@ public class HaskellLibraryDescriptionTest {
                     HaskellLibraryDescription.Type.SHARED.getFlavor()))
             .build(graphBuilder);
 
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ImmutableList<Path> outputs =
         ImmutableList.of(
                 Objects.requireNonNull(staticLib.getSourcePathToOutput()),
                 Objects.requireNonNull(staticPicLib.getSourcePathToOutput()),
                 Objects.requireNonNull(sharedLib.getSourcePathToOutput()))
             .stream()
-            .map(pathResolver::getRelativePath)
+            .map(graphBuilder.getSourcePathResolver()::getRelativePath)
             .collect(ImmutableList.toImmutableList());
     assertThat(outputs.size(), Matchers.equalTo(ImmutableSet.copyOf(outputs).size()));
 
@@ -124,7 +122,7 @@ public class HaskellLibraryDescriptionTest {
     HaskellLibraryBuilder builder = new HaskellLibraryBuilder(target).setLinkWhole(true);
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(builder.build()));
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     HaskellLibrary library = builder.build(graphBuilder);
 
     // Lookup the link whole flags.

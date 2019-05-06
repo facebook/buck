@@ -26,8 +26,6 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
@@ -98,7 +96,6 @@ public class RustToolchainFactoryTest {
   @Test
   public void customPlatforms() {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
 
     Flavor custom = InternalFlavor.of("custom");
     UnresolvedCxxPlatform cxxPlatform =
@@ -152,7 +149,7 @@ public class RustToolchainFactoryTest {
             .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
             .getRustCompiler()
             .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
-            .getCommandPrefix(pathResolver),
+            .getCommandPrefix(resolver.getSourcePathResolver()),
         Matchers.contains(filesystem.resolve(compiler).toString()));
     assertThat(
         toolchain
@@ -163,7 +160,7 @@ public class RustToolchainFactoryTest {
             .getLinker()
             .get()
             .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
-            .getCommandPrefix(pathResolver),
+            .getCommandPrefix(resolver.getSourcePathResolver()),
         Matchers.contains(filesystem.resolve(linker).toString()));
     assertThat(
         platform.getCxxPlatform(),
