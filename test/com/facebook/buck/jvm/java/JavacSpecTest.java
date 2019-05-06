@@ -28,8 +28,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -42,7 +40,6 @@ import org.junit.Test;
 
 public class JavacSpecTest {
   private ActionGraphBuilder graphBuilder;
-  private SourcePathResolver sourcePathResolver;
   private JavacSpec.Builder specBuilder;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -50,7 +47,6 @@ public class JavacSpecTest {
   @Before
   public void setUp() {
     graphBuilder = new TestActionGraphBuilder();
-    sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
     specBuilder = JavacSpec.builder();
   }
 
@@ -72,7 +68,8 @@ public class JavacSpecTest {
     ExternalJavac javac = (ExternalJavac) getJavac();
 
     assertEquals(
-        ImmutableList.of(externalPath.toString()), javac.getCommandPrefix(sourcePathResolver));
+        ImmutableList.of(externalPath.toString()),
+        javac.getCommandPrefix(graphBuilder.getSourcePathResolver()));
   }
 
   @Test

@@ -29,7 +29,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
@@ -67,7 +66,7 @@ public class CalculateClassAbiTest {
   @Test
   public void ruleKeysChangeIfGeneratedBinaryJarChanges() throws Exception {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // Setup the initial java library.
@@ -107,7 +106,6 @@ public class CalculateClassAbiTest {
 
     // Re-setup some entities to drop internal rule key caching.
     graphBuilder = new TestActionGraphBuilder();
-    pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     builder.build(graphBuilder, filesystem);
 
     FileHashCache alteredHashCache =
@@ -126,7 +124,6 @@ public class CalculateClassAbiTest {
   public void inputRuleKeyDoesNotChangeIfGeneratedBinaryJarDoesNotChange() throws Exception {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = graphBuilder;
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // Setup the initial java library.
@@ -140,7 +137,8 @@ public class CalculateClassAbiTest {
     // Write something to the library source and geneated JAR, so they exist to generate rule keys.
     filesystem.writeContentsToPath("stuff", input);
     filesystem.writeContentsToPath(
-        "stuff", pathResolver.getRelativePath(javaLibrary.getSourcePathToOutput()));
+        "stuff",
+        ruleFinder.getSourcePathResolver().getRelativePath(javaLibrary.getSourcePathToOutput()));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:library-abi");
     CalculateClassAbi calculateAbi =
@@ -165,7 +163,6 @@ public class CalculateClassAbiTest {
     // Re-setup some entities to drop internal rule key caching.
     graphBuilder = new TestActionGraphBuilder();
     ruleFinder = graphBuilder;
-    pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     builder.build(graphBuilder, filesystem);
 
     FileHashCache alteredHashCache =

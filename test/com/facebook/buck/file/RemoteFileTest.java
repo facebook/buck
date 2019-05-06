@@ -37,8 +37,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.file.downloader.impl.ExplodingDownloader;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -72,7 +70,6 @@ public class RemoteFileTest {
     Downloader downloader = new ExplodingDownloader();
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:cake");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     RemoteFile remoteFile =
         new RemoteFileBuilder(downloader, target)
             .setUrl("http://www.facebook.com/")
@@ -81,9 +78,10 @@ public class RemoteFileTest {
 
     BuildableContext buildableContext = new FakeBuildableContext();
     buildableContext.recordArtifact(
-        pathResolver.getRelativePath(remoteFile.getSourcePathToOutput()));
+        graphBuilder.getSourcePathResolver().getRelativePath(remoteFile.getSourcePathToOutput()));
     remoteFile.getBuildSteps(
-        FakeBuildContext.withSourcePathResolver(pathResolver), buildableContext);
+        FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
+        buildableContext);
   }
 
   @Test
@@ -594,11 +592,11 @@ public class RemoteFileTest {
             type);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     graphBuilder.addToIndex(remoteFile);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     ImmutableList<Step> buildSteps =
         remoteFile.getBuildSteps(
-            FakeBuildContext.withSourcePathResolver(pathResolver), new FakeBuildableContext());
+            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
+            new FakeBuildableContext());
     ExecutionContext context =
         TestExecutionContext.newBuilder()
             .setCellPathResolver(TestCellPathResolver.get(filesystem))
@@ -615,6 +613,6 @@ public class RemoteFileTest {
       }
     }
 
-    return pathResolver.getAbsolutePath(remoteFile.getSourcePathToOutput());
+    return graphBuilder.getSourcePathResolver().getAbsolutePath(remoteFile.getSourcePathToOutput());
   }
 }

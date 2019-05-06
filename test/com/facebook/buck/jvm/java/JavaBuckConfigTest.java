@@ -42,7 +42,6 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
@@ -67,8 +66,7 @@ import org.junit.Test;
 public class JavaBuckConfigTest {
 
   public static final BuildRuleResolver RULE_RESOLVER = new TestActionGraphBuilder();
-  private static final SourcePathResolver PATH_RESOLVER =
-      DefaultSourcePathResolver.from(RULE_RESOLVER);
+  private static final SourcePathResolver PATH_RESOLVER = RULE_RESOLVER.getSourcePathResolver();
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   private ProjectFilesystem defaultFilesystem;

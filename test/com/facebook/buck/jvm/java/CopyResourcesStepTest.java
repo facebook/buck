@@ -24,8 +24,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -45,7 +43,6 @@ public class CopyResourcesStepTest {
   @Test
   public void testAddResourceCommandsWithBuildFileParentOfSrcDirectory() {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     // Files:
     // android/java/BUCK
     // android/java/src/com/facebook/base/data.json
@@ -56,7 +53,7 @@ public class CopyResourcesStepTest {
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
 
     BuildContext buildContext =
-        FakeBuildContext.withSourcePathResolver(resolver)
+        FakeBuildContext.withSourcePathResolver(ruleFinder.getSourcePathResolver())
             .withJavaPackageFinder(javaPackageFinder)
             .withBuildCellRootPath(filesystem.getRootPath());
 
@@ -126,9 +123,8 @@ public class CopyResourcesStepTest {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    DefaultSourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildContext buildContext =
-        FakeBuildContext.withSourcePathResolver(resolver)
+        FakeBuildContext.withSourcePathResolver(ruleFinder.getSourcePathResolver())
             .withJavaPackageFinder(javaPackageFinder)
             .withBuildCellRootPath(filesystem.getRootPath());
     CopyResourcesStep step =
@@ -198,9 +194,8 @@ public class CopyResourcesStepTest {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    DefaultSourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildContext buildContext =
-        FakeBuildContext.withSourcePathResolver(resolver)
+        FakeBuildContext.withSourcePathResolver(ruleFinder.getSourcePathResolver())
             .withJavaPackageFinder(javaPackageFinder)
             .withBuildCellRootPath(filesystem.getRootPath());
 

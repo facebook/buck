@@ -28,8 +28,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -115,7 +113,6 @@ public class RemoteFileDescriptionTest {
     graphBuilder.addToIndex(buildRule);
 
     assertThat(buildRule, CoreMatchers.instanceOf(RemoteFileBinary.class));
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     Tool executableCommand = ((RemoteFileBinary) buildRule).getExecutableCommand();
     assertThat(
         BuildableSupport.deriveInputs(executableCommand).collect(ImmutableList.toImmutableList()),
@@ -124,10 +121,10 @@ public class RemoteFileDescriptionTest {
         Iterables.getOnlyElement(
             BuildableSupport.deriveInputs(executableCommand)
                 .collect(ImmutableList.toImmutableList()));
-    Path absolutePath = pathResolver.getAbsolutePath(input);
+    Path absolutePath = graphBuilder.getSourcePathResolver().getAbsolutePath(input);
     assertEquals("kale", absolutePath.getFileName().toString());
     assertEquals(
         ImmutableList.of(absolutePath.toString()),
-        executableCommand.getCommandPrefix(pathResolver));
+        executableCommand.getCommandPrefix(graphBuilder.getSourcePathResolver()));
   }
 }

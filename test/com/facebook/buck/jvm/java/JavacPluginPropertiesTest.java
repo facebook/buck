@@ -28,8 +28,6 @@ import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type;
@@ -56,7 +54,7 @@ public class JavacPluginPropertiesTest {
             BuildTargetFactory.newInstance("//lib:junit-util"),
             fakeProjectFilesystem,
             TestBuildRuleParams.create(),
-            DefaultSourcePathResolver.from(new TestActionGraphBuilder()),
+            new TestActionGraphBuilder().getSourcePathResolver(),
             FakeSourcePath.of("abi-util.jar"),
             Optional.of(FakeSourcePath.of("lib/junit-util-4.11-sources.jar")),
             /* gwtJar */ Optional.empty(),
@@ -77,7 +75,7 @@ public class JavacPluginPropertiesTest {
                 () -> ImmutableSortedSet.of(transitivePrebuiltJarDep),
                 ImmutableSortedSet::of,
                 ImmutableSortedSet.of()),
-            DefaultSourcePathResolver.from(new TestActionGraphBuilder()),
+            new TestActionGraphBuilder().getSourcePathResolver(),
             FakeSourcePath.of("abi.jar"),
             Optional.of(FakeSourcePath.of("lib/junit-4.11-sources.jar")),
             /* gwtJar */ Optional.empty(),
@@ -164,7 +162,6 @@ public class JavacPluginPropertiesTest {
 
   private RuleKey createInputRuleKey(Optional<String> resourceName) {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     Optional<PathSourcePath> resource =
@@ -181,7 +178,7 @@ public class JavacPluginPropertiesTest {
                 HashCode.fromInt(0));
     if (resource.isPresent()) {
       builder.put(
-          pathResolver.getAbsolutePath(resource.get()),
+          graphBuilder.getSourcePathResolver().getAbsolutePath(resource.get()),
           HashCode.fromInt(resourceName.get().hashCode()));
     }
     FakeFileHashCache hashCache = new FakeFileHashCache(builder.build());

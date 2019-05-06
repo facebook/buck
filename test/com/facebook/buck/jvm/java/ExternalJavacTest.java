@@ -40,7 +40,6 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -211,8 +210,7 @@ public class ExternalJavacTest extends EasyMockSupport {
     verify(sink);
     Tool tool = identifier.getValue().get();
 
-    assertEquals(
-        commandPrefix, tool.getCommandPrefix(DefaultSourcePathResolver.from(graphBuilder)));
+    assertEquals(commandPrefix, tool.getCommandPrefix(graphBuilder.getSourcePathResolver()));
   }
 
   @Test

@@ -25,7 +25,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import org.hamcrest.Matchers;
@@ -36,7 +35,7 @@ public class SourcePathArgTest {
   @Test
   public void stringify() {
     SourcePath path = FakeSourcePath.of("something");
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
+    SourcePathResolver resolver = new TestActionGraphBuilder().getSourcePathResolver();
     SourcePathArg arg = SourcePathArg.of(path);
     assertThat(
         Arg.stringifyList(arg, resolver),

@@ -34,7 +34,6 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourcePathFactoryForTests;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
@@ -57,7 +56,7 @@ public class DependencyFileRuleKeyFactoryTest {
   public void testKeysWhenInputPathContentsChanges() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver = newActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleResolver);
+    SourcePathResolver pathResolver = ruleResolver.getSourcePathResolver();
 
     SourcePath usedSourcePath = PathSourcePath.of(filesystem, Paths.get("usedInput"));
     SourcePath unusedSourcePath = PathSourcePath.of(filesystem, Paths.get("unusedInput"));
@@ -80,7 +79,7 @@ public class DependencyFileRuleKeyFactoryTest {
   @Test
   public void testKeysWhenInputTargetOutputChanges() throws Exception {
     ActionGraphBuilder graphBuilder = newActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
 
     BuildTarget usedTarget = BuildTargetFactory.newInstance("//:used");
     BuildTarget unusedTarget = BuildTargetFactory.newInstance("//:unused");
@@ -112,7 +111,7 @@ public class DependencyFileRuleKeyFactoryTest {
   public void testKeysWhenInputArchiveMemberChanges() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver = newActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleResolver);
+    SourcePathResolver pathResolver = ruleResolver.getSourcePathResolver();
 
     SourcePath archivePath = PathSourcePath.of(filesystem, Paths.get("archive"));
     SourcePath usedSourcePath = ArchiveMemberSourcePath.of(archivePath, Paths.get("used"));
@@ -845,7 +844,7 @@ public class DependencyFileRuleKeyFactoryTest {
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     BuildRuleResolver ruleResolver = newActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleResolver);
+    SourcePathResolver pathResolver = ruleResolver.getSourcePathResolver();
 
     SourcePath unusedSourcePath = PathSourcePath.of(filesystem, Paths.get("input0"));
     SourcePath sourcePath = PathSourcePath.of(filesystem, Paths.get("input"));

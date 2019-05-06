@@ -21,8 +21,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -64,7 +62,6 @@ public class HttpFileBinaryTest {
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     graphBuilder.addToIndex(binary);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     Tool tool = binary.getExecutableCommand();
 
@@ -73,6 +70,7 @@ public class HttpFileBinaryTest {
             filesysten.getBuckPaths().getGenDir().resolve(Paths.get("foo", "bar", "foo.exe")));
 
     Assert.assertEquals(
-        ImmutableList.of(expectedPath.toString()), tool.getCommandPrefix(pathResolver));
+        ImmutableList.of(expectedPath.toString()),
+        tool.getCommandPrefix(graphBuilder.getSourcePathResolver()));
   }
 }

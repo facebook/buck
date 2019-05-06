@@ -29,7 +29,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -132,7 +131,7 @@ public class Jsr199JavacIntegrationTest {
         javac
             .newBuildInvocation(
                 javacExecutionContext,
-                DefaultSourcePathResolver.from(new TestActionGraphBuilder()),
+                new TestActionGraphBuilder().getSourcePathResolver(),
                 BuildTargetFactory.newInstance("//some:example"),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -186,7 +185,7 @@ public class Jsr199JavacIntegrationTest {
         javac
             .newBuildInvocation(
                 javacExecutionContext,
-                DefaultSourcePathResolver.from(new TestActionGraphBuilder()),
+                new TestActionGraphBuilder().getSourcePathResolver(),
                 BuildTargetFactory.newInstance("//some:example"),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -290,7 +289,7 @@ public class Jsr199JavacIntegrationTest {
       javac
           .newBuildInvocation(
               javacExecutionContext,
-              DefaultSourcePathResolver.from(new TestActionGraphBuilder()),
+              new TestActionGraphBuilder().getSourcePathResolver(),
               BuildTargetFactory.newInstance("//some:example"),
               ImmutableList.of(),
               ImmutableList.of(),
@@ -379,7 +378,7 @@ public class Jsr199JavacIntegrationTest {
     Invocation buildInvocation =
         javac.newBuildInvocation(
             javacExecutionContext,
-            DefaultSourcePathResolver.from(new TestActionGraphBuilder()),
+            new TestActionGraphBuilder().getSourcePathResolver(),
             BuildTargetFactory.newInstance("//some:example"),
             ImmutableList.of(),
             ImmutableList.of(),
