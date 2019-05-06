@@ -132,7 +132,7 @@ def update_formula_before_bottle(
         )
         all_data = re.sub(
             r'    root_url "https://github.com/.*/releases/download/v#{BUCK_VERSION}"',
-            r'    root_url "https://github.com/{repository}/releases/download/v#{BUCK_VERSION}"'.format(
+            r'    root_url "https://github.com/{repository}/releases/download/v#{{BUCK_VERSION}}"'.format(
                 repository=repository
             ),
             all_data,

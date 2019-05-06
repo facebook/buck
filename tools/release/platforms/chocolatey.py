@@ -127,7 +127,7 @@ def build_chocolatey(
 
 def publish_chocolatey(chocolatey_file, chocolatey_api_key, insecure_chocolatey_upload):
     """ Publish a nupkg to chocolatey """
-    url = "https://push.chocolatey.org/api/v2/package"
+    url = "https://chocolatey.org/api/v2/package"
     headers = {"X-NuGet-ApiKey": chocolatey_api_key}
     verify = not insecure_chocolatey_upload
 
