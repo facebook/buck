@@ -533,7 +533,7 @@ For some distros, the default packages may be older than what you would like. In
       <code>NDK_HOME</code> environment variable.
     </li>  
     <li>
-      The value of the {call buckconfig.ndk_path /} property 
+      The value of the {call buckconfig.ndk_ndk_path /} property 
       in <code>.buckconfig</code>.
     </li>
   </ul>
@@ -548,7 +548,7 @@ For some distros, the default packages may be older than what you would like. In
       <code>ANDROID_NDK_REPOSITORY</code> environment variable.
     </li>
     <li>
-      The {call buckconfig.ndk_repository_path /} property 
+      The {call buckconfig.ndk_ndk_repository_path /} property 
       in <code>.buckconfig</code>. 
     </li>
   </ul>
@@ -559,7 +559,7 @@ For some distros, the default packages may be older than what you would like. In
 
   <p>
   If you specify an NDK repository, Buck selects the NDK based on the
-  version that you specify in the {call buckconfig.ndk_version /} property 
+  version that you specify in the {call buckconfig.ndk_ndk_version /} property 
   of <code>.buckconfig</code>.
   </p>
 
@@ -791,19 +791,19 @@ ANDROID_SDK=&lt;path-to-sdk&gt;
 <ul>
   <li>See {call buckconfig.android_build_tools_version /} to get the version of build tools in Android SDK.</li>
   <li>{call buckconfig.android_target /} points to the target.</li>
-  <li>{call buckconfig.ndk_version /} points to the version of Android NDK.</li>
+  <li>{call buckconfig.ndk_ndk_version /} points to the version of Android NDK.</li>
 </ul>
 
 Optionally:
 
 <ul>
   <li>{call buckconfig.android_sdk_path /} is an absolute path to the Android SDK.</li>
-  <li>{call buckconfig.ndk_path /} is an absolute path to the Android NDK.</li>
+  <li>{call buckconfig.ndk_ndk_path /} is an absolute path to the Android NDK.</li>
   <li>
-    {call buckconfig.ndk_repository_path /} is an absolute path to a
+    {call buckconfig.ndk_ndk_repository_path /} is an absolute path to a
     directory that contains multiple Android NDKs in subdirectories.
     Buck selects which NDK to use based on the value of 
-    the {call buckconfig.ndk_version /} property in <code>.buckconfig</code>.
+    the {call buckconfig.ndk_ndk_version /} property in <code>.buckconfig</code>.
   </li>
 </ul>
 

@@ -61,6 +61,12 @@ done
 
 STATIC_FILES_DIR=$(mktemp -d)
 
+buck run //docs:generate_buckconfig_aliases
+if ! git diff --quiet; then
+  echo "Git repository is not clean; refusing to publish"
+  exit 1
+fi
+
 # Always run this script from the root of the Buck project directory.
 cd $(git rev-parse --show-toplevel)
 

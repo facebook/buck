@@ -1069,7 +1069,7 @@ artifact_cache_size_limit = 52428800
     <p>
       <strong>Note:</strong> This value sets an upper bound on artifact 
       size for all values of {call buckconfig.cache_mode /}.  
-      The parameter {call buckconfig.http_max_store_size /} sets 
+      The parameter {call buckconfig.cache_http_max_store_size /} sets 
       an artifact size limit <em>only</em> for distributed cache modes 
       (<code>http</code> and <code>thrift_over_http</code>).
       Therefore, it is not meaningful to set a value 
@@ -2351,7 +2351,7 @@ cxx_library(
   {param description}
     <p>
       Specifies whether the <code>default</code> flavor should be remapped to the value of 
-      the {call buckconfig.host_platform /} configuration parameter.
+      the {call buckconfig.cxx_host_platform /} configuration parameter.
     </p>
 
 <p>
@@ -2386,7 +2386,7 @@ cxx_library(
   {param description}
     <p>
       Specifies the host platform to use 
-      if {call buckconfig.should_remap_host_platform /} is <code>true</code>.  
+      if {call buckconfig.cxx_should_remap_host_platform /} is <code>true</code>.  
     </p>
 
     <p>
@@ -3626,7 +3626,7 @@ your <code>.buckjavaargs</code> file</a>:
       The version of the NDK that Buck should use to build native code.
       Buck searches for this version in the subdirectories beneath the
       directory specified by either the <code>ANDROID_NDK_REPOSITORY</code> environment 
-      variable or the value of the {call buckconfig.ndk_repository_path /} property.
+      variable or the value of the {call buckconfig.ndk_ndk_repository_path /} property.
       Buck prefers an exact match, and otherwise accepts a prefix match.
     </p>
 
@@ -3726,7 +3726,7 @@ Pkg.Revision = 13.1.3345770
     </p>
     <p>
       Buck selects which NDK to use based on the value of 
-      the {call buckconfig.ndk_version /} property.
+      the {call buckconfig.ndk_ndk_version /} property.
       Currently, if you do not specify a value for <code>ndk.ndk_version</code>, 
       Buck selects the most-recent NDK.  However, you should not rely on this 
       behavior as it could change in a future release.
@@ -4967,7 +4967,7 @@ buck = .
   {param description}
     The <code>javac</code> option is a path to a program that acts like Java javac.
     When set, buck uses this program instead of the system Java compiler.
-    When neither this nor {call buckconfig.tools_java_jar /} is set, Buck defaults
+    When neither this nor {call buckconfig.tools_javac_jar /} is set, Buck defaults
     to using the system compiler in-memory.
   {/param}
 {/call}

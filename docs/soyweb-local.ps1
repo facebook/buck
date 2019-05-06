@@ -11,4 +11,6 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+buck run //docs:generate_buckconfig_aliases
+
 java -jar docs\plovr-81ed862.jar soyweb --dir docs --globals docs\globals.json
