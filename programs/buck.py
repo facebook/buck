@@ -36,9 +36,9 @@ from buck_tool import (
     BuckDaemonErrorException,
     BuckStatusReporter,
     ExecuteTarget,
-    get_java_path,
     install_signal_handlers,
 )
+from java_lookup import get_java_path
 from java_version import get_java_major_version
 from subprocutils import propagate_failure
 from tracing import Tracing
@@ -119,11 +119,12 @@ def _get_java_version(java_path):
     return get_java_major_version(match.group("version"))
 
 
-def _try_to_verify_java_version(java_version_status_queue, required_java_version):
+def _try_to_verify_java_version(
+    java_version_status_queue, java_path, required_java_version
+):
     """
     Best effort check to make sure users have required Java version installed.
     """
-    java_path = get_java_path()
     warning = None
     try:
         java_version = _get_java_version(java_path)
@@ -144,7 +145,7 @@ is correct.".format(
 
 
 def _try_to_verify_java_version_off_thread(
-    java_version_status_queue, required_java_version
+    java_version_status_queue, java_path, required_java_version
 ):
     """ Attempts to validate the java version off main execution thread.
         The reason for this is to speed up the start-up time for the buck process.
@@ -152,7 +153,7 @@ def _try_to_verify_java_version_off_thread(
         this optimization has reduced startup time of 'buck run' from 673 ms to 520 ms. """
     verify_java_version_thread = threading.Thread(
         target=_try_to_verify_java_version,
-        args=(java_version_status_queue, required_java_version),
+        args=(java_version_status_queue, java_path, required_java_version),
     )
     verify_java_version_thread.daemon = True
     verify_java_version_thread.start()
@@ -218,9 +219,10 @@ def main(argv, reporter):
             with BuckProject.from_current_dir() as project:
                 tracing_dir = os.path.join(project.get_buck_out_log_dir(), "traces")
                 with get_repo(project) as buck_repo:
+                    required_java_version = buck_repo.get_buck_compiled_java_version()
+                    java_path = get_java_path(required_java_version)
                     _try_to_verify_java_version_off_thread(
-                        java_version_status_queue,
-                        buck_repo.get_buck_compiled_java_version(),
+                        java_version_status_queue, java_path, required_java_version
                     )
 
                     # If 'kill' is the second argument, shut down the buckd
@@ -228,7 +230,7 @@ def main(argv, reporter):
                     if argv[1:] == ["kill"]:
                         buck_repo.kill_buckd()
                         return ExitCode.SUCCESS
-                    return buck_repo.launch_buck(build_id, argv)
+                    return buck_repo.launch_buck(build_id, java_path, argv)
     finally:
         if tracing_dir:
             Tracing.write_to_dir(tracing_dir, build_id)

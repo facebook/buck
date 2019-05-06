@@ -148,6 +148,7 @@ python_library(
         "buck_repo.py",
         "buck_tool.py",
         "file_locks.py",
+        "java_lookup.py",
         "timing.py",
         "tracing.py",
     ],

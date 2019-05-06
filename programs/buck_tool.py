@@ -324,7 +324,7 @@ class BuckTool(object):
             return argv
         return self._add_args(argv, args)
 
-    def _run_with_nailgun(self, argv, env):
+    def _run_with_nailgun(self, java_path, argv, env):
         """
         Run the command using nailgun.  If the daemon is busy, block until it becomes free.
         """
@@ -385,7 +385,7 @@ class BuckTool(object):
 
         return exit_code
 
-    def _run_without_nailgun(self, argv, env):
+    def _run_without_nailgun(self, java_path, argv, env):
         """
         Run the command by directly invoking `java` (rather than by sending a command via nailgun)
         """
@@ -404,13 +404,12 @@ class BuckTool(object):
         command.extend(self._add_args_from_env(argv))
         now = int(round(time.time() * 1000))
         env["BUCK_PYTHON_SPACE_INIT_TIME"] = str(now - self._init_timestamp)
-        java = get_java_path()
         with Tracing("buck", args={"command": command}):
             return subprocess.call(
-                command, cwd=self._buck_project.root, env=env, executable=java
+                command, cwd=self._buck_project.root, env=env, executable=java_path
             )
 
-    def _execute_command_and_maybe_run_target(self, run_fn, env, argv):
+    def _execute_command_and_maybe_run_target(self, run_fn, java_path, env, argv):
         """
         Run a buck command using the specified `run_fn`.  If the command is "run", get the path,
         args, etc. from the daemon, and raise an exception that tells __main__ to run that binary
@@ -440,12 +439,12 @@ class BuckTool(object):
 
             argv = argv[1:]
             if len(argv) == 0 or argv[0] != "run":
-                return run_fn(argv, env)
+                return run_fn(java_path, argv, env)
             else:
                 with tempfile.NamedTemporaryFile(dir=self._tmp_dir) as argsfile:
                     # Splice in location of command file to run outside buckd
                     argv = [argv[0]] + ["--command-args-file", argsfile.name] + argv[1:]
-                    exit_code = run_fn(argv, env)
+                    exit_code = run_fn(java_path, argv, env)
                     if exit_code != 0 or os.path.getsize(argsfile.name) == 0:
                         # Build failed, so there's nothing to run.  Exit normally.
                         return exit_code
@@ -459,7 +458,7 @@ class BuckTool(object):
                     cwd = cmd["cwd"].encode("utf8")
                     raise ExecuteTarget(path, argv, envp, cwd)
 
-    def launch_buck(self, build_id, argv):
+    def launch_buck(self, build_id, java_path, argv):
         with Tracing("BuckTool.launch_buck"):
             with JvmCrashLogger(self, self._buck_project.root):
                 self._reporter.build_id = build_id
@@ -528,7 +527,7 @@ class BuckTool(object):
                     if need_start:
                         self.kill_buckd()
                         if not self.launch_buckd(
-                            jvm_args, buck_version_uid=buck_version_uid
+                            java_path, jvm_args, buck_version_uid=buck_version_uid
                         ):
                             use_buckd = False
                             self._reporter.no_buckd_reason = "daemon_failure"
@@ -547,7 +546,7 @@ class BuckTool(object):
                 self._unpack_modules()
 
                 exit_code = self._execute_command_and_maybe_run_target(
-                    run_fn, env, argv
+                    run_fn, java_path, env, argv
                 )
 
                 # Most shells return process termination with signal as
@@ -559,7 +558,7 @@ class BuckTool(object):
                 return exit_code
 
 
-    def launch_buckd(self, jvm_args, buck_version_uid=None):
+    def launch_buckd(self, java_path, jvm_args, buck_version_uid=None):
         with Tracing("BuckTool.launch_buckd"):
             setup_watchman_watch()
             if buck_version_uid is None:
@@ -636,7 +635,7 @@ class BuckTool(object):
 
             process = subprocess.Popen(
                 command,
-                executable=get_java_path(),
+                executable=java_path,
                 cwd=self._buck_project.root,
                 env=self._environ_for_buck(),
                 creationflags=creationflags,
@@ -882,34 +881,6 @@ class BuckTool(object):
 def install_signal_handlers():
     if os.name == "posix":
         signal.signal(signal.SIGUSR1, lambda sig, frame: traceback.print_stack(frame))
-
-
-def _get_java_exec_under_home(java_home_base):
-    java_exec = "java.exe" if os.name == "nt" else "java"
-    return os.path.join(java_home_base, "bin", java_exec)
-
-
-def get_java_path():
-    java_home_path = os.getenv("JAVA_HOME")
-    if java_home_path is None:
-        java_path = which("java")
-        if java_path is None:
-            raise BuckToolException(
-                "Could not find Java executable. \
-Make sure it is on PATH or JAVA_HOME is set."
-            )
-    else:
-        java_path = _get_java_exec_under_home(java_home_path)
-        if not os.path.isfile(java_path):
-            message = textwrap.dedent(
-                """
-            Could not find Java executable under JAVA_HOME at: '{}'.
-            Please make sure your JAVA_HOME environment variable is set correctly.
-            Then restart buck (buck kill) and try again.
-            """
-            ).format(java_path)
-            raise BuckToolException(message)
-    return java_path
 
 
 def platform_path(path):
