@@ -40,7 +40,7 @@ import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.test.config.TestBuckConfig;
-import com.facebook.buck.util.Optionals;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -82,7 +82,7 @@ public class ShTestDescription implements DescriptionWithTargetGraph<ShTestDescr
         StringWithMacrosConverter.of(buildTarget, context.getCellPathResolver(), MACRO_EXPANDERS);
     ImmutableList<Arg> testArgs =
         Stream.concat(
-                Optionals.toStream(args.getTest()).map(SourcePathArg::of),
+                RichStream.from(args.getTest()).map(SourcePathArg::of),
                 args.getArgs().stream().map(x -> macrosConverter.convert(x, graphBuilder)))
             .collect(ImmutableList.toImmutableList());
     ImmutableMap<String, Arg> testEnv =

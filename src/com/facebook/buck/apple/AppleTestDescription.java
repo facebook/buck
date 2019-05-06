@@ -75,7 +75,7 @@ import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.SwiftRuntimeNativeLinkable;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.unarchive.UnzipStep;
-import com.facebook.buck.util.Optionals;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.Version;
 import com.google.common.annotations.VisibleForTesting;
@@ -286,7 +286,7 @@ public class AppleTestDescription
             testHostWithTargetApp.flatMap(TestHostInfo::getTestHostAppBinarySourcePath),
             testHostWithTargetApp.map(TestHostInfo::getBlacklist).orElse(ImmutableSet.of()),
             libraryTarget,
-            Optionals.toStream(args.getTestHostApp()).toImmutableSortedSet(Ordering.natural()));
+            RichStream.from(args.getTestHostApp()).toImmutableSortedSet(Ordering.natural()));
     if (!createBundle || SwiftLibraryDescription.isSwiftTarget(libraryTarget)) {
       return library;
     }

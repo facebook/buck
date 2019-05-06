@@ -66,7 +66,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.MoreMaps;
-import com.facebook.buck.util.Optionals;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -148,7 +148,7 @@ public class LuaBinaryDescription
     Optional<BuildTarget> nativeStarterLibrary = luaPlatform.getNativeStarterLibrary();
     return nativeStarterLibrary.isPresent()
         ? ImmutableSet.of(nativeStarterLibrary.get())
-        : Optionals.toStream(luaPlatform.getLuaCxxLibraryTarget())
+        : RichStream.from(luaPlatform.getLuaCxxLibraryTarget())
             .collect(ImmutableSet.toImmutableSet());
   }
 

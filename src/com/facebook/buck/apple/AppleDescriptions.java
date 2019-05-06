@@ -65,7 +65,6 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.shell.AbstractGenruleDescription;
-import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Either;
 import com.google.common.annotations.VisibleForTesting;
@@ -814,9 +813,9 @@ public class AppleDescriptions {
             binaryTarget,
             ImmutableSet.<BuildRule>builder()
                 .add(targetDebuggableBinaryRule)
-                .addAll(Optionals.toStream(assetCatalog).iterator())
-                .addAll(Optionals.toStream(coreDataModel).iterator())
-                .addAll(Optionals.toStream(sceneKitAssets).iterator())
+                .addAll(RichStream.from(assetCatalog).iterator())
+                .addAll(RichStream.from(coreDataModel).iterator())
+                .addAll(RichStream.from(sceneKitAssets).iterator())
                 .addAll(
                     BuildRules.toBuildRulesFor(
                         buildTarget,
@@ -826,7 +825,7 @@ public class AppleDescriptions {
                             .filter(BuildTargetSourcePath.class)
                             .map(BuildTargetSourcePath::getTarget)
                             .collect(ImmutableSet.toImmutableSet())))
-                .addAll(Optionals.toStream(appleDsym).iterator())
+                .addAll(RichStream.from(appleDsym).iterator())
                 .addAll(extraBinaries)
                 .build());
 

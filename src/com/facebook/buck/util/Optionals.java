@@ -66,27 +66,6 @@ public class Optionals {
     return optional.get();
   }
 
-  /**
-   * Returns a singleton stream of an {@code Optional}'s value if present, otherwise an empty
-   * stream.
-   *
-   * <p>Useful for filtering present instances in a stream pipeline:
-   *
-   * <pre>{@code
-   * Stream.of(Optional.empty(), Optional.of(1), Optional.of(2))
-   *   .flatMap(Optionals::toStream)
-   *
-   * // Yields a stream of 2 elements, [1, 2]
-   * }</pre>
-   */
-  public static <T> RichStream<T> toStream(Optional<T> optional) {
-    if (optional.isPresent()) {
-      return RichStream.of(optional.get());
-    } else {
-      return RichStream.empty();
-    }
-  }
-
   private static final Optional<Boolean> OPTIONAL_TRUE = Optional.of(true);
   private static final Optional<Boolean> OPTIONAL_FALSE = Optional.of(false);
 

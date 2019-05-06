@@ -32,7 +32,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
-import com.facebook.buck.util.Optionals;
+import com.facebook.buck.util.RichStream;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
@@ -134,7 +134,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
   private Path getRelativePathAndRecordRule(SourcePath sourcePath) {
     requiredBuildTargets.addAll(
-        Optionals.toStream(graphBuilder.getRule(sourcePath).map(BuildRule::getBuildTarget))
+        RichStream.from(graphBuilder.getRule(sourcePath).map(BuildRule::getBuildTarget))
             .collect(Collectors.toList()));
     return sourcePathResolver.getRelativePath(sourcePath);
   }

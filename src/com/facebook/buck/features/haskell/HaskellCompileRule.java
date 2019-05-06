@@ -49,7 +49,6 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.MoreSuppliers;
-import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
@@ -308,7 +307,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     builder
         .addAll(
             MoreIterables.zipAndConcat(
-                Iterables.cycle("-main-is"), Optionals.toStream(main).toOnceIterable()))
+                Iterables.cycle("-main-is"), RichStream.from(main).toOnceIterable()))
         .addAll(getPackageNameArgs())
         .addAll(getPreprocessorFlags(resolver))
         .add("-odir", getProjectFilesystem().resolve(getObjectDir()).toString())

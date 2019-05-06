@@ -18,7 +18,7 @@ package com.facebook.buck.counters;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.util.Optionals;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -121,7 +121,7 @@ public class CounterRegistryImpl implements CounterRegistry {
     }
 
     ImmutableList<CounterSnapshot> presentSnapshots =
-        snapshots.stream().flatMap(Optionals::toStream).collect(ImmutableList.toImmutableList());
+        snapshots.stream().flatMap(RichStream::from).collect(ImmutableList.toImmutableList());
     if (!presentSnapshots.isEmpty()) {
       CountersSnapshotEvent event = new CountersSnapshotEvent(presentSnapshots);
       eventBus.post(event);

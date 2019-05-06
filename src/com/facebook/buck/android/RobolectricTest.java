@@ -36,7 +36,7 @@ import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.WriteFileStep;
-import com.facebook.buck.util.Optionals;
+import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -308,9 +308,9 @@ public class RobolectricTest extends JavaTest {
                 // {@link DummyRDotJava} and any of its resource deps is available locally (if it
                 // exists)
                 // to run this test.
-                Optionals.toStream(optionalDummyRDotJava),
+                RichStream.from(optionalDummyRDotJava),
                 buildRuleResolver.filterBuildRuleInputs(
-                    Optionals.toStream(optionalDummyRDotJava)
+                    RichStream.from(optionalDummyRDotJava)
                         .flatMap(input -> input.getAndroidResourceDeps().stream())
                         .flatMap(input -> Stream.of(input.getRes(), input.getAssets()))
                         .filter(Objects::nonNull)),

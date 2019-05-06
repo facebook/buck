@@ -52,7 +52,6 @@ import com.facebook.buck.rules.macros.WorkerMacro;
 import com.facebook.buck.rules.macros.WorkerMacroArg;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
-import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
@@ -184,7 +183,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
               Stream.concat(
                       graphBuilder.filterBuildRuleInputs(args.getSrcs().getPaths()).stream(),
                       Stream.of(cmd, bash, cmdExe)
-                          .flatMap(Optionals::toStream)
+                          .flatMap(RichStream::from)
                           .flatMap(input -> BuildableSupport.getDeps(input, graphBuilder)))
                   .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()))),
           graphBuilder,

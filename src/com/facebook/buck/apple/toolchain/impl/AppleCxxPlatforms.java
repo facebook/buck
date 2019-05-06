@@ -58,7 +58,7 @@ import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.impl.SwiftPlatformFactory;
-import com.facebook.buck.util.Optionals;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -229,7 +229,7 @@ public class AppleCxxPlatforms {
     ImmutableList<String> toolchainVersions =
         targetSdk.getToolchains().stream()
             .map(AppleToolchain::getVersion)
-            .flatMap(Optionals::toStream)
+            .flatMap(RichStream::from)
             .collect(ImmutableList.toImmutableList());
     if (toolchainVersions.isEmpty()) {
       if (!xcodeBuildVersion.isPresent()) {

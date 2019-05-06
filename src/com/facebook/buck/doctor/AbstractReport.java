@@ -165,7 +165,7 @@ public abstract class AbstractReport {
             .setHighlightedBuildIds(
                 RichStream.from(selectedBuilds)
                     .map(BuildLogEntry::getBuildId)
-                    .flatMap(Optionals::toStream)
+                    .flatMap(RichStream::from)
                     .toOnceIterable())
             .setBuildEnvironmentDescription(buildEnvironmentDescription)
             .setSourceControlInfo(sourceControlInfo)

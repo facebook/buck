@@ -18,7 +18,6 @@ package com.facebook.buck.core.rules;
 
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSet;
 import java.util.Arrays;
@@ -54,7 +53,7 @@ public class DefaultSourcePathRuleFinder implements SourcePathRuleFinder {
 
   @Override
   public Stream<BuildRule> filterBuildRuleInputs(Optional<SourcePath> sourcePath) {
-    return filterBuildRuleInputs(Optionals.toStream(sourcePath));
+    return filterBuildRuleInputs(RichStream.from(sourcePath));
   }
 
   /**

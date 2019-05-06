@@ -49,7 +49,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.features.halide.HalideBuckConfig;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.swift.SwiftBuckConfig;
-import com.facebook.buck.util.Optionals;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -253,7 +253,7 @@ public class WorkspaceAndProjectGenerator {
 
     ImmutableSet<BuildTarget> targetsInRequiredProjects =
         Stream.concat(
-                schemeNameToSrcTargetNode.values().stream().flatMap(Optionals::toStream),
+                schemeNameToSrcTargetNode.values().stream().flatMap(RichStream::from),
                 buildForTestNodes.values().stream())
             .map(TargetNode::getBuildTarget)
             .collect(ImmutableSet.toImmutableSet());
@@ -1069,7 +1069,7 @@ public class WorkspaceAndProjectGenerator {
     for (String schemeName : schemeNameToSrcTargetNode.keySet()) {
       ImmutableSet<TargetNode<?>> targetNodes =
           schemeNameToSrcTargetNode.get(schemeName).stream()
-              .flatMap(Optionals::toStream)
+              .flatMap(RichStream::from)
               .collect(ImmutableSet.toImmutableSet());
       ImmutableSet<TargetNode<AppleTestDescriptionArg>> testNodes =
           getOrderedTestNodes(
@@ -1187,7 +1187,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSet<PBXTarget> orderedBuildTargets =
           schemeNameToSrcTargetNode.get(schemeName).stream()
               .distinct()
-              .flatMap(Optionals::toStream)
+              .flatMap(RichStream::from)
               .map(TargetNode::getBuildTarget)
               .map(buildTargetToPBXTarget::get)
               .filter(Objects::nonNull)
