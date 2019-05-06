@@ -238,6 +238,7 @@ public class NdkCxxPlatformTest {
     assertEquals("6.0.2", NdkCxxPlatforms.getDefaultClangVersionForNdk("17.1.2977051"));
   }
 
+  @Test
   public void testDefaultCpuAbisForNdk16() {
     assertEquals(
         ImmutableSet.of("arm", "armv7", "x86"), NdkCxxPlatforms.getDefaultCpuAbis("16.1.123"));
