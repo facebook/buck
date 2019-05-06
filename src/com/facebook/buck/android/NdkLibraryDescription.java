@@ -36,8 +36,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxHeaders;
@@ -184,8 +182,6 @@ public class NdkLibraryDescription
       ActionGraphBuilder graphBuilder,
       TargetConfiguration targetConfiguration) {
 
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-
     ImmutableList.Builder<String> outputLinesBuilder = ImmutableList.builder();
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
 
@@ -215,13 +211,17 @@ public class NdkLibraryDescription
       ImmutableList.Builder<String> ppFlags = ImmutableList.builder();
       ppFlags.addAll(
           Arg.stringify(
-              cxxPreprocessorInput.getPreprocessorFlags().get(CxxSource.Type.C), pathResolver));
+              cxxPreprocessorInput.getPreprocessorFlags().get(CxxSource.Type.C),
+              graphBuilder.getSourcePathResolver()));
       Preprocessor preprocessor =
           CxxSourceTypes.getPreprocessor(cxxPlatform, CxxSource.Type.C)
               .resolve(graphBuilder, targetConfiguration);
       ppFlags.addAll(
           CxxHeaders.getArgs(
-              cxxPreprocessorInput.getIncludes(), pathResolver, Optional.empty(), preprocessor));
+              cxxPreprocessorInput.getIncludes(),
+              graphBuilder.getSourcePathResolver(),
+              Optional.empty(),
+              preprocessor));
       String localCflags =
           Joiner.on(' ')
               .join(
@@ -259,7 +259,8 @@ public class NdkLibraryDescription
                   escapeForMakefile(
                       projectFilesystem,
                       shouldEscapeLdFlags,
-                      Arg.stringify(nativeLinkableInput.getArgs(), pathResolver)));
+                      Arg.stringify(
+                          nativeLinkableInput.getArgs(), graphBuilder.getSourcePathResolver())));
 
       // Write the relevant lines to the generated makefile.
       if (!localCflags.isEmpty() || !localLdflags.isEmpty()) {

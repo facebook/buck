@@ -31,7 +31,6 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
@@ -124,15 +123,12 @@ abstract class DDescriptionUtils {
       ImmutableList<String> linkerFlags,
       DIncludes includes) {
 
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
-
     ImmutableList<SourcePath> sourcePaths =
         sourcePathsForCompiledSources(
             buildTarget,
             projectFilesystem,
             params,
             graphBuilder,
-            sourcePathResolver,
             cxxPlatform,
             dBuckConfig,
             compilerFlags,
@@ -146,7 +142,6 @@ abstract class DDescriptionUtils {
         cxxPlatform,
         projectFilesystem,
         graphBuilder,
-        sourcePathResolver,
         buildTarget,
         Linker.LinkType.EXECUTABLE,
         Optional.empty(),
@@ -305,7 +300,6 @@ abstract class DDescriptionUtils {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver sourcePathResolver,
       CxxPlatform cxxPlatform,
       DBuckConfig dBuckConfig,
       ImmutableList<String> compilerFlags,
@@ -313,7 +307,9 @@ abstract class DDescriptionUtils {
       DIncludes includes) {
     ImmutableList.Builder<SourcePath> sourcePaths = ImmutableList.builder();
     for (Map.Entry<String, SourcePath> source :
-        sources.toNameMap(baseBuildTarget, sourcePathResolver, "srcs").entrySet()) {
+        sources
+            .toNameMap(baseBuildTarget, graphBuilder.getSourcePathResolver(), "srcs")
+            .entrySet()) {
       BuildTarget compileTarget =
           createDCompileBuildTarget(baseBuildTarget, source.getKey(), cxxPlatform);
       BuildRule rule =

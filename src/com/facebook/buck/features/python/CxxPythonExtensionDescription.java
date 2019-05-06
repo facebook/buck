@@ -316,7 +316,6 @@ public class CxxPythonExtensionDescription
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       CxxPythonExtensionDescriptionArg args) {
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     String moduleName = args.getModuleName().orElse(buildTarget.getShortName());
     String extensionName = getExtensionName(moduleName);
     Path extensionPath =
@@ -332,7 +331,6 @@ public class CxxPythonExtensionDescription
         cxxPlatform,
         projectFilesystem,
         graphBuilder,
-        pathResolver,
         getExtensionTarget(buildTarget, pythonPlatform.getFlavor(), cxxPlatform.getFlavor()),
         Linker.LinkType.SHARED,
         Optional.of(extensionName),
@@ -351,7 +349,7 @@ public class CxxPythonExtensionDescription
                     buildTarget.withoutFlavors(LinkerMapMode.FLAVOR_DOMAIN.getFlavors()),
                     projectFilesystem,
                     graphBuilder,
-                    pathResolver,
+                    graphBuilder.getSourcePathResolver(),
                     cellRoots,
                     cxxPlatform,
                     args,

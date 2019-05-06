@@ -35,7 +35,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -571,7 +570,7 @@ public class AndroidBinaryGraphEnhancer {
               projectFilesystem,
               buildRuleParams.withDeclaredDeps(
                   ImmutableSortedSet.of(graphBuilder.getRule(jarPath))),
-              DefaultSourcePathResolver.from(graphBuilder),
+              graphBuilder.getSourcePathResolver(),
               jarPath,
               Optional.empty(),
               Optional.empty(),

@@ -885,14 +885,13 @@ public class AppleCxxPlatformsTest {
   private ImmutableMap<Flavor, RuleKey> constructLinkRuleKeys(
       ImmutableMap<Flavor, AppleCxxPlatform> cxxPlatforms) throws NoSuchBuildTargetException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
                     .put("input.o", Strings.repeat("a", 40))
                     .build()),
-            pathResolver,
+            graphBuilder.getSourcePathResolver(),
             graphBuilder);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     ImmutableMap.Builder<Flavor, RuleKey> ruleKeys = ImmutableMap.builder();
@@ -903,7 +902,6 @@ public class AppleCxxPlatformsTest {
               entry.getValue().getCxxPlatform(),
               new FakeProjectFilesystem(),
               graphBuilder,
-              pathResolver,
               target,
               Linker.LinkType.EXECUTABLE,
               Optional.empty(),

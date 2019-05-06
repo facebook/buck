@@ -28,8 +28,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.Archive;
@@ -73,12 +71,15 @@ public class DLibraryDescription
       BuildRuleParams params,
       DLibraryDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (buildTarget.getFlavors().contains(DDescriptionUtils.SOURCE_LINK_TREE)) {
       return DDescriptionUtils.createSourceSymlinkTree(
-          buildTarget, projectFilesystem, pathResolver, graphBuilder, args.getSrcs());
+          buildTarget,
+          projectFilesystem,
+          graphBuilder.getSourcePathResolver(),
+          graphBuilder,
+          args.getSrcs());
     }
 
     BuildTarget sourceTreeTarget =
@@ -96,7 +97,6 @@ public class DLibraryDescription
           projectFilesystem,
           params,
           graphBuilder,
-          pathResolver,
           /* compilerFlags */ ImmutableList.of(),
           args.getSrcs(),
           dIncludes,
@@ -112,7 +112,6 @@ public class DLibraryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       ImmutableList<String> compilerFlags,
       SourceSortedSet sources,
       DIncludes dIncludes,
@@ -128,7 +127,6 @@ public class DLibraryDescription
             projectFilesystem,
             params,
             graphBuilder,
-            pathResolver,
             cxxPlatform,
             dBuckConfig,
             compilerFlags,

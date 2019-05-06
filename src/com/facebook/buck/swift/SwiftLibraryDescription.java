@@ -36,7 +36,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -334,7 +333,6 @@ public class SwiftLibraryDescription
       CxxPlatform cxxPlatform,
       Optional<String> soname) {
 
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
     String sharedLibrarySoname =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
             soname, buildTarget.withoutFlavors(SUPPORTED_FLAVORS), cxxPlatform);
@@ -368,7 +366,6 @@ public class SwiftLibraryDescription
             cxxPlatform,
             projectFilesystem,
             graphBuilder,
-            sourcePathResolver,
             buildTarget,
             Linker.LinkType.SHARED,
             Optional.of(sharedLibrarySoname),

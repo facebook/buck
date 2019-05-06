@@ -219,7 +219,6 @@ public class PrebuiltCxxLibraryDescription
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       PrebuiltCxxLibraryDescriptionArg args) {
 
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     PrebuiltCxxLibraryPaths paths = getPaths(buildTarget, args);
 
     String soname = getSoname(buildTarget, cxxPlatform, args.getSoname());
@@ -251,7 +250,6 @@ public class PrebuiltCxxLibraryDescription
         cxxPlatform,
         projectFilesystem,
         graphBuilder,
-        pathResolver,
         sharedTarget,
         Linker.LinkType.SHARED,
         Optional.of(soname),
@@ -271,7 +269,7 @@ public class PrebuiltCxxLibraryDescription
                 cxxPlatform
                     .getLd()
                     .resolve(graphBuilder, buildTarget.getTargetConfiguration())
-                    .linkWhole(SourcePathArg.of(library), pathResolver))
+                    .linkWhole(SourcePathArg.of(library), graphBuilder.getSourcePathResolver()))
             .addAllArgs(
                 StringArg.from(
                     CxxFlags.getFlagsWithPlatformMacroExpansion(

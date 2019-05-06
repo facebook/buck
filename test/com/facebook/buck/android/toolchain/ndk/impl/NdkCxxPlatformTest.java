@@ -164,14 +164,13 @@ public class NdkCxxPlatformTest {
       ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> cxxPlatforms)
       throws NoSuchBuildTargetException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.<String, String>builder()
                     .put("input.o", Strings.repeat("a", 40))
                     .build()),
-            pathResolver,
+            graphBuilder.getSourcePathResolver(),
             graphBuilder);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     ImmutableMap.Builder<TargetCpuType, RuleKey> ruleKeys = ImmutableMap.builder();
@@ -183,7 +182,6 @@ public class NdkCxxPlatformTest {
               entry.getValue().resolve(graphBuilder).getCxxPlatform(),
               filesystem,
               graphBuilder,
-              pathResolver,
               target,
               Linker.LinkType.EXECUTABLE,
               Optional.empty(),

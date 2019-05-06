@@ -34,7 +34,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TopologicalSort;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -121,7 +120,6 @@ class NativeLibraryMergeEnhancer {
       CellPathResolver cellPathResolver,
       CxxBuckConfig cxxBuckConfig,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
@@ -201,7 +199,6 @@ class NativeLibraryMergeEnhancer {
             cellPathResolver,
             cxxBuckConfig,
             graphBuilder,
-            pathResolver,
             buildTarget,
             projectFilesystem,
             glueLinkable,
@@ -490,7 +487,6 @@ class NativeLibraryMergeEnhancer {
       CellPathResolver cellPathResolver,
       CxxBuckConfig cxxBuckConfig,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       BuildTarget baseBuildTarget,
       ProjectFilesystem projectFilesystem,
       Optional<NativeLinkable> glueLinkable,
@@ -523,7 +519,6 @@ class NativeLibraryMergeEnhancer {
               cellPathResolver,
               cxxBuckConfig,
               graphBuilder,
-              pathResolver,
               baseBuildTarget,
               targetProjectFilesystem,
               constituents,
@@ -633,7 +628,6 @@ class NativeLibraryMergeEnhancer {
   private static class MergedLibNativeLinkable implements NativeLinkable {
     private final CxxBuckConfig cxxBuckConfig;
     private final ActionGraphBuilder graphBuilder;
-    private final SourcePathResolver pathResolver;
     private final ProjectFilesystem projectFilesystem;
     private final MergedNativeLibraryConstituents constituents;
     private final Optional<NativeLinkable> glueLinkable;
@@ -648,7 +642,6 @@ class NativeLibraryMergeEnhancer {
         CellPathResolver cellPathResolver,
         CxxBuckConfig cxxBuckConfig,
         ActionGraphBuilder graphBuilder,
-        SourcePathResolver pathResolver,
         BuildTarget baseBuildTarget,
         ProjectFilesystem projectFilesystem,
         MergedNativeLibraryConstituents constituents,
@@ -659,7 +652,6 @@ class NativeLibraryMergeEnhancer {
       this.cellPathResolver = cellPathResolver;
       this.cxxBuckConfig = cxxBuckConfig;
       this.graphBuilder = graphBuilder;
-      this.pathResolver = pathResolver;
       this.projectFilesystem = projectFilesystem;
       this.constituents = constituents;
       this.glueLinkable = glueLinkable;
@@ -910,8 +902,7 @@ class NativeLibraryMergeEnhancer {
     private NativeLinkableInput getImmediateNativeLinkableInput(
         CxxPlatform cxxPlatform,
         ActionGraphBuilder graphBuilder,
-        TargetConfiguration targetConfiguration,
-        SourcePathResolver pathResolver) {
+        TargetConfiguration targetConfiguration) {
       Linker linker = cxxPlatform.getLd().resolve(graphBuilder, targetConfiguration);
       ImmutableList.Builder<NativeLinkableInput> builder = ImmutableList.builder();
       ImmutableList<NativeLinkable> usingGlue = ImmutableList.of();
@@ -925,7 +916,8 @@ class NativeLibraryMergeEnhancer {
           // linker flags.
           builder.add(
               ((NativeLinkTarget) linkable)
-                  .getNativeLinkTargetInput(cxxPlatform, graphBuilder, pathResolver));
+                  .getNativeLinkTargetInput(
+                      cxxPlatform, graphBuilder, graphBuilder.getSourcePathResolver()));
         } else {
           // Otherwise, just get the static pic output.
           NativeLinkableInput staticPic =
@@ -937,7 +929,8 @@ class NativeLibraryMergeEnhancer {
           builder.add(
               staticPic.withArgs(
                   FluentIterable.from(staticPic.getArgs())
-                      .transformAndConcat(arg -> linker.linkWhole(arg, pathResolver))));
+                      .transformAndConcat(
+                          arg -> linker.linkWhole(arg, graphBuilder.getSourcePathResolver()))));
         }
       }
       return NativeLinkableInput.concat(builder.build());
@@ -988,7 +981,6 @@ class NativeLibraryMergeEnhancer {
                       cxxPlatform,
                       projectFilesystem,
                       graphBuilder,
-                      pathResolver,
                       target,
                       Linker.LinkType.SHARED,
                       Optional.of(soname),
@@ -1006,7 +998,7 @@ class NativeLibraryMergeEnhancer {
                       ImmutableSet.of(),
                       ImmutableSet.of(),
                       getImmediateNativeLinkableInput(
-                          cxxPlatform, graphBuilder, target.getTargetConfiguration(), pathResolver),
+                          cxxPlatform, graphBuilder, target.getTargetConfiguration()),
                       constituents.isActuallyMerged()
                           ? symbolsToLocalize.map(SymbolLocalizingPostprocessor::new)
                           : Optional.empty(),

@@ -724,11 +724,16 @@ public class CxxDescriptionEnhancer {
       CxxPlatform cxxPlatform,
       CommonArg args,
       ImmutableSet<BuildTarget> extraDeps) {
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ImmutableMap<String, CxxSource> srcs =
-        parseCxxSources(target, graphBuilder, pathResolver, cxxPlatform, args);
+        parseCxxSources(
+            target, graphBuilder, graphBuilder.getSourcePathResolver(), cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
-        parseHeaders(target, graphBuilder, pathResolver, Optional.of(cxxPlatform), args);
+        parseHeaders(
+            target,
+            graphBuilder,
+            graphBuilder.getSourcePathResolver(),
+            Optional.of(cxxPlatform),
+            args);
 
     // Build the binary deps.
     ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
@@ -810,7 +815,6 @@ public class CxxDescriptionEnhancer {
                         cxxPlatform,
                         projectFilesystem,
                         graphBuilder,
-                        pathResolver,
                         target,
                         indexOutput,
                         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
@@ -1125,7 +1129,6 @@ public class CxxDescriptionEnhancer {
       ImmutableSortedSet<SourcePath> rawHeaders,
       ImmutableSortedSet<String> includeDirectories,
       Optional<String> outputRootName) {
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
     //    TODO(beefon): should be:
     //    Path linkOutput = getLinkOutputPath(
     //        createCxxLinkTarget(params.getBuildTarget(), flavoredLinkerMapMode),
@@ -1199,7 +1202,6 @@ public class CxxDescriptionEnhancer {
                         cxxPlatform,
                         projectFilesystem,
                         graphBuilder,
-                        sourcePathResolver,
                         linkRuleTarget,
                         Linker.LinkType.EXECUTABLE,
                         Optional.empty(),

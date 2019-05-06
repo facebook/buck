@@ -30,7 +30,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxConstructorArg;
@@ -221,7 +220,6 @@ public class CxxLuaExtensionDescription
       LuaPlatform luaPlatform,
       CxxLuaExtensionDescriptionArg args) {
     CxxPlatform cxxPlatform = luaPlatform.getCxxPlatform();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     String extensionName = getExtensionName(buildTarget, cxxPlatform);
     Path extensionPath = getExtensionPath(projectFilesystem, buildTarget, cxxPlatform);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
@@ -229,7 +227,6 @@ public class CxxLuaExtensionDescription
         cxxPlatform,
         projectFilesystem,
         graphBuilder,
-        pathResolver,
         getExtensionTarget(buildTarget, cxxPlatform.getFlavor()),
         Linker.LinkType.SHARED,
         Optional.of(extensionName),
@@ -254,7 +251,7 @@ public class CxxLuaExtensionDescription
                     buildTarget.withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
                     projectFilesystem,
                     graphBuilder,
-                    pathResolver,
+                    graphBuilder.getSourcePathResolver(),
                     cellRoots,
                     luaPlatform,
                     args))

@@ -631,7 +631,6 @@ public class CxxLibraryFactory {
         cxxPlatform,
         projectFilesystem,
         graphBuilder,
-        pathResolver,
         sharedTarget,
         linkType,
         Optional.of(sharedLibrarySoname),

@@ -78,7 +78,6 @@ public class CxxLinkableEnhancer {
       CxxPlatform cxxPlatform,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver resolver,
       BuildTarget target,
       Path output,
       Linker.LinkableDepType depType,
@@ -116,7 +115,6 @@ public class CxxLinkableEnhancer {
         createDepSharedLibFrameworkArgsForLink(
             cxxPlatform,
             graphBuilder,
-            resolver,
             target,
             Linker.LinkType.EXECUTABLE,
             Optional.empty(),
@@ -234,7 +232,6 @@ public class CxxLinkableEnhancer {
   private static ImmutableList<Arg> createDepSharedLibFrameworkArgsForLink(
       CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver resolver,
       BuildTarget target,
       Linker.LinkType linkType,
       Optional<String> soname,
@@ -313,7 +310,7 @@ public class CxxLinkableEnhancer {
     if (!linkableInput.getLibraries().isEmpty()) {
       addSharedLibrariesLinkerArgs(
           cxxPlatform,
-          resolver,
+          graphBuilder.getSourcePathResolver(),
           ImmutableSortedSet.copyOf(linkableInput.getLibraries()),
           argsBuilder);
     }
@@ -322,7 +319,7 @@ public class CxxLinkableEnhancer {
     if (!linkableInput.getFrameworks().isEmpty()) {
       addFrameworkLinkerArgs(
           cxxPlatform,
-          resolver,
+          graphBuilder.getSourcePathResolver(),
           ImmutableSortedSet.copyOf(linkableInput.getFrameworks()),
           argsBuilder);
     }
@@ -343,7 +340,6 @@ public class CxxLinkableEnhancer {
       CxxPlatform cxxPlatform,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver resolver,
       BuildTarget target,
       Linker.LinkType linkType,
       Optional<String> soname,
@@ -364,7 +360,6 @@ public class CxxLinkableEnhancer {
         createDepSharedLibFrameworkArgsForLink(
             cxxPlatform,
             graphBuilder,
-            resolver,
             target,
             linkType,
             soname,

@@ -436,7 +436,6 @@ public class CxxPrecompiledHeaderRuleTest {
             platformSupportingPch,
             filesystem,
             graphBuilder,
-            pathResolver,
             CxxDescriptionEnhancer.createCxxLinkTarget(
                 binTarget, Optional.of(LinkerMapMode.NO_LINKER_MAP)),
             Linker.LinkType.EXECUTABLE,

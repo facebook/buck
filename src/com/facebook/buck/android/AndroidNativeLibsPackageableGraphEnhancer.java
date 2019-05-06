@@ -33,8 +33,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -70,7 +68,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private final ProjectFilesystem projectFilesystem;
   private final BuildTarget originalBuildTarget;
   private final ActionGraphBuilder graphBuilder;
-  private final SourcePathResolver pathResolver;
   private final ImmutableSet<TargetCpuType> cpuFilters;
   private final CxxBuckConfig cxxBuckConfig;
   private final Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap;
@@ -101,7 +98,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     this.projectFilesystem = projectFilesystem;
     this.originalBuildTarget = originalBuildTarget;
     this.nativeLibraryMergeLocalizedSymbols = nativeLibraryMergeLocalizedSymbols;
-    this.pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     this.graphBuilder = graphBuilder;
     this.cpuFilters = cpuFilters;
     this.cxxBuckConfig = cxxBuckConfig;
@@ -198,7 +194,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               cellPathResolver,
               cxxBuckConfig,
               graphBuilder,
-              pathResolver,
               originalBuildTarget,
               projectFilesystem,
               nativePlatforms,
@@ -271,7 +266,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               originalBuildTarget,
               projectFilesystem,
               cellPathResolver,
-              pathResolver,
+              graphBuilder.getSourcePathResolver(),
               graphBuilder,
               cxxBuckConfig,
               nativePlatforms,
