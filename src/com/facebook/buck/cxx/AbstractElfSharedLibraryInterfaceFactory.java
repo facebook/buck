@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -45,13 +44,11 @@ abstract class AbstractElfSharedLibraryInterfaceFactory implements SharedLibrary
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       SourcePath library) {
     return ElfSharedLibraryInterface.from(
         target,
         projectFilesystem,
-        pathResolver,
         resolver,
         getObjcopy().resolve(resolver, target.getTargetConfiguration()),
         library,
@@ -63,7 +60,6 @@ abstract class AbstractElfSharedLibraryInterfaceFactory implements SharedLibrary
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
       String libName,
       Linker linker,
       ImmutableList<Arg> args) {

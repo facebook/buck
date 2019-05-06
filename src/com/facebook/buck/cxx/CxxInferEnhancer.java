@@ -25,8 +25,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -247,9 +245,7 @@ public final class CxxInferEnhancer {
   private ImmutableMap<String, CxxSource> collectSources(
       BuildTarget buildTarget, CxxConstructorArg args) {
     InferFlavors.checkNoInferFlavors(buildTarget.getFlavors());
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-    return CxxDescriptionEnhancer.parseCxxSources(
-        buildTarget, graphBuilder, pathResolver, cxxPlatform, args);
+    return CxxDescriptionEnhancer.parseCxxSources(buildTarget, graphBuilder, cxxPlatform, args);
   }
 
   private <T extends BuildRule> ImmutableSet<T> requireTransitiveDependentLibraries(
@@ -319,11 +315,8 @@ public final class CxxInferEnhancer {
 
     InferFlavors.checkNoInferFlavors(target.getFlavors());
 
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-
     ImmutableMap<Path, SourcePath> headers =
-        CxxDescriptionEnhancer.parseHeaders(
-            target, graphBuilder, pathResolver, Optional.of(cxxPlatform), args);
+        CxxDescriptionEnhancer.parseHeaders(target, graphBuilder, Optional.of(cxxPlatform), args);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
@@ -378,7 +371,7 @@ public final class CxxInferEnhancer {
             filesystem,
             target,
             graphBuilder,
-            pathResolver,
+            graphBuilder.getSourcePathResolver(),
             cxxBuckConfig,
             cxxPlatform,
             preprocessorInputs,

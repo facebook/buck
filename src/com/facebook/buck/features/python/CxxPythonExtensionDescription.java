@@ -32,7 +32,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
@@ -156,7 +155,6 @@ public class CxxPythonExtensionDescription
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       CxxPythonExtensionDescriptionArg args,
@@ -164,11 +162,9 @@ public class CxxPythonExtensionDescription
 
     // Extract all C/C++ sources from the constructor arg.
     ImmutableMap<String, CxxSource> srcs =
-        CxxDescriptionEnhancer.parseCxxSources(
-            target, graphBuilder, pathResolver, cxxPlatform, args);
+        CxxDescriptionEnhancer.parseCxxSources(target, graphBuilder, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
-        CxxDescriptionEnhancer.parseHeaders(
-            target, graphBuilder, pathResolver, Optional.of(cxxPlatform), args);
+        CxxDescriptionEnhancer.parseHeaders(target, graphBuilder, Optional.of(cxxPlatform), args);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
@@ -224,7 +220,7 @@ public class CxxPythonExtensionDescription
             projectFilesystem,
             target,
             graphBuilder,
-            pathResolver,
+            graphBuilder.getSourcePathResolver(),
             cxxBuckConfig,
             cxxPlatform,
             cxxPreprocessorInput,
@@ -239,7 +235,6 @@ public class CxxPythonExtensionDescription
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       CxxPythonExtensionDescriptionArg args,
@@ -270,14 +265,7 @@ public class CxxPythonExtensionDescription
     // Add object files into the args.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> picObjects =
         requireCxxObjects(
-            target,
-            projectFilesystem,
-            graphBuilder,
-            pathResolver,
-            cellRoots,
-            cxxPlatform,
-            args,
-            deps);
+            target, projectFilesystem, graphBuilder, cellRoots, cxxPlatform, args, deps);
     argsBuilder.addAll(SourcePathArg.from(picObjects.values()));
 
     return argsBuilder.build();
@@ -349,7 +337,6 @@ public class CxxPythonExtensionDescription
                     buildTarget.withoutFlavors(LinkerMapMode.FLAVOR_DOMAIN.getFlavors()),
                     projectFilesystem,
                     graphBuilder,
-                    graphBuilder.getSourcePathResolver(),
                     cellRoots,
                     cxxPlatform,
                     args,
@@ -369,18 +356,10 @@ public class CxxPythonExtensionDescription
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       CxxPythonExtensionDescriptionArg args) {
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ImmutableSet<BuildRule> deps = getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args);
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
         requireCxxObjects(
-            target,
-            projectFilesystem,
-            graphBuilder,
-            pathResolver,
-            cellRoots,
-            cxxPlatform,
-            args,
-            deps);
+            target, projectFilesystem, graphBuilder, cellRoots, cxxPlatform, args, deps);
     return CxxCompilationDatabase.createCompilationDatabase(
         target, projectFilesystem, objects.keySet());
   }
@@ -533,7 +512,6 @@ public class CxxPythonExtensionDescription
                             pythonPlatform.getFlavor(), CxxDescriptionEnhancer.SHARED_FLAVOR),
                         projectFilesystem,
                         graphBuilder,
-                        pathResolver,
                         cellRoots,
                         cxxPlatform,
                         args,

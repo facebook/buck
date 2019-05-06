@@ -24,8 +24,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import org.immutables.value.Value;
@@ -46,13 +44,12 @@ public class CxxPrecompiledHeaderDescription
       BuildRuleParams params,
       CxxPrecompiledHeaderDescriptionArg args) {
     BuildRuleResolver ruleResolver = context.getActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleResolver);
     return new CxxPrecompiledHeaderTemplate(
         buildTarget,
         context.getProjectFilesystem(),
         ruleResolver.getAllRules(args.getDeps()),
         args.getSrc(),
-        pathResolver.getAbsolutePath(args.getSrc()));
+        ruleResolver.getSourcePathResolver().getAbsolutePath(args.getSrc()));
   }
 
   @Override

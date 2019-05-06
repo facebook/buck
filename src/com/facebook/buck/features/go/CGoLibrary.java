@@ -109,7 +109,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
     // generate C sources with cgo tool (go build writes c files to _obj dir)
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
-            buildTarget, graphBuilder, pathResolver, Optional.of(platform.getCxxPlatform()), args);
+            buildTarget, graphBuilder, Optional.of(platform.getCxxPlatform()), args);
 
     HeaderSymlinkTree headerSymlinkTree =
         getHeaderSymlinkTree(
@@ -164,7 +164,6 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                         target,
                         projectFilesystem,
                         graphBuilder,
-                        pathResolver,
                         cellRoots,
                         cxxBuckConfig,
                         platform.getCxxPlatform(),
@@ -334,7 +333,6 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
@@ -348,7 +346,6 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
         CxxDescriptionEnhancer.parseCxxSources(
             buildTarget,
             graphBuilder,
-            pathResolver,
             cxxPlatform,
             wrapSourcePathsWithFlags(sources),
             PatternMatchedCollection.of());

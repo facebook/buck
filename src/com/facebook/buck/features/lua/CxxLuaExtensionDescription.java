@@ -109,7 +109,6 @@ public class CxxLuaExtensionDescription
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       CellPathResolver cellRoots,
       LuaPlatform luaPlatform,
       CxxLuaExtensionDescriptionArg args) {
@@ -118,11 +117,10 @@ public class CxxLuaExtensionDescription
 
     // Extract all C/C++ sources from the constructor arg.
     ImmutableMap<String, CxxSource> srcs =
-        CxxDescriptionEnhancer.parseCxxSources(
-            buildTarget, graphBuilder, pathResolver, cxxPlatform, args);
+        CxxDescriptionEnhancer.parseCxxSources(buildTarget, graphBuilder, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
-            buildTarget, graphBuilder, pathResolver, Optional.of(cxxPlatform), args);
+            buildTarget, graphBuilder, Optional.of(cxxPlatform), args);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
@@ -186,7 +184,7 @@ public class CxxLuaExtensionDescription
                 projectFilesystem,
                 buildTarget,
                 graphBuilder,
-                pathResolver,
+                graphBuilder.getSourcePathResolver(),
                 cxxBuckConfig,
                 cxxPlatform,
                 cxxPreprocessorInput,
@@ -251,7 +249,6 @@ public class CxxLuaExtensionDescription
                     buildTarget.withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
                     projectFilesystem,
                     graphBuilder,
-                    graphBuilder.getSourcePathResolver(),
                     cellRoots,
                     luaPlatform,
                     args))
@@ -328,7 +325,6 @@ public class CxxLuaExtensionDescription
                     buildTarget,
                     projectFilesystem,
                     graphBuilder,
-                    pathResolver,
                     cellRoots,
                     luaPlatforms.getValue(cxxPlatform.getFlavor()),
                     args))

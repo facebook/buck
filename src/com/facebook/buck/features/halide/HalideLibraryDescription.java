@@ -35,8 +35,6 @@ import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.Archive;
@@ -123,7 +121,6 @@ public class HalideLibraryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       CellPathResolver cellRoots,
       CxxPlatformsProvider cxxPlatformsProvider,
       CxxPlatform cxxPlatform,
@@ -145,12 +142,7 @@ public class HalideLibraryDescription
 
     ImmutableMap<String, CxxSource> srcs =
         CxxDescriptionEnhancer.parseCxxSources(
-            buildTarget,
-            graphBuilder,
-            pathResolver,
-            cxxPlatform,
-            halideSources,
-            PatternMatchedCollection.of());
+            buildTarget, graphBuilder, cxxPlatform, halideSources, PatternMatchedCollection.of());
 
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinary(
@@ -288,7 +280,6 @@ public class HalideLibraryDescription
         cxxPlatformsProvider.getUnresolvedCxxPlatforms();
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(buildTarget.getFlavors());
     // TODO(cjhopman): This description doesn't handle parse time deps correctly.
     CxxPlatform cxxPlatform =
@@ -330,7 +321,6 @@ public class HalideLibraryDescription
           projectFilesystem,
           params.withDeclaredDeps(graphBuilder.getAllRules(compilerDeps)).withoutExtraDeps(),
           graphBuilder,
-          pathResolver,
           context.getCellPathResolver(),
           cxxPlatformsProvider,
           hostCxxPlatform,

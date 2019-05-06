@@ -23,7 +23,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -203,7 +202,7 @@ public class CxxLinkableEnhancer {
           extraOutputsDeriver
               .get()
               .deriveExtraOutputsFromArgs(
-                  Arg.stringify(ldArgs, DefaultSourcePathResolver.from(ruleResolver)), output);
+                  Arg.stringify(ldArgs, ruleResolver.getSourcePathResolver()), output);
       if (!derivedExtraOutputs.isEmpty()) {
         allExtraOutputs =
             ImmutableMap.<String, Path>builder()

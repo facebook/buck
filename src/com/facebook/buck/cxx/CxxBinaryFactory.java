@@ -24,8 +24,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.common.BuildableSupport;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -206,14 +204,13 @@ public class CxxBinaryFactory {
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       CxxBinaryDescriptionArg args) {
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
         graphBuilder,
         cxxPlatform,
         CxxDescriptionEnhancer.parseHeaders(
-            buildTarget, graphBuilder, pathResolver, Optional.of(cxxPlatform), args),
+            buildTarget, graphBuilder, Optional.of(cxxPlatform), args),
         HeaderVisibility.PRIVATE,
         true);
   }

@@ -38,7 +38,6 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.AbstractCxxSource.Type;
@@ -264,12 +263,11 @@ public class CxxDescriptionEnhancer {
   static ImmutableMap<String, SourcePath> parseOnlyHeaders(
       BuildTarget buildTarget,
       SourcePathRuleFinder ruleFinder,
-      SourcePathResolver sourcePathResolver,
       String parameterName,
       SourceSortedSet exportedHeaders) {
     return exportedHeaders.toNameMap(
         buildTarget,
-        sourcePathResolver,
+        ruleFinder.getSourcePathResolver(),
         parameterName,
         path -> !CxxGenruleDescription.wrapsCxxGenrule(ruleFinder, path),
         path -> path);
@@ -278,7 +276,6 @@ public class CxxDescriptionEnhancer {
   static ImmutableMap<String, SourcePath> parseOnlyPlatformHeaders(
       BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver sourcePathResolver,
       CxxPlatform cxxPlatform,
       String headersParameterName,
       SourceSortedSet headers,
@@ -293,7 +290,7 @@ public class CxxDescriptionEnhancer {
     parsed.putAll(
         headers.toNameMap(
             buildTarget,
-            sourcePathResolver,
+            graphBuilder.getSourcePathResolver(),
             headersParameterName,
             path -> CxxGenruleDescription.wrapsCxxGenrule(graphBuilder, path),
             fixup));
@@ -303,7 +300,11 @@ public class CxxDescriptionEnhancer {
         platformHeaders.getMatchingValues(cxxPlatform.getFlavor().toString())) {
       parsed.putAll(
           sourceList.toNameMap(
-              buildTarget, sourcePathResolver, platformHeadersParameterName, path -> true, fixup));
+              buildTarget,
+              graphBuilder.getSourcePathResolver(),
+              platformHeadersParameterName,
+              path -> true,
+              fixup));
     }
 
     return parsed.build();
@@ -316,15 +317,12 @@ public class CxxDescriptionEnhancer {
   public static ImmutableMap<Path, SourcePath> parseHeaders(
       BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver sourcePathResolver,
       Optional<CxxPlatform> cxxPlatform,
       CxxConstructorArg args) {
     ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
 
     // Add platform-agnostic headers.
-    headers.putAll(
-        parseOnlyHeaders(
-            buildTarget, graphBuilder, sourcePathResolver, "headers", args.getHeaders()));
+    headers.putAll(parseOnlyHeaders(buildTarget, graphBuilder, "headers", args.getHeaders()));
 
     // Add platform-specific headers.
     cxxPlatform.ifPresent(
@@ -333,7 +331,6 @@ public class CxxDescriptionEnhancer {
                 parseOnlyPlatformHeaders(
                     buildTarget,
                     graphBuilder,
-                    sourcePathResolver,
                     cxxPlatformValue,
                     "headers",
                     args.getHeaders(),
@@ -352,19 +349,13 @@ public class CxxDescriptionEnhancer {
   public static ImmutableMap<Path, SourcePath> parseExportedHeaders(
       BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver sourcePathResolver,
       Optional<CxxPlatform> cxxPlatform,
       CxxLibraryDescription.CommonArg args) {
     ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
 
     // Include platform-agnostic headers.
     headers.putAll(
-        parseOnlyHeaders(
-            buildTarget,
-            graphBuilder,
-            sourcePathResolver,
-            "exported_headers",
-            args.getExportedHeaders()));
+        parseOnlyHeaders(buildTarget, graphBuilder, "exported_headers", args.getExportedHeaders()));
 
     // If a platform is specific, include platform-specific headers.
     cxxPlatform.ifPresent(
@@ -373,7 +364,6 @@ public class CxxDescriptionEnhancer {
                 parseOnlyPlatformHeaders(
                     buildTarget,
                     graphBuilder,
-                    sourcePathResolver,
                     cxxPlatformValue,
                     "exported_headers",
                     args.getExportedHeaders(),
@@ -392,7 +382,6 @@ public class CxxDescriptionEnhancer {
   public static ImmutableMap<Path, SourcePath> parseExportedPlatformHeaders(
       BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver sourcePathResolver,
       CxxPlatform cxxPlatform,
       CxxLibraryDescription.CommonArg args) {
     return CxxPreprocessables.resolveHeaderMap(
@@ -400,7 +389,6 @@ public class CxxDescriptionEnhancer {
         parseOnlyPlatformHeaders(
             buildTarget,
             graphBuilder,
-            sourcePathResolver,
             cxxPlatform,
             "exported_headers",
             args.getExportedHeaders(),
@@ -415,31 +403,23 @@ public class CxxDescriptionEnhancer {
   public static ImmutableMap<String, CxxSource> parseCxxSources(
       BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       CxxConstructorArg args) {
     return parseCxxSources(
-        buildTarget,
-        graphBuilder,
-        pathResolver,
-        cxxPlatform,
-        args.getSrcs(),
-        args.getPlatformSrcs());
+        buildTarget, graphBuilder, cxxPlatform, args.getSrcs(), args.getPlatformSrcs());
   }
 
   public static ImmutableMap<String, CxxSource> parseCxxSources(
       BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       ImmutableSortedSet<SourceWithFlags> srcs,
       PatternMatchedCollection<ImmutableSortedSet<SourceWithFlags>> platformSrcs) {
     ImmutableMap.Builder<String, SourceWithFlags> sources = ImmutableMap.builder();
-    putAllSources(buildTarget, graphBuilder, pathResolver, cxxPlatform, srcs, sources);
+    putAllSources(buildTarget, graphBuilder, cxxPlatform, srcs, sources);
     for (ImmutableSortedSet<SourceWithFlags> sourcesWithFlags :
         platformSrcs.getMatchingValues(cxxPlatform.getFlavor().toString())) {
-      putAllSources(
-          buildTarget, graphBuilder, pathResolver, cxxPlatform, sourcesWithFlags, sources);
+      putAllSources(buildTarget, graphBuilder, cxxPlatform, sourcesWithFlags, sources);
     }
     return resolveCxxSources(sources.build());
   }
@@ -447,25 +427,26 @@ public class CxxDescriptionEnhancer {
   private static void putAllSources(
       BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       CxxPlatform cxxPlatform,
       ImmutableSortedSet<SourceWithFlags> sourcesWithFlags,
       ImmutableMap.Builder<String, SourceWithFlags> sources) {
     sources.putAll(
-        pathResolver.getSourcePathNames(
-            buildTarget,
-            "srcs",
-            sourcesWithFlags.stream()
-                .map(
-                    s ->
-                        s.withSourcePath(
-                            CxxGenruleDescription.fixupSourcePath(
-                                graphBuilder,
-                                cxxPlatform,
-                                Objects.requireNonNull(s.getSourcePath()))))
-                .collect(ImmutableList.toImmutableList()),
-            x -> true,
-            SourceWithFlags::getSourcePath));
+        graphBuilder
+            .getSourcePathResolver()
+            .getSourcePathNames(
+                buildTarget,
+                "srcs",
+                sourcesWithFlags.stream()
+                    .map(
+                        s ->
+                            s.withSourcePath(
+                                CxxGenruleDescription.fixupSourcePath(
+                                    graphBuilder,
+                                    cxxPlatform,
+                                    Objects.requireNonNull(s.getSourcePath()))))
+                    .collect(ImmutableList.toImmutableList()),
+                x -> true,
+                SourceWithFlags::getSourcePath));
   }
 
   public static ImmutableList<CxxPreprocessorInput> collectCxxPreprocessorInput(
@@ -724,16 +705,9 @@ public class CxxDescriptionEnhancer {
       CxxPlatform cxxPlatform,
       CommonArg args,
       ImmutableSet<BuildTarget> extraDeps) {
-    ImmutableMap<String, CxxSource> srcs =
-        parseCxxSources(
-            target, graphBuilder, graphBuilder.getSourcePathResolver(), cxxPlatform, args);
+    ImmutableMap<String, CxxSource> srcs = parseCxxSources(target, graphBuilder, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
-        parseHeaders(
-            target,
-            graphBuilder,
-            graphBuilder.getSourcePathResolver(),
-            Optional.of(cxxPlatform),
-            args);
+        parseHeaders(target, graphBuilder, Optional.of(cxxPlatform), args);
 
     // Build the binary deps.
     ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
@@ -847,11 +821,9 @@ public class CxxDescriptionEnhancer {
       Optional<StripStyle> stripStyle,
       Optional<LinkerMapMode> flavoredLinkerMapMode) {
 
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-    ImmutableMap<String, CxxSource> srcs =
-        parseCxxSources(target, graphBuilder, pathResolver, cxxPlatform, args);
+    ImmutableMap<String, CxxSource> srcs = parseCxxSources(target, graphBuilder, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
-        parseHeaders(target, graphBuilder, pathResolver, Optional.of(cxxPlatform), args);
+        parseHeaders(target, graphBuilder, Optional.of(cxxPlatform), args);
 
     // Build the binary deps.
     ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
@@ -1013,8 +985,6 @@ public class CxxDescriptionEnhancer {
       Optional<SourcePath> precompiledHeader,
       ImmutableSortedSet<SourcePath> rawHeaders,
       ImmutableSortedSet<String> includeDirectories) {
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
-
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
     boolean shouldCreatePrivateHeadersSymlinks = cxxBuckConfig.getPrivateHeadersSymlinksEnabled();
@@ -1082,7 +1052,7 @@ public class CxxDescriptionEnhancer {
             projectFilesystem,
             target,
             graphBuilder,
-            sourcePathResolver,
+            graphBuilder.getSourcePathResolver(),
             cxxBuckConfig,
             cxxPlatform,
             cxxPreprocessorInput,
@@ -1328,7 +1298,6 @@ public class CxxDescriptionEnhancer {
                 .withAppendedFlavors(CxxCompilationDatabase.COMPILATION_DATABASE),
             CxxCompilationDatabaseDependencies.class);
     Preconditions.checkState(compilationDatabases.isPresent());
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     return new JsonConcatenate(
         buildTarget,
         projectFilesystem,
@@ -1339,7 +1308,9 @@ public class CxxDescriptionEnhancer {
                         compilationDatabases.get().getSourcePaths())),
             ImmutableSortedSet::of,
             ImmutableSortedSet.of()),
-        pathResolver.getAllAbsolutePaths(compilationDatabases.get().getSourcePaths()),
+        graphBuilder
+            .getSourcePathResolver()
+            .getAllAbsolutePaths(compilationDatabases.get().getSourcePaths()),
         "compilation-database-concatenate",
         "Concatenate compilation databases",
         "uber-compilation-database",

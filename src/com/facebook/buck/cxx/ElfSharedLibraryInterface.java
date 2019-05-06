@@ -57,12 +57,12 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
   public static ElfSharedLibraryInterface<ExistingBasedElfSharedLibraryImpl> from(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
-      SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
       Tool objcopy,
       SourcePath input,
       boolean removeUndefinedSymbols) {
-    String libName = resolver.getRelativePath(input).getFileName().toString();
+    String libName =
+        ruleFinder.getSourcePathResolver().getRelativePath(input).getFileName().toString();
     return new ElfSharedLibraryInterface<>(
         target,
         projectFilesystem,

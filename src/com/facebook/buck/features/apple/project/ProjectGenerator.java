@@ -2530,7 +2530,7 @@ public class ProjectGenerator {
       return allHeadersBuilder
           .putAll(
               CxxDescriptionEnhancer.parseExportedHeaders(
-                  targetNode.getBuildTarget(), graphBuilder, pathResolver, Optional.empty(), arg))
+                  targetNode.getBuildTarget(), graphBuilder, Optional.empty(), arg))
           .putAll(
               ProjectGenerator.parseAllPlatformHeaders(
                   targetNode.getBuildTarget(), pathResolver, platformHeaders, true, arg))
@@ -2592,7 +2592,7 @@ public class ProjectGenerator {
       return allHeadersBuilder
           .putAll(
               CxxDescriptionEnhancer.parseHeaders(
-                  targetNode.getBuildTarget(), graphBuilder, pathResolver, Optional.empty(), arg))
+                  targetNode.getBuildTarget(), graphBuilder, Optional.empty(), arg))
           .putAll(
               ProjectGenerator.parseAllPlatformHeaders(
                   targetNode.getBuildTarget(), pathResolver, platformHeaders, false, arg))

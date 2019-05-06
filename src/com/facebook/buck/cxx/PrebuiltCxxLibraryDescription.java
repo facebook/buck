@@ -40,7 +40,6 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -185,19 +184,13 @@ public class PrebuiltCxxLibraryDescription
       CxxPlatform cxxPlatform,
       PrebuiltCxxLibraryDescriptionArg args) {
     ImmutableMap.Builder<String, SourcePath> headers = ImmutableMap.builder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     headers.putAll(
         CxxDescriptionEnhancer.parseOnlyHeaders(
-            buildTarget,
-            graphBuilder,
-            pathResolver,
-            "exported_headers",
-            args.getExportedHeaders()));
+            buildTarget, graphBuilder, "exported_headers", args.getExportedHeaders()));
     headers.putAll(
         CxxDescriptionEnhancer.parseOnlyPlatformHeaders(
             buildTarget,
             graphBuilder,
-            pathResolver,
             cxxPlatform,
             "exported_headers",
             args.getExportedHeaders(),
@@ -334,8 +327,6 @@ public class PrebuiltCxxLibraryDescription
           baseTarget, cxxPlatform.getFlavor());
     }
 
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-
     SourcePath sharedLibrary =
         requireSharedLibrary(
             baseTarget,
@@ -352,7 +343,6 @@ public class PrebuiltCxxLibraryDescription
                 Type.SHARED_INTERFACE.getFlavor(), cxxPlatform.getFlavor()),
             projectFilesystem,
             graphBuilder,
-            pathResolver,
             cxxPlatform,
             sharedLibrary);
   }
@@ -718,9 +708,9 @@ public class PrebuiltCxxLibraryDescription
             if (args.isLinkWhole() || forceLinkWhole) {
               Linker linker =
                   cxxPlatform.getLd().resolve(graphBuilder, buildTarget.getTargetConfiguration());
-              DefaultSourcePathResolver pathResolver =
-                  DefaultSourcePathResolver.from(context.getActionGraphBuilder());
-              linkerArgsBuilder.addAll(linker.linkWhole(staticLibrary, pathResolver));
+              linkerArgsBuilder.addAll(
+                  linker.linkWhole(
+                      staticLibrary, context.getActionGraphBuilder().getSourcePathResolver()));
             } else {
               linkerArgsBuilder.add(FileListableLinkerInputArg.withSourcePathArg(staticLibrary));
             }

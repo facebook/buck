@@ -25,7 +25,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
@@ -304,7 +303,7 @@ public class Omnibus {
     // Add the args for the root link target first.
     NativeLinkableInput input =
         root.getNativeLinkTargetInput(
-            cxxPlatform, graphBuilder, DefaultSourcePathResolver.from(graphBuilder));
+            cxxPlatform, graphBuilder, graphBuilder.getSourcePathResolver());
     argsBuilder.addAll(input.getArgs());
 
     // Grab a topologically sorted mapping of all the root's deps.
