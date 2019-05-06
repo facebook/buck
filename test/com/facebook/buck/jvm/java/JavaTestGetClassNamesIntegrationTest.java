@@ -16,14 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
-import static org.easymock.EasyMock.createMock;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -52,7 +50,7 @@ public class JavaTestGetClassNamesIntegrationTest {
             this, "java_test_get_class_names", temporaryFolder);
     workspace.setUp();
     projectFilesystem = TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    resolver = DefaultSourcePathResolver.from(createMock(SourcePathRuleFinder.class));
+    resolver = new TestActionGraphBuilder().getSourcePathResolver();
   }
 
   @Test

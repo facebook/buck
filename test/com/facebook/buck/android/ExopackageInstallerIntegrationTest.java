@@ -28,10 +28,9 @@ import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.ExopackagePathAndHash;
 import com.facebook.buck.android.exopackage.TestAndroidDevice;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.TestExecutionContext;
@@ -534,8 +533,6 @@ public class ExopackageInstallerIntegrationTest {
       int expectedResourcesInstalled,
       int expectedModulesInstalled)
       throws Exception {
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(null);
-
     ExpectedStateBuilder builder = new ExpectedStateBuilder();
 
     writeFakeApk(currentBuildState.apkContent);
@@ -686,7 +683,11 @@ public class ExopackageInstallerIntegrationTest {
     try {
       assertTrue(
           new ExopackageInstaller(
-                  pathResolver, executionContext, filesystem, FAKE_PACKAGE_NAME, device)
+                  new TestActionGraphBuilder().getSourcePathResolver(),
+                  executionContext,
+                  filesystem,
+                  FAKE_PACKAGE_NAME,
+                  device)
               .doInstall(apkInfo, null));
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
