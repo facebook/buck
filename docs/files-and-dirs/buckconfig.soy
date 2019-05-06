@@ -238,40 +238,34 @@ personal settings, such as personal aliases.
 
 <p>
 In addition to the <code>.buckconfig</code> and <code>.buckconfig.local</code> files in 
-the project root, Buck supports a cascading set of other configuration
-files. These files are identified either by having the name <code>.buckconfig</code> or 
-by being located in a subdirectory named <code>.buckconfig.d</code>.
-</p>
-
-<p>
-Buck supports the following locations for additional <code>.buckconfig</code> files 
-and <code>.buckconfig.d</code> directories:
-</p>
+the project root, Buck reads configuration settings from the following additional locations, some of
+which are actually directories:</p>
 
 <ol>
 
   <li>
-    The root directory of your Buck project. That is, you can locate 
-    a <code>.buckconfig.d</code> directory in the same location 
-    as <code>.buckconfig.local</code> and the primary <code>.buckconfig</code>. 
+    Directory <code>.buckconfig.d</code> located in the project root directory.
   </li>
 
   <li>
-    The current user's home directory which, on Unix-like systems, is
+    File <code>.buckconfig</code> and directory <code>.buckconfig.d</code> located
+    in the current user's home directory which, on Unix-like systems, is
     available from the <code>HOME</code> environment variable or through
     the <code>~</code> symbol.
   </li>
 
   <li>
-    The system directory <code>/etc/</code>.
+    File <code>buckconfig</code> and directory <code>buckconfig.d</code> located
+    in system directory <code>/etc/</code>.
   </li>
 
 </ol>
 
 
 <p>
-Buck treats <em>any</em> file&mdash;irrespective of name&mdash;in a <code>.buckconfig.d</code> directory 
-as a Buck configuration file, provided that it adheres to <code>.buckconfig</code> syntax.
+Buck treats <em>any</em> file&mdash;irrespective of name&mdash;in a <code>.buckconfig.d</code>
+(<code>buckconfig.d</code>) directory (excluding files found in subdirectories) as a Buck
+configuration file, provided that it adheres to <code>.buckconfig</code> syntax.
 </p>
 
 <p>
@@ -316,7 +310,7 @@ rendered_text: '<strong>Common Parameters</strong>' /}{/call} topic.
 <p>
 The following list shows the order of precedence for how Buck interprets
 its configuration specifications. Settings specified using a method closer 
-to the top of the list have higher precedence and will override those lower 
+to the top of the list have higher precedence and will override those lower
 on the list. For example, the <code>.buckconfig</code> file in the project directory
 overrides a <code>.buckconfig</code> file in the user's <code>HOME</code> directory.
 </p>
@@ -331,12 +325,12 @@ Configuration specified later on the command line overrides configuration specif
 <li><code>.buckconfig</code> in the <code>HOME</code> directory.</li>
 <li>Files in a <code>.buckconfig.d</code> subdirectory of the project directory, irrespective of filename.</li>
 <li>Files in a <code>.buckconfig.d</code> subdirectory of the <code>HOME</code> directory, irrespective of filename.</li>
-<li><code>.buckconfig</code> in the <code>/etc/</code> directory.</li>
-<li>Files in a <code>.buckconfig.d</code> subdirectory of the <code>/etc/</code> directory, irrespective of filename.</li>
+<li><code>buckconfig</code> in the <code>/etc/</code> directory.</li>
+<li>Files in a <code>buckconfig.d</code> subdirectory of the <code>/etc/</code> directory, irrespective of filename.</li>
 </ol>
 
 <p>
-Files in a <code>.buckconfig.d</code> directory have precedence
+Files in a <code>.buckconfig.d</code> (<code>buckconfig.d</code>) directory have precedence
 according to the lexicographical order of their file names. 
 Files <em>later</em> in the lexicographical order have precedence 
 over files earlier in that order.
