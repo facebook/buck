@@ -53,7 +53,6 @@ import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationDescriptionsFactory;
-import com.facebook.buck.core.rules.knowntypes.DefaultKnownRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
@@ -422,32 +421,6 @@ public final class MainRunner {
     this.platform = platform;
     this.context = context;
     this.commandMode = commandMode;
-  }
-
-  @VisibleForTesting
-  public MainRunner(
-      Console console,
-      InputStream stdIn,
-      BuildId buildId,
-      ImmutableMap<String, String> clientEnvironment,
-      Platform platform,
-      PluginManager pluginManager,
-      BuckModuleManager moduleManager,
-      BackgroundTaskManager bgTaskManager,
-      CommandMode commandMode,
-      Optional<NGContext> context) {
-    this(
-        console,
-        stdIn,
-        DefaultKnownRuleTypesFactory::new,
-        buildId,
-        clientEnvironment,
-        platform,
-        pluginManager,
-        moduleManager,
-        bgTaskManager,
-        commandMode,
-        context);
   }
 
   /* Define all error handling surrounding main command */

@@ -15,11 +15,13 @@
  */
 package com.facebook.buck.cli;
 
+import com.facebook.buck.cli.MainRunner.KnownRuleTypesFactoryFactory;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.core.rules.knowntypes.DefaultKnownRuleTypesFactory;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
@@ -97,6 +99,7 @@ abstract class AbstractMain {
     return new MainRunner(
         defaultConsole,
         stdIn,
+        getKnownRuleTypesFactory(),
         getBuildId(clientEnvironment),
         clientEnvironment,
         platform,
@@ -105,6 +108,10 @@ abstract class AbstractMain {
         bgTaskManager,
         commandMode,
         optionalNGContext);
+  }
+
+  protected KnownRuleTypesFactoryFactory getKnownRuleTypesFactory() {
+    return DefaultKnownRuleTypesFactory::new;
   }
 
   private static BuildId getBuildId(ImmutableMap<String, String> clientEnvironment) {

@@ -29,6 +29,7 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.core.rules.knowntypes.DefaultKnownRuleTypesFactory;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
@@ -180,6 +181,7 @@ public class DaemonIntegrationTest {
             new MainRunner(
                 new TestConsole(),
                 new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
+                DefaultKnownRuleTypesFactory::new,
                 new BuildId(),
                 EnvVariablesProvider.getSystemEnv(),
                 Platform.detect(),
