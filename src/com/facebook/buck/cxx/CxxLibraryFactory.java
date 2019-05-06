@@ -522,8 +522,7 @@ public class CxxLibraryFactory {
 
     return NativeLinkableInput.builder()
         .addAllArgs(
-            RichStream.<StringWithMacros>empty()
-                .concat(linkerFlags.stream())
+            RichStream.from(linkerFlags)
                 .concat(exportedLinkerFlags.stream())
                 .map(
                     f ->

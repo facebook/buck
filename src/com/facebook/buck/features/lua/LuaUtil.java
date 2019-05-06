@@ -64,17 +64,16 @@ public class LuaUtil {
   }
 
   public static String getBaseModule(BuildTarget target, Optional<String> override) {
-    return override.isPresent()
-        ? override.get().replace('.', File.separatorChar)
-        : target.getBasePath().toString();
+    return override
+        .map(s -> s.replace('.', File.separatorChar))
+        .orElseGet(() -> target.getBasePath().toString());
   }
 
   public static ImmutableList<BuildTarget> getDeps(
       CxxPlatform cxxPlatform,
       ImmutableSortedSet<BuildTarget> deps,
       PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps) {
-    return RichStream.<BuildTarget>empty()
-        .concat(deps.stream())
+    return RichStream.from(deps)
         .concat(
             platformDeps.getMatchingValues(cxxPlatform.getFlavor().toString()).stream()
                 .flatMap(Collection::stream))

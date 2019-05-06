@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 /** Compilation step for C interoperability files. */
 public class OcamlCCompileStep extends ShellStep {
@@ -62,9 +61,8 @@ public class OcamlCCompileStep extends ShellStep {
             .addAll(ocamlCompilerPrefix)
             .addAll(OcamlCompilables.DEFAULT_OCAML_FLAGS);
 
-    if (args.stdlib.isPresent()) {
-      cmd.add("-nostdlib", OcamlCompilables.OCAML_INCLUDE_FLAG, args.stdlib.get());
-    }
+    args.stdlib.ifPresent(
+        stdlib -> cmd.add("-nostdlib", OcamlCompilables.OCAML_INCLUDE_FLAG, stdlib));
 
     ImmutableList<String> cCompilerFlags =
         OcamlUtil.makeArgFile(
@@ -72,8 +70,7 @@ public class OcamlCCompileStep extends ShellStep {
             OcamlUtil.makeArgFilePath(filesystem, args.buildTarget, COMPILER_FLAG),
             ocamlCompilerPrefix,
             COMPILER_FLAG,
-            RichStream.<String>empty()
-                .concat(Stream.of("-Wall", "-Wextra", "-o", args.output.toString()))
+            RichStream.of("-Wall", "-Wextra", "-o", args.output.toString())
                 .concat(args.cCompiler.subList(1, args.cCompiler.size()).stream())
                 .concat(Arg.stringify(args.cFlags, resolver).stream())
                 // The ocaml compiler invokes the C compiler, along with these flags, using the

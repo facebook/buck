@@ -80,8 +80,7 @@ public class PythonUtil {
       CxxPlatform cxxPlatform,
       ImmutableSortedSet<BuildTarget> deps,
       PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps) {
-    return RichStream.<BuildTarget>empty()
-        .concat(deps.stream())
+    return RichStream.from(deps)
         .concat(
             platformDeps.getMatchingValues(pythonPlatform.getFlavor().toString()).stream()
                 .flatMap(Collection::stream))

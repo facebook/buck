@@ -65,16 +65,14 @@ abstract class AbstractCxxDeps {
   }
 
   public ImmutableSet<BuildRule> getForAllPlatforms(BuildRuleResolver resolver) {
-    return RichStream.<BuildTarget>empty()
-        .concat(getDeps().stream())
+    return RichStream.from(getDeps())
         .concat(getAllPlatformDeps())
         .map(resolver::getRule)
         .toImmutableSet();
   }
 
   public ImmutableSet<BuildRule> get(BuildRuleResolver resolver, CxxPlatform cxxPlatform) {
-    return RichStream.<BuildTarget>empty()
-        .concat(getDeps().stream())
+    return RichStream.from(getDeps())
         .concat(getSpecificPlatformDeps(cxxPlatform))
         .map(resolver::getRule)
         .toImmutableSet();
