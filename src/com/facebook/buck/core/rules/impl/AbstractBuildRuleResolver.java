@@ -23,6 +23,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Streams;
@@ -104,5 +105,10 @@ public abstract class AbstractBuildRuleResolver implements BuildRuleResolver {
   @Override
   public BuildRule getRule(BuildTargetSourcePath sourcePath) {
     return sourcePathRuleFinder.getRule(sourcePath);
+  }
+
+  @Override
+  public SourcePathResolver getSourcePathResolver() {
+    return sourcePathRuleFinder.getSourcePathResolver();
   }
 }

@@ -21,6 +21,8 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSet;
 import java.util.Arrays;
@@ -30,9 +32,11 @@ import java.util.stream.Stream;
 public class DefaultSourcePathRuleFinder implements SourcePathRuleFinder {
 
   private final BuildRuleResolver ruleResolver;
+  private final SourcePathResolver sourcePathResolver;
 
   DefaultSourcePathRuleFinder(BuildRuleResolver ruleResolver) {
     this.ruleResolver = ruleResolver;
+    this.sourcePathResolver = DefaultSourcePathResolver.from(this);
   }
 
   @Override
@@ -77,5 +81,10 @@ public class DefaultSourcePathRuleFinder implements SourcePathRuleFinder {
   @Override
   public BuildRule getRule(BuildTargetSourcePath sourcePath) {
     return ruleResolver.getRule(sourcePath.getTarget());
+  }
+
+  @Override
+  public SourcePathResolver getSourcePathResolver() {
+    return sourcePathResolver;
   }
 }
