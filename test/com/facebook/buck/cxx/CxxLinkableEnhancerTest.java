@@ -43,7 +43,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -461,7 +460,6 @@ public class CxxLinkableEnhancerTest {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     // Create a native linkable that sits at the bottom of the dep chain.
     String sentinel = "bottom";
@@ -489,8 +487,12 @@ public class CxxLinkableEnhancerTest {
             ImmutableList.of(top),
             Linker.LinkableDepType.STATIC,
             r -> Optional.empty());
-    assertThat(Arg.stringify(bottomInput.getArgs(), pathResolver), hasItem(sentinel));
-    assertThat(Arg.stringify(totalInput.getArgs(), pathResolver), not(hasItem(sentinel)));
+    assertThat(
+        Arg.stringify(bottomInput.getArgs(), graphBuilder.getSourcePathResolver()),
+        hasItem(sentinel));
+    assertThat(
+        Arg.stringify(totalInput.getArgs(), graphBuilder.getSourcePathResolver()),
+        not(hasItem(sentinel)));
   }
 
   @Test
@@ -498,7 +500,6 @@ public class CxxLinkableEnhancerTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     CxxLink cxxLink =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             CxxPlatformUtils.DEFAULT_CONFIG,
@@ -522,9 +523,10 @@ public class CxxLinkableEnhancerTest {
                 .build(),
             Optional.empty(),
             TestCellPathResolver.get(filesystem));
-    assertThat(Arg.stringify(cxxLink.getArgs(), pathResolver), hasItem("-bundle"));
     assertThat(
-        Arg.stringify(cxxLink.getArgs(), pathResolver),
+        Arg.stringify(cxxLink.getArgs(), graphBuilder.getSourcePathResolver()), hasItem("-bundle"));
+    assertThat(
+        Arg.stringify(cxxLink.getArgs(), graphBuilder.getSourcePathResolver()),
         hasConsecutiveItems(
             "-bundle_loader", filesystem.resolve("path/to/MyBundleLoader").toString()));
   }
@@ -592,7 +594,7 @@ public class CxxLinkableEnhancerTest {
   @Test
   public void frameworksToLinkerFlagsTransformer() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
+    SourcePathResolver resolver = new TestActionGraphBuilder().getSourcePathResolver();
 
     Arg linkerFlags =
         CxxLinkableEnhancer.frameworksToLinkerArg(

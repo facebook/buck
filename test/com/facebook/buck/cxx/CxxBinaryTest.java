@@ -27,8 +27,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -46,7 +44,6 @@ public class CxxBinaryTest {
   @Test
   public void getExecutableCommandUsesAbsolutePath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     BuildTarget linkTarget = BuildTargetFactory.newInstance("//:link");
     Path bin = Paths.get("path/to/exectuable");
@@ -86,7 +83,8 @@ public class CxxBinaryTest {
                 ImmutableList.of(),
                 target,
                 false));
-    ImmutableList<String> command = binary.getExecutableCommand().getCommandPrefix(pathResolver);
+    ImmutableList<String> command =
+        binary.getExecutableCommand().getCommandPrefix(graphBuilder.getSourcePathResolver());
     assertTrue(Paths.get(command.get(0)).isAbsolute());
   }
 }

@@ -28,8 +28,6 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.Compiler;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -64,9 +62,9 @@ public class CxxCompileStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
     Compiler compiler = platform.getCc().resolve(resolver, EmptyTargetConfiguration.INSTANCE);
-    ImmutableList<String> compilerCommandPrefix = compiler.getCommandPrefix(pathResolver);
+    ImmutableList<String> compilerCommandPrefix =
+        compiler.getCommandPrefix(resolver.getSourcePathResolver());
     Path output = filesystem.resolve(Paths.get("output.o"));
     Path depFile = filesystem.resolve(Paths.get("output.dep"));
     Path relativeInput = Paths.get("input.c");
@@ -91,7 +89,7 @@ public class CxxCompileStepIntegrationTest {
             CxxSource.Type.C,
             new CxxPreprocessAndCompileStep.ToolCommand(
                 compilerCommandPrefix, compilerArguments.build(), ImmutableMap.of()),
-            HeaderPathNormalizer.empty(pathResolver),
+            HeaderPathNormalizer.empty(resolver.getSourcePathResolver()),
             sanitizer,
             scratchDir,
             true,
@@ -133,9 +131,9 @@ public class CxxCompileStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
     Compiler compiler = platform.getCc().resolve(resolver, EmptyTargetConfiguration.INSTANCE);
-    ImmutableList<String> compilerCommandPrefix = compiler.getCommandPrefix(pathResolver);
+    ImmutableList<String> compilerCommandPrefix =
+        compiler.getCommandPrefix(resolver.getSourcePathResolver());
     Path output = filesystem.resolve(Paths.get("output.o"));
     Path depFile = filesystem.resolve(Paths.get("output.dep"));
     Path relativeInput = Paths.get("input.c");
@@ -158,7 +156,7 @@ public class CxxCompileStepIntegrationTest {
             CxxSource.Type.C,
             new CxxPreprocessAndCompileStep.ToolCommand(
                 compilerCommandPrefix, compilerArguments.build(), ImmutableMap.of()),
-            HeaderPathNormalizer.empty(pathResolver),
+            HeaderPathNormalizer.empty(resolver.getSourcePathResolver()),
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
             scratchDir,
             true,

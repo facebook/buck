@@ -35,8 +35,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
@@ -187,7 +185,6 @@ public class ArchiveTest {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
     Archive archive =
         new Archive(
             target,
@@ -205,7 +202,7 @@ public class ArchiveTest {
     BuildContext buildContext =
         BuildContext.builder()
             .from(FakeBuildContext.NOOP_CONTEXT)
-            .setSourcePathResolver(pathResolver)
+            .setSourcePathResolver(resolver.getSourcePathResolver())
             .build();
 
     ImmutableList<Step> steps = archive.getBuildSteps(buildContext, new FakeBuildableContext());

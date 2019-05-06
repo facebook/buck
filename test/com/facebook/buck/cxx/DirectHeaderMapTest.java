@@ -32,7 +32,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -106,7 +105,7 @@ public class DirectHeaderMapTest {
     // Setup the symlink tree buildable.
     graphBuilder = new TestActionGraphBuilder();
 
-    pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    pathResolver = graphBuilder.getSourcePathResolver();
 
     buildRule =
         new DirectHeaderMap(buildTarget, projectFilesystem, symlinkTreeRoot, links, graphBuilder);

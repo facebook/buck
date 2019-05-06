@@ -25,8 +25,6 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.Archiver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -70,7 +68,6 @@ public class ArchiveStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleResolver);
     Archiver archiver = platform.getAr().resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE);
     Path output = filesystem.getPath("output.a");
     Path input = filesystem.getPath("input.dat");
@@ -81,8 +78,8 @@ public class ArchiveStepIntegrationTest {
     ArchiveStep archiveStep =
         new ArchiveStep(
             filesystem,
-            archiver.getEnvironment(sourcePathResolver),
-            archiver.getCommandPrefix(sourcePathResolver),
+            archiver.getEnvironment(ruleResolver.getSourcePathResolver()),
+            archiver.getCommandPrefix(ruleResolver.getSourcePathResolver()),
             ImmutableList.of(),
             getArchiveOptions(false),
             output,
@@ -121,7 +118,6 @@ public class ArchiveStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleResolver);
     Archiver archiver = platform.getAr().resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE);
     Path output = filesystem.getPath("output.a");
 
@@ -129,8 +125,8 @@ public class ArchiveStepIntegrationTest {
     ArchiveStep archiveStep =
         new ArchiveStep(
             filesystem,
-            archiver.getEnvironment(sourcePathResolver),
-            archiver.getCommandPrefix(sourcePathResolver),
+            archiver.getEnvironment(ruleResolver.getSourcePathResolver()),
+            archiver.getCommandPrefix(ruleResolver.getSourcePathResolver()),
             ImmutableList.of(),
             getArchiveOptions(false),
             output,
@@ -161,7 +157,6 @@ public class ArchiveStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleResolver);
     Archiver archiver = platform.getAr().resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE);
     Path output = filesystem.getPath("output.a");
     Path input = filesystem.getPath("foo/blah.dat");
@@ -172,8 +167,8 @@ public class ArchiveStepIntegrationTest {
     ArchiveStep archiveStep =
         new ArchiveStep(
             filesystem,
-            archiver.getEnvironment(sourcePathResolver),
-            archiver.getCommandPrefix(sourcePathResolver),
+            archiver.getEnvironment(ruleResolver.getSourcePathResolver()),
+            archiver.getCommandPrefix(ruleResolver.getSourcePathResolver()),
             ImmutableList.of(),
             getArchiveOptions(false),
             output,
@@ -205,7 +200,6 @@ public class ArchiveStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleResolver);
     Archiver archiver = platform.getAr().resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE);
 
     assumeTrue(archiver.supportsThinArchives());
@@ -227,8 +221,8 @@ public class ArchiveStepIntegrationTest {
     ArchiveStep archiveStep =
         new ArchiveStep(
             filesystem,
-            archiver.getEnvironment(sourcePathResolver),
-            archiver.getCommandPrefix(sourcePathResolver),
+            archiver.getEnvironment(ruleResolver.getSourcePathResolver()),
+            archiver.getCommandPrefix(ruleResolver.getSourcePathResolver()),
             ImmutableList.of(),
             getArchiveOptions(true),
             output,

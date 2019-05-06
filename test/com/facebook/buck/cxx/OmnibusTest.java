@@ -29,7 +29,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
@@ -72,7 +71,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ImmutableMap<String, SourcePath> libs =
@@ -132,7 +131,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ImmutableMap<String, SourcePath> libs =
@@ -199,7 +198,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ImmutableMap<String, SourcePath> libs =
@@ -272,7 +271,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ImmutableMap<String, SourcePath> libs =
@@ -339,7 +338,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ImmutableMap<String, SourcePath> libs =
@@ -397,7 +396,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ImmutableMap<String, SourcePath> libs =
@@ -482,7 +481,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ImmutableMap<String, SourcePath> libs =

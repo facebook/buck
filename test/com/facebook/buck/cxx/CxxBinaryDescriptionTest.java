@@ -38,8 +38,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
@@ -137,7 +135,6 @@ public class CxxBinaryDescriptionTest {
 
     // Create the build rules.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     genHeaderBuilder.build(graphBuilder, projectFilesystem, targetGraph);
     genSourceBuilder.build(graphBuilder, projectFilesystem, targetGraph);
     depBuilder.build(graphBuilder, projectFilesystem, targetGraph);
@@ -150,7 +147,7 @@ public class CxxBinaryDescriptionTest {
             .setBaseBuildTarget(target)
             .setProjectFilesystem(projectFilesystem)
             .setActionGraphBuilder(graphBuilder)
-            .setPathResolver(pathResolver)
+            .setPathResolver(graphBuilder.getSourcePathResolver())
             .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
             .setCxxPlatform(cxxPlatform)
             .setPicType(PicType.PDC)
@@ -244,7 +241,6 @@ public class CxxBinaryDescriptionTest {
   public void linkerFlagsLocationMacro() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -259,7 +255,7 @@ public class CxxBinaryDescriptionTest {
     BuildRule binary = builder.build(graphBuilder).getLinkRule();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
-        Arg.stringify(((CxxLink) binary).getArgs(), pathResolver),
+        Arg.stringify(((CxxLink) binary).getArgs(), graphBuilder.getSourcePathResolver()),
         Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
     assertThat(binary.getBuildDeps(), Matchers.hasItem(dep));
   }
@@ -268,7 +264,6 @@ public class CxxBinaryDescriptionTest {
   public void platformLinkerFlagsLocationMacroWithMatch() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -288,7 +283,7 @@ public class CxxBinaryDescriptionTest {
     BuildRule binary = builder.build(graphBuilder).getLinkRule();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
-        Arg.stringify(((CxxLink) binary).getArgs(), pathResolver),
+        Arg.stringify(((CxxLink) binary).getArgs(), graphBuilder.getSourcePathResolver()),
         Matchers.hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
     assertThat(binary.getBuildDeps(), Matchers.hasItem(dep));
   }
@@ -297,7 +292,6 @@ public class CxxBinaryDescriptionTest {
   public void platformLinkerFlagsLocationMacroWithoutMatch() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -316,7 +310,7 @@ public class CxxBinaryDescriptionTest {
     BuildRule binary = builder.build(graphBuilder).getLinkRule();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
     assertThat(
-        Arg.stringify(((CxxLink) binary).getArgs(), pathResolver),
+        Arg.stringify(((CxxLink) binary).getArgs(), graphBuilder.getSourcePathResolver()),
         Matchers.not(
             Matchers.hasItem(
                 String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath()))));
@@ -340,11 +334,11 @@ public class CxxBinaryDescriptionTest {
         .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     CxxBinary binary = binaryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertThat(binary.getLinkRule(), Matchers.instanceOf(CxxLink.class));
     assertThat(
-        Arg.stringify(((CxxLink) binary.getLinkRule()).getArgs(), pathResolver),
+        Arg.stringify(
+            ((CxxLink) binary.getLinkRule()).getArgs(), graphBuilder.getSourcePathResolver()),
         Matchers.hasItems("-L", "/another/path", "/some/path", "-la", "-ls"));
   }
 

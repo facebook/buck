@@ -30,8 +30,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.toolchain.Compiler;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.GccPreprocessor;
@@ -65,7 +63,6 @@ public class CxxPrecompiledHeaderTest {
         CxxPlatformUtils.DEFAULT_PLATFORM
             .getCxx()
             .resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE);
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
     CxxPrecompiledHeader precompiledHeader =
         new CxxPrecompiledHeader(
             /* canPrecompile */ true,
@@ -79,7 +76,7 @@ public class CxxPrecompiledHeaderTest {
                 preprocessorSupportingPch,
                 PreprocessorFlags.builder().build(),
                 CxxDescriptionEnhancer.frameworkPathToSearchPath(
-                    CxxPlatformUtils.DEFAULT_PLATFORM, sourcePathResolver),
+                    CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder.getSourcePathResolver()),
                 /* leadingIncludePaths */ Optional.empty(),
                 Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
                 ImmutableSortedSet.of()),
@@ -93,7 +90,8 @@ public class CxxPrecompiledHeaderTest {
             CxxSource.Type.C,
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
     graphBuilder.addToIndex(precompiledHeader);
-    BuildContext buildContext = FakeBuildContext.withSourcePathResolver(sourcePathResolver);
+    BuildContext buildContext =
+        FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver());
     ImmutableList<Step> postBuildSteps =
         precompiledHeader.getBuildSteps(buildContext, new FakeBuildableContext());
     CxxPreprocessAndCompileStep step =

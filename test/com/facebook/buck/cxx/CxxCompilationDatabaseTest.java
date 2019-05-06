@@ -30,8 +30,6 @@ import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.GccCompiler;
@@ -71,7 +69,6 @@ public class CxxCompilationDatabaseTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem(fakeRoot);
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver testSourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     HeaderSymlinkTree privateSymlinkTree =
         CxxDescriptionEnhancer.createHeaderSymlinkTree(
@@ -159,11 +156,13 @@ public class CxxCompilationDatabaseTest {
     assertEquals(
         "getPathToOutput() should be a function of the build target.",
         BuildTargetPaths.getGenPath(filesystem, testBuildTarget, "__%s/compile_commands.json"),
-        testSourcePathResolver.getRelativePath(compilationDatabase.getSourcePathToOutput()));
+        graphBuilder
+            .getSourcePathResolver()
+            .getRelativePath(compilationDatabase.getSourcePathToOutput()));
 
     List<Step> buildSteps =
         compilationDatabase.getBuildSteps(
-            FakeBuildContext.withSourcePathResolver(testSourcePathResolver),
+            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
             new FakeBuildableContext());
     assertEquals(2, buildSteps.size());
     assertTrue(buildSteps.get(0) instanceof MkdirStep);

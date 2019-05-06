@@ -23,8 +23,6 @@ import static org.hamcrest.Matchers.oneOf;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.Ansi;
@@ -47,12 +45,12 @@ public class CxxErrorTransformerTest {
   public static Collection<Object[]> data() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleResolver);
 
     Path original = filesystem.resolve("buck-out/foo#bar/world.h");
     Path replacement = filesystem.resolve("hello/world.h");
 
-    HeaderPathNormalizer.Builder normalizerBuilder = new HeaderPathNormalizer.Builder(pathResolver);
+    HeaderPathNormalizer.Builder normalizerBuilder =
+        new HeaderPathNormalizer.Builder(ruleResolver.getSourcePathResolver());
     normalizerBuilder.addHeader(FakeSourcePath.of(replacement.toString()), original);
     HeaderPathNormalizer normalizer = normalizerBuilder.build();
 

@@ -29,7 +29,6 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
@@ -92,7 +91,7 @@ public class CxxToolchainDescriptionTest {
     graphBuilder.addToIndex(new SimpleToolRule(binaryToolTarget, binaryTool));
     CxxToolchainBuildRule cxxPlatformRule = builder.build(graphBuilder);
 
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(graphBuilder);
+    SourcePathResolver resolver = graphBuilder.getSourcePathResolver();
 
     CxxPlatform platform = cxxPlatformRule.getPlatformWithFlavor(InternalFlavor.of("dontcare"));
 

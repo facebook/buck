@@ -38,7 +38,6 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
@@ -409,8 +408,8 @@ public class CxxPreprocessAndCompileTest {
   public void usesCorrectCommandForCompile() {
     // Setup some dummy values for inputs to the CxxPreprocessAndCompile.
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
+    BuildContext context =
+        FakeBuildContext.withSourcePathResolver(ruleFinder.getSourcePathResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     CxxToolFlags flags =
         CxxToolFlags.explicitBuilder()
@@ -461,7 +460,7 @@ public class CxxPreprocessAndCompileTest {
     Tool compilerTool = new CommandTool.Builder().addInput(compiler).build();
 
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver = ruleFinder.getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
 
@@ -524,8 +523,8 @@ public class CxxPreprocessAndCompileTest {
   @Test
   public void usesColorFlagForCompilationWhenRequested() {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
+    BuildContext context =
+        FakeBuildContext.withSourcePathResolver(ruleFinder.getSourcePathResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     String output = "test.o";
     Path input = Paths.get("test.ii");
@@ -560,8 +559,8 @@ public class CxxPreprocessAndCompileTest {
   @Test
   public void usesColorFlagForPreprocessingWhenRequested() {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
+    BuildContext context =
+        FakeBuildContext.withSourcePathResolver(ruleFinder.getSourcePathResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     String output = "test.ii";
     Path input = Paths.get("test.cpp");
@@ -616,8 +615,8 @@ public class CxxPreprocessAndCompileTest {
   public void usesUnixPathSeparatorForCompile() {
     // Setup some dummy values for inputs to the CxxPreprocessAndCompile.
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
+    BuildContext context =
+        FakeBuildContext.withSourcePathResolver(ruleFinder.getSourcePathResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     Path includePath = PathNormalizer.toWindowsPathIfNeeded(Paths.get("/foo/bar/zap"));
     String includedPathStr = MorePaths.pathWithUnixSeparators(includePath);

@@ -37,7 +37,6 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -106,7 +105,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
 
     ruleResolver = new TestActionGraphBuilder(TargetGraph.EMPTY);
-    resolver = DefaultSourcePathResolver.from(ruleResolver);
+    resolver = ruleResolver.getSourcePathResolver();
 
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule =
