@@ -34,8 +34,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -155,7 +153,6 @@ public class HaskellBinaryDescription
           args.isEnableProfiling());
     }
 
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     Linker.LinkableDepType depType = getLinkStyle(args, type);
 
     // The target to use for the link rule.
@@ -267,8 +264,7 @@ public class HaskellBinaryDescription
                 args.getMain(),
                 Optional.empty(),
                 args.getCompilerFlags(),
-                HaskellSources.from(
-                    buildTarget, graphBuilder, pathResolver, platform, "srcs", args.getSrcs())));
+                HaskellSources.from(buildTarget, graphBuilder, platform, "srcs", args.getSrcs())));
     linkInputsBuilder.addAll(SourcePathArg.from(compileRule.getObjects()));
 
     ImmutableList<Arg> linkInputs = linkInputsBuilder.build();

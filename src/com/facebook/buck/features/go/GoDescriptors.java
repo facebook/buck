@@ -32,7 +32,6 @@ import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.log.Logger;
@@ -132,8 +131,6 @@ abstract class GoDescriptors {
       Iterable<BuildTarget> deps,
       Iterable<BuildTarget> cgoDeps,
       List<ListType> goListTypes) {
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-
     Preconditions.checkState(buildTarget.getFlavors().contains(platform.getFlavor()));
 
     ImmutableSet<GoLinkable> linkables =
@@ -145,8 +142,7 @@ abstract class GoDescriptors {
     }
 
     BuildTarget target = createSymlinkTreeTarget(buildTarget);
-    SymlinkTree symlinkTree =
-        makeSymlinkTree(target, projectFilesystem, graphBuilder, pathResolver, linkables);
+    SymlinkTree symlinkTree = makeSymlinkTree(target, projectFilesystem, graphBuilder, linkables);
     graphBuilder.addToIndex(symlinkTree);
 
     ImmutableList.Builder<SourcePath> extraAsmOutputsBuilder = ImmutableList.builder();
@@ -335,14 +331,12 @@ abstract class GoDescriptors {
     graphBuilder.addToIndex(library);
     extraDeps.add(library);
 
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     BuildTarget target = createTransitiveSymlinkTreeTarget(buildTarget);
     SymlinkTree symlinkTree =
         makeSymlinkTree(
             target,
             projectFilesystem,
             graphBuilder,
-            pathResolver,
             requireTransitiveGoLinkables(
                 buildTarget,
                 graphBuilder,
@@ -571,7 +565,6 @@ abstract class GoDescriptors {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver,
       ImmutableSet<GoLinkable> linkables) {
 
     ImmutableMap<Path, SourcePath> treeMap;
@@ -581,7 +574,9 @@ abstract class GoDescriptors {
               .flatMap(linkable -> linkable.getGoLinkInput().entrySet().stream())
               .collect(
                   ImmutableMap.toImmutableMap(
-                      entry -> getPathInSymlinkTree(pathResolver, entry.getKey(), entry.getValue()),
+                      entry ->
+                          getPathInSymlinkTree(
+                              ruleFinder.getSourcePathResolver(), entry.getKey(), entry.getValue()),
                       entry -> entry.getValue()));
     } catch (IllegalArgumentException ex) {
       throw new HumanReadableException(

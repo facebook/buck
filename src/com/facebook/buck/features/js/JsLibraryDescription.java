@@ -37,7 +37,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -104,12 +103,12 @@ public class JsLibraryDescription
       JsLibraryDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
 
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor> sourcesToFlavors;
     try {
       sourcesToFlavors =
           sourcesToFlavorsCache.get(
-              args.getSrcs(), () -> mapSourcesToFlavors(sourcePathResolver, args.getSrcs()));
+              args.getSrcs(),
+              () -> mapSourcesToFlavors(graphBuilder.getSourcePathResolver(), args.getSrcs()));
     } catch (ExecutionException e) {
       throw new RuntimeException(e);
     }
@@ -146,14 +145,7 @@ public class JsLibraryDescription
           ? createReleaseFileRule(
               buildTarget, projectFilesystem, graphBuilder, cellRoots, args, worker)
           : createDevFileRule(
-              buildTarget,
-              projectFilesystem,
-              sourcePathResolver,
-              graphBuilder,
-              cellRoots,
-              args,
-              file.get(),
-              worker);
+              buildTarget, projectFilesystem, graphBuilder, cellRoots, args, file.get(), worker);
     } else if (buildTarget.getFlavors().contains(JsFlavors.LIBRARY_FILES)) {
       return new LibraryFilesBuilder(graphBuilder, buildTarget, baseParams, sourcesToFlavors)
           .setSources(args.getSrcs())
@@ -356,7 +348,6 @@ public class JsLibraryDescription
   private static <A extends AbstractJsLibraryDescriptionArg> BuildRule createDevFileRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathResolver sourcePathResolver,
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       A args,
@@ -373,7 +364,7 @@ public class JsLibraryDescription
                             sourcePath,
                             basePath,
                             projectFilesystem,
-                            sourcePathResolver,
+                            graphBuilder.getSourcePathResolver(),
                             cellRoots,
                             buildTarget.getUnflavoredBuildTarget())
                         .resolve(subPath.orElse("")));

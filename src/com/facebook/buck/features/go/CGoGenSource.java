@@ -28,7 +28,6 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -63,7 +62,6 @@ public class CGoGenSource extends AbstractBuildRule {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver,
       ImmutableSet<SourcePath> cgoSrcs,
       HeaderSymlinkTree headerSymlinkTree,
       Tool cgo,
@@ -87,7 +85,8 @@ public class CGoGenSource extends AbstractBuildRule {
     ImmutableList.Builder<SourcePath> goBuilder = ImmutableList.builder();
 
     for (SourcePath srcPath : cgoSrcs) {
-      String filename = pathResolver.getAbsolutePath(srcPath).getFileName().toString();
+      String filename =
+          ruleFinder.getSourcePathResolver().getAbsolutePath(srcPath).getFileName().toString();
       String filenameWithoutExt =
           filename.substring(0, filename.lastIndexOf('.')).replace(File.separatorChar, '_');
 

@@ -32,7 +32,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -113,8 +112,7 @@ public class JsBundleGenruleDescription
                 jsBundle.getSourcePathToOutput(), "%s has no output", jsBundle.getBuildTarget());
       }
 
-      Path fileName =
-          DefaultSourcePathResolver.from(graphBuilder).getRelativePath(output).getFileName();
+      Path fileName = graphBuilder.getSourcePathResolver().getRelativePath(output).getFileName();
       return new ExportFile(
           buildTarget,
           projectFilesystem,

@@ -33,7 +33,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -239,8 +238,6 @@ public class GoProjectCommandHelper {
     }
     ActionGraphAndBuilder result =
         Objects.requireNonNull(getActionGraph(targetGraphAndTargets.getTargetGraph()));
-    DefaultSourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(result.getActionGraphBuilder());
 
     // cleanup files from previous runs
     for (BuildTargetSourcePath sourcePath : generatedPackages.keySet()) {
@@ -260,7 +257,8 @@ public class GoProjectCommandHelper {
     // copy files generated in current run
     for (BuildTargetSourcePath sourcePath : generatedPackages.keySet()) {
       Path desiredPath = vendorPath.resolve(generatedPackages.get(sourcePath));
-      Path generatedSrc = sourcePathResolver.getAbsolutePath(sourcePath);
+      Path generatedSrc =
+          result.getActionGraphBuilder().getSourcePathResolver().getAbsolutePath(sourcePath);
 
       if (projectFilesystem.isDirectory(generatedSrc)) {
         projectFilesystem.copyFolder(generatedSrc, desiredPath);

@@ -101,7 +101,6 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.log.Logger;
@@ -345,11 +344,11 @@ public class ProjectGenerator {
     this.appleCxxFlavors = appleCxxFlavors;
     this.actionGraphBuilderForNode = actionGraphBuilderForNode;
     this.defaultPathResolver =
-        DefaultSourcePathResolver.from(
-            new SingleThreadedActionGraphBuilder(
+        new SingleThreadedActionGraphBuilder(
                 TargetGraph.EMPTY,
                 new DefaultTargetNodeToBuildRuleTransformer(),
-                cell.getCellProvider()));
+                cell.getCellProvider())
+            .getSourcePathResolver();
     this.buckEventBus = buckEventBus;
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
@@ -1047,7 +1046,7 @@ public class ProjectGenerator {
             return StringArg.of(
                 Arg.stringify(
                     super.expandFrom(target, cellNames, builderFromNode, input),
-                    DefaultSourcePathResolver.from(builderFromNode)));
+                    builderFromNode.getSourcePathResolver()));
           }
         };
 
@@ -2520,7 +2519,6 @@ public class ProjectGenerator {
       return convertMapKeysToPaths(fullExportedHeaders);
     } else {
       ActionGraphBuilder graphBuilder = actionGraphBuilderForNode.apply(targetNode);
-      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
       ImmutableSortedMap.Builder<Path, SourcePath> allHeadersBuilder =
           ImmutableSortedMap.naturalOrder();
       String platform = defaultCxxPlatform.getFlavor().toString();
@@ -2533,7 +2531,11 @@ public class ProjectGenerator {
                   targetNode.getBuildTarget(), graphBuilder, Optional.empty(), arg))
           .putAll(
               ProjectGenerator.parseAllPlatformHeaders(
-                  targetNode.getBuildTarget(), pathResolver, platformHeaders, true, arg))
+                  targetNode.getBuildTarget(),
+                  graphBuilder.getSourcePathResolver(),
+                  platformHeaders,
+                  true,
+                  arg))
           .build();
     }
   }
@@ -2582,7 +2584,6 @@ public class ProjectGenerator {
       return convertMapKeysToPaths(fullHeaders);
     } else {
       ActionGraphBuilder graphBuilder = actionGraphBuilderForNode.apply(targetNode);
-      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
       ImmutableSortedMap.Builder<Path, SourcePath> allHeadersBuilder =
           ImmutableSortedMap.naturalOrder();
       String platform = defaultCxxPlatform.getFlavor().toString();
@@ -2595,7 +2596,11 @@ public class ProjectGenerator {
                   targetNode.getBuildTarget(), graphBuilder, Optional.empty(), arg))
           .putAll(
               ProjectGenerator.parseAllPlatformHeaders(
-                  targetNode.getBuildTarget(), pathResolver, platformHeaders, false, arg))
+                  targetNode.getBuildTarget(),
+                  graphBuilder.getSourcePathResolver(),
+                  platformHeaders,
+                  false,
+                  arg))
           .build();
     }
   }
@@ -4614,8 +4619,7 @@ public class ProjectGenerator {
         TargetNodes.castArg(node, ExportFileDescriptionArg.class);
     if (!exportFileNode.isPresent()) {
       BuildRuleResolver resolver = actionGraphBuilderForNode.apply(node);
-      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
-      Path output = pathResolver.getAbsolutePath(sourcePath);
+      Path output = resolver.getSourcePathResolver().getAbsolutePath(sourcePath);
       if (output == null) {
         throw new HumanReadableException(
             "The target '%s' does not have an output.", node.getBuildTarget());

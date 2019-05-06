@@ -23,8 +23,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
@@ -42,10 +40,12 @@ public class PrebuiltDotnetLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       PrebuiltDotnetLibraryDescriptionArg args) {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(context.getActionGraphBuilder());
     return new PrebuiltDotnetLibrary(
-        buildTarget, context.getProjectFilesystem(), params, pathResolver, args.getAssembly());
+        buildTarget,
+        context.getProjectFilesystem(),
+        params,
+        context.getActionGraphBuilder().getSourcePathResolver(),
+        args.getAssembly());
   }
 
   @BuckStyleImmutable

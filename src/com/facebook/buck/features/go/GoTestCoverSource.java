@@ -64,7 +64,6 @@ public class GoTestCoverSource extends AbstractBuildRule {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver,
       GoPlatform platform,
       ImmutableSet<SourcePath> srcs,
       Tool cover,
@@ -86,6 +85,7 @@ public class GoTestCoverSource extends AbstractBuildRule {
     ImmutableMap.Builder<SourcePath, SourcePath> coveredSources = ImmutableMap.builder();
     ImmutableSet.Builder<SourcePath> testSources = ImmutableSet.builder();
 
+    SourcePathResolver pathResolver = ruleFinder.getSourcePathResolver();
     for (SourcePath path : srcs) {
       if (!isTestFile(pathResolver, buildTarget, path)) {
         Path srcPath = pathResolver.getAbsolutePath(path);

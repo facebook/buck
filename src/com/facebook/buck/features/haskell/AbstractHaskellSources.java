@@ -23,7 +23,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
@@ -45,13 +44,12 @@ abstract class AbstractHaskellSources implements AddsToRuleKey {
   public static HaskellSources from(
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       HaskellPlatform platform,
       String parameter,
       SourceSortedSet sources) {
     HaskellSources.Builder builder = HaskellSources.builder();
     for (Map.Entry<String, SourcePath> ent :
-        sources.toNameMap(target, pathResolver, parameter).entrySet()) {
+        sources.toNameMap(target, graphBuilder.getSourcePathResolver(), parameter).entrySet()) {
       builder.putModuleMap(
           ent.getKey().substring(0, ent.getKey().lastIndexOf('.')).replace(File.separatorChar, '.'),
           CxxGenruleDescription.fixupSourcePath(

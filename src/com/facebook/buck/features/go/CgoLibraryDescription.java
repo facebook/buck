@@ -30,8 +30,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxBinaryDescription;
@@ -148,7 +146,6 @@ public class CgoLibraryDescription
 
     if (platform.isPresent()) {
       ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
       ImmutableList<BuildTarget> cxxDeps =
           params.getDeclaredDeps().get().stream()
@@ -164,7 +161,6 @@ public class CgoLibraryDescription
                   cgoLibTarget,
                   projectFilesystem,
                   graphBuilder,
-                  pathResolver,
                   context.getCellPathResolver(),
                   cxxBuckConfig,
                   platform.get(),

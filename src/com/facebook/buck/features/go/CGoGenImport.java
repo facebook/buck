@@ -57,14 +57,13 @@ public class CGoGenImport extends AbstractBuildRule {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver,
       Tool cgo,
       GoPlatform platform,
       SourcePath sourceWithPackageName,
       SourcePath cgoBin) {
     super(buildTarget, projectFilesystem);
 
-    this.pathResolver = pathResolver;
+    this.pathResolver = ruleFinder.getSourcePathResolver();
     this.cgo = cgo;
     this.platform = platform;
     this.sourceWithPackageName = sourceWithPackageName;

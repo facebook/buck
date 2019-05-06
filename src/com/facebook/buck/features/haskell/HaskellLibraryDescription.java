@@ -35,8 +35,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -134,7 +132,6 @@ public class HaskellLibraryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       HaskellPlatform platform,
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
@@ -152,8 +149,7 @@ public class HaskellLibraryDescription
         Optional.empty(),
         Optional.of(getPackageInfo(platform, buildTarget)),
         args.getCompilerFlags(),
-        HaskellSources.from(
-            buildTarget, graphBuilder, pathResolver, platform, "srcs", args.getSrcs()));
+        HaskellSources.from(buildTarget, graphBuilder, platform, "srcs", args.getSrcs()));
   }
 
   private Archive createStaticLibrary(
@@ -161,7 +157,6 @@ public class HaskellLibraryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       HaskellPlatform platform,
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
@@ -173,7 +168,6 @@ public class HaskellLibraryDescription
             projectFilesystem,
             baseParams,
             graphBuilder,
-            pathResolver,
             platform,
             args,
             deps,
@@ -210,7 +204,6 @@ public class HaskellLibraryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       HaskellPlatformsProvider haskellPlatformsProvider,
       HaskellPlatform platform,
       HaskellLibraryDescriptionArg args,
@@ -246,7 +239,6 @@ public class HaskellLibraryDescription
                     projectFilesystem,
                     baseParams,
                     graphBuilder,
-                    pathResolver,
                     platform,
                     args,
                     deps,
@@ -259,7 +251,6 @@ public class HaskellLibraryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       HaskellPlatformsProvider haskellPlatformsProvider,
       HaskellPlatform platform,
       HaskellLibraryDescriptionArg args,
@@ -277,7 +268,6 @@ public class HaskellLibraryDescription
                 projectFilesystem,
                 baseParams,
                 graphBuilder,
-                pathResolver,
                 haskellPlatformsProvider,
                 platform,
                 args,
@@ -293,7 +283,6 @@ public class HaskellLibraryDescription
                 projectFilesystem,
                 baseParams,
                 graphBuilder,
-                pathResolver,
                 haskellPlatformsProvider,
                 platform,
                 args,
@@ -313,7 +302,6 @@ public class HaskellLibraryDescription
                   projectFilesystem,
                   baseParams,
                   graphBuilder,
-                  pathResolver,
                   haskellPlatformsProvider,
                   platform,
                   args,
@@ -355,7 +343,6 @@ public class HaskellLibraryDescription
             projectFilesystem,
             baseParams,
             graphBuilder,
-            pathResolver,
             platform,
             args,
             deps,
@@ -369,7 +356,6 @@ public class HaskellLibraryDescription
               projectFilesystem,
               baseParams,
               graphBuilder,
-              pathResolver,
               platform,
               args,
               deps,
@@ -406,7 +392,6 @@ public class HaskellLibraryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       HaskellPlatformsProvider haskellPlatformsProvider,
       HaskellPlatform platform,
       HaskellLibraryDescriptionArg args,
@@ -448,7 +433,6 @@ public class HaskellLibraryDescription
                     projectFilesystem,
                     baseParams,
                     graphBuilder,
-                    pathResolver,
                     haskellPlatformsProvider,
                     platform,
                     args,
@@ -462,7 +446,6 @@ public class HaskellLibraryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       HaskellPlatform platform,
       HaskellLibraryDescriptionArg args) {
     CxxPlatform cxxPlatform = platform.getCxxPlatform();
@@ -525,8 +508,7 @@ public class HaskellLibraryDescription
             projectFilesystem,
             baseParams,
             graphBuilder,
-            HaskellSources.from(
-                baseTarget, graphBuilder, pathResolver, platform, "srcs", args.getSrcs()),
+            HaskellSources.from(baseTarget, graphBuilder, platform, "srcs", args.getSrcs()),
             platform.getHaddock().resolve(graphBuilder, baseTarget.getTargetConfiguration()),
             args.getHaddockFlags(),
             args.getCompilerFlags(),
@@ -546,7 +528,6 @@ public class HaskellLibraryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       HaskellPlatform platform,
       HaskellLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
@@ -557,7 +538,6 @@ public class HaskellLibraryDescription
             projectFilesystem,
             baseParams,
             graphBuilder,
-            pathResolver,
             platform,
             args,
             deps,
@@ -591,7 +571,6 @@ public class HaskellLibraryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       HaskellPlatformsProvider haskellPlatformsProvider,
       HaskellPlatform platform,
       HaskellLibraryDescriptionArg args,
@@ -614,7 +593,6 @@ public class HaskellLibraryDescription
                     projectFilesystem,
                     baseParams,
                     graphBuilder,
-                    pathResolver,
                     platform,
                     args,
                     deps,
@@ -649,7 +627,6 @@ public class HaskellLibraryDescription
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
 
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
 
@@ -681,7 +658,6 @@ public class HaskellLibraryDescription
               projectFilesystem,
               params,
               graphBuilder,
-              pathResolver,
               haskellPlatformsProvider,
               platform,
               args,
@@ -694,7 +670,6 @@ public class HaskellLibraryDescription
               projectFilesystem,
               params,
               graphBuilder,
-              pathResolver,
               haskellPlatformsProvider,
               platform,
               args,
@@ -707,7 +682,6 @@ public class HaskellLibraryDescription
               projectFilesystem,
               params,
               graphBuilder,
-              pathResolver,
               haskellPlatformsProvider,
               platform,
               args,
@@ -718,7 +692,7 @@ public class HaskellLibraryDescription
               args.isEnableProfiling());
         case HADDOCK:
           return requireHaddockLibrary(
-              baseTarget, projectFilesystem, params, graphBuilder, pathResolver, platform, args);
+              baseTarget, projectFilesystem, params, graphBuilder, platform, args);
         case GHCI:
           return HaskellDescriptionUtils.requireGhciRule(
               // The GHCi rule is a user-facing "deployable" rule, rather than a factory rule, so
@@ -764,7 +738,6 @@ public class HaskellLibraryDescription
                 projectFilesystem,
                 params,
                 graphBuilder,
-                pathResolver,
                 haskellPlatformsProvider,
                 platform,
                 args,
@@ -799,7 +772,6 @@ public class HaskellLibraryDescription
                   projectFilesystem,
                   params,
                   graphBuilder,
-                  pathResolver,
                   platforms.getValue(cxxPlatform.getFlavor()),
                   args,
                   allDeps.get(graphBuilder, cxxPlatform),
@@ -868,7 +840,6 @@ public class HaskellLibraryDescription
                     projectFilesystem,
                     params,
                     graphBuilder,
-                    pathResolver,
                     haskellPlatformsProvider,
                     platforms.getValue(cxxPlatform.getFlavor()),
                     args,
@@ -880,7 +851,7 @@ public class HaskellLibraryDescription
                     ? cxxPlatform
                         .getLd()
                         .resolve(graphBuilder, targetConfiguration)
-                        .linkWhole(archive.toArg(), pathResolver)
+                        .linkWhole(archive.toArg(), graphBuilder.getSourcePathResolver())
                     : ImmutableList.of(archive.toArg());
             break;
           case SHARED:
@@ -890,7 +861,6 @@ public class HaskellLibraryDescription
                     projectFilesystem,
                     params,
                     graphBuilder,
-                    pathResolver,
                     haskellPlatformsProvider,
                     platforms.getValue(cxxPlatform.getFlavor()),
                     args,
@@ -922,7 +892,6 @@ public class HaskellLibraryDescription
                 projectFilesystem,
                 params,
                 graphBuilder,
-                pathResolver,
                 haskellPlatformsProvider,
                 platforms.getValue(cxxPlatform.getFlavor()),
                 args,

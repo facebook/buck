@@ -95,7 +95,6 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
       GoPlatform platform,
@@ -120,6 +119,8 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
             cxxDeps,
             headers);
 
+    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+
     ImmutableSet.Builder<SourcePath> cxxSourcesFromArg = ImmutableSet.builder();
     ImmutableSet.Builder<SourcePath> goSourcesFromArg = ImmutableSet.builder();
 
@@ -143,7 +144,6 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                         target,
                         projectFilesystem,
                         graphBuilder,
-                        pathResolver,
                         goSourcesFromArg.build(),
                         headerSymlinkTree,
                         cgo,
@@ -196,7 +196,6 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                     target,
                     projectFilesystem,
                     graphBuilder,
-                    pathResolver,
                     cgo,
                     platform,
                     // take first source file in the list to infer the package

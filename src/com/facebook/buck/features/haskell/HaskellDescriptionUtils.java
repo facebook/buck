@@ -28,8 +28,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.cxx.Archive;
@@ -427,8 +425,6 @@ public class HaskellDescriptionUtils {
       Optional<SourcePath> argGhciInit,
       ImmutableList<SourcePath> argExtraScriptTemplates,
       boolean hsProfile) {
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-
     ImmutableSet.Builder<BuildRule> depsBuilder = ImmutableSet.builder();
     depsBuilder.addAll(
         CxxDeps.builder()
@@ -554,8 +550,7 @@ public class HaskellDescriptionUtils {
         .forEach(l -> preloadLibsBuilder.add(platform.getCxxPlatform(), l, graphBuilder));
     ImmutableSortedMap<String, SourcePath> preloadLibs = preloadLibsBuilder.build();
 
-    HaskellSources srcs =
-        HaskellSources.from(buildTarget, graphBuilder, pathResolver, platform, "srcs", argSrcs);
+    HaskellSources srcs = HaskellSources.from(buildTarget, graphBuilder, platform, "srcs", argSrcs);
 
     return HaskellGhciRule.from(
         buildTarget,

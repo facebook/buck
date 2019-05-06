@@ -30,7 +30,6 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
@@ -191,7 +190,6 @@ abstract class DDescriptionUtils {
   public static SymlinkTree createSourceSymlinkTree(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       SourceSortedSet sources) {
     Preconditions.checkState(target.getFlavors().contains(SOURCE_LINK_TREE));
@@ -201,7 +199,7 @@ abstract class DDescriptionUtils {
         projectFilesystem,
         BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
         MoreMaps.transformKeys(
-            sources.toNameMap(target, pathResolver, "srcs"),
+            sources.toNameMap(target, ruleFinder.getSourcePathResolver(), "srcs"),
             MorePaths.toPathFn(projectFilesystem.getRootPath().getFileSystem())),
         ImmutableMultimap.of(),
         ruleFinder);

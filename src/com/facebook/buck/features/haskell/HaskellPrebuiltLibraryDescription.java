@@ -27,7 +27,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -144,10 +143,12 @@ public class HaskellPrebuiltLibraryDescription
               SourcePathArg.from(
                   args.isEnableProfiling() ? args.getProfiledStaticLibs() : args.getStaticLibs());
           if (forceLinkWhole) {
-            DefaultSourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
             libArgs =
                 RichStream.from(libArgs)
-                    .flatMap(lib -> RichStream.from(linker.linkWhole(lib, pathResolver)))
+                    .flatMap(
+                        lib ->
+                            RichStream.from(
+                                linker.linkWhole(lib, graphBuilder.getSourcePathResolver())))
                     .toImmutableList();
           }
           builder.addAllArgs(libArgs);
