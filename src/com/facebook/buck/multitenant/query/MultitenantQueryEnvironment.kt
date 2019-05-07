@@ -18,6 +18,7 @@ package com.facebook.buck.multitenant.query
 import com.facebook.buck.core.exceptions.BuildTargetParseException
 import com.facebook.buck.core.model.QueryTarget
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.Commit
 import com.facebook.buck.multitenant.service.Index
 import com.facebook.buck.query.DepsFunction
@@ -125,7 +126,7 @@ private class TargetEvaluator(private val index: Index, private val commit: Comm
         // Check to see if it is a wildcard pattern.
         if (target.startsWith("//") && target.endsWith("/...")) {
             val basePath = if (target.length == 5) "" else target.substring(2, target.length - 4)
-            return ImmutableSet.copyOf(index.getTargetsUnderBasePath(commit, basePath))
+            return ImmutableSet.copyOf(index.getTargetsUnderBasePath(commit, FsAgnosticPath.of(basePath)))
         }
 
         // TODO: We should probably also support aliases specified via .buckconfig here?

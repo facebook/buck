@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget
 import com.facebook.buck.core.model.RuleType
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
+import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.BuildPackage
 import com.facebook.buck.multitenant.service.Changes
 import com.facebook.buck.multitenant.service.Index
@@ -31,8 +32,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import java.io.InputStream
-import java.nio.file.Path
-import java.nio.file.Paths
 
 /**
  * Ultimately, we would like to use kotlinx.serialization for this, but we are currently blocked by
@@ -82,7 +81,7 @@ private fun toBuildPackages(index: Index, node: JsonNode?): List<BuildPackage> {
 
     val buildPackages = mutableListOf<BuildPackage>()
     for (buildPackageItem in node) {
-        val path = buildPackageItem.get("path").asText()
+        val path = FsAgnosticPath.of(buildPackageItem.get("path").asText())
         val rulesAttr = buildPackageItem.get("rules")
         val rules = mutableSetOf<RawBuildRule>()
         for (rule in rulesAttr.elements()) {
@@ -96,18 +95,18 @@ private fun toBuildPackages(index: Index, node: JsonNode?): List<BuildPackage> {
             val buildTarget = index.buildTargetParser("//${path}:${name}")
             rules.add(createRawRule(index, buildTarget, ruleType, deps))
         }
-        buildPackages.add(BuildPackage(Paths.get(path), rules))
+        buildPackages.add(BuildPackage(path, rules))
     }
 
     return buildPackages
 }
 
-private fun toRemovedPackages(node: JsonNode?): List<Path> {
+private fun toRemovedPackages(node: JsonNode?): List<FsAgnosticPath> {
     if (node == null) {
         return listOf()
     }
 
-    return node.asSequence().map { Paths.get(it.asText()) }.toList()
+    return node.asSequence().map { FsAgnosticPath.of(it.asText()) }.toList()
 }
 
 private fun createRawRule(index: Index, target: UnconfiguredBuildTarget, ruleType: String, deps: Set<String>): RawBuildRule {

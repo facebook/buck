@@ -17,16 +17,16 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
-import java.nio.file.Path
+import com.facebook.buck.multitenant.fs.FsAgnosticPath
 
 /**
  * Represents a change between versions of a build package.
  */
 internal sealed class BuildPackageDelta {
     /** Note that this is an "added" or "modified" package. */
-    data class Updated(val directory: Path, val rules: Set<String>) : BuildPackageDelta()
+    data class Updated(val directory: FsAgnosticPath, val rules: Set<String>) : BuildPackageDelta()
 
-    data class Removed(val directory: Path) : BuildPackageDelta()
+    data class Removed(val directory: FsAgnosticPath) : BuildPackageDelta()
 }
 
 /**

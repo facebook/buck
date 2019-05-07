@@ -18,7 +18,7 @@ package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
-import java.nio.file.Path
+import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import java.util.*
 
 typealias Commit = String
@@ -71,9 +71,9 @@ private fun hashCode_BuildTargetSet(set: BuildTargetSet): Int {
  * By construction, the name for each rule in rules should be distinct across all of the rules in
  * the set.
  */
-data class BuildPackage(val buildFileDirectory: Path, val rules: Set<RawBuildRule>)
+data class BuildPackage(val buildFileDirectory: FsAgnosticPath, val rules: Set<RawBuildRule>)
 
-internal data class InternalBuildPackage(val buildFileDirectory: Path, val rules: Set<InternalRawBuildRule>)
+internal data class InternalBuildPackage(val buildFileDirectory: FsAgnosticPath, val rules: Set<InternalRawBuildRule>)
 
 /**
  * By construction, the Path for each BuildPackage should be distinct across all of the
@@ -81,8 +81,8 @@ internal data class InternalBuildPackage(val buildFileDirectory: Path, val rules
  */
 data class Changes(val addedBuildPackages: List<BuildPackage>,
                    val modifiedBuildPackages: List<BuildPackage>,
-                   val removedBuildPackages: List<Path>)
+                   val removedBuildPackages: List<FsAgnosticPath>)
 
 internal data class InternalChanges(val addedBuildPackages: List<InternalBuildPackage>,
                                     val modifiedBuildPackages: List<InternalBuildPackage>,
-                                    val removedBuildPackages: List<Path>)
+                                    val removedBuildPackages: List<FsAgnosticPath>)
