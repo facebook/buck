@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.rules.modern;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
+
 /**
  * A {@link CustomFieldSerialization} that will disable remote execution for the referencing rule if
  * the field holds a false value.
@@ -34,5 +36,9 @@ public class RemoteExecutionEnabled implements CustomFieldSerialization<Boolean>
     return true;
   }
 
-  private class DisableRemoteExecutionException extends RuntimeException {}
+  private class DisableRemoteExecutionException extends HumanReadableException {
+    public DisableRemoteExecutionException() {
+      super("Remote Execution is disabled for this object.");
+    }
+  }
 }

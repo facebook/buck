@@ -40,7 +40,9 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultimap;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -170,10 +172,59 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
     return "provides facilities to audit build targets' classpaths";
   }
 
+  private static class ByPackageFailureRecorder {
+    final String errorMessage;
+    int failureCount = 0;
+    Multimap<String, String> failedRulesByPackage = TreeMultimap.create();
+
+    ByPackageFailureRecorder(String errorMessage) {
+      this.errorMessage = errorMessage;
+    }
+
+    public void record(String packageName, String ruleName) {
+      failureCount++;
+      failedRulesByPackage.put(packageName, ruleName);
+    }
+
+    public Collection<String> getOrderedPackages() {
+      return failedRulesByPackage.asMap().entrySet().stream()
+          .sorted(Comparator.comparing(e -> -e.getValue().size()))
+          .map(e -> e.getKey())
+          .collect(ImmutableList.toImmutableList());
+    }
+
+    public Collection<String> getFailedRules(String packageName) {
+      return failedRulesByPackage.get(packageName).stream()
+          .sorted(Ordering.natural())
+          .collect(ImmutableList.toImmutableList());
+    }
+  }
+
+  private static class RuleTypeFailureRecorder {
+    int totalFailureCount = 0;
+    Map<String, ByPackageFailureRecorder> failuresByMessageAndPackage = new HashMap<>();
+
+    public void record(BuildTarget buildTarget, String error) {
+      totalFailureCount++;
+      ByPackageFailureRecorder failuresByMessage =
+          failuresByMessageAndPackage.computeIfAbsent(
+              error, ignored -> new ByPackageFailureRecorder(error));
+      failuresByMessage.record(
+          buildTarget.getCell().orElse("") + "//" + buildTarget.getBaseName(),
+          buildTarget.getFullyQualifiedName());
+    }
+
+    public Collection<ByPackageFailureRecorder> getOrderedErrors() {
+      return failuresByMessageAndPackage.values().stream()
+          .sorted(Comparator.comparing(r -> -r.failureCount))
+          .collect(ImmutableList.toImmutableList());
+    }
+  }
+
   private static class SerializationReportGenerator {
     // Maps a rule type to a set of failures for that rule type. The set of failures in turn is a
     // map of failure message to a set of targets that failed in that way.
-    Map<String, Multimap<String, String>> failuresByRuleType = new HashMap<>();
+    Map<String, RuleTypeFailureRecorder> failureRecordersByType = new HashMap<>();
     Map<String, Multimap<String, String>> absolutePathsRequired = new HashMap<>();
 
     Multimap<String, String> successByType = ArrayListMultimap.create();
@@ -191,10 +242,11 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
           public void reportSerializationFailure(
               BuildRule instance, String crumbs, String message) {
             String error = String.format("%s %s", crumbs, message);
-            Multimap<String, String> failedTargetsByMessage =
-                failuresByRuleType.computeIfAbsent(
-                    getRuleTypeString(instance), ignored -> TreeMultimap.create());
-            failedTargetsByMessage.put(error, instance.getFullyQualifiedName());
+            RuleTypeFailureRecorder failureRecorder =
+                failureRecordersByType.computeIfAbsent(
+                    getRuleTypeString(instance), ignored -> new RuleTypeFailureRecorder());
+
+            failureRecorder.record(instance.getBuildTarget(), error);
           }
 
           @Override
@@ -243,27 +295,37 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
       }
 
       builder.addSeparator();
-      if (failuresByRuleType.isEmpty()) {
-        builder.addLine("There's no failures for rules migrated to ModernBuildRule.");
+      if (failureRecordersByType.isEmpty()) {
+        builder.addLine("There's no serialization failures for rules migrated to ModernBuildRule.");
       } else {
-        for (Map.Entry<String, Multimap<String, String>> failure :
-            failuresByRuleType.entrySet().stream()
-                .sorted(Comparator.comparing(entry -> -entry.getValue().size()))
-                .collect(Collectors.toList())) {
-          builder.addLine(
-              "%s failures for rules of type %s.", failure.getValue().size(), failure.getKey());
-          for (Entry<String, Collection<String>> instance : asSortedEntries(failure.getValue())) {
-            builder.addLine(" %s: %s", instance.getValue().size(), instance.getKey());
+        // Configures maximum packages and rules to show for each error.
+        final int maxPackages = 3;
+        final int maxRules = 2;
 
-            int count = 0;
-            int max = 3;
-            for (String target : instance.getValue()) {
-              if (count >= max) {
-                builder.addLine("    ...");
-                break;
+        for (Entry<String, RuleTypeFailureRecorder> failure :
+            failureRecordersByType.entrySet().stream()
+                .sorted(Comparator.comparing(entry -> -entry.getValue().totalFailureCount))
+                .collect(Collectors.toList())) {
+          String ruleType = failure.getKey();
+          RuleTypeFailureRecorder recorder = failure.getValue();
+
+          builder.addLine(
+              "%s serialization failures for rules of type %s.",
+              recorder.totalFailureCount, ruleType);
+
+          for (ByPackageFailureRecorder byPackageRecorder : recorder.getOrderedErrors()) {
+            builder.addLine(
+                " %d: %s", byPackageRecorder.failureCount, byPackageRecorder.errorMessage);
+            Collection<String> orderedPackages = byPackageRecorder.getOrderedPackages();
+            for (String packageName : Iterables.limit(orderedPackages, maxPackages)) {
+              Collection<String> failedRules = byPackageRecorder.getFailedRules(packageName);
+              builder.addLine("  % 5d: %s", failedRules.size(), packageName);
+              for (String rule : Iterables.limit(failedRules, maxRules)) {
+                builder.addLine("           %s", rule);
               }
-              builder.addLine("    %s", target);
-              count++;
+            }
+            if (orderedPackages.size() > maxPackages) {
+              builder.addLine("    ... %d more packages", orderedPackages.size() - maxPackages);
             }
           }
         }
