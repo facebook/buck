@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model.actiongraph;
 
+import com.facebook.buck.core.build.action.resolver.BuildEngineActionToBuildRuleResolver;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
@@ -23,10 +24,15 @@ import org.immutables.value.Value;
 /** Holds an ActionGraph with the BuildRuleResolver that created it. */
 @Value.Immutable
 @BuckStyleImmutable
-interface AbstractActionGraphAndBuilder {
+abstract class AbstractActionGraphAndBuilder {
   @Value.Parameter
-  ActionGraph getActionGraph();
+  public abstract ActionGraph getActionGraph();
 
   @Value.Parameter
-  ActionGraphBuilder getActionGraphBuilder();
+  public abstract ActionGraphBuilder getActionGraphBuilder();
+
+  @Value.Default
+  public BuildEngineActionToBuildRuleResolver getBuildEngineActionToBuildRuleResolver() {
+    return new BuildEngineActionToBuildRuleResolver();
+  }
 }
