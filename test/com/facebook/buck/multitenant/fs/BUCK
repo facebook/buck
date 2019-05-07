@@ -1,0 +1,11 @@
+kotlin_test(
+    name = "fs",
+    srcs = glob(["*.kt"]),
+    friend_paths = [
+        "//src/com/facebook/buck/multitenant/fs:fs",
+    ],
+    deps = [
+        "//src/com/facebook/buck/multitenant/fs:fs",
+        "//third-party/java/junit:junit",
+    ],
+)
