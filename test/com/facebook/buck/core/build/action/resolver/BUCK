@@ -1,0 +1,18 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+java_test(
+    name = "resolver",
+    srcs = glob(
+        ["*Test.java"],
+    ),
+    deps = [
+        "//src/com/facebook/buck/core/build/action/resolver:resolver",
+        "//src/com/facebook/buck/core/model:model",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/model/targetgraph:testutil",
+        "//test/com/facebook/buck/core/rules/impl:testutil",
+        "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)
