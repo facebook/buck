@@ -27,7 +27,7 @@ private val PATH_CACHE: Cache<String, FsAgnosticPath> = CacheBuilder.newBuilder(
  *
  * This path will always serialize itself using '/' as the path separator, even on Windows.
  */
-data class FsAgnosticPath private constructor(private val path: String) {
+data class FsAgnosticPath private constructor(private val path: String) : Comparable<FsAgnosticPath> {
     companion object {
         /**
          * @param path must be a normalized, relative path.
@@ -48,6 +48,10 @@ data class FsAgnosticPath private constructor(private val path: String) {
             PATH_CACHE.put(verifiedPath, newPath)
             return newPath
         }
+    }
+
+    override fun compareTo(other: FsAgnosticPath): Int {
+        return path.compareTo(other.path)
     }
 
     fun isEmpty(): Boolean {

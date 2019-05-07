@@ -15,8 +15,10 @@
  */
 package com.facebook.buck.multitenant.fs
 
+import org.hamcrest.Matchers
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThat
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -139,6 +141,22 @@ class FsAgnosticPathTest {
         thrown.expect(IllegalArgumentException::class.java)
         thrown.expectMessage("'foo/../bar' contained illegal path component: '..'")
         FsAgnosticPath.of("foo/../bar")
+    }
+
+    @Test
+    fun compareEqual() {
+        val a = FsAgnosticPath.of("foo/bar")
+        val b = FsAgnosticPath.of("foo/bar")
+        assertEquals(0, a.compareTo(b))
+        assertEquals(0, b.compareTo(a))
+    }
+
+    @Test
+    fun compareNotEqual() {
+        val a = FsAgnosticPath.of("foo/a")
+        val b = FsAgnosticPath.of("foo/b")
+        assertThat(a.compareTo(b), Matchers.lessThan(0))
+        assertThat(b.compareTo(a), Matchers.greaterThan(0))
     }
 
     @Test
