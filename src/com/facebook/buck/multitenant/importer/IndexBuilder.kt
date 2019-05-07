@@ -29,6 +29,7 @@ import com.facebook.buck.rules.visibility.VisibilityPattern
 import com.facebook.buck.util.json.ObjectMappers
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ArrayNode
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import java.io.InputStream
@@ -85,20 +86,46 @@ private fun toBuildPackages(index: Index, node: JsonNode?): List<BuildPackage> {
         val rulesAttr = buildPackageItem.get("rules")
         val rules = mutableSetOf<RawBuildRule>()
         for (rule in rulesAttr.elements()) {
-            val name = rule.get("name").asText()
-            val ruleType = rule.get("buck.type").asText()
+            var name: String? = null
+            var ruleType: String? = null
             val deps = mutableSetOf<String>()
-            val depsAttr = rule.get("deps")
-            if (depsAttr != null) {
-                deps.addAll(depsAttr.asSequence().map { it.asText() })
+            val attrs = ImmutableMap.builder<String, Any>()
+            for (field in rule.fields()) {
+                when (field.key) {
+                    "name" -> name = field.value.asText()
+                    "buck.type" -> ruleType = field.value.asText()
+                    "deps" -> deps.addAll(field.value.asSequence().map { it.asText() })
+                    else -> {
+                        // Properties that start with "buck." have a special meaning that must be
+                        // handled explicitly.
+                        if (!field.key.startsWith("buck.")) {
+                            attrs.put(field.key, normalizeJsonValue(field.value))
+                        }
+                    }
+                }
             }
+            requireNotNull(name)
+            requireNotNull(ruleType)
             val buildTarget = index.buildTargetParser("//${path}:${name}")
-            rules.add(createRawRule(index, buildTarget, ruleType, deps))
+            rules.add(createRawRule(index, buildTarget, ruleType, deps, attrs.build()))
         }
         buildPackages.add(BuildPackage(path, rules))
     }
 
     return buildPackages
+}
+
+private fun normalizeJsonValue(value: JsonNode): Any {
+    // Note that if we need to support other values, such as null or Object, we will add support for
+    // them as needed.
+    return when {
+        value.isBoolean -> value.asBoolean()
+        value.isTextual() -> value.asText()
+        value.isLong() -> value.asLong()
+        value.isDouble() -> value.asDouble()
+        value.isArray() -> (value as ArrayNode).map { normalizeJsonValue(it) }
+        else -> throw IllegalArgumentException("normalizeJsonValue() not supported for ${value}")
+    }
 }
 
 private fun toRemovedPackages(node: JsonNode?): List<FsAgnosticPath> {
@@ -109,8 +136,13 @@ private fun toRemovedPackages(node: JsonNode?): List<FsAgnosticPath> {
     return node.asSequence().map { FsAgnosticPath.of(it.asText()) }.toList()
 }
 
-private fun createRawRule(index: Index, target: UnconfiguredBuildTarget, ruleType: String, deps: Set<String>): RawBuildRule {
-    val node = ServiceRawTargetNode(target, RuleTypeFactory.createBuildRule(ruleType), ImmutableMap.of())
+private fun createRawRule(
+        index: Index,
+        target: UnconfiguredBuildTarget,
+        ruleType: String,
+        deps: Set<String>,
+        attrs: ImmutableMap<String, Any>): RawBuildRule {
+    val node = ServiceRawTargetNode(target, RuleTypeFactory.createBuildRule(ruleType), attrs)
     return RawBuildRule(node, deps.map { index.buildTargetParser(it) }.toSet())
 }
 
