@@ -18,7 +18,7 @@
           },
           {
             "name": "C",
-            "buck.type": "java_library",
+            "buck.type": "cxx_library",
             "deps": [
               "//java/com/example:A",
             ],

@@ -112,7 +112,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
           new DepsFunction.LookupFunction<QueryTarget, QueryBuildTarget>(),
           new InputsFunction(),
           new FilterFunction<QueryBuildTarget>(),
-          new KindFunction(),
+          new KindFunction<>(),
           new LabelsFunction(),
           new OwnerFunction<QueryBuildTarget>(),
           new RdepsFunction(),

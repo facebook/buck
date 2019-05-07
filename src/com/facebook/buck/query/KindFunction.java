@@ -30,6 +30,7 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.google.common.collect.ImmutableList;
@@ -40,7 +41,7 @@ import com.google.common.collect.ImmutableList;
  *
  * <pre>expr ::= KIND '(' WORD ',' expr ')'</pre>
  */
-public class KindFunction extends RegexFilterFunction<QueryBuildTarget, QueryBuildTarget> {
+public class KindFunction<T extends QueryTarget> extends RegexFilterFunction<T, T> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD, ArgumentType.EXPRESSION);
@@ -63,22 +64,18 @@ public class KindFunction extends RegexFilterFunction<QueryBuildTarget, QueryBui
   }
 
   @Override
-  protected QueryExpression<QueryBuildTarget> getExpressionToEval(
-      ImmutableList<Argument<QueryBuildTarget>> args) {
+  protected QueryExpression<T> getExpressionToEval(ImmutableList<Argument<T>> args) {
     return args.get(1).getExpression();
   }
 
   @Override
-  protected String getPattern(ImmutableList<Argument<QueryBuildTarget>> args) {
+  protected String getPattern(ImmutableList<Argument<T>> args) {
     return args.get(0).getWord();
   }
 
   @Override
   protected String getStringToFilter(
-      QueryEnvironment<QueryBuildTarget> env,
-      ImmutableList<Argument<QueryBuildTarget>> args,
-      QueryBuildTarget target)
-      throws QueryException {
+      QueryEnvironment<T> env, ImmutableList<Argument<T>> args, T target) throws QueryException {
     return env.getTargetKind(target);
   }
 }

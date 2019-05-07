@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.service.Commit
 import com.facebook.buck.multitenant.service.Index
 import com.facebook.buck.query.DepsFunction
+import com.facebook.buck.query.KindFunction
 import com.facebook.buck.query.NoopQueryEvaluator
 import com.facebook.buck.query.QueryEnvironment
 import com.facebook.buck.query.QueryException
@@ -34,7 +35,8 @@ import java.util.function.Supplier
 
 val QUERY_FUNCTIONS: List<QueryEnvironment.QueryFunction<out QueryTarget, UnconfiguredBuildTarget>> = listOf(
         DepsFunction<UnconfiguredBuildTarget>(),
-        DepsFunction.FirstOrderDepsFunction<UnconfiguredBuildTarget>())
+        DepsFunction.FirstOrderDepsFunction<UnconfiguredBuildTarget>(),
+        KindFunction<UnconfiguredBuildTarget>())
 
 /**
  * Each instance of a [MultitenantQueryEnvironment] is parameterized by a base commit and the
@@ -88,8 +90,9 @@ class MultitenantQueryEnvironment(private val index: Index, private val commit: 
         // to tighten targetNodes to be Set<UnconfiguredBuildTarget> instead of Set<? extends QueryTarget>.
     }
 
-    override fun getTargetKind(target: UnconfiguredBuildTarget?): String {
-        TODO("getTargetKind() not implemented")
+    override fun getTargetKind(target: UnconfiguredBuildTarget): String {
+        val rawBuildRule = requireNotNull(index.getTargetNode(commit, target))
+        return rawBuildRule.targetNode.ruleType.toString()
     }
 
     override fun getTestsForTarget(target: UnconfiguredBuildTarget?): ImmutableSet<UnconfiguredBuildTarget> {

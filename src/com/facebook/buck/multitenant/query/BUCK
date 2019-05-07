@@ -9,6 +9,7 @@ kotlin_library(
     ],
     deps = [
         "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
         "//src/com/facebook/buck/multitenant/collect:collect",
         "//src/com/facebook/buck/multitenant/service:service",
         "//src/com/facebook/buck/query:query",

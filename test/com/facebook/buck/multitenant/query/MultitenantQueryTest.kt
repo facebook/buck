@@ -105,6 +105,24 @@ class MultitenantQueryTest {
                         "//java/com/example:D"),
                 env.evaluateQuery("deps(//java/com/example:D)"))
     }
+
+    @Test
+    fun kindQuery() {
+        val env = loadIndex("diamond_dependency_graph.json", 0)
+        assertEquals(
+                asOutput(
+                        "//java/com/example:A",
+                        "//java/com/example:B",
+                        "//java/com/example:D"),
+                env.evaluateQuery("kind('java_library', //...)"))
+        assertEquals(
+                asOutput(
+                        "//java/com/example:A",
+                        "//java/com/example:B",
+                        "//java/com/example:D",
+                        "//java/com/facebook/buck:buck"),
+                env.evaluateQuery("kind('java_.*', //...)"))
+    }
 }
 
 private fun asOutput(vararg target: String): Set<UnconfiguredBuildTarget> {
