@@ -43,7 +43,7 @@ val QUERY_FUNCTIONS: List<QueryEnvironment.QueryFunction<out QueryTarget, Unconf
  */
 class MultitenantQueryEnvironment(private val index: Index, private val commit: Commit) : QueryEnvironment<UnconfiguredBuildTarget> {
     private val targetEvaluator: Supplier<TargetEvaluator> = Suppliers.memoize {
-        TargetEvaluator(index.buildTargetParser)
+        TargetEvaluator(index, commit)
     }
 
     fun evaluateQuery(query: String): ImmutableSet<UnconfiguredBuildTarget> {
@@ -113,21 +113,23 @@ class MultitenantQueryEnvironment(private val index: Index, private val commit: 
     }
 }
 
-private class TargetEvaluator(private val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) : QueryEnvironment.TargetEvaluator {
+private class TargetEvaluator(private val index: Index, private val commit: Commit) : QueryEnvironment.TargetEvaluator {
     override fun getType(): QueryEnvironment.TargetEvaluator.Type = QueryEnvironment.TargetEvaluator.Type.IMMEDIATE
 
     override fun evaluateTarget(target: String?): ImmutableSet<QueryTarget> {
         requireNotNull(target)
 
-        // TODO: There are some values of target, such as wildcard targets like "//foo/bar..." that
-        // we do not currently support, but we should. In order to implement that correctly, we will
-        // need a reference to the MultitenantQueryEnvironment.
+        // Check to see if it is a wildcard pattern.
+        if (target.startsWith("//") && target.endsWith("/...")) {
+            val basePath = if (target.length == 5) "" else target.substring(2, target.length - 4)
+            return ImmutableSet.copyOf(index.getTargetsUnderBasePath(commit, basePath))
+        }
 
         // TODO: We should probably also support aliases specified via .buckconfig here?
 
         val unconfiguredBuildTarget: UnconfiguredBuildTarget
         try {
-            unconfiguredBuildTarget = buildTargetParser(target)
+            unconfiguredBuildTarget = index.buildTargetParser(target)
         } catch (e: BuildTargetParseException) {
             throw QueryException(e, "Error trying to parse '${target}'")
         }

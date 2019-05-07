@@ -24,13 +24,24 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class MultitenantQueryTest {
+
+    @Test
+    fun universeQuery() {
+        val env = loadIndex("diamond_dependency_graph.json", 0)
+        assertEquals(
+                asOutput(
+                        "//java/com/example:A",
+                        "//java/com/example:B",
+                        "//java/com/example:C",
+                        "//java/com/example:D"
+                ),
+                env.evaluateQuery("//...")
+        )
+    }
+
     @Test
     fun depsQuery() {
-        val index = Index(::parseOrdinaryBuildTarget)
-        val commits = populateIndexFromStream(index, MultitenantQueryTest::class.java.getResourceAsStream("diamond_dependency_graph.json"))
-        val commit = commits[0]
-
-        val env = MultitenantQueryEnvironment(index, commit)
+        val env = loadIndex("diamond_dependency_graph.json", 0)
         assertEquals(
                 "Depth of 1 should not include //java/com/example:A.",
                 asOutput(
@@ -58,6 +69,12 @@ class MultitenantQueryTest {
     }
 }
 
-fun asOutput(vararg target: String): Set<UnconfiguredBuildTarget> {
+private fun asOutput(vararg target: String): Set<UnconfiguredBuildTarget> {
     return target.map(::parseOrdinaryBuildTarget).toSet()
+}
+
+private fun loadIndex(resource: String, commitIndex: Int): MultitenantQueryEnvironment {
+    val index = Index(::parseOrdinaryBuildTarget)
+    val commits = populateIndexFromStream(index, MultitenantQueryTest::class.java.getResourceAsStream(resource))
+    return MultitenantQueryEnvironment(index, commits[commitIndex])
 }

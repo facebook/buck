@@ -200,6 +200,14 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
         return pairs.map { buildTargetCache.getByIndex(it.first) }.toList()
     }
 
+    fun getTargetsUnderBasePath(commit: Commit, basePath: String): List<UnconfiguredBuildTarget> {
+        if (basePath == "") {
+            return getTargets(commit)
+        }
+
+        TODO("Implement getTargetsUnderBasePath()")
+    }
+
     /**
      * Currently, the caller is responsible for ensuring that addCommitData() is invoked
      * serially (never concurrently) for each commit in a chain of version control history.
