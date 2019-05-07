@@ -94,6 +94,17 @@ private class GenerationList<INFO, VALUE : Any>() {
             }
         }.filterNotNull()
     }
+
+    fun filterEntriesByKeyInfo(generation: Int, filter: (keyInfo: INFO) -> Boolean): Sequence<Pair<INFO, VALUE>> {
+        return buckets.asSequence().map {
+            val value = it.getVersion(generation)
+            if (value != null && filter(it.info)) {
+                Pair(it.info, value)
+            } else {
+                null
+            }
+        }.filterNotNull()
+    }
 }
 
 /**
@@ -127,6 +138,10 @@ class GenerationMap<KEY : Any, VALUE : Any, KEY_INFO>(val keyInfoDeriver: (key: 
         // downside of iterating the generationList is that the key is not readily available, though
         // the keyInfo is.
         return generationList.getAllInfoValuePairsForGeneration(generation)
+    }
+
+    fun filterEntriesByKeyInfo(generation: Int, filter: (keyInfo: KEY_INFO) -> Boolean): Sequence<Pair<KEY_INFO, VALUE>> {
+        return generationList.filterEntriesByKeyInfo(generation, filter)
     }
 
     private fun findOrCreateBucketIndex(key: KEY): Int {

@@ -21,6 +21,7 @@ import com.facebook.buck.multitenant.collect.GenerationMap
 import com.google.common.collect.ImmutableSet
 import java.io.Closeable
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.withLock
 
@@ -67,7 +68,7 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
      * The key is the path for the directory relative to the Buck root that contains the build file
      * for the corresponding build package.
      */
-    private val buildPackageMap = GenerationMap<Path, Set<String>, Unit>({})
+    private val buildPackageMap = GenerationMap<Path, Set<String>, Path>({ it })
 
     /**
      * Map that captures the value of a build rule at a specific generation, indexed by BuildTarget.
@@ -200,12 +201,36 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
         return pairs.map { buildTargetCache.getByIndex(it.first) }.toList()
     }
 
+    /**
+     * Note this method does not take an [IndexReadLock] because it does its own synchronization
+     * internally.
+     *
+     * @param commit at which to enumerate all build targets under `basePath`
+     * @param basePath under which to look. If the query is for `//...`, then `basePath` would be
+     *     the empty string. If the query is for `//foo/bar/...`, then `basePath` would be
+     *     `foo/bar`.
+     */
     fun getTargetsUnderBasePath(commit: Commit, basePath: String): List<UnconfiguredBuildTarget> {
         if (basePath == "") {
             return getTargets(commit)
         }
 
-        TODO("Implement getTargetsUnderBasePath()")
+        val path = Paths.get(basePath)
+        val entries = rwLock.readLock().withLock {
+            val generation = requireNotNull(commitToGeneration[commit]) {
+                "No generation found for $commit"
+            }
+
+            buildPackageMap.filterEntriesByKeyInfo(generation) { it.startsWith(path) }
+        }
+
+        return entries.flatMap {
+            val basePath = it.first
+            val names = it.second
+            names.map {
+                buildTargetParser("//${pathWithUnixSeparators(basePath)}:${it}")
+            }.asSequence()
+        }.toList()
     }
 
     /**
@@ -275,9 +300,7 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
     }
 
     private fun createBuildTarget(buildFileDirectory: Path, name: String): UnconfiguredBuildTarget {
-        // Same as MorePaths.pathWithUnixSeparators(), but MorePaths has too many dependencies, so
-        // we inline the method here since it is one trivial line.
-        val unixPath = buildFileDirectory.toString().replace('\\', '/')
+        val unixPath = pathWithUnixSeparators(buildFileDirectory)
         return buildTargetParser(String.format("//%s:%s", unixPath, name))
     }
 
@@ -341,6 +364,12 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
         }
 
         return Deltas(buildPackageDeltas, ruleDeltas)
+    }
+
+    private fun pathWithUnixSeparators(path: Path): String {
+        // Same as MorePaths.pathWithUnixSeparators(), but MorePaths has too many dependencies, so
+        // we inline the method here since it is one trivial line.
+        return path.toString().replace('\\', '/')
     }
 
     private fun toInternalChanges(changes: Changes): InternalChanges {

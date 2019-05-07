@@ -32,7 +32,16 @@
             ],
           },
         ],
-      }
+      },
+      {
+        "path": "java/com/facebook/buck",
+        "rules": [
+          {
+            "name": "buck",
+            "buck.type": "java_binary",
+          },
+        ],
+      },
     ]
   }
 ]

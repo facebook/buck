@@ -33,9 +33,47 @@ class MultitenantQueryTest {
                         "//java/com/example:A",
                         "//java/com/example:B",
                         "//java/com/example:C",
-                        "//java/com/example:D"
+                        "//java/com/example:D",
+                        "//java/com/facebook/buck:buck"
                 ),
                 env.evaluateQuery("//...")
+        )
+    }
+
+    @Test
+    fun wildcardQuery() {
+        val env = loadIndex("diamond_dependency_graph.json", 0)
+        assertEquals(
+                asOutput(
+                        "//java/com/example:A",
+                        "//java/com/example:B",
+                        "//java/com/example:C",
+                        "//java/com/example:D",
+                        "//java/com/facebook/buck:buck"
+                ),
+                env.evaluateQuery("//java/...")
+        )
+
+        assertEquals(
+                asOutput(
+                        "//java/com/example:A",
+                        "//java/com/example:B",
+                        "//java/com/example:C",
+                        "//java/com/example:D",
+                        "//java/com/facebook/buck:buck"
+                ),
+                env.evaluateQuery("//java/com/...")
+        )
+
+        assertEquals(
+                "Note how this no longer includes //java/com/facebook/buck:buck",
+                asOutput(
+                        "//java/com/example:A",
+                        "//java/com/example:B",
+                        "//java/com/example:C",
+                        "//java/com/example:D"
+                ),
+                env.evaluateQuery("//java/com/example/...")
         )
     }
 
