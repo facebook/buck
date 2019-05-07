@@ -116,11 +116,6 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
     return getBuildable().getSourceBuildTarget(ruleFinder);
   }
 
-  @Override
-  public boolean isCacheable() {
-    return false;
-  }
-
   /** Creates JS file dev rule implementation */
   public static JsFile<JsFileDev> create(
       BuildTarget buildTarget,
