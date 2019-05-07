@@ -39,8 +39,13 @@ data class FsAgnosticPath private constructor(private val path: String) {
             }
 
             verifyPath(path)
-            val newPath = FsAgnosticPath(path.intern())
-            PATH_CACHE.put(path, newPath)
+            return createWithoutVerification(path)
+        }
+
+        /** Caller is responsible for verifying that the string is well-formed. */
+        private fun createWithoutVerification(verifiedPath: String): FsAgnosticPath {
+            val newPath = FsAgnosticPath(verifiedPath.intern())
+            PATH_CACHE.put(verifiedPath, newPath)
             return newPath
         }
     }
@@ -58,6 +63,19 @@ data class FsAgnosticPath private constructor(private val path: String) {
             }
         } else {
             false
+        }
+    }
+
+    /**
+     * @return a path that is resolved against this path.
+     */
+    fun resolve(other: FsAgnosticPath): FsAgnosticPath {
+        return if (isEmpty()) {
+            other
+        } else if (other.isEmpty()) {
+            this
+        } else {
+            createWithoutVerification("${path}/${other}")
         }
     }
 

@@ -140,4 +140,33 @@ class FsAgnosticPathTest {
         thrown.expectMessage("'foo/../bar' contained illegal path component: '..'")
         FsAgnosticPath.of("foo/../bar")
     }
+
+    @Test
+    fun resolveEmptyAgainstEmpty() {
+        val empty1 = FsAgnosticPath.of("")
+        val empty2 = FsAgnosticPath.of("")
+        assertEquals(FsAgnosticPath.of(""), empty1.resolve(empty2))
+    }
+
+    @Test
+    fun resolveEmptyAgainstNonEmpty() {
+        val empty = FsAgnosticPath.of("")
+        val other = FsAgnosticPath.of("foo/bar")
+        assertEquals(FsAgnosticPath.of("foo/bar"), empty.resolve(other))
+    }
+
+    @Test
+    fun resolveNonEmptyAgainstEmpty() {
+        val other = FsAgnosticPath.of("foo/bar")
+        val empty = FsAgnosticPath.of("")
+        assertEquals(FsAgnosticPath.of("foo/bar"), other.resolve(empty))
+    }
+
+    @Test
+    fun resolveNonEmptyAgainstNonEmpty() {
+        val a = FsAgnosticPath.of("foo/bar")
+        val b = FsAgnosticPath.of("baz/buzz")
+        assertEquals(FsAgnosticPath.of("foo/bar/baz/buzz"), a.resolve(b))
+        assertEquals(FsAgnosticPath.of("baz/buzz/foo/bar"), b.resolve(a))
+    }
 }
