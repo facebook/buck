@@ -236,11 +236,11 @@
 {template .plugins_arguments}
 {call buck.arg}
   {param name: 'plugins_arguments' /}
-  {param default: '{}' /}
+  {{param default : '{}' /}}
   {param desc}
      <p><code>java_plugin</code> rules arguments to be passed to corresponding
-     rules on <code>plugins</plugins>. It maps the plugin name passed as `plugin_name`
-     on the respective rule to a list of arguments.</p>
+     rules on <code>plugins</code>. Each key is represented as the name passed as `plugin_name`
+     on the respective rule to a list of arguments (value).</p>
   {/param}
 {/call}
 {/template}
