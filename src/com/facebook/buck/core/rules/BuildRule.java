@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
@@ -38,10 +39,12 @@ import javax.annotation.Nullable;
     fieldVisibility = JsonAutoDetect.Visibility.NONE,
     getterVisibility = JsonAutoDetect.Visibility.NONE,
     setterVisibility = JsonAutoDetect.Visibility.NONE)
-public interface BuildRule extends Comparable<BuildRule>, AllowsNonAnnotatedFields {
+public interface BuildRule
+    extends Comparable<BuildRule>, AllowsNonAnnotatedFields, BuildEngineAction {
   // We allow non-@AddToRuleKey annotated fields in BuildRule because they are so extensively used
   // for non-action-y things (like Provider-type things).
 
+  @Override
   BuildTarget getBuildTarget();
 
   @JsonProperty("name")
@@ -97,6 +100,7 @@ public interface BuildRule extends Comparable<BuildRule>, AllowsNonAnnotatedFiel
    * representation is up to date. This means that these rules can take advantage of {@link
    * com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey} to prevent rebuilding.
    */
+  @Override
   @JsonIgnore
   boolean isCacheable();
 
@@ -132,6 +136,7 @@ public interface BuildRule extends Comparable<BuildRule>, AllowsNonAnnotatedFiel
    *     on the machine that initiated a build instead of one of the remote workers taking part in
    *     the distributed build.
    */
+  @Override
   default boolean shouldBuildLocally() {
     return false;
   }
