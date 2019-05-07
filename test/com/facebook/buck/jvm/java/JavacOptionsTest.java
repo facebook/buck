@@ -132,11 +132,13 @@ public class JavacOptionsTest {
     JavacPluginParams params =
         JavacPluginParams.builder().addPluginProperties(resolvedProps).build();
 
-    JavacOptions options = createStandardBuilder()
-        .setStandardJavacPluginParams(params)
-        .putJavacPluginArguments("ThePlugin", ImmutableList.of("param1", "param2", "param3"))
-        .putJavacPluginArguments("ThePluginOther", ImmutableList.of("param4", "param5", "param6"))
-        .build();
+    JavacOptions options =
+        createStandardBuilder()
+            .setStandardJavacPluginParams(params)
+            .putJavacPluginArguments("ThePlugin", ImmutableList.of("param1", "param2", "param3"))
+            .putJavacPluginArguments(
+                "ThePluginOther", ImmutableList.of("param4", "param5", "param6"))
+            .build();
 
     assertOptionsHasFlag(options, "Xplugin:ThePlugin param1 param2 param3");
     // Testing there is no duplicated info

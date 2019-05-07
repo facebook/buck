@@ -236,10 +236,9 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
         // Javac plugins should be declared as:
         // '-Xplugin:<pluginName> <arg1> <arg2> <arg3> ...'
         String pluginName = properties.getProcessorNames().first();
-        String pluginArguments = getJavacPluginArguments()
-            .getOrDefault(pluginName, ImmutableList.of())
-            .stream()
-            .reduce("", (s, s2) -> s + " " + s2);
+        String pluginArguments =
+            getJavacPluginArguments().getOrDefault(pluginName, ImmutableList.of()).stream()
+                .reduce("", (s, s2) -> s + " " + s2);
         optionsConsumer.addFlag("Xplugin:" + pluginName + pluginArguments);
       }
 
