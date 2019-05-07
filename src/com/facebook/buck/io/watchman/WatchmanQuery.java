@@ -16,14 +16,12 @@
 
 package com.facebook.buck.io.watchman;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractWatchmanQuery {
+@BuckStyleValue
+abstract class WatchmanQuery {
 
   abstract String getQueryPath();
 

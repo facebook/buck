@@ -58,13 +58,14 @@ import org.junit.Test;
 public class WatchmanWatcherTest {
 
   private static final Path FAKE_ROOT = Paths.get("/fake/root").toAbsolutePath();
-  private static final WatchmanQuery FAKE_QUERY = WatchmanQuery.of("/fake/root", ImmutableMap.of());
+  private static final WatchmanQuery FAKE_QUERY =
+      new ImmutableWatchmanQuery("/fake/root", ImmutableMap.of());
   private static final List<Object> FAKE_UUID_QUERY = FAKE_QUERY.toList("n:buckduuid");
   private static final List<Object> FAKE_CLOCK_QUERY = FAKE_QUERY.toList("c:0:0");
 
   private static final Path FAKE_SECONDARY_ROOT = Paths.get("/fake/secondary").toAbsolutePath();
   private static final WatchmanQuery FAKE_SECONDARY_QUERY =
-      WatchmanQuery.of("/fake/SECONDARY", ImmutableMap.of());
+      new ImmutableWatchmanQuery("/fake/SECONDARY", ImmutableMap.of());
 
   private EventBus eventBus;
   private EventBuffer eventBuffer;
@@ -390,20 +391,22 @@ public class WatchmanWatcherTest {
                 RecursiveFileMatcher.of(Paths.get("bar/baz"))),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
-        WatchmanQuery.of(
+        new ImmutableWatchmanQuery(
             "/path/to/repo",
             ImmutableMap.of(
                 "expression",
+                ImmutableList.of(
+                    "not",
                     ImmutableList.of(
-                        "not",
+                        "anyof",
+                        ImmutableList.of("type", "d"),
+                        ImmutableList.of("dirname", "foo"),
                         ImmutableList.of(
-                            "anyof",
-                            ImmutableList.of("type", "d"),
-                            ImmutableList.of("dirname", "foo"),
-                            ImmutableList.of(
-                                "dirname", MorePaths.pathWithPlatformSeparators("bar/baz")))),
-                "empty_on_fresh_instance", true,
-                "fields", ImmutableList.of("name", "exists", "new"))),
+                            "dirname", MorePaths.pathWithPlatformSeparators("bar/baz")))),
+                "empty_on_fresh_instance",
+                true,
+                "fields",
+                ImmutableList.of("name", "exists", "new"))),
         query);
   }
 
@@ -417,22 +420,24 @@ public class WatchmanWatcherTest {
                 RecursiveFileMatcher.of(Paths.get("bar/baz"))),
             ImmutableSet.of());
     assertEquals(
-        WatchmanQuery.of(
+        new ImmutableWatchmanQuery(
             "/path/to/repo",
             ImmutableMap.of(
                 "expression",
+                ImmutableList.of(
+                    "not",
                     ImmutableList.of(
-                        "not",
+                        "anyof",
+                        ImmutableList.of("type", "d"),
+                        ImmutableList.of("match", "foo" + File.separator + "**", "wholename"),
                         ImmutableList.of(
-                            "anyof",
-                            ImmutableList.of("type", "d"),
-                            ImmutableList.of("match", "foo" + File.separator + "**", "wholename"),
-                            ImmutableList.of(
-                                "match",
-                                "bar" + File.separator + "baz" + File.separator + "**",
-                                "wholename"))),
-                "empty_on_fresh_instance", true,
-                "fields", ImmutableList.of("name", "exists", "new"))),
+                            "match",
+                            "bar" + File.separator + "baz" + File.separator + "**",
+                            "wholename"))),
+                "empty_on_fresh_instance",
+                true,
+                "fields",
+                ImmutableList.of("name", "exists", "new"))),
         query);
   }
 
@@ -447,20 +452,22 @@ public class WatchmanWatcherTest {
                 RecursiveFileMatcher.of(Paths.get("bar/baz"))),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
-        WatchmanQuery.of(
+        new ImmutableWatchmanQuery(
             watchRoot,
             ImmutableMap.of(
                 "expression",
+                ImmutableList.of(
+                    "not",
                     ImmutableList.of(
-                        "not",
+                        "anyof",
+                        ImmutableList.of("type", "d"),
+                        ImmutableList.of("dirname", "foo"),
                         ImmutableList.of(
-                            "anyof",
-                            ImmutableList.of("type", "d"),
-                            ImmutableList.of("dirname", "foo"),
-                            ImmutableList.of(
-                                "dirname", MorePaths.pathWithPlatformSeparators("bar/baz")))),
-                "empty_on_fresh_instance", true,
-                "fields", ImmutableList.of("name", "exists", "new"))),
+                            "dirname", MorePaths.pathWithPlatformSeparators("bar/baz")))),
+                "empty_on_fresh_instance",
+                true,
+                "fields",
+                ImmutableList.of("name", "exists", "new"))),
         query);
   }
 
@@ -472,22 +479,24 @@ public class WatchmanWatcherTest {
             ImmutableSet.of(GlobPatternMatcher.of("*.pbxproj")),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
-        WatchmanQuery.of(
+        new ImmutableWatchmanQuery(
             "/path/to/repo",
             ImmutableMap.of(
                 "expression",
+                ImmutableList.of(
+                    "not",
                     ImmutableList.of(
-                        "not",
+                        "anyof",
+                        ImmutableList.of("type", "d"),
                         ImmutableList.of(
-                            "anyof",
-                            ImmutableList.of("type", "d"),
-                            ImmutableList.of(
-                                "match",
-                                "*.pbxproj",
-                                "wholename",
-                                ImmutableMap.<String, Object>of("includedotfiles", true)))),
-                "empty_on_fresh_instance", true,
-                "fields", ImmutableList.of("name", "exists", "new"))),
+                            "match",
+                            "*.pbxproj",
+                            "wholename",
+                            ImmutableMap.<String, Object>of("includedotfiles", true)))),
+                "empty_on_fresh_instance",
+                true,
+                "fields",
+                ImmutableList.of("name", "exists", "new"))),
         query);
   }
 

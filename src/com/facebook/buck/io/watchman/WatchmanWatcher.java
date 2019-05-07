@@ -172,7 +172,7 @@ public class WatchmanWatcher {
     if (watchPrefix.isPresent()) {
       sinceParams.put("relative_root", watchPrefix.get());
     }
-    return WatchmanQuery.of(watchRoot, sinceParams);
+    return new ImmutableWatchmanQuery(watchRoot, sinceParams);
   }
 
   @VisibleForTesting
