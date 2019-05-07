@@ -117,6 +117,35 @@ public class JavacOptionsTest {
   }
 
   @Test
+  public void shouldAddAllPluginsParametersOnAddedJavacPlugins() {
+    JavacPluginProperties props =
+        JavacPluginProperties.builder()
+            .setType(Type.JAVAC_PLUGIN)
+            .setCanReuseClassLoader(true)
+            .setDoesNotAffectAbi(true)
+            .setSupportsAbiGenerationFromSource(true)
+            .addProcessorNames("ThePlugin")
+            .build();
+
+    ResolvedJavacPluginProperties resolvedProps = new ResolvedJavacPluginProperties(props);
+
+    JavacPluginParams params =
+        JavacPluginParams.builder().addPluginProperties(resolvedProps).build();
+
+    JavacOptions options = createStandardBuilder()
+        .setStandardJavacPluginParams(params)
+        .putJavacPluginArguments("ThePlugin", ImmutableList.of("param1", "param2", "param3"))
+        .putJavacPluginArguments("ThePluginOther", ImmutableList.of("param4", "param5", "param6"))
+        .build();
+
+    assertOptionsHasFlag(options, "Xplugin:ThePlugin param1 param2 param3");
+    // Testing there is no duplicated info
+    assertOptionsHasNoFlag(options, "Xplugin:ThePlugin");
+    // Parameters from other plugins wont be added if plugin itself wasnt added
+    assertOptionsHasNoFlag(options, "Xplugin:ThePluginOther param4 param5 param6");
+  }
+
+  @Test
   public void shouldNotAddJavacPluginsIfNoSpecified() {
     JavacOptions options = createStandardBuilder().build();
     assertOptionsHasFlagMatching(options, not(hasItem(containsString("Xplugin"))));
