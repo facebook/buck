@@ -177,9 +177,9 @@ public class CxxLibraryDescription
                     args.getLangPreprocessorFlags(),
                     args.getLangPlatformPreprocessorFlags(),
                     cxxPlatform),
-                f ->
-                    CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                        target, cellRoots, graphBuilder, cxxPlatform, f))),
+                CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                        target, cellRoots, graphBuilder, cxxPlatform)
+                    ::convert)),
         headerSymlinkTrees,
         ImmutableSet.of(),
         RichStream.from(

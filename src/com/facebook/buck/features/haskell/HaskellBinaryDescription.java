@@ -241,9 +241,9 @@ public class HaskellBinaryDescription
         ImmutableList.copyOf(
             Iterables.transform(
                 args.getLinkerFlags(),
-                f ->
-                    CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                        buildTarget, cellRoots, graphBuilder, platform.getCxxPlatform(), f))));
+                CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                        buildTarget, cellRoots, graphBuilder, platform.getCxxPlatform())
+                    ::convert)));
 
     // Generate the compile rule and add its objects to the link.
     HaskellCompileRule compileRule =

@@ -121,9 +121,9 @@ public class CxxLibraryMetadataFactory {
               cxxPreprocessorInputBuilder,
               args,
               cxxPlatform,
-              f ->
-                  CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                      buildTarget, cellRoots, graphBuilder, cxxPlatform, f));
+              CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                      buildTarget, cellRoots, graphBuilder, cxxPlatform)
+                  ::convert);
 
           if (visibility.getValue() == HeaderVisibility.PRIVATE) {
             if (!args.getHeaders().isEmpty()) {

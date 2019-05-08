@@ -292,9 +292,9 @@ public final class CxxInferEnhancer {
                     args.getLangPreprocessorFlags(),
                     args.getLangPlatformPreprocessorFlags(),
                     cxxPlatform),
-                f ->
-                    CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                        target, cellRoots, graphBuilder, cxxPlatform, f))),
+                CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                        target, cellRoots, graphBuilder, cxxPlatform)
+                    ::convert)),
         ImmutableList.of(headerSymlinkTree),
         args.getFrameworks(),
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
@@ -382,9 +382,9 @@ public final class CxxInferEnhancer {
                     args.getLangCompilerFlags(),
                     args.getLangPlatformCompilerFlags(),
                     cxxPlatform),
-                f ->
-                    CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                        target, cellRoots, graphBuilder, cxxPlatform, f)),
+                CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                        target, cellRoots, graphBuilder, cxxPlatform)
+                    ::convert),
             args.getPrefixHeader(),
             args.getPrecompiledHeader(),
             PicType.PDC);

@@ -56,6 +56,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.VersionPropagator;
@@ -114,6 +115,9 @@ public class CxxLuaExtensionDescription
       CxxLuaExtensionDescriptionArg args) {
 
     CxxPlatform cxxPlatform = luaPlatform.getCxxPlatform();
+    StringWithMacrosConverter macrosConverter =
+        CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+            buildTarget, cellRoots, graphBuilder, cxxPlatform);
 
     // Extract all C/C++ sources from the constructor arg.
     ImmutableMap<String, CxxSource> srcs =
@@ -154,9 +158,7 @@ public class CxxLuaExtensionDescription
                                 args.getLangPreprocessorFlags(),
                                 args.getLangPlatformPreprocessorFlags(),
                                 cxxPlatform),
-                            f ->
-                                CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                                    buildTarget, cellRoots, graphBuilder, cxxPlatform, f))),
+                            macrosConverter::convert)),
                     ImmutableList.of(headerSymlinkTree),
                     ImmutableSet.of(),
                     CxxPreprocessables.getTransitiveCxxPreprocessorInput(
@@ -176,9 +178,7 @@ public class CxxLuaExtensionDescription
                     args.getLangCompilerFlags(),
                     args.getLangPlatformCompilerFlags(),
                     cxxPlatform),
-                f ->
-                    CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                        buildTarget, cellRoots, graphBuilder, cxxPlatform, f)));
+                macrosConverter::convert));
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> picObjects =
         CxxSourceRuleFactory.of(
                 projectFilesystem,
@@ -198,10 +198,7 @@ public class CxxLuaExtensionDescription
     CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
             args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)
         .stream()
-        .map(
-            f ->
-                CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                    buildTarget, cellRoots, graphBuilder, cxxPlatform, f))
+        .map(macrosConverter::convert)
         .forEach(argsBuilder::add);
 
     // Add object files into the args.

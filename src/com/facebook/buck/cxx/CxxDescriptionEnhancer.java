@@ -986,6 +986,9 @@ public class CxxDescriptionEnhancer {
       Optional<SourcePath> precompiledHeader,
       ImmutableSortedSet<SourcePath> rawHeaders,
       ImmutableSortedSet<String> includeDirectories) {
+    StringWithMacrosConverter macrosConverter =
+        getStringWithMacrosArgsConverter(target, cellRoots, graphBuilder, cxxPlatform);
+
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
     boolean shouldCreatePrivateHeadersSymlinks = cxxBuckConfig.getPrivateHeadersSymlinksEnabled();
@@ -1012,7 +1015,7 @@ public class CxxDescriptionEnhancer {
                         langPreprocessorFlags,
                         langPlatformPreprocessorFlags,
                         cxxPlatform),
-                    f -> toStringWithMacrosArgs(target, cellRoots, graphBuilder, cxxPlatform, f))),
+                    macrosConverter::convert)),
             ImmutableList.of(headerSymlinkTree),
             frameworks,
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
@@ -1035,7 +1038,7 @@ public class CxxDescriptionEnhancer {
                 langCompilerFlags,
                 langPlatformCompilerFlags,
                 cxxPlatform),
-            f -> toStringWithMacrosArgs(target, cellRoots, graphBuilder, cxxPlatform, f)));
+            macrosConverter::convert));
     if (linkOptions.getThinLto()) {
       allCompilerFlagsBuilder.putAll(CxxFlags.toLanguageFlags(StringArg.from("-flto=thin")));
     } else if (linkOptions.getFatLto()) {
@@ -1517,21 +1520,19 @@ public class CxxDescriptionEnhancer {
     return cxxSources.build();
   }
 
-  public static Arg toStringWithMacrosArgs(
+  /** @return a {@link StringWithMacrosConverter} to use when converting C/C++ flags. */
+  public static StringWithMacrosConverter getStringWithMacrosArgsConverter(
       BuildTarget target,
       CellPathResolver cellPathResolver,
       ActionGraphBuilder graphBuilder,
-      CxxPlatform cxxPlatform,
-      StringWithMacros flag) {
-    StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(target)
-            .setCellPathResolver(cellPathResolver)
-            .setActionGraphBuilder(graphBuilder)
-            .addExpanders(new CxxLocationMacroExpander(cxxPlatform), new OutputMacroExpander())
-            .setSanitizer(getStringWithMacrosArgSanitizer(cxxPlatform))
-            .build();
-    return macrosConverter.convert(flag);
+      CxxPlatform cxxPlatform) {
+    return StringWithMacrosConverter.builder()
+        .setBuildTarget(target)
+        .setCellPathResolver(cellPathResolver)
+        .setActionGraphBuilder(graphBuilder)
+        .addExpanders(new CxxLocationMacroExpander(cxxPlatform), new OutputMacroExpander())
+        .setSanitizer(getStringWithMacrosArgSanitizer(cxxPlatform))
+        .build();
   }
 
   private static Function<String, String> getStringWithMacrosArgSanitizer(CxxPlatform platform) {

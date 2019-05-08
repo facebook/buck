@@ -51,6 +51,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -278,9 +279,9 @@ public class CxxLibraryFactory {
                   args.getExportedLinkerFlags(), args.getExportedPlatformLinkerFlags(), input);
           return RichStream.from(flags)
               .map(
-                  f ->
-                      CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                          buildTarget, cellRoots, graphBuilderInner, input, f))
+                  CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                          buildTarget, cellRoots, graphBuilderInner, input)
+                      ::convert)
               .concat(RichStream.from(delegateExportedLinkerFlags))
               .toImmutableList();
         },
@@ -300,9 +301,9 @@ public class CxxLibraryFactory {
                   input);
           return RichStream.from(flags)
               .map(
-                  f ->
-                      CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                          buildTarget, cellRoots, graphBuilderInner, input, f))
+                  CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                          buildTarget, cellRoots, graphBuilderInner, input)
+                      ::convert)
               .concat(RichStream.from(delegatePostExportedLinkerFlags))
               .toImmutableList();
         },
@@ -446,9 +447,9 @@ public class CxxLibraryFactory {
                     args.getLangCompilerFlags(),
                     args.getLangPlatformCompilerFlags(),
                     cxxPlatform),
-                f ->
-                    CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                        buildTarget, cellRoots, graphBuilder, cxxPlatform, f)));
+                CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                        buildTarget, cellRoots, graphBuilder, cxxPlatform)
+                    ::convert));
     return CxxSourceRuleFactory.of(
             projectFilesystem,
             buildTarget,
@@ -494,6 +495,10 @@ public class CxxLibraryFactory {
           transitiveCxxPreprocessorInputFunction,
       Optional<CxxLibraryDescriptionDelegate> delegate) {
 
+    StringWithMacrosConverter macrosConverter =
+        CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+            buildTarget, cellRoots, graphBuilder, cxxPlatform);
+
     // Create rules for compiling the PIC object files.
     ImmutableList<SourcePath> objects =
         requireObjects(
@@ -513,25 +518,14 @@ public class CxxLibraryFactory {
         .addAllArgs(
             RichStream.from(linkerFlags)
                 .concat(exportedLinkerFlags.stream())
-                .map(
-                    f ->
-                        CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                            buildTarget, cellRoots, graphBuilder, cxxPlatform, f))
+                .map(macrosConverter::convert)
                 .toImmutableList())
         .addAllArgs(SourcePathArg.from(objects))
         .addAllArgs(
-            RichStream.from(postLinkerFlags)
-                .map(
-                    f ->
-                        CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                            buildTarget, cellRoots, graphBuilder, cxxPlatform, f))
-                .toImmutableList())
+            RichStream.from(postLinkerFlags).map(macrosConverter::convert).toImmutableList())
         .addAllArgs(
             RichStream.from(postExportedLinkerFlags.stream())
-                .map(
-                    f ->
-                        CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                            buildTarget, cellRoots, graphBuilder, cxxPlatform, f))
+                .map(macrosConverter::convert)
                 .toImmutableList())
         .setFrameworks(frameworks)
         .setLibraries(libraries)
@@ -584,11 +578,14 @@ public class CxxLibraryFactory {
             deps,
             transitiveCxxPreprocessorInputFunction,
             delegate);
-
     // Setup the rules to link the shared library.
     BuildTarget sharedTarget =
         CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
             buildTargetMaybeWithLinkerMapMode, cxxPlatform.getFlavor(), linkType);
+
+    StringWithMacrosConverter macrosConverter =
+        CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+            sharedTarget, cellRoots, graphBuilder, cxxPlatform);
 
     String sharedLibrarySoname =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
@@ -632,20 +629,10 @@ public class CxxLibraryFactory {
         ImmutableSet.of(),
         NativeLinkableInput.builder()
             .addAllArgs(
-                RichStream.from(linkerFlags)
-                    .map(
-                        f ->
-                            CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                                sharedTarget, cellRoots, graphBuilder, cxxPlatform, f))
-                    .toImmutableList())
+                RichStream.from(linkerFlags).map(macrosConverter::convert).toImmutableList())
             .addAllArgs(SourcePathArg.from(objects))
             .addAllArgs(
-                RichStream.from(postLinkerFlags)
-                    .map(
-                        f ->
-                            CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                                sharedTarget, cellRoots, graphBuilder, cxxPlatform, f))
-                    .toImmutableList())
+                RichStream.from(postLinkerFlags).map(macrosConverter::convert).toImmutableList())
             .setFrameworks(frameworks)
             .setLibraries(libraries)
             .build(),

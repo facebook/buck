@@ -294,9 +294,9 @@ public class SwiftLibraryDescription
           args.getVersion(),
           RichStream.from(args.getCompilerFlags())
               .map(
-                  f ->
-                      CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                          buildTargetCopy, cellRoots, graphBuilder, cxxPlatform, f))
+                  CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                          buildTargetCopy, cellRoots, graphBuilder, cxxPlatform)
+                      ::convert)
               .toImmutableList(),
           args.getEnableObjcInterop(),
           args.getBridgingHeader(),
@@ -450,9 +450,9 @@ public class SwiftLibraryDescription
         args.getVersion(),
         RichStream.from(args.getCompilerFlags())
             .map(
-                f ->
-                    CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                        buildTarget, cellRoots, graphBuilder, cxxPlatform, f))
+                CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                        buildTarget, cellRoots, graphBuilder, cxxPlatform)
+                    ::convert)
             .toImmutableList(),
         args.getEnableObjcInterop(),
         args.getBridgingHeader(),

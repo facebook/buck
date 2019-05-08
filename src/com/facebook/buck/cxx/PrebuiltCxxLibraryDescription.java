@@ -501,9 +501,9 @@ public class PrebuiltCxxLibraryDescription
                     exportedLangPreprocessorFlags,
                     exportedLangPlatformPreprocessorFlags,
                     cxxPlatform),
-                flag ->
-                    CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                        getBuildTarget(), cellRoots, graphBuilder, cxxPlatform, flag)));
+                CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                        getBuildTarget(), cellRoots, graphBuilder, cxxPlatform)
+                    ::convert));
       }
 
       @Override
@@ -869,9 +869,9 @@ public class PrebuiltCxxLibraryDescription
             args.getExportedLinkerFlags(), args.getExportedPlatformLinkerFlags(), cxxPlatform)
         .stream()
         .map(
-            s ->
-                CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                    buildTarget, cellRoots, graphBuilder, cxxPlatform, s))
+            CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                    buildTarget, cellRoots, graphBuilder, cxxPlatform)
+                ::convert)
         .collect(ImmutableList.toImmutableList());
   }
 

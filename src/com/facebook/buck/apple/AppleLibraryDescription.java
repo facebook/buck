@@ -932,9 +932,9 @@ public class AppleLibraryDescription
         cxxPreprocessorInputBuilder,
         args,
         cxxPlatform,
-        f ->
-            CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                buildTarget, cellRoots, graphBuilder, cxxPlatform, f));
+        CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                buildTarget, cellRoots, graphBuilder, cxxPlatform)
+            ::convert);
 
     HeaderSymlinkTree symlinkTree =
         (HeaderSymlinkTree)

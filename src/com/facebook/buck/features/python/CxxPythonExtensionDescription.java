@@ -65,6 +65,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.VersionPropagator;
@@ -160,6 +161,10 @@ public class CxxPythonExtensionDescription
       CxxPythonExtensionDescriptionArg args,
       ImmutableSet<BuildRule> deps) {
 
+    StringWithMacrosConverter macrosConverter =
+        CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+            target, cellRoots, graphBuilder, cxxPlatform);
+
     // Extract all C/C++ sources from the constructor arg.
     ImmutableMap<String, CxxSource> srcs =
         CxxDescriptionEnhancer.parseCxxSources(target, graphBuilder, cxxPlatform, args);
@@ -192,9 +197,7 @@ public class CxxPythonExtensionDescription
                         args.getLangPreprocessorFlags(),
                         args.getLangPlatformPreprocessorFlags(),
                         cxxPlatform),
-                    f ->
-                        CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                            target, cellRoots, graphBuilder, cxxPlatform, f))),
+                    macrosConverter::convert)),
             ImmutableList.of(headerSymlinkTree),
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder, deps),
@@ -212,9 +215,7 @@ public class CxxPythonExtensionDescription
                     args.getLangCompilerFlags(),
                     args.getLangPlatformCompilerFlags(),
                     cxxPlatform),
-                f ->
-                    CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                        target, cellRoots, graphBuilder, cxxPlatform, f)));
+                macrosConverter::convert));
     CxxSourceRuleFactory factory =
         CxxSourceRuleFactory.of(
             projectFilesystem,
@@ -245,9 +246,9 @@ public class CxxPythonExtensionDescription
             args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)
         .stream()
         .map(
-            f ->
-                CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                    target, cellRoots, graphBuilder, cxxPlatform, f))
+            CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                    target, cellRoots, graphBuilder, cxxPlatform)
+                ::convert)
         .forEach(argsBuilder::add);
 
     // Embed a origin-relative library path into the binary so it can find the shared libraries.
