@@ -21,7 +21,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 
 /**
  * Something (usually a {@link BuildRule}) that can be included in an Android package
- * (android_binary or (hopefully soon) aar).
+ * (android_binary, cxx_library or android_prebuilt_aar).
  */
 public interface AndroidPackageable {
 
