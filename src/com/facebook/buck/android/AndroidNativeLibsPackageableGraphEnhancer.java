@@ -34,7 +34,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -108,9 +108,9 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     this.apkModuleGraph = apkModuleGraph;
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractAndroidNativeLibsGraphEnhancementResult {
+  @Value.Immutable(prehash = false, builder = true, copy = false)
+  @BuckStyleValue
+  interface AndroidNativeLibsGraphEnhancementResult {
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> getCopyNativeLibraries();
 
     Optional<ImmutableSortedSet<SourcePath>> getUnstrippedLibraries();
@@ -159,8 +159,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   public AndroidNativeLibsGraphEnhancementResult enhance(
       AndroidPackageableCollection packageableCollection) {
     @SuppressWarnings("PMD.PrematureDeclaration")
-    AndroidNativeLibsGraphEnhancementResult.Builder resultBuilder =
-        AndroidNativeLibsGraphEnhancementResult.builder();
+    ImmutableAndroidNativeLibsGraphEnhancementResult.Builder resultBuilder =
+        ImmutableAndroidNativeLibsGraphEnhancementResult.builder();
 
     ImmutableMultimap<APKModule, NativeLinkable> nativeLinkables =
         packageableCollection.getNativeLinkables();
