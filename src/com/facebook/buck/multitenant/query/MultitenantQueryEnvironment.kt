@@ -18,6 +18,7 @@ package com.facebook.buck.multitenant.query
 import com.facebook.buck.core.exceptions.BuildTargetParseException
 import com.facebook.buck.core.model.QueryTarget
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternData
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternData.Kind
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternDataParser
@@ -25,6 +26,7 @@ import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.Commit
 import com.facebook.buck.multitenant.service.Index
 import com.facebook.buck.query.DepsFunction
+import com.facebook.buck.query.InputsFunction
 import com.facebook.buck.query.KindFunction
 import com.facebook.buck.query.NoopQueryEvaluator
 import com.facebook.buck.query.QueryEnvironment
@@ -40,6 +42,7 @@ import java.util.function.Supplier
 val QUERY_FUNCTIONS: List<QueryEnvironment.QueryFunction<out QueryTarget, UnconfiguredBuildTarget>> = listOf(
         DepsFunction<UnconfiguredBuildTarget>(),
         DepsFunction.FirstOrderDepsFunction<UnconfiguredBuildTarget>(),
+        InputsFunction<UnconfiguredBuildTarget>(),
         KindFunction<UnconfiguredBuildTarget>())
 
 /**
@@ -78,8 +81,9 @@ class MultitenantQueryEnvironment(private val index: Index, private val commit: 
         TODO("getReverseDeps() not implemented")
     }
 
-    override fun getInputs(target: UnconfiguredBuildTarget?): MutableSet<QueryFileTarget> {
-        TODO("getInputs() not implemented")
+    override fun getInputs(target: UnconfiguredBuildTarget): Set<QueryFileTarget> {
+        val targetNode = requireNotNull(index.getTargetNode(commit, target)).targetNode
+        return extractInputs(targetNode)
     }
 
     override fun getTransitiveClosure(targets: MutableSet<UnconfiguredBuildTarget>?): MutableSet<UnconfiguredBuildTarget> {
@@ -147,4 +151,42 @@ private class TargetEvaluator(private val index: Index, private val commit: Comm
             }
         }
     }
+}
+
+/**
+ * HACK! List of build rule attributes that, if present, is known to correspond to a list of
+ * SourcePaths. As noted in extractInputs(), this should go away once we move to using
+ * RawTargetNodeToTargetNodeFactory.
+ */
+val SRC_LIST_ATTRIBUTES = listOf("srcs", "exported_headers")
+
+private fun extractInputs(targetNode: RawTargetNode): Set<QueryFileTarget> {
+    // Ideally, we would use RawTargetNodeToTargetNodeFactory and invoke its getInputs() method.
+    // Currently, that is a difficult thing to do because it would pull in far more dependencies
+    // than we can manage cleanly. For now, we use some heuristics so we can at least provide some
+    // value.
+    val basePath = toBasePath(targetNode.buildTarget)
+    val attrs = targetNode.attributes
+    val inputs: MutableSet<QueryFileTarget> = mutableSetOf()
+    for (attrName in SRC_LIST_ATTRIBUTES) {
+        val srcs = attrs[attrName] as? List<*> ?: continue
+        for (src in srcs) {
+            if (src !is String) {
+                continue
+            }
+
+            // If "//" appears at the beginning, it is an absolute build target. If it appears in
+            // the middle, then it is an absolute build target within a cell.
+            // TODO(buck_team): Replace the heuristic below with proper target parser logic.
+            if (!src.startsWith(":") && !src.contains("//")) {
+                val fullPath = basePath.resolve(FsAgnosticPath.of(src))
+                inputs.add(QueryFileTarget.of(FsAgnosticSourcePath(fullPath)))
+            }
+        }
+    }
+    return inputs
+}
+
+private fun toBasePath(target: UnconfiguredBuildTarget): FsAgnosticPath {
+    return FsAgnosticPath.of(target.baseName.substring(2))
 }

@@ -17,9 +17,11 @@
 package com.facebook.buck.multitenant.query
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.importer.parseOrdinaryBuildTarget
 import com.facebook.buck.multitenant.importer.populateIndexFromStream
 import com.facebook.buck.multitenant.service.Index
+import com.facebook.buck.query.QueryFileTarget
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -142,10 +144,27 @@ class MultitenantQueryTest {
                         "//java/com/facebook/buck:buck"),
                 env.evaluateQuery("kind('java_.*', //...)"))
     }
+
+    @Test
+    fun inputsQuery() {
+        val env = loadIndex("diamond_dependency_graph.json", 0)
+        assertEquals(
+                asFileTargets(
+                        "java/com/example/A.java",
+                        "java/com/example/B.java",
+                        "java/com/example/D.java",
+                        "java/com/example/vector.cpp",
+                        "java/com/example/vector.h"),
+                env.evaluateQuery("inputs(//java/com/example/...)"))
+    }
 }
 
 private fun asOutput(vararg target: String): Set<UnconfiguredBuildTarget> {
     return target.map(::parseOrdinaryBuildTarget).toSet()
+}
+
+private fun asFileTargets(vararg path: String): Set<QueryFileTarget> {
+    return path.map { QueryFileTarget.of(FsAgnosticSourcePath(FsAgnosticPath.of(it))) }.toSet()
 }
 
 private fun loadIndex(resource: String, commitIndex: Int): MultitenantQueryEnvironment {

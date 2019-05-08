@@ -258,7 +258,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
               new KindFunction<>(),
               new FilterFunction<QueryBuildTarget>(),
               new LabelsFunction(),
-              new InputsFunction(),
+              new InputsFunction<>(),
               new RdepsFunction());
 
   @Override

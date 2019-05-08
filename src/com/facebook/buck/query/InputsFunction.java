@@ -16,6 +16,7 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
@@ -27,7 +28,7 @@ import com.google.common.collect.ImmutableSet;
  *
  * <pre>expr ::= INPUTS '(' expr ')'</pre>
  */
-public class InputsFunction implements QueryFunction<QueryFileTarget, QueryBuildTarget> {
+public class InputsFunction<T extends QueryTarget> implements QueryFunction<QueryFileTarget, T> {
 
   @Override
   public String getName() {
@@ -47,16 +48,14 @@ public class InputsFunction implements QueryFunction<QueryFileTarget, QueryBuild
   /** Evaluates to the direct inputs of the argument. */
   @Override
   public ImmutableSet<QueryFileTarget> eval(
-      QueryEvaluator<QueryBuildTarget> evaluator,
-      QueryEnvironment<QueryBuildTarget> env,
-      ImmutableList<Argument<QueryBuildTarget>> args)
+      QueryEvaluator<T> evaluator, QueryEnvironment<T> env, ImmutableList<Argument<T>> args)
       throws QueryException {
-    ImmutableSet<QueryBuildTarget> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
+    ImmutableSet<T> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
     env.buildTransitiveClosure(argumentSet, 0);
 
     ImmutableSet.Builder<QueryFileTarget> result = new ImmutableSet.Builder<>();
 
-    for (QueryBuildTarget target : argumentSet) {
+    for (T target : argumentSet) {
       result.addAll(env.getInputs(target));
     }
     return result.build();

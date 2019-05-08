@@ -7,10 +7,12 @@
         "rules": [
           {
             "name": "A",
+            "srcs": ["A.java"],
             "buck.type": "java_library",
           },
           {
             "name": "B",
+            "srcs": ["B.java"],
             "buck.type": "java_library",
             "deps": [
               "//java/com/example:A"
@@ -18,13 +20,23 @@
           },
           {
             "name": "C",
+            "srcs": [
+              ":D",
+              "//java/com/facebook/buck:buck",
+              "vector.cpp",
+              "some_cell//foo/build:rule",
+            ],
             "buck.type": "cxx_library",
+            "exported_headers": [
+              "vector.h",
+            ],
             "deps": [
               "//java/com/example:A",
             ],
           },
           {
             "name": "D",
+            "srcs": ["D.java"],
             "buck.type": "java_library",
             "deps": [
               "//java/com/example:B",
