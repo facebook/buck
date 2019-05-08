@@ -16,6 +16,7 @@
 package com.facebook.buck.core.description;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 
@@ -54,5 +55,6 @@ public interface RuleDescription<T> extends Description<T> {
    *     com.google.devtools.build.lib.packages.Provider} and the corresponding {@link
    *     com.google.devtools.build.lib.packages.InfoInterface} to be propagated by this rule.
    */
-  ProviderInfoCollection ruleImpl(RuleAnalysisContext context, BuildTarget target, T args);
+  ProviderInfoCollection ruleImpl(RuleAnalysisContext context, BuildTarget target, T args)
+      throws ActionCreationException;
 }

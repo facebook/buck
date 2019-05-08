@@ -23,6 +23,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
@@ -57,7 +58,8 @@ public class RuleAnalysisComputation
   }
 
   @Override
-  public RuleAnalysisResult transform(RuleAnalysisKey key, ComputationEnvironment env) {
+  public RuleAnalysisResult transform(RuleAnalysisKey key, ComputationEnvironment env)
+      throws ActionCreationException {
     return transformImpl(targetGraph.get(key.getBuildTarget()), env);
   }
 
@@ -74,8 +76,8 @@ public class RuleAnalysisComputation
    *
    * @return an {@link RuleAnalysisResult} containing information about the rule analyzed
    */
-  private <T> RuleAnalysisResult transformImpl(
-      TargetNode<T> targetNode, ComputationEnvironment env) {
+  private <T> RuleAnalysisResult transformImpl(TargetNode<T> targetNode, ComputationEnvironment env)
+      throws ActionCreationException {
     BaseDescription<T> baseDescription = targetNode.getDescription();
     Verify.verify(baseDescription instanceof RuleDescription);
 

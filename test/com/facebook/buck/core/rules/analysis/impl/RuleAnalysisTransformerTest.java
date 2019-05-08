@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
@@ -152,7 +153,7 @@ public class RuleAnalysisTransformerTest {
   }
 
   @Test
-  public void transformNodeWithNoDepsCorrectly() {
+  public void transformNodeWithNoDepsCorrectly() throws ActionCreationException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:target");
 
     ProviderInfoCollection expectedProviders =
@@ -205,7 +206,7 @@ public class RuleAnalysisTransformerTest {
   }
 
   @Test
-  public void transformNodeWithDepsCorrectly() {
+  public void transformNodeWithDepsCorrectly() throws ActionCreationException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:target");
     BuildTarget buildTarget2 = BuildTargetFactory.newInstance("//my:target2");
 
