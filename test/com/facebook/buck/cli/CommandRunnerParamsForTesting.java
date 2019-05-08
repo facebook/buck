@@ -25,6 +25,8 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
@@ -102,6 +104,7 @@ public class CommandRunnerParamsForTesting {
   }
 
   public static CommandRunnerParams createCommandRunnerParamsForTesting(
+      DepsAwareExecutor<? super ComputeResult, ?> executor,
       Console console,
       Cell cell,
       ArtifactCache artifactCache,
@@ -135,7 +138,7 @@ public class CommandRunnerParamsForTesting {
         new ParsingUnconfiguredBuildTargetFactory(),
         () -> EmptyTargetConfiguration.INSTANCE,
         TargetConfigurationSerializerForTests.create(cell.getCellPathResolver()),
-        TestParserFactory.create(cell, knownRuleTypesProvider),
+        TestParserFactory.create(executor, cell, knownRuleTypesProvider),
         eventBus,
         platform,
         environment,
@@ -174,6 +177,7 @@ public class CommandRunnerParamsForTesting {
 
   public static class Builder {
 
+    private DepsAwareExecutor<? super ComputeResult, ?> executor;
     private ArtifactCache artifactCache = new NoopArtifactCache();
     private Console console = new TestConsole();
     private BuckConfig config = FakeBuckConfig.builder().build();
@@ -191,6 +195,7 @@ public class CommandRunnerParamsForTesting {
       }
 
       return createCommandRunnerParamsForTesting(
+          executor,
           console,
           cellBuilder.build(),
           artifactCache,
@@ -200,6 +205,11 @@ public class CommandRunnerParamsForTesting {
           environment,
           javaPackageFinder,
           webServer);
+    }
+
+    public Builder setExecutor(DepsAwareExecutor<? super ComputeResult, ?> executor) {
+      this.executor = executor;
+      return this;
     }
 
     public Builder setConsole(Console console) {

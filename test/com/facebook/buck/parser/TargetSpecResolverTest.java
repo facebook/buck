@@ -23,6 +23,9 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
@@ -47,6 +50,7 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -74,6 +78,10 @@ public class TargetSpecResolverTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   @Rule public ExpectedException thrown = ExpectedException.none();
+
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
 
   private ProjectWorkspace workspace;
   private ProjectFilesystem filesystem;
@@ -125,8 +133,8 @@ public class TargetSpecResolverTest {
             new ParsingUnconfiguredBuildTargetFactory());
 
     targetNodeTargetSpecResolver =
-        TestTargetSpecResolverFactory.create(cell.getCellProvider(), eventBus);
-    parser = TestParserFactory.create(cell, perBuildStateFactory);
+        TestTargetSpecResolverFactory.create(executor.get(), cell.getCellProvider(), eventBus);
+    parser = TestParserFactory.create(executor.get(), cell, perBuildStateFactory);
     flavorEnhancer = (target, targetNode, targetType) -> target;
     executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
   }

@@ -34,6 +34,9 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -55,6 +58,7 @@ import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.FakeOutputStream;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -98,6 +102,10 @@ public class TargetsCommandTest {
   private ListeningExecutorService executor;
   private CapturingConsoleEventListener capturingConsoleEventListener;
 
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
+
   private SortedSet<TargetNode<?>> buildTargetNodes(
       ProjectFilesystem filesystem, String buildTarget) {
     SortedSet<TargetNode<?>> buildRules = new TreeSet<>();
@@ -127,6 +135,7 @@ public class TargetsCommandTest {
     targetsCommand = new TargetsCommand();
     params =
         CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
+            depsAwareExecutor.get(),
             console,
             cell,
             artifactCache,

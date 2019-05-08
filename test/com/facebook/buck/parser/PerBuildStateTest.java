@@ -24,6 +24,9 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
@@ -35,6 +38,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -55,6 +59,10 @@ import org.pf4j.PluginManager;
 public class PerBuildStateTest {
   @Rule public TemporaryPaths tempDir = new TemporaryPaths();
   @Rule public ExpectedException thrown = ExpectedException.none();
+
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
 
   private final int threads;
   private final boolean parallelParsing;
@@ -111,7 +119,8 @@ public class PerBuildStateTest {
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(pluginManager);
     Parser parser =
-        TestParserFactory.create(cell, knownRuleTypesProvider, BuckEventBusForTests.newInstance());
+        TestParserFactory.create(
+            executor.get(), cell, knownRuleTypesProvider, BuckEventBusForTests.newInstance());
 
     perBuildState = TestPerBuildStateFactory.create(parser, cell);
   }

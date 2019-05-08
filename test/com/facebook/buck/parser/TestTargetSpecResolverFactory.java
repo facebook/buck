@@ -18,6 +18,8 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.files.DirectoryListCache;
 import com.facebook.buck.core.files.FileTreeCache;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.event.BuckEventBus;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -27,10 +29,13 @@ import java.nio.file.Path;
 public class TestTargetSpecResolverFactory {
 
   /** Create new instance of {@link TargetSpecResolver} that could be used in tests */
-  public static TargetSpecResolver create(CellProvider cellProvider, BuckEventBus eventBus) {
+  public static TargetSpecResolver create(
+      DepsAwareExecutor<? super ComputeResult, ?> executor,
+      CellProvider cellProvider,
+      BuckEventBus eventBus) {
     return new TargetSpecResolver(
         eventBus,
-        4,
+        executor,
         cellProvider,
         CacheBuilder.newBuilder()
             .build(

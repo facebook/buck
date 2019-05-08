@@ -24,6 +24,9 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -35,6 +38,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
@@ -58,6 +62,10 @@ public class AuditInputCommandTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
+
   @Before
   public void setUp() throws IOException {
     console = new TestConsole();
@@ -72,6 +80,7 @@ public class AuditInputCommandTest {
     auditInputCommand = new AuditInputCommand();
     params =
         CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
+            executor.get(),
             console,
             cell,
             artifactCache,

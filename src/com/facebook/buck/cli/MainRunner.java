@@ -37,6 +37,9 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.config.ErrorHandlingBuckConfig;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutorWithLocalStack;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
@@ -149,6 +152,7 @@ import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager.Lifecycle
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.test.config.TestResultSummaryVerbosity;
 import com.facebook.buck.util.BgProcessKiller;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
@@ -1253,10 +1257,13 @@ public final class MainRunner {
 
           ResourcesConfig resourceConfig = buckConfig.getView(ResourcesConfig.class);
 
+          CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
+              depsAwareExecutorSupplier = getDepsAwareExecutorSupplier(resourceConfig);
+
           TargetSpecResolver targetSpecResolver =
               new TargetSpecResolver(
                   buildEventBus,
-                  resourceConfig.getMaximumResourceAmounts().getCpu(),
+                  depsAwareExecutorSupplier.get(),
                   rootCell.getCellProvider(),
                   buckGlobalState.getDirectoryListCaches(),
                   buckGlobalState.getFileTreeCaches());
@@ -2038,6 +2045,14 @@ public final class MainRunner {
   private static String getArtifactProducerId(ExecutionEnvironment executionEnvironment) {
     String artifactProducerId = "user://" + executionEnvironment.getUsername();
     return artifactProducerId;
+  }
+
+  private static CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
+      getDepsAwareExecutorSupplier(ResourcesConfig config) {
+    return CloseableMemoizedSupplier.of(
+        () ->
+            DefaultDepsAwareExecutorWithLocalStack.of(config.getMaximumResourceAmounts().getCpu()),
+        DepsAwareExecutor::close);
   }
 
   private static void installUncaughtExceptionHandler(Optional<NGContext> context) {

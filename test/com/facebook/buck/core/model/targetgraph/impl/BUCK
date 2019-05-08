@@ -6,6 +6,7 @@ java_test(
     has_immutable_types = True,
     deps = [
         ":testutil",
+        "//src/com/facebook/buck/core/graph/transformation/executor/impl:impl",
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
         "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
         "//src/com/facebook/buck/core/plugin/impl:impl",

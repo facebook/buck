@@ -31,6 +31,9 @@ import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
@@ -52,6 +55,7 @@ import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ExitCode;
@@ -77,6 +81,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 import org.pf4j.PluginManager;
@@ -85,6 +90,10 @@ import org.pf4j.PluginManager;
 public class CleanCommandTest {
 
   private ProjectFilesystem projectFilesystem;
+
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
 
   @Before
   public void setUp() {
@@ -315,7 +324,7 @@ public class CleanCommandTest {
         new ParsingUnconfiguredBuildTargetFactory(),
         () -> EmptyTargetConfiguration.INSTANCE,
         TargetConfigurationSerializerForTests.create(cell.getCellPathResolver()),
-        TestParserFactory.create(cell, knownRuleTypesProvider),
+        TestParserFactory.create(executor.get(), cell, knownRuleTypesProvider),
         BuckEventBusForTests.newInstance(),
         Platform.detect(),
         EnvVariablesProvider.getSystemEnv(),

@@ -24,6 +24,9 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -53,6 +56,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -82,6 +86,10 @@ public class TargetGraphHashingTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   @Rule public ExpectedException thrown = ExpectedException.none();
 
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
+
   private BuckEventBus eventBus;
   private RuleKeyConfiguration ruleKeyConfiguration;
   private ProjectFilesystem projectFilesystem;
@@ -99,7 +107,8 @@ public class TargetGraphHashingTest {
     projectFilesystem = cell.getFilesystem();
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager());
-    Parser parser = TestParserFactory.create(cell, knownRuleTypesProvider, eventBus);
+    Parser parser =
+        TestParserFactory.create(executor.get(), cell, knownRuleTypesProvider, eventBus);
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     PerBuildState parserState =
         PerBuildStateFactory.createFactory(

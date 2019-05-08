@@ -26,6 +26,9 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
@@ -65,6 +68,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.PathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -101,6 +105,10 @@ public class DistBuildStateTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
+
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
 
   private ProcessExecutor processExecutor;
   private ExecutableFinder executableFinder;
@@ -242,7 +250,7 @@ public class DistBuildStateTest {
     ProjectFilesystem projectFilesystem = cell.getFilesystem();
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getBuckOut());
     setUp();
-    Parser parser = TestParserFactory.create(cell);
+    Parser parser = TestParserFactory.create(executor.get(), cell);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
             ParsingContext.builder(

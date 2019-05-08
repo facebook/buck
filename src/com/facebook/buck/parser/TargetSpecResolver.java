@@ -27,7 +27,6 @@ import com.facebook.buck.core.files.FileTreeFileNameIterator;
 import com.facebook.buck.core.files.ImmutableFileTreeKey;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
-import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.impl.DefaultGraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -82,7 +81,7 @@ public class TargetSpecResolver implements AutoCloseable {
    * Create {@link TargetSpecResolver instance}
    *
    * @param eventBus Event bus to send performance events to
-   * @param numThreads Number of threads to be used by Graph Engine executor
+   * @param executor The executor for the {@link GraphTransformationEngine}
    * @param cellProvider Provider to get a cell by path; this is a workaround for the state that
    *     cell itself is not really hashable so we use cell path instead as a key for appropriate
    *     caches
@@ -93,14 +92,11 @@ public class TargetSpecResolver implements AutoCloseable {
    */
   public TargetSpecResolver(
       BuckEventBus eventBus,
-      int numThreads,
+      DepsAwareExecutor<? super ComputeResult, ?> executor,
       CellProvider cellProvider,
       LoadingCache<Path, DirectoryListCache> dirListCachePerRoot,
       LoadingCache<Path, FileTreeCache> fileTreeCachePerRoot) {
     this.eventBus = eventBus;
-
-    // TODO(buck_team): pass executor from upstream
-    DepsAwareExecutor<ComputeResult, ?> executor = DefaultDepsAwareExecutor.of(numThreads);
 
     // For each cell we create a separate graph engine. The purpose of graph engine is to
     // recursively build a file tree with all files in appropriate cell for appropriate path.

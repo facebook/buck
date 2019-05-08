@@ -23,11 +23,15 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -50,6 +54,10 @@ public class IntraCellIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
+
   @Test
   @Ignore
   public void shouldTreatACellBoundaryAsAHardBuckPackageBoundary() {}
@@ -65,7 +73,7 @@ public class IntraCellIntegrationTest {
     // We don't need to do a build. It's enough to just parse these things.
     Cell cell = workspace.asCell();
 
-    Parser parser = TestParserFactory.create(cell);
+    Parser parser = TestParserFactory.create(executor.get(), cell);
 
     // This parses cleanly
     parser.buildTargetGraph(

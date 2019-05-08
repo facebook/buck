@@ -46,6 +46,9 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
@@ -86,6 +89,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.shell.GenruleDescriptionArg;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -142,6 +146,10 @@ import org.pf4j.PluginManager;
 
 @RunWith(Parameterized.class)
 public class ParserWithConfigurableAttributesTest {
+
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
 
   @Rule public TemporaryPaths tempDir = new TemporaryPaths();
   @Rule public ExpectedException thrown = ExpectedException.none();
@@ -323,7 +331,7 @@ public class ParserWithConfigurableAttributesTest {
     knownRuleTypesProvider = TestKnownRuleTypesProvider.create(pluginManager);
 
     typeCoercerFactory = new DefaultTypeCoercerFactory();
-    parser = TestParserFactory.create(cell, knownRuleTypesProvider, eventBus);
+    parser = TestParserFactory.create(executor.get(), cell, knownRuleTypesProvider, eventBus);
 
     counter = new ParseEventStartedCounter();
     eventBus.register(counter);
@@ -1549,7 +1557,8 @@ public class ParserWithConfigurableAttributesTest {
     Cell newCell =
         new TestCellBuilder().setFilesystem(newFilesystem).setBuckConfig(newConfig).build();
 
-    Parser newParser = TestParserFactory.create(newCell, knownRuleTypesProvider, eventBus);
+    Parser newParser =
+        TestParserFactory.create(executor.get(), newCell, knownRuleTypesProvider, eventBus);
 
     filterAllTargetsInProject(newParser, parsingContext.withCell(newCell));
 
@@ -1652,7 +1661,7 @@ public class ParserWithConfigurableAttributesTest {
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
     HashCode original = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
-    parser = TestParserFactory.create(cell, knownRuleTypesProvider);
+    parser = TestParserFactory.create(executor.get(), cell, knownRuleTypesProvider);
     Path testFooJavaFile = tempDir.newFile("foo/Foo.java");
     Files.write(testFooJavaFile, "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
     HashCode updated = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
@@ -1763,7 +1772,7 @@ public class ParserWithConfigurableAttributesTest {
     HashCode libKey = hashes.get(fooLibTarget);
     HashCode lib2Key = hashes.get(fooLib2Target);
 
-    parser = TestParserFactory.create(cell, knownRuleTypesProvider);
+    parser = TestParserFactory.create(executor.get(), cell, knownRuleTypesProvider);
     Files.write(
         testFooBuckFile,
         ("java_library(name = 'lib', deps = [], visibility=['PUBLIC'])\njava_library("

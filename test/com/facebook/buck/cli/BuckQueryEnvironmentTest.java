@@ -24,6 +24,9 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.QueryTarget;
@@ -52,6 +55,7 @@ import com.facebook.buck.query.QueryException;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -78,6 +82,10 @@ public class BuckQueryEnvironmentTest {
   private static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
+
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
 
   private BuckQueryEnvironment buckQueryEnvironment;
   private Path cellRoot;
@@ -127,7 +135,8 @@ public class BuckQueryEnvironmentTest {
             getManifestSupplier(),
             new FakeFileHashCache(ImmutableMap.of()),
             new ParsingUnconfiguredBuildTargetFactory());
-    Parser parser = TestParserFactory.create(cell, perBuildStateFactory, eventBus);
+    Parser parser =
+        TestParserFactory.create(depsAwareExecutor.get(), cell, perBuildStateFactory, eventBus);
     parserState =
         perBuildStateFactory.create(
             ParsingContext.builder(cell, executor)
