@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -35,7 +36,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.UnconfiguredBuildTargetTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.base.Verify;

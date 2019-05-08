@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.util.exceptions;
+package com.facebook.buck.core.exceptions;
 
 import java.io.IOException;
 import java.util.List;

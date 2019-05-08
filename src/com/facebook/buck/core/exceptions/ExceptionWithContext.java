@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util.exceptions;
+package com.facebook.buck.core.exceptions;
 
 import java.util.Optional;
 

@@ -20,7 +20,6 @@ standard_java_test(
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/util:constants",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/cache/impl:impl",

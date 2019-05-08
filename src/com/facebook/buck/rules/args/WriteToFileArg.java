@@ -16,13 +16,13 @@
 
 package com.facebook.buck.rules.args;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Consumer;

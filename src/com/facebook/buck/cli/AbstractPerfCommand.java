@@ -17,6 +17,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
@@ -40,7 +41,6 @@ import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.config.Config;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Stopwatch;

@@ -29,7 +29,6 @@ java_test(
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/features/python/toolchain/impl:impl",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/core/model:testutil",

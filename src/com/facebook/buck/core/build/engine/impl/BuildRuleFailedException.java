@@ -15,9 +15,9 @@
  */
 package com.facebook.buck.core.build.engine.impl;
 
+import com.facebook.buck.core.exceptions.ExceptionWithContext;
+import com.facebook.buck.core.exceptions.WrapsException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.util.exceptions.ExceptionWithContext;
-import com.facebook.buck.util.exceptions.WrapsException;
 import java.util.Optional;
 
 /** Exception indicating that building a rule failed. */

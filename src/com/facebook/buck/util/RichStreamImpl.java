@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.util.exceptions.WrapsException;
+import com.facebook.buck.core.exceptions.WrapsException;
 import com.facebook.buck.util.function.ThrowingConsumer;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;

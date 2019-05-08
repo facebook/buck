@@ -16,7 +16,6 @@ java_library(
     ],
     deps = [
         "//src/com/facebook/buck/io/file:file",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/json:json",
         "//third-party/java/guava:guava",

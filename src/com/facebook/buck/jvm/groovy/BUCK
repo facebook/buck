@@ -27,7 +27,6 @@ java_library_with_plugins(
         "//src/com/facebook/buck/rules/macros:macros",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/test/config:config",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/versions:versions",
         "//third-party/java/guava:guava",

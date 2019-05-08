@@ -21,7 +21,6 @@ standard_java_test(
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/test/result/type:type",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",

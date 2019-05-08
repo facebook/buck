@@ -11,7 +11,6 @@ standard_java_test(
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/util/environment:environment",

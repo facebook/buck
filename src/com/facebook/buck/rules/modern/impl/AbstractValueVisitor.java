@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
@@ -26,7 +27,6 @@ import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.Serializer;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

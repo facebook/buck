@@ -17,6 +17,7 @@
 package com.facebook.buck.core.toolchain.impl;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.BaseToolchainProvider;
 import com.facebook.buck.core.toolchain.Toolchain;
@@ -31,7 +32,6 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;

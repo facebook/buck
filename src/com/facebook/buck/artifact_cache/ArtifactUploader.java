@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -28,7 +29,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.CloseableHolder;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.NamedTemporaryFile;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;

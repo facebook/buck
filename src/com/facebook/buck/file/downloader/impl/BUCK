@@ -6,7 +6,6 @@ java_library_with_plugins(
     exported_deps = [
         "//src/com/facebook/buck/core/toolchain:toolchain",
         "//src/com/facebook/buck/file/downloader:downloader",
-        "//src/com/facebook/buck/util:exceptions",
     ],
     visibility = ["PUBLIC"],
     deps = [

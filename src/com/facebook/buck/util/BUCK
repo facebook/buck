@@ -13,21 +13,6 @@ java_library(
     ],
 )
 
-EXCEPTION_SRCS = glob(["exceptions/*.java"])
-
-java_library(
-    name = "exceptions",
-    srcs = EXCEPTION_SRCS,
-    tests = [
-        "//test/com/facebook/buck/util:util",
-    ],
-    visibility = ["PUBLIC"],
-    deps = [
-        "//src/com/facebook/buck/util/string:string",
-        "//third-party/java/jsr:jsr305",
-    ],
-)
-
 IO_SRCS = [
     "AbstractDirectoryCleanerArgs.java",
     "AnsiEnvironmentChecking.java",
@@ -50,7 +35,6 @@ java_immutables_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
-        ":exceptions",
         ":process_executor",
         ":util",
         "//src/com/facebook/buck/core/exceptions:exceptions",
@@ -146,7 +130,7 @@ java_immutables_library(
     name = "util",
     srcs = glob(
         ["*.java"],
-        exclude = CONSTANT_SRCS + EXCEPTION_SRCS + IO_SRCS +
+        exclude = CONSTANT_SRCS + IO_SRCS +
                   PACKAGED_RESOURCE_SRCS + PROCESS_EXECUTOR_SRCS + ISOLATED_SRCS,
     ),
     exported_deps = [
@@ -162,7 +146,6 @@ java_immutables_library(
         "PUBLIC",
     ],
     deps = [
-        ":exceptions",
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/exceptions/handler:handler",
         "//src/com/facebook/buck/core/util/log:log",

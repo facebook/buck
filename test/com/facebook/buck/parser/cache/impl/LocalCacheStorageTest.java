@@ -27,6 +27,7 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -39,7 +40,6 @@ import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

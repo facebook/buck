@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.ocaml;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -24,7 +25,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

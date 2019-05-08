@@ -5,7 +5,6 @@ java_test(
     srcs = glob(["*Test.java"]),
     deps = [
         "//src/com/facebook/buck/core/toolchain/impl:impl",
-        "//src/com/facebook/buck/util:exceptions",
         "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/rules/keys/config:testutil",

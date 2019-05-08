@@ -19,8 +19,8 @@ package com.facebook.buck.android.exopackage;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.agent.util.AgentUtil;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.io.file.MostFiles;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

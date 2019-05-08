@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.config.BuildBuckConfig;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
@@ -35,7 +36,6 @@ import com.facebook.buck.rules.modern.tools.IsolationChecker.FailureReporter;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;

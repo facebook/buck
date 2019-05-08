@@ -18,7 +18,6 @@ java_immutables_library(
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/rules/modern/builders:builders",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",

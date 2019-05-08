@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
@@ -36,7 +37,6 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
 import java.util.List;

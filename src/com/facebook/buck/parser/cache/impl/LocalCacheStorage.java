@@ -16,13 +16,13 @@
 
 package com.facebook.buck.parser.cache.impl;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.cache.ParserCacheException;
 import com.facebook.buck.parser.cache.ParserCacheStorage;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.hash.HashCode;

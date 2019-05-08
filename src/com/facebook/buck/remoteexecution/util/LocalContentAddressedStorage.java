@@ -16,6 +16,7 @@
 
 package com.facebook.buck.remoteexecution.util;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
@@ -32,7 +33,6 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.SymlinkNode;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

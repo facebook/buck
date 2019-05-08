@@ -47,7 +47,6 @@ standard_java_test(
         "//src/com/facebook/buck/test:test",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/test/selectors:selectors",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -28,7 +29,6 @@ import com.facebook.buck.rules.modern.PublicOutputPath;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ImmutableListValueTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.OptionalValueTypeInfo;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;

@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rulekey.calculator;
 
 import com.facebook.buck.core.build.engine.RuleDepsCache;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -24,7 +25,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.collect.SortedSets;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;

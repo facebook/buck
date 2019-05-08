@@ -16,11 +16,11 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.ModernBuildRule;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Preconditions;
 import java.lang.reflect.Modifier;
 import java.util.Optional;

@@ -26,7 +26,6 @@ buck_module(
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/versions:translator",
         "//src/com/facebook/buck/versions:versions",
         "//third-party/java/guava:guava",

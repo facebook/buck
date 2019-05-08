@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.util.exceptions;
+package com.facebook.buck.core.exceptions;
 
 /**
  * This interface indicates that an exception is just used to wrap another and isn't the true root

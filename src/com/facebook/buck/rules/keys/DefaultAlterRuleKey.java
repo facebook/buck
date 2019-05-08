@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 
 class DefaultAlterRuleKey implements AlterRuleKey {
   private final ValueExtractor valueExtractor;

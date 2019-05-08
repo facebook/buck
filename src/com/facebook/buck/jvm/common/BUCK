@@ -7,7 +7,6 @@ java_library(
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
-        "//src/com/facebook/buck/util:exceptions",
         "//third-party/java/guava:guava",
     ],
 )

@@ -17,11 +17,11 @@ package com.facebook.buck.core.rules.resolver.impl;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.MetadataProvidingDescription;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;

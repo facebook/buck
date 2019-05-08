@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -39,7 +40,6 @@ import com.facebook.buck.rules.modern.impl.UnconfiguredBuildTargetTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ExcludedValueTypeInfo;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;

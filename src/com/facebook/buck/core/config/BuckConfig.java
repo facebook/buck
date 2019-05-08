@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.config;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -29,7 +30,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.facebook.infer.annotation.PropagatesNullable;
 import com.google.common.base.Objects;

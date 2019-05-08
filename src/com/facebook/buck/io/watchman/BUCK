@@ -52,7 +52,6 @@ java_immutables_library(
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/io/unixsocket:unixsocket",
         "//src/com/facebook/buck/io/windowspipe:windowspipe",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/bser:bser",

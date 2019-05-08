@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.log.Logger;
@@ -37,7 +38,6 @@ import com.facebook.buck.jvm.java.tracing.JavacPhaseEventLogger;
 import com.facebook.buck.jvm.java.tracing.TracingTaskListener;
 import com.facebook.buck.jvm.java.tracing.TranslatingJavacPhaseTracer;
 import com.facebook.buck.util.concurrent.MostExecutors.NamedThreadFactory;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.zip.JarBuilder;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;

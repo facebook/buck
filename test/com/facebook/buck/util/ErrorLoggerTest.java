@@ -19,11 +19,11 @@ package com.facebook.buck.util;
 import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.junit.Assert.*;
 
+import com.facebook.buck.core.exceptions.BuckExecutionException;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.util.ErrorLogger.DeconstructedException;
-import com.facebook.buck.util.exceptions.BuckExecutionException;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;

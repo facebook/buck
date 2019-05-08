@@ -19,7 +19,6 @@ java_immutables_library(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/io/watchman:watchman",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/filesystem:filesystem",
         "//src/com/facebook/buck/util/sha1:sha1",

@@ -18,12 +18,12 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.Hint;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Types;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
