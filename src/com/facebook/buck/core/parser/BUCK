@@ -15,6 +15,7 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/core/files:files",
         "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
+        "//src/com/facebook/buck/core/parser/buildtargetpattern:buildtargetpattern",
         "//src/com/facebook/buck/io/file:file",
         "//third-party/java/guava:guava",
     ],

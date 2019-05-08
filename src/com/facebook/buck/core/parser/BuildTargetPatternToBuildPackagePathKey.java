@@ -19,7 +19,7 @@ package com.facebook.buck.core.parser;
 import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternData;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternData;
 import org.immutables.value.Value;
 
 /** Transformation key containing build target pattern for which to discover package paths */

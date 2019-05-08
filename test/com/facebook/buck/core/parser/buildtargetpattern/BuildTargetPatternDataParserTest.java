@@ -13,12 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.core.parser.buildtargetparser;
+package com.facebook.buck.core.parser.buildtargetpattern;
 
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternData.Kind;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternData.Kind;
 import java.nio.file.Paths;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;

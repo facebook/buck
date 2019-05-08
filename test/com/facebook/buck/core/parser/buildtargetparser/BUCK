@@ -4,6 +4,7 @@ standard_java_test(
     name = "buildtargetparser",
     deps = [
         "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
+        "//src/com/facebook/buck/core/parser/buildtargetpattern:buildtargetpattern",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//third-party/java/junit:junit",

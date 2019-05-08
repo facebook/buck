@@ -14,10 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.core.parser.buildtargetparser;
+package com.facebook.buck.core.parser.buildtargetpattern;
 
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternData.Kind;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternData.Kind;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
