@@ -23,7 +23,10 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Set;
 
 /** Checks that paths exist and throw an exception if at least one path doesn't exist. */
@@ -43,9 +46,18 @@ class MissingPathsChecker implements PathsChecker {
         continue;
       }
 
-      if (!projectFilesystem.exists(path)) {
+      try {
+        projectFilesystem.readAttributes(path, BasicFileAttributes.class);
+      } catch (NoSuchFileException e) {
         throw new HumanReadableException(
-            "%s references non-existing file or directory '%s'", buildTarget, path);
+            e, "%s references non-existing file or directory '%s'", buildTarget, path);
+      } catch (IOException e) {
+        throw new HumanReadableException(
+            e,
+            "%s references inaccessible file or directory '%s': %s",
+            buildTarget,
+            path,
+            e.getMessage());
       }
     }
   }
