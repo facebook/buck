@@ -18,6 +18,9 @@ package com.facebook.buck.multitenant.query
 import com.facebook.buck.core.exceptions.BuildTargetParseException
 import com.facebook.buck.core.model.QueryTarget
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternData
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternData.Kind
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternDataParser
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.Commit
 import com.facebook.buck.multitenant.service.Index
@@ -120,23 +123,27 @@ class MultitenantQueryEnvironment(private val index: Index, private val commit: 
 private class TargetEvaluator(private val index: Index, private val commit: Commit) : QueryEnvironment.TargetEvaluator {
     override fun getType(): QueryEnvironment.TargetEvaluator.Type = QueryEnvironment.TargetEvaluator.Type.IMMEDIATE
 
-    override fun evaluateTarget(target: String?): ImmutableSet<QueryTarget> {
-        requireNotNull(target)
-
-        // Check to see if it is a wildcard pattern.
-        if (target.startsWith("//") && target.endsWith("/...")) {
-            val basePath = if (target.length == 5) "" else target.substring(2, target.length - 4)
-            return ImmutableSet.copyOf(index.getTargetsUnderBasePath(commit, FsAgnosticPath.of(basePath)))
-        }
-
+    override fun evaluateTarget(target: String): ImmutableSet<QueryTarget> {
         // TODO: We should probably also support aliases specified via .buckconfig here?
-
-        val unconfiguredBuildTarget: UnconfiguredBuildTarget
+        val buildTargetPattern: BuildTargetPatternData
         try {
-            unconfiguredBuildTarget = index.buildTargetParser(target)
+            buildTargetPattern = BuildTargetPatternDataParser.parse(target)
         } catch (e: BuildTargetParseException) {
             throw QueryException(e, "Error trying to parse '${target}'")
         }
-        return ImmutableSet.of(unconfiguredBuildTarget)
+
+        // TODO: Cells (and flavors?) need to be supported.
+        return when (buildTargetPattern.kind) {
+            Kind.SINGLE -> {
+                ImmutableSet.of(index.buildTargetParser(buildTargetPattern.toString()))
+            }
+            Kind.PACKAGE -> {
+                TODO("Support PACKAGE")
+            }
+            Kind.RECURSIVE -> {
+                val basePath = buildTargetPattern.basePath.toString()
+                ImmutableSet.copyOf(index.getTargetsUnderBasePath(commit, FsAgnosticPath.of(basePath)))
+            }
+        }
     }
 }
