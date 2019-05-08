@@ -96,6 +96,7 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
         StringWithMacrosConverter.builder()
             .setBuildTarget(ruleNode.getBuildTarget())
             .setCellPathResolver(cellNames)
+            .setActionGraphBuilder(graphBuilder)
             .addExpanders(new QueryTargetsAndOutputsMacroExpander(Optional.of(targetGraph)))
             .setPrecomputedWorkCache(cache)
             .build();
@@ -173,7 +174,7 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
                 rule.getBuildTarget().getBasePath(),
                 EmptyTargetConfiguration.INSTANCE,
                 input);
-    Arg arg = converter.convert(stringWithMacros, graphBuilder);
+    Arg arg = converter.convert(stringWithMacros);
     return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
   }
 

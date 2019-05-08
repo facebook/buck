@@ -157,6 +157,7 @@ public class JavaTestDescription
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(cellRoots)
+            .setActionGraphBuilder(graphBuilder)
             .setExpanders(MACRO_EXPANDERS)
             .build();
 
@@ -172,7 +173,7 @@ public class JavaTestDescription
         javaOptionsForTests
             .get()
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
-        Lists.transform(args.getVmArgs(), vmArg -> macrosConverter.convert(vmArg, graphBuilder)),
+        Lists.transform(args.getVmArgs(), macrosConverter::convert),
         cxxLibraryEnhancement.nativeLibsEnvironment,
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
@@ -182,8 +183,7 @@ public class JavaTestDescription
                     .getView(TestBuckConfig.class)
                     .getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
-        ImmutableMap.copyOf(
-            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder))),
+        ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert)),
         args.getRunTestSeparately(),
         args.getForkMode(),
         args.getStdOutLogLevel(),

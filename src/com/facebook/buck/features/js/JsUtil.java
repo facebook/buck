@@ -166,8 +166,8 @@ public class JsUtil {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots) {
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.of(target, cellRoots, MACRO_EXPANDERS);
-    return args.getExtraJson().map(x -> macrosConverter.convert(x, graphBuilder));
+        StringWithMacrosConverter.of(target, cellRoots, graphBuilder, MACRO_EXPANDERS);
+    return args.getExtraJson().map(macrosConverter::convert);
   }
 
   /** @return The input with all special JSON characters escaped, but not wrapped in quotes. */

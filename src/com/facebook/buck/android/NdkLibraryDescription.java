@@ -395,12 +395,13 @@ public class NdkLibraryDescription
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(context.getCellPathResolver())
+            .setActionGraphBuilder(graphBuilder)
             .setExpanders(MACRO_EXPANDERS)
             .build();
 
     ImmutableList<Arg> flags =
         args.getFlags().stream()
-            .map(flag -> macrosConverter.convert(flag, graphBuilder))
+            .map(macrosConverter::convert)
             .collect(ImmutableList.toImmutableList());
 
     AndroidNdk androidNdk = toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);

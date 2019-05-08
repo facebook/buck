@@ -227,17 +227,17 @@ public class CxxTestDescription
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(cellRoots)
+            .setActionGraphBuilder(graphBuilder)
             .addExpanders(new LocationMacroExpander())
             .build();
 
     // Supplier which expands macros in the passed in test environment.
     ImmutableMap<String, Arg> testEnv =
-        ImmutableMap.copyOf(
-            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder)));
+        ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert));
 
     ImmutableList<Arg> testArgs =
         args.getArgs().stream()
-            .map(x -> macrosConverter.convert(x, graphBuilder))
+            .map(macrosConverter::convert)
             .collect(ImmutableList.toImmutableList());
 
     Function<SourcePathRuleFinder, ImmutableSortedSet<BuildRule>> additionalDeps =

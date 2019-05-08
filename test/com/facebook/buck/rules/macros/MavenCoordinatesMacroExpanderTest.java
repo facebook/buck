@@ -121,6 +121,7 @@ public class MavenCoordinatesMacroExpanderTest {
         StringWithMacrosConverter.builder()
             .setBuildTarget(target)
             .setCellPathResolver(cellPathResolver)
+            .setActionGraphBuilder(graphBuilder)
             .addExpanders(expander)
             .build();
 
@@ -142,6 +143,7 @@ public class MavenCoordinatesMacroExpanderTest {
         StringWithMacrosConverter.builder()
             .setBuildTarget(target)
             .setCellPathResolver(cellPathResolver)
+            .setActionGraphBuilder(graphBuilder)
             .addExpanders(expander)
             .build();
 
@@ -168,7 +170,7 @@ public class MavenCoordinatesMacroExpanderTest {
                     rule.getBuildTarget().getBasePath(),
                     EmptyTargetConfiguration.INSTANCE,
                     input);
-    Arg arg = converter.convert(stringWithMacros, graphBuilder);
+    Arg arg = converter.convert(stringWithMacros);
     return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
   }
 }

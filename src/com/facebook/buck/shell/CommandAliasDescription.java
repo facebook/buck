@@ -74,14 +74,15 @@ public class CommandAliasDescription
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.of(buildTarget, context.getCellPathResolver(), MACRO_EXPANDERS);
+        StringWithMacrosConverter.of(
+            buildTarget, context.getCellPathResolver(), graphBuilder, MACRO_EXPANDERS);
 
     for (StringWithMacros x : args.getArgs()) {
-      toolArgs.add(macrosConverter.convert(x, graphBuilder));
+      toolArgs.add(macrosConverter.convert(x));
     }
 
     for (Map.Entry<String, StringWithMacros> x : args.getEnv().entrySet()) {
-      toolEnv.put(x.getKey(), macrosConverter.convert(x.getValue(), graphBuilder));
+      toolEnv.put(x.getKey(), macrosConverter.convert(x.getValue()));
     }
 
     Optional<BuildRule> exe = args.getExe().map(graphBuilder::getRule);

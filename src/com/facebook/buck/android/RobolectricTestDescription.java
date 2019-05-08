@@ -157,12 +157,11 @@ public class RobolectricTestDescription
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(context.getCellPathResolver())
+            .setActionGraphBuilder(graphBuilder)
             .setExpanders(JavaTestDescription.MACRO_EXPANDERS)
             .build();
     ImmutableList<Arg> vmArgs =
-        ImmutableList.copyOf(
-            Lists.transform(
-                args.getVmArgs(), vmArg -> macrosConverter.convert(vmArg, graphBuilder)));
+        ImmutableList.copyOf(Lists.transform(args.getVmArgs(), macrosConverter::convert));
 
 
     Optional<DummyRDotJava> dummyRDotJava =
@@ -240,8 +239,7 @@ public class RobolectricTestDescription
                     .getView(TestBuckConfig.class)
                     .getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
-        ImmutableMap.copyOf(
-            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder))),
+        ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert)),
         args.getRunTestSeparately(),
         args.getForkMode(),
         args.getStdOutLogLevel(),

@@ -85,6 +85,7 @@ public class QueryPathsMacroExpanderTest {
         StringWithMacrosConverter.builder()
             .setBuildTarget(targetNode.getBuildTarget())
             .setCellPathResolver(cellPathResolver)
+            .setActionGraphBuilder(graphBuilder)
             .addExpanders(expander)
             .build();
 
@@ -155,7 +156,7 @@ public class QueryPathsMacroExpanderTest {
                     rule.getBuildTarget().getBasePath(),
                     EmptyTargetConfiguration.INSTANCE,
                     input);
-    Arg arg = converter.convert(stringWithMacros, graphBuilder);
+    Arg arg = converter.convert(stringWithMacros);
     return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
   }
 }

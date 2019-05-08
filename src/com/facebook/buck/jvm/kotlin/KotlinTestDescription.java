@@ -124,6 +124,7 @@ public class KotlinTestDescription
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(context.getCellPathResolver())
+            .setActionGraphBuilder(graphBuilder)
             .setExpanders(JavaTestDescription.MACRO_EXPANDERS)
             .build();
     return new JavaTest(
@@ -139,7 +140,7 @@ public class KotlinTestDescription
         javaOptionsForTests
             .get()
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
-        Lists.transform(args.getVmArgs(), vmArg -> macrosConverter.convert(vmArg, graphBuilder)),
+        Lists.transform(args.getVmArgs(), macrosConverter::convert),
         ImmutableMap.of(), /* nativeLibsEnvironment */
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
@@ -149,8 +150,7 @@ public class KotlinTestDescription
                     .getView(TestBuckConfig.class)
                     .getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
-        ImmutableMap.copyOf(
-            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder))),
+        ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert)),
         args.getRunTestSeparately(),
         args.getForkMode(),
         args.getStdOutLogLevel(),

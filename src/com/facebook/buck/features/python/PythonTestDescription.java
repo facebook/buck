@@ -329,6 +329,7 @@ public class PythonTestDescription
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(cellRoots)
+            .setActionGraphBuilder(graphBuilder)
             .setExpanders(PythonUtil.MACRO_EXPANDERS)
             .build();
     PythonPackageComponents allComponents =
@@ -344,7 +345,7 @@ public class PythonTestDescription
             cxxBuckConfig,
             cxxPlatform,
             args.getLinkerFlags().stream()
-                .map(x -> macrosConverter.convert(x, graphBuilder))
+                .map(macrosConverter::convert)
                 .collect(ImmutableList.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
             args.getPreloadDeps());
@@ -406,8 +407,7 @@ public class PythonTestDescription
 
     Function<BuildRuleResolver, ImmutableMap<String, Arg>> testEnv =
         (ruleResolverInner) ->
-            ImmutableMap.copyOf(
-                Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder)));
+            ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert));
 
     // Additional CXX Targets used to generate CXX coverage.
     ImmutableSet<UnflavoredBuildTargetView> additionalCoverageTargets =

@@ -69,6 +69,7 @@ public class LocationMacroExpanderTest {
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(cellPathResolver)
+            .setActionGraphBuilder(graphBuilder)
             .addExpanders(new LocationMacroExpander())
             .build();
     return graphBuilder;
@@ -192,7 +193,7 @@ public class LocationMacroExpanderTest {
                     rule.getBuildTarget().getBasePath(),
                     EmptyTargetConfiguration.INSTANCE,
                     input);
-    Arg arg = converter.convert(stringWithMacros, graphBuilder);
+    Arg arg = converter.convert(stringWithMacros);
     return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
   }
 }

@@ -324,6 +324,7 @@ public class PythonBinaryDescription
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(cellRoots)
+            .setActionGraphBuilder(graphBuilder)
             .setExpanders(PythonUtil.MACRO_EXPANDERS)
             .build();
     PythonPackageComponents allPackageComponents =
@@ -342,7 +343,7 @@ public class PythonBinaryDescription
             cxxBuckConfig,
             cxxPlatform,
             args.getLinkerFlags().stream()
-                .map(x -> macrosConverter.convert(x, graphBuilder))
+                .map(macrosConverter::convert)
                 .collect(ImmutableList.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
             args.getPreloadDeps());

@@ -101,12 +101,13 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(context.getCellPathResolver())
+            .setActionGraphBuilder(graphBuilder)
             .setExpanders(MACRO_EXPANDERS)
             .build();
 
     if (args.getArgs().isLeft()) {
       builder.addArg(
-          new ProxyArg(macrosConverter.convert(args.getArgs().getLeft(), graphBuilder)) {
+          new ProxyArg(macrosConverter.convert(args.getArgs().getLeft())) {
             @Override
             public void appendToCommandLine(
                 Consumer<String> consumer, SourcePathResolver pathResolver) {
@@ -121,11 +122,11 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
           });
     } else {
       for (StringWithMacros arg : args.getArgs().getRight()) {
-        builder.addArg(macrosConverter.convert(arg, graphBuilder));
+        builder.addArg(macrosConverter.convert(arg));
       }
     }
     for (Map.Entry<String, StringWithMacros> e : args.getEnv().entrySet()) {
-      builder.addEnv(e.getKey(), macrosConverter.convert(e.getValue(), graphBuilder));
+      builder.addEnv(e.getKey(), macrosConverter.convert(e.getValue()));
     }
 
     Preconditions.checkArgument(

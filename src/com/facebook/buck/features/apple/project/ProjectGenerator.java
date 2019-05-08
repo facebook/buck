@@ -1058,11 +1058,12 @@ public class ProjectGenerator {
     ImmutableList.Builder<String> result = new ImmutableList.Builder<>();
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
-            node.getBuildTarget(), node.getCellNames(), ImmutableList.of(locationMacroExpander));
+            node.getBuildTarget(),
+            node.getCellNames(),
+            emptyGraphBuilder,
+            ImmutableList.of(locationMacroExpander));
     for (StringWithMacros flag : flags) {
-      macrosConverter
-          .convert(flag, emptyGraphBuilder)
-          .appendToCommandLine(result::add, defaultPathResolver);
+      macrosConverter.convert(flag).appendToCommandLine(result::add, defaultPathResolver);
     }
     return result.build();
   }

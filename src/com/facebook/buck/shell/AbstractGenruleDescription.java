@@ -162,10 +162,11 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     if (maybeExpanders.isPresent()) {
       ImmutableList<MacroExpander<? extends Macro, ?>> expanders = maybeExpanders.get();
       StringWithMacrosConverter converter =
-          StringWithMacrosConverter.of(buildTarget, context.getCellPathResolver(), expanders);
+          StringWithMacrosConverter.of(
+              buildTarget, context.getCellPathResolver(), graphBuilder, expanders);
       Function<StringWithMacros, Arg> toArg =
           str -> {
-            Arg arg = converter.convert(str, graphBuilder);
+            Arg arg = converter.convert(str);
             if (RichStream.from(str.getMacros())
                 .map(MacroContainer::getMacro)
                 .anyMatch(WorkerMacro.class::isInstance)) {

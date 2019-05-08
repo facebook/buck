@@ -270,6 +270,7 @@ public class GoTestDescription
         StringWithMacrosConverter.builder()
             .setBuildTarget(buildTarget)
             .setCellPathResolver(context.getCellPathResolver())
+            .setActionGraphBuilder(graphBuilder)
             .setExpanders(MACRO_EXPANDERS)
             .build();
 
@@ -287,8 +288,7 @@ public class GoTestDescription
                     .getDelegate()
                     .getView(TestBuckConfig.class)
                     .getDefaultTestRuleTimeoutMs()),
-        ImmutableMap.copyOf(
-            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder))),
+        ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert)),
         args.getRunTestSeparately(),
         args.getResources(),
         coverageMode);
