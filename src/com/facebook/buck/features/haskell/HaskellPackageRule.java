@@ -185,10 +185,14 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     }
     entries.put("library-dirs", Joiner.on(", ").join(libDirs));
 
-    if (Linker.LinkableDepType.STATIC == depType) {
-      entries.put("hs-libraries", Joiner.on(", ").join(libs));
-    } else {
+    if (Linker.LinkableDepType.SHARED == depType) {
+      // ghc expects the filename to be something like `libfoo-ghc8.x.y.so` but
+      // we have `libfoo.so`.
       entries.put("extra-libraries", Joiner.on(", ").join(libs));
+    } else {
+      // the filename can be either `libfoo.a` or `libfoo_p.a` depending on
+      // if profiling is enabled.
+      entries.put("hs-libraries", Joiner.on(", ").join(libs));
     }
 
     entries.put("depends", Joiner.on(", ").join(depPackages.keySet()));

@@ -537,6 +537,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     if (enableProfiling) {
       compilerFlagsBuilder.addAll(HaskellDescriptionUtils.PROF_FLAGS);
     }
+    compilerFlagsBuilder.addAll(HaskellDescriptionUtils.PIC_FLAGS);
 
     String ghc = ghcPath;
     ImmutableMap.Builder<String, String> templateArgs = ImmutableMap.builder();

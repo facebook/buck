@@ -274,6 +274,11 @@ public class HaskellLibraryDescription
                 deps,
                 hsProfile);
         libraries = ImmutableSortedSet.of(library.getSourcePathToOutput());
+
+        if (hsProfile) {
+          throw new IllegalStateException("shared,prof is not supported");
+        }
+
         break;
       case STATIC:
       case STATIC_PIC:
@@ -288,15 +293,12 @@ public class HaskellLibraryDescription
                 args,
                 deps,
                 depType,
-                false);
+                hsProfile);
+        libraries = ImmutableSortedSet.of(library.getSourcePathToOutput());
 
+        // TODO: exclude vanilla library from profiling library
         if (hsProfile) {
-          if (!(Linker.LinkableDepType.STATIC == depType
-              || Linker.LinkableDepType.STATIC_PIC == depType)) {
-            throw new IllegalStateException();
-          }
-
-          BuildRule profiledLibrary =
+          BuildRule vanillaLibrary =
               requireStaticLibrary(
                   getBaseBuildTarget(haskellPlatformsProvider, target),
                   projectFilesystem,
@@ -306,15 +308,11 @@ public class HaskellLibraryDescription
                   platform,
                   args,
                   deps,
-                  depType,
-                  true);
-
+                  Linker.LinkableDepType.STATIC,
+                  false);
           libraries =
               ImmutableSortedSet.of(
-                  library.getSourcePathToOutput(), profiledLibrary.getSourcePathToOutput());
-
-        } else {
-          libraries = ImmutableSortedSet.of(library.getSourcePathToOutput());
+                  library.getSourcePathToOutput(), vanillaLibrary.getSourcePathToOutput());
         }
         break;
       default:
@@ -335,8 +333,6 @@ public class HaskellLibraryDescription
 
     ImmutableSortedMap<String, HaskellPackage> depPackages = depPackagesBuilder.build();
 
-    ImmutableSortedSet<SourcePath> interfaces;
-    ImmutableSortedSet<SourcePath> objects;
     HaskellCompileRule compileRule =
         requireCompileRule(
             target,
@@ -347,10 +343,13 @@ public class HaskellLibraryDescription
             args,
             deps,
             depType,
-            false);
+            hsProfile);
+    ImmutableSortedSet<SourcePath> interfaces = ImmutableSortedSet.of(compileRule.getInterfaces());
+    ImmutableSortedSet<SourcePath> objects = ImmutableSortedSet.of(compileRule.getObjectsDir());
 
+    // TODO: exclude vanilla library from profiling library
     if (hsProfile) {
-      HaskellCompileRule profiledCompileRule =
+      HaskellCompileRule vanillaCompileRule =
           requireCompileRule(
               target,
               projectFilesystem,
@@ -359,16 +358,12 @@ public class HaskellLibraryDescription
               platform,
               args,
               deps,
-              depType,
-              true);
-
+              Linker.LinkableDepType.STATIC,
+              false);
       interfaces =
-          ImmutableSortedSet.of(compileRule.getInterfaces(), profiledCompileRule.getInterfaces());
+          ImmutableSortedSet.of(compileRule.getInterfaces(), vanillaCompileRule.getInterfaces());
       objects =
-          ImmutableSortedSet.of(compileRule.getObjectsDir(), profiledCompileRule.getObjectsDir());
-    } else {
-      interfaces = ImmutableSortedSet.of(compileRule.getInterfaces());
-      objects = ImmutableSortedSet.of(compileRule.getObjectsDir());
+          ImmutableSortedSet.of(compileRule.getObjectsDir(), vanillaCompileRule.getObjectsDir());
     }
 
     return HaskellPackageRule.from(

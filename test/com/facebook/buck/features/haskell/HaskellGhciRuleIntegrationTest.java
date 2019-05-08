@@ -42,9 +42,7 @@ public class HaskellGhciRuleIntegrationTest {
   public static Collection<Object[]> data() {
     return ImmutableList.copyOf(
         new Object[][] {
-          {Linker.LinkableDepType.STATIC},
-          {Linker.LinkableDepType.STATIC_PIC},
-          {Linker.LinkableDepType.SHARED},
+          {Linker.LinkableDepType.STATIC}, {Linker.LinkableDepType.SHARED},
         });
   }
 

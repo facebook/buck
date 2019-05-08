@@ -87,12 +87,6 @@ public class HaskellLibraryDescriptionTest {
                     CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR,
                     HaskellLibraryDescription.Type.STATIC.getFlavor()))
             .build(graphBuilder);
-    BuildRule staticPicLib =
-        new HaskellLibraryBuilder(
-                baseTarget.withFlavors(
-                    CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR,
-                    HaskellLibraryDescription.Type.STATIC_PIC.getFlavor()))
-            .build(graphBuilder);
     BuildRule sharedLib =
         new HaskellLibraryBuilder(
                 baseTarget.withFlavors(
@@ -103,7 +97,6 @@ public class HaskellLibraryDescriptionTest {
     ImmutableList<Path> outputs =
         ImmutableList.of(
                 Objects.requireNonNull(staticLib.getSourcePathToOutput()),
-                Objects.requireNonNull(staticPicLib.getSourcePathToOutput()),
                 Objects.requireNonNull(sharedLib.getSourcePathToOutput()))
             .stream()
             .map(graphBuilder.getSourcePathResolver()::getRelativePath)
@@ -111,8 +104,7 @@ public class HaskellLibraryDescriptionTest {
     assertThat(outputs.size(), Matchers.equalTo(ImmutableSet.copyOf(outputs).size()));
 
     ImmutableList<BuildTarget> targets =
-        ImmutableList.of(
-            staticLib.getBuildTarget(), staticPicLib.getBuildTarget(), sharedLib.getBuildTarget());
+        ImmutableList.of(staticLib.getBuildTarget(), sharedLib.getBuildTarget());
     assertThat(targets.size(), Matchers.equalTo(ImmutableSet.copyOf(targets).size()));
   }
 
@@ -145,17 +137,6 @@ public class HaskellLibraryDescriptionTest {
             EmptyTargetConfiguration.INSTANCE);
     assertThat(
         Arg.stringify(staticInput.getArgs(), pathResolver),
-        hasItems(linkWholeFlags.toArray(new String[0])));
-
-    // Test static-pic dep type.
-    NativeLinkableInput staticPicInput =
-        library.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            Linker.LinkableDepType.STATIC_PIC,
-            graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
-    assertThat(
-        Arg.stringify(staticPicInput.getArgs(), pathResolver),
         hasItems(linkWholeFlags.toArray(new String[0])));
 
     // Test shared dep type.

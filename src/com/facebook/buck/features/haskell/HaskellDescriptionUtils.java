@@ -41,7 +41,6 @@ import com.facebook.buck.cxx.ExplicitCxxToolFlags;
 import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
@@ -82,14 +81,12 @@ public class HaskellDescriptionUtils {
   static final Flavor GHCI_FLAV = UserFlavor.of("ghci", "Open a ghci session on this target");
 
   static final Flavor PROF = InternalFlavor.of("prof");
-  // We always build profiling object with PIC so it can be loaded by
-  // ghc-iserv-prof anywhere in the address space without the limitation of
-  // lower 2G address space.
   static final ImmutableList<String> PROF_FLAGS =
-      ImmutableList.of(
-          "-prof", "-fPIC", "-fexternal-dynamic-refs", "-osuf", "p_o", "-hisuf", "p_hi");
+      ImmutableList.of("-prof", "-osuf", "p_o", "-hisuf", "p_hi");
+  static final ImmutableList<String> DYNAMIC_FLAGS =
+      ImmutableList.of("-dynamic", "-osuf", "dyn_o", "-hisuf", "dyn_hi");
   static final ImmutableList<String> PIC_FLAGS =
-      ImmutableList.of("-dynamic", "-fPIC", "-hisuf", "dyn_hi");
+      ImmutableList.of("-fPIC", "-fexternal-dynamic-refs");
 
   /**
    * Create a Haskell compile rule that compiles all the given haskell sources in one step and pulls
@@ -184,7 +181,7 @@ public class HaskellDescriptionUtils {
         compileFlags,
         ppFlags,
         cxxPlatform,
-        depType == Linker.LinkableDepType.STATIC ? PicType.PDC : PicType.PIC,
+        depType,
         hsProfile,
         main,
         packageInfo,
@@ -454,8 +451,12 @@ public class HaskellDescriptionUtils {
             ImmutableSet.Builder<BuildRule> traverse = ImmutableSet.builder();
             if (rule instanceof HaskellLibrary || rule instanceof PrebuiltHaskellLibrary) {
               HaskellCompileDep haskellRule = (HaskellCompileDep) rule;
+              // Always use pic packages so we can use `+RTS -xp -RTS` to load
+              // the objects anywhere in the address space without the
+              // limitation of lower 2G address space.
               HaskellCompileInput ci =
-                  haskellRule.getCompileInput(platform, Linker.LinkableDepType.STATIC, hsProfile);
+                  haskellRule.getCompileInput(
+                      platform, Linker.LinkableDepType.STATIC_PIC, hsProfile);
 
               if (params.getBuildDeps().contains(rule)) {
                 firstOrderHaskellPackages.addAll(ci.getPackages());
