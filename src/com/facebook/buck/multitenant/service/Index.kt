@@ -126,18 +126,20 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
      *     if no rule existed for that target at that commit.
      */
     fun getTargetNodes(generation: Generation, targets: List<UnconfiguredBuildTarget>): List<RawBuildRule?> {
+        // internalRules is a List rather than a Sequence because sequences are lazy and we need to
+        // ensure all reads to ruleMap are done while the lock is held.
         val internalRules = acquireReadLock().use {
-            return@use targets.map {
+            targets.asSequence().map {
                 buildTargetCache.get(it)
             }.map {
                 ruleMap.getVersion(it, generation)
-            }
+            }.toList()
         }
         // We can release the lock because now we only need access to buildTargetCache, which does
         // not need to be guarded by rwLock.
         return internalRules.map {
             if (it != null) {
-                val deps = it.deps.map { buildTargetCache.getByIndex(it) }.toSet()
+                val deps = it.deps.asSequence().map { buildTargetCache.getByIndex(it) }.toSet()
                 RawBuildRule(it.targetNode, deps)
             } else {
                 null
@@ -173,7 +175,7 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
         }
 
         visited.remove(rootBuildTargetId)
-        return visited.map { buildTargetCache.getByIndex(it) }.toSet()
+        return visited.asSequence().map { buildTargetCache.getByIndex(it) }.toSet()
     }
 
     fun getFwdDeps(indexReadLock: IndexReadLock, generation: Generation, targets: Iterable<UnconfiguredBuildTarget>, out: ImmutableSet.Builder<UnconfiguredBuildTarget>) {
@@ -223,7 +225,7 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
         }
 
         return targetNames.asSequence().map {
-            buildTargetParser("//${basePath}:${it}")
+            createBuildTarget(basePath, it)
         }.toList()
     }
 
@@ -251,7 +253,7 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
             val basePath = it.first
             val names = it.second
             names.map {
-                buildTargetParser("//${basePath}:${it}")
+                createBuildTarget(basePath, it)
             }.asSequence()
         }.toList()
     }
@@ -374,7 +376,7 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
                             "generation $generation"
                 }
 
-                val oldRules = oldRuleNames.map { oldRuleName: String ->
+                val oldRules = oldRuleNames.asSequence().map { oldRuleName: String ->
                     val buildTarget = createBuildTarget(modified.buildFileDirectory, oldRuleName)
                     requireNotNull(ruleMap.getVersion(buildTargetCache.get(buildTarget),
                             generation)) {
@@ -427,7 +429,7 @@ internal data class Deltas(val buildPackageDeltas: List<BuildPackageDelta>,
 }
 
 private fun getRuleNames(rules: Set<InternalRawBuildRule>): Set<String> {
-    return rules.map { it.targetNode.buildTarget.name }.toSet()
+    return rules.asSequence().map { it.targetNode.buildTarget.name }.toSet()
 }
 
 /**
