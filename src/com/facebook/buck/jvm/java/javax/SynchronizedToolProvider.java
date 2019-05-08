@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.javax;
 
-import com.facebook.buck.util.JavaVersion;
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import javax.tools.JavaCompiler;

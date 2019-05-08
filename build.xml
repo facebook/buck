@@ -361,12 +361,12 @@
     <compiler destdir="${bootstrapper.classes.dir}" classpathref="bootstrapper-classpath">
       <javac-params>
         <include name="${bootstrapper.src.dir}/**/*.java" />
-        <include name="com/facebook/buck/util/JavaVersion.java" />
         <include name="com/facebook/buck/util/liteinfersupport/Nullable.java" />
         <include name="com/facebook/buck/util/liteinfersupport/PropagatesNullable.java" />
         <include name="com/facebook/buck/jvm/java/plugin/api/*.java" />
         <include name="com/facebook/buck/jvm/java/abi/source/api/*.java" />
         <include name="com/facebook/buck/jvm/java/lang/model/*.java" />
+        <include name="com/facebook/buck/jvm/java/version/JavaVersion.java" />
         <include name="com/facebook/buck/core/filesystems/*.java" />
       </javac-params>
     </compiler>

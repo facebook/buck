@@ -1,0 +1,10 @@
+java_library(
+    name = "version",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        # Do NOT add any deps here. This library is used by code that cannot depend on the rest of Buck.
+    ],
+)

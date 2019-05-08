@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.plugin.adapter;
 
-import com.facebook.buck.util.JavaVersion;
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.TaskEvent;
