@@ -42,7 +42,7 @@ import org.immutables.value.Value;
     of = "new",
     visibility = Value.Style.ImplementationVisibility.SAME,
     allParameters = true,
-    defaults = @Value.Immutable(builder = false, copy = false),
+    defaults = @Value.Immutable(builder = false, copy = false, prehash = false),
     forceJacksonPropertyNames = false,
     additionalJsonAnnotations = {JsonNaming.class})
 @Target({ElementType.TYPE, ElementType.PACKAGE, ElementType.ANNOTATION_TYPE})

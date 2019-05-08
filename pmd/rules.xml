@@ -114,7 +114,7 @@ public interface AbstractBaz {
   <rule name="BuckStyleValueMustNotHaveDefaultsImplicitlyOverridden"
     message="
 Value types decorated with @BuckStyleValue and @Value.Immutable must have explicit values
-for 'builder' and 'copy', preferably set to the default false.
+for 'builder', 'copy' and 'prehash', preferably set to the default false.
 Ex: @Value.Immutable(prehash = true, builder = false, copy = false)"
         class="net.sourceforge.pmd.lang.rule.XPathRule"
         language="java">
@@ -132,7 +132,8 @@ Ex: @Value.Immutable(prehash = true, builder = false, copy = false)"
   ]/*[
     Name/@Image='Value.Immutable'
     and (not(MemberValuePairs/MemberValuePair/@Image="builder")
-         or not(MemberValuePairs/MemberValuePair/@Image="copy"))
+         or not(MemberValuePairs/MemberValuePair/@Image="copy")
+         or not(MemberValuePairs/MemberValuePair/@Image="prehash"))
   ]
           ]]>
         </value>
@@ -177,6 +178,18 @@ abstract class Bad2 {
 
 // Bad: copy not specified
 @Value.Immutable(prehash = true, builder = true)
+@BuckStyleValue
+abstract class Bad3 {
+}
+
+// Bad: builder not specified
+@Value.Immutable(copy = true, prehash = true)
+@BuckStyleValue
+abstract class Bad3 {
+}
+
+// Bad: prehash not specified
+@Value.Immutable(copy = true, builder = true)
 @BuckStyleValue
 abstract class Bad3 {
 }
