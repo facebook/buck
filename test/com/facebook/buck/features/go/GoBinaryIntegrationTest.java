@@ -29,6 +29,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -64,9 +65,15 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
-  public void binaryWithAsm() throws IOException {
+  public void binaryWithAsm() throws IOException, InterruptedException {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "asm", tmp);
     workspace.setUp();
+
+    // gensymabis was introduced in go 1.12
+    List<Integer> versionNumbers = GoAssumptions.getActualVersionNumbers();
+    if (versionNumbers.get(1) >= 12 && versionNumbers.get(0) >= 1) {
+      workspace.addBuckConfigLocalOption("go", "gensymabis", "true");
+    }
 
     ProcessResult result = workspace.runBuckCommand("run", "//src/asm_test:bin");
     result.assertSuccess();
@@ -314,6 +321,20 @@ public class GoBinaryIntegrationTest {
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
     workspace.setUp();
     workspace.runBuckCommand("run", "//src/different_package/cli:cli").assertSuccess();
+  }
+
+  @Test
+  public void cgoLibraryWithCxxPrebuiltDep() throws IOException {
+    GoAssumptions.assumeGoVersionAtLeast("1.10.0");
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace
+            .runBuckCommand("run", "//src/prebuilt_cxx_lib/cli:cli")
+            .assertSuccess()
+            .getStdout(),
+        Matchers.containsString("called remote_function"));
   }
 
   @Test

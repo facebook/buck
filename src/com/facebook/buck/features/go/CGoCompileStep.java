@@ -28,6 +28,7 @@ public class CGoCompileStep extends ShellStep {
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> cgoCommandPrefix;
   private final ImmutableList<String> cgoCompilerFlags;
+  private final Iterable<String> cxxCompilerFlags;
   private final ImmutableList<Path> srcs;
   private final ImmutableList<Path> includeDirs;
   private final GoPlatform platform;
@@ -38,6 +39,7 @@ public class CGoCompileStep extends ShellStep {
       ImmutableMap<String, String> environment,
       ImmutableList<String> cgoCommandPrefix,
       ImmutableList<String> cgoCompilerFlags,
+      Iterable<String> cxxCompilerFlags,
       ImmutableList<Path> srcs,
       ImmutableList<Path> includeDirs,
       GoPlatform platform,
@@ -46,6 +48,7 @@ public class CGoCompileStep extends ShellStep {
     this.environment = environment;
     this.cgoCommandPrefix = cgoCommandPrefix;
     this.cgoCompilerFlags = cgoCompilerFlags;
+    this.cxxCompilerFlags = cxxCompilerFlags;
     this.srcs = srcs;
     this.includeDirs = includeDirs;
     this.outputDir = outputDir;
@@ -62,6 +65,7 @@ public class CGoCompileStep extends ShellStep {
         .addAll(cgoCompilerFlags)
         .add("--")
         .addAll(includeDirs.stream().map(dir -> "-I" + dir.toString()).collect(Collectors.toSet()))
+        .addAll(cxxCompilerFlags)
         .addAll(srcs.stream().map(Object::toString).iterator())
         .build();
   }

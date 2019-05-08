@@ -37,7 +37,9 @@ import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
+import com.facebook.buck.cxx.CxxSourceTypes;
 import com.facebook.buck.cxx.CxxSymlinkTreeHeaders;
+import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
@@ -105,6 +107,23 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(cxxDeps).addPlatformDeps(args.getPlatformDeps()).build();
 
+    // build cxxPreprocessorInputs and collect include flags (used by cgo
+    // compiler)
+    ImmutableList<BuildRule> cxxDepsRules =
+        Streams.stream(cxxDeps)
+            .map(graphBuilder::requireRule)
+            .collect(ImmutableList.toImmutableList());
+
+    Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+            platform.getCxxPlatform(), graphBuilder, cxxDepsRules);
+
+    PreprocessorFlags.Builder ppFlagsBuilder = PreprocessorFlags.builder();
+    for (CxxPreprocessorInput input : cxxPreprocessorInputs) {
+      ppFlagsBuilder.addAllIncludes(input.getIncludes());
+    }
+    PreprocessorFlags ppFlags = ppFlagsBuilder.build();
+
     // generate C sources with cgo tool (go build writes c files to _obj dir)
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
@@ -116,7 +135,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
             projectFilesystem,
             graphBuilder,
             platform.getCxxPlatform(),
-            cxxDeps,
+            cxxPreprocessorInputs,
             headers);
 
     SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
@@ -144,10 +163,13 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                         target,
                         projectFilesystem,
                         graphBuilder,
+                        CxxSourceTypes.getPreprocessor(platform.getCxxPlatform(), CxxSource.Type.C)
+                            .resolve(graphBuilder, target.getTargetConfiguration()),
                         goSourcesFromArg.build(),
                         headerSymlinkTree,
                         cgo,
                         args.getCgoCompilerFlags(),
+                        ppFlags,
                         platform));
 
     // generated c files needs to be compiled and linked into a single object
@@ -292,17 +314,8 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
-      Iterable<BuildTarget> cxxDeps,
+      Collection<CxxPreprocessorInput> cxxPreprocessorInputs,
       ImmutableMap<Path, SourcePath> headers) {
-
-    ImmutableList<BuildRule> cxxDepsRules =
-        Streams.stream(cxxDeps)
-            .map(graphBuilder::requireRule)
-            .collect(ImmutableList.toImmutableList());
-
-    Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-            cxxPlatform, graphBuilder, cxxDepsRules);
 
     ImmutableMap.Builder<Path, SourcePath> allHeaders = ImmutableMap.builder();
 
