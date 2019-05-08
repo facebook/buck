@@ -66,6 +66,7 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -350,11 +351,19 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   // Provide a future that resolves to the result of executing this rule and its runtime
   // dependencies.
-  private ListenableFuture<BuildResult> getBuildRuleResultWithRuntimeDepsUnlocked(
+  private ListenableFuture<BuildResult> getBuildRuleResultWithRuntimeDeps(
       BuildRule rule, BuildEngineBuildContext buildContext, ExecutionContext executionContext) {
 
     // If the rule is already executing, return its result future from the cache.
     ListenableFuture<BuildResult> existingResult = results.get(rule.getBuildTarget());
+    if (existingResult != null) {
+      return existingResult;
+    }
+
+    // Create a `SettableFuture` and atomically put it in the results map.  At this point, if it's
+    // not already created, we should proceed.
+    SettableFuture<BuildResult> future = SettableFuture.create();
+    existingResult = results.putIfAbsent(rule.getBuildTarget(), future);
     if (existingResult != null) {
       return existingResult;
     }
@@ -368,8 +377,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             input -> processBuildRule(rule, buildContext, executionContext),
             serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
     if (!(rule instanceof HasRuntimeDeps)) {
-      results.put(rule.getBuildTarget(), result);
-      return result;
+      future.setFuture(result);
+      return future;
     }
 
     // Collect any runtime deps we have into a list of futures.
@@ -378,8 +387,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     ImmutableSet<BuildRule> runtimeDeps =
         resolver.getAllRules(runtimeDepPaths.collect(ImmutableSet.toImmutableSet()));
     for (BuildRule dep : runtimeDeps) {
-      runtimeDepResults.add(
-          getBuildRuleResultWithRuntimeDepsUnlocked(dep, buildContext, executionContext));
+      runtimeDepResults.add(getBuildRuleResultWithRuntimeDeps(dep, buildContext, executionContext));
     }
 
     // Create a new combined future, which runs the original rule and all the runtime deps in
@@ -400,24 +408,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
               return result;
             },
             MoreExecutors.directExecutor());
-    results.put(rule.getBuildTarget(), chainedResult);
-    return chainedResult;
-  }
-
-  private ListenableFuture<BuildResult> getBuildRuleResultWithRuntimeDeps(
-      BuildRule rule, BuildEngineBuildContext buildContext, ExecutionContext executionContext) {
-
-    // If the rule is already executing, return it's result future from the cache without acquiring
-    // the lock.
-    ListenableFuture<BuildResult> existingResult = results.get(rule.getBuildTarget());
-    if (existingResult != null) {
-      return existingResult;
-    }
-
-    // Otherwise, grab the lock and delegate to the real method,
-    synchronized (results) {
-      return getBuildRuleResultWithRuntimeDepsUnlocked(rule, buildContext, executionContext);
-    }
+    future.setFuture(chainedResult);
+    return future;
   }
 
   public ListenableFuture<?> walkRule(BuildRule rule, Set<BuildRule> seen) {
