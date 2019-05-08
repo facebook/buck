@@ -14,14 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.android;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.testutil.packaged_resource.PackagedResourceTestUtil;
 import org.junit.Test;
 
 public class PackagedResourceIntegrationTest {
@@ -29,15 +28,18 @@ public class PackagedResourceIntegrationTest {
   public void testPackagedResourceOnIndividualFile() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PackagedResource packagedResource =
-        PackagedResourceTestUtil.getPackagedResource(filesystem, "testdata/packaged_resource_one");
+        new PackagedResource(
+            filesystem,
+            PackagedResourceIntegrationTest.class,
+            "testdata/packaged_resource/packaged_resource_one");
 
     assertThat(packagedResource.getFilenamePath().toString(), is("packaged_resource_one"));
 
     assertThat(
         packagedResource.getResourceIdentifier(),
         is(
-            "com.facebook.buck.testutil.packaged_resource.PackagedResourceTestUtil"
-                + "#testdata/packaged_resource_one"));
+            "com.facebook.buck.android.PackagedResourceIntegrationTest"
+                + "#testdata/packaged_resource/packaged_resource_one"));
 
     String fileContent = filesystem.readFileIfItExists(packagedResource.get()).get();
     assertThat(fileContent, is("abc"));

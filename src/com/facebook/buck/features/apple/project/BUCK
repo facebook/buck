@@ -48,7 +48,6 @@ buck_module(
         "//src/com/facebook/buck/rules/macros:types",
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/swift:swift",
-        "//src/com/facebook/buck/util:packaged_resource",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/concurrent:concurrent",

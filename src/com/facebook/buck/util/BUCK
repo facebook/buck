@@ -91,32 +91,11 @@ java_immutables_library(
     ],
 )
 
-PACKAGED_RESOURCE_SRCS = [
-    "PackagedResource.java",
-]
-
-java_library(
-    name = "packaged_resource",
-    srcs = PACKAGED_RESOURCE_SRCS,
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io/filesystem:filesystem",
-        "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/string:string",
-        "//src/com/facebook/buck/util/unarchive:unarchive",
-        "//third-party/java/guava:guava",
-    ],
-)
-
 java_immutables_library(
     name = "util",
     srcs = glob(
         ["*.java"],
-        exclude = CONSTANT_SRCS + IO_SRCS +
-                  PACKAGED_RESOURCE_SRCS + PROCESS_EXECUTOR_SRCS,
+        exclude = CONSTANT_SRCS + IO_SRCS + PROCESS_EXECUTOR_SRCS,
     ),
     exported_deps = [
         "//src/com/facebook/buck/util/function:function",

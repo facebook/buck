@@ -14,12 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.android;
 
 import static com.facebook.buck.util.unarchive.ExistingFileMode.OVERWRITE;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;

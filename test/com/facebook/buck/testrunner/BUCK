@@ -69,7 +69,6 @@ standard_java_test(
         "//src/com/facebook/buck/testrunner:instrumentation",
         "//src/com/facebook/buck/testrunner:junit",
         "//src/com/facebook/buck/util:io",
-        "//src/com/facebook/buck/util:packaged_resource",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/cache:cache",

@@ -36,7 +36,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.test.config.TestBuckConfig;
-import com.facebook.buck.util.PackagedResource;
 import com.google.common.collect.ImmutableCollection.Builder;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
