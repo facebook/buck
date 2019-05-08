@@ -781,7 +781,7 @@ abstract class AbstractCxxSourceRuleFactory {
     private final Function<AddsToRuleKey, String> commandHashCache;
 
     public HashBuilder(Function<AddsToRuleKey, String> commandHashCache) {
-      super(new NoopRuleKeyScopedHasher());
+      super(NoopRuleKeyScopedHasher.INSTANCE);
       this.commandHashCache = commandHashCache;
     }
 

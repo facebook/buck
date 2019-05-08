@@ -20,6 +20,8 @@ package com.facebook.buck.util;
  * A more specific interface that doesn't throw rather than using {@link AutoCloseable} directly.
  */
 public interface Scope extends AutoCloseable {
+  Scope NOOP = () -> {};
+
   @Override
   void close();
 }

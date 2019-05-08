@@ -25,10 +25,8 @@ import com.facebook.buck.core.rules.modern.HasCustomInputsLogic;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.keys.AbstractRuleKeyBuilder;
 import com.facebook.buck.rules.keys.AlterRuleKeys;
-import com.facebook.buck.rules.keys.RuleKeyScopedHasher;
-import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
+import com.facebook.buck.rules.keys.NoopRuleKeyScopedHasher;
 import com.facebook.buck.util.Memoizer;
-import com.facebook.buck.util.Scope;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -112,31 +110,7 @@ public final class BuildableSupport {
     private final SourcePathRuleFinder ruleFinder;
 
     public DepsBuilder(SourcePathRuleFinder ruleFinder) {
-      super(
-          new RuleKeyScopedHasher() {
-            @Override
-            public Scope keyScope(String key) {
-              return () -> {};
-            }
-
-            @Override
-            public Scope wrapperScope(RuleKeyHasher.Wrapper wrapper) {
-              return () -> {};
-            }
-
-            @Override
-            public ContainerScope containerScope(RuleKeyHasher.Container container) {
-              return new ContainerScope() {
-                @Override
-                public void close() {}
-
-                @Override
-                public Scope elementScope() {
-                  return () -> {};
-                }
-              };
-            }
-          });
+      super(NoopRuleKeyScopedHasher.INSTANCE);
       this.ruleFinder = ruleFinder;
       this.streamBuilder = Stream.builder();
     }
@@ -190,31 +164,7 @@ public final class BuildableSupport {
     private final Stream.Builder<SourcePath> streamBuilder;
 
     public InputsBuilder() {
-      super(
-          new RuleKeyScopedHasher() {
-            @Override
-            public Scope keyScope(String key) {
-              return () -> {};
-            }
-
-            @Override
-            public Scope wrapperScope(RuleKeyHasher.Wrapper wrapper) {
-              return () -> {};
-            }
-
-            @Override
-            public ContainerScope containerScope(RuleKeyHasher.Container container) {
-              return new ContainerScope() {
-                @Override
-                public void close() {}
-
-                @Override
-                public Scope elementScope() {
-                  return () -> {};
-                }
-              };
-            }
-          });
+      super(NoopRuleKeyScopedHasher.INSTANCE);
       this.streamBuilder = Stream.builder();
     }
 
