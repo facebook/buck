@@ -99,6 +99,7 @@ public class FetchCommand extends BuildCommand {
                             params.getBuckEventBus(),
                             params.getCell().getCellProvider(),
                             params.getExecutors(),
+                            params.getDepsAwareExecutorSupplier(),
                             params.getBuckConfig()),
                         new ActionGraphCache(
                             params

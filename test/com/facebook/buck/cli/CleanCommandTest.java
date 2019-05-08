@@ -58,6 +58,7 @@ import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -312,6 +313,9 @@ public class CleanCommandTest {
         TestKnownRuleTypesProvider.create(pluginManager);
     ExecutableFinder executableFinder = new ExecutableFinder();
 
+    CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
+        depsAwareExecutorSupplier = MainRunner.getDepsAwareExecutorSupplier(buckConfig);
+
     return CommandRunnerParams.of(
         new TestConsole(),
         new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
@@ -342,6 +346,7 @@ public class CleanCommandTest {
         new ActionGraphProviderBuilder()
             .withMaxEntries(
                 buckConfig.getView(BuildBuckConfig.class).getMaxActionGraphCacheEntries())
+            .withDepsAwareExecutorSupplier(depsAwareExecutorSupplier)
             .build(),
         knownRuleTypesProvider,
         new BuildInfoStoreManager(),
@@ -353,6 +358,7 @@ public class CleanCommandTest {
         executableFinder,
         pluginManager,
         TestBuckModuleManagerFactory.create(pluginManager),
+        depsAwareExecutorSupplier,
         MetadataProviderFactory.emptyMetadataProvider(),
         getManifestSupplier());
   }

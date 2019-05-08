@@ -1285,6 +1285,7 @@ public final class MainRunner {
                   buildEventBus,
                   executors,
                   ruleKeyConfiguration,
+                  depsAwareExecutorSupplier,
                   executableFinder,
                   manifestServiceSupplier,
                   fileHashCache,
@@ -1366,6 +1367,7 @@ public final class MainRunner {
                         executableFinder,
                         pluginManager,
                         moduleManager,
+                        depsAwareExecutorSupplier,
                         metadataProvider,
                         manifestServiceSupplier));
           } catch (InterruptedException | ClosedByInterruptException e) {
@@ -1543,6 +1545,8 @@ public final class MainRunner {
       BuckEventBus buildEventBus,
       ImmutableMap<ExecutorPool, ListeningExecutorService> executors,
       RuleKeyConfiguration ruleKeyConfiguration,
+      CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
+          depsAwareExecutorSupplier,
       ExecutableFinder executableFinder,
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
       FileHashCache fileHashCache,
@@ -1611,7 +1615,11 @@ public final class MainRunner {
         new ActionGraphProvider(
             buildEventBus,
             ActionGraphFactory.create(
-                buildEventBus, rootCell.getCellProvider(), executors, buckConfig),
+                buildEventBus,
+                rootCell.getCellProvider(),
+                executors,
+                depsAwareExecutorSupplier,
+                buckConfig),
             buckGlobalState.getActionGraphCache(),
             ruleKeyConfiguration,
             buckConfig),
@@ -2045,6 +2053,11 @@ public final class MainRunner {
   private static String getArtifactProducerId(ExecutionEnvironment executionEnvironment) {
     String artifactProducerId = "user://" + executionEnvironment.getUsername();
     return artifactProducerId;
+  }
+
+  static CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
+      getDepsAwareExecutorSupplier(BuckConfig config) {
+    return getDepsAwareExecutorSupplier(config.getView(ResourcesConfig.class));
   }
 
   private static CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>

@@ -161,6 +161,7 @@ public class AuditClasspathCommand extends AbstractCommand {
                             params.getBuckEventBus(),
                             params.getCell().getCellProvider(),
                             params.getExecutors(),
+                            params.getDepsAwareExecutorSupplier(),
                             params.getBuckConfig()),
                         new ActionGraphCache(
                             params
@@ -213,6 +214,7 @@ public class AuditClasspathCommand extends AbstractCommand {
                             params.getBuckEventBus(),
                             params.getCell().getCellProvider(),
                             params.getExecutors(),
+                            params.getDepsAwareExecutorSupplier(),
                             params.getBuckConfig()),
                         new ActionGraphCache(
                             params

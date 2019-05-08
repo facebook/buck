@@ -52,11 +52,17 @@ public class ParallelActionGraphFactory implements ActionGraphFactoryDelegate {
   public ActionGraphAndBuilder create(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
-      ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener) {
+      ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener,
+      ActionGraphBuilderDecorator actionGraphBuilderDecorator) {
     ListeningExecutorService executorService = executorSupplier.get();
+
     MultiThreadedActionGraphBuilder graphBuilder =
-        new MultiThreadedActionGraphBuilder(
-            executorService, targetGraph, transformer, cellProvider);
+        (MultiThreadedActionGraphBuilder)
+            actionGraphBuilderDecorator.create(
+                nodeTransformer ->
+                    new MultiThreadedActionGraphBuilder(
+                        executorService, targetGraph, nodeTransformer, cellProvider));
+
     HashMap<BuildTarget, ListenableFuture<BuildRule>> futures = new HashMap<>();
 
     actionGraphCreationLifecycleListener.onCreate(graphBuilder);

@@ -21,6 +21,8 @@ import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
@@ -42,6 +44,7 @@ import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
@@ -176,6 +179,10 @@ public abstract class AbstractCommandRunnerParams {
 
   @Value.Parameter
   public abstract BuckModuleManager getBuckModuleManager();
+
+  @Value.Parameter
+  public abstract CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
+      getDepsAwareExecutorSupplier();
 
   @Value.Parameter
   public abstract MetadataProvider getMetadataProvider();

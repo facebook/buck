@@ -18,11 +18,26 @@ package com.facebook.buck.core.model.actiongraph.computation;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory.ActionGraphCreationLifecycleListener;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
+import java.util.function.Function;
 
+/** The factory in charge of creating the action graph depending on the construction mode. */
 public interface ActionGraphFactoryDelegate {
   ActionGraphAndBuilder create(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
-      ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener);
+      ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener,
+      ActionGraphBuilderDecorator actionGraphBuilderDecorator);
+
+  /**
+   * Creates the base {@link ActionGraphBuilder} with potentially a decorator to be compatible with
+   * the new rule analysis framework
+   */
+  @FunctionalInterface
+  interface ActionGraphBuilderDecorator {
+    ActionGraphBuilder create(
+        Function<TargetNodeToBuildRuleTransformer, ActionGraphBuilder>
+            actionGraphBuilderConstructor);
+  }
 }

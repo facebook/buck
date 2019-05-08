@@ -54,10 +54,13 @@ public class SerialActionGraphFactory implements ActionGraphFactoryDelegate {
   public ActionGraphAndBuilder create(
       TargetNodeToBuildRuleTransformer transformer,
       TargetGraph targetGraph,
-      ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener) {
+      ActionGraphCreationLifecycleListener actionGraphCreationLifecycleListener,
+      ActionGraphBuilderDecorator actionGraphBuilderDecorator) {
     // TODO: Reduce duplication between the serial and parallel creation methods.
     ActionGraphBuilder graphBuilder =
-        new SingleThreadedActionGraphBuilder(targetGraph, transformer, cellProvider);
+        actionGraphBuilderDecorator.create(
+            nodeTransformer ->
+                new SingleThreadedActionGraphBuilder(targetGraph, nodeTransformer, cellProvider));
 
     actionGraphCreationLifecycleListener.onCreate(graphBuilder);
 

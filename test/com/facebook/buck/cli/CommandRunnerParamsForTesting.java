@@ -52,6 +52,7 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -126,6 +127,9 @@ public class CommandRunnerParamsForTesting {
             MoreExecutors.newDirectExecutorService(),
             ExecutorPool.GRAPH_CPU,
             MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()));
+    CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
+        depsAwareExecutorSupplier = MainRunner.getDepsAwareExecutorSupplier(config);
+
     return CommandRunnerParams.of(
         console,
         new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
@@ -156,6 +160,7 @@ public class CommandRunnerParamsForTesting {
         new ActionGraphProviderBuilder()
             .withMaxEntries(config.getView(BuildBuckConfig.class).getMaxActionGraphCacheEntries())
             .withPoolSupplier(executors)
+            .withDepsAwareExecutorSupplier(depsAwareExecutorSupplier)
             .build(),
         knownRuleTypesProvider,
         new BuildInfoStoreManager(),
@@ -167,6 +172,7 @@ public class CommandRunnerParamsForTesting {
         new ExecutableFinder(),
         pluginManager,
         TestBuckModuleManagerFactory.create(pluginManager),
+        depsAwareExecutorSupplier,
         MetadataProviderFactory.emptyMetadataProvider(),
         getManifestSupplier());
   }
