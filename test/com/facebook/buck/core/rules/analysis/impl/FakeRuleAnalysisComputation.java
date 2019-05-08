@@ -18,6 +18,7 @@ package com.facebook.buck.core.rules.analysis.impl;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisComputation;
+import com.facebook.buck.util.function.ThrowingFunction;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import java.util.Set;
@@ -27,8 +28,9 @@ public class FakeRuleAnalysisComputation implements RuleAnalysisComputation {
 
   private final Function<RuleAnalysisKey, RuleAnalysisResult> mappingFunc;
 
-  public FakeRuleAnalysisComputation(Function<RuleAnalysisKey, RuleAnalysisResult> mappingFunc) {
-    this.mappingFunc = mappingFunc;
+  public FakeRuleAnalysisComputation(
+      ThrowingFunction<RuleAnalysisKey, RuleAnalysisResult, Exception> mappingFunc) {
+    this.mappingFunc = mappingFunc.asFunction();
   }
 
   @Override

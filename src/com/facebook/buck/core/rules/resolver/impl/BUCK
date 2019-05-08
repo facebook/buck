@@ -6,6 +6,7 @@ java_library(
     exported_deps = [
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/rules/analysis/computation:computation",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/rules/transformer:transformer",
         "//src/com/facebook/buck/util/types:types",
@@ -18,6 +19,7 @@ java_library(
     ],
     deps = [
         "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/transformer/impl:impl",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/types:types",
