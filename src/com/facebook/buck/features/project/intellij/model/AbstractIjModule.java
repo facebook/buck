@@ -21,7 +21,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.features.project.intellij.IjDependencyListBuilder;
 import com.facebook.buck.features.project.intellij.Util;
 import com.facebook.buck.features.project.intellij.model.folders.IjFolder;
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -39,7 +39,8 @@ abstract class AbstractIjModule implements IjProjectElement {
   @Override
   @Value.Derived
   public String getName() {
-    return Util.intelliJModuleNameFromPath(MorePaths.pathWithUnixSeparators(getModuleBasePath()));
+    return Util.intelliJModuleNameFromPath(
+        PathFormatter.pathWithUnixSeparators(getModuleBasePath()));
   }
 
   @Override

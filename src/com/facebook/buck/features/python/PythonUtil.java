@@ -39,8 +39,8 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
@@ -165,7 +165,7 @@ public class PythonUtil {
       throw new HumanReadableException("%s: missing extension for module path: %s", target, name);
     }
     name = name.substring(0, ext);
-    return MorePaths.pathWithUnixSeparators(name).replace('/', '.');
+    return PathFormatter.pathWithUnixSeparators(name).replace('/', '.');
   }
 
   static PythonPackageComponents getAllComponents(

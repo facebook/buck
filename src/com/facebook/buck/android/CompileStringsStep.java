@@ -19,8 +19,8 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.StringResources.Gender;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -218,7 +218,7 @@ public class CompileStringsStep implements Step {
     ImmutableMultimap.Builder<String, Path> localeToFiles = ImmutableMultimap.builder();
 
     for (Path filepath : files) {
-      String path = MorePaths.pathWithUnixSeparators(filepath);
+      String path = PathFormatter.pathWithUnixSeparators(filepath);
       Matcher matcher = NON_ENGLISH_STRING_FILE_PATTERN.matcher(path);
 
       if (matcher.matches()) {

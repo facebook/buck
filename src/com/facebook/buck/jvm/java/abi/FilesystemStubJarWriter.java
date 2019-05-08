@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.buck.util.zip.CustomZipEntry;
 import com.facebook.buck.util.zip.JarBuilder;
@@ -50,7 +50,7 @@ class FilesystemStubJarWriter implements StubJarWriter {
       Path relativePath, ThrowingSupplier<InputStream, IOException> streamSupplier) {
     jarBuilder.addEntry(
         new JarEntrySupplier(
-            new CustomZipEntry(MorePaths.pathWithUnixSeparators(relativePath)),
+            new CustomZipEntry(PathFormatter.pathWithUnixSeparators(relativePath)),
             outputPath.toString(),
             streamSupplier));
   }

@@ -33,8 +33,8 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.FileScrubber;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -151,7 +151,7 @@ public class GnuLinker extends DelegatingTool implements Linker {
 
   @Override
   public Iterable<String> outputArgs(String path) {
-    return ImmutableList.of("-o", MorePaths.pathWithUnixSeparators(path));
+    return ImmutableList.of("-o", PathFormatter.pathWithUnixSeparators(path));
   }
 
   @Override

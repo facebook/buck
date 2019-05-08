@@ -33,10 +33,10 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.TestParserFactory;
@@ -115,7 +115,7 @@ public class DistBuildFileHashesIntegrationTest {
     String expectedPath =
         temporaryFolder.getRoot().resolve(SYMLINK_FILE_NAME).toAbsolutePath().toString();
     assertEquals(
-        MorePaths.pathWithUnixSeparators(expectedPath),
+        PathFormatter.pathWithUnixSeparators(expectedPath),
         symLinkEntry.getRootSymLinkTarget().getPath());
     assertEquals(SYMLINK_FILE_NAME, symLinkEntry.getRootSymLink().getPath());
 

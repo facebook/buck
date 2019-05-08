@@ -21,7 +21,7 @@ import static org.eclipse.aether.util.artifact.JavaScopes.TEST;
 
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TraversableGraph;
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.maven.aether.AetherUtil;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
@@ -649,7 +649,7 @@ public class Resolver {
     private String formatDep(Path buckThirdPartyRelativePath, Artifact artifact) {
       return String.format(
           "//%s/%s:%s",
-          MorePaths.pathWithUnixSeparators(buckThirdPartyRelativePath),
+          PathFormatter.pathWithUnixSeparators(buckThirdPartyRelativePath),
           getProjectName(artifact),
           artifact.getArtifactId());
     }

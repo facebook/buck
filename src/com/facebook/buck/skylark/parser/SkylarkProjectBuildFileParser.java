@@ -19,7 +19,7 @@ package com.facebook.buck.skylark.parser;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.BuildFileManifestPojoizer;
 import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
@@ -864,7 +864,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    */
   private String getBasePath(Path buildFile) {
     return Optional.ofNullable(options.getProjectRoot().relativize(buildFile).getParent())
-        .map(MorePaths::pathWithUnixSeparators)
+        .map(PathFormatter::pathWithUnixSeparators)
         .orElse("");
   }
 

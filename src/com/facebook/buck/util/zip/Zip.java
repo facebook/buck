@@ -17,8 +17,8 @@
 package com.facebook.buck.util.zip;
 
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
@@ -89,7 +89,7 @@ public class Zip {
 
           private String getEntryName(Path path) {
             Path relativePath = junkPaths ? path.getFileName() : baseDir.relativize(path);
-            return MorePaths.pathWithUnixSeparators(relativePath);
+            return PathFormatter.pathWithUnixSeparators(relativePath);
           }
 
           private CustomZipEntry getZipEntry(String entryName, Path path, BasicFileAttributes attr)

@@ -36,8 +36,8 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -369,7 +369,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
             for (Path exePath : executablesBuilder.build()) {
               Path fakeSoPath =
                   Paths.get(
-                      MorePaths.pathWithUnixSeparators(exePath)
+                      PathFormatter.pathWithUnixSeparators(exePath)
                           .replaceAll("/([^/]+)-disguised-exe$", "/lib$1.so"));
               filesystem.move(exePath, fakeSoPath);
             }

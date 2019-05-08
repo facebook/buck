@@ -17,6 +17,7 @@
 package com.facebook.buck.util.zip;
 
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,7 +63,7 @@ class DirectoryJarEntryContainer implements JarEntryContainer {
         .map(
             path -> {
               String relativePath =
-                  MorePaths.pathWithUnixSeparators(MorePaths.relativize(directory, path));
+                  PathFormatter.pathWithUnixSeparators(MorePaths.relativize(directory, path));
 
               if (relativePath.isEmpty()) {
                 return null;

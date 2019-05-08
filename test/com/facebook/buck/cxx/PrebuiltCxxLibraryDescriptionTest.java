@@ -48,10 +48,10 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.AllExistingProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
@@ -338,7 +338,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     SourcePath staticLibraryPath =
         library.getStaticLibrary(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder).get();
     assertThat(
-        MorePaths.pathWithUnixSeparators(
+        PathFormatter.pathWithUnixSeparators(
             graphBuilder.getSourcePathResolver().getAbsolutePath(staticLibraryPath)),
         Matchers.containsString(String.format("two/%s/libtarget.a", "lib")));
   }

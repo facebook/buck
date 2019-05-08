@@ -16,8 +16,8 @@
 
 package com.facebook.buck.log;
 
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.PathListing;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
@@ -136,7 +136,7 @@ public class LogConfig {
       ST st = new ST(template);
       st.add(
           "default_file_pattern",
-          MorePaths.pathWithUnixSeparators(logConfigSetup.getLogFilePath()));
+          PathFormatter.pathWithUnixSeparators(logConfigSetup.getLogFilePath()));
       st.add("default_count", logConfigSetup.getCount());
       st.add("default_max_size_bytes", logConfigSetup.getMaxLogSizeBytes());
       String result = st.render();

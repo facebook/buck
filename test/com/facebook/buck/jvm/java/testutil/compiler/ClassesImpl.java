@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.testutil.compiler;
 
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.zip.CustomZipEntry;
 import com.facebook.buck.util.zip.JarBuilder;
 import com.facebook.buck.util.zip.JarEntrySupplier;
@@ -72,7 +72,7 @@ class ClassesImpl implements Classes {
       jarBuilder.addEntry(
           new JarEntrySupplier(
               new CustomZipEntry(
-                  MorePaths.pathWithUnixSeparators(root.getRoot().toPath().relativize(file))),
+                  PathFormatter.pathWithUnixSeparators(root.getRoot().toPath().relativize(file))),
               "test",
               () -> Files.newInputStream(file)));
     }

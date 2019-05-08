@@ -16,8 +16,8 @@
 
 package com.facebook.buck.features.project.intellij;
 
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -32,7 +32,7 @@ public final class IjAndroidHelper {
    * users to target
    */
   public static String getAndroidGenDir(ProjectFilesystem filesystem) {
-    return MorePaths.pathWithUnixSeparators(
+    return PathFormatter.pathWithUnixSeparators(
         filesystem.getBuckPaths().getBuckOut().resolve("android"));
   }
 

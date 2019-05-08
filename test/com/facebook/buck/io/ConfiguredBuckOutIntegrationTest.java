@@ -20,7 +20,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -148,7 +148,7 @@ public class ConfiguredBuckOutIntegrationTest {
             .getStdout()
             .trim();
     output = Splitter.on(' ').splitToList(output).get(1);
-    assertThat(MorePaths.pathWithUnixSeparators(output), Matchers.startsWith("something/"));
+    assertThat(PathFormatter.pathWithUnixSeparators(output), Matchers.startsWith("something/"));
   }
 
   @Test
@@ -168,14 +168,14 @@ public class ConfiguredBuckOutIntegrationTest {
             .getStdout()
             .trim();
     output = Splitter.on(' ').splitToList(output).get(1);
-    assertThat(MorePaths.pathWithUnixSeparators(output), Matchers.startsWith("buck-out/gen/"));
+    assertThat(PathFormatter.pathWithUnixSeparators(output), Matchers.startsWith("buck-out/gen/"));
   }
 
   @Test
   public void buildShowOutput() throws IOException {
     Path output = workspace.buildAndReturnOutput("-c", "project.buck_out=something", "//:dummy");
     assertThat(
-        MorePaths.pathWithUnixSeparators(workspace.getDestPath().relativize(output)),
+        PathFormatter.pathWithUnixSeparators(workspace.getDestPath().relativize(output)),
         Matchers.startsWith("something/"));
   }
 
@@ -190,7 +190,7 @@ public class ConfiguredBuckOutIntegrationTest {
             "project.buck_out_compat_link=true",
             "//:dummy");
     assertThat(
-        MorePaths.pathWithUnixSeparators(workspace.getDestPath().relativize(output)),
+        PathFormatter.pathWithUnixSeparators(workspace.getDestPath().relativize(output)),
         Matchers.startsWith("buck-out/gen/"));
   }
 }

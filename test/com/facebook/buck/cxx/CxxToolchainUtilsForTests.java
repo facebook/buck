@@ -17,7 +17,7 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.environment.PlatformType;
@@ -85,13 +85,13 @@ public class CxxToolchainUtilsForTests {
             "  ar=\"%3$s\"",
             "  archiver_platform=windows",
             "  ranlib=\"%3$s\""),
-        MorePaths.pathWithUnixSeparators(cl),
-        MorePaths.pathWithUnixSeparators(link),
-        MorePaths.pathWithUnixSeparators(lib),
-        MorePaths.pathWithUnixSeparators(WINDOWS_CXX_TOOLCHAIN_LIB_LOCATION),
-        MorePaths.pathWithUnixSeparators(libDir.resolve("km").resolve("x64")),
-        MorePaths.pathWithUnixSeparators(libDir.resolve("ucrt").resolve("x64")),
-        MorePaths.pathWithUnixSeparators(libDir.resolve("um").resolve("x64")));
+        PathFormatter.pathWithUnixSeparators(cl),
+        PathFormatter.pathWithUnixSeparators(link),
+        PathFormatter.pathWithUnixSeparators(lib),
+        PathFormatter.pathWithUnixSeparators(WINDOWS_CXX_TOOLCHAIN_LIB_LOCATION),
+        PathFormatter.pathWithUnixSeparators(libDir.resolve("km").resolve("x64")),
+        PathFormatter.pathWithUnixSeparators(libDir.resolve("ucrt").resolve("x64")),
+        PathFormatter.pathWithUnixSeparators(libDir.resolve("um").resolve("x64")));
   }
 
   private static Path findLastSubDir(Path path) throws IOException {

@@ -27,6 +27,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedMap;
@@ -91,7 +92,7 @@ abstract class AbstractResourcesParameters implements AddsToRuleKey {
         BuildTarget underlyingTarget = underlyingRule.get().getBuildTarget();
         if (underlyingRule.get() instanceof HasOutputName) {
           resource =
-              MorePaths.pathWithUnixSeparators(
+              PathFormatter.pathWithUnixSeparators(
                   underlyingTarget
                       .getBasePath()
                       .resolve(((HasOutputName) underlyingRule.get()).getOutputName()));
@@ -109,11 +110,11 @@ abstract class AbstractResourcesParameters implements AddsToRuleKey {
               "%s is used as a resource but does not output to a default output directory",
               underlyingTarget.getFullyQualifiedName());
           resource =
-              MorePaths.pathWithUnixSeparators(
+              PathFormatter.pathWithUnixSeparators(
                   underlyingTarget.getBasePath().resolve(outputPath.get()));
         }
       } else {
-        resource = MorePaths.pathWithUnixSeparators(relativePathToResource);
+        resource = PathFormatter.pathWithUnixSeparators(relativePathToResource);
       }
       builder.put(resource, rawResource);
     }

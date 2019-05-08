@@ -27,8 +27,8 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -230,7 +230,7 @@ class Depfiles {
           int inputIndex =
               prereqs.indexOf(
                   useUnixPathSeparator
-                      ? MorePaths.pathWithUnixSeparators(inputPath)
+                      ? PathFormatter.pathWithUnixSeparators(inputPath)
                       : inputPath.toString());
           Preconditions.checkState(
               inputIndex != -1,

@@ -23,6 +23,7 @@ import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.types.Pair;
@@ -152,7 +153,7 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
     for (Path relativeChildPath : projectFilesystem.getDirectoryContents(path)) {
       childrenRelativePaths.add(
           new PathWithUnixSeparators()
-              .setPath(MorePaths.pathWithUnixSeparators(relativeChildPath)));
+              .setPath(PathFormatter.pathWithUnixSeparators(relativeChildPath)));
       remainingPaths.add(relativeChildPath);
     }
 
@@ -306,17 +307,17 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
       Path symLinkRoot =
           projectFilesystem.getPathRelativeToProjectRoot(symLinkRootAndTarget.getFirst()).get();
       fileHashEntry.setRootSymLink(
-          new PathWithUnixSeparators().setPath(MorePaths.pathWithUnixSeparators(symLinkRoot)));
+          new PathWithUnixSeparators().setPath(PathFormatter.pathWithUnixSeparators(symLinkRoot)));
       fileHashEntry.setRootSymLinkTarget(
           new PathWithUnixSeparators()
               .setPath(
-                  MorePaths.pathWithUnixSeparators(
+                  PathFormatter.pathWithUnixSeparators(
                       symLinkRootAndTarget.getSecond().toAbsolutePath())));
     }
 
     fileHashEntry.setIsDirectory(isDirectory);
     fileHashEntry.setPath(
-        new PathWithUnixSeparators().setPath(MorePaths.pathWithUnixSeparators(entryKey)));
+        new PathWithUnixSeparators().setPath(PathFormatter.pathWithUnixSeparators(entryKey)));
     if (memberRelPath.isPresent()) {
       fileHashEntry.setArchiveMemberPath(memberRelPath.get());
     }

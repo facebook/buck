@@ -26,8 +26,8 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -166,7 +166,8 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
                   output.putNextEntry(
                       new ZipEntry(
-                          MorePaths.pathWithUnixSeparators(pathToInput.get().relativize(file))));
+                          PathFormatter.pathWithUnixSeparators(
+                              pathToInput.get().relativize(file))));
                   if (allPreDexRules.isEmpty()) {
                     // If there are no pre-dexed inputs, we don't yet support trimming
                     // R.java, so just copy it verbatim (instead of trimming it down to nothing).

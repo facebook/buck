@@ -21,8 +21,8 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -154,26 +154,30 @@ class BuckPythonProgram implements AutoCloseable {
                   "import sys",
                   "PY2 = sys.version_info[0] == 2",
                   "sys.path.insert(0, "
-                      + Escaper.escapeAsPythonString(MorePaths.pathWithUnixSeparators(pathlibDir))
+                      + Escaper.escapeAsPythonString(
+                          PathFormatter.pathWithUnixSeparators(pathlibDir))
                       + ")",
                   "sys.path.insert(0, "
-                      + Escaper.escapeAsPythonString(MorePaths.pathWithUnixSeparators(watchmanDir))
+                      + Escaper.escapeAsPythonString(
+                          PathFormatter.pathWithUnixSeparators(watchmanDir))
                       + ")",
                   "if PY2:",
                   "    sys.path.insert(0, "
-                      + Escaper.escapeAsPythonString(MorePaths.pathWithUnixSeparators(typingDir))
+                      + Escaper.escapeAsPythonString(
+                          PathFormatter.pathWithUnixSeparators(typingDir))
                       + ")",
                   "sys.path.insert(0, "
-                      + Escaper.escapeAsPythonString(MorePaths.pathWithUnixSeparators(sixDir))
+                      + Escaper.escapeAsPythonString(PathFormatter.pathWithUnixSeparators(sixDir))
                       + ")",
                   // Path to the bundled python code.
                   "sys.path.insert(0, "
-                      + Escaper.escapeAsPythonString(MorePaths.pathWithUnixSeparators(pythonPath))
+                      + Escaper.escapeAsPythonString(
+                          PathFormatter.pathWithUnixSeparators(pythonPath))
                       + ")",
                   // Path to the generated rules stub.
                   "sys.path.insert(0, "
                       + Escaper.escapeAsPythonString(
-                          MorePaths.pathWithUnixSeparators(generatedRoot))
+                          PathFormatter.pathWithUnixSeparators(generatedRoot))
                       + ")",
                   "if __name__ == '__main__':",
                   "    try:",

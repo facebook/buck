@@ -22,8 +22,8 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import java.nio.file.Path;
 
 /** {@link TypeCoercer} for {@link UnconfiguredBuildTargetView} */
@@ -58,7 +58,7 @@ public class UnconfiguredBuildTargetTypeCoercer
     try {
       String baseName =
           UnflavoredBuildTargetView.BUILD_TARGET_PREFIX
-              + MorePaths.pathWithUnixSeparators(pathRelativeToProjectRoot);
+              + PathFormatter.pathWithUnixSeparators(pathRelativeToProjectRoot);
 
       return unconfiguredBuildTargetFactory.createForBaseName(cellRoots, baseName, param);
     } catch (BuildTargetParseException e) {

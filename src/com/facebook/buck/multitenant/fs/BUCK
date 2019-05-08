@@ -9,6 +9,7 @@ kotlin_library(
         "//test/com/facebook/buck/multitenant/...",
     ],
     deps = [
+        "//src/com/facebook/buck/io/pathformat:pathformat",
         "//third-party/java/guava:guava",
     ],
 )

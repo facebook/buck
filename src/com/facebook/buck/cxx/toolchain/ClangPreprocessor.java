@@ -18,7 +18,7 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -46,14 +46,14 @@ public class ClangPreprocessor extends DelegatingTool implements Preprocessor {
   public final Iterable<String> localIncludeArgs(Iterable<String> includeRoots) {
     return MoreIterables.zipAndConcat(
         Iterables.cycle("-I"),
-        Iterables.transform(includeRoots, MorePaths::pathWithUnixSeparators));
+        Iterables.transform(includeRoots, PathFormatter::pathWithUnixSeparators));
   }
 
   @Override
   public final Iterable<String> systemIncludeArgs(Iterable<String> includeRoots) {
     return MoreIterables.zipAndConcat(
         Iterables.cycle("-isystem"),
-        Iterables.transform(includeRoots, MorePaths::pathWithUnixSeparators));
+        Iterables.transform(includeRoots, PathFormatter::pathWithUnixSeparators));
   }
 
   @Override
@@ -61,7 +61,7 @@ public class ClangPreprocessor extends DelegatingTool implements Preprocessor {
     Preconditions.checkArgument(
         !prefixHeader.toString().endsWith(".gch"),
         "Expected non-precompiled file, got a '.gch': " + prefixHeader);
-    return ImmutableList.of("-include", MorePaths.pathWithUnixSeparators(prefixHeader));
+    return ImmutableList.of("-include", PathFormatter.pathWithUnixSeparators(prefixHeader));
   }
 
   @Override
@@ -71,7 +71,7 @@ public class ClangPreprocessor extends DelegatingTool implements Preprocessor {
         "Expected a precompiled '.gch' file, got: " + pchOutputPath);
     return ImmutableList.of(
         "-include-pch",
-        MorePaths.pathWithUnixSeparators(pchOutputPath),
+        PathFormatter.pathWithUnixSeparators(pchOutputPath),
         // Force clang to accept pch even if mtime of its input changes, since buck tracks
         // input contents, this should be safe.
         "-Wp,-fno-validate-pch");

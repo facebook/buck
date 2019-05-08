@@ -20,8 +20,8 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.file.downloader.Downloader;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -133,6 +133,6 @@ public class DownloadStep implements Step {
   public String getDescription(ExecutionContext context) {
     return String.format(
         "curl %s -o '%s'",
-        canonicalUri, MorePaths.pathWithUnixSeparators(filesystem.resolve(output)));
+        canonicalUri, PathFormatter.pathWithUnixSeparators(filesystem.resolve(output)));
   }
 }

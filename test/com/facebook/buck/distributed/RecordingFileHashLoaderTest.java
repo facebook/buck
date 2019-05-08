@@ -29,9 +29,9 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.testutil.FakeProjectFileHashCache;
 import com.facebook.buck.testutil.FileHashEntryMatcher;
 import com.facebook.buck.util.CreateSymlinksForTests;
@@ -495,6 +495,6 @@ public class RecordingFileHashLoaderTest {
   }
 
   private static PathWithUnixSeparators unixPath(String path) {
-    return new PathWithUnixSeparators().setPath(MorePaths.pathWithUnixSeparators(path));
+    return new PathWithUnixSeparators().setPath(PathFormatter.pathWithUnixSeparators(path));
   }
 }

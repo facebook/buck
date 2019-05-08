@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.parser.buildtargetpattern;
 
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import org.immutables.value.Value;
@@ -84,7 +85,7 @@ public abstract class BuildTargetPatternData {
 
   @Override
   public String toString() {
-    String result = getCell() + ROOT_SYMBOL + pathWithUnixSeparators(getBasePath());
+    String result = getCell() + ROOT_SYMBOL + PathFormatter.pathWithUnixSeparators(getBasePath());
     switch (getKind()) {
       case SINGLE:
         return result + TARGET_SYMBOL + getTargetName();
@@ -94,14 +95,5 @@ public abstract class BuildTargetPatternData {
         return result + PATH_SYMBOL + RECURSIVE_SYMBOL;
     }
     throw new IllegalStateException();
-  }
-
-  /**
-   * Same as {@link com.facebook.buck.io.file.MorePaths#pathWithUnixSeparators(Path)}, but {@code
-   * MorePaths} has too many dependencies, so we inline the method here since it is one trivial
-   * line.
-   */
-  private static String pathWithUnixSeparators(Path path) {
-    return path.toString().replace('\\', '/');
   }
 }

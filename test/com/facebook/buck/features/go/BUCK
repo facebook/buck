@@ -141,6 +141,7 @@ java_test(
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/pathformat:pathformat",
         "//src/com/facebook/buck/io/watchman:transport",
         "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/jvm/core:core",

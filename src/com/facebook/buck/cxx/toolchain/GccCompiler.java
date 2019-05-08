@@ -17,7 +17,7 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
@@ -57,7 +57,7 @@ public class GccCompiler extends DefaultCompiler {
     if (useDependencyTree) {
       return ImmutableList.of("-H");
     } else {
-      return ImmutableList.of("-MD", "-MF", MorePaths.pathWithUnixSeparators(outputPath));
+      return ImmutableList.of("-MD", "-MF", PathFormatter.pathWithUnixSeparators(outputPath));
     }
   }
 

@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.impl.HostTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
@@ -49,7 +49,8 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
   @Override
   public void visitOutputPath(OutputPath value) {
     append(
-        "OutputPath(%s)", MorePaths.pathWithUnixSeparators(OutputPath.internals().getPath(value)));
+        "OutputPath(%s)",
+        PathFormatter.pathWithUnixSeparators(OutputPath.internals().getPath(value)));
   }
 
   @Override
@@ -251,6 +252,6 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
 
   @Override
   public void visitPath(Path path) {
-    append("path(%s)", MorePaths.pathWithUnixSeparators(path));
+    append("path(%s)", PathFormatter.pathWithUnixSeparators(path));
   }
 }

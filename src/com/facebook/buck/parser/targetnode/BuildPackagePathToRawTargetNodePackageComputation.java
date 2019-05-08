@@ -36,7 +36,7 @@ import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDeps;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDepsPackage;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.RawTargetNodeToTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -141,7 +141,7 @@ public class BuildPackagePathToRawTargetNodePackageComputation
 
     BuildFileManifest buildFileManifest =
         env.getDep(ImmutableBuildPackagePathToBuildFileManifestKey.of(key.getPath()));
-    String baseName = "//" + MorePaths.pathWithUnixSeparators(key.getPath());
+    String baseName = "//" + PathFormatter.pathWithUnixSeparators(key.getPath());
 
     ImmutableSet.Builder<BuildTargetToRawTargetNodeKey> builder =
         ImmutableSet.builderWithExpectedSize(buildFileManifest.getTargets().size());

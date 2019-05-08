@@ -21,7 +21,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.MoreStringsForTests;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -73,7 +73,7 @@ public class ZipInspector {
   }
 
   public void assertFileContents(Path pathRelativeToRoot, String expected) throws IOException {
-    assertFileContents(MorePaths.pathWithUnixSeparators(pathRelativeToRoot), expected);
+    assertFileContents(PathFormatter.pathWithUnixSeparators(pathRelativeToRoot), expected);
   }
 
   public void assertFileContains(String pathRelativeToRoot, String expected) throws IOException {
@@ -83,7 +83,7 @@ public class ZipInspector {
   }
 
   public void assertFileContains(Path pathRelativeToRoot, String expected) throws IOException {
-    assertFileContains(MorePaths.pathWithUnixSeparators(pathRelativeToRoot), expected);
+    assertFileContains(PathFormatter.pathWithUnixSeparators(pathRelativeToRoot), expected);
   }
 
   public byte[] getFileContents(String pathRelativeToRoot) throws IOException {

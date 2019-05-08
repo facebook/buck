@@ -30,6 +30,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.query.thrift.DirectedAcyclicGraph;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
@@ -349,7 +350,7 @@ public class QueryCommandIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand(
-            "query", "owner(%s)", MorePaths.pathWithUnixSeparators("example/1.txt"));
+            "query", "owner(%s)", PathFormatter.pathWithUnixSeparators("example/1.txt"));
 
     result.assertSuccess();
     assertThat(result.getStdout(), containsString("//example:one"));

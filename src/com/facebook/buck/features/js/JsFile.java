@@ -25,8 +25,8 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.features.js.JsFile.AbstractImpl;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
@@ -151,7 +151,7 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
       super(buildTarget, extraJson, workerTool, projectFilesystem);
       this.src = src;
       this.subPath = subPath;
-      this.virtualPath = virtualPath.map(MorePaths::pathWithUnixSeparators);
+      this.virtualPath = virtualPath.map(PathFormatter::pathWithUnixSeparators);
     }
 
     @Override
@@ -164,7 +164,9 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
           .addString(
               "sourceJsFileName",
               virtualPath.orElseGet(
-                  () -> MorePaths.pathWithUnixSeparators(sourcePathResolver.getRelativePath(src))));
+                  () ->
+                      PathFormatter.pathWithUnixSeparators(
+                          sourcePathResolver.getRelativePath(src))));
     }
 
     @Nullable

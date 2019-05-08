@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.classes;
 
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -145,7 +146,7 @@ public abstract class ClasspathTraversal {
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                 throws IOException {
               String relativePath =
-                  MorePaths.pathWithUnixSeparators(MorePaths.relativize(directory, file));
+                  PathFormatter.pathWithUnixSeparators(MorePaths.relativize(directory, file));
               traversal.visit(new FileLikeInDirectory(file, relativePath));
               return FileVisitResult.CONTINUE;
             }

@@ -17,7 +17,7 @@ package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
@@ -55,7 +55,7 @@ abstract class AbstractSubdirectoryBuildTargetPattern implements BuildTargetPatt
 
   @Override
   public String getCellFreeRepresentation() {
-    return "//" + MorePaths.pathWithUnixSeparators(getPathWithinCell()) + "/...";
+    return "//" + PathFormatter.pathWithUnixSeparators(getPathWithinCell()) + "/...";
   }
 
   @Override

@@ -25,9 +25,9 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.parser.DaemonicCellState.Cache;
 import com.facebook.buck.parser.api.BuildFileManifestFactory;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -56,7 +56,7 @@ public class DaemonicCellStateTest {
                 target.getShortName(),
                 ImmutableMap.of(
                     "name", target.getShortName(),
-                    "buck.base_path", MorePaths.pathWithUnixSeparators(target.getBasePath())))),
+                    "buck.base_path", PathFormatter.pathWithUnixSeparators(target.getBasePath())))),
         ImmutableSet.of(),
         ImmutableMap.of());
   }

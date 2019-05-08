@@ -26,6 +26,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
         "//src/com/facebook/buck/cxx/toolchain/linker/impl:impl",
         "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/pathformat:pathformat",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
         "//third-party/java/infer-annotations:infer-annotations",

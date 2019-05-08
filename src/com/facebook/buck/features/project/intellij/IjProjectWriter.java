@@ -25,8 +25,8 @@ import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.features.project.intellij.model.ModuleIndexEntry;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -333,13 +333,13 @@ public class IjProjectWriter {
     final Set<Path> existingModuleFilepaths =
         existingModules.stream()
             .map(ModuleIndexEntry::getFilePath)
-            .map(MorePaths::pathWithUnixSeparators)
+            .map(PathFormatter::pathWithUnixSeparators)
             .map(Paths::get)
             .collect(ImmutableSet.toImmutableSet());
     ImmutableSet<Path> remainingModuleFilepaths =
         modulesEdited.stream()
             .map(projectPaths::getModuleImlFilePath)
-            .map(MorePaths::pathWithUnixSeparators)
+            .map(PathFormatter::pathWithUnixSeparators)
             .map(Paths::get)
             .filter(modulePath -> !existingModuleFilepaths.contains(modulePath))
             .collect(ImmutableSet.toImmutableSet());

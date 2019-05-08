@@ -22,7 +22,7 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Charsets;
@@ -93,7 +93,7 @@ public class JsFlavors {
   public static Flavor fileFlavorForSourcePath(Path path) {
     String hash =
         Hashing.sha1()
-            .hashString(MorePaths.pathWithUnixSeparators(path), Charsets.UTF_8)
+            .hashString(PathFormatter.pathWithUnixSeparators(path), Charsets.UTF_8)
             .toString()
             .substring(0, 10);
     String safeFileName = Flavor.replaceInvalidCharacters(path.getFileName().toString());

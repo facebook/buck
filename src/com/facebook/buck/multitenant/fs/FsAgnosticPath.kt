@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.multitenant.fs
 
+import com.facebook.buck.io.pathformat.PathFormatter
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import java.nio.file.Path
@@ -49,7 +50,7 @@ class FsAgnosticPath private constructor(private val path: String) : Comparable<
          * @param path must be a normalized, relative path.
          */
         fun of(path: Path): FsAgnosticPath {
-            return of(path.toString().replace('\\', '/'))
+            return of(PathFormatter.pathWithUnixSeparators(path))
         }
 
         /** Caller is responsible for verifying that the string is well-formed. */

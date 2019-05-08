@@ -18,6 +18,7 @@ package com.facebook.buck.io.file;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.BuckUnixPath;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
@@ -49,32 +50,16 @@ public class MorePaths {
   /** Utility class: do not instantiate. */
   private MorePaths() {}
 
-  public static String pathWithUnixSeparators(String path) {
-    return pathWithUnixSeparators(Paths.get(path));
-  }
-
-  public static String pathWithUnixSeparators(Path path) {
-    return path.toString().replace('\\', '/');
-  }
-
-  public static String pathWithWindowsSeparators(Path path) {
-    return path.toString().replace('/', '\\');
-  }
-
   public static String pathWithPlatformSeparators(String path) {
     return pathWithPlatformSeparators(Paths.get(path));
   }
 
   public static String pathWithPlatformSeparators(Path path) {
     if (Platform.detect() == Platform.WINDOWS) {
-      return pathWithWindowsSeparators(path);
+      return PathFormatter.pathWithWindowsSeparators(path);
     } else {
-      return pathWithUnixSeparators(path);
+      return PathFormatter.pathWithUnixSeparators(path);
     }
-  }
-
-  public static String pathWithUnixSeparatorsAndTrailingSlash(Path path) {
-    return pathWithUnixSeparators(path) + "/";
   }
 
   public static Path getParentOrEmpty(Path path) {

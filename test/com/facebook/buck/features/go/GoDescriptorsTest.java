@@ -30,9 +30,9 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.features.go.GoListStep.ListType;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.FluentIterable;
@@ -66,8 +66,8 @@ public class GoDescriptorsTest {
             .transform(
                 input ->
                     Maps.immutableEntry(
-                        MorePaths.pathWithUnixSeparators(input.getKey()),
-                        MorePaths.pathWithUnixSeparators(input.getValue()))));
+                        PathFormatter.pathWithUnixSeparators(input.getKey()),
+                        PathFormatter.pathWithUnixSeparators(input.getValue()))));
   }
 
   @Test

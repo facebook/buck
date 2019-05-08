@@ -16,8 +16,8 @@
 
 package com.facebook.buck.util.hashing;
 
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -42,7 +42,7 @@ public class PathHashing {
         !root.equals(EMPTY_PATH), "Path to hash (%s) must not be empty", root);
     ImmutableSet.Builder<Path> children = ImmutableSet.builder();
     for (Path path : ImmutableSortedSet.copyOf(projectFilesystem.getFilesUnderPath(root))) {
-      StringHashing.hashStringAndLength(hasher, MorePaths.pathWithUnixSeparators(path));
+      StringHashing.hashStringAndLength(hasher, PathFormatter.pathWithUnixSeparators(path));
       if (!root.equals(path)) {
         children.add(root.relativize(path));
       }

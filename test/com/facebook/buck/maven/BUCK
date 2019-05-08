@@ -130,6 +130,7 @@ java_test(
         "//src/com/facebook/buck/core/model/impl:impl",
         "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/pathformat:pathformat",
         "//src/com/facebook/buck/maven/aether:aether",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android/aapt:aapt",

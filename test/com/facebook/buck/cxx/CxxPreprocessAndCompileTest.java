@@ -48,9 +48,9 @@ import com.facebook.buck.cxx.toolchain.GccCompiler;
 import com.facebook.buck.cxx.toolchain.GccPreprocessor;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.ToolType;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -619,7 +619,7 @@ public class CxxPreprocessAndCompileTest {
         FakeBuildContext.withSourcePathResolver(ruleFinder.getSourcePathResolver());
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     Path includePath = PathNormalizer.toWindowsPathIfNeeded(Paths.get("/foo/bar/zap"));
-    String includedPathStr = MorePaths.pathWithUnixSeparators(includePath);
+    String includedPathStr = PathFormatter.pathWithUnixSeparators(includePath);
 
     CxxToolFlags flags =
         CxxToolFlags.explicitBuilder()
@@ -658,10 +658,10 @@ public class CxxPreprocessAndCompileTest {
             .add("-x", "c++")
             .add("-ffunction-sections")
             .add("-O3")
-            .add("-I " + MorePaths.pathWithUnixSeparators(includePath))
+            .add("-I " + PathFormatter.pathWithUnixSeparators(includePath))
             .add("-o", "buck-out/gen/foo/bar__/baz/test.o")
             .add("-c")
-            .add(MorePaths.pathWithUnixSeparators(input.toString()))
+            .add(PathFormatter.pathWithUnixSeparators(input.toString()))
             .build();
     ImmutableList<String> actualCompileCommand =
         buildRule.makeMainStep(context, false).getCommand();

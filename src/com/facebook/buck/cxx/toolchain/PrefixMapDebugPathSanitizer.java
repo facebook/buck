@@ -17,7 +17,7 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -58,7 +58,7 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
   @Override
   public String getCompilationDirectory() {
     return useUnixPathSeparator
-        ? MorePaths.pathWithUnixSeparators(fakeCompilationDirectory)
+        ? PathFormatter.pathWithUnixSeparators(fakeCompilationDirectory)
         : fakeCompilationDirectory;
   }
 
@@ -68,7 +68,7 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
     return ImmutableMap.of(
         "PWD",
         useUnixPathSeparator
-            ? MorePaths.pathWithUnixSeparators(workingDir.toString())
+            ? PathFormatter.pathWithUnixSeparators(workingDir.toString())
             : workingDir.toString());
   }
 
@@ -104,7 +104,7 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
                             new AbstractMap.SimpleEntry<>(
                                 e.getKey(),
                                 useUnixPathSeparator
-                                    ? MorePaths.pathWithUnixSeparators(e.getValue().toString())
+                                    ? PathFormatter.pathWithUnixSeparators(e.getValue().toString())
                                     : e.getValue().toString())))
         .concat(RichStream.from(getAllPaths(Optional.of(workingDir))))
         .sorted(
@@ -124,7 +124,7 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
 
   private String getDebugPrefixMapFlag(Path realPath, String fakePath) {
     String realPathStr =
-        useUnixPathSeparator ? MorePaths.pathWithUnixSeparators(realPath) : realPath.toString();
+        useUnixPathSeparator ? PathFormatter.pathWithUnixSeparators(realPath) : realPath.toString();
     // If we're replacing the real path with an empty fake path, then also remove the trailing `/`
     // to prevent forming an absolute path.
     if (fakePath.isEmpty()) {
@@ -144,7 +144,7 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
             new AbstractMap.SimpleEntry<>(
                 workingDir.get(),
                 useUnixPathSeparator
-                    ? MorePaths.pathWithUnixSeparators(fakeCompilationDirectory)
+                    ? PathFormatter.pathWithUnixSeparators(fakeCompilationDirectory)
                     : fakeCompilationDirectory)));
   }
 }

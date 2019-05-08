@@ -22,8 +22,8 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -213,7 +213,7 @@ public class FilterResourcesSteps {
     if (localeFilterEnabled || enableStringWhitelisting) {
       pathPredicates.add(
           path -> {
-            String filePath = MorePaths.pathWithUnixSeparators(path);
+            String filePath = PathFormatter.pathWithUnixSeparators(path);
             Matcher matcher = NON_ENGLISH_STRINGS_FILE_PATH.matcher(filePath);
             if (!matcher.matches() || !filePath.endsWith(localizedStringFileName)) {
               return true;
@@ -286,7 +286,7 @@ public class FilterResourcesSteps {
         String fromDensity = (density == ResourceFilters.Density.NO_QUALIFIER ? "" : "-") + density;
         Path destination =
             Paths.get(
-                MorePaths.pathWithUnixSeparators(drawable)
+                PathFormatter.pathWithUnixSeparators(drawable)
                     .replaceFirst(
                         "((?:^|/)drawable[^/]*)" + Pattern.quote(fromDensity) + "(-|$|/)",
                         "$1-" + targetDensity + "$2"));
@@ -337,7 +337,7 @@ public class FilterResourcesSteps {
             new SimpleFileVisitor<Path>() {
               @Override
               public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
-                String unixPath = MorePaths.pathWithUnixSeparators(path);
+                String unixPath = PathFormatter.pathWithUnixSeparators(path);
                 if (DRAWABLE_PATH_PATTERN.matcher(unixPath).matches()
                     && !DRAWABLE_EXCLUDE_PATTERN.matcher(unixPath).matches()) {
                   // The path is normalized so that the value can be matched against patterns.

@@ -24,9 +24,9 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -188,7 +188,7 @@ public class CxxPrepareForLinkStepTest {
 
     ImmutableList<String> expectedArgFileContents =
         ImmutableList.<String>builder()
-            .add("-o", MorePaths.pathWithUnixSeparators(output))
+            .add("-o", PathFormatter.pathWithUnixSeparators(output))
             .add("-rpath")
             .add("hello")
             .add("a.o")
@@ -200,7 +200,8 @@ public class CxxPrepareForLinkStepTest {
             .build();
 
     ImmutableList<String> expectedFileListContents =
-        ImmutableList.of(MorePaths.pathWithUnixSeparators(Paths.get("libb.a").toAbsolutePath()));
+        ImmutableList.of(
+            PathFormatter.pathWithUnixSeparators(Paths.get("libb.a").toAbsolutePath()));
 
     checkContentsOfFile(argFilePath, expectedArgFileContents);
     checkContentsOfFile(fileListPath, expectedFileListContents);
@@ -256,7 +257,7 @@ public class CxxPrepareForLinkStepTest {
 
     ImmutableList<String> expectedArgFileContents =
         ImmutableList.<String>builder()
-            .add("-o", MorePaths.pathWithUnixSeparators(output))
+            .add("-o", PathFormatter.pathWithUnixSeparators(output))
             .add("-rpath")
             .add(isWindows ? "\"\\\"hello\\\"\"" : "'\"hello\"'")
             .add(isWindows ? "'a.o'" : "''\\''a.o'\\'''")
@@ -266,9 +267,9 @@ public class CxxPrepareForLinkStepTest {
                 isWindows
                     ? "\"/Library/Application Support/blabla\""
                     : "'/Library/Application Support/blabla'")
-            .add(MorePaths.pathWithUnixSeparators(FakeSourcePath.of("libb.a").toString()))
+            .add(PathFormatter.pathWithUnixSeparators(FakeSourcePath.of("libb.a").toString()))
             .add(
-                MorePaths.pathWithUnixSeparators(
+                PathFormatter.pathWithUnixSeparators(
                     FakeSourcePath.of("buck-out/gen/mylib#default,static/libmylib.lib").toString()))
             .build();
 

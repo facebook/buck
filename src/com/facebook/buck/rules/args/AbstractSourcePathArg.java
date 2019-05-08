@@ -21,7 +21,7 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.function.Consumer;
@@ -44,7 +44,7 @@ abstract class AbstractSourcePathArg implements Arg, HasSourcePath {
       Consumer<String> consumer, SourcePathResolver pathResolver, boolean useUnixPathSeparator) {
     String line = pathResolver.getAbsolutePath(getPath()).toString();
     if (useUnixPathSeparator) {
-      line = MorePaths.pathWithUnixSeparators(line);
+      line = PathFormatter.pathWithUnixSeparators(line);
     }
     consumer.accept(line);
   }
@@ -59,7 +59,7 @@ abstract class AbstractSourcePathArg implements Arg, HasSourcePath {
         && cellPath.equals(((BuildTargetSourcePath) path).getTarget().getCellPath())) {
       String line = pathResolver.getRelativePath(path).toString();
       if (useUnixPathSeparator) {
-        line = MorePaths.pathWithUnixSeparators(line);
+        line = PathFormatter.pathWithUnixSeparators(line);
       }
       consumer.accept(line);
     } else {

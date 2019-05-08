@@ -17,7 +17,7 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueVisitor;
@@ -125,7 +125,7 @@ public abstract class DebugPathSanitizer implements AddsToRuleKey {
       String replacement = entry.getValue();
       String pathToReplace =
           useUnixPathSeparator
-              ? MorePaths.pathWithUnixSeparators(entry.getKey())
+              ? PathFormatter.pathWithUnixSeparators(entry.getKey())
               : entry.getKey().toString();
       if (contents.contains(pathToReplace)) {
         // String.replace creates a number of objects, and creates a fair

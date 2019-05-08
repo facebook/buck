@@ -17,8 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -57,7 +57,7 @@ public class GetStringsFilesStep implements Step {
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
     Predicate<Path> filter =
         pathRelativeToProjectRoot -> {
-          String filePath = MorePaths.pathWithUnixSeparators(pathRelativeToProjectRoot);
+          String filePath = PathFormatter.pathWithUnixSeparators(pathRelativeToProjectRoot);
           return STRINGS_FILE_PATH.matcher(filePath).matches();
         };
 

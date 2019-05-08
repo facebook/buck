@@ -35,6 +35,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.maven.aether.Repository;
 import com.facebook.buck.parser.ParserConfig;
@@ -251,7 +252,7 @@ public class ResolverIntegrationTest {
     assertEquals(1, visibility.size());
     assertEquals(
         ImmutableList.of(
-            String.format("//%s:with-deps", MorePaths.pathWithUnixSeparators(exampleDir))),
+            String.format("//%s:with-deps", PathFormatter.pathWithUnixSeparators(exampleDir))),
         visibility);
     assertNull(noDeps.get("deps"));
 
@@ -260,7 +261,8 @@ public class ResolverIntegrationTest {
     List<String> deps = (List<String>) withDeps.get("deps");
     assertEquals(1, deps.size());
     assertEquals(
-        ImmutableList.of(String.format("//%s:no-deps", MorePaths.pathWithUnixSeparators(otherDir))),
+        ImmutableList.of(
+            String.format("//%s:no-deps", PathFormatter.pathWithUnixSeparators(otherDir))),
         deps);
   }
 
