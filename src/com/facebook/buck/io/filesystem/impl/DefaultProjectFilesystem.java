@@ -412,7 +412,8 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   }
 
   /** Walks a project-root relative file tree with a visitor and visit options. */
-  protected void walkRelativeFileTree(
+  @Override
+  public void walkRelativeFileTree(
       Path pathRelativeToProjectRoot,
       EnumSet<FileVisitOption> visitOptions,
       FileVisitor<Path> fileVisitor,
