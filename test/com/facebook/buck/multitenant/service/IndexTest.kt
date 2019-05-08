@@ -33,67 +33,67 @@ class IndexTest {
 
         val commits = populateIndexFromStream(index, IndexTest::class.java.getResourceAsStream("index_test_targets_and_deps.json"))
 
-        val commit1 = commits[0]
-        val commit2 = commits[1]
-        val commit3 = commits[2]
-        val commit4 = commits[3]
-        val commit5 = commits[4]
+        val generation1 = requireNotNull(index.getGeneration(commits[0]))
+        val generation2 = requireNotNull(index.getGeneration(commits[1]))
+        val generation3 = requireNotNull(index.getGeneration(commits[2]))
+        val generation4 = requireNotNull(index.getGeneration(commits[3]))
+        val generation5 = requireNotNull(index.getGeneration(commits[4]))
 
         assertEquals(
                 setOf(bt("//java/com/facebook/buck/base:base")),
-                index.getTargets(commit1).toSet())
+                index.getTargets(generation1).toSet())
         assertEquals(
                 setOf(
                         bt("//java/com/facebook/buck/base:base"),
                         bt("//java/com/facebook/buck/model:model")),
-                index.getTargets(commit2).toSet())
+                index.getTargets(generation2).toSet())
         assertEquals(
                 setOf(
                         bt("//java/com/facebook/buck/base:base"),
                         bt("//java/com/facebook/buck/model:model"),
                         bt("//java/com/facebook/buck/util:util")),
-                index.getTargets(commit3).toSet())
+                index.getTargets(generation3).toSet())
         assertEquals(
                 setOf(
                         bt("//java/com/facebook/buck/base:base"),
                         bt("//java/com/facebook/buck/model:model"),
                         bt("//java/com/facebook/buck/util:util")),
-                index.getTargets(commit4).toSet())
+                index.getTargets(generation4).toSet())
         assertEquals(
                 setOf(
                         bt("//java/com/facebook/buck/base:base"),
                         bt("//java/com/facebook/buck/util:util")),
-                index.getTargets(commit5).toSet())
+                index.getTargets(generation5).toSet())
 
         index.acquireReadLock().use {
             assertEquals(
                     setOf(
                             bt("//java/com/facebook/buck/base:base")
                     ),
-                    index.getTransitiveDeps(it, commit2, bt("//java/com/facebook/buck/model:model"))
+                    index.getTransitiveDeps(it, generation2, bt("//java/com/facebook/buck/model:model"))
             )
             assertEquals(
                     setOf(
                             bt("//java/com/facebook/buck/base:base"),
                             bt("//java/com/facebook/buck/util:util")
                     ),
-                    index.getTransitiveDeps(it, commit3, bt("//java/com/facebook/buck/model:model"))
+                    index.getTransitiveDeps(it, generation3, bt("//java/com/facebook/buck/model:model"))
             )
 
             val commit1baseFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
-            index.getFwdDeps(it, commit1, listOf(bt("//java/com/facebook/buck/base:base")), commit1baseFwdDeps)
+            index.getFwdDeps(it, generation1, listOf(bt("//java/com/facebook/buck/base:base")), commit1baseFwdDeps)
             assertEquals(commit1baseFwdDeps.build(), setOf<UnconfiguredBuildTarget>())
 
             val commit2modelFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
-            index.getFwdDeps(it, commit2, listOf(bt("//java/com/facebook/buck/model:model")), commit2modelFwdDeps)
+            index.getFwdDeps(it, generation2, listOf(bt("//java/com/facebook/buck/model:model")), commit2modelFwdDeps)
             assertEquals(commit2modelFwdDeps.build(), setOf(bt("//java/com/facebook/buck/base:base")))
 
             val commit3modelFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
-            index.getFwdDeps(it, commit3, listOf(bt("//java/com/facebook/buck/model:model")), commit3modelFwdDeps)
+            index.getFwdDeps(it, generation3, listOf(bt("//java/com/facebook/buck/model:model")), commit3modelFwdDeps)
             assertEquals(commit3modelFwdDeps.build(), setOf(bt("//java/com/facebook/buck/base:base"), bt("//java/com/facebook/buck/util:util")))
 
             val commit3utilFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
-            index.getFwdDeps(it, commit3, listOf(bt("//java/com/facebook/buck/util:util")), commit3utilFwdDeps)
+            index.getFwdDeps(it, generation3, listOf(bt("//java/com/facebook/buck/util:util")), commit3utilFwdDeps)
             assertEquals(commit3utilFwdDeps.build(), setOf(bt("//java/com/facebook/buck/base:base")))
         }
     }
@@ -104,9 +104,9 @@ class IndexTest {
         val index = Index(bt)
 
         val commits = populateIndexFromStream(index, IndexTest::class.java.getResourceAsStream("index_test_targets_and_deps.json"))
-        val commit5 = commits[4]
+        val generation5 = requireNotNull(index.getGeneration(commits[4]))
 
-        val targetNodes = index.getTargetNodes(commit5, listOf(
+        val targetNodes = index.getTargetNodes(generation5, listOf(
                 bt("//java/com/facebook/buck/base:base"),
                 bt("//java/com/facebook/buck/model:model"),
                 bt("//java/com/facebook/buck/util:util")
@@ -115,7 +115,7 @@ class IndexTest {
         assertNull("model was deleted at commit 5", targetNodes[1])
         assertEquals(targetNodes[2]!!.deps, setOf(bt("//java/com/facebook/buck/base:base")))
 
-        assertEquals(targetNodes[0], index.getTargetNode(commit5, bt("//java/com/facebook/buck/base:base")))
+        assertEquals(targetNodes[0], index.getTargetNode(generation5, bt("//java/com/facebook/buck/base:base")))
         assertEquals(targetNodes[1], null)
     }
 }

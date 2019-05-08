@@ -22,6 +22,7 @@ import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import java.util.*
 
 typealias Commit = String
+typealias Generation = Int
 
 internal typealias BuildTargetId = Int
 

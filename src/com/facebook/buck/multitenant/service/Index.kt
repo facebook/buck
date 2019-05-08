@@ -21,7 +21,10 @@ import com.facebook.buck.multitenant.collect.GenerationMap
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.google.common.collect.ImmutableSet
 import java.io.Closeable
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import javax.annotation.concurrent.GuardedBy
 import kotlin.concurrent.withLock
 
 /**
@@ -56,17 +59,25 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
     private val buildTargetCache = AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>()
 
     /**
-     * Access to all of the fields after this one must be guarded by the rwLock.
+     * id of the current generation. should only be read and set by [addCommitData] as clients
+     * should get generation ids via [commitToGeneration]/[getGeneration].
      */
-    private val rwLock = ReentrantReadWriteLock()
+    private val generation = AtomicInteger()
 
-    private var generation = 0
-    private val commitToGeneration = mutableMapOf<Commit, Int>()
+    /** Stores commit to generation mappings created by [addCommitData]. */
+    private val commitToGeneration = ConcurrentHashMap<Commit, Int>()
+
+    /**
+     * Access to all of the fields after this one must be guarded by the rwLock.
+     * We use a fair lock to prioritize writer threads.
+     */
+    private val rwLock = ReentrantReadWriteLock(/*fair*/ true)
 
     /**
      * The key is the path for the directory relative to the Buck root that contains the build file
      * for the corresponding build package.
      */
+    @GuardedBy("rwLock")
     private val buildPackageMap = GenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath>({ it })
 
     /**
@@ -75,6 +86,7 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
      * We also specify the key as the keyInfo so that we get it back when we use
      * `getAllInfoValuePairsForGeneration()`.
      */
+    @GuardedBy("rwLock")
     private val ruleMap = GenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>({ it })
 
     /**
@@ -101,8 +113,8 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
      * @return the corresponding [RawBuildRule] at the specified commit, if it exists;
      *     otherwise, return `null`.
      */
-    fun getTargetNode(commit: Commit, target: UnconfiguredBuildTarget): RawBuildRule? {
-        return getTargetNodes(commit, listOf(target))[0]
+    fun getTargetNode(generation: Generation, target: UnconfiguredBuildTarget): RawBuildRule? {
+        return getTargetNodes(generation, listOf(target))[0]
     }
 
     /**
@@ -113,9 +125,8 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
      *     the output is the corresponding target node for the build target at the commit or `null`
      *     if no rule existed for that target at that commit.
      */
-    fun getTargetNodes(commit: Commit, targets: List<UnconfiguredBuildTarget>): List<RawBuildRule?> {
+    fun getTargetNodes(generation: Generation, targets: List<UnconfiguredBuildTarget>): List<RawBuildRule?> {
         val internalRules = acquireReadLock().use {
-            val generation = commitToGeneration.getValue(commit)
             return@use targets.map {
                 buildTargetCache.get(it)
             }.map {
@@ -138,9 +149,8 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
      * @param indexReadLock caller is responsible for ensuring this lock is still held, i.e., that
      * `close()` has not been invoked.
      */
-    fun getTransitiveDeps(indexReadLock: IndexReadLock, commit: Commit, target: UnconfiguredBuildTarget): Set<UnconfiguredBuildTarget> {
+    fun getTransitiveDeps(indexReadLock: IndexReadLock, generation: Generation, target: UnconfiguredBuildTarget): Set<UnconfiguredBuildTarget> {
         checkReadLock(indexReadLock)
-        val generation = commitToGeneration.getValue(commit)
         val rootBuildTargetId = buildTargetCache.get(target)
         val toVisit = LinkedHashSet<Int>()
         toVisit.add(rootBuildTargetId)
@@ -166,9 +176,8 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
         return visited.map { buildTargetCache.getByIndex(it) }.toSet()
     }
 
-    fun getFwdDeps(indexReadLock: IndexReadLock, commit: Commit, targets: Iterable<UnconfiguredBuildTarget>, out: ImmutableSet.Builder<UnconfiguredBuildTarget>) {
+    fun getFwdDeps(indexReadLock: IndexReadLock, generation: Generation, targets: Iterable<UnconfiguredBuildTarget>, out: ImmutableSet.Builder<UnconfiguredBuildTarget>) {
         checkReadLock(indexReadLock)
-        val generation = commitToGeneration.getValue(commit)
         for (target in targets) {
             val targetId = buildTargetCache.get(target)
             val node = ruleMap.getVersion(targetId, generation) ?: continue
@@ -182,13 +191,10 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
      * Note this method does not take an [IndexReadLock] because it does its own synchronization
      * internally.
      *
-     * @param commit at which to enumerate all build targets
+     * @param generation at which to enumerate all build targets
      */
-    fun getTargets(commit: Commit): List<UnconfiguredBuildTarget> {
+    fun getTargets(generation: Generation): List<UnconfiguredBuildTarget> {
         val pairs = rwLock.readLock().withLock {
-            val generation = requireNotNull(commitToGeneration[commit]) {
-                "No generation found for $commit"
-            }
             ruleMap.getAllInfoValuePairsForGeneration(generation)
         }
 
@@ -206,17 +212,13 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
      * Note this method does not take an [IndexReadLock] because it does its own synchronization
      * internally.
      *
-     * @param commit at which to enumerate all build targets under `basePath`
+     * @param generation at which to enumerate all build targets under `basePath`
      * @param basePath under which to look. If the query is for `//:`, then `basePath` would be
      *     the empty string. If the query is for `//foo/bar:`, then `basePath` would be
      *     `foo/bar`.
      */
-    fun getTargetsInBasePath(commit: Commit, basePath: FsAgnosticPath): List<UnconfiguredBuildTarget> {
+    fun getTargetsInBasePath(generation: Generation, basePath: FsAgnosticPath): List<UnconfiguredBuildTarget> {
         val targetNames = rwLock.readLock().withLock {
-            val generation = requireNotNull(commitToGeneration[commit]) {
-                "No generation found for $commit"
-            }
-
             buildPackageMap.getVersion(basePath, generation) ?: return listOf()
         }
 
@@ -231,21 +233,17 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
      * Note this method does not take an [IndexReadLock] because it does its own synchronization
      * internally.
      *
-     * @param commit at which to enumerate all build targets under `basePath`
+     * @param generation at which to enumerate all build targets under `basePath`
      * @param basePath under which to look. If the query is for `//...`, then `basePath` would be
      *     the empty string. If the query is for `//foo/bar/...`, then `basePath` would be
      *     `foo/bar`.
      */
-    fun getTargetsUnderBasePath(commit: Commit, basePath: FsAgnosticPath): List<UnconfiguredBuildTarget> {
+    fun getTargetsUnderBasePath(generation: Generation, basePath: FsAgnosticPath): List<UnconfiguredBuildTarget> {
         if (basePath.isEmpty()) {
-            return getTargets(commit)
+            return getTargets(generation)
         }
 
         val entries = rwLock.readLock().withLock {
-            val generation = requireNotNull(commitToGeneration[commit]) {
-                "No generation found for $commit"
-            }
-
             buildPackageMap.filterEntriesByKeyInfo(generation) { it.startsWith(basePath) }
         }
 
@@ -256,6 +254,14 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
                 buildTargetParser("//${basePath}:${it}")
             }.asSequence()
         }.toList()
+    }
+
+    /**
+     * @return the generation that corresponds to the specified commit or `null` if no such
+     *     generation is available
+     */
+    fun getGeneration(commit: Commit): Int? {
+        return commitToGeneration[commit]
     }
 
     /**
@@ -275,23 +281,23 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
 
         // First, determine if any of the changes from the commits require new values to be added
         // to the generation map.
-        val deltas = determineDeltas(toInternalChanges(changes))
+        val currentGeneration = generation.get()
+        val deltas = determineDeltas(toInternalChanges(changes), currentGeneration)
 
         // If there are no updates to any of the generation maps, add a new entry for the current
         // commit using the existing generation in the commitToGeneration map.
         if (deltas.isEmpty()) {
-            rwLock.writeLock().withLock {
-                commitToGeneration[commit] = generation;
-            }
-            return;
+            val oldValue = commitToGeneration.putIfAbsent(commit, currentGeneration)
+            require(oldValue == null) { "Should not have existing value for $commit" }
+            return
         }
+
+        val nextGeneration = currentGeneration + 1
 
         // If any generation map needs to be updated, grab the write lock, bump the generation for
         // all of the maps, insert all of the new values into the maps, and as a final step, add a
         // new entry to commitToGeneration with the new generation value.
         rwLock.writeLock().withLock {
-            val nextGeneration = generation + 1;
-
             for (delta in deltas.buildPackageDeltas) {
                 when (delta) {
                     is BuildPackageDelta.Updated -> {
@@ -318,17 +324,18 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
                 }
                 ruleMap.addVersion(buildTargetCache.get(buildTarget), newNodeAndDeps, nextGeneration)
             }
-
-            commitToGeneration[commit] = nextGeneration;
-            ++generation
         }
+
+        val oldValue = commitToGeneration.putIfAbsent(commit, nextGeneration)
+        require(oldValue == null) { "Should not have existing value for $commit" }
+        generation.set(nextGeneration)
     }
 
     private fun createBuildTarget(buildFileDirectory: FsAgnosticPath, name: String): UnconfiguredBuildTarget {
         return buildTargetParser(String.format("//%s:%s", buildFileDirectory, name))
     }
 
-    private fun determineDeltas(changes: InternalChanges): Deltas {
+    private fun determineDeltas(changes: InternalChanges, generation: Generation): Deltas {
         val buildPackageDeltas = mutableListOf<BuildPackageDelta>()
         val ruleDeltas = mutableListOf<RuleDelta>()
 

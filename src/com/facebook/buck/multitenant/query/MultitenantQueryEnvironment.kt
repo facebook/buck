@@ -23,7 +23,7 @@ import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternData
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternData.Kind
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternDataParser
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
-import com.facebook.buck.multitenant.service.Commit
+import com.facebook.buck.multitenant.service.Generation
 import com.facebook.buck.multitenant.service.Index
 import com.facebook.buck.query.DepsFunction
 import com.facebook.buck.query.InputsFunction
@@ -46,13 +46,13 @@ val QUERY_FUNCTIONS: List<QueryEnvironment.QueryFunction<out QueryTarget, Unconf
         KindFunction<UnconfiguredBuildTarget>())
 
 /**
- * Each instance of a [MultitenantQueryEnvironment] is parameterized by a base commit and the
+ * Each instance of a [MultitenantQueryEnvironment] is parameterized by a generation and the
  * user's local changes. All queries that are satisfied by this environment are done in the context
  * of that state.
  */
-class MultitenantQueryEnvironment(private val index: Index, private val commit: Commit) : QueryEnvironment<UnconfiguredBuildTarget> {
+class MultitenantQueryEnvironment(private val index: Index, private val generation: Generation) : QueryEnvironment<UnconfiguredBuildTarget> {
     private val targetEvaluator: Supplier<TargetEvaluator> = Suppliers.memoize {
-        TargetEvaluator(index, commit)
+        TargetEvaluator(index, generation)
     }
 
     fun evaluateQuery(query: String): ImmutableSet<UnconfiguredBuildTarget> {
@@ -72,7 +72,7 @@ class MultitenantQueryEnvironment(private val index: Index, private val commit: 
     override fun getFwdDeps(targets: Iterable<UnconfiguredBuildTarget>): ImmutableSet<UnconfiguredBuildTarget> {
         val fwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
         index.acquireReadLock().use {
-            index.getFwdDeps(it, commit, targets, fwdDeps)
+            index.getFwdDeps(it, generation, targets, fwdDeps)
         }
         return fwdDeps.build()
     }
@@ -82,7 +82,7 @@ class MultitenantQueryEnvironment(private val index: Index, private val commit: 
     }
 
     override fun getInputs(target: UnconfiguredBuildTarget): Set<QueryFileTarget> {
-        val targetNode = requireNotNull(index.getTargetNode(commit, target)).targetNode
+        val targetNode = requireNotNull(index.getTargetNode(generation, target)).targetNode
         return extractInputs(targetNode)
     }
 
@@ -99,7 +99,7 @@ class MultitenantQueryEnvironment(private val index: Index, private val commit: 
     }
 
     override fun getTargetKind(target: UnconfiguredBuildTarget): String {
-        val rawBuildRule = requireNotNull(index.getTargetNode(commit, target))
+        val rawBuildRule = requireNotNull(index.getTargetNode(generation, target))
         return rawBuildRule.targetNode.ruleType.toString()
     }
 
@@ -124,7 +124,7 @@ class MultitenantQueryEnvironment(private val index: Index, private val commit: 
     }
 }
 
-private class TargetEvaluator(private val index: Index, private val commit: Commit) : QueryEnvironment.TargetEvaluator {
+private class TargetEvaluator(private val index: Index, private val generation: Generation) : QueryEnvironment.TargetEvaluator {
     override fun getType(): QueryEnvironment.TargetEvaluator.Type = QueryEnvironment.TargetEvaluator.Type.IMMEDIATE
 
     override fun evaluateTarget(target: String): ImmutableSet<QueryTarget> {
@@ -143,11 +143,11 @@ private class TargetEvaluator(private val index: Index, private val commit: Comm
             }
             Kind.PACKAGE -> {
                 val basePath = buildTargetPattern.basePath
-                ImmutableSet.copyOf(index.getTargetsInBasePath(commit, FsAgnosticPath.of(basePath)))
+                ImmutableSet.copyOf(index.getTargetsInBasePath(generation, FsAgnosticPath.of(basePath)))
             }
             Kind.RECURSIVE -> {
                 val basePath = buildTargetPattern.basePath
-                ImmutableSet.copyOf(index.getTargetsUnderBasePath(commit, FsAgnosticPath.of(basePath)))
+                ImmutableSet.copyOf(index.getTargetsUnderBasePath(generation, FsAgnosticPath.of(basePath)))
             }
         }
     }

@@ -170,5 +170,7 @@ private fun asFileTargets(vararg path: String): Set<QueryFileTarget> {
 private fun loadIndex(resource: String, commitIndex: Int): MultitenantQueryEnvironment {
     val index = Index(::parseOrdinaryBuildTarget)
     val commits = populateIndexFromStream(index, MultitenantQueryTest::class.java.getResourceAsStream(resource))
-    return MultitenantQueryEnvironment(index, commits[commitIndex])
+    val generation = index.getGeneration(commits[commitIndex])
+    requireNotNull(generation)
+    return MultitenantQueryEnvironment(index, generation)
 }
