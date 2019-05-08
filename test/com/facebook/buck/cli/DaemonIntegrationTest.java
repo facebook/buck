@@ -25,11 +25,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
-import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
-import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.core.rules.knowntypes.DefaultKnownRuleTypesFactory;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
@@ -41,9 +36,7 @@ import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.Threads;
-import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -64,7 +57,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.pf4j.PluginManager;
 
 public class DaemonIntegrationTest {
 
@@ -172,26 +164,17 @@ public class DaemonIntegrationTest {
   private Runnable createRunnableCommand(ExitCode expectedExitCode, String... args) {
     return () -> {
       try {
-        PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
-        DefaultBuckModuleManager moduleManager =
-            new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());
         BackgroundTaskManager manager = TestBackgroundTaskManager.of();
-
-        MainRunner main =
-            new MainRunner(
+        MainForTests main =
+            new MainForTests(
                 new TestConsole(),
                 new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
-                DefaultKnownRuleTypesFactory::new,
-                new BuildId(),
                 EnvVariablesProvider.getSystemEnv(),
-                Platform.detect(),
-                pluginManager,
-                moduleManager,
-                manager,
-                CommandMode.TEST,
                 Optional.of(new TestContext()));
+
+        MainRunner mainRunner = main.prepareMainRunner(manager);
         ExitCode exitCode =
-            main.runMainWithExitCode(
+            mainRunner.runMainWithExitCode(
                 tmp.getRoot(),
                 WatchmanWatcher.FreshInstanceAction.NONE,
                 System.nanoTime(),

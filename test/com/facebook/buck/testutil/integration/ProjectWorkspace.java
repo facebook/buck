@@ -27,6 +27,7 @@ import static org.junit.Assume.assumeTrue;
 import com.dd.plist.BinaryPropertyListParser;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
+import com.facebook.buck.cli.MainForTests;
 import com.facebook.buck.cli.MainRunner;
 import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
 import com.facebook.buck.core.cell.Cell;
@@ -36,13 +37,10 @@ import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
-import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
-import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
-import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownRuleTypesFactory;
@@ -76,7 +74,6 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
-import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.string.MoreStrings;
@@ -517,39 +514,19 @@ public class ProjectWorkspace extends AbstractWorkspace {
       envBuilder.putAll(environmentOverrides);
 
       ImmutableMap<String, String> sanizitedEnv = ImmutableMap.copyOf(envBuilder);
-      Platform platform = Platform.detect();
-
-      PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
-      DefaultBuckModuleManager moduleManager =
-          new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());
       BackgroundTaskManager manager = AsyncBackgroundTaskManager.of();
 
-      MainRunner main =
-          knownRuleTypesFactoryFactory == null
-              ? new MainRunner(
-                  testConsole,
-                  stdin,
-                  DefaultKnownRuleTypesFactory::new,
-                  new BuildId(),
-                  sanizitedEnv,
-                  platform,
-                  pluginManager,
-                  moduleManager,
-                  manager,
-                  CommandMode.TEST,
-                  context)
-              : new MainRunner(
-                  testConsole,
-                  stdin,
-                  knownRuleTypesFactoryFactory,
-                  new BuildId(),
-                  sanizitedEnv,
-                  platform,
-                  pluginManager,
-                  moduleManager,
-                  manager,
-                  CommandMode.TEST,
-                  context);
+      MainForTests main =
+          new MainForTests(
+              testConsole,
+              stdin,
+              knownRuleTypesFactoryFactory == null
+                  ? DefaultKnownRuleTypesFactory::new
+                  : knownRuleTypesFactoryFactory,
+              sanizitedEnv,
+              context);
+
+      MainRunner mainRunner = main.prepareMainRunner(manager);
       ExitCode exitCode;
 
       // TODO (buck_team): this code repeats the one in Main and thus wants generalization
@@ -580,7 +557,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
       try {
         exitCode =
-            main.runMainWithExitCode(
+            mainRunner.runMainWithExitCode(
                 repoRoot,
                 WatchmanWatcher.FreshInstanceAction.NONE,
                 System.nanoTime(),

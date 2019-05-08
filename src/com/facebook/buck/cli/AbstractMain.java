@@ -69,25 +69,35 @@ abstract class AbstractMain {
       ImmutableMap<String, String> clientEnvironment,
       Platform platform,
       Optional<NGContext> ngContext) {
-    this.stdIn = stdIn;
-
-    this.clientEnvironment = clientEnvironment;
-    this.platform = platform;
-    this.optionalNGContext = ngContext;
-
-    // Create default console to start outputting errors immediately, if any
-    // console may be overridden with custom console later once we have enough information to
-    // construct it
-    this.defaultConsole =
+    this(
         new Console(
             Verbosity.STANDARD_INFORMATION,
             stdOut,
             stdErr,
             new Ansi(
                 AnsiEnvironmentChecking.environmentSupportsAnsiEscapes(
-                    platform, clientEnvironment)));
+                    platform, clientEnvironment))),
+        stdIn,
+        clientEnvironment,
+        platform,
+        CommandMode.RELEASE,
+        ngContext);
+  }
 
-    this.commandMode = CommandMode.RELEASE;
+  protected AbstractMain(
+      Console console,
+      InputStream stdIn,
+      ImmutableMap<String, String> clientEnvironment,
+      Platform platform,
+      CommandMode commandMode,
+      Optional<NGContext> ngContext) {
+    this.stdIn = stdIn;
+
+    this.clientEnvironment = clientEnvironment;
+    this.platform = platform;
+    this.optionalNGContext = ngContext;
+    this.commandMode = commandMode;
+    this.defaultConsole = console;
   }
 
   /**
@@ -100,7 +110,7 @@ abstract class AbstractMain {
         defaultConsole,
         stdIn,
         getKnownRuleTypesFactory(),
-        getBuildId(clientEnvironment),
+        getBuildId(),
         clientEnvironment,
         platform,
         pluginManager,
@@ -114,7 +124,7 @@ abstract class AbstractMain {
     return DefaultKnownRuleTypesFactory::new;
   }
 
-  private static BuildId getBuildId(ImmutableMap<String, String> clientEnvironment) {
+  protected BuildId getBuildId() {
     @Nullable String specifiedBuildId = clientEnvironment.get(BUCK_BUILD_ID_ENV_VAR);
     if (specifiedBuildId == null) {
       specifiedBuildId = UUID.randomUUID().toString();

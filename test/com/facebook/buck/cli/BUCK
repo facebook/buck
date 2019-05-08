@@ -4,11 +4,32 @@ STANDARD_TEST_SRCS = [
     "*Test.java",
 ]
 
+MAIN_FOR_TEST = [
+    "MainForTests.java",
+]
+
+java_library(
+    name = "mainfortests",
+    srcs = MAIN_FOR_TEST,
+    exported_deps = [
+        "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/support/bgtasks:bgtasks",
+    ],
+    visibility = [
+        "//test/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
+        "//src/com/facebook/buck/util/environment:environment",
+        "//third-party/java/nailgun:nailgun",
+    ],
+)
+
 java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
-        exclude = STANDARD_TEST_SRCS,
+        exclude = STANDARD_TEST_SRCS + MAIN_FOR_TEST,
     ),
     visibility = [
         "//test/...",
@@ -301,6 +322,7 @@ java_test(
         ["testdata/**"],
     ),
     deps = [
+        ":mainfortests",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",
