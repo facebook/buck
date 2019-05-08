@@ -124,19 +124,29 @@ abstract class AbstractStringWithMacrosConverter {
     return arg;
   }
 
+  private Arg transformString(String str) {
+    return getSanitizer()
+        .<Arg>map(sanitizer -> SanitizedArg.create(sanitizer, str))
+        .orElseGet(() -> StringArg.of(str));
+  }
+
+  private Arg transformMacro(ActionGraphBuilder ruleResolver, MacroContainer macroContainer) {
+    try {
+      return expand(macroContainer, ruleResolver);
+    } catch (MacroException e) {
+      throw new HumanReadableException(e, "%s: %s", getBuildTarget(), e.getMessage());
+    }
+  }
+
   public Arg convert(StringWithMacros val, ActionGraphBuilder ruleResolver) {
-    return CompositeArg.of(
-        val.map(
-            str ->
-                getSanitizer()
-                    .<Arg>map(sanitizer -> SanitizedArg.create(sanitizer, str))
-                    .orElseGet(() -> StringArg.of(str)),
-            macroContainer -> {
-              try {
-                return expand(macroContainer, ruleResolver);
-              } catch (MacroException e) {
-                throw new HumanReadableException(e, "%s: %s", getBuildTarget(), e.getMessage());
-              }
-            }));
+    if (val.getParts().size() == 0) {
+      return StringArg.of("");
+    }
+    if (val.getParts().size() == 1) {
+      return val.getParts()
+          .get(0)
+          .transform(this::transformString, m -> transformMacro(ruleResolver, m));
+    }
+    return CompositeArg.of(val.map(this::transformString, m -> transformMacro(ruleResolver, m)));
   }
 }

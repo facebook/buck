@@ -53,7 +53,7 @@ public class StringWithMacrosConverterTest {
         StringWithMacrosConverter.of(TARGET, CELL_ROOTS, MACRO_EXPANDERS);
     assertThat(
         converter.convert(StringWithMacrosUtils.format("something"), graphBuilder),
-        Matchers.equalTo(CompositeArg.of(ImmutableList.of(StringArg.of("something")))));
+        Matchers.equalTo(StringArg.of("something")));
   }
 
   @Test
@@ -70,8 +70,26 @@ public class StringWithMacrosConverterTest {
             StringWithMacrosUtils.format("%s", LocationMacro.of(genrule.getBuildTarget())),
             graphBuilder),
         Matchers.equalTo(
+            SourcePathArg.of(Preconditions.checkNotNull(genrule.getSourcePathToOutput()))));
+  }
+
+  @Test
+  public void macroAndString() {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    Genrule genrule =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setOut("out")
+            .build(graphBuilder);
+    StringWithMacrosConverter converter =
+        StringWithMacrosConverter.of(TARGET, CELL_ROOTS, MACRO_EXPANDERS);
+    assertThat(
+        converter.convert(
+            StringWithMacrosUtils.format("--foo=%s", LocationMacro.of(genrule.getBuildTarget())),
+            graphBuilder),
+        Matchers.equalTo(
             CompositeArg.of(
                 ImmutableList.of(
+                    StringArg.of("--foo="),
                     SourcePathArg.of(
                         Preconditions.checkNotNull(genrule.getSourcePathToOutput()))))));
   }
@@ -88,9 +106,7 @@ public class StringWithMacrosConverterTest {
             .build();
     assertThat(
         converter.convert(StringWithMacrosUtils.format("something"), graphBuilder),
-        Matchers.equalTo(
-            CompositeArg.of(
-                ImmutableList.of(SanitizedArg.create(s -> "something else", "something")))));
+        Matchers.equalTo(SanitizedArg.create(s -> "something else", "something")));
   }
 
   @Test
@@ -107,8 +123,6 @@ public class StringWithMacrosConverterTest {
             StringWithMacrosUtils.format(
                 "%s", MacroContainer.of(LocationMacro.of(genrule.getBuildTarget()), true)),
             graphBuilder);
-    assertThat(
-        ((CompositeArg) result).getArgs(),
-        Matchers.contains(Matchers.instanceOf(WriteToFileArg.class)));
+    assertThat(result, Matchers.instanceOf(WriteToFileArg.class));
   }
 }
