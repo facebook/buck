@@ -1,0 +1,27 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+java_test(
+    name = "impl",
+    srcs = glob(
+        ["*Test.java"],
+    ),
+    deps = [
+        "//src/com/facebook/buck/core/cell/impl:impl",
+        "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/analysis/impl:impl",
+        "//src/com/facebook/buck/core/rules/providers/impl:impl",
+        "//src/com/facebook/buck/core/rules/transformer/impl:impl",
+        "//src/com/facebook/buck/rules/coercer:coercer",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/model/targetgraph:testutil",
+        "//test/com/facebook/buck/core/model/targetgraph/impl:testutil",
+        "//test/com/facebook/buck/core/rules/actions:testutil",
+        "//test/com/facebook/buck/core/rules/analysis/impl:testutil",
+        "//test/com/facebook/buck/core/rules/impl:testutil",
+        "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
+        "//test/com/facebook/buck/core/toolchain/impl:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)
