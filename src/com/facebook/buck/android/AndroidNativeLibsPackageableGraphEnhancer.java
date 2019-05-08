@@ -122,15 +122,13 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
   // Populates an immutable map builder with all given linkables set to the given cpu type.
   // Returns true iff linkables is not empty.
-  private boolean populateMapWithLinkables(
+  private void populateMapWithLinkables(
       ImmutableMultimap<APKModule, NativeLinkable> linkables,
       ImmutableMap.Builder<AndroidLinkableMetadata, SourcePath> builder,
       Map<AndroidLinkableMetadata, NativeLinkable> nativeLinkableMap,
       TargetCpuType targetCpuType,
       NdkCxxPlatform platform)
       throws HumanReadableException {
-
-    boolean hasNativeLibs = false;
 
     for (Map.Entry<APKModule, NativeLinkable> linkableEntry : linkables.entries()) {
       NativeLinkable nativeLinkable = linkableEntry.getValue();
@@ -153,11 +151,9 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                 metadata.getSoName(), nativeLinkable, nativeLinkableMap.get(metadata));
           }
           nativeLinkableMap.put(metadata, nativeLinkable);
-          hasNativeLibs = true;
         }
       }
     }
-    return hasNativeLibs;
   }
 
   public AndroidNativeLibsGraphEnhancementResult enhance(
