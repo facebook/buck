@@ -27,8 +27,10 @@ private val PATH_CACHE: Cache<String, FsAgnosticPath> = CacheBuilder.newBuilder(
  * wrapper around a [String] for type safety with `Path`-like methods.
  *
  * This path will always serialize itself using '/' as the path separator, even on Windows.
+ *
+ * Note this is not a `data class` because the `copy()` method would expose the private constructor.
  */
-data class FsAgnosticPath private constructor(private val path: String) : Comparable<FsAgnosticPath> {
+class FsAgnosticPath private constructor(private val path: String) : Comparable<FsAgnosticPath> {
     companion object {
         /**
          * @param path must be a normalized, relative path.
@@ -47,7 +49,7 @@ data class FsAgnosticPath private constructor(private val path: String) : Compar
          * @param path must be a normalized, relative path.
          */
         fun of(path: Path): FsAgnosticPath {
-            return of(path.toString().replace('\\', '/'));
+            return of(path.toString().replace('\\', '/'))
         }
 
         /** Caller is responsible for verifying that the string is well-formed. */
@@ -71,7 +73,7 @@ data class FsAgnosticPath private constructor(private val path: String) : Compar
             if (prefixPath.path.isEmpty() || prefixPath.path.length == path.length) {
                 true
             } else {
-                path.get(prefixPath.path.length) == '/'
+                path[prefixPath.path.length] == '/'
             }
         } else {
             false
@@ -82,13 +84,23 @@ data class FsAgnosticPath private constructor(private val path: String) : Compar
      * @return a path that is resolved against this path.
      */
     fun resolve(other: FsAgnosticPath): FsAgnosticPath {
-        return if (isEmpty()) {
-            other
-        } else if (other.isEmpty()) {
-            this
-        } else {
-            createWithoutVerification("${path}/${other}")
+        return when {
+            isEmpty() -> other
+            other.isEmpty() -> this
+            else -> createWithoutVerification("$path/$other")
         }
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return when {
+            (this === other) -> true
+            (other is FsAgnosticPath) -> path == other.path
+            else -> false
+        }
+    }
+
+    override fun hashCode(): Int {
+        return path.hashCode()
     }
 
     override fun toString(): String {
@@ -102,21 +114,21 @@ private fun verifyPath(path: String) {
     }
 
     if (path.startsWith('/')) {
-        throw IllegalArgumentException("'${path}' must be relative but starts with '/'")
+        throw IllegalArgumentException("'$path' must be relative but starts with '/'")
     }
     if (path.endsWith('/')) {
-        throw IllegalArgumentException("'${path}' cannot have a trailing slash")
+        throw IllegalArgumentException("'$path' cannot have a trailing slash")
     }
 
     for (component in path.split("/")) {
         if (component == "") {
-            throw IllegalArgumentException("'${path}' contained an empty path component")
+            throw IllegalArgumentException("'$path' contained an empty path component")
         }
         if (component == ".") {
-            throw IllegalArgumentException("'${path}' contained illegal path component: '.'")
+            throw IllegalArgumentException("'$path' contained illegal path component: '.'")
         }
         if (component == "..") {
-            throw IllegalArgumentException("'${path}' contained illegal path component: '..'")
+            throw IllegalArgumentException("'$path' contained illegal path component: '..'")
         }
     }
 }

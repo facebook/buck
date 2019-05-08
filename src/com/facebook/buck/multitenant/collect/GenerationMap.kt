@@ -58,7 +58,7 @@ private class Bucket<INFO, VALUE : Any>(val info: INFO) {
  * GenerationList is a glorified append-only list-of-lists.
  * This class is not threadsafe: it must be synchronized externally.
  */
-private class GenerationList<INFO, VALUE : Any>() {
+private class GenerationList<INFO, VALUE : Any> {
     private val buckets: MutableList<Bucket<INFO, VALUE>> = mutableListOf()
 
     /**

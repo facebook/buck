@@ -38,34 +38,29 @@ import java.io.InputStream
  * Ultimately, we would like to use kotlinx.serialization for this, but we are currently blocked by
  * https://youtrack.jetbrains.com/issue/KT-30998.
  */
-fun populateIndexFromStream(index: Index, stream: InputStream): List<String> {
-    val parser = ObjectMappers.createParser(stream)
-            .enable(JsonParser.Feature.ALLOW_COMMENTS)
-            .enable(JsonParser.Feature.ALLOW_TRAILING_COMMA)
-
-    val jsonNode = parser.readValueAsTree<JsonNode>()
-    val commits = mutableListOf<String>()
-    for (commit in jsonNode.asSequence()) {
-        val hash = commit.get("commit").asText()
-        val added = toBuildPackages(index, commit.get("added"))
-        val modified = toBuildPackages(index, commit.get("modified"))
-        var removed = toRemovedPackages(commit.get("removed"))
-        val changes = Changes(added, modified, removed)
-        index.addCommitData(hash, changes)
-        commits.add(hash)
-    }
-    return commits
-}
+fun populateIndexFromStream(index: Index, stream: InputStream): List<String> = ObjectMappers.createParser(stream)
+        .enable(JsonParser.Feature.ALLOW_COMMENTS)
+        .enable(JsonParser.Feature.ALLOW_TRAILING_COMMA)
+        .readValueAsTree<JsonNode>()
+        .asSequence().map { commit ->
+            val hash = commit.get("commit").asText()
+            val added = toBuildPackages(index, commit.get("added"))
+            val modified = toBuildPackages(index, commit.get("modified"))
+            val removed = toRemovedPackages(commit.get("removed"))
+            val changes = Changes(added, modified, removed)
+            index.addCommitData(hash, changes)
+            hash
+        }.toList()
 
 /** Parses an "ordinary" fully-qualified build target with no cells or flavors. */
 fun parseOrdinaryBuildTarget(target: String): UnconfiguredBuildTarget {
     if (!target.startsWith("//")) {
-        throw IllegalArgumentException("target '${target}' did not start with //")
+        throw IllegalArgumentException("target '$target' did not start with //")
     }
 
     val index = target.lastIndexOf(':')
     if (index < 0) {
-        throw IllegalArgumentException("target '${target}' did not contain a colon")
+        throw IllegalArgumentException("target '$target' did not contain a colon")
     }
 
     return ImmutableUnconfiguredBuildTarget.of(
@@ -73,19 +68,17 @@ fun parseOrdinaryBuildTarget(target: String): UnconfiguredBuildTarget {
     )
 }
 
-val FAKE_RULE_TYPE = RuleTypeFactory.createBuildRule("fake_rule")
+val FAKE_RULE_TYPE: RuleType = RuleTypeFactory.createBuildRule("fake_rule")
 
 private fun toBuildPackages(index: Index, node: JsonNode?): List<BuildPackage> {
     if (node == null) {
         return listOf()
     }
 
-    val buildPackages = mutableListOf<BuildPackage>()
-    for (buildPackageItem in node) {
+    return node.map { buildPackageItem ->
         val path = FsAgnosticPath.of(buildPackageItem.get("path").asText())
         val rulesAttr = buildPackageItem.get("rules")
-        val rules = mutableSetOf<RawBuildRule>()
-        for (rule in rulesAttr.elements()) {
+        val rules = rulesAttr.elements().asSequence().map { rule ->
             var name: String? = null
             var ruleType: String? = null
             val deps = mutableSetOf<String>()
@@ -106,13 +99,11 @@ private fun toBuildPackages(index: Index, node: JsonNode?): List<BuildPackage> {
             }
             requireNotNull(name)
             requireNotNull(ruleType)
-            val buildTarget = index.buildTargetParser("//${path}:${name}")
-            rules.add(createRawRule(index, buildTarget, ruleType, deps, attrs.build()))
-        }
-        buildPackages.add(BuildPackage(path, rules))
+            val buildTarget = index.buildTargetParser("//$path:$name")
+            createRawRule(index, buildTarget, ruleType, deps, attrs.build())
+        }.toSet()
+        BuildPackage(path, rules)
     }
-
-    return buildPackages
 }
 
 private fun normalizeJsonValue(value: JsonNode): Any {
@@ -120,11 +111,11 @@ private fun normalizeJsonValue(value: JsonNode): Any {
     // them as needed.
     return when {
         value.isBoolean -> value.asBoolean()
-        value.isTextual() -> value.asText()
-        value.isLong() -> value.asLong()
-        value.isDouble() -> value.asDouble()
-        value.isArray() -> (value as ArrayNode).map { normalizeJsonValue(it) }
-        else -> throw IllegalArgumentException("normalizeJsonValue() not supported for ${value}")
+        value.isTextual -> value.asText()
+        value.isLong -> value.asLong()
+        value.isDouble -> value.asDouble()
+        value.isArray -> (value as ArrayNode).map { normalizeJsonValue(it) }
+        else -> throw IllegalArgumentException("normalizeJsonValue() not supported for $value")
     }
 }
 

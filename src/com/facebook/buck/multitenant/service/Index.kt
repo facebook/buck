@@ -78,7 +78,7 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
      * for the corresponding build package.
      */
     @GuardedBy("rwLock")
-    private val buildPackageMap = GenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath>({ it })
+    private val buildPackageMap = GenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath> { it }
 
     /**
      * Map that captures the value of a build rule at a specific generation, indexed by BuildTarget.
@@ -87,7 +87,7 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
      * `getAllInfoValuePairsForGeneration()`.
      */
     @GuardedBy("rwLock")
-    private val ruleMap = GenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>({ it })
+    private val ruleMap = GenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId> { it }
 
     /**
      * This should always be used with try-with-resources.
@@ -358,7 +358,7 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
 
             for (removed in changes.removedBuildPackages) {
                 val oldRules = requireNotNull(buildPackageMap.getVersion(removed, generation)) {
-                    "Build package to remove did not exist at ${removed} for generation $generation"
+                    "Build package to remove did not exist at $removed for generation $generation"
                 }
 
                 buildPackageDeltas.add(BuildPackageDelta.Removed(removed))
@@ -388,7 +388,7 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
                 // Compare oldRules and newRules to see whether the build package actually changed.
                 // Keep track of the individual rule changes so we need not recompute them later.
                 val ruleChanges = diffRules(oldRules, newRules)
-                if (!ruleChanges.isEmpty()) {
+                if (ruleChanges.isNotEmpty()) {
                     buildPackageDeltas.add(BuildPackageDelta.Updated(modified
                             .buildFileDirectory, getRuleNames(newRules)))
                     ruleDeltas.addAll(ruleChanges)

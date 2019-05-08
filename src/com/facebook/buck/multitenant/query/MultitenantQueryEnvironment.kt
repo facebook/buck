@@ -19,7 +19,6 @@ import com.facebook.buck.core.exceptions.BuildTargetParseException
 import com.facebook.buck.core.model.QueryTarget
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
-import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternData
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternData.Kind
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternDataParser
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
@@ -129,15 +128,14 @@ private class TargetEvaluator(private val index: Index, private val generation: 
 
     override fun evaluateTarget(target: String): ImmutableSet<QueryTarget> {
         // TODO: We should probably also support aliases specified via .buckconfig here?
-        val buildTargetPattern: BuildTargetPatternData
-        try {
-            buildTargetPattern = BuildTargetPatternDataParser.parse(target)
+        val buildTargetPattern = try {
+            BuildTargetPatternDataParser.parse(target)
         } catch (e: BuildTargetParseException) {
-            throw QueryException(e, "Error trying to parse '${target}'")
+            throw QueryException(e, "Error trying to parse '$target'")
         }
 
         // TODO: Cells (and flavors?) need to be supported.
-        return when (buildTargetPattern.kind) {
+        return when (buildTargetPattern.kind!!) {
             Kind.SINGLE -> {
                 ImmutableSet.of(index.buildTargetParser(buildTargetPattern.toString()))
             }

@@ -21,7 +21,8 @@ import com.facebook.buck.multitenant.fs.FsAgnosticPath
 
 /**
  * Implementation of [SourcePath] that makes sense in the context of
- * `com.facebook.buck.multitenant`. It is designed to be used with [QueryFileTarget].
+ * `com.facebook.buck.multitenant`. It is designed to be used with
+ * [com.facebook.buck.query.QueryFileTarget].
  */
 data class FsAgnosticSourcePath(private val path: FsAgnosticPath) : SourcePath {
 
