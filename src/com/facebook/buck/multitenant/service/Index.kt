@@ -201,6 +201,33 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
     }
 
     /**
+     * Used to match a ":" build target pattern wildcard.
+     *
+     * Note this method does not take an [IndexReadLock] because it does its own synchronization
+     * internally.
+     *
+     * @param commit at which to enumerate all build targets under `basePath`
+     * @param basePath under which to look. If the query is for `//:`, then `basePath` would be
+     *     the empty string. If the query is for `//foo/bar:`, then `basePath` would be
+     *     `foo/bar`.
+     */
+    fun getTargetsInBasePath(commit: Commit, basePath: FsAgnosticPath): List<UnconfiguredBuildTarget> {
+        val targetNames = rwLock.readLock().withLock {
+            val generation = requireNotNull(commitToGeneration[commit]) {
+                "No generation found for $commit"
+            }
+
+            buildPackageMap.getVersion(basePath, generation) ?: return listOf()
+        }
+
+        return targetNames.asSequence().map {
+            buildTargetParser("//${basePath}:${it}")
+        }.toList()
+    }
+
+    /**
+     * Used to match a "/..." build target pattern wildcard.
+     *
      * Note this method does not take an [IndexReadLock] because it does its own synchronization
      * internally.
      *

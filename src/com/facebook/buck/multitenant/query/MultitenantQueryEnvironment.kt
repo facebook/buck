@@ -138,10 +138,11 @@ private class TargetEvaluator(private val index: Index, private val commit: Comm
                 ImmutableSet.of(index.buildTargetParser(buildTargetPattern.toString()))
             }
             Kind.PACKAGE -> {
-                TODO("Support PACKAGE")
+                val basePath = buildTargetPattern.basePath
+                ImmutableSet.copyOf(index.getTargetsInBasePath(commit, FsAgnosticPath.of(basePath)))
             }
             Kind.RECURSIVE -> {
-                val basePath = buildTargetPattern.basePath.toString()
+                val basePath = buildTargetPattern.basePath
                 ImmutableSet.copyOf(index.getTargetsUnderBasePath(commit, FsAgnosticPath.of(basePath)))
             }
         }

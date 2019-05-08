@@ -17,6 +17,7 @@ package com.facebook.buck.multitenant.fs
 
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
+import java.nio.file.Path
 
 private val PATH_CACHE: Cache<String, FsAgnosticPath> = CacheBuilder.newBuilder().softValues().build()
 
@@ -40,6 +41,13 @@ data class FsAgnosticPath private constructor(private val path: String) : Compar
 
             verifyPath(path)
             return createWithoutVerification(path)
+        }
+
+        /**
+         * @param path must be a normalized, relative path.
+         */
+        fun of(path: Path): FsAgnosticPath {
+            return of(path.toString().replace('\\', '/'));
         }
 
         /** Caller is responsible for verifying that the string is well-formed. */

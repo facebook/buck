@@ -41,7 +41,26 @@ class MultitenantQueryTest {
     }
 
     @Test
-    fun wildcardQuery() {
+    fun packageWildcardQuery() {
+        val env = loadIndex("diamond_dependency_graph.json", 0)
+        assertEquals(
+                asOutput(),
+                env.evaluateQuery("//:")
+        )
+
+        assertEquals(
+                asOutput(
+                        "//java/com/example:A",
+                        "//java/com/example:B",
+                        "//java/com/example:C",
+                        "//java/com/example:D"
+                ),
+                env.evaluateQuery("//java/com/example:")
+        )
+    }
+
+    @Test
+    fun recursiveWildcardQuery() {
         val env = loadIndex("diamond_dependency_graph.json", 0)
         assertEquals(
                 asOutput(
