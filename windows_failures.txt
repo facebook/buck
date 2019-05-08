@@ -30,4 +30,3 @@
 !com.facebook.buck.core.build.engine.impl.CachingBuildEngineTest
 !com.facebook.buck.core.build.engine.impl.CachingBuildEngineTest.*
 !com.facebook.buck.core.model.graph.action.computation.ActionGraphCacheIntegrationTest
-!com.facebook.buck.swift.SwiftNativeLinkableTest

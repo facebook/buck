@@ -25,6 +25,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.impl.SwiftPlatformFactory;
@@ -74,15 +75,15 @@ public class SwiftNativeLinkableTest {
             "-Xlinker",
             "-rpath",
             "-Xlinker",
-            "/usr/lib/swift",
+            MorePaths.pathWithPlatformSeparators("/usr/lib/swift"),
             "-Xlinker",
             "-rpath",
             "-Xlinker",
-            "@executable_path/Frameworks",
+            MorePaths.pathWithPlatformSeparators("@executable_path/Frameworks"),
             "-Xlinker",
             "-rpath",
             "-Xlinker",
-            "@loader_path/Frameworks"));
+            MorePaths.pathWithPlatformSeparators("@loader_path/Frameworks")));
   }
 
   @Test
@@ -102,14 +103,14 @@ public class SwiftNativeLinkableTest {
             "-Xlinker",
             "-rpath",
             "-Xlinker",
-            "/usr/lib/swift",
+            MorePaths.pathWithPlatformSeparators("/usr/lib/swift"),
             "-Xlinker",
             "-rpath",
             "-Xlinker",
-            "@executable_path/../Frameworks",
+            MorePaths.pathWithPlatformSeparators("@executable_path/../Frameworks"),
             "-Xlinker",
             "-rpath",
             "-Xlinker",
-            "@loader_path/../Frameworks"));
+            MorePaths.pathWithPlatformSeparators("@loader_path/../Frameworks")));
   }
 }
