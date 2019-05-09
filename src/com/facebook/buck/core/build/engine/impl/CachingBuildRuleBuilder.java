@@ -326,7 +326,6 @@ class CachingBuildRuleBuilder {
             manifestRuleKeyManager,
             eventBus,
             artifactCache,
-            filesystem,
             artifactCacheSizeLimit);
     this.customBuildRuleStrategy = customBuildRuleStrategy;
   }
