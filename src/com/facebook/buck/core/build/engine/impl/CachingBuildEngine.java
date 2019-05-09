@@ -526,9 +526,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             buildableContext,
             pipelinesRunner,
             remoteBuildRuleCompletionWaiter,
-            cellProvider,
-            manifestService,
-            customBuildRuleStrategy);
+            customBuildRuleStrategy,
+            manifestService);
     ruleBuilders.add(new WeakReference<>(cachingBuildRuleBuilder));
     if (firstFailure.get() != null) {
       cachingBuildRuleBuilder.cancel(firstFailure.get());

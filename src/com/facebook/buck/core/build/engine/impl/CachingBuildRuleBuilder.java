@@ -55,7 +55,6 @@ import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.event.BuildRuleExecutionEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
-import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
@@ -80,7 +79,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.ThrowableConsoleEvent;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.RuleKeyAndInputs;
@@ -153,8 +151,6 @@ class CachingBuildRuleBuilder {
   private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
   private final Set<String> depsWithCacheMiss = Collections.synchronizedSet(new HashSet<>());
 
-  private final ProjectFilesystem filesystem;
-
   private final BuildRuleScopeManager buildRuleScopeManager;
 
   private final RuleKey defaultKey;
@@ -222,9 +218,8 @@ class CachingBuildRuleBuilder {
       BuildableContext buildableContext,
       BuildRulePipelinesRunner pipelinesRunner,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
-      CellProvider cellProvider,
-      Optional<ManifestService> manifestService,
-      Optional<BuildRuleStrategy> customBuildRuleStrategy) {
+      Optional<BuildRuleStrategy> customBuildRuleStrategy,
+      Optional<ManifestService> manifestService) {
     this.buildRuleBuilderDelegate = buildRuleBuilderDelegate;
     this.buildMode = buildMode;
     this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
@@ -247,8 +242,6 @@ class CachingBuildRuleBuilder {
     this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
 
     this.defaultKey = ruleKeyFactories.getDefaultRuleKeyFactory().build(rule);
-
-    this.filesystem = cellProvider.getBuildTargetCell(rule.getBuildTarget()).getFilesystem();
 
     this.inputBasedKey = MoreSuppliers.memoize(this::calculateInputBasedRuleKey);
     this.manifestBasedKeySupplier =
@@ -588,7 +581,7 @@ class CachingBuildRuleBuilder {
 
     // Invalidate any cached hashes for the output paths, since we've updated them.
     for (Path path : onDiskBuildInfo.getOutputPaths()) {
-      fileHashCache.invalidate(filesystem.resolve(path));
+      fileHashCache.invalidate(rule.getProjectFilesystem().resolve(path));
     }
 
     // If this rule was fetched from cache, seed the file hash cache with the recorded
@@ -603,9 +596,9 @@ class CachingBuildRuleBuilder {
       Preconditions.checkState(hashes.isPresent());
       // Seed the cache with the hashes.
       for (Map.Entry<String, String> ent : hashes.get().entrySet()) {
-        Path path = filesystem.getPath(ent.getKey());
+        Path path = rule.getProjectFilesystem().getPath(ent.getKey());
         HashCode hashCode = HashCode.fromString(ent.getValue());
-        fileHashCache.set(filesystem.resolve(path), hashCode);
+        fileHashCache.set(rule.getProjectFilesystem().resolve(path), hashCode);
       }
     }
 
@@ -668,7 +661,7 @@ class CachingBuildRuleBuilder {
 
     // Invalidate any cached hashes for the output paths, since we've updated them.
     for (Path path : getBuildInfoRecorder().getRecordedPaths()) {
-      fileHashCache.invalidate(filesystem.resolve(path));
+      fileHashCache.invalidate(rule.getProjectFilesystem().resolve(path));
     }
 
     // Doing this here is probably not strictly necessary, however in the case of
@@ -1187,7 +1180,7 @@ class CachingBuildRuleBuilder {
                 defaultKey,
                 artifactCache,
                 // TODO(simons): This should be a shared between all tests, not one per cell
-                filesystem),
+                rule.getProjectFilesystem()),
         cacheResult -> {
           RuleKeyCacheResult ruleKeyCacheResult =
               RuleKeyCacheResult.builder()
