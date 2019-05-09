@@ -90,7 +90,6 @@ public class AsyncBackgroundTaskManagerTest {
     manager.notify(Notification.COMMAND_END);
 
     for (Future<?> f : futures) {
-      assertTrue(f.isDone());
       try {
         f.get();
         fail("Expected an Exception from the task");
