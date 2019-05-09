@@ -34,7 +34,7 @@ public class CannotInferException extends RuntimeException {
             + "One of three things is happening:\n"
             + "  1. The BUCK file is missing a dependency for %1$s\n"
             + "  2. The module containing %1$s needs to be marked with required_for_source_only_abi or referenced as a source_only_abi_dep\n"
-            + "  3. An annotatin processor is accessing a type that it shouldn't be",
+            + "  3. An annotation processor is accessing a type that it shouldn't be",
         owner, what);
   }
 }
