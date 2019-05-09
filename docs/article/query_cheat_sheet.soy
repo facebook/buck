@@ -54,8 +54,8 @@
     </p>
 
     <p>
-    Most of these examples use the {call buck.cmd_query /}, {call buck.cmd_targets /}, 
-    and {call buck.cmd_audit /} commands.  For more information and examples, 
+    Most of these examples use the {call buck.cmd_query /}, {call buck.cmd_targets /},
+    and {call buck.cmd_audit /} commands.  For more information and examples,
     see the reference pages for those commands.
     </p>
 
@@ -96,6 +96,12 @@
   </li>
 
   <li>
+    <a href="#queries-in-rules">
+      How do I perform a query <em>inside</em> of a rule?
+    </a>
+  </li>
+
+  <li>
     <a href="#find-dependencies">
       How do I find the dependencies for a target?
     </a>
@@ -116,15 +122,15 @@
   {param id: 'list-all-rules' /}
   {param question}
     <p>
-      How do I get a list of all the rules that Buck supports, <em>from 
-      the command line</em>, so that I can process them 
+      How do I get a list of all the rules that Buck supports, <em>from
+      the command line</em>, so that I can process them
       with <code>grep</code>, <code>sed</code>, etc?
     </p>
   {/param}
 
   {param shortAnswer}
     <p>
-      Use {call buck.cmd_audit /} with the <code>ruletypes</code> (plural) 
+      Use {call buck.cmd_audit /} with the <code>ruletypes</code> (plural)
       subcommand, which returns an alphabetized list of all the
       rules that Buck supports.
     </p>
@@ -145,7 +151,7 @@
 
   {param shortAnswer}
     <p>
-      Use {call buck.cmd_audit /} with the <code>ruletype</code> (singular) 
+      Use {call buck.cmd_audit /} with the <code>ruletype</code> (singular)
       subcommand followed by the name of the rule.
     </p>
 
@@ -177,8 +183,8 @@ buck query //path/to/dir/...
   {/param}
   {param longAnswer}
     <p>
-      The <code>buck query</code> command can accept a {call buck.build_target_pattern /} as a 
-      parameter. If you specify a build target pattern, Buck evaluates this 
+      The <code>buck query</code> command can accept a {call buck.build_target_pattern /} as a
+      parameter. If you specify a build target pattern, Buck evaluates this
       pattern and shows all the build targets that match it.
     </p>
   {/param}
@@ -187,7 +193,7 @@ buck query //path/to/dir/...
 {call .faq}
   {param id: 'query-multiple-targets' /}
   {param question}
-    <p>                              
+    <p>
       How do I specify more than one target to <code>buck query</code>?
     </p>
   {/param}
@@ -257,6 +263,39 @@ buck query "deps(//foo:bar)" --output-attributes 'name' 'exported_headers'
 
 
 {call .faq}
+  {param id: 'queries-in-rules' /}
+  {param question}
+    <p>
+      How do I perform a query <em>inside</em> of a rule?
+    </p>
+  {/param}
+
+  {param shortAnswer}
+    <p>
+      Use <strong>{call buck.string_parameter_macros /}</strong>,
+      specifically, the <em>query</em> macros:
+    </p>
+
+<p>
+<pre>
+{literal}
+$(query_targets "queryfunction(//:foo)")
+$(query_outputs "queryfunction(//:foo)")
+$(query_targets_and_outputs [SEPARATOR] "queryfunction(//:foo)")
+{/literal}
+</pre>
+</p>
+
+    <p>
+      Note, however, that the query macros are supported only
+      for {call buck.genrule /} and {call buck.apk_genrule /}.
+    </p>
+  {/param}
+
+{/call}
+
+
+{call .faq}
   {param id: 'find-dependencies' /}
   {param question}
     <p>
@@ -285,7 +324,7 @@ buck query "deps(set('//foo:bar' '//foo:lib' '//foo/baz:util'))"
     <p>
       The <a href="{ROOT}command/query.html#deps">deps</a> operator finds
       the dependencies of the specified targets. The first argument
-      represents the targets of interest. This can be a 
+      represents the targets of interest. This can be a
       single {call buck.build_target /} or {call buck.build_target_pattern /},
       or a set of these.
     </p>
