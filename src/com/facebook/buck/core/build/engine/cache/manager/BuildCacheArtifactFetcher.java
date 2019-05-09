@@ -19,12 +19,12 @@ package com.facebook.buck.core.build.engine.cache.manager;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfoStore;
 import com.facebook.buck.core.build.engine.buildinfo.OnDiskBuildInfo;
 import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -50,7 +50,7 @@ public class BuildCacheArtifactFetcher {
 
   private static final Logger LOG = Logger.get(BuildCacheArtifactFetcher.class);
 
-  private final BuildRule rule;
+  private final BuildEngineAction action;
   private final BuildRuleScopeManager buildRuleScopeManager;
   private final WeightedListeningExecutorService executorService;
   private final OnOutputsWillChange onOutputsWillChange;
@@ -60,7 +60,7 @@ public class BuildCacheArtifactFetcher {
   private final OnDiskBuildInfo onDiskBuildInfo;
 
   public BuildCacheArtifactFetcher(
-      BuildRule rule,
+      BuildEngineAction action,
       BuildRuleScopeManager buildRuleScopeManager,
       WeightedListeningExecutorService executorService,
       OnOutputsWillChange onOutputsWillChange,
@@ -68,7 +68,7 @@ public class BuildCacheArtifactFetcher {
       BuildInfoStoreManager buildInfoStoreManager,
       MetadataStorage metadataStorage,
       OnDiskBuildInfo onDiskBuildInfo) {
-    this.rule = rule;
+    this.action = action;
     this.buildRuleScopeManager = buildRuleScopeManager;
     this.executorService = executorService;
     this.onOutputsWillChange = onOutputsWillChange;
@@ -85,7 +85,7 @@ public class BuildCacheArtifactFetcher {
   public ListenableFuture<CacheResult>
       tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
           RuleKey ruleKey, ArtifactCache artifactCache, ProjectFilesystem filesystem) {
-    if (!rule.isCacheable()) {
+    if (!action.isCacheable()) {
       return Futures.immediateFuture(CacheResult.ignored());
     }
 
@@ -96,7 +96,7 @@ public class BuildCacheArtifactFetcher {
           @Override
           protected Path create() throws IOException {
             return Files.createTempFile(
-                "buck_artifact_" + MostFiles.sanitize(rule.getBuildTarget().getShortName()),
+                "buck_artifact_" + MostFiles.sanitize(action.getBuildTarget().getShortName()),
                 ".zip");
           }
         };
@@ -120,7 +120,7 @@ public class BuildCacheArtifactFetcher {
               if (!ruleKeys.contains(ruleKey)) {
                 LOG.warn(
                     "%s: rule keys in artifact don't match rule key used to fetch it: %s not in %s",
-                    rule.getBuildTarget(), ruleKey, ruleKeys);
+                    action.getBuildTarget(), ruleKey, ruleKeys);
               }
             }
 
@@ -133,7 +133,7 @@ public class BuildCacheArtifactFetcher {
   public ListenableFuture<CacheResult> fetch(
       ArtifactCache artifactCache, RuleKey ruleKey, LazyPath outputPath) {
     return Futures.transform(
-        artifactCache.fetchAsync(rule.getBuildTarget(), ruleKey, outputPath),
+        artifactCache.fetchAsync(action.getBuildTarget(), ruleKey, outputPath),
         (CacheResult cacheResult) -> {
           try (Scope ignored = buildRuleScope()) {
             if (cacheResult.getType() != CacheResultType.HIT) {
@@ -177,14 +177,14 @@ public class BuildCacheArtifactFetcher {
 
     // We only unpack artifacts from hits.
     if (!cacheResult.getType().isSuccess()) {
-      LOG.debug("Cache miss for '%s' with rulekey '%s'", rule, ruleKey);
+      LOG.debug("Cache miss for '%s' with rulekey '%s'", action, ruleKey);
       return cacheResult;
     }
     onOutputsWillChange.call();
 
     Preconditions.checkState(cacheResult.metadata().isPresent());
     Preconditions.checkArgument(cacheResult.getType() == CacheResultType.HIT);
-    LOG.debug("Fetched '%s' from cache with rulekey '%s'", rule, ruleKey);
+    LOG.debug("Fetched '%s' from cache with rulekey '%s'", action, ruleKey);
 
     // It should be fine to get the path straight away, since cache already did it's job.
     Path zipPath = lazyZipPath.getUnchecked();
@@ -232,7 +232,7 @@ public class BuildCacheArtifactFetcher {
       // TODO(cjhopman): This should probably record metadata with the buildInfoRecorder, not
       // directly into the buildInfoStore.
       // Also write out the build metadata.
-      buildInfoStore.updateMetadata(rule.getBuildTarget(), cacheResult.getMetadata());
+      buildInfoStore.updateMetadata(action.getBuildTarget(), cacheResult.getMetadata());
     } catch (IOException e) {
       throw new IOException(
           String.format(
