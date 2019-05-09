@@ -26,6 +26,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -44,6 +45,7 @@ public class BuildCacheArtifactUploader {
   private final ManifestRuleKeyManager manifestRuleKeyManager;
   private final BuckEventBus eventBus;
   private final ArtifactCache artifactCache;
+  private final ProjectFilesystem filesystem;
   private final Optional<Long> artifactCacheSizeLimit;
 
   public BuildCacheArtifactUploader(
@@ -54,6 +56,7 @@ public class BuildCacheArtifactUploader {
       ManifestRuleKeyManager manifestRuleKeyManager,
       BuckEventBus eventBus,
       ArtifactCache artifactCache,
+      ProjectFilesystem filesystem,
       Optional<Long> artifactCacheSizeLimit) {
     this.defaultKey = defaultKey;
     this.inputBasedKey = inputBasedKey;
@@ -62,6 +65,7 @@ public class BuildCacheArtifactUploader {
     this.manifestRuleKeyManager = manifestRuleKeyManager;
     this.eventBus = eventBus;
     this.artifactCache = artifactCache;
+    this.filesystem = filesystem;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
   }
 
@@ -118,7 +122,7 @@ public class BuildCacheArtifactUploader {
         onDiskBuildInfo.getMetadataForArtifact(),
         onDiskBuildInfo.getPathsForArtifact(),
         rule.getBuildTarget(),
-        rule.getProjectFilesystem(),
+        filesystem,
         buildTimeMs);
   }
 
