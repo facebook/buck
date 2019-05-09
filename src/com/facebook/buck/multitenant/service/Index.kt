@@ -20,35 +20,11 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.collect.GenerationMap
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.google.common.collect.ImmutableSet
-import java.io.Closeable
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import javax.annotation.concurrent.GuardedBy
 import kotlin.concurrent.withLock
-
-/**
- * Object that represents the client has acquired the read lock for Index. All public methods of
- * Index that require the read lock to be held take this object as a parameter. This ensures
- * multiple read-only calls into Index can be made while only acquiring the read lock once.
- *
- * In C++, using folly::Synchronized makes it natural for a caller to acquire a read lock and
- * then use a number of methods that take it as a parameter (indicating it is already
- * held) to avoid having to reacquire the lock for each such method (reentrant locks are not
- * commonly used in C++, anyway). Java's concurrency API does not seem to lend itself to this
- * as elegantly.
- *
- * @param readLock caller is responsible for ensuring the specified readLock is locked when it is
- * passed in.
- */
-class IndexReadLock internal constructor(internal val readLock: ReentrantReadWriteLock.ReadLock) : AutoCloseable, Closeable {
-    /**
-     * Warning: this method is NOT idempotent!!!
-     */
-    override fun close() {
-        readLock.unlock()
-    }
-}
 
 class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) {
     /**
@@ -90,25 +66,7 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
     private val ruleMap = GenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId> { it }
 
     /**
-     * This should always be used with try-with-resources.
-     */
-    fun acquireReadLock(): IndexReadLock {
-        val lock = rwLock.readLock()
-        lock.lock()
-        return IndexReadLock(lock)
-    }
-
-    private fun checkReadLock(indexReadLock: IndexReadLock) {
-        require(indexReadLock.readLock === rwLock.readLock()) {
-            "Specified lock must belong to this Index."
-        }
-    }
-
-    /**
      * If you need to look up multiple target nodes for the same commit, prefer [getTargetNodes].
-     *
-     * Note this method does not take an [IndexReadLock] because it does its own synchronization
-     * internally.
      *
      * @return the corresponding [RawBuildRule] at the specified commit, if it exists;
      *     otherwise, return `null`.
@@ -118,22 +76,17 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
     }
 
     /**
-     * Note this method does not take an [IndexReadLock] because it does its own synchronization
-     * internally.
-     *
      * @return a list whose entries correspond to the input list of `targets` where each element in
      *     the output is the corresponding target node for the build target at the commit or `null`
      *     if no rule existed for that target at that commit.
      */
     fun getTargetNodes(generation: Generation, targets: List<UnconfiguredBuildTarget>): List<RawBuildRule?> {
+        val targetIds = targets.map { buildTargetCache.get(it) }
+
         // internalRules is a List rather than a Sequence because sequences are lazy and we need to
         // ensure all reads to ruleMap are done while the lock is held.
-        val internalRules = acquireReadLock().use {
-            targets.asSequence().map {
-                buildTargetCache.get(it)
-            }.map {
-                ruleMap.getVersion(it, generation)
-            }.toList()
+        val internalRules = rwLock.readLock().withLock {
+            targetIds.map { ruleMap.getVersion(it, generation) }.toList()
         }
         // We can release the lock because now we only need access to buildTargetCache, which does
         // not need to be guarded by rwLock.
@@ -148,28 +101,28 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
     }
 
     /**
-     * @param indexReadLock caller is responsible for ensuring this lock is still held, i.e., that
-     * `close()` has not been invoked.
+     * @return the transitive deps of the specified target (does not include target)
      */
-    fun getTransitiveDeps(indexReadLock: IndexReadLock, generation: Generation, target: UnconfiguredBuildTarget): Set<UnconfiguredBuildTarget> {
-        checkReadLock(indexReadLock)
+    fun getTransitiveDeps(generation: Generation, target: UnconfiguredBuildTarget): Set<UnconfiguredBuildTarget> {
         val rootBuildTargetId = buildTargetCache.get(target)
         val toVisit = LinkedHashSet<Int>()
         toVisit.add(rootBuildTargetId)
         val visited = mutableSetOf<Int>()
 
-        while (toVisit.isNotEmpty()) {
-            val targetId = getFirst(toVisit)
-            val node = ruleMap.getVersion(targetId, generation)
-            visited.add(targetId)
+        rwLock.readLock().withLock {
+            while (toVisit.isNotEmpty()) {
+                val targetId = getFirst(toVisit)
+                val node = ruleMap.getVersion(targetId, generation)
+                visited.add(targetId)
 
-            if (node == null) {
-                continue
-            }
+                if (node == null) {
+                    continue
+                }
 
-            for (dep in node.deps) {
-                if (!toVisit.contains(dep) && !visited.contains(dep)) {
-                    toVisit.add(dep)
+                for (dep in node.deps) {
+                    if (!toVisit.contains(dep) && !visited.contains(dep)) {
+                        toVisit.add(dep)
+                    }
                 }
             }
         }
@@ -178,21 +131,20 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
         return visited.asSequence().map { buildTargetCache.getByIndex(it) }.toSet()
     }
 
-    fun getFwdDeps(indexReadLock: IndexReadLock, generation: Generation, targets: Iterable<UnconfiguredBuildTarget>, out: ImmutableSet.Builder<UnconfiguredBuildTarget>) {
-        checkReadLock(indexReadLock)
-        for (target in targets) {
-            val targetId = buildTargetCache.get(target)
-            val node = ruleMap.getVersion(targetId, generation) ?: continue
-            for (dep in node.deps) {
-                out.add(buildTargetCache.getByIndex(dep))
+    fun getFwdDeps(generation: Generation, targets: Iterable<UnconfiguredBuildTarget>, out: ImmutableSet.Builder<UnconfiguredBuildTarget>) {
+        // Compute the list of target ids before taking the lock.
+        val targetIds = targets.map { buildTargetCache.get(it) }
+        rwLock.readLock().withLock {
+            for (targetId in targetIds) {
+                val node = ruleMap.getVersion(targetId, generation) ?: continue
+                for (dep in node.deps) {
+                    out.add(buildTargetCache.getByIndex(dep))
+                }
             }
         }
     }
 
     /**
-     * Note this method does not take an [IndexReadLock] because it does its own synchronization
-     * internally.
-     *
      * @param generation at which to enumerate all build targets
      */
     fun getTargets(generation: Generation): List<UnconfiguredBuildTarget> {
@@ -211,9 +163,6 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
     /**
      * Used to match a ":" build target pattern wildcard.
      *
-     * Note this method does not take an [IndexReadLock] because it does its own synchronization
-     * internally.
-     *
      * @param generation at which to enumerate all build targets under `basePath`
      * @param basePath under which to look. If the query is for `//:`, then `basePath` would be
      *     the empty string. If the query is for `//foo/bar:`, then `basePath` would be
@@ -231,9 +180,6 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
 
     /**
      * Used to match a "/..." build target pattern wildcard.
-     *
-     * Note this method does not take an [IndexReadLock] because it does its own synchronization
-     * internally.
      *
      * @param generation at which to enumerate all build targets under `basePath`
      * @param basePath under which to look. If the query is for `//...`, then `basePath` would be
@@ -269,9 +215,6 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
     /**
      * Currently, the caller is responsible for ensuring that addCommitData() is invoked
      * serially (never concurrently) for each commit in a chain of version control history.
-     *
-     * Note this method handles its own synchronization internally, so callers should not invoke
-     * [acquireReadLock] or anything like that.
      *
      * The expectation is that the caller will use something like `buck audit rules` based on the
      * changes in the commit to produce the Changes object to pass to this method.

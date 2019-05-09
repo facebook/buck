@@ -65,37 +65,35 @@ class IndexTest {
                         bt("//java/com/facebook/buck/util:util")),
                 index.getTargets(generation5).toSet())
 
-        index.acquireReadLock().use {
-            assertEquals(
-                    setOf(
-                            bt("//java/com/facebook/buck/base:base")
-                    ),
-                    index.getTransitiveDeps(it, generation2, bt("//java/com/facebook/buck/model:model"))
-            )
-            assertEquals(
-                    setOf(
-                            bt("//java/com/facebook/buck/base:base"),
-                            bt("//java/com/facebook/buck/util:util")
-                    ),
-                    index.getTransitiveDeps(it, generation3, bt("//java/com/facebook/buck/model:model"))
-            )
+        assertEquals(
+                setOf(
+                        bt("//java/com/facebook/buck/base:base")
+                ),
+                index.getTransitiveDeps(generation2, bt("//java/com/facebook/buck/model:model"))
+        )
+        assertEquals(
+                setOf(
+                        bt("//java/com/facebook/buck/base:base"),
+                        bt("//java/com/facebook/buck/util:util")
+                ),
+                index.getTransitiveDeps(generation3, bt("//java/com/facebook/buck/model:model"))
+        )
 
-            val commit1baseFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
-            index.getFwdDeps(it, generation1, listOf(bt("//java/com/facebook/buck/base:base")), commit1baseFwdDeps)
-            assertEquals(commit1baseFwdDeps.build(), setOf<UnconfiguredBuildTarget>())
+        val commit1baseFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
+        index.getFwdDeps(generation1, listOf(bt("//java/com/facebook/buck/base:base")), commit1baseFwdDeps)
+        assertEquals(commit1baseFwdDeps.build(), setOf<UnconfiguredBuildTarget>())
 
-            val commit2modelFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
-            index.getFwdDeps(it, generation2, listOf(bt("//java/com/facebook/buck/model:model")), commit2modelFwdDeps)
-            assertEquals(commit2modelFwdDeps.build(), setOf(bt("//java/com/facebook/buck/base:base")))
+        val commit2modelFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
+        index.getFwdDeps(generation2, listOf(bt("//java/com/facebook/buck/model:model")), commit2modelFwdDeps)
+        assertEquals(commit2modelFwdDeps.build(), setOf(bt("//java/com/facebook/buck/base:base")))
 
-            val commit3modelFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
-            index.getFwdDeps(it, generation3, listOf(bt("//java/com/facebook/buck/model:model")), commit3modelFwdDeps)
-            assertEquals(commit3modelFwdDeps.build(), setOf(bt("//java/com/facebook/buck/base:base"), bt("//java/com/facebook/buck/util:util")))
+        val commit3modelFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
+        index.getFwdDeps(generation3, listOf(bt("//java/com/facebook/buck/model:model")), commit3modelFwdDeps)
+        assertEquals(commit3modelFwdDeps.build(), setOf(bt("//java/com/facebook/buck/base:base"), bt("//java/com/facebook/buck/util:util")))
 
-            val commit3utilFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
-            index.getFwdDeps(it, generation3, listOf(bt("//java/com/facebook/buck/util:util")), commit3utilFwdDeps)
-            assertEquals(commit3utilFwdDeps.build(), setOf(bt("//java/com/facebook/buck/base:base")))
-        }
+        val commit3utilFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
+        index.getFwdDeps(generation3, listOf(bt("//java/com/facebook/buck/util:util")), commit3utilFwdDeps)
+        assertEquals(commit3utilFwdDeps.build(), setOf(bt("//java/com/facebook/buck/base:base")))
     }
 
     @Test

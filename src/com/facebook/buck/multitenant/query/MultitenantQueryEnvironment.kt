@@ -70,9 +70,7 @@ class MultitenantQueryEnvironment(private val index: Index, private val generati
 
     override fun getFwdDeps(targets: Iterable<UnconfiguredBuildTarget>): ImmutableSet<UnconfiguredBuildTarget> {
         val fwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
-        index.acquireReadLock().use {
-            index.getFwdDeps(it, generation, targets, fwdDeps)
-        }
+        index.getFwdDeps(generation, targets, fwdDeps)
         return fwdDeps.build()
     }
 
