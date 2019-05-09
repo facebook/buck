@@ -25,6 +25,7 @@ import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDeleg
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.engine.type.DepFiles;
 import com.facebook.buck.core.build.engine.type.MetadataStorage;
+import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
@@ -64,13 +65,16 @@ public class CachingBuildEngineFactory {
   private BuildInfoStoreManager buildInfoStoreManager;
   private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
   private Optional<BuildRuleStrategy> customBuildRuleStrategy = Optional.empty();
+  private final CellProvider cellProvider;
 
   public CachingBuildEngineFactory(
       BuildRuleResolver buildRuleResolver,
       BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver,
       BuildInfoStoreManager buildInfoStoreManager,
-      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
+      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
+      CellProvider cellProvider) {
     this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
+    this.cellProvider = cellProvider;
     this.cachingBuildEngineDelegate = new LocalCachingBuildEngineDelegate(new DummyFileHashCache());
     this.executorService = toWeighted(MoreExecutors.newDirectExecutorService());
     this.buildRuleResolver = buildRuleResolver;
@@ -161,7 +165,8 @@ public class CachingBuildEngineFactory {
           resourceAwareSchedulingInfo,
           RuleKeyDiagnostics.nop(),
           logBuildRuleFailuresInline,
-          Optional.empty());
+          Optional.empty(),
+          cellProvider);
     }
 
     return new CachingBuildEngine(
@@ -186,7 +191,8 @@ public class CachingBuildEngineFactory {
             inputFileSizeLimit,
             new TrackedRuleKeyCache<>(new DefaultRuleKeyCache<>(), new NoOpCacheStatsTracker())),
         remoteBuildRuleCompletionWaiter,
-        Optional.empty());
+        Optional.empty(),
+        cellProvider);
   }
 
   private static WeightedListeningExecutorService toWeighted(ListeningExecutorService service) {

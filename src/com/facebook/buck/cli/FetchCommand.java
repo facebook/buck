@@ -159,7 +159,8 @@ public class FetchCommand extends BuildCommand {
                       ruleKeyCacheScope.getCache()),
                   new NoOpRemoteBuildRuleCompletionWaiter(),
                   cachingBuildEngineBuckConfig.getManifestServiceIfEnabled(
-                      params.getManifestServiceSupplier()));
+                      params.getManifestServiceSupplier()),
+                  params.getCell().getCellProvider());
           Build build =
               new Build(
                   actionGraphAndBuilder.getActionGraphBuilder(),

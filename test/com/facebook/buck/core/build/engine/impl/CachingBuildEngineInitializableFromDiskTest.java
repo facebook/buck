@@ -80,8 +80,7 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
 
   private static final String DEPFILE_INPUT_CONTENT = "depfile input";
   private static final String NON_DEPFILE_INPUT_CONTENT = "depfile input";
-  public static final BuildTarget BUILD_TARGET =
-      BuildTargetFactory.newInstance("//src/com/facebook/buck:buck");
+  protected BuildTarget defaultBuildTarget;
 
   private PathSourcePath depfileInput;
   private PathSourcePath nonDepfileInput;
@@ -187,10 +186,12 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
     nonDepfileInput = FakeSourcePath.of(filesystem, "path/not/in/depfile");
     RulePipelineStateFactory<SimplePipelineState> pipelineStateFactory =
         (context, filesystem, firstTarget) -> new SimplePipelineState();
-    rootRule = new SimpleNoopRule(BUILD_TARGET.withFlavors(InternalFlavor.of("root")), filesystem);
+    defaultBuildTarget = BuildTargetFactory.newInstance(filesystem, "//src/com/facebook/buck:buck");
+    rootRule =
+        new SimpleNoopRule(defaultBuildTarget.withFlavors(InternalFlavor.of("root")), filesystem);
     dependency =
         new InitializableFromDiskRule(
-            BUILD_TARGET.withFlavors(InternalFlavor.of("child")),
+            defaultBuildTarget.withFlavors(InternalFlavor.of("child")),
             filesystem,
             rootRule,
             ImmutableSortedSet.of(depfileInput, nonDepfileInput),
@@ -199,7 +200,7 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
             PipelineType.MIDDLE);
     buildRule =
         new InitializableFromDiskRule(
-            BUILD_TARGET,
+            defaultBuildTarget,
             filesystem,
             dependency,
             ImmutableSortedSet.of(depfileInput, nonDepfileInput),
@@ -208,7 +209,7 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
             pipelineType);
     dependent =
         new InitializableFromDiskRule(
-            BUILD_TARGET.withFlavors(InternalFlavor.of("parent")),
+            defaultBuildTarget.withFlavors(InternalFlavor.of("parent")),
             filesystem,
             buildRule,
             ImmutableSortedSet.of(depfileInput, nonDepfileInput),
@@ -445,7 +446,7 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
     // Check that the build engine waited for the remote build of rule to finish.
     assertTrue(
         RemoteBuildRuleSynchronizerTestUtil.buildCompletionWaitingFutureCreatedForTarget(
-            synchronizer, BUILD_TARGET.getFullyQualifiedName()));
+            synchronizer, defaultBuildTarget.getFullyQualifiedName()));
 
     synchronizer.close();
   }
@@ -489,7 +490,7 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
     // Check that the build engine waited for the remote build of rule to finish.
     assertTrue(
         RemoteBuildRuleSynchronizerTestUtil.buildCompletionWaitingFutureCreatedForTarget(
-            synchronizer, BUILD_TARGET.getFullyQualifiedName()));
+            synchronizer, defaultBuildTarget.getFullyQualifiedName()));
 
     synchronizer.close();
   }
@@ -513,7 +514,7 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
     // Check that the build engine did not wait for the remote build of rule to finish
     assertFalse(
         RemoteBuildRuleSynchronizerTestUtil.buildCompletionWaitingFutureCreatedForTarget(
-            synchronizer, BUILD_TARGET.getFullyQualifiedName()));
+            synchronizer, defaultBuildTarget.getFullyQualifiedName()));
 
     synchronizer.close();
   }
@@ -523,7 +524,7 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
     RemoteBuildRuleSynchronizer synchronizer = createRemoteBuildRuleSynchronizer();
 
     // Signal that the build has started, which should ensure build waits.
-    synchronizer.signalStartedRemoteBuildingOfBuildRule(BUILD_TARGET.getFullyQualifiedName());
+    synchronizer.signalStartedRemoteBuildingOfBuildRule(defaultBuildTarget.getFullyQualifiedName());
 
     // Signal the completion of the build rule asynchronously.
     // waitForBuildRuleToFinishRemotely call inside caching build engine should result in an
@@ -536,7 +537,7 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
               } catch (InterruptedException e) {
                 fail("Test was interrupted");
               }
-              synchronizer.signalCompletionOfBuildRule(BUILD_TARGET.getFullyQualifiedName());
+              synchronizer.signalCompletionOfBuildRule(defaultBuildTarget.getFullyQualifiedName());
             });
     signalBuildRuleCompletedThread.start();
 
@@ -557,7 +558,7 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
     // Check that the build engine waited for the remote build of rule to finish.
     assertTrue(
         RemoteBuildRuleSynchronizerTestUtil.buildCompletionWaitingFutureCreatedForTarget(
-            synchronizer, BUILD_TARGET.getFullyQualifiedName()));
+            synchronizer, defaultBuildTarget.getFullyQualifiedName()));
 
     synchronizer.close();
   }
