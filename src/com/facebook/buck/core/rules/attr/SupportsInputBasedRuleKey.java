@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.attr;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -38,8 +39,8 @@ public interface SupportsInputBasedRuleKey extends BuildRule {
     return true;
   }
 
-  static boolean isSupported(BuildRule rule) {
-    return (rule instanceof SupportsInputBasedRuleKey)
-        && ((SupportsInputBasedRuleKey) rule).inputBasedRuleKeyIsEnabled();
+  static boolean isSupported(BuildEngineAction action) {
+    return (action instanceof SupportsInputBasedRuleKey)
+        && ((SupportsInputBasedRuleKey) action).inputBasedRuleKeyIsEnabled();
   }
 }
