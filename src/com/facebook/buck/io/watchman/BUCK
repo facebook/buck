@@ -1,10 +1,17 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
+TRANSPORT_SRCS = ["Transport.java"]
+
+CAPABILITY_SRCS = ["Capability.java"]
+
+WATCHMAN_SRCS = glob(
+    ["*.java"],
+    exclude = TRANSPORT_SRCS + CAPABILITY_SRCS,
+)
+
 java_library(
     name = "transport",
-    srcs = [
-        "Transport.java",
-    ],
+    srcs = TRANSPORT_SRCS,
     visibility = [
         "PUBLIC",
     ],
@@ -12,30 +19,13 @@ java_library(
 
 java_library(
     name = "capability",
-    srcs = [
-        "Capability.java",
-    ],
+    srcs = CAPABILITY_SRCS,
     visibility = ["PUBLIC"],
 )
 
 java_immutables_library(
     name = "watchman",
-    srcs = [
-        "AbstractProjectWatch.java",
-        "AbstractWatchmanDiagnostic.java",
-        "Watchman.java",
-        "WatchmanClient.java",
-        "WatchmanCursor.java",
-        "WatchmanDiagnosticEvent.java",
-        "WatchmanDiagnosticEventListener.java",
-        "WatchmanEvent.java",
-        "WatchmanFactory.java",
-        "WatchmanPathEvent.java",
-        "WatchmanQuery.java",
-        "WatchmanTransportClient.java",
-        "WatchmanWatcher.java",
-        "WatchmanWatcherException.java",
-    ],
+    srcs = WATCHMAN_SRCS,
     visibility = [
         "PUBLIC",
     ],
