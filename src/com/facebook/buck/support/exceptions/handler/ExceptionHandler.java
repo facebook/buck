@@ -29,4 +29,8 @@ public abstract class ExceptionHandler<T extends Throwable, R> {
   }
 
   public abstract R handleException(T t);
+
+  Class<T> getExceptionType() {
+    return exceptionType;
+  }
 }

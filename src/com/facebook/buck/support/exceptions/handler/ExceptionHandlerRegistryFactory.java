@@ -26,18 +26,19 @@ import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.FileSystemLoopException;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
-/**
- * Util class for creating an {@link
- * com.facebook.buck.support.exceptions.handler.ExceptionHandlerRegistry} with the default handlers
- */
+/** Util class for creating an {@link ExceptionHandlerRegistry} with the default defaultHandlers */
 public class ExceptionHandlerRegistryFactory {
-  /** @return a new ExceptionHandlerRegistry with the default handlers */
-  public static ExceptionHandlerRegistry<ExitCode> create() {
-    ImmutableList.Builder<ExceptionHandler<? extends Throwable, ExitCode>> handlerListBuilder =
-        ImmutableList.builder();
 
-    handlerListBuilder.addAll(
+  private static final Map<
+          Class<? extends Throwable>, ExceptionHandler<? extends Throwable, ExitCode>>
+      defaultHandlers = new LinkedHashMap<>();
+
+  static {
+    List<ExceptionHandler<? extends Throwable, ExitCode>> defaulthHandlers =
         Arrays.asList(
             new ExceptionHandler<InterruptedException, ExitCode>(InterruptedException.class) {
               @Override
@@ -94,9 +95,33 @@ public class ExceptionHandlerRegistryFactory {
               public ExitCode handleException(BuckIsDyingException e) {
                 return ExitCode.FATAL_GENERIC;
               }
-            }));
+            });
+
+    defaulthHandlers.forEach(handler -> defaultHandlers.put(handler.getExceptionType(), handler));
+  }
+
+  /**
+   * Overriding is defined such that the order of the existing handlers are unaltered. When handlers
+   * handle the same exception, the new one will replace the existing handler. New handlers not
+   * present in the mapping will be appended at the end of the handling chain.
+   *
+   * @param exceptionHandlers the defaultHandlers to override some default handler
+   * @return new {@link ExceptionHandlerRegistry} with the default defaultHandlers overridden by the
+   *     given ones
+   */
+  @SafeVarargs
+  public static ExceptionHandlerRegistry<ExitCode> create(
+      ExceptionHandler<? extends Throwable, ExitCode>... exceptionHandlers) {
+    LinkedHashMap<Class<? extends Throwable>, ExceptionHandler<? extends Throwable, ExitCode>>
+        currentHandlers = new LinkedHashMap<>(defaultHandlers);
+    for (int i = 0; i < exceptionHandlers.length; i++) {
+      if (currentHandlers.replace(exceptionHandlers[i].getExceptionType(), exceptionHandlers[i])
+          == null) {
+        currentHandlers.put(exceptionHandlers[i].getExceptionType(), exceptionHandlers[i]);
+      }
+    }
     return new ExceptionHandlerRegistry<>(
-        handlerListBuilder.build(),
+        ImmutableList.copyOf(currentHandlers.values()),
         new ExceptionHandler<Throwable, ExitCode>(Throwable.class) {
           @Override
           public ExitCode handleException(Throwable t) {
@@ -104,4 +129,18 @@ public class ExceptionHandlerRegistryFactory {
           }
         });
   }
+
+  /** @return a new {@link ExceptionHandlerRegistry} with the default handlers */
+  public static ExceptionHandlerRegistry<ExitCode> create() {
+    return new ExceptionHandlerRegistry<>(
+        ImmutableList.copyOf(defaultHandlers.values()),
+        new ExceptionHandler<Throwable, ExitCode>(Throwable.class) {
+          @Override
+          public ExitCode handleException(Throwable t) {
+            return ExitCode.FATAL_GENERIC;
+          }
+        });
+  }
+
+  private ExceptionHandlerRegistryFactory() {}
 }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.support.exceptions.handler;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
@@ -28,6 +29,7 @@ import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.FileSystemLoopException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -146,5 +148,24 @@ public class ExceptionHandlerRegistryTest {
             throwableMessage, new Exception("t1", new Exception("t2", new Exception("t3", t4))));
     t4.initCause(t0.getCause());
     assertThat(registry.handleException(t0), is(ExitCode.FATAL_GENERIC));
+  }
+
+  @Test
+  public void overrideProperExceptionHandler() {
+    AtomicBoolean isCalled = new AtomicBoolean();
+    registry =
+        ExceptionHandlerRegistryFactory.create(
+            new ExceptionHandler<InterruptedException, ExitCode>(InterruptedException.class) {
+              @Override
+              public ExitCode handleException(InterruptedException throwable) {
+                isCalled.set(true);
+                return ExitCode.SIGNAL_INTERRUPT;
+              }
+            });
+
+    registry.handleException(new InterruptedException());
+    assertTrue(isCalled.get());
+
+    assertThat(registry.handleException(new Throwable("wow")), is(ExitCode.FATAL_GENERIC));
   }
 }
