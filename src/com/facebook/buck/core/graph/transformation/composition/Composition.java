@@ -52,13 +52,13 @@ public class Composition {
    */
   @SuppressWarnings("unchecked")
   public static <
-          Key1 extends ComputeKey<Result1>,
+          Key1 extends ComputeKey<?>,
           Result1 extends ComputeResult,
           Key2 extends ComputeKey<Result2>,
           Result2 extends ComputeResult>
-      ComposedComputation<Key1, Result1, Result2> of(
+      ComposedComputation<Key1, Result2> of(
           Class<Result2> resultClass,
-          ComposedComputation<Key1, ?, Result1> baseComputation,
+          ComposedComputation<Key1, Result1> baseComputation,
           KeyComposer<Key1, Result1, Key2> composer) {
 
     return new ComposingComputation<>(
@@ -80,7 +80,7 @@ public class Composition {
    * @return a {@link ComposedComputation} wrapping the given {@link GraphComputation}
    */
   public static <Key1 extends ComputeKey<Result1>, Result1 extends ComputeResult>
-      ComposedComputation<Key1, Result1, Result1> asComposition(
+      ComposedComputation<Key1, Result1> asComposition(
           Class<Result1> resultClass, GraphComputation<Key1, Result1> baseComputation) {
 
     return new ComposedWrapperComputation<>(resultClass, baseComputation.getIdentifier());

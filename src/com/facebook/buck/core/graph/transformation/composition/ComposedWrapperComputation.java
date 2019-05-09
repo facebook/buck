@@ -35,7 +35,7 @@ import com.google.common.collect.ImmutableSet;
  * <p>TODO(bobyf): restructure graph engine so that we don't need to create this extra computation
  */
 class ComposedWrapperComputation<Key1 extends ComputeKey<Result>, Result extends ComputeResult>
-    implements ComposedComputation<Key1, Result, Result> {
+    implements ComposedComputation<Key1, Result> {
 
   private final ComposedComputationIdentifier<Result> identifier;
 

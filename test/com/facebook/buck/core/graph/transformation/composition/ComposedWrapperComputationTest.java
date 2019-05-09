@@ -33,7 +33,7 @@ public class ComposedWrapperComputationTest {
 
   @Test
   public void composedComputationReturnsCorrectPreliminaryDeps() {
-    ComposedComputation<LongNode, LongNode, LongNode> computation =
+    ComposedComputation<LongNode, LongNode> computation =
         new ComposedWrapperComputation<>(LongNode.class, LongNode.IDENTIFIER);
 
     assertEquals(
@@ -46,7 +46,7 @@ public class ComposedWrapperComputationTest {
   public void composedComputationReturnsCorrectDeps() throws Exception {
     FakeComputationEnvironment environment = new FakeComputationEnvironment(ImmutableMap.of());
 
-    ComposedComputation<LongMultNode, LongMultNode, LongMultNode> computation =
+    ComposedComputation<LongMultNode, LongMultNode> computation =
         new ComposedWrapperComputation<>(LongMultNode.class, LongMultNode.IDENTIFIER);
 
     assertEquals(
@@ -61,7 +61,7 @@ public class ComposedWrapperComputationTest {
         new FakeComputationEnvironment(
             ImmutableMap.of(ImmutableLongNode.of(1), ImmutableLongNode.of(1)));
 
-    ComposedComputation<LongNode, LongNode, LongNode> computation =
+    ComposedComputation<LongNode, LongNode> computation =
         new ComposedWrapperComputation<>(LongNode.class, LongNode.IDENTIFIER);
 
     assertEquals(

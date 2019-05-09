@@ -39,10 +39,8 @@ import com.google.common.collect.Maps;
  * @param <Result2> the result type of this computation
  */
 public class ComposingComputation<
-        Key1 extends ComputeKey<Result1>,
-        Result1 extends ComputeResult,
-        Result2 extends ComputeResult>
-    implements ComposedComputation<Key1, Result1, Result2> {
+        Key1 extends ComputeKey<?>, Result1 extends ComputeResult, Result2 extends ComputeResult>
+    implements ComposedComputation<Key1, Result2> {
 
   private final Composer<Key1, Result1> composer;
   private final Transformer<Result2> transformer;

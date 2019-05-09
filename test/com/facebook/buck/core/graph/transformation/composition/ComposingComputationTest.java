@@ -41,7 +41,7 @@ public class ComposingComputationTest {
 
     Composer<LongNode, LongNode> composer = (ignored1, ignored2) -> null;
     Transformer<LongMultNode> transformer = ignored -> null;
-    ComposedComputation<LongNode, LongNode, LongMultNode> computation =
+    ComposedComputation<LongNode, LongMultNode> computation =
         new ComposingComputation<>(
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
             LongMultNode.class,
@@ -76,7 +76,7 @@ public class ComposingComputationTest {
           return expectedDeps;
         };
     Transformer<LongMultNode> transformer = ignored -> null;
-    ComposedComputation<LongNode, LongNode, LongMultNode> computation =
+    ComposedComputation<LongNode, LongMultNode> computation =
         new ComposingComputation<>(
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
             LongMultNode.class,
@@ -108,7 +108,7 @@ public class ComposingComputationTest {
     Transformer<LongMultNode> transformer =
         deps -> (LongMultNode) Iterables.getOnlyElement(deps.values());
 
-    ComposedComputation<LongNode, LongNode, LongMultNode> computation =
+    ComposedComputation<LongNode, LongMultNode> computation =
         new ComposingComputation<>(
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
             LongMultNode.class,

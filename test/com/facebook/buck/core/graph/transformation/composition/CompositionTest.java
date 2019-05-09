@@ -38,14 +38,14 @@ public class CompositionTest {
 
   @Test
   public void composedComputationReturnsCorrectPreliminaryDeps() {
-    ComposedComputation<LongNode, LongNode, LongNode> baseComputation =
+    ComposedComputation<LongNode, LongNode> baseComputation =
         new ComposingComputation<>(
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
             LongNode.class,
             (ignored1, ignored2) -> ImmutableSet.of(),
             identify -> (LongNode) Iterables.getOnlyElement(identify.values()));
 
-    ComposedComputation<LongNode, LongNode, LongMultNode> composedComputation =
+    ComposedComputation<LongNode, LongMultNode> composedComputation =
         Composition.of(LongMultNode.class, baseComputation, (ignored1, ignored2) -> null);
 
     assertEquals(
@@ -65,7 +65,7 @@ public class CompositionTest {
     ImmutableSet<LongMultNode> expectedDeps =
         ImmutableSet.of(ImmutableLongMultNode.of(1), ImmutableLongMultNode.of(2));
 
-    ComposedComputation<LongNode, LongNode, LongNode> baseComputation =
+    ComposedComputation<LongNode, LongNode> baseComputation =
         new ComposingComputation<>(
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
             LongNode.class,
@@ -79,7 +79,7 @@ public class CompositionTest {
           return expectedDeps;
         };
 
-    ComposedComputation<LongNode, LongNode, LongMultNode> composedComputation =
+    ComposedComputation<LongNode, LongMultNode> composedComputation =
         Composition.of(LongMultNode.class, baseComputation, composer);
 
     FakeComputationEnvironment environment =
@@ -109,14 +109,14 @@ public class CompositionTest {
     KeyComposer<LongNode, LongNode, LongMultNode> composer =
         (key, result) -> ImmutableSet.of(ImmutableLongMultNode.of(result.get()));
 
-    ComposedComputation<LongNode, LongNode, LongNode> baseComputation =
+    ComposedComputation<LongNode, LongNode> baseComputation =
         new ComposingComputation<>(
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
             LongNode.class,
             (ignored1, ignored2) -> ImmutableSet.of(),
             identify -> (LongNode) Iterables.getOnlyElement(identify.values()));
 
-    ComposedComputation<LongNode, LongNode, LongMultNode> composedComputation =
+    ComposedComputation<LongNode, LongMultNode> composedComputation =
         Composition.of(LongMultNode.class, baseComputation, composer);
 
     assertEquals(
@@ -132,7 +132,7 @@ public class CompositionTest {
         new FakeComputationEnvironment(
             ImmutableMap.of(ImmutableLongNode.of(1), ImmutableLongNode.of(1)));
 
-    ComposedComputation<LongNode, LongNode, LongNode> baseComputation =
+    ComposedComputation<LongNode, LongNode> baseComputation =
         Composition.asComposition(
             LongNode.class, new ChildrenAdder(GraphBuilder.directed().build()));
 

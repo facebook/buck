@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableSet;
 /** A specific {@link Composer} that has output key restrictions */
 @FunctionalInterface
 public interface KeyComposer<
-        Key1 extends ComputeKey<Result1>, Result1 extends ComputeResult, Key2 extends ComputeKey<?>>
+        Key1 extends ComputeKey<?>, Result1 extends ComputeResult, Key2 extends ComputeKey<?>>
     extends Composer<Key1, Result1> {
   @Override
   ImmutableSet<Key2> transitionWith(Key1 key, Result1 result) throws Exception;
