@@ -20,6 +20,7 @@ import com.facebook.buck.core.graph.transformation.GraphEngineCache;
 import com.facebook.buck.event.FileHashCacheEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
+import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -156,8 +157,7 @@ public class BuildFileManifestCache
 
       // If dependency file is modified or deleted, invalidate packages that depend on it
       // Dependent files may come from different cells
-      if (event.getKind() == WatchmanPathEvent.Kind.MODIFY
-          || event.getKind() == WatchmanPathEvent.Kind.DELETE) {
+      if (event.getKind() == Kind.MODIFY || event.getKind() == Kind.DELETE) {
         Path eventPath = event.getPath();
 
         // Convert any path to be relative to super root, because that's how we store dependencies

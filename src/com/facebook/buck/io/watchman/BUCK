@@ -30,6 +30,7 @@ java_immutables_library(
         "WatchmanDiagnosticEventListener.java",
         "WatchmanEvent.java",
         "WatchmanFactory.java",
+        "WatchmanPathEvent.java",
         "WatchmanQuery.java",
         "WatchmanTransportClient.java",
         "WatchmanWatcher.java",

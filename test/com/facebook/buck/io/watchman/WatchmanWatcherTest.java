@@ -34,6 +34,7 @@ import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
+import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
@@ -113,7 +114,7 @@ public class WatchmanWatcherTest {
         BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     WatchmanPathEvent pathEvent = (WatchmanPathEvent) eventBuffer.getOnlyEvent();
-    assertEquals(WatchmanPathEvent.Kind.MODIFY, pathEvent.getKind());
+    assertEquals(Kind.MODIFY, pathEvent.getKind());
     assertEquals(
         "Path should match watchman output.",
         MorePaths.pathWithPlatformSeparators("foo/bar/baz"),
@@ -132,7 +133,7 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.FreshInstanceAction.NONE);
     assertEquals(
         "Should be create event.",
-        WatchmanPathEvent.Kind.CREATE,
+        Kind.CREATE,
         ((WatchmanPathEvent) eventBuffer.getOnlyEvent()).getKind());
   }
 
@@ -150,7 +151,7 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.FreshInstanceAction.NONE);
     assertEquals(
         "Should be delete event.",
-        WatchmanPathEvent.Kind.DELETE,
+        Kind.DELETE,
         ((WatchmanPathEvent) eventBuffer.getOnlyEvent()).getKind());
   }
 
@@ -171,7 +172,7 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.FreshInstanceAction.NONE);
     assertEquals(
         "Should be delete event.",
-        WatchmanPathEvent.Kind.DELETE,
+        Kind.DELETE,
         ((WatchmanPathEvent) eventBuffer.getOnlyEvent()).getKind());
   }
 

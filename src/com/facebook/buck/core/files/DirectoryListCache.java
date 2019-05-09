@@ -19,6 +19,7 @@ package com.facebook.buck.core.files;
 import com.facebook.buck.core.graph.transformation.GraphEngineCache;
 import com.facebook.buck.event.FileHashCacheEvent;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.google.common.eventbus.Subscribe;
@@ -143,7 +144,7 @@ public class DirectoryListCache implements GraphEngineCache<DirectoryListKey, Di
     /** Invoked asynchronously by event bus when file system change is detected with Watchman */
     @Subscribe
     public void onFileSystemChange(WatchmanPathEvent event) {
-      if (event.getKind() == WatchmanPathEvent.Kind.MODIFY) {
+      if (event.getKind() == Kind.MODIFY) {
         // file modifications do not change directory structure, do nothing
         return;
       }
@@ -158,7 +159,7 @@ public class DirectoryListCache implements GraphEngineCache<DirectoryListKey, Di
       DirectoryListKey key = ImmutableDirectoryListKey.of(folderPath);
       dirListCache.cache.remove(key);
 
-      if (event.getKind() == WatchmanPathEvent.Kind.DELETE) {
+      if (event.getKind() == Kind.DELETE) {
         // Watchman does not report when a folder is deleted, it reports deletions of all the files
         // in that folder. If a folder is deleted, we have to invalidate also containing
         // parent DirectoryList. So we keep track of all affected folders in order to possibly

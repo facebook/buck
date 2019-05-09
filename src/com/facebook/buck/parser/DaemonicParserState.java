@@ -28,6 +28,7 @@ import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.counters.TagSetCounter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ParsingEvent;
+import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -497,8 +498,7 @@ public class DaemonicParserState {
   }
 
   public static boolean isPathCreateOrDeleteEvent(WatchmanPathEvent event) {
-    return event.getKind() == WatchmanPathEvent.Kind.CREATE
-        || event.getKind() == WatchmanPathEvent.Kind.DELETE;
+    return event.getKind() == Kind.CREATE || event.getKind() == Kind.DELETE;
   }
 
   private boolean invalidateIfBuckConfigOrEnvHasChanged(

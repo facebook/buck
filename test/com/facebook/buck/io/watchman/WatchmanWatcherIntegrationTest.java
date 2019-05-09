@@ -25,6 +25,7 @@ import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -111,7 +112,7 @@ public class WatchmanWatcherIntegrationTest {
     WatchmanPathEvent event = (WatchmanPathEvent) events.get(0);
     Path eventPath = event.getPath();
     assertThat(eventPath, Matchers.equalTo(path));
-    assertSame(event.getKind(), WatchmanPathEvent.Kind.CREATE);
+    assertSame(event.getKind(), Kind.CREATE);
   }
 
   // Create a watcher for the given ignore paths, clearing the initial overflow event before

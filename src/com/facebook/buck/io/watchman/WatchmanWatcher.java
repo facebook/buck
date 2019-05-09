@@ -22,7 +22,6 @@ import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.io.filesystem.PathMatcher;
-import com.facebook.buck.io.watchman.AbstractWatchmanPathEvent.Kind;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
@@ -366,15 +365,16 @@ public class WatchmanWatcher {
               return;
             }
             Boolean fileNew = (Boolean) file.get("new");
-            Kind kind = WatchmanPathEvent.Kind.MODIFY;
+            WatchmanEvent.Kind kind = WatchmanEvent.Kind.MODIFY;
             if (fileNew != null && fileNew) {
-              kind = WatchmanPathEvent.Kind.CREATE;
+              kind = WatchmanEvent.Kind.CREATE;
             }
             Boolean fileExists = (Boolean) file.get("exists");
             if (fileExists != null && !fileExists) {
-              kind = WatchmanPathEvent.Kind.DELETE;
+              kind = WatchmanEvent.Kind.DELETE;
             }
-            postWatchEvent(buckEventBus, WatchmanPathEvent.of(cellPath, kind, Paths.get(fileName)));
+            postWatchEvent(
+                buckEventBus, ImmutableWatchmanPathEvent.of(cellPath, kind, Paths.get(fileName)));
           }
 
           if (!files.isEmpty() || freshInstanceAction == FreshInstanceAction.NONE) {

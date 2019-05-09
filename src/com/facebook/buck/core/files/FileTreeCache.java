@@ -18,6 +18,7 @@ package com.facebook.buck.core.files;
 
 import com.facebook.buck.core.graph.transformation.GraphEngineCache;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.google.common.eventbus.Subscribe;
@@ -77,7 +78,7 @@ public class FileTreeCache implements GraphEngineCache<FileTreeKey, FileTree> {
     /** Invoked asynchronously by event bus when file system change is detected with Watchman */
     @Subscribe
     public void onFileSystemChange(WatchmanPathEvent event) {
-      if (event.getKind() == WatchmanPathEvent.Kind.MODIFY) {
+      if (event.getKind() == Kind.MODIFY) {
         // file modifications do not change directory structure, do nothing
         return;
       }

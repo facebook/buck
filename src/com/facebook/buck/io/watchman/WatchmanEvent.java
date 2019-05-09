@@ -20,11 +20,26 @@ import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
+/** Interface for all Watchman events, requires them to have a base path */
 public interface WatchmanEvent {
-  /** Cell path being watched. */
+  /** Absolute cell path root being watched. */
   Path getCellPath();
+
+  /** The kind of event that occurred in watched file system, like creation of a new file */
+  enum Kind {
+    /** A new entity, like file or directory, was created */
+    CREATE,
+    /** An existing entity, like file or directory, was modified */
+    MODIFY,
+    /** An entity, like file or directory, was deleted */
+    DELETE,
+  }
 }
 
+/**
+ * Buck sends this event when Watchman is unable to correctly determine the whole set of changes in
+ * the filesystem, or if too many files have changed
+ */
 @Value.Immutable(copy = false, builder = false)
 @BuckStyleTuple
 abstract class AbstractWatchmanOverflowEvent implements WatchmanEvent {
@@ -32,26 +47,4 @@ abstract class AbstractWatchmanOverflowEvent implements WatchmanEvent {
   public abstract Path getCellPath();
 
   public abstract String getReason();
-}
-
-@Value.Immutable(copy = false, builder = false)
-@BuckStyleTuple
-abstract class AbstractWatchmanPathEvent implements WatchmanEvent {
-  public enum Kind {
-    CREATE,
-    MODIFY,
-    DELETE,
-  }
-
-  @Override
-  public abstract Path getCellPath();
-
-  /** The kind of event that occurred. */
-  public abstract Kind getKind();
-
-  /**
-   * Relative path of the actual file the event is about. The path is relative to the cell path
-   * returned by {@link #getCellPath()}.
-   */
-  public abstract Path getPath();
 }
