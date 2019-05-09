@@ -32,4 +32,14 @@ public interface WatchmanEvent {
     /** An entity, like file or directory, was deleted */
     DELETE,
   }
+
+  /** Type of the file that was changed, like a regular file or a directory */
+  enum Type {
+    /** Regular file */
+    FILE,
+    /** Directory (folder that contains other files) */
+    DIRECTORY,
+    /** Symbolic link to another file */
+    SYMLINK
+  }
 }
