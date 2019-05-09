@@ -508,8 +508,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
           // Ensure plugins are loaded from their own classloader.
           PluginFactory pluginFactory =
               new PluginFactory(
-                  compiler.getClass().getClassLoader(),
-                  context.getClassLoaderCache());
+                  compiler.getClass().getClassLoader(), context.getClassLoaderCache());
 
           PluginLoaderJavaFileManager fileManager;
           if (libraryJarParameters != null) {
@@ -523,10 +522,12 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                     directToJarPath,
                     libraryJarParameters.getRemoveEntryPredicate());
             addCloseable(inMemoryFileManager);
-            fileManager = new PluginLoaderJavaFileManager(inMemoryFileManager, pluginFactory, javacPlugins);
+            fileManager =
+                new PluginLoaderJavaFileManager(inMemoryFileManager, pluginFactory, javacPlugins);
           } else {
             inMemoryFileManager = null;
-            fileManager = new PluginLoaderJavaFileManager(standardFileManager, pluginFactory, javacPlugins);
+            fileManager =
+                new PluginLoaderJavaFileManager(standardFileManager, pluginFactory, javacPlugins);
           }
 
           Iterable<? extends JavaFileObject> compilationUnits;

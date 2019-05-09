@@ -11,9 +11,7 @@ public class PluginFactory implements AutoCloseable {
   private final ClassLoaderCache globalClassLoaderCache;
   private final ClassLoaderCache localClassLoaderCache = new ClassLoaderCache();
 
-  PluginFactory(
-      ClassLoader compilerClassLoader,
-      ClassLoaderCache globalClassLoaderCache) {
+  PluginFactory(ClassLoader compilerClassLoader, ClassLoaderCache globalClassLoaderCache) {
     this.compilerClassLoader = compilerClassLoader;
     this.globalClassLoaderCache = globalClassLoaderCache;
   }
@@ -23,7 +21,8 @@ public class PluginFactory implements AutoCloseable {
     localClassLoaderCache.close();
   }
 
-  ClassLoader getClassLoaderForProcessorGroups(ImmutableList<JavacPluginJsr199Fields> pluginGroups) {
+  ClassLoader getClassLoaderForProcessorGroups(
+      ImmutableList<JavacPluginJsr199Fields> pluginGroups) {
     ClassLoaderCache cache;
     // We can avoid lots of overhead in large builds by reusing the same classloader for java
     // plugins. However, some plugins use static variables in a way that assumes
