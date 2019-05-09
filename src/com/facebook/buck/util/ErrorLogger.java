@@ -18,8 +18,8 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.core.exceptions.ExceptionWithContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.exceptions.WrapsException;
-import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;

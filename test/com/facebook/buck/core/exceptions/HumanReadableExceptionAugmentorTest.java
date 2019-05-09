@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.core.exceptions.handler;
+package com.facebook.buck.core.exceptions;
 
 import static com.facebook.buck.util.string.MoreStrings.linesToText;
 

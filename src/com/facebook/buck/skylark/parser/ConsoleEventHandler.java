@@ -16,7 +16,7 @@
 
 package com.facebook.buck.skylark.parser;
 
-import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
+import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.google.common.collect.ImmutableSet;

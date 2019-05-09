@@ -17,7 +17,7 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
-import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
+import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.log.Logger;
