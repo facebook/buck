@@ -868,7 +868,7 @@ class CachingBuildRuleBuilder {
             if (SupportsPipelining.isSupported(rule)
                 && ((SupportsPipelining<?>) rule).useRulePipelining()) {
               return pipelinesRunner.runPipelineStartingAt(
-                  buildRuleBuildContext, (SupportsPipelining<?>) rule, filesystem, service);
+                  buildRuleBuildContext, (SupportsPipelining<?>) rule, service);
             } else {
               buildRuleSteps.runWithDefaultExecutor();
               return buildRuleSteps.future;

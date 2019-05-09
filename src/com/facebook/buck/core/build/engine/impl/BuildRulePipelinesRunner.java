@@ -21,7 +21,6 @@ import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
@@ -104,18 +103,14 @@ public class BuildRulePipelinesRunner {
 
   public <T extends RulePipelineState>
       ListenableFuture<Optional<BuildResult>> runPipelineStartingAt(
-          BuildContext context,
-          SupportsPipelining<T> rootRule,
-          ProjectFilesystem filesystem,
-          ExecutorService executor) {
-    RunnableWithFuture<Optional<BuildResult>> runner =
-        newPipelineRunner(context, rootRule, filesystem);
+          BuildContext context, SupportsPipelining<T> rootRule, ExecutorService executor) {
+    RunnableWithFuture<Optional<BuildResult>> runner = newPipelineRunner(context, rootRule);
     executor.execute(runner);
     return runner.getFuture();
   }
 
   private <T extends RulePipelineState> RunnableWithFuture<Optional<BuildResult>> newPipelineRunner(
-      BuildContext context, SupportsPipelining<T> rootRule, ProjectFilesystem filesystem) {
+      BuildContext context, SupportsPipelining<T> rootRule) {
     BuildRulePipelineStage<T> rootPipelineStage = getPipelineStage(rootRule);
     Preconditions.checkState(!rootPipelineStage.pipelineBuilt());
 
@@ -124,7 +119,7 @@ public class BuildRulePipelinesRunner {
             rootPipelineStage,
             rootRule
                 .getPipelineStateFactory()
-                .newInstance(context, filesystem, rootRule.getBuildTarget()));
+                .newInstance(context, rootRule.getProjectFilesystem(), rootRule.getBuildTarget()));
     return new RunnableWithFuture<Optional<BuildResult>>() {
       @Override
       public ListenableFuture<Optional<BuildResult>> getFuture() {
