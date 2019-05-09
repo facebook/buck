@@ -17,7 +17,6 @@
 package com.facebook.buck.core.build.engine.cache.manager;
 
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
 
 /**
@@ -27,7 +26,7 @@ import java.nio.file.Path;
  */
 public class ManifestRuleKeyManagerTestUtil {
 
-  public static Path getManifestPath(BuildRule rule, ProjectFilesystem filesystem) {
-    return ManifestRuleKeyManager.getManifestPath(rule, filesystem);
+  public static Path getManifestPath(BuildRule rule) {
+    return ManifestRuleKeyManager.getManifestPath(rule);
   }
 }

@@ -316,7 +316,6 @@ class CachingBuildRuleBuilder {
             buildCacheArtifactFetcher,
             artifactCache,
             manifestBasedKeySupplier,
-            filesystem,
             manifestRuleKeyService);
     buildCacheArtifactUploader =
         new BuildCacheArtifactUploader(
