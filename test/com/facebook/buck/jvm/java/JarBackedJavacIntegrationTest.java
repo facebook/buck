@@ -39,7 +39,7 @@ public class JarBackedJavacIntegrationTest {
   }
 
   @Test
-  public void testJarBackedJavacFromJavaLibrary() throws IOException {
+  public void testJarBackedJavacFromJavaLibrary() {
     ProcessResult buildResult = workspace.runBuckBuild("//:lib");
     buildResult.assertSuccess();
   }

@@ -923,7 +923,7 @@ class CachingBuildRuleBuilder {
         MoreExecutors.directExecutor());
   }
 
-  private ListenableFuture<Optional<BuildResult>> checkManifestBasedCaches() throws IOException {
+  private ListenableFuture<Optional<BuildResult>> checkManifestBasedCaches() {
     Optional<RuleKeyAndInputs> manifestKeyAndInputs = manifestBasedKeySupplier.get();
     if (!manifestKeyAndInputs.isPresent()) {
       return Futures.immediateFuture(Optional.empty());
@@ -963,7 +963,7 @@ class CachingBuildRuleBuilder {
         : Optional.empty();
   }
 
-  private ListenableFuture<Optional<BuildResult>> checkInputBasedCaches() throws IOException {
+  private ListenableFuture<Optional<BuildResult>> checkInputBasedCaches() {
     long start = System.currentTimeMillis();
     return Futures.transform(
         inputBasedRuleKeyManager.checkInputBasedCaches(),

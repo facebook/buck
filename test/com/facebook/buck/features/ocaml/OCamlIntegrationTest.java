@@ -346,13 +346,13 @@ public class OCamlIntegrationTest {
   }
 
   @Test
-  public void testSimpleBuildWithLib() throws IOException {
+  public void testSimpleBuildWithLib() {
     BuildTarget target = BuildTargetFactory.newInstance(workspace.getDestPath(), "//:plus");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
   }
 
   @Test
-  public void testRootBuildTarget() throws IOException {
+  public void testRootBuildTarget() {
     BuildTarget target = BuildTargetFactory.newInstance(workspace.getDestPath(), "//:main");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
   }
@@ -463,7 +463,7 @@ public class OCamlIntegrationTest {
   }
 
   @Test
-  public void testCppLibraryDependency() throws InterruptedException, IOException {
+  public void testCppLibraryDependency() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance(workspace.getDestPath(), "//clib:clib");
     BuildTarget binary = createOcamlLinkTarget(target);
     BuildTarget libplus = BuildTargetFactory.newInstance(workspace.getDestPath(), "//clib:plus");

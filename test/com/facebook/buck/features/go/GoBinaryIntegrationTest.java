@@ -42,7 +42,7 @@ public class GoBinaryIntegrationTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
-  public void ensureGoIsAvailable() throws IOException {
+  public void ensureGoIsAvailable() {
     GoAssumptions.assumeGoCompilerAvailable();
   }
 

@@ -43,32 +43,32 @@ public class GroovyLibraryIntegrationTest {
   }
 
   @Test
-  public void shouldCompileGroovyClass() throws Exception {
+  public void shouldCompileGroovyClass() {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/good:example");
     buildResult.assertSuccess("Build should have succeeded.");
   }
 
   @Test
-  public void shouldCompileLibraryWithDependencyOnAnother() throws Exception {
+  public void shouldCompileLibraryWithDependencyOnAnother() {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/child:child");
     buildResult.assertSuccess("Build should have succeeded.");
   }
 
   @Test
-  public void shouldFailToCompileInvalidGroovyClass() throws Exception {
+  public void shouldFailToCompileInvalidGroovyClass() {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/bad:fail");
     buildResult.assertFailure();
   }
 
   @Test
-  public void shouldCrossCompileWithJava() throws Exception {
+  public void shouldCrossCompileWithJava() {
     ProcessResult buildResult =
         workspace.runBuckCommand("build", "//com/example/xcompile:xcompile");
     buildResult.assertSuccess();
   }
 
   @Test
-  public void javaOptionsArePassedThroughToTheJavacCompiler() throws Exception {
+  public void javaOptionsArePassedThroughToTheJavacCompiler() {
     // The code inside requires java 7, but the source level is set to java 6.
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/modern:xcompile");
 
@@ -76,7 +76,7 @@ public class GroovyLibraryIntegrationTest {
   }
 
   @Test
-  public void arbitraryJavaOptionsArePassedThrough() throws Exception {
+  public void arbitraryJavaOptionsArePassedThrough() {
     ProcessResult buildResult =
         workspace.runBuckCommand("build", "//com/example/javacextras:javacextras");
 

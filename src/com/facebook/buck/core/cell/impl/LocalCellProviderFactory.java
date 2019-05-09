@@ -73,7 +73,7 @@ public class LocalCellProviderFactory {
         cellProvider ->
             new CacheLoader<Path, Cell>() {
               @Override
-              public Cell load(Path cellPath) throws IOException, InterruptedException {
+              public Cell load(Path cellPath) throws IOException {
                 Path normalizedCellPath = cellPath.toRealPath().normalize();
 
                 Preconditions.checkState(

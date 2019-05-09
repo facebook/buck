@@ -48,7 +48,7 @@ public class AndroidBinaryAssetsIntegrationTest extends AbiCompilationModeTest {
   private static final String SIMPLE_TARGET = "//apps/multidex:app";
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     workspace =

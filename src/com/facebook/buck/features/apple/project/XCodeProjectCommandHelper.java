@@ -534,7 +534,7 @@ public class XCodeProjectCommandHelper {
     return requiredBuildTargetsBuilder.build();
   }
 
-  private FocusedModuleTargetMatcher getFocusModules() throws IOException, InterruptedException {
+  private FocusedModuleTargetMatcher getFocusModules() throws InterruptedException {
     if (modulesToFocusOn == null) {
       return FocusedModuleTargetMatcher.noFocus();
     }

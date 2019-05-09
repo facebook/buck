@@ -136,7 +136,7 @@ class TargetPatternEvaluator {
   }
 
   private ImmutableMap<String, ImmutableSet<QueryTarget>> resolveBuildTargetPatterns(
-      List<String> patterns) throws InterruptedException, BuildFileParseException, IOException {
+      List<String> patterns) throws InterruptedException, BuildFileParseException {
 
     // Build up an ordered list of patterns and pass them to the parse to get resolved in one go.
     // The returned list of nodes maintains the spec list ordering.

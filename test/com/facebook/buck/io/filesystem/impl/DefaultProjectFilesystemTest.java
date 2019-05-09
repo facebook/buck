@@ -664,7 +664,7 @@ public class DefaultProjectFilesystemTest {
   }
 
   @Test
-  public void twoProjectFilesystemsWithSameIgnoreGlobsShouldBeEqual() throws InterruptedException {
+  public void twoProjectFilesystemsWithSameIgnoreGlobsShouldBeEqual() {
     Config config = ConfigBuilder.createFromText("[project]", "ignore = **/*.orig");
     Path rootPath = tmp.getRoot();
     ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();

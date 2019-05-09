@@ -62,7 +62,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     filesystem = new FakeProjectFilesystem();
 
     // Create our target graph. All nodes are JavaLibrary except b
@@ -182,7 +182,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void getTransitiveClasspathDeps() throws Exception {
+  public void getTransitiveClasspathDeps() {
     TargetNode<?> noOutputNode =
         makeRule("//no:output", ImmutableSet.of(), ImmutableSet.of(zNode), filesystem);
 

@@ -20,7 +20,6 @@ import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.util.timing.SettableFakeClock;
-import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.EdenService;
 import com.facebook.eden.thrift.SHA1Result;
 import com.facebook.thrift.TException;
@@ -35,7 +34,7 @@ import org.junit.Test;
 public class ReconnectingEdenClientTest extends EasyMockSupport {
   @Test
   public void requestToAStaleClientShouldBeRetriedWithAFreshClient()
-      throws EdenError, IOException, TException {
+      throws IOException, TException {
     String mountPoint = "/some/mountPoint";
     List<String> paths = ImmutableList.of(".buckconfig");
     HashCode hash = HashCode.fromString("2b8b815229aa8a61e483fb4ba0588b8b6c491890");

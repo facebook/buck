@@ -344,8 +344,7 @@ public class ThriftCoordinatorServerIntegrationTest {
     testChromeTraceHelper(0, true);
   }
 
-  private void testChromeTraceHelper(int exitCode, boolean chromeExpectedToBeCreated)
-      throws IOException {
+  private void testChromeTraceHelper(int exitCode, boolean chromeExpectedToBeCreated) {
     File traceFile = newNonExistentTmpFile();
 
     Future<ExitState> exitState =

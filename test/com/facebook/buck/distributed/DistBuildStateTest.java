@@ -386,7 +386,7 @@ public class DistBuildStateTest {
         cacheSection.get().get("slb_server_pool"), Matchers.equalTo("http://someserver:8080"));
   }
 
-  private DistBuildFileHashes emptyActionGraph() throws IOException, InterruptedException {
+  private DistBuildFileHashes emptyActionGraph() throws IOException {
     ActionGraph actionGraph = new ActionGraph(ImmutableList.of());
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     ProjectFilesystem projectFilesystem = createJavaOnlyFilesystem("/opt/buck");

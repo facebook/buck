@@ -57,7 +57,7 @@ public class GenerateStringResourcesIntegrationTest {
   }
 
   @Test
-  public void testExpectedOutputsAreAllAvailable() throws InterruptedException, IOException {
+  public void testExpectedOutputsAreAllAvailable() throws IOException {
     String buildTarget =
         String.format(
             "%s#%s",
@@ -76,8 +76,7 @@ public class GenerateStringResourcesIntegrationTest {
   }
 
   @Test
-  public void testExpectedOutputsAreAllAvailableWithAapt2()
-      throws InterruptedException, IOException {
+  public void testExpectedOutputsAreAllAvailableWithAapt2() throws IOException {
     // TODO(dreiss): Remove this when aapt2 is everywhere.
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProcessResult foundAapt2 = workspace.runBuckBuild("//apps/sample:check_for_aapt2");

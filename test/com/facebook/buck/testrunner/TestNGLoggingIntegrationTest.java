@@ -42,7 +42,7 @@ public class TestNGLoggingIntegrationTest {
   }
 
   @Test
-  public void logOutputIsOnlyReportedForTestWhichFails() throws IOException {
+  public void logOutputIsOnlyReportedForTestWhichFails() {
     ProcessResult result = workspace.runBuckCommand("test", "//:testng-logging");
     result.assertTestFailure();
 
@@ -61,7 +61,7 @@ public class TestNGLoggingIntegrationTest {
   }
 
   @Test
-  public void logParametersForFailingTest() throws IOException {
+  public void logParametersForFailingTest() {
     ProcessResult result = workspace.runBuckCommand("test", "//:testng-test-output-parameters");
     result.assertTestFailure();
 

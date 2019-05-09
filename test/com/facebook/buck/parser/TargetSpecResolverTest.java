@@ -231,7 +231,7 @@ public class TargetSpecResolverTest {
   }
 
   private ImmutableList<ImmutableSet<BuildTarget>> resolve(Iterable<? extends TargetNodeSpec> specs)
-      throws IOException, InterruptedException {
+      throws InterruptedException {
     PerBuildState state =
         perBuildStateFactory.create(
             ParsingContext.builder(cell, executorService).build(),

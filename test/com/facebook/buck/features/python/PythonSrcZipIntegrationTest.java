@@ -42,7 +42,7 @@ public class PythonSrcZipIntegrationTest {
   }
 
   @Test
-  public void testDependingOnSrcZipWorks() throws IOException {
+  public void testDependingOnSrcZipWorks() {
     // This test should pass.
     ProcessResult result1 = workspace.runBuckCommand("test", "//:test");
     result1.assertSuccess();

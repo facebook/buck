@@ -45,7 +45,7 @@ public class ScalaLibraryIntegrationTest {
   }
 
   @Test(timeout = (2 * 60 * 1000))
-  public void shouldCompileScalaClass() throws Exception {
+  public void shouldCompileScalaClass() {
     assertThat(
         workspace
             .runBuckCommand(
@@ -61,7 +61,7 @@ public class ScalaLibraryIntegrationTest {
   }
 
   @Test(timeout = (2 * 60 * 1000))
-  public void shouldWorkWithLocalCompiler() throws Exception {
+  public void shouldWorkWithLocalCompiler() {
     try {
       new ScalaBuckConfig(FakeBuckConfig.builder().build())
           .getScalac(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE);
@@ -106,7 +106,7 @@ public class ScalaLibraryIntegrationTest {
   }
 
   @Test(timeout = (2 * 60 * 1000))
-  public void shouldCompileMixedJavaAndScalaSources() throws Exception {
+  public void shouldCompileMixedJavaAndScalaSources() {
     assertThat(
         workspace
             .runBuckCommand(

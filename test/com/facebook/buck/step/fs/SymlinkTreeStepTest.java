@@ -37,7 +37,7 @@ public class SymlinkTreeStepTest {
   @Rule public final TemporaryFolder tmpDir = new TemporaryFolder();
 
   @Test
-  public void testSymlinkFiles() throws InterruptedException, IOException {
+  public void testSymlinkFiles() throws IOException {
 
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());

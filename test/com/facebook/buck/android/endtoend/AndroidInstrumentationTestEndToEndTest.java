@@ -48,7 +48,7 @@ public class AndroidInstrumentationTestEndToEndTest {
   private static final Logger LOG = Logger.get(AndroidInstrumentationTestEndToEndTest.class);
 
   @Before
-  public void assumeEnvironment() throws Exception {
+  public void assumeEnvironment() {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
 

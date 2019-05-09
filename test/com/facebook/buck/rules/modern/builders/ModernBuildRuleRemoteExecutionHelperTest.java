@@ -60,7 +60,7 @@ public class ModernBuildRuleRemoteExecutionHelperTest {
   private SourcePathRuleFinder ruleFinder;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     BuckEventBus eventBus = new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("dontcare"));
     ruleFinder =
         new AbstractBuildRuleResolver() {

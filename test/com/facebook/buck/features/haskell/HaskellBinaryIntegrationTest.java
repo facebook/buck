@@ -75,14 +75,14 @@ public class HaskellBinaryIntegrationTest {
   }
 
   @Test
-  public void simple() throws IOException {
+  public void simple() {
     ProcessResult result = workspace.runBuckCommand("run", "//:foo#default," + getLinkFlavor());
     result.assertSuccess();
     assertThat(result.getStdout(), Matchers.equalTo("5"));
   }
 
   @Test
-  public void ghcLinkerFlags() throws IOException {
+  public void ghcLinkerFlags() {
     ProcessResult result =
         workspace.runBuckCommand(
             "run", "//:foo_rtsflags#default," + getLinkFlavor(), "-- +RTS -A512m -RTS");
@@ -91,7 +91,7 @@ public class HaskellBinaryIntegrationTest {
   }
 
   @Test
-  public void dependency() throws IOException {
+  public void dependency() {
     ProcessResult result =
         workspace.runBuckCommand("run", "//:dependent#default," + getLinkFlavor());
     result.assertSuccess();
@@ -99,14 +99,14 @@ public class HaskellBinaryIntegrationTest {
   }
 
   @Test
-  public void foreign() throws IOException {
+  public void foreign() {
     ProcessResult result = workspace.runBuckCommand("run", "//:foreign#default," + getLinkFlavor());
     result.assertSuccess();
     assertThat(result.getStdout(), Matchers.equalTo("hello world"));
   }
 
   @Test
-  public void cxxGenrule() throws IOException {
+  public void cxxGenrule() {
     ProcessResult result =
         workspace.runBuckCommand(
             "run", "-c", "cxx.cppflags=-some-flag", "//:gen_main#default," + getLinkFlavor());
@@ -115,7 +115,7 @@ public class HaskellBinaryIntegrationTest {
   }
 
   @Test
-  public void cHeader() throws IOException {
+  public void cHeader() {
     ProcessResult result =
         workspace.runBuckCommand("run", "//:hs_header#default," + getLinkFlavor());
     result.assertSuccess();
@@ -123,7 +123,7 @@ public class HaskellBinaryIntegrationTest {
   }
 
   @Test
-  public void buildError() throws IOException {
+  public void buildError() {
     ProcessResult result = workspace.runBuckBuild("//:error#default," + getLinkFlavor());
     result.assertFailure();
   }

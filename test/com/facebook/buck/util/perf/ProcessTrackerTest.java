@@ -297,15 +297,15 @@ public class ProcessTrackerTest {
       super(eventBus, invocationInfo, processHelper, processRegistry, /* isDaemon */ false, false);
     }
 
-    void explicitStartUp() throws Exception {
+    void explicitStartUp() {
       super.startUp();
     }
 
-    void explicitRunOneIteration() throws Exception {
+    void explicitRunOneIteration() {
       super.runOneIteration();
     }
 
-    void explicitShutDown() throws Exception {
+    void explicitShutDown() {
       super.shutDown();
     }
 

@@ -130,8 +130,7 @@ public class BuildKeepGoingIntegrationTest {
     assertEquals(workspace.getFileContents("expected_build_report.json"), buildReportContents);
   }
 
-  private static ProcessResult buildTwoGoodRulesAndAssertSuccess(ProjectWorkspace workspace)
-      throws IOException {
+  private static ProcessResult buildTwoGoodRulesAndAssertSuccess(ProjectWorkspace workspace) {
     return workspace
         .runBuckBuild("--keep-going", "//:rule_with_output", "//:rule_without_output")
         .assertSuccess();

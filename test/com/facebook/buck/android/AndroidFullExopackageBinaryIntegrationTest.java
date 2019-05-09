@@ -38,7 +38,7 @@ public class AndroidFullExopackageBinaryIntegrationTest {
   private Path outputPath;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     workspace =

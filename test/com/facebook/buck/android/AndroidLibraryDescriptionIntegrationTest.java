@@ -135,14 +135,14 @@ public class AndroidLibraryDescriptionIntegrationTest extends AbiCompilationMode
   }
 
   @Test
-  public void testDepQueryCanApplyToResources() throws Exception {
+  public void testDepQueryCanApplyToResources() {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     // Build once to warm cache
     workspace.runBuckBuild("//:resources_from_query").assertSuccess();
   }
 
   @Test
-  public void testDepQueryWithClasspathDoesNotTraverseProvidedDeps() throws Exception {
+  public void testDepQueryWithClasspathDoesNotTraverseProvidedDeps() {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     // Should succeed because lib_c is a provided dep
     workspace.runBuckBuild("//:provided_only");
@@ -152,7 +152,7 @@ public class AndroidLibraryDescriptionIntegrationTest extends AbiCompilationMode
   }
 
   @Test
-  public void testProvidedDepsQuery() throws Exception {
+  public void testProvidedDepsQuery() {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     // Should succeed because required dep (lib_c) will be added as provided
     workspace.runBuckBuild("//:has_lib_c_from_provided_query").assertSuccess();
@@ -174,13 +174,13 @@ public class AndroidLibraryDescriptionIntegrationTest extends AbiCompilationMode
   }
 
   @Test
-  public void testClasspathQueryCanTraverseAndroidResource() throws Exception {
+  public void testClasspathQueryCanTraverseAndroidResource() {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace.runBuckBuild("//:needs_b_has_res").assertSuccess();
   }
 
   @Test
-  public void testClasspathQueryOnAndroidResourceRespectsDepth() throws Exception {
+  public void testClasspathQueryOnAndroidResourceRespectsDepth() {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     // Check that we have b in our resolved deps, but not c, due to the depth limiting
     workspace.runBuckBuild("//:needs_c_has_res").assertFailure();

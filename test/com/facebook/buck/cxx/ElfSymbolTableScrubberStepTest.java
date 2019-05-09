@@ -42,7 +42,7 @@ public class ElfSymbolTableScrubberStepTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void test() throws InterruptedException, IOException {
+  public void test() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "elf_shared_lib", tmp);
     workspace.setUp();
@@ -82,7 +82,7 @@ public class ElfSymbolTableScrubberStepTest {
   }
 
   @Test
-  public void testScrubUndefined() throws InterruptedException, IOException {
+  public void testScrubUndefined() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "elf_shared_lib", tmp);
     workspace.setUp();

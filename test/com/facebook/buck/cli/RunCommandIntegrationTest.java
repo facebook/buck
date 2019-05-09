@@ -42,7 +42,7 @@ public class RunCommandIntegrationTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     // sh_binary doesn't support Windows.
     assumeThat(Platform.detect(), is(not(WINDOWS)));
   }

@@ -41,7 +41,7 @@ public class AndroidBinaryFlavorsIntegrationTest {
   private ProjectWorkspace workspace;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     workspace =
@@ -50,7 +50,7 @@ public class AndroidBinaryFlavorsIntegrationTest {
   }
 
   @Test
-  public void testPackageStringAssetsFlavorOutput() throws IOException {
+  public void testPackageStringAssetsFlavorOutput() {
     String target = "//apps/sample:app_comp_str#package_string_assets";
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", target);
@@ -64,7 +64,7 @@ public class AndroidBinaryFlavorsIntegrationTest {
   }
 
   @Test
-  public void testPackageStringsOnlyFlavorOutput() throws IOException {
+  public void testPackageStringsOnlyFlavorOutput() {
     String target = "//apps/sample:app_str#package_string_assets";
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", target);
@@ -78,7 +78,7 @@ public class AndroidBinaryFlavorsIntegrationTest {
   }
 
   @Test
-  public void testPackageStringAssetsFlavorDoesNotExist() throws IOException {
+  public void testPackageStringAssetsFlavorDoesNotExist() {
     String target = "//apps/sample:app#package_string_assets";
     ProcessResult processResult = workspace.runBuckCommand("targets", "--show-output", target);
     processResult.assertFailure();

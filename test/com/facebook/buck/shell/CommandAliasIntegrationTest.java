@@ -65,7 +65,7 @@ public class CommandAliasIntegrationTest {
   }
 
   @Test
-  public void onlyBuildsToolForCurrentPlatform() throws IOException, InterruptedException {
+  public void onlyBuildsToolForCurrentPlatform() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "command_alias", tmp).setUp();
 

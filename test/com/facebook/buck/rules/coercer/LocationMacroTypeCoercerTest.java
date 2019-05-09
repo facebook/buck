@@ -43,7 +43,7 @@ public class LocationMacroTypeCoercerTest {
   private UnconfiguredBuildTargetTypeCoercer unconfiguredBuildTargetFactory;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     unconfiguredBuildTargetFactory =
         new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory());
   }

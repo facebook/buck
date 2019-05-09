@@ -101,7 +101,7 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   @Test
-  public void exceptionWithCauseThrown() throws Exception {
+  public void exceptionWithCauseThrown() {
     mockDescription.buildRuleFactory =
         exceptionTargetFactory("failure message", RuntimeException.class, RuntimeException.class);
     ProcessResult result = workspace.runBuckBuild(":target_name");
@@ -116,7 +116,7 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   @Test
-  public void exceptionWithCauseThrownInStep() throws Exception {
+  public void exceptionWithCauseThrownInStep() {
     mockDescription.buildRuleFactory =
         stepExceptionTargetFactory(
             "failure message", RuntimeException.class, RuntimeException.class);
@@ -134,7 +134,7 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   @Test
-  public void runtimeExceptionThrown() throws Exception {
+  public void runtimeExceptionThrown() {
     mockDescription.buildRuleFactory =
         exceptionTargetFactory("failure message", RuntimeException.class);
     ProcessResult result = workspace.runBuckBuild(":target_name");
@@ -148,7 +148,7 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   @Test
-  public void runtimeExceptionThrownInStep() throws Exception {
+  public void runtimeExceptionThrownInStep() {
     mockDescription.buildRuleFactory =
         stepExceptionTargetFactory("failure message", RuntimeException.class);
     ProcessResult result = workspace.runBuckBuild(":target_name");
@@ -163,7 +163,7 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   @Test
-  public void ioExceptionThrownInStep() throws Exception {
+  public void ioExceptionThrownInStep() {
     mockDescription.buildRuleFactory =
         stepExceptionTargetFactory("failure message", IOException.class);
     ProcessResult result = workspace.runBuckBuild(":target_name");
@@ -178,7 +178,7 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   @Test
-  public void ioExceptionThrown() throws Exception {
+  public void ioExceptionThrown() {
     mockDescription.buildRuleFactory = exceptionTargetFactory("failure message", IOException.class);
     ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertExitCode(null, ExitCode.FATAL_IO);
@@ -191,7 +191,7 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   @Test
-  public void ioExceptionWithRuleInMessageThrown() throws Exception {
+  public void ioExceptionWithRuleInMessageThrown() {
     mockDescription.buildRuleFactory =
         exceptionTargetFactory("failure message //:target_name", IOException.class);
     ProcessResult result = workspace.runBuckBuild(":target_name");
@@ -205,7 +205,7 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   @Test
-  public void humanReadableExceptionThrownInStep() throws Exception {
+  public void humanReadableExceptionThrownInStep() {
     mockDescription.buildRuleFactory =
         stepExceptionTargetFactory("failure message", HumanReadableException.class);
     ProcessResult result = workspace.runBuckBuild(":target_name");
@@ -219,7 +219,7 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   @Test
-  public void humanReadableExceptionThrown() throws Exception {
+  public void humanReadableExceptionThrown() {
     mockDescription.buildRuleFactory =
         exceptionTargetFactory("failure message", HumanReadableException.class);
     ProcessResult result = workspace.runBuckBuild(":target_name");
@@ -230,7 +230,7 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   @Test
-  public void withStepReturningFailure() throws Exception {
+  public void withStepReturningFailure() {
     mockDescription.buildRuleFactory = exitCodeTargetFactory("failure message", 1);
     ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertFailure();
@@ -244,7 +244,7 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   @Test
-  public void withSuccessfulStep() throws Exception {
+  public void withSuccessfulStep() {
     mockDescription.buildRuleFactory = exitCodeTargetFactory("success message", 0);
     ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertSuccess();
@@ -252,7 +252,7 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   @Test
-  public void successWithNoSteps() throws Exception {
+  public void successWithNoSteps() {
     mockDescription.buildRuleFactory = successTargetFactory();
     ProcessResult result = workspace.runBuckBuild(":target_name");
     result.assertSuccess();
@@ -260,7 +260,7 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   @Test
-  public void runtimeExceptionThrownKeepGoing() throws Exception {
+  public void runtimeExceptionThrownKeepGoing() {
     mockDescription.buildRuleFactory =
         exceptionTargetFactory("failure message", RuntimeException.class);
     ProcessResult result = workspace.runBuckBuild("--keep-going", ":target_name");
@@ -275,7 +275,7 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   @Test
-  public void runtimeExceptionThrownInStepKeepGoing() throws Exception {
+  public void runtimeExceptionThrownInStepKeepGoing() {
     mockDescription.buildRuleFactory =
         stepExceptionTargetFactory("failure message", RuntimeException.class);
     ProcessResult result = workspace.runBuckBuild("--keep-going", ":target_name");
@@ -291,7 +291,7 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   @Test
-  public void ioExceptionThrownInStepKeepGoing() throws Exception {
+  public void ioExceptionThrownInStepKeepGoing() {
     mockDescription.buildRuleFactory =
         stepExceptionTargetFactory("failure message", IOException.class);
     ProcessResult result = workspace.runBuckBuild("--keep-going", ":target_name");
@@ -307,7 +307,7 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   @Test
-  public void ioExceptionThrownKeepGoing() throws Exception {
+  public void ioExceptionThrownKeepGoing() {
     mockDescription.buildRuleFactory = exceptionTargetFactory("failure message", IOException.class);
     ProcessResult result = workspace.runBuckBuild("--keep-going", ":target_name");
     result.assertFailure();

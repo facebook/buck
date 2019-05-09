@@ -50,7 +50,7 @@ public class MultiSourceContentsProvider implements FileContentsProvider {
             path -> {
               try {
                 return new LocalFsContentsProvider(projectFilesystemFactory, path);
-              } catch (InterruptedException | IOException e) {
+              } catch (IOException e) {
                 throw new RuntimeException(e);
               }
             }),

@@ -90,7 +90,7 @@ public class WorkerProcessTest {
   }
 
   @Test
-  public void testClose() throws IOException {
+  public void testClose() {
     FakeWorkerProcessProtocol.FakeCommandSender protocol =
         new FakeWorkerProcessProtocol.FakeCommandSender();
 

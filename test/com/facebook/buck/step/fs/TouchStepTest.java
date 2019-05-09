@@ -46,7 +46,7 @@ public class TouchStepTest {
   }
 
   @Test
-  public void testFileGetsCreated() throws IOException, InterruptedException {
+  public void testFileGetsCreated() throws IOException {
     Path path = Paths.get("somefile");
     assertFalse(path.toFile().exists());
     ProjectFilesystem projectFilesystem =
@@ -61,7 +61,7 @@ public class TouchStepTest {
   }
 
   @Test
-  public void testFileLastModifiedTimeUpdated() throws IOException, InterruptedException {
+  public void testFileLastModifiedTimeUpdated() throws IOException {
     Path path = Paths.get("somefile");
     ProjectFilesystem projectFilesystem =
         new FakeProjectFilesystem(

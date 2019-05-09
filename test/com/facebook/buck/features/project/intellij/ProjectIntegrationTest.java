@@ -387,7 +387,7 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void testOutputDir() throws IOException, InterruptedException {
+  public void testOutputDir() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -416,7 +416,7 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void testOutputDirNoProjectWrite() throws IOException, InterruptedException {
+  public void testOutputDirNoProjectWrite() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -442,7 +442,7 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void testDifferentOutputDirSameProject() throws InterruptedException, IOException {
+  public void testDifferentOutputDirSameProject() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -503,7 +503,7 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void testBuckModuleRegenerateSubprojectNoOp() throws InterruptedException, IOException {
+  public void testBuckModuleRegenerateSubprojectNoOp() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -643,7 +643,7 @@ public class ProjectIntegrationTest {
   }
 
   private ProcessResult runBuckProjectAndVerify(String folderWithTestData, String... commandArgs)
-      throws InterruptedException, IOException {
+      throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     ProjectWorkspace workspace =

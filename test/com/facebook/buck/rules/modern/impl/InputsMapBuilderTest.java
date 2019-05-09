@@ -174,7 +174,7 @@ public class InputsMapBuilderTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void withExcludeFromRuleKey() throws Exception {
+  public void withExcludeFromRuleKey() {
     WithExcludeFromRuleKey value = new WithExcludeFromRuleKey();
     inputsConsumer.accept(value.sourcePath);
     apply(value);

@@ -206,8 +206,7 @@ public class PublishCommandIntegrationTest {
     return zipEntries.build();
   }
 
-  private ProcessResult runBuckPublish(ProjectWorkspace workspace, String... extraArgs)
-      throws IOException {
+  private ProcessResult runBuckPublish(ProjectWorkspace workspace, String... extraArgs) {
     return workspace.runBuckCommand(
         FluentIterable.from(new String[] {"publish"})
             .append(extraArgs)

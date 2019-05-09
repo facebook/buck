@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.eventbus.Subscribe;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Delayed;
@@ -82,7 +81,7 @@ public class CounterRegistryImplTest {
   }
 
   @Test
-  public void testCreatingCounters() throws IOException {
+  public void testCreatingCounters() {
     try (CounterRegistryImpl registry = new CounterRegistryImpl(executor, eventBus)) {
       Assert.assertNotNull(registry.newIntegerCounter(CATEGORY, "counter1", TAGS));
       Assert.assertNotNull(registry.newSamplingCounter(CATEGORY, "counter2", TAGS));
@@ -91,7 +90,7 @@ public class CounterRegistryImplTest {
   }
 
   @Test
-  public void testFlushingCounters() throws IOException {
+  public void testFlushingCounters() {
     CountersSnapshotEventEventListener listener = new CountersSnapshotEventEventListener();
     eventBus.register(listener);
     try (CounterRegistryImpl registry = new CounterRegistryImpl(executor, eventBus)) {
@@ -114,7 +113,7 @@ public class CounterRegistryImplTest {
   }
 
   @Test
-  public void noEventsFlushedIfNoCountersRegistered() throws IOException {
+  public void noEventsFlushedIfNoCountersRegistered() {
     BuckEventBus fakeEventBus =
         new DefaultBuckEventBus(FakeClock.doNotCare(), false, new BuildId("12345"), 1000);
     SnapshotEventListener listener = new SnapshotEventListener();
@@ -132,7 +131,7 @@ public class CounterRegistryImplTest {
   }
 
   @Test
-  public void noEventsFlushedIfCounterRegisteredButHasNoData() throws IOException {
+  public void noEventsFlushedIfCounterRegisteredButHasNoData() {
     BuckEventBus fakeEventBus =
         new DefaultBuckEventBus(FakeClock.doNotCare(), false, new BuildId("12345"), 1000);
     SnapshotEventListener listener = new SnapshotEventListener();
@@ -154,7 +153,7 @@ public class CounterRegistryImplTest {
   }
 
   @Test
-  public void eventIsFlushedIfCounterRegisteredWithData() throws IOException {
+  public void eventIsFlushedIfCounterRegisteredWithData() {
     BuckEventBus fakeEventBus =
         new DefaultBuckEventBus(FakeClock.doNotCare(), false, new BuildId("12345"), 1000);
     SnapshotEventListener listener = new SnapshotEventListener();
@@ -182,7 +181,7 @@ public class CounterRegistryImplTest {
   }
 
   @Test
-  public void closingRegistryBeforeTimerFiresFlushesCounters() throws IOException {
+  public void closingRegistryBeforeTimerFiresFlushesCounters() {
     BuckEventBus fakeEventBus =
         new DefaultBuckEventBus(FakeClock.doNotCare(), false, new BuildId("12345"), 1000);
     SnapshotEventListener listener = new SnapshotEventListener();

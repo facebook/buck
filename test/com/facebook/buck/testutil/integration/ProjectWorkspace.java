@@ -250,30 +250,29 @@ public class ProjectWorkspace extends AbstractWorkspace {
     return configs;
   }
 
-  public BuckPaths getBuckPaths() throws InterruptedException, IOException {
+  public BuckPaths getBuckPaths() throws IOException {
     return getProjectFilesystemAndConfig().projectFilesystem.getBuckPaths();
   }
 
-  public ProcessResult runBuckBuild(String... args) throws IOException {
+  public ProcessResult runBuckBuild(String... args) {
     return runBuckBuild(Optional.empty(), args);
   }
 
-  public ProcessResult runBuckBuild(Optional<NGContext> context, String... args)
-      throws IOException {
+  public ProcessResult runBuckBuild(Optional<NGContext> context, String... args) {
     String[] totalArgs = new String[args.length + 1];
     totalArgs[0] = "build";
     System.arraycopy(args, 0, totalArgs, 1, args.length);
     return runBuckCommand(context, totalArgs);
   }
 
-  public ProcessResult runBuckTest(String... args) throws IOException {
+  public ProcessResult runBuckTest(String... args) {
     String[] totalArgs = new String[args.length + 1];
     totalArgs[0] = "test";
     System.arraycopy(args, 0, totalArgs, 1, args.length);
     return runBuckCommand(totalArgs);
   }
 
-  public ProcessResult runBuckDistBuildRun(String... args) throws IOException {
+  public ProcessResult runBuckDistBuildRun(String... args) {
     String[] totalArgs = new String[args.length + 2];
     totalArgs[0] = "distbuild";
     totalArgs[1] = "run";
@@ -281,8 +280,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
     return runBuckCommand(totalArgs);
   }
 
-  private ImmutableMap<String, String> buildMultipleAndReturnStringOutputs(String... args)
-      throws IOException {
+  private ImmutableMap<String, String> buildMultipleAndReturnStringOutputs(String... args) {
     // Add in `--show-output` to the build, so we can parse the output paths after the fact.
     ImmutableList<String> buildArgs =
         ImmutableList.<String>builder().add("--show-output").add(args).build();
@@ -318,15 +316,14 @@ public class ProjectWorkspace extends AbstractWorkspace {
     return builder.build();
   }
 
-  public ImmutableMap<String, Path> buildMultipleAndReturnOutputs(String... args)
-      throws IOException {
+  public ImmutableMap<String, Path> buildMultipleAndReturnOutputs(String... args) {
     return buildMultipleAndReturnStringOutputs(args).entrySet().stream()
         .collect(
             ImmutableMap.toImmutableMap(
                 entry -> entry.getKey(), entry -> getPath(entry.getValue())));
   }
 
-  public Path buildAndReturnOutput(String... args) throws IOException {
+  public Path buildAndReturnOutput(String... args) {
     ImmutableMap<String, Path> outputs = buildMultipleAndReturnOutputs(args);
 
     // Verify we only have a single output.
@@ -340,15 +337,14 @@ public class ProjectWorkspace extends AbstractWorkspace {
     return outputs.values().iterator().next();
   }
 
-  public ImmutableMap<String, Path> buildMultipleAndReturnRelativeOutputs(String... args)
-      throws IOException {
+  public ImmutableMap<String, Path> buildMultipleAndReturnRelativeOutputs(String... args) {
     return buildMultipleAndReturnStringOutputs(args).entrySet().stream()
         .collect(
             ImmutableMap.toImmutableMap(
                 entry -> entry.getKey(), entry -> Paths.get(entry.getValue())));
   }
 
-  public Path buildAndReturnRelativeOutput(String... args) throws IOException {
+  public Path buildAndReturnRelativeOutput(String... args) {
     ImmutableMap<String, Path> outputs = buildMultipleAndReturnRelativeOutputs(args);
 
     // Verify we only have a single output.
@@ -410,25 +406,23 @@ public class ProjectWorkspace extends AbstractWorkspace {
    * @return the result of running Buck, which includes the exit code, stdout, and stderr.
    */
   @Override
-  public ProcessResult runBuckCommand(String... args) throws IOException {
+  public ProcessResult runBuckCommand(String... args) {
     return runBuckCommandWithEnvironmentOverridesAndContext(
         destPath, Optional.empty(), ImmutableMap.of(), args);
   }
 
-  public ProcessResult runBuckCommand(Optional<NGContext> context, String... args)
-      throws IOException {
+  public ProcessResult runBuckCommand(Optional<NGContext> context, String... args) {
     return runBuckCommandWithEnvironmentOverridesAndContext(
         destPath, context, ImmutableMap.of(), args);
   }
 
   @Override
-  public ProcessResult runBuckCommand(ImmutableMap<String, String> environment, String... args)
-      throws IOException {
+  public ProcessResult runBuckCommand(ImmutableMap<String, String> environment, String... args) {
     return runBuckCommandWithEnvironmentOverridesAndContext(
         destPath, Optional.empty(), environment, args);
   }
 
-  public ProcessResult runBuckCommand(Path repoRoot, String... args) throws IOException {
+  public ProcessResult runBuckCommand(Path repoRoot, String... args) {
     return runBuckCommandWithEnvironmentOverridesAndContext(
         repoRoot, Optional.empty(), ImmutableMap.of(), args);
   }
@@ -452,12 +446,11 @@ public class ProjectWorkspace extends AbstractWorkspace {
     }
   }
 
-  public ProcessResult runBuckdCommand(NGContext context, String... args) throws IOException {
+  public ProcessResult runBuckdCommand(NGContext context, String... args) {
     return runBuckdCommand(destPath, context, args);
   }
 
-  public ProcessResult runBuckdCommand(Path repoRoot, NGContext context, String... args)
-      throws IOException {
+  public ProcessResult runBuckdCommand(Path repoRoot, NGContext context, String... args) {
     assumeTrue(
         "watchman must exist to run buckd",
         new ExecutableFinder(Platform.detect())
@@ -640,7 +633,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
    * @see ChromeTraceParser#parse(Path, Set)
    */
   public Map<ChromeTraceEventMatcher<?>, Object> parseTraceFromMostRecentBuckInvocation(
-      Set<ChromeTraceEventMatcher<?>> matchers) throws InterruptedException, IOException {
+      Set<ChromeTraceEventMatcher<?>> matchers) throws IOException {
     ProjectFilesystem projectFilesystem = getProjectFilesystemAndConfig().projectFilesystem;
     ChromeTraceParser parser = new ChromeTraceParser(projectFilesystem);
     return parser.parse(
@@ -673,11 +666,11 @@ public class ProjectWorkspace extends AbstractWorkspace {
         root, Files.readAllLines(root.resolve(PATH_TO_BUILD_LOG), UTF_8));
   }
 
-  public Config getConfig() throws IOException, InterruptedException {
+  public Config getConfig() throws IOException {
     return getProjectFilesystemAndConfig().config;
   }
 
-  public Cell asCell() throws IOException, InterruptedException {
+  public Cell asCell() throws IOException {
     ProjectFilesystemAndConfig filesystemAndConfig = getProjectFilesystemAndConfig();
     ProjectFilesystem filesystem = filesystemAndConfig.projectFilesystem;
     Config config = filesystemAndConfig.config;
@@ -716,8 +709,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
         .getCellByPath(filesystem.getRootPath());
   }
 
-  public BuildTarget newBuildTarget(String fullyQualifiedName)
-      throws IOException, InterruptedException {
+  public BuildTarget newBuildTarget(String fullyQualifiedName) throws IOException {
     return BuildTargetFactory.newInstance(
         asCell().getFilesystem().getRootPath(), fullyQualifiedName);
   }

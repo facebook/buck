@@ -373,7 +373,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void withExcludeFromRuleKey() throws Exception {
+  public void withExcludeFromRuleKey() {
     assertEquals("sourcePath:\n" + "otherPath:", stringify(new WithExcludeFromRuleKey()));
   }
 }

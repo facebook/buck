@@ -179,7 +179,7 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void withExcludeFromRuleKey() throws Exception {
+  public void withExcludeFromRuleKey() {
     apply(new WithExcludeFromRuleKey());
   }
 

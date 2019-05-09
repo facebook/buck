@@ -382,7 +382,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
   }
 
   @Test
-  public void testAbstractBuildRuleFieldSerialization() throws Exception {
+  public void testAbstractBuildRuleFieldSerialization() {
     ProcessResult result = workspace.runBuckBuild(checkSerializationTarget);
     result.assertSuccess();
   }
@@ -460,13 +460,13 @@ public class ModernBuildRuleStrategyIntegrationTest {
   }
 
   @Test
-  public void testBuildRuleWithDuplicateOutputFiles() throws Exception {
+  public void testBuildRuleWithDuplicateOutputFiles() {
     ProcessResult result = workspace.runBuckBuild(duplicateOutputFilesTarget);
     result.assertSuccess();
   }
 
   @Test
-  public void testBuildRuleWithDuplicateOutputDirs() throws Exception {
+  public void testBuildRuleWithDuplicateOutputDirs() {
     ProcessResult result = workspace.runBuckBuild(duplicateOutputDirsTarget);
     result.assertSuccess();
   }

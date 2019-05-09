@@ -84,7 +84,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   private static final String APP_REDEX_TARGET = "//apps/sample:app_redex";
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     workspace =
@@ -301,7 +301,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testDxFindsReferencedResources() throws IOException {
+  public void testDxFindsReferencedResources() {
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
     BuildTarget dexTarget = BuildTargetFactory.newInstance("//java/com/sample/lib:lib#dex");
     ProjectFilesystem filesystem =
@@ -314,7 +314,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testD8FindsReferencedResources() throws IOException {
+  public void testD8FindsReferencedResources() {
     workspace.runBuckBuild(RES_D8_TARGET).assertSuccess();
     BuildTarget dexTarget = BuildTargetFactory.newInstance("//java/com/sample/lib:lib#d8");
     ProjectFilesystem filesystem =
@@ -348,7 +348,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testProguardDontObfuscateGeneratesMappingFile() throws IOException {
+  public void testProguardDontObfuscateGeneratesMappingFile() {
     String target = "//apps/sample:app_proguard_dontobfuscate";
     workspace.runBuckCommand("build", target).assertSuccess();
 
@@ -453,7 +453,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testSimpleD8App() throws IOException {
+  public void testSimpleD8App() {
     workspace.runBuckBuild("//apps/sample:app_with_d8").assertSuccess();
   }
 
@@ -483,7 +483,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testApkEmptyResDirectoriesBuildsCorrectly() throws IOException {
+  public void testApkEmptyResDirectoriesBuildsCorrectly() {
     workspace.runBuckBuild("//apps/sample:app_with_aar_and_no_res").assertSuccess();
   }
 
@@ -635,7 +635,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testInstrumentationApkWithEmptyResDepBuildsCorrectly() throws IOException {
+  public void testInstrumentationApkWithEmptyResDepBuildsCorrectly() {
     workspace.runBuckBuild("//apps/sample:instrumentation_apk").assertSuccess();
   }
 
@@ -686,7 +686,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testErrorReportingDuringManifestMerging() throws IOException {
+  public void testErrorReportingDuringManifestMerging() {
     ProcessResult processResult =
         workspace.runBuckBuild("//apps/sample:dump_invalid_merged_manifest");
     assertThat(

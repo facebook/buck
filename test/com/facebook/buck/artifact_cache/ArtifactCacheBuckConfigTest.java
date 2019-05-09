@@ -367,7 +367,7 @@ public class ArtifactCacheBuckConfigTest {
   }
 
   @Test
-  public void testGetStringOrEnvironmentVariable() throws IOException {
+  public void testGetStringOrEnvironmentVariable() {
     BuckConfig config = FakeBuckConfig.builder().setSections("[section]", "field = value").build();
     assertEquals(
         Optional.of("value"),

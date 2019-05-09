@@ -49,7 +49,7 @@ public class EstimateDexWeightStepTest {
               .build());
 
   @Test
-  public void testExecuteEstimateDexWeightStep() throws InterruptedException, IOException {
+  public void testExecuteEstimateDexWeightStep() throws IOException {
     // Create a directory.
     String name = "dir";
     tmp.newFolder(name);

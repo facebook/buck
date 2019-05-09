@@ -91,7 +91,7 @@ public class CxxCompilationDatabaseIntegrationTest {
   }
 
   @Test
-  public void binaryWithDependenciesCompilationDatabase() throws InterruptedException, IOException {
+  public void binaryWithDependenciesCompilationDatabase() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_dep#compilation-database");
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -166,7 +166,7 @@ public class CxxCompilationDatabaseIntegrationTest {
   }
 
   @Test
-  public void libraryCompilationDatabase() throws InterruptedException, IOException {
+  public void libraryCompilationDatabase() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target =
         BuildTargetFactory.newInstance("//:library_with_header#default,compilation-database");
@@ -355,7 +355,7 @@ public class CxxCompilationDatabaseIntegrationTest {
 
   @Test
   public void compilationDatabaseFetchedFromCacheAlsoFetchesSymlinkTreeOrHeaderMap()
-      throws InterruptedException, IOException {
+      throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // This test only fails if the directory cache is enabled and we don't update

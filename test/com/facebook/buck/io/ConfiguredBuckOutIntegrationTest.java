@@ -48,7 +48,7 @@ public class ConfiguredBuckOutIntegrationTest {
   }
 
   @Test
-  public void outputPathsUseConfiguredBuckOut() throws IOException {
+  public void outputPathsUseConfiguredBuckOut() {
     String buckOut = "new-buck-out";
     Path output = workspace.buildAndReturnOutput("-c", "project.buck_out=" + buckOut, "//:dummy");
     assertTrue(Files.exists(output));
@@ -56,7 +56,7 @@ public class ConfiguredBuckOutIntegrationTest {
   }
 
   @Test
-  public void configuredBuckOutAffectsRuleKey() throws IOException {
+  public void configuredBuckOutAffectsRuleKey() {
     String out =
         workspace
             .runBuckCommand("targets", "--show-rulekey", "//:dummy")
@@ -90,7 +90,7 @@ public class ConfiguredBuckOutIntegrationTest {
   }
 
   @Test
-  public void verifyTogglingConfiguredBuckOut() throws IOException {
+  public void verifyTogglingConfiguredBuckOut() {
     assumeThat(Platform.detect(), Matchers.not(Matchers.is(Platform.WINDOWS)));
     workspace
         .runBuckBuild(
@@ -139,7 +139,7 @@ public class ConfiguredBuckOutIntegrationTest {
   }
 
   @Test
-  public void targetsShowOutput() throws IOException {
+  public void targetsShowOutput() {
     String output =
         workspace
             .runBuckCommand(
@@ -152,7 +152,7 @@ public class ConfiguredBuckOutIntegrationTest {
   }
 
   @Test
-  public void targetsShowOutputCompatSymlink() throws IOException {
+  public void targetsShowOutputCompatSymlink() {
     assumeThat(Platform.detect(), Matchers.not(Matchers.is(Platform.WINDOWS)));
     String output =
         workspace
@@ -172,7 +172,7 @@ public class ConfiguredBuckOutIntegrationTest {
   }
 
   @Test
-  public void buildShowOutput() throws IOException {
+  public void buildShowOutput() {
     Path output = workspace.buildAndReturnOutput("-c", "project.buck_out=something", "//:dummy");
     assertThat(
         PathFormatter.pathWithUnixSeparators(workspace.getDestPath().relativize(output)),
@@ -180,7 +180,7 @@ public class ConfiguredBuckOutIntegrationTest {
   }
 
   @Test
-  public void buildShowOutputCompatSymlink() throws IOException {
+  public void buildShowOutputCompatSymlink() {
     assumeThat(Platform.detect(), Matchers.not(Matchers.is(Platform.WINDOWS)));
     Path output =
         workspace.buildAndReturnOutput(

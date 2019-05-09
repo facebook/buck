@@ -109,7 +109,7 @@ public class IntraCellIntegrationTest {
   public void allOutputsShouldBePlacedInTheSameRootOutputDirectory() {}
 
   @Test
-  public void testEmbeddedBuckOut() throws IOException, InterruptedException {
+  public void testEmbeddedBuckOut() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "intracell/visibility", tmp);
     workspace.setUp();

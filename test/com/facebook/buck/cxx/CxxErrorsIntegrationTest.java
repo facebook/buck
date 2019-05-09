@@ -53,7 +53,7 @@ public class CxxErrorsIntegrationTest {
   }
 
   @Test
-  public void compilerError() throws IOException {
+  public void compilerError() {
     ProcessResult runResult =
         workspace.runBuckCommand(
             "build", "//:not_compilable#static," + CxxPlatforms.getHostFlavor().getName());
@@ -62,7 +62,7 @@ public class CxxErrorsIntegrationTest {
   }
 
   @Test
-  public void linkError() throws IOException {
+  public void linkError() {
     ProcessResult staticBuildResult =
         workspace.runBuckCommand(
             "build", "//:not_linkable#static," + CxxPlatforms.getHostFlavor().getName());

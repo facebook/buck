@@ -57,7 +57,7 @@ public class ExecutableMacroExpanderTest {
   private StringWithMacrosConverter converter;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     filesystem = new FakeProjectFilesystem();
     cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
     graphBuilder = new TestActionGraphBuilder();

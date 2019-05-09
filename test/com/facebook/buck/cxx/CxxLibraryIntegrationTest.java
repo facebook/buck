@@ -217,8 +217,7 @@ public class CxxLibraryIntegrationTest {
   }
 
   @Test
-  public void testCxxLibraryWithDefaultsInFlagBuildsSomething()
-      throws InterruptedException, IOException {
+  public void testCxxLibraryWithDefaultsInFlagBuildsSomething() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     AssumeAndroidPlatform.assumeSdkIsAvailable();
@@ -305,8 +304,7 @@ public class CxxLibraryIntegrationTest {
     workspace.runBuckBuild("//:lib_header#default,shared").assertSuccess();
   }
 
-  private void assumeSymLinkTreeWithHeaderMap(Path rootPath)
-      throws InterruptedException, IOException {
+  private void assumeSymLinkTreeWithHeaderMap(Path rootPath) throws IOException {
     // We can only disable symlink trees if header map is supported.
     HeaderMode headerMode = CxxPlatformUtils.getHeaderModeForDefaultPlatform(rootPath);
     assumeTrue(headerMode == HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP);

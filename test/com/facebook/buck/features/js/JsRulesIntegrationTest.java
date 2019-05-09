@@ -236,7 +236,7 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
-  public void androidApplicationsContainsJsAndResources() throws InterruptedException, IOException {
+  public void androidApplicationsContainsJsAndResources() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     BuildTarget target = BuildTargetFactory.newInstance("//android/apps/sample:app");
@@ -250,7 +250,7 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
-  public void bundleWithAndroidLibraryDependency() throws IOException, InterruptedException {
+  public void bundleWithAndroidLibraryDependency() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     workspace.runBuckBuild("//js:bundle-with-android-lib#android,release").assertSuccess();
@@ -292,7 +292,7 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
-  public void sourcemapCanBeAccessedWithoutDependingOnBundle() throws IOException {
+  public void sourcemapCanBeAccessedWithoutDependingOnBundle() {
     workspace.runBuckBuild("//js:genrule-using-only-sourcemap").assertSuccess();
   }
 
@@ -344,8 +344,7 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
-  public void apkContainsGenruleOutputAndBundleResources()
-      throws IOException, InterruptedException {
+  public void apkContainsGenruleOutputAndBundleResources() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     BuildTarget target = BuildTargetFactory.newInstance("//android/apps/sample:app_with_genrule");
@@ -366,7 +365,7 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
-  public void genruleSourcemapCanBeAccessedWithoutDependingOnBundle() throws IOException {
+  public void genruleSourcemapCanBeAccessedWithoutDependingOnBundle() {
     workspace.runBuckBuild("//js:genrule-using-only-sourcemap-of-bundle-genrule").assertSuccess();
   }
 

@@ -153,7 +153,7 @@ public class DistBuildState {
       ProjectFilesystemFactory projectFilesystemFactory,
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       Supplier<TargetConfiguration> targetConfiguration)
-      throws InterruptedException, IOException {
+      throws IOException {
     ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
 
     ImmutableMap.Builder<Path, DistBuildCellParams> cellParams = ImmutableMap.builder();

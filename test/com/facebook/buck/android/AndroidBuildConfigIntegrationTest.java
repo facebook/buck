@@ -38,12 +38,12 @@ public class AndroidBuildConfigIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testBuildConfigWithValues() throws IOException {
+  public void testBuildConfigWithValues() {
     workspace.runBuckCommand("run", "//:main_values_test").assertSuccess();
   }
 
   @Test
-  public void testBuildConfigWithValuesFile() throws IOException {
+  public void testBuildConfigWithValuesFile() {
     workspace.runBuckCommand("run", "//:main_values_file_test").assertSuccess();
   }
 }

@@ -86,7 +86,7 @@ public class HttpFileIntegrationTest {
   }
 
   @Test
-  public void setsExecutableBitToTrue() throws IOException, InterruptedException {
+  public void setsExecutableBitToTrue() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     workspace.setUp();
@@ -111,7 +111,7 @@ public class HttpFileIntegrationTest {
   }
 
   @Test
-  public void setsExecutableBitToFalse() throws IOException, InterruptedException {
+  public void setsExecutableBitToFalse() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     workspace.setUp();
@@ -136,7 +136,7 @@ public class HttpFileIntegrationTest {
   }
 
   @Test
-  public void doesNotWriteFileIfDownloadFails() throws IOException, InterruptedException {
+  public void doesNotWriteFileIfDownloadFails() throws IOException {
     workspace.setUp();
     rewriteBuckFileTemplate();
 
@@ -163,7 +163,7 @@ public class HttpFileIntegrationTest {
   }
 
   @Test
-  public void doesNotWriteFileIfShaVerificationFails() throws IOException, InterruptedException {
+  public void doesNotWriteFileIfShaVerificationFails() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     workspace.setUp();
@@ -194,7 +194,7 @@ public class HttpFileIntegrationTest {
   }
 
   @Test
-  public void downloadsFileAndValidatesIt() throws IOException, InterruptedException {
+  public void downloadsFileAndValidatesIt() throws IOException {
     workspace.setUp();
     rewriteBuckFileTemplate();
 
@@ -211,8 +211,7 @@ public class HttpFileIntegrationTest {
   }
 
   @Test
-  public void writesFileToAlternateLocationIfOutProvided()
-      throws IOException, InterruptedException {
+  public void writesFileToAlternateLocationIfOutProvided() throws IOException {
     workspace.setUp();
     rewriteBuckFileTemplate();
 
@@ -230,7 +229,7 @@ public class HttpFileIntegrationTest {
   }
 
   @Test
-  public void downloadsFromMavenCoordinates() throws IOException, InterruptedException {
+  public void downloadsFromMavenCoordinates() throws IOException {
     workspace.setUp();
     TestDataHelper.overrideBuckconfig(
         workspace,

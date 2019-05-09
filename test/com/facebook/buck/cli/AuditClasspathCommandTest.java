@@ -42,7 +42,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -57,7 +56,7 @@ public class AuditClasspathCommandTest {
   private CommandRunnerParams params;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() {
     console = new TestConsole();
     auditClasspathCommand = new AuditClasspathCommand();
     params =

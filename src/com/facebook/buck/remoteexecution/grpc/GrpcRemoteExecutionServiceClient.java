@@ -73,8 +73,7 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
 
   @Override
   public ListenableFuture<ExecutionResult> execute(
-      Protocol.Digest actionDigest, String ruleName, MetadataProvider metadataProvider)
-      throws IOException, InterruptedException {
+      Protocol.Digest actionDigest, String ruleName, MetadataProvider metadataProvider) {
     SettableFuture<Operation> future = SettableFuture.create();
 
     StubAndResponseMetadata<ExecutionStub> stubAndMetadata =

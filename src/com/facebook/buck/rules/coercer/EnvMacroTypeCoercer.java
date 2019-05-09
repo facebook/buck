@@ -53,8 +53,7 @@ public class EnvMacroTypeCoercer implements MacroTypeCoercer<EnvMacro> {
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      ImmutableList<String> args)
-      throws CoerceFailedException {
+      ImmutableList<String> args) {
     Preconditions.checkState(
         args.size() == 1, String.format("expected a single argument: %s", args));
     return EnvMacro.of(args.get(0));

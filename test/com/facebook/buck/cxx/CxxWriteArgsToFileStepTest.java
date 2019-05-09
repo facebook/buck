@@ -81,7 +81,7 @@ public class CxxWriteArgsToFileStepTest {
       ImmutableList<Arg> inputArgs,
       ImmutableList<String> expectedArgFileContents,
       Path currentCellPath)
-      throws IOException, InterruptedException {
+      throws IOException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     SourcePathResolver sourcePathResolver = new TestActionGraphBuilder().getSourcePathResolver();

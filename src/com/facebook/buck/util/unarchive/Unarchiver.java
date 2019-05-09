@@ -137,7 +137,6 @@ public abstract class Unarchiver {
    *     stripping is done.
    * @param existingFileMode How to handle existing files
    * @return A list of paths to files that were created (not directories)
-   * @throws InterruptedException If a filesystem could not be created in the destination directory
    * @throws IOException If the archive could not be extracted for any reason
    */
   public ImmutableList<Path> extractArchive(
@@ -147,7 +146,7 @@ public abstract class Unarchiver {
       Optional<Path> stripPrefix,
       PatternsMatcher entriesToExclude,
       ExistingFileMode existingFileMode)
-      throws InterruptedException, IOException {
+      throws IOException {
     // Create output directory if it does not exist
     Files.createDirectories(destination);
     return extractArchive(

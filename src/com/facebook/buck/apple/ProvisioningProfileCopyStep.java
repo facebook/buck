@@ -120,8 +120,7 @@ class ProvisioningProfileCopyStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     Optional<ImmutableMap<String, NSObject>> entitlements;
     String prefix;
     if (entitlementsPlist.isPresent()) {

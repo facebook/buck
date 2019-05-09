@@ -128,7 +128,7 @@ public class DistBuildSlaveEventBusListenerTest {
   }
 
   @After
-  public void tearDown() throws IOException {
+  public void tearDown() {
     listener.close();
   }
 

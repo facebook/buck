@@ -31,7 +31,7 @@ import org.junit.Test;
 public class DiagnosticPrettyPrinterTest {
 
   @Test
-  public void ifThereAreNoLineNumbersOnlyTheFormattedMessageIsReturned() throws Exception {
+  public void ifThereAreNoLineNumbersOnlyTheFormattedMessageIsReturned() {
     String message = "Something has gone wrong.";
 
     String formatted =
@@ -47,7 +47,7 @@ public class DiagnosticPrettyPrinterTest {
   }
 
   @Test
-  public void ifThereAreNoLineNumbersAllLinesOfTheFormattedMessageAreReturned() throws Exception {
+  public void ifThereAreNoLineNumbersAllLinesOfTheFormattedMessageAreReturned() {
     String summary = "Something has gone wrong";
     String remainder = "Very, very wrong";
 
@@ -65,7 +65,7 @@ public class DiagnosticPrettyPrinterTest {
   }
 
   @Test
-  public void ifThereAreLineNumbersErrorContextIsDisplayed() throws Exception {
+  public void ifThereAreLineNumbersErrorContextIsDisplayed() {
     String code = MoreStrings.linesToText("some line of", "code with an", "error");
     //                           123
     String formatted =
@@ -75,8 +75,7 @@ public class DiagnosticPrettyPrinterTest {
   }
 
   @Test
-  public void errorContextIsDisplayedAfterTheSummaryButBeforeTheRemainderOfTheMessage()
-      throws Exception {
+  public void errorContextIsDisplayedAfterTheSummaryButBeforeTheRemainderOfTheMessage() {
     String code = MoreStrings.linesToText("some line of", "code with an", "error");
     //                           123
     String formatted =

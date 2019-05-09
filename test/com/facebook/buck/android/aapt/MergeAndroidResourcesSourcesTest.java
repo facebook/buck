@@ -130,7 +130,7 @@ public class MergeAndroidResourcesSourcesTest {
   }
 
   @Test
-  public void testStepExecution() throws IOException, InterruptedException {
+  public void testStepExecution() throws IOException {
     Path rootPath = tmp.getRoot().toPath();
     File outFolder = tmp.newFolder("out");
     File tmpFolder = tmp.newFolder("tmp");

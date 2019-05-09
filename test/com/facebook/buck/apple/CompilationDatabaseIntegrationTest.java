@@ -76,8 +76,7 @@ public class CompilationDatabaseIntegrationTest {
   }
 
   @Test
-  public void testCreateCompilationDatabaseForAppleLibraryWithNoDeps()
-      throws InterruptedException, IOException {
+  public void testCreateCompilationDatabaseForAppleLibraryWithNoDeps() throws IOException {
     // buck build the #compilation-database.
     BuildTarget target =
         BuildTargetFactory.newInstance(
@@ -146,8 +145,7 @@ public class CompilationDatabaseIntegrationTest {
   }
 
   @Test
-  public void testCreateCompilationDatabaseForAppleBinaryWithDeps()
-      throws InterruptedException, IOException {
+  public void testCreateCompilationDatabaseForAppleBinaryWithDeps() throws IOException {
     // buck build the #compilation-database.
     BuildTarget target =
         BuildTargetFactory.newInstance(

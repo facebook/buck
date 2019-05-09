@@ -55,8 +55,7 @@ public class StringTemplateStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     String template;
     template = new String(Files.readAllBytes(templatePath), Charsets.UTF_8);
 

@@ -74,7 +74,7 @@ public class GrpcRemoteExecutionClientsTest {
   private List<BindableService> services;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     services = new ArrayList<>();
     eventBus = new DefaultBuckEventBus(new DefaultClock(), new BuildId("dontcare"));
   }

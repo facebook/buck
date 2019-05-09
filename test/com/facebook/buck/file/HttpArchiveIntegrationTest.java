@@ -101,7 +101,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void doesNotWriteFileIfDownloadFails() throws IOException, InterruptedException {
+  public void doesNotWriteFileIfDownloadFails() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
@@ -131,7 +131,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void doesNotWriteFileIfShaVerificationFails() throws IOException, InterruptedException {
+  public void doesNotWriteFileIfShaVerificationFails() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
@@ -162,8 +162,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void writesFileToAlternateLocationIfOutProvided()
-      throws IOException, InterruptedException {
+  public void writesFileToAlternateLocationIfOutProvided() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
@@ -197,7 +196,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void downloadsZipFileAndValidatesIt() throws IOException, InterruptedException {
+  public void downloadsZipFileAndValidatesIt() throws IOException {
     // TODO: Windows has some issues w/ symlinks in zip files. Once fixed, remove this distinction
     Assume.assumeThat(Platform.detect(), is(not(WINDOWS)));
 
@@ -238,8 +237,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void downloadsZipFileAndValidatesItWithNoSymlinksOnWindows()
-      throws IOException, InterruptedException {
+  public void downloadsZipFileAndValidatesItWithNoSymlinksOnWindows() throws IOException {
     // TODO: Windows has some issues w/ symlinks in zip files. Once fixed, remove this distinction
     Assume.assumeThat(Platform.detect(), is(WINDOWS));
 
@@ -286,7 +284,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void downloadsTarFileAndValidatesIt() throws IOException, InterruptedException {
+  public void downloadsTarFileAndValidatesIt() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath = workspace.getBuckPaths().getGenDir().resolve("test.tar").resolve("test.tar");
@@ -324,7 +322,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void downloadsTarBz2FileAndValidatesIt() throws IOException, InterruptedException {
+  public void downloadsTarBz2FileAndValidatesIt() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
@@ -364,7 +362,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void downloadsTarGzFileAndValidatesIt() throws IOException, InterruptedException {
+  public void downloadsTarGzFileAndValidatesIt() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
@@ -403,7 +401,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void downloadsTarXzFileAndValidatesIt() throws IOException, InterruptedException {
+  public void downloadsTarXzFileAndValidatesIt() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
@@ -442,7 +440,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void stripsZipPrefixIfRequested() throws IOException, InterruptedException {
+  public void stripsZipPrefixIfRequested() throws IOException {
     // TODO: Windows has some issues w/ symlinks in zip files. Once fixed, remove this distinction
     Assume.assumeThat(Platform.detect(), is(not(WINDOWS)));
 
@@ -484,8 +482,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void stripsZipPrefixIfRequestedWithNoSymlinksOnWindows()
-      throws IOException, InterruptedException {
+  public void stripsZipPrefixIfRequestedWithNoSymlinksOnWindows() throws IOException {
     // TODO: Windows has some issues w/ symlinks in zip files. Once fixed, remove this distinction
     Assume.assumeThat(Platform.detect(), is(WINDOWS));
 
@@ -532,7 +529,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void stripsTarPrefixIfRequested() throws IOException, InterruptedException {
+  public void stripsTarPrefixIfRequested() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
@@ -571,7 +568,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void stripsTarBz2PrefixIfRequested() throws IOException, InterruptedException {
+  public void stripsTarBz2PrefixIfRequested() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
@@ -611,7 +608,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void stripsTarGzPrefixIfRequested() throws IOException, InterruptedException {
+  public void stripsTarGzPrefixIfRequested() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
@@ -651,7 +648,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void stripsTarXzPrefixIfRequested() throws IOException, InterruptedException {
+  public void stripsTarXzPrefixIfRequested() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
@@ -691,7 +688,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void typeOverridesUrl() throws IOException, InterruptedException {
+  public void typeOverridesUrl() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
@@ -731,7 +728,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void downloadZipFromMavenCoordinates() throws IOException, InterruptedException {
+  public void downloadZipFromMavenCoordinates() throws IOException {
     TestDataHelper.overrideBuckconfig(
         workspace,
         ImmutableMap.of("download", ImmutableMap.of("maven_repo", httpd.getRootUri().toString())));

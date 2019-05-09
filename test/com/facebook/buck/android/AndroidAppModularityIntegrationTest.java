@@ -42,7 +42,7 @@ public class AndroidAppModularityIntegrationTest extends AbiCompilationModeTest 
   private Path testdataDir;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     workspace =

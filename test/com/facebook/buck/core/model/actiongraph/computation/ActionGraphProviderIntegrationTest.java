@@ -141,8 +141,7 @@ public class ActionGraphProviderIntegrationTest {
             }
           };
 
-  private ActionGraphCacheStatus getActionGraphCacheStatus()
-      throws InterruptedException, IOException {
+  private ActionGraphCacheStatus getActionGraphCacheStatus() throws IOException {
     Map<ChromeTraceParser.ChromeTraceEventMatcher<?>, Object> results =
         workspace.parseTraceFromMostRecentBuckInvocation(
             ImmutableSet.of(ACTION_GRAPH_CACHE_STATUS_MATCHER));

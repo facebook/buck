@@ -66,7 +66,7 @@ public class PrebuiltPythonLibraryIntegrationTest {
   }
 
   @Test
-  public void testRunPexWithEggDependency() throws IOException {
+  public void testRunPexWithEggDependency() {
     ProcessResult eggResults = workspace.runBuckCommand("run", "//:main_egg");
     eggResults.assertSuccess();
 
@@ -75,7 +75,7 @@ public class PrebuiltPythonLibraryIntegrationTest {
   }
 
   @Test
-  public void buildingAPrebuiltPythonLibraryExtractsIt() throws IOException, InterruptedException {
+  public void buildingAPrebuiltPythonLibraryExtractsIt() throws IOException {
     ProcessResult eggResults = workspace.runBuckCommand("run", "//:main_egg");
     eggResults.assertSuccess();
 

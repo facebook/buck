@@ -41,7 +41,7 @@ public class FileTreeFileNameIteratorTest {
   private FileTreeFileNameIterator iterator;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     iterator = createIterator();
   }
 

@@ -51,8 +51,7 @@ public class OcamlDebugLauncherStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws InterruptedException, IOException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     String debugCmdStr = getDebugCmd();
     String debugLauncherScript = getDebugLauncherScript(debugCmdStr);
 

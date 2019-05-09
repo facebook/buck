@@ -66,7 +66,7 @@ public class SymCopyStepTest {
   }
 
   @Test
-  public void testSymCopyStep() throws IOException, InterruptedException {
+  public void testSymCopyStep() throws IOException {
     Path sourceRoot = Paths.get("src-root");
     projectFilesystem.mkdirs(sourceRoot);
 

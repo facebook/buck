@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
-import java.io.IOException;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,7 +32,7 @@ public class ServerStatusCommandTest {
   private int webServerPort;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() {
     console = new TestConsole();
     WebServer webServer =
         new WebServer(0, new FakeProjectFilesystem()) {

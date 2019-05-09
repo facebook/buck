@@ -45,7 +45,7 @@ public class PrebuiltJarIntegrationTest {
   @Rule public TemporaryPaths temp = new TemporaryPaths();
 
   @Test
-  public void outputIsPlacedInCorrectFolder() throws IOException, InterruptedException {
+  public void outputIsPlacedInCorrectFolder() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt", temp);
     workspace.setUp();

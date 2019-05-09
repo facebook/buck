@@ -254,7 +254,7 @@ public class IjProjectWriterTest {
   }
 
   private IjProjectWriter getWriterForModuleGraph1(
-      ProjectFilesystem filesystem, ProjectFilesystem outFileSystem) throws IOException {
+      ProjectFilesystem filesystem, ProjectFilesystem outFileSystem) {
     TargetNode<?> guavaTargetNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//third_party/guava:guava"))
@@ -277,7 +277,7 @@ public class IjProjectWriterTest {
   }
 
   private IjProjectWriter getWriterForModuleGraph2(
-      ProjectFilesystem filesystem, ProjectFilesystem outFileSystem) throws IOException {
+      ProjectFilesystem filesystem, ProjectFilesystem outFileSystem) {
     TargetNode<?> baseTargetNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:base"))

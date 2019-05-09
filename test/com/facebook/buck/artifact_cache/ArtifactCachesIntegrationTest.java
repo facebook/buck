@@ -447,7 +447,7 @@ public class ArtifactCachesIntegrationTest {
    * hostnames for tests), and that accepts certs signed by the CA
    */
   private ClientCertificateHandler createClientCertificateHandler(
-      Path clientKeyPath, Path clientCertPath, Path caCertPath) throws IOException {
+      Path clientKeyPath, Path clientCertPath, Path caCertPath) {
     X509Certificate certificate =
         ClientCertificateHandler.parseCertificate(Optional.of(clientCertPath), true).get();
     X509Certificate caCertificate =

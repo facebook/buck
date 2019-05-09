@@ -49,7 +49,7 @@ public class AndroidAarIntegrationTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
   }
@@ -298,7 +298,7 @@ public class AndroidAarIntegrationTest {
   }
 
   @Test
-  public void testResultIsRecorded() throws IOException, InterruptedException {
+  public void testResultIsRecorded() throws IOException {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);

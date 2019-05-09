@@ -619,7 +619,7 @@ public class InterCellIntegrationTest {
   }
 
   @Test
-  public void testCrossCellAndroidLibrary() throws InterruptedException, IOException {
+  public void testCrossCellAndroidLibrary() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
@@ -770,7 +770,7 @@ public class InterCellIntegrationTest {
   }
 
   @Test
-  public void testCrossCellCleanCommand() throws IOException, InterruptedException {
+  public void testCrossCellCleanCommand() throws IOException {
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
     ProjectWorkspace primary = cells.getFirst();

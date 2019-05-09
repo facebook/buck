@@ -45,14 +45,14 @@ public class TestSelectorsIntegrationTest {
   }
 
   @Test
-  public void shouldFailWithoutAnySelectors() throws IOException {
+  public void shouldFailWithoutAnySelectors() {
     ProcessResult result = workspace.runBuckCommand("test", "--all");
     result.assertTestFailure("Some tests fail");
     assertThat(result.getStderr(), containsString("TESTS FAILED: 1 FAILURE"));
   }
 
   @Test
-  public void shouldRunASingleTest() throws IOException {
+  public void shouldRunASingleTest() {
     ProcessResult result =
         workspace.runBuckCommand("test", "--all", "--filter", "com.example.clown.FlowerTest");
     result.assertSuccess("The test passed");
@@ -60,7 +60,7 @@ public class TestSelectorsIntegrationTest {
   }
 
   @Test
-  public void shouldPassWhenUnselectingEntireFailingClass() throws IOException {
+  public void shouldPassWhenUnselectingEntireFailingClass() {
     String testSelector = "!com.example.clown.PrimeMinisterialDecreeTest";
     String[] command1 = {"test", "--all", "--test-selectors", testSelector};
     ProcessResult result = workspace.runBuckCommand(command1);
@@ -71,7 +71,7 @@ public class TestSelectorsIntegrationTest {
   }
 
   @Test
-  public void shouldPassWhenUnselectingTheFailingMethod() throws IOException {
+  public void shouldPassWhenUnselectingTheFailingMethod() {
     String[] command = {"test", "--all", "--test-selectors", "!#formAllianceWithClowns"};
     ProcessResult result = workspace.runBuckCommand(command);
     result.assertSuccess("All tests pass");
@@ -81,7 +81,7 @@ public class TestSelectorsIntegrationTest {
   }
 
   @Test
-  public void shouldNotMatchMethodsUsingPrefixAlone() throws IOException {
+  public void shouldNotMatchMethodsUsingPrefixAlone() {
     String[] command = {"test", "--all", "--test-selectors", "#test"};
     ProcessResult result = workspace.runBuckCommand(command);
     assertNoTestsRan(result);
@@ -89,7 +89,7 @@ public class TestSelectorsIntegrationTest {
   }
 
   @Test
-  public void shouldReportRegularExpressionErrors() throws IOException {
+  public void shouldReportRegularExpressionErrors() {
     String error = "Regular expression error in 'Clown(': Unclosed group near index 7";
     ProcessResult processResult = workspace.runBuckCommand("test", "--all", "--filter", "Clown(");
     processResult.assertFailure();
@@ -97,7 +97,7 @@ public class TestSelectorsIntegrationTest {
   }
 
   @Test
-  public void shouldFilterFromFile() throws IOException {
+  public void shouldFilterFromFile() {
     Path testSelectorsFile = workspace.getPath("test-selectors.txt");
     String arg = String.format("@%s", testSelectorsFile.toAbsolutePath().toString());
     ProcessResult result = workspace.runBuckCommand("test", "--all", "--filter", arg);
@@ -108,7 +108,7 @@ public class TestSelectorsIntegrationTest {
   // TODO(ttsugrii): test expects a failure due to multiple filter arguments, but it actually
   // fails because bar/BUCK file does not exist :(
   @Ignore(value = "This is is broken since the assert succeeds for a completely unrelated reason.")
-  public void shouldFailWithMultipleStringsGivenToFilter() throws IOException {
+  public void shouldFailWithMultipleStringsGivenToFilter() {
     String[] goodArgs = {"test", "--filter", "QQ", "//test/com/example/clown:clown"};
     String goodMessage = "Should pass, because the target is real and no test matches the filter.";
 
@@ -120,13 +120,13 @@ public class TestSelectorsIntegrationTest {
   }
 
   @Test
-  public void assertNoSummariesForASingleTest() throws IOException {
+  public void assertNoSummariesForASingleTest() {
     ProcessResult result = workspace.runBuckCommand("test", "//test/com/example/clown:clown");
     assertNoTestSummaryShown(result);
   }
 
   @Test
-  public void nestedClassTestSelectionWorks() throws IOException {
+  public void nestedClassTestSelectionWorks() {
     ProcessResult filteredTestResult =
         workspace.runBuckCommand(
             "test", "//test/com/example/clown:clown", "-f", "NestedClassTest$#");

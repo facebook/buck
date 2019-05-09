@@ -489,7 +489,7 @@ public class DefaultGraphTransformationEngineTest {
           }
 
           @Override
-          public ImmutableSet<LongNode> discoverPreliminaryDeps(LongNode aLong) throws Exception {
+          public ImmutableSet<LongNode> discoverPreliminaryDeps(LongNode aLong) {
             return ImmutableSet.of();
           }
         };

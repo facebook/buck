@@ -57,7 +57,7 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
-  public void runPass() throws IOException {
+  public void runPass() {
     // sh_test doesn't support Windows
     assumeFalse(isWindowsOs);
     ProcessResult result =
@@ -68,7 +68,7 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
-  public void runCoverage() throws IOException {
+  public void runCoverage() {
     String externalTestRunner =
         isWindowsOs ? "test_runner_coverage.bat" : "test_runner_coverage.py";
     ProcessResult result =
@@ -131,7 +131,7 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
-  public void runFail() throws IOException {
+  public void runFail() {
     // sh_test doesn't support Windows
     assumeFalse(isWindowsOs);
     ProcessResult result =
@@ -142,7 +142,7 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
-  public void extraArgs() throws IOException {
+  public void extraArgs() {
     // sh_test doesn't support Windows
     assumeFalse(isWindowsOs);
     ProcessResult result =
@@ -158,7 +158,7 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
-  public void runJavaTest() throws IOException {
+  public void runJavaTest() {
     String externalTestRunner = isWindowsOs ? "test_runner.bat" : "test_runner.py";
     ProcessResult result =
         workspace.runBuckCommand(
@@ -191,7 +191,7 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
-  public void numberOfJobsIsPassedToExternalRunner() throws IOException {
+  public void numberOfJobsIsPassedToExternalRunner() {
     // sh_test doesn't support Windows
     assumeFalse(isWindowsOs);
     ProcessResult result =
@@ -207,7 +207,7 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
-  public void numberOfJobsInExtraArgsIsPassedToExternalRunner() throws IOException {
+  public void numberOfJobsInExtraArgsIsPassedToExternalRunner() {
     // sh_test doesn't support Windows
     assumeFalse(isWindowsOs);
     ProcessResult result =
@@ -235,8 +235,7 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
-  public void numberOfJobsInExtraArgsWithShortNotationIsPassedToExternalRunner()
-      throws IOException {
+  public void numberOfJobsInExtraArgsWithShortNotationIsPassedToExternalRunner() {
     // sh_test doesn't support Windows
     assumeFalse(isWindowsOs);
     ProcessResult result =
@@ -264,7 +263,7 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
-  public void numberOfJobsWithUtilizationRatioAppliedIsPassedToExternalRunner() throws IOException {
+  public void numberOfJobsWithUtilizationRatioAppliedIsPassedToExternalRunner() {
     // sh_test doesn't support Windows
     assumeFalse(isWindowsOs);
     ProcessResult result =
@@ -282,7 +281,7 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
-  public void numberOfJobsWithTestThreadsIsPassedToExternalRunner() throws IOException {
+  public void numberOfJobsWithTestThreadsIsPassedToExternalRunner() {
     // sh_test doesn't support Windows
     assumeFalse(isWindowsOs);
     ProcessResult result =

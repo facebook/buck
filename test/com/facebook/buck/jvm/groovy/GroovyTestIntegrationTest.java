@@ -43,19 +43,19 @@ public class GroovyTestIntegrationTest {
   }
 
   @Test
-  public void allTestsPassingMakesTheBuildResultASuccess() throws Exception {
+  public void allTestsPassingMakesTheBuildResultASuccess() {
     ProcessResult buildResult = workspace.runBuckCommand("test", "//com/example/spock:passing");
     buildResult.assertSuccess("Build should have succeeded.");
   }
 
   @Test
-  public void oneTestFailingMakesTheBuildResultAFailure() throws Exception {
+  public void oneTestFailingMakesTheBuildResultAFailure() {
     ProcessResult buildResult = workspace.runBuckCommand("test", "//com/example/spock:failing");
     buildResult.assertTestFailure();
   }
 
   @Test
-  public void compilationFailureMakesTheBuildResultAFailure() throws Exception {
+  public void compilationFailureMakesTheBuildResultAFailure() {
     ProcessResult buildResult =
         workspace.runBuckCommand("test", "//com/example/spock:will_not_compile");
     buildResult.assertFailure();

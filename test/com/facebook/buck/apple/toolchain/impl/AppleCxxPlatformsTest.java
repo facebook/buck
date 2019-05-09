@@ -1046,7 +1046,7 @@ public class AppleCxxPlatformsTest {
   // The important aspects we check for in rule keys is that the host platform and the path
   // to the NDK don't cause changes.
   @Test
-  public void checkRootAndPlatformDoNotAffectRuleKeys() throws Exception {
+  public void checkRootAndPlatformDoNotAffectRuleKeys() {
     Map<String, ImmutableMap<Flavor, RuleKey>> preprocessAndCompileRukeKeys = new HashMap<>();
     Map<String, ImmutableMap<Flavor, RuleKey>> compileRukeKeys = new HashMap<>();
     Map<String, ImmutableMap<Flavor, RuleKey>> linkRukeKeys = new HashMap<>();

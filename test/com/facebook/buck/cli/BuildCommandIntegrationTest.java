@@ -220,7 +220,7 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
-  public void lastOutputDir() throws InterruptedException, IOException {
+  public void lastOutputDir() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
@@ -232,7 +232,7 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
-  public void lastOutputDirForAppleBundle() throws InterruptedException, IOException {
+  public void lastOutputDirForAppleBundle() throws IOException {
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_app_bundle", tmp);

@@ -43,7 +43,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     AssumeAndroidPlatform.assumeAapt2WithOutputTextSymbolsIsAvailable();
@@ -249,7 +249,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
   }
 
   @Test
-  public void testMultidexModularWithManifestAapt2() throws InterruptedException, IOException {
+  public void testMultidexModularWithManifestAapt2() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeAapt2WithOutputTextSymbolsIsAvailable();
     ProcessResult foundAapt2 = workspace.runBuckBuild("//apps/sample:check_for_aapt2");

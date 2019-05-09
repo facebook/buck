@@ -50,7 +50,7 @@ public class KotlinLibraryIntegrationTest {
   private ProjectWorkspace workspace;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "kotlin_library_description", tmp);
     workspace.setUp();
@@ -62,7 +62,7 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
-  public void shouldCompileKotlinClass() throws Exception {
+  public void shouldCompileKotlinClass() {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/good:example");
     buildResult.assertSuccess("Build should have succeeded.");
   }
@@ -134,7 +134,7 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test(timeout = 100000)
-  public void shouldAnnotationProcessClassesUsingKapt() throws Exception {
+  public void shouldAnnotationProcessClassesUsingKapt() {
     ProcessResult buildResult =
         workspace.runBuckCommand(
             "build", "//com/example/ap/annotation-processing-tool-kapt:kotlin");
@@ -142,7 +142,7 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
-  public void shouldAnnotationProcessClassesUsingJavac() throws Exception {
+  public void shouldAnnotationProcessClassesUsingJavac() {
     ProcessResult buildResult =
         workspace.runBuckCommand(
             "build", "//com/example/ap/annotation-processing-tool-javac:kotlin");
@@ -150,31 +150,31 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
-  public void shouldCompileLibraryWithDependencyOnAnother() throws Exception {
+  public void shouldCompileLibraryWithDependencyOnAnother() {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/child:child");
     buildResult.assertSuccess("Build should have succeeded.");
   }
 
   @Test
-  public void shouldFailToCompileInvalidKotlinCode() throws Exception {
+  public void shouldFailToCompileInvalidKotlinCode() {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/bad:fail");
     buildResult.assertFailure();
   }
 
   @Test
-  public void shouldCompileMixedJavaAndKotlinSources() throws Exception {
+  public void shouldCompileMixedJavaAndKotlinSources() {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/mixed:example");
     buildResult.assertSuccess("Build should have succeeded.");
   }
 
   @Test
-  public void shouldCompileKotlinSrcZip() throws Exception {
+  public void shouldCompileKotlinSrcZip() {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/zip:zip");
     buildResult.assertSuccess("Build should have succeeded.");
   }
 
   @Test
-  public void shouldPassApoptionsToKapt() throws Exception {
+  public void shouldPassApoptionsToKapt() {
     ProcessResult buildResult =
         workspace.runBuckCommand("build", "//com/example/ap/kapt-apoptions:kotlin");
     buildResult.assertSuccess("Build should have succeeded.");

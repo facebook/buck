@@ -54,7 +54,7 @@ public class WindowsCxxIntegrationTest {
   }
 
   @Test
-  public void testFilenameIsFilteredOut() throws IOException {
+  public void testFilenameIsFilteredOut() {
     ProcessResult runResult = workspace.runBuckCommand("build", "//simple:simple#windows-x86_64");
     runResult.assertSuccess();
     final String input = "simple.cpp";
@@ -67,7 +67,7 @@ public class WindowsCxxIntegrationTest {
   }
 
   @Test
-  public void simpleBinary64() throws IOException {
+  public void simpleBinary64() {
     ProcessResult runResult = workspace.runBuckCommand("run", "//app:hello#windows-x86_64");
     runResult.assertSuccess();
     assertThat(runResult.getStdout(), Matchers.containsString("The process is 64bits"));
@@ -76,20 +76,20 @@ public class WindowsCxxIntegrationTest {
   }
 
   @Test
-  public void simpleBinary64WithDebugFull() throws IOException {
+  public void simpleBinary64WithDebugFull() {
     ProcessResult runResult = workspace.runBuckCommand("build", "//app:pdb");
     runResult.assertSuccess();
   }
 
   @Test
-  public void simpleBinaryWithLib() throws IOException {
+  public void simpleBinaryWithLib() {
     ProcessResult runResult = workspace.runBuckCommand("run", "//app_lib:app_lib#windows-x86_64");
     runResult.assertSuccess();
     assertThat(runResult.getStdout(), Matchers.containsString("BUCK ON WINDOWS"));
   }
 
   @Test
-  public void simpleBinaryWithWholeLib() throws IOException {
+  public void simpleBinaryWithWholeLib() {
     ProcessResult runResult =
         workspace.runBuckCommand("run", "//app_wholelib:app_wholelib#windows-x86_64");
     runResult.assertSuccess();
@@ -151,13 +151,13 @@ public class WindowsCxxIntegrationTest {
   }
 
   @Test
-  public void implibOutputAccessible() throws IOException {
+  public void implibOutputAccessible() {
     workspace.runBuckCommand("build", "//implib:implib_copy").assertSuccess();
     assertTrue(Files.exists(workspace.resolve("buck-out/gen/implib/implib_copy/implib_copy.lib")));
   }
 
   @Test
-  public void errorVerifyHeaders() throws IOException {
+  public void errorVerifyHeaders() {
     ProcessResult result;
     result =
         workspace.runBuckBuild(
@@ -176,7 +176,7 @@ public class WindowsCxxIntegrationTest {
   }
 
   @Test
-  public void errorVerifyNestedHeaders() throws IOException {
+  public void errorVerifyNestedHeaders() {
     ProcessResult result;
     result =
         workspace.runBuckBuild(
@@ -199,7 +199,7 @@ public class WindowsCxxIntegrationTest {
   }
 
   @Test
-  public void errorVerifyNestedHeadersWithCycle() throws IOException {
+  public void errorVerifyNestedHeadersWithCycle() {
     ProcessResult result;
     result =
         workspace.runBuckBuild(
@@ -222,7 +222,7 @@ public class WindowsCxxIntegrationTest {
   }
 
   @Test
-  public void compilationDatabaseCanBeBuilt() throws IOException {
+  public void compilationDatabaseCanBeBuilt() {
     workspace.runBuckBuild("//app:hello#compilation-database,windows-x86_64").assertSuccess();
     workspace.runBuckBuild("//app_asm:app_asm#compilation-database,windows-x86_64").assertSuccess();
     workspace.runBuckBuild("//app_lib:app_lib#compilation-database,windows-x86_64").assertSuccess();

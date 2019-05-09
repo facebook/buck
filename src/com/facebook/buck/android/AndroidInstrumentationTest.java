@@ -120,8 +120,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     this.toolsCommonJar = toolsCommonJar;
   }
 
-  private static AndroidDevice getSingleDevice(AndroidDevicesHelper adbHelper)
-      throws InterruptedException {
+  private static AndroidDevice getSingleDevice(AndroidDevicesHelper adbHelper) {
     List<AndroidDevice> devices = adbHelper.getDevices(true);
     if (devices.isEmpty()) {
       throw new HumanReadableException("Expecting one android device/emulator to be attached.");
@@ -204,11 +203,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
 
     AndroidDevicesHelper adb = executionContext.getAndroidDevicesHelper().get();
     AndroidDevice device;
-    try {
-      device = getSingleDevice(adb);
-    } catch (InterruptedException e) {
-      throw new HumanReadableException("Unable to get connected device.");
-    }
+    device = getSingleDevice(adb);
 
     steps.add(
         getInstrumentationStep(
@@ -353,11 +348,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
       AndroidDevice device;
       AndroidDevicesHelper adbHelper = context.getAndroidDevicesHelper().get();
-      try {
-        device = getSingleDevice(adbHelper);
-      } catch (InterruptedException e) {
-        device = null;
-      }
+      device = getSingleDevice(adbHelper);
       if (device == null) {
         summaries.add(getTestClassAssumedSummary(getBuildTarget().getFullyQualifiedName()));
       } else {

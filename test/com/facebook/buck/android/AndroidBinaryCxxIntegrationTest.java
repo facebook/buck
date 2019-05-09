@@ -39,7 +39,7 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     workspace =

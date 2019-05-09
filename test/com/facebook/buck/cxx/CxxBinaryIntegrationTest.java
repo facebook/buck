@@ -96,7 +96,7 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void testInferCxxBinaryDepsCaching() throws IOException, InterruptedException {
+  public void testInferCxxBinaryDepsCaching() throws IOException {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
 
@@ -169,8 +169,7 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void testInferCxxBinaryDepsInvalidateCacheWhenVersionChanges()
-      throws IOException, InterruptedException {
+  public void testInferCxxBinaryDepsInvalidateCacheWhenVersionChanges() throws IOException {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
 
@@ -289,7 +288,7 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void testInferCxxBinaryWithoutDeps() throws IOException, InterruptedException {
+  public void testInferCxxBinaryWithoutDeps() throws IOException {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(workspace.asCell().getBuckConfig());
@@ -380,7 +379,7 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void testInferCxxBinaryWithDeps() throws IOException, InterruptedException {
+  public void testInferCxxBinaryWithDeps() throws IOException {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(workspace.asCell().getBuckConfig());
@@ -980,7 +979,7 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void testInferCxxBinaryWithUnusedDepsDoesNotRebuildWhenUnusedHeaderChanges()
-      throws IOException, InterruptedException {
+      throws IOException {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
 
@@ -1558,7 +1557,7 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void testSimpleCxxBinaryWithHeader() throws IOException, InterruptedException {
+  public void testSimpleCxxBinaryWithHeader() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
     workspace.setUp();
@@ -1625,8 +1624,7 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void testSimpleCxxBinaryWithDependencyOnCxxLibraryWithHeader()
-      throws IOException, InterruptedException {
+  public void testSimpleCxxBinaryWithDependencyOnCxxLibraryWithHeader() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
     workspace.setUp();
@@ -1931,7 +1929,7 @@ public class CxxBinaryIntegrationTest {
     }
   }
 
-  private void platformLinkerFlags(ProjectWorkspace workspace, String target) throws IOException {
+  private void platformLinkerFlags(ProjectWorkspace workspace, String target) {
     workspace.runBuckBuild("//:binary_matches_default_exactly_" + target).assertSuccess();
     workspace.runBuckBuild("//:binary_matches_default_" + target).assertSuccess();
     ProcessResult result = workspace.runBuckBuild("//:binary_no_match_" + target);

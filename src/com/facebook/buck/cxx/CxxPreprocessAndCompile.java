@@ -376,8 +376,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
           .add(
               new AbstractExecutionStep("verify_cxx_outputs") {
                 @Override
-                public StepExecutionResult execute(ExecutionContext executionContext)
-                    throws IOException, InterruptedException {
+                public StepExecutionResult execute(ExecutionContext executionContext) {
                   Path outputPath =
                       filesystem.getRootPath().toAbsolutePath().resolve(resolvedOutput);
                   if (!Files.exists(outputPath)) {

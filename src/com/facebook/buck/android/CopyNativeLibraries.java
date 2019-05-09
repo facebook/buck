@@ -315,8 +315,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
         steps.add(
             new Step() {
               @Override
-              public StepExecutionResult execute(ExecutionContext context)
-                  throws IOException, InterruptedException {
+              public StepExecutionResult execute(ExecutionContext context) throws IOException {
                 // TODO(simons): Using a projectfilesystem here is almost definitely wrong.
                 // This is because each library may come from different build rules, which may be in
                 // different cells --- this check works by coincidence.

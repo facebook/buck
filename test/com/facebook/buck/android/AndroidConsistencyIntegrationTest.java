@@ -36,7 +36,7 @@ public class AndroidConsistencyIntegrationTest extends AbiCompilationModeTest {
   public ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     workspace =
@@ -48,13 +48,13 @@ public class AndroidConsistencyIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testModuleConsistencyStep() throws IOException {
+  public void testModuleConsistencyStep() {
     String target = "//apps/multidex:app-with-consistency-check";
     workspace.runBuckCommand("build", target).assertSuccess();
   }
 
   @Test
-  public void testModuleConsistencyFailure() throws IOException {
+  public void testModuleConsistencyFailure() {
     String target = "//apps/multidex:app-with-consistency-failure";
     workspace.runBuckCommand("build", target).assertFailure();
   }

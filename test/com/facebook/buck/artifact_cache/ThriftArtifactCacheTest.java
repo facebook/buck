@@ -87,26 +87,26 @@ public class ThriftArtifactCacheTest {
   }
 
   @Test
-  public void testFetchResponseWithCorruptedRuleKeys() throws IOException, InterruptedException {
+  public void testFetchResponseWithCorruptedRuleKeys() throws IOException {
     ArtifactMetadata metadata = new ArtifactMetadata();
     metadata.addToRuleKeys(new RuleKey().setHashString("123\uFFFF"));
     testWithMetadata(metadata);
   }
 
   @Test
-  public void testFetchResponseWithUnevenRuleKeyHash() throws IOException, InterruptedException {
+  public void testFetchResponseWithUnevenRuleKeyHash() throws IOException {
     ArtifactMetadata metadata = new ArtifactMetadata();
     metadata.addToRuleKeys(new RuleKey().setHashString("akjdasadasdas"));
     testWithMetadata(metadata);
   }
 
   @Test
-  public void testFetchResponseWithEmptyMetadata() throws IOException, InterruptedException {
+  public void testFetchResponseWithEmptyMetadata() throws IOException {
     testWithMetadata(new ArtifactMetadata());
   }
 
   @Test
-  public void testFetchResponseWithoutMetadata() throws IOException, InterruptedException {
+  public void testFetchResponseWithoutMetadata() throws IOException {
     testWithMetadata(null);
   }
 

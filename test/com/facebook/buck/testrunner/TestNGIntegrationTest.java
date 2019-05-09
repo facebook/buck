@@ -43,20 +43,20 @@ public class TestNGIntegrationTest {
   }
 
   @Test
-  public void testThatSuccessfulTestNGTestWorks() throws IOException {
+  public void testThatSuccessfulTestNGTestWorks() {
     ProcessResult simpleTestNGTestResult = workspace.runBuckCommand("test", "//test:simple-test");
     simpleTestNGTestResult.assertSuccess();
   }
 
   @Test
-  public void testThatFailingBeforeTestFailsTest() throws IOException {
+  public void testThatFailingBeforeTestFailsTest() {
     ProcessResult simpleTestNGTestResult =
         workspace.runBuckCommand("test", "//test:simple-before-test-fail");
     simpleTestNGTestResult.assertTestFailure();
   }
 
   @Test
-  public void testThatSkipInBeforeTestWorks() throws IOException {
+  public void testThatSkipInBeforeTestWorks() {
     ProcessResult skippedTestNGTestResult =
         workspace.runBuckCommand("test", "//test:simple-before-test-skip");
     assertThat(
@@ -65,14 +65,14 @@ public class TestNGIntegrationTest {
   }
 
   @Test
-  public void testThatFailingTestNGTestWorks() throws IOException {
+  public void testThatFailingTestNGTestWorks() {
     ProcessResult failingTestNGTestResult =
         workspace.runBuckCommand("test", "//test:simple-failing-test");
     failingTestNGTestResult.assertTestFailure();
   }
 
   @Test
-  public void testThatSkippedTestNGTestFails() throws IOException {
+  public void testThatSkippedTestNGTestFails() {
     ProcessResult skippedTestNGTestResult =
         workspace.runBuckCommand("test", "//test:simple-skipped-test");
     assertThat(
@@ -81,7 +81,7 @@ public class TestNGIntegrationTest {
   }
 
   @Test
-  public void testSelectors() throws IOException {
+  public void testSelectors() {
     ProcessResult filteredTestNGTestResult =
         workspace.runBuckCommand("test", "//test:", "-f", "SimpleTest");
     filteredTestNGTestResult.assertSuccess();
@@ -92,7 +92,7 @@ public class TestNGIntegrationTest {
   }
 
   @Test
-  public void testSelectorsBlacklistClass() throws IOException {
+  public void testSelectorsBlacklistClass() {
     ProcessResult filteredTestNGTestResult =
         workspace.runBuckCommand("test", "//test:simple-test", "-f", "!SimpleTest");
     filteredTestNGTestResult.assertSuccess();
@@ -101,7 +101,7 @@ public class TestNGIntegrationTest {
   }
 
   @Test
-  public void testSelectorsWhitelistMethod() throws IOException {
+  public void testSelectorsWhitelistMethod() {
     ProcessResult filteredTestNGTestResult =
         workspace.runBuckCommand("test", "//test:simple-test", "-f", "SimpleTest#defeat");
     filteredTestNGTestResult.assertSuccess();
@@ -110,7 +110,7 @@ public class TestNGIntegrationTest {
   }
 
   @Test
-  public void testSelectorsBlacklistMethod() throws IOException {
+  public void testSelectorsBlacklistMethod() {
     ProcessResult filteredTestNGTestResult =
         workspace.runBuckCommand("test", "//test:simple-test", "-f", "!SimpleTest#defeat");
     filteredTestNGTestResult.assertSuccess();
@@ -119,7 +119,7 @@ public class TestNGIntegrationTest {
   }
 
   @Test
-  public void testThatInjectionWorks() throws IOException {
+  public void testThatInjectionWorks() {
     ProcessResult injectionTestNGTestResult =
         workspace.runBuckCommand("test", "//test:injection-test");
     injectionTestNGTestResult.assertSuccess();
@@ -128,7 +128,7 @@ public class TestNGIntegrationTest {
   }
 
   @Test
-  public void emptyMethodSelectorsRunsTests() throws IOException {
+  public void emptyMethodSelectorsRunsTests() {
     ProcessResult filteredTestNGTestResult =
         workspace.runBuckCommand("test", "//test:", "-f", "SimpleTest#$");
     filteredTestNGTestResult.assertSuccess(); // should run SimpleTest

@@ -215,7 +215,7 @@ public class LuaBinaryIntegrationTest {
   }
 
   @Test
-  public void nativeExtension() throws Exception {
+  public void nativeExtension() {
     assumeTrue(luaDevel);
     ProcessResult result = workspace.runBuckCommand("run", "//:native").assertSuccess();
     assertThat(
@@ -225,7 +225,7 @@ public class LuaBinaryIntegrationTest {
   }
 
   @Test
-  public void nativeExtensionWithDep() throws Exception {
+  public void nativeExtensionWithDep() {
     assumeThat(starterType, Matchers.not(Matchers.equalTo(LuaBinaryDescription.StarterType.PURE)));
     assumeTrue(luaDevel);
     ProcessResult result = workspace.runBuckCommand("run", "//:native_with_dep").assertSuccess();

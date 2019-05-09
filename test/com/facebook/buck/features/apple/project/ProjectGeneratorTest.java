@@ -313,7 +313,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testSwapWithSharedBundes() throws IOException {
+  public void testSwapWithSharedBundes() {
     BuildTarget sharedLibrary = BuildTargetFactory.newInstance(rootPath, "//foo:shared#shared");
     BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "sharedFramework");
 

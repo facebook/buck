@@ -169,7 +169,7 @@ public class ManifestRuleKeyServiceFactoryTest {
     Assert.assertEquals(CacheResultType.ERROR, cacheResult.getType());
   }
 
-  private LazyPath getArtifactPath() throws IOException {
+  private LazyPath getArtifactPath() {
     return LazyPath.ofInstance(temporaryFolder.getRoot().resolve("artifact"));
   }
 }

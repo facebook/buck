@@ -43,21 +43,21 @@ public class AndroidLibraryGraphEnhancerIntegrationTest {
   }
 
   @Test
-  public void testPullsResourcesFromDeps() throws IOException {
+  public void testPullsResourcesFromDeps() {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProcessResult result = workspace.runBuckBuild("//:lib_with_direct_dep");
     result.assertSuccess();
   }
 
   @Test
-  public void testPullsResourcesFromProvidedDeps() throws IOException {
+  public void testPullsResourcesFromProvidedDeps() {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProcessResult result = workspace.runBuckBuild("//:lib_with_provided_dep");
     result.assertSuccess();
   }
 
   @Test
-  public void testDoesNotPullResourcesFromJavaResources() throws IOException {
+  public void testDoesNotPullResourcesFromJavaResources() {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProcessResult result = workspace.runBuckBuild("//:lib_with_java_resources_dep");
     result.assertFailure();
@@ -71,7 +71,7 @@ public class AndroidLibraryGraphEnhancerIntegrationTest {
   }
 
   @Test
-  public void testDoesNotPullResourcesFromLicenses() throws IOException {
+  public void testDoesNotPullResourcesFromLicenses() {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProcessResult result = workspace.runBuckBuild("//:lib_with_licenses_dep");
     result.assertFailure();

@@ -20,7 +20,6 @@ import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionContext;
-import java.io.IOException;
 import java.nio.file.Path;
 
 /**
@@ -41,8 +40,7 @@ public class ActionExecutionStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) {
     ActionExecutionContext executionContext =
         ImmutableActionExecutionContext.of(
             context.getBuckEventBus(), shouldDeleteTemporaries, buildFileRootPath);

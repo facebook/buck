@@ -86,7 +86,7 @@ public class SymlinkTreeMergeStepTest {
   }
 
   @Test
-  public void mergesFromDirectoriesProperly() throws IOException, InterruptedException {
+  public void mergesFromDirectoriesProperly() throws IOException {
     ImmutableMultimap<Path, Path> dirs =
         ImmutableSetMultimap.of(
             Paths.get(""), filesystem.resolve(Paths.get("example_py")),
@@ -165,7 +165,7 @@ public class SymlinkTreeMergeStepTest {
   }
 
   @Test
-  public void throwsIfDestinationAlreadyExists() throws IOException, InterruptedException {
+  public void throwsIfDestinationAlreadyExists() throws IOException {
     Path examplePyDest = linkPath.resolve("example_py.py");
     Path examplePySource = filesystem.resolve("example_py").resolve("example_py.py");
 
@@ -185,8 +185,7 @@ public class SymlinkTreeMergeStepTest {
   }
 
   @Test
-  public void throwsWithBetterMessageIfDestinationAlreadyExistsAndIsASymlink()
-      throws IOException, InterruptedException {
+  public void throwsWithBetterMessageIfDestinationAlreadyExistsAndIsASymlink() throws IOException {
     Assume.assumeThat(Platform.detect(), Matchers.is(Matchers.not(Platform.WINDOWS)));
     Path examplePyDest = linkPath.resolve("example_py.py");
     Path examplePySource = filesystem.resolve("example_py").resolve("example_py.py");

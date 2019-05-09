@@ -29,7 +29,7 @@ public class AndroidBinaryCrossCellIntegrationTest extends AbiCompilationModeTes
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   @Test
-  public void testCrossRepositoryDexMerge() throws InterruptedException, IOException {
+  public void testCrossRepositoryDexMerge() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
 
@@ -43,7 +43,7 @@ public class AndroidBinaryCrossCellIntegrationTest extends AbiCompilationModeTes
   }
 
   @Test
-  public void testCrossRepositoryDexMergeWithSplitDex() throws InterruptedException, IOException {
+  public void testCrossRepositoryDexMergeWithSplitDex() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
 
@@ -59,7 +59,7 @@ public class AndroidBinaryCrossCellIntegrationTest extends AbiCompilationModeTes
   }
 
   @Test
-  public void testBuildingBinariesSeparately() throws InterruptedException, IOException {
+  public void testBuildingBinariesSeparately() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
 

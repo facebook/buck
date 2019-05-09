@@ -43,7 +43,7 @@ public class GenAidlIntegrationTest {
   @Rule public TemporaryPaths tmp2 = new TemporaryPaths();
 
   @Test
-  public void buildingWithAidlSrcsDeclared() throws InterruptedException, IOException {
+  public void buildingWithAidlSrcsDeclared() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "gen_aidl_missing_src", tmp);
@@ -59,8 +59,7 @@ public class GenAidlIntegrationTest {
   }
 
   @Test
-  public void buildingCleaningAndThenRebuildingFromCacheShouldWorkAsExpected()
-      throws InterruptedException, IOException {
+  public void buildingCleaningAndThenRebuildingFromCacheShouldWorkAsExpected() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cached_build", tmp);
@@ -79,7 +78,7 @@ public class GenAidlIntegrationTest {
   }
 
   @Test
-  public void rootDirectoryDoesntChangeBuild() throws InterruptedException, IOException {
+  public void rootDirectoryDoesntChangeBuild() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cached_build", tmp);

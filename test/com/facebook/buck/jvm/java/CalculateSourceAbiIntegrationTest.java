@@ -97,7 +97,7 @@ public class CalculateSourceAbiIntegrationTest {
   }
 
   @Test
-  public void testErrorsReportedGracefully() throws IOException {
+  public void testErrorsReportedGracefully() {
     ProcessResult buildResult = workspace.runBuckBuild("//:main-errors");
     buildResult.assertFailure();
     assertThat(

@@ -145,7 +145,7 @@ public class LocalFallbackStrategyTest {
   }
 
   @Test
-  public void testLocalException() throws ExecutionException, InterruptedException {
+  public void testLocalException() throws InterruptedException {
     EasyMock.expect(strategyBuildResult.getBuildResult())
         .andReturn(Futures.immediateFuture(Optional.of(failedBuildResult("//will/fail:remotely"))))
         .times(2);

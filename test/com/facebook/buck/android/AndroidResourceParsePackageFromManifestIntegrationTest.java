@@ -38,7 +38,7 @@ public class AndroidResourceParsePackageFromManifestIntegrationTest {
    * com.example} package was extracted from the manifest correctly.
    */
   @Test
-  public void testParsePackageFromManifest() throws InterruptedException, IOException {
+  public void testParsePackageFromManifest() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "parse_package_from_manifest", tmp);

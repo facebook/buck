@@ -50,7 +50,7 @@ public class AuditAliasCommandIntegrationTest {
   }
 
   @Test
-  public void testBuckAliasList() throws IOException {
+  public void testBuckAliasList() {
     ProcessResult result = workspace.runBuckCommand("audit", "alias", "--list");
     result.assertSuccess();
 
@@ -68,7 +68,7 @@ public class AuditAliasCommandIntegrationTest {
   }
 
   @Test
-  public void testBuckAliasListMap() throws IOException {
+  public void testBuckAliasListMap() {
     ProcessResult result = workspace.runBuckCommand("audit", "alias", "--list-map");
     result.assertSuccess();
 

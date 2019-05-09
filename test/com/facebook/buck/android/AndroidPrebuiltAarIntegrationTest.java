@@ -43,7 +43,7 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "android_prebuilt_aar", tmp);
     workspace.setUp();
@@ -84,12 +84,12 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testPrebuiltJarInDepsIsExported() throws IOException {
+  public void testPrebuiltJarInDepsIsExported() {
     workspace.runBuckBuild("//prebuilt_jar-dep:lib").assertSuccess();
   }
 
   @Test
-  public void testAndroidPrebuiltAarInDepsIsExported() throws IOException {
+  public void testAndroidPrebuiltAarInDepsIsExported() {
     workspace.runBuckBuild("//android_prebuilt_aar-dep:lib").assertSuccess();
   }
 
@@ -112,7 +112,7 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testExtraDepsDontResultInWarning() throws IOException {
+  public void testExtraDepsDontResultInWarning() {
     ProcessResult result = workspace.runBuckBuild("//:app-extra-res-entry").assertSuccess();
 
     String buildOutput = result.getStderr();
@@ -120,12 +120,12 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testNoClassesDotJar() throws IOException {
+  public void testNoClassesDotJar() {
     workspace.runBuckBuild("//:app-no-classes-dot-jar").assertSuccess();
   }
 
   @Test
-  public void testAarWithoutResBuildsFine() throws IOException {
+  public void testAarWithoutResBuildsFine() {
     workspace.runBuckBuild("//:app-dep-on-aar-without-res").assertSuccess();
   }
 }

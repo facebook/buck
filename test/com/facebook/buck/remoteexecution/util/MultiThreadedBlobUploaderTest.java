@@ -94,7 +94,7 @@ public class MultiThreadedBlobUploaderTest {
     UploadDataSupplier supplier =
         new UploadDataSupplier() {
           @Override
-          public InputStream get() throws IOException {
+          public InputStream get() {
             return new ByteArrayInputStream(buffer);
           }
 

@@ -64,7 +64,7 @@ public class CsharpLibraryIntegrationTest {
   public boolean configureCsc;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
     checkAssumptions();
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "csc-tests", tmp);
     workspace.setUp();

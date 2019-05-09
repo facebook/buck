@@ -119,21 +119,21 @@ public class PythonTestIntegrationTest {
   }
 
   @Test
-  public void testPythonTestEnv() throws IOException {
+  public void testPythonTestEnv() {
     // Test if setting environment during test execution works
     ProcessResult result = workspace.runBuckCommand("test", "//:test-env");
     result.assertSuccess();
   }
 
   @Test
-  public void testPythonSkippedResult() throws IOException {
+  public void testPythonSkippedResult() {
     assumePythonVersionIsAtLeast("2.7", "unittest skip support was added in Python-2.7");
     ProcessResult result = workspace.runBuckCommand("test", "//:test-skip").assertSuccess();
     assertThat(result.getStderr(), containsString("1 Skipped"));
   }
 
   @Test
-  public void testPythonTestTimeout() throws IOException {
+  public void testPythonTestTimeout() {
     ProcessResult result = workspace.runBuckCommand("test", "//:test-spinning");
     String stderr = result.getStderr();
     result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
@@ -141,7 +141,7 @@ public class PythonTestIntegrationTest {
   }
 
   @Test
-  public void testPythonSetupClassFailure() throws IOException {
+  public void testPythonSetupClassFailure() {
     assumePythonVersionIsAtLeast("2.7", "`setUpClass` support was added in Python-2.7");
     ProcessResult result = workspace.runBuckCommand("test", "//:test-setup-class-failure");
     result.assertSpecialExitCode(
@@ -153,21 +153,21 @@ public class PythonTestIntegrationTest {
   }
 
   @Test
-  public void testRunPythonTest() throws IOException {
+  public void testRunPythonTest() {
     ProcessResult result = workspace.runBuckCommand("run", "//:test-success");
     result.assertSuccess();
     assertThat(result.getStderr(), containsString("test_that_passes (test_success.Test) ... ok"));
   }
 
   @Test
-  public void testRunPythonBinaryTest() throws IOException {
+  public void testRunPythonBinaryTest() {
     ProcessResult result = workspace.runBuckCommand("test", "//:binary-with-tests");
     result.assertSuccess();
     assertThat(result.getStderr(), containsString("1 Passed"));
   }
 
   @Test
-  public void testPythonSetupClassFailureWithTestSuite() throws IOException {
+  public void testPythonSetupClassFailureWithTestSuite() {
     assumePythonVersionIsAtLeast("2.7", "`setUpClass` support was added in Python-2.7");
     ProcessResult result =
         workspace.runBuckCommand("test", "//:test-setup-class-failure-with-test-suite");
@@ -195,7 +195,7 @@ public class PythonTestIntegrationTest {
   }
 
   @Test
-  public void addsTargetsFromMacrosToDependencies() throws IOException {
+  public void addsTargetsFromMacrosToDependencies() {
     ProcessResult result = workspace.runBuckCommand("test", "//:test-deps-with-env-macros");
     result.assertSuccess();
   }

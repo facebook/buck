@@ -533,7 +533,7 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void testBuckProjectOtherCell() throws IOException, InterruptedException {
+  public void testBuckProjectOtherCell() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace =

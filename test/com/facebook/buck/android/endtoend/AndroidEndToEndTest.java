@@ -56,7 +56,7 @@ public class AndroidEndToEndTest {
   private static final String mainTarget = "//android:demo-app";
 
   @Before
-  public void assumeEnvironment() throws InterruptedException {
+  public void assumeEnvironment() {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
   }

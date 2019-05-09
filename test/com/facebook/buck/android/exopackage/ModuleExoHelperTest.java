@@ -51,7 +51,7 @@ public class ModuleExoHelperTest {
   private Path metadataOutputPath;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

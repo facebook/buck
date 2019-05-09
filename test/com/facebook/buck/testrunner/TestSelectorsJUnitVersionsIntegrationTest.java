@@ -69,8 +69,7 @@ public class TestSelectorsJUnitVersionsIntegrationTest {
         ImmutableList.of("test", "--all", "--filter", "com.example.TestC"));
   }
 
-  private void assertPassingTests(Set<String> expectedPassingTests, List<String> buckArgs)
-      throws IOException {
+  private void assertPassingTests(Set<String> expectedPassingTests, List<String> buckArgs) {
     String[] args = buckArgs.toArray(new String[0]);
     ProcessResult result = workspace.runBuckCommand(args);
     String[] lines = result.getStderr().split("\n");

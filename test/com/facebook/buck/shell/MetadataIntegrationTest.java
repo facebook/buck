@@ -49,7 +49,7 @@ public class MetadataIntegrationTest {
   @Rule public ExpectedException exception = ExpectedException.none();
 
   @Test
-  public void testMetadataPermissions() throws InterruptedException, IOException {
+  public void testMetadataPermissions() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     ProjectWorkspace workspace =

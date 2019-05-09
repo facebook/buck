@@ -55,7 +55,7 @@ public class AndroidBinaryRDotJavaIntegrationTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     workspace =
@@ -66,13 +66,13 @@ public class AndroidBinaryRDotJavaIntegrationTest {
   }
 
   @Test
-  public void testApkWithNoResourcesBuildsCorrectly() throws IOException {
+  public void testApkWithNoResourcesBuildsCorrectly() {
     workspace.runBuckBuild("//apps/sample:app_with_no_res").assertSuccess();
     workspace.runBuckBuild("//apps/sample:app_with_no_res_or_predex").assertSuccess();
   }
 
   @Test
-  public void testApkWithNoResourcesBuildsCorrectlyWithAapt2() throws Exception {
+  public void testApkWithNoResourcesBuildsCorrectlyWithAapt2() {
     AssumeAndroidPlatform.assumeAapt2WithOutputTextSymbolsIsAvailable();
     workspace.runBuckBuild("//apps/sample:app_aapt2_with_no_res").assertSuccess();
   }

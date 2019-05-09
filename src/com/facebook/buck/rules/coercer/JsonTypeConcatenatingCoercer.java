@@ -55,8 +55,7 @@ public class JsonTypeConcatenatingCoercer implements TypeCoercer<Object> {
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      Object object)
-      throws CoerceFailedException {
+      Object object) {
     // No transformations here, just return the same object
     return object;
   }

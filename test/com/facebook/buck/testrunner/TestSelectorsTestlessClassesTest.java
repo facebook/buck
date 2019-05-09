@@ -51,7 +51,7 @@ public class TestSelectorsTestlessClassesTest {
   }
 
   @Test
-  public void shouldNotFailWhenNotUsingAFilter() throws IOException {
+  public void shouldNotFailWhenNotUsingAFilter() {
     ProcessResult result = workspace.runBuckCommand("test", "--all");
     result.assertSuccess(
         "Testless classes should not cause NoTestsRemainException, "
@@ -67,7 +67,7 @@ public class TestSelectorsTestlessClassesTest {
   }
 
   @Test
-  public void shouldNotFailWhenUsingAFilterThatIncludesNothing() throws IOException {
+  public void shouldNotFailWhenUsingAFilterThatIncludesNothing() {
     ProcessResult result = workspace.runBuckCommand("test", "--all", "--filter", "XYZ");
     result.assertSuccess(
         "Testless classes should not cause NoTestsRemainException, "
@@ -79,7 +79,7 @@ public class TestSelectorsTestlessClassesTest {
   }
 
   @Test
-  public void shouldNotFailWhenUsingAFilterThatIncludesSomething() throws IOException {
+  public void shouldNotFailWhenUsingAFilterThatIncludesSomething() {
     ProcessResult result = workspace.runBuckCommand("test", "--all", "--filter", "com.example.+");
     result.assertSuccess(
         "Testless classes should not cause NoTestsRemainException, "

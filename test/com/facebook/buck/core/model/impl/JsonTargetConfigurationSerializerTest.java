@@ -34,7 +34,7 @@ public class JsonTargetConfigurationSerializerTest {
   private Function<String, UnconfiguredBuildTargetView> buildTargetProvider;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
         new ParsingUnconfiguredBuildTargetFactory();
     CellPathResolver cellPathResolver = TestCellPathResolver.get(new FakeProjectFilesystem());

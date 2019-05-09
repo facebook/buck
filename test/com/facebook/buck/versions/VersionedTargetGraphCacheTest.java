@@ -60,7 +60,7 @@ public class VersionedTargetGraphCacheTest {
   private BuildTarget versionedAlias = BuildTargetFactory.newInstance("//:alias");
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetFactory();
   }
 

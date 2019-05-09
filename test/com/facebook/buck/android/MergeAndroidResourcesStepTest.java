@@ -923,7 +923,7 @@ public class MergeAndroidResourcesStepTest {
       ImmutableList<String> duplicateResources,
       ImmutableList<String> ignoredDuplicates,
       Optional<List<String>> duplicateWhitelist)
-      throws IOException, InterruptedException {
+      throws IOException {
 
     Optional<Path> duplicateWhitelistPath =
         duplicateWhitelist.map(

@@ -63,7 +63,7 @@ public class TargetCompatibilityCheckerTest {
   private ConstraintBasedPlatform nonCompatiblePlatform;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     platform = new ConstraintBasedPlatform("", ImmutableSet.of(cs1v1));
     constraintResolver =
         new RuleBasedConstraintResolver(

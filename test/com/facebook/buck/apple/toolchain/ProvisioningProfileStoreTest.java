@@ -37,7 +37,7 @@ import org.junit.Test;
 
 public class ProvisioningProfileStoreTest {
   private static ProvisioningProfileMetadata makeTestMetadata(
-      String appID, Date expirationDate, String uuid) throws Exception {
+      String appID, Date expirationDate, String uuid) {
     return makeTestMetadata(appID, expirationDate, uuid, ImmutableMap.of());
   }
 
@@ -117,7 +117,7 @@ public class ProvisioningProfileStoreTest {
   }
 
   @Test
-  public void testEntitlementKeysAreMatched() throws Exception {
+  public void testEntitlementKeysAreMatched() {
     NSString[] fakeKeychainAccessGroups = {new NSString("AAAAAAAAAA.*")};
     NSArray fakeKeychainAccessGroupsArray = new NSArray(fakeKeychainAccessGroups);
 
@@ -337,7 +337,7 @@ public class ProvisioningProfileStoreTest {
   }
 
   @Test
-  public void testDiagnostics() throws Exception {
+  public void testDiagnostics() {
     NSString[] fakeKeychainAccessGroups = {new NSString("AAAAAAAAAA.*")};
     NSArray fakeKeychainAccessGroupsArray = new NSArray(fakeKeychainAccessGroups);
 

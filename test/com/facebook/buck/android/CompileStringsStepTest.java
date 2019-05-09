@@ -400,7 +400,7 @@ public class CompileStringsStepTest {
   }
 
   @Test
-  public void testSuccessfulStepExecution() throws InterruptedException, IOException {
+  public void testSuccessfulStepExecution() throws IOException {
     Path destinationDir = Paths.get("");
     Path rDotJavaSrcDir = Paths.get("");
 

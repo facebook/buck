@@ -43,7 +43,7 @@ public class UnusedDependenciesFinderIntegrationTest {
   }
 
   @Test
-  public void testShowWarning() throws IOException {
+  public void testShowWarning() {
     ProcessResult processResult =
         workspace.runBuckCommand(
             "build", "-c", "java.unused_dependencies_action=warn", ":bar_with_dep");
@@ -58,7 +58,7 @@ public class UnusedDependenciesFinderIntegrationTest {
   }
 
   @Test
-  public void testFailBuild() throws IOException {
+  public void testFailBuild() {
     ProcessResult processResult =
         workspace.runBuckCommand(
             "build", "-c", "java.unused_dependencies_action=fail", ":bar_with_dep");
@@ -73,7 +73,7 @@ public class UnusedDependenciesFinderIntegrationTest {
   }
 
   @Test
-  public void testDoNotFailBuildWhenNoUnusedDeps() throws IOException {
+  public void testDoNotFailBuildWhenNoUnusedDeps() {
     ProcessResult processResult =
         workspace.runBuckCommand(
             "build", "-c", "java.unused_dependencies_action=fail", ":bar_without_dep");
@@ -82,7 +82,7 @@ public class UnusedDependenciesFinderIntegrationTest {
   }
 
   @Test
-  public void testExportedDepsNotReported() throws IOException {
+  public void testExportedDepsNotReported() {
     ProcessResult processResult =
         workspace.runBuckCommand(
             "build",
@@ -101,7 +101,7 @@ public class UnusedDependenciesFinderIntegrationTest {
   }
 
   @Test
-  public void testOverridenTargetOptionDoesNotFailBuild() throws IOException {
+  public void testOverridenTargetOptionDoesNotFailBuild() {
     ProcessResult processResult =
         workspace.runBuckCommand(
             "build", "-c", "java.unused_dependencies_action=fail", ":bar_with_dep_and_skip_option");
@@ -110,7 +110,7 @@ public class UnusedDependenciesFinderIntegrationTest {
   }
 
   @Test
-  public void testOverridenTargetOptionShowsWarning() throws IOException {
+  public void testOverridenTargetOptionShowsWarning() {
     ProcessResult processResult =
         workspace.runBuckCommand(
             "build", "-c", "java.unused_dependencies_action=fail", ":bar_with_dep_and_warn_option");
@@ -125,7 +125,7 @@ public class UnusedDependenciesFinderIntegrationTest {
   }
 
   @Test
-  public void testShowWarningAboutProvidedDeps() throws IOException {
+  public void testShowWarningAboutProvidedDeps() {
     ProcessResult processResult =
         workspace.runBuckCommand(
             "build", "-c", "java.unused_dependencies_action=warn", ":bar_with_provided_dep");
@@ -140,7 +140,7 @@ public class UnusedDependenciesFinderIntegrationTest {
   }
 
   @Test
-  public void testShowWarningAboutExportedDeps() throws IOException {
+  public void testShowWarningAboutExportedDeps() {
     ProcessResult processResult =
         workspace.runBuckCommand(
             "build", "-c", "java.unused_dependencies_action=warn", ":bar_with_exported_dep");
@@ -155,7 +155,7 @@ public class UnusedDependenciesFinderIntegrationTest {
   }
 
   @Test
-  public void testShowWarningAboutExportedProvidedDeps() throws IOException {
+  public void testShowWarningAboutExportedProvidedDeps() {
     ProcessResult processResult =
         workspace.runBuckCommand(
             "build",

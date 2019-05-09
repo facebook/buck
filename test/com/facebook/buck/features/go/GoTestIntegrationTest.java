@@ -41,7 +41,7 @@ public class GoTestIntegrationTest {
   public ProjectWorkspace workspace;
 
   @Before
-  public void ensureGoIsAvailable() throws IOException {
+  public void ensureGoIsAvailable() {
     GoAssumptions.assumeGoCompilerAvailable();
   }
 
@@ -86,13 +86,13 @@ public class GoTestIntegrationTest {
 
   @Ignore
   @Test
-  public void testGoInternalTest() throws IOException {
+  public void testGoInternalTest() {
     ProcessResult result1 = workspace.runBuckCommand("test", "//:test-success-internal");
     result1.assertSuccess();
   }
 
   @Test
-  public void testWithResources() throws IOException {
+  public void testWithResources() {
     ProcessResult result1 = workspace.runBuckCommand("test", "//:test-with-resources");
     result1.assertSuccess();
 
@@ -168,19 +168,19 @@ public class GoTestIntegrationTest {
   }
 
   @Test
-  public void testGoInternalTestInTestList() throws IOException {
+  public void testGoInternalTestInTestList() {
     ProcessResult processResult = workspace.runBuckCommand("test", "//:test-success-bad");
     processResult.assertFailure();
   }
 
   @Test
-  public void testGoTestTimeout() throws IOException {
+  public void testGoTestTimeout() {
     ProcessResult result = workspace.runBuckCommand("test", "//:test-spinning");
     result.assertTestFailure("test timed out after 500ms");
   }
 
   @Test
-  public void testGoPanic() throws IOException {
+  public void testGoPanic() {
     ProcessResult result2 = workspace.runBuckCommand("test", "//:test-panic");
     result2.assertTestFailure();
     assertThat(
@@ -194,52 +194,52 @@ public class GoTestIntegrationTest {
   }
 
   @Test
-  public void testSubTests() throws IOException {
+  public void testSubTests() {
     GoAssumptions.assumeGoVersionAtLeast("1.7.0");
     ProcessResult result = workspace.runBuckCommand("test", "//:subtests");
     result.assertSuccess();
   }
 
   @Test
-  public void testIndirectDeps() throws IOException {
+  public void testIndirectDeps() {
     ProcessResult result = workspace.runBuckCommand("test", "//add:test-add13");
     result.assertSuccess();
   }
 
   @Test
-  public void testLibWithCgoDeps() throws IOException {
+  public void testLibWithCgoDeps() {
     GoAssumptions.assumeGoVersionAtLeast("1.10.0");
     ProcessResult result = workspace.runBuckCommand("test", "//cgo/lib:all_tests");
     result.assertSuccess();
   }
 
   @Test
-  public void testGenRuleAsSrc() throws IOException {
+  public void testGenRuleAsSrc() {
     ProcessResult result = workspace.runBuckCommand("test", "//genrule_as_src:test");
     result.assertSuccess();
   }
 
   @Test
-  public void testGenRuleWithLibAsSrc() throws IOException {
+  public void testGenRuleWithLibAsSrc() {
     ProcessResult result = workspace.runBuckCommand("test", "//genrule_wtih_lib_as_src:test");
     result.assertSuccess();
   }
 
   @Test
-  public void testHyphen() throws IOException {
+  public void testHyphen() {
     // This test should pass.
     ProcessResult result = workspace.runBuckCommand("test", "//:test-hyphen");
     result.assertSuccess();
   }
 
   @Test
-  public void testFuncWithPrefixTest() throws IOException {
+  public void testFuncWithPrefixTest() {
     ProcessResult result = workspace.runBuckCommand("test", "//:test-scores");
     result.assertSuccess();
   }
 
   @Test
-  public void testNonprintableCharacterInResult() throws IOException {
+  public void testNonprintableCharacterInResult() {
     ProcessResult result = workspace.runBuckCommand("test", "//testOutput:all_tests");
     assertThat(
         "`buck test` should print out the error message",
@@ -249,7 +249,7 @@ public class GoTestIntegrationTest {
   }
 
   @Test
-  public void testGoTestWithEnv() throws IOException {
+  public void testGoTestWithEnv() {
     ProcessResult result = workspace.runBuckCommand("test", "//:test-with-env");
     result.assertSuccess();
   }

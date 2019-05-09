@@ -336,7 +336,7 @@ public class InstallCommand extends BuildCommand {
 
   private ImmutableSet<String> getInstallHelperTargets(
       CommandRunnerParams params, ListeningExecutorService executor)
-      throws IOException, InterruptedException, BuildFileParseException {
+      throws InterruptedException, BuildFileParseException {
 
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ParsingContext parsingContext =

@@ -54,7 +54,7 @@ public class AssumptionViolationsTest {
     shouldPassWithASimplePassingTest("Junit");
   }
 
-  private void shouldPassWithASimplePassingTest(String type) throws IOException {
+  private void shouldPassWithASimplePassingTest(String type) {
     ProcessResult result =
         workspace.runBuckCommand("test", "--all", "--filter", "com.example.PassingTest" + type);
     result.assertSuccess();
@@ -76,7 +76,7 @@ public class AssumptionViolationsTest {
     shouldFailIfOneTestFails("TestNG", 0);
   }
 
-  private void shouldFailIfOneTestFails(String type, int numSkipped) throws IOException {
+  private void shouldFailIfOneTestFails(String type, int numSkipped) {
     ProcessResult result =
         workspace.runBuckCommand(
             "test",
@@ -100,7 +100,7 @@ public class AssumptionViolationsTest {
   }
 
   @Test
-  public void shouldIndicateAssumptionViolations() throws IOException {
+  public void shouldIndicateAssumptionViolations() {
     ProcessResult result =
         workspace.runBuckCommand(
             "test",
@@ -124,7 +124,7 @@ public class AssumptionViolationsTest {
   }
 
   @Test
-  public void shouldIndicateAssumptionViolationsBeforeClass() throws IOException {
+  public void shouldIndicateAssumptionViolationsBeforeClass() {
     ProcessResult result = workspace.runBuckCommand("test", "//test:tests3");
     result.assertSuccess();
     String output = result.getStderr();

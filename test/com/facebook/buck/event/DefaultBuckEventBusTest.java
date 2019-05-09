@@ -28,7 +28,6 @@ import com.facebook.buck.util.concurrent.MostExecutors.NamedThreadFactory;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.eventbus.Subscribe;
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 
@@ -37,7 +36,7 @@ public class DefaultBuckEventBusTest {
   private static final int timeoutMillis = 500;
 
   @Test
-  public void testShutdownSuccess() throws Exception {
+  public void testShutdownSuccess() {
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(
             new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
@@ -54,7 +53,7 @@ public class DefaultBuckEventBusTest {
   }
 
   @Test
-  public void testShutdownFailure() throws IOException {
+  public void testShutdownFailure() {
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(
             new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
@@ -72,7 +71,7 @@ public class DefaultBuckEventBusTest {
   }
 
   @Test
-  public void whenEventTimestampedThenEventCannotBePosted() throws IOException {
+  public void whenEventTimestampedThenEventCannotBePosted() {
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(
             new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
@@ -92,7 +91,7 @@ public class DefaultBuckEventBusTest {
   }
 
   @Test
-  public void whenEventPostedWithAnotherThenTimestampCopiedToPostedEvent() throws IOException {
+  public void whenEventPostedWithAnotherThenTimestampCopiedToPostedEvent() {
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(
             new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
@@ -106,7 +105,7 @@ public class DefaultBuckEventBusTest {
   }
 
   @Test
-  public void timestampedEventHasSeparateNanosAndMillis() throws IOException {
+  public void timestampedEventHasSeparateNanosAndMillis() {
     SettableFakeClock fakeClock = new SettableFakeClock(49152, 64738);
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(

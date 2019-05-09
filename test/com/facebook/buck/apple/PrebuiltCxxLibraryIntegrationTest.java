@@ -77,7 +77,7 @@ public class PrebuiltCxxLibraryIntegrationTest {
   }
 
   @Test
-  public void testBuild() throws IOException, InterruptedException {
+  public void testBuild() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt_cxx_library", tmp);
     workspace.setUp();

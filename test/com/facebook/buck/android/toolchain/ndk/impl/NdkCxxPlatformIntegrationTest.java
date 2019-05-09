@@ -275,8 +275,7 @@ public class NdkCxxPlatformIntegrationTest {
   }
 
   private NdkCxxToolchainPaths createNdkCxxToolchainPaths(
-      ProjectWorkspace workspace, ProjectFilesystem projectFilesystem)
-      throws IOException, InterruptedException {
+      ProjectWorkspace workspace, ProjectFilesystem projectFilesystem) throws IOException {
     Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(projectFilesystem);
     assumeTrue(androidNdk.isPresent());
     String ndkVersion = androidNdk.get().getNdkVersion();

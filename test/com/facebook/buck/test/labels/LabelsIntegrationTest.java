@@ -98,14 +98,14 @@ public class LabelsIntegrationTest {
     assertTestsPass("test", "--all", "--include", "testy+lighty");
   }
 
-  private void assertTestsFail(String... args) throws IOException {
+  private void assertTestsFail(String... args) {
     ProcessResult result = workspace.runBuckCommand(args);
     result.assertTestFailure();
     assertThat(result.getStderr(), containsString("Earth should be flat!"));
     assertThat(result.getStderr(), containsString("TESTS FAILED: 1 FAILURE"));
   }
 
-  private void assertTestsPass(String... args) throws IOException {
+  private void assertTestsPass(String... args) {
     ProcessResult result = workspace.runBuckCommand(args);
     result.assertSuccess();
     assertThat(result.getStderr(), containsString("TESTS PASSED"));

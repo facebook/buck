@@ -67,7 +67,7 @@ public class WindowsClangCxxIntegrationTest {
   }
 
   @Test
-  public void simpleBinary64() throws IOException {
+  public void simpleBinary64() {
     ProcessResult runResult = workspace.runBuckCommand("run", "//app:hello#windows-x86_64");
     runResult.assertSuccess();
     assertThat(runResult.getStdout(), Matchers.containsString("The process is 64bits"));
@@ -76,14 +76,14 @@ public class WindowsClangCxxIntegrationTest {
   }
 
   @Test
-  public void simpleBinaryWithLib() throws IOException {
+  public void simpleBinaryWithLib() {
     ProcessResult runResult = workspace.runBuckCommand("run", "//app_lib:app_lib#windows-x86_64");
     runResult.assertSuccess();
     assertThat(runResult.getStdout(), Matchers.containsString("BUCK ON WINDOWS"));
   }
 
   @Test
-  public void simpleBinaryWithThinLib() throws IOException {
+  public void simpleBinaryWithThinLib() {
     ProcessResult runResult =
         workspace.runBuckCommand(
             "run",
@@ -286,7 +286,7 @@ public class WindowsClangCxxIntegrationTest {
   }
 
   @Test
-  public void errorVerifyHeaders() throws IOException {
+  public void errorVerifyHeaders() {
     ProcessResult result;
     result =
         workspace.runBuckBuild(
@@ -303,7 +303,7 @@ public class WindowsClangCxxIntegrationTest {
   }
 
   @Test
-  public void errorVerifyNestedHeaders() throws IOException {
+  public void errorVerifyNestedHeaders() {
     ProcessResult result;
     result =
         workspace.runBuckBuild(

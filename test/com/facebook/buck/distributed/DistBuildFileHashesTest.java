@@ -124,8 +124,7 @@ public class DistBuildFileHashesTest {
               rootCell);
     }
 
-    public Fixture(TemporaryFolder tempDir)
-        throws InterruptedException, IOException, NoSuchBuildTargetException {
+    public Fixture(TemporaryFolder tempDir) throws IOException, NoSuchBuildTargetException {
       this(
           TestProjectFilesystems.createProjectFilesystem(
               tempDir.newFolder("first").toPath().toRealPath()),
@@ -347,7 +346,7 @@ public class DistBuildFileHashesTest {
     protected HashCode archiveMemberHash;
 
     private ArchiveFilesFixture(Path firstFolder, Path secondFolder)
-        throws InterruptedException, IOException, NoSuchBuildTargetException {
+        throws IOException, NoSuchBuildTargetException {
       super(
           TestProjectFilesystems.createProjectFilesystem(firstFolder),
           TestProjectFilesystems.createProjectFilesystem(secondFolder));

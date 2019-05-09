@@ -329,7 +329,7 @@ public abstract class AbstractWorkspace {
     Files.setPosixFilePermissions(targetPath, targetPermissions);
   }
 
-  private void preAddTemplateActions(Path templatePath) throws IOException {
+  private void preAddTemplateActions(Path templatePath) {
     ensureNoLocalBuckConfig(templatePath);
   }
 

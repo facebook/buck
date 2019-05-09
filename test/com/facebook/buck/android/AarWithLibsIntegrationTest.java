@@ -35,7 +35,7 @@ public class AarWithLibsIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void testLibsInAarAreIncludedInApk() throws InterruptedException, IOException {
+  public void testLibsInAarAreIncludedInApk() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);

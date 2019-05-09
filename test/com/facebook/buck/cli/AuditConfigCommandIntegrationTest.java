@@ -186,7 +186,7 @@ public class AuditConfigCommandIntegrationTest {
   }
 
   @Test
-  public void testConfigAuditEntireConfig() throws IOException, InterruptedException {
+  public void testConfigAuditEntireConfig() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
     workspace.setUp();

@@ -75,22 +75,22 @@ public class HaskellLibraryIntegrationTest {
   }
 
   @Test
-  public void simple() throws IOException {
+  public void simple() {
     workspace.runBuckBuild("//:foo#default," + getLinkFlavor()).assertSuccess();
   }
 
   @Test
-  public void dependency() throws IOException {
+  public void dependency() {
     workspace.runBuckBuild("//:dependent#default," + getLinkFlavor()).assertSuccess();
   }
 
   @Test
-  public void foreign() throws IOException {
+  public void foreign() {
     workspace.runBuckBuild("//:foreign#default," + getLinkFlavor()).assertSuccess();
   }
 
   @Test
-  public void firstOrderDeps() throws IOException {
+  public void firstOrderDeps() {
     workspace.runBuckBuild("//:first_order_a_pass#default," + getLinkFlavor()).assertSuccess();
     ProcessResult result =
         workspace.runBuckBuild("//:first_order_a_fail#default," + getLinkFlavor()).assertFailure();
@@ -112,7 +112,7 @@ public class HaskellLibraryIntegrationTest {
   }
 
   @Test
-  public void cHeader() throws IOException {
+  public void cHeader() {
     workspace.runBuckBuild("//:hs_header#default," + getLinkFlavor()).assertSuccess();
   }
 }

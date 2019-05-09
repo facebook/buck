@@ -241,7 +241,7 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
-  public void simpleBinaryIncremental() throws IOException, InterruptedException {
+  public void simpleBinaryIncremental() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();

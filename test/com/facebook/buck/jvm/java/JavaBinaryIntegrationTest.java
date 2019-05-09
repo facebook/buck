@@ -68,7 +68,7 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void fatJarOutputIsRecorded() throws IOException, InterruptedException {
+  public void fatJarOutputIsRecorded() throws IOException {
     setUpProjectWorkspaceForScenario("fat_jar");
     workspace.enableDirCache();
     workspace.runBuckCommand("build", "//:bin-fat").assertSuccess();

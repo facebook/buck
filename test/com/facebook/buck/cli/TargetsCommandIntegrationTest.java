@@ -1094,7 +1094,7 @@ public class TargetsCommandIntegrationTest {
   }
 
   @Test
-  public void printsBothOutputAndFiltersType() throws IOException, InterruptedException {
+  public void printsBothOutputAndFiltersType() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "output_path_and_type", tmp);
     workspace.setUp();

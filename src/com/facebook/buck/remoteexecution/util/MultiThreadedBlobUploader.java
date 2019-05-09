@@ -101,8 +101,7 @@ public class MultiThreadedBlobUploader {
   }
 
   /** Uploads missing items to the CAS. */
-  public ListenableFuture<Void> addMissing(Stream<UploadDataSupplier> dataSupplier)
-      throws IOException {
+  public ListenableFuture<Void> addMissing(Stream<UploadDataSupplier> dataSupplier) {
     ImmutableList<UploadDataSupplier> data =
         dataSupplier
             // We don't trust the caller to have applied filtering. This means that

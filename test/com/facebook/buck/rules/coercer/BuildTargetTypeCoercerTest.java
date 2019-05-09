@@ -44,7 +44,7 @@ public class BuildTargetTypeCoercerTest {
   private UnconfiguredBuildTargetTypeCoercer unconfiguredBuildTargetTypeCoercer;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     unconfiguredBuildTargetTypeCoercer =
         new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory());
   }

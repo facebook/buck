@@ -55,12 +55,12 @@ public class BuckQueryIntegrationTest {
    * build target.
    */
   @Test
-  public void testRdepsWithSymlinks() throws IOException {
+  public void testRdepsWithSymlinks() {
     workspace.runBuckCommand("query", "rdeps(//symlinks/..., //symlinks/a:a)");
   }
 
   @Test
-  public void testDependencyCycles() throws IOException {
+  public void testDependencyCycles() {
     ProcessResult processResult = workspace.runBuckCommand("query", "deps(//cycles:a)");
     processResult.assertFailure();
     assertThat(processResult.getStderr(), containsString("//cycles:a -> //cycles:a"));

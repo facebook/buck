@@ -172,7 +172,7 @@ public class WorkerToolRuleIntegrationTest {
   }
 
   @Test
-  public void testWorkerCrashDoesNotHang() throws Exception {
+  public void testWorkerCrashDoesNotHang() {
     workspace.runBuckBuild("//:test10").assertFailure();
   }
 }

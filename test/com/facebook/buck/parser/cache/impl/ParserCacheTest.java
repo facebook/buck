@@ -32,7 +32,6 @@ import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
-import com.facebook.buck.parser.cache.ParserCacheException;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.io.GlobSpec;
@@ -55,7 +54,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -121,7 +119,7 @@ public class ParserCacheTest {
     }
 
     @Override
-    public void close() throws IOException {}
+    public void close() {}
   }
 
   private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
@@ -174,17 +172,16 @@ public class ParserCacheTest {
     }
 
     @Override
-    public BuildFileManifest getBuildFileManifest(Path buildFile)
-        throws BuildFileParseException, InterruptedException, IOException {
+    public BuildFileManifest getBuildFileManifest(Path buildFile) throws BuildFileParseException {
       return null;
     }
 
     @Override
-    public void reportProfile() throws IOException {}
+    public void reportProfile() {}
 
     @Override
     public ImmutableSortedSet<String> getIncludedFiles(Path buildFile)
-        throws BuildFileParseException, InterruptedException, IOException {
+        throws BuildFileParseException {
       if (throwsBuildFileParseException) {
         throw BuildFileParseException.createForUnknownParseError("Fake exception!");
       }
@@ -196,18 +193,16 @@ public class ParserCacheTest {
 
     @Override
     public boolean globResultsMatchCurrentState(
-        Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
-        throws IOException, InterruptedException {
+        Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
       return true;
     }
 
     @Override
-    public void close() throws BuildFileParseException, InterruptedException, IOException {}
+    public void close() throws BuildFileParseException {}
   }
 
   @Test
-  public void testHybridStorageInstantiatedWhenLocalAndRemoteStoragesEnabled()
-      throws IOException, ExecutionException, InterruptedException, ParserCacheException {
+  public void testHybridStorageInstantiatedWhenLocalAndRemoteStoragesEnabled() {
     BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "readwrite", "readwrite");
     ParserCache parserCache =
         ParserCache.of(
@@ -216,8 +211,7 @@ public class ParserCacheTest {
   }
 
   @Test
-  public void testRemoteStorageInstantiatedWhenRemoteOnlyEnabled()
-      throws IOException, ExecutionException, InterruptedException, ParserCacheException {
+  public void testRemoteStorageInstantiatedWhenRemoteOnlyEnabled() {
     BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "none", "readwrite");
     ParserCache parserCache =
         ParserCache.of(
@@ -226,8 +220,7 @@ public class ParserCacheTest {
   }
 
   @Test
-  public void testLocalStorageInstantiatedWhenLocalOnlyEnabled()
-      throws IOException, ExecutionException, InterruptedException, ParserCacheException {
+  public void testLocalStorageInstantiatedWhenLocalOnlyEnabled() {
     BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "readwrite", "none");
     ParserCache parserCache =
         ParserCache.of(
@@ -237,7 +230,7 @@ public class ParserCacheTest {
 
   @Test
   public void testCacheWhenGetAllIncludesThrowsBuildFileParseException()
-      throws IOException, ExecutionException, InterruptedException, ParserCacheException {
+      throws IOException, InterruptedException {
     BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "none", "readwrite");
     ParserCache parserCache =
         ParserCache.of(
@@ -255,7 +248,7 @@ public class ParserCacheTest {
 
   @Test
   public void storeInRemoteCacheAndGetFromRemoteCacheAndVerifyMatch()
-      throws IOException, ExecutionException, InterruptedException, ParserCacheException {
+      throws IOException, InterruptedException {
     BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "readwrite", "readwrite");
 
     Path buildPath = filesystem.getPath("Foo/Bar");

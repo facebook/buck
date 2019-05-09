@@ -76,7 +76,7 @@ public class AndroidResourceFilterIntegrationTest {
   private ProjectFilesystem filesystem;
 
   @BeforeClass
-  public static void findBuildToolsVersion() throws InterruptedException {
+  public static void findBuildToolsVersion() {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
@@ -266,7 +266,7 @@ public class AndroidResourceFilterIntegrationTest {
   }
 
   @Test
-  public void testPostFilterResourcesAndBanDuplicates() throws IOException {
+  public void testPostFilterResourcesAndBanDuplicates() {
     workspace.runBuckBuild("//apps/sample:app_post_filter_no_dups").assertSuccess();
   }
 

@@ -78,7 +78,7 @@ public class CacheBenchmark {
   }
 
   @Test
-  public void addMultipleEntriesPerformance() throws Exception {
+  public void addMultipleEntriesPerformance() {
     addMultipleEntries();
   }
 

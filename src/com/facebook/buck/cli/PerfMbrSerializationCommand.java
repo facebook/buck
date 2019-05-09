@@ -66,7 +66,7 @@ public class PerfMbrSerializationCommand
   }
 
   @Override
-  void runPerfTest(CommandRunnerParams params, PreparedState state) throws Exception {
+  void runPerfTest(CommandRunnerParams params, PreparedState state) {
     Cell rootCell = params.getCell();
     Serializer serializer =
         new Serializer(

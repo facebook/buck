@@ -26,7 +26,7 @@ import org.junit.Test;
 
 public class ExecutionOrderAwareFakeStepTest {
   @Test
-  public void eachStepHasIncrementingExecutionOrder() throws Exception {
+  public void eachStepHasIncrementingExecutionOrder() {
     AtomicInteger order = new AtomicInteger(0);
     ExecutionOrderAwareFakeStep step1 = new ExecutionOrderAwareFakeStep("name", "desc", 0, order);
     ExecutionOrderAwareFakeStep step2 = new ExecutionOrderAwareFakeStep("name", "desc", 0, order);

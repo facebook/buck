@@ -63,7 +63,7 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
     AssumeAndroidPlatform.assumeBundleBuildIsSupported();
@@ -156,7 +156,7 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testAppBundleHaveCorrectAaptMode() throws IOException {
+  public void testAppBundleHaveCorrectAaptMode() {
     String target = "//apps/sample:app_bundle_wrong_aapt_mode";
 
     thrown.expect(HumanReadableException.class);

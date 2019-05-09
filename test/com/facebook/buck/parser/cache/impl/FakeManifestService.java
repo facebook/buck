@@ -21,7 +21,6 @@ import com.facebook.buck.manifestservice.ManifestService;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -81,5 +80,5 @@ public class FakeManifestService implements ManifestService {
   }
 
   @Override
-  public void close() throws IOException {}
+  public void close() {}
 }

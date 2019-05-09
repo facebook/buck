@@ -566,12 +566,12 @@ public class CxxPrecompiledHeaderRuleTest {
   }
 
   @Test
-  public void successfulBuildWithPchHavingNoDeps() throws Exception {
+  public void successfulBuildWithPchHavingNoDeps() {
     workspace.runBuckBuild("//basic_tests:main").assertSuccess();
   }
 
   @Test
-  public void successfulBuildWithPchHavingDeps() throws Exception {
+  public void successfulBuildWithPchHavingDeps() {
     workspace.runBuckBuild("//deps_test:bin").assertSuccess();
   }
 
