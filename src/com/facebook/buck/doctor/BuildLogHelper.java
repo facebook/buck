@@ -20,6 +20,7 @@ import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_BUILD_FINISH
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_EXIT_CODE;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_INVOCATION_INFO;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -46,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
+import javax.annotation.Nullable;
 
 /** Methods for finding and inspecting buck log files. */
 public class BuildLogHelper {
@@ -183,9 +185,7 @@ public class BuildLogHelper {
         new FileVisitor<Path>() {
           @Override
           public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-            return Files.isSymbolicLink(dir)
-                ? FileVisitResult.SKIP_SUBTREE
-                : FileVisitResult.CONTINUE;
+            return attrs.isSymbolicLink() ? FileVisitResult.SKIP_SUBTREE : FileVisitResult.CONTINUE;
           }
 
           @Override
@@ -199,11 +199,17 @@ public class BuildLogHelper {
 
           @Override
           public FileVisitResult visitFileFailed(Path file, IOException exc) {
+            if (exc != null) {
+              throw new HumanReadableException(exc, "Cannot visit %s", file);
+            }
             return FileVisitResult.CONTINUE;
           }
 
           @Override
-          public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
+          public FileVisitResult postVisitDirectory(Path dir, @Nullable IOException exc) {
+            if (exc != null) {
+              throw new HumanReadableException(exc, "Cannot get a list of files in %s", dir);
+            }
             return FileVisitResult.CONTINUE;
           }
         },
