@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.RuleKeyCalculationEvent;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.SizeLimiter;
 import com.facebook.buck.util.Discardable;
@@ -49,6 +50,7 @@ public class InputBasedRuleKeyManager {
   private final OnDiskBuildInfo onDiskBuildInfo;
   private final BuildRule rule;
   private final BuildRuleScopeManager buildRuleScopeManager;
+  private final ProjectFilesystem filesystem;
   private final Supplier<Optional<RuleKey>> inputBasedKey;
 
   public InputBasedRuleKeyManager(
@@ -60,6 +62,7 @@ public class InputBasedRuleKeyManager {
       OnDiskBuildInfo onDiskBuildInfo,
       BuildRule rule,
       BuildRuleScopeManager buildRuleScopeManager,
+      ProjectFilesystem filesystem,
       Supplier<Optional<RuleKey>> inputBasedKey) {
     this.eventBus = eventBus;
     this.ruleKeyFactories = ruleKeyFactories;
@@ -69,6 +72,7 @@ public class InputBasedRuleKeyManager {
     this.onDiskBuildInfo = onDiskBuildInfo;
     this.rule = rule;
     this.buildRuleScopeManager = buildRuleScopeManager;
+    this.filesystem = filesystem;
     this.inputBasedKey = inputBasedKey;
   }
 
@@ -105,7 +109,7 @@ public class InputBasedRuleKeyManager {
                 inputRuleKey,
                 artifactCache,
                 // TODO(simons): Share this between all tests, not one per cell.
-                rule.getProjectFilesystem()),
+                filesystem),
         cacheResult -> {
           if (cacheResult.getType().isSuccess()) {
             try (Scope ignored = LeafEvents.scope(eventBus, "handling_cache_result")) {

@@ -294,6 +294,7 @@ class CachingBuildRuleBuilder {
             onDiskBuildInfo,
             rule,
             buildRuleScopeManager,
+            filesystem,
             inputBasedKey);
 
     ManifestRuleKeyService manifestRuleKeyService;
