@@ -18,6 +18,7 @@ package com.facebook.buck.core.build.engine.impl;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.core.build.action.resolver.BuildEngineActionToBuildRuleResolver;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.BuildEngine;
@@ -160,6 +161,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
       BuildRuleResolver resolver,
+      BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver,
       TargetConfigurationSerializer targetConfigurationSerializer,
       BuildInfoStoreManager buildInfoStoreManager,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
@@ -178,6 +180,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         artifactCacheSizeLimit,
         resolver,
         buildInfoStoreManager,
+        actionToBuildRuleResolver,
         targetConfigurationSerializer,
         ruleKeyFactories,
         remoteBuildRuleCompletionWaiter,
@@ -208,6 +211,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       Optional<Long> artifactCacheSizeLimit,
       BuildRuleResolver resolver,
       BuildInfoStoreManager buildInfoStoreManager,
+      BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver,
       TargetConfigurationSerializer targetConfigurationSerializer,
       RuleKeyFactories ruleKeyFactories,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
@@ -234,7 +238,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.buildInfoStoreManager = buildInfoStoreManager;
     this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
 
-    this.ruleDeps = new DefaultRuleDepsCache(resolver);
+    this.ruleDeps = new DefaultRuleDepsCache(resolver, actionToBuildRuleResolver);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, resolver);
     this.defaultRuleKeyDiagnostics = defaultRuleKeyDiagnostics;
     this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;

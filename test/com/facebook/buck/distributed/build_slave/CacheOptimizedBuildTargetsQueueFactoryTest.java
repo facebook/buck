@@ -32,6 +32,7 @@ import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
+import com.facebook.buck.core.build.action.resolver.BuildEngineActionToBuildRuleResolver;
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -62,10 +63,12 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
 
   private ArtifactCacheByBuildRule artifactCache;
   private CoordinatorBuildRuleEventsPublisher ruleFinishedPublisher;
+  private BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver;
 
   @Before
   public void setUp() {
     this.artifactCache = null;
+    this.actionToBuildRuleResolver = new BuildEngineActionToBuildRuleResolver();
     this.ruleFinishedPublisher = EasyMock.createNiceMock(CoordinatorBuildRuleEventsPublisher.class);
   }
 
@@ -79,7 +82,11 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
             localCacheHitTargets.stream().map(resolver::getRule).collect(Collectors.toList()));
 
     return new CacheOptimizedBuildTargetsQueueFactory(
-            resolver, artifactCache, false, new DefaultRuleDepsCache(resolver), false)
+            resolver,
+            artifactCache,
+            false,
+            new DefaultRuleDepsCache(resolver, actionToBuildRuleResolver),
+            false)
         .createBuildTargetsQueue(
             topLevelTargets, ruleFinishedPublisher, MOST_BUILD_RULES_FINISHED_PERCENTAGE);
   }
@@ -99,7 +106,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
             resolver,
             artifactCache,
             false,
-            new DefaultRuleDepsCache(resolver),
+            new DefaultRuleDepsCache(resolver, actionToBuildRuleResolver),
             shouldBuildSelectedTargetsLocally)
         .createBuildTargetsQueue(
             topLevelTargets, ruleFinishedPublisher, MOST_BUILD_RULES_FINISHED_PERCENTAGE);

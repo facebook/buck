@@ -3,6 +3,7 @@ java_library(
     srcs = glob(["*.java"]),
     exported_deps = [
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
+        "//src/com/facebook/buck/core/build/action/resolver:resolver",
         "//src/com/facebook/buck/core/build/engine:engine",
         "//src/com/facebook/buck/core/build/engine/config:config",
         "//src/com/facebook/buck/core/cell:cell",

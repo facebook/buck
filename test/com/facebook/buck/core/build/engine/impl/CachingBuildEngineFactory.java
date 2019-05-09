@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.build.engine.impl;
 
+import com.facebook.buck.core.build.action.resolver.BuildEngineActionToBuildRuleResolver;
 import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.build.engine.config.ResourceAwareSchedulingInfo;
@@ -56,6 +57,7 @@ public class CachingBuildEngineFactory {
   private CachingBuildEngineDelegate cachingBuildEngineDelegate;
   private WeightedListeningExecutorService executorService;
   private BuildRuleResolver buildRuleResolver;
+  private BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver;
   private ResourceAwareSchedulingInfo resourceAwareSchedulingInfo =
       ResourceAwareSchedulingInfo.NON_AWARE_SCHEDULING_INFO;
   private boolean logBuildRuleFailuresInline = true;
@@ -65,12 +67,14 @@ public class CachingBuildEngineFactory {
 
   public CachingBuildEngineFactory(
       BuildRuleResolver buildRuleResolver,
+      BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver,
       BuildInfoStoreManager buildInfoStoreManager,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
     this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
     this.cachingBuildEngineDelegate = new LocalCachingBuildEngineDelegate(new DummyFileHashCache());
     this.executorService = toWeighted(MoreExecutors.newDirectExecutorService());
     this.buildRuleResolver = buildRuleResolver;
+    this.actionToBuildRuleResolver = actionToBuildRuleResolver;
     this.buildInfoStoreManager = buildInfoStoreManager;
   }
 
@@ -150,6 +154,7 @@ public class CachingBuildEngineFactory {
           artifactCacheSizeLimit,
           buildRuleResolver,
           buildInfoStoreManager,
+          actionToBuildRuleResolver,
           targetConfigurationSerializer,
           ruleKeyFactories.get(),
           remoteBuildRuleCompletionWaiter,
@@ -169,6 +174,7 @@ public class CachingBuildEngineFactory {
         maxDepFileCacheEntries,
         artifactCacheSizeLimit,
         buildRuleResolver,
+        actionToBuildRuleResolver,
         targetConfigurationSerializer,
         buildInfoStoreManager,
         resourceAwareSchedulingInfo,

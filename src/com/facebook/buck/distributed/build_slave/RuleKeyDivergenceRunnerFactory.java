@@ -175,11 +175,17 @@ public class RuleKeyDivergenceRunnerFactory {
                 actionGraphBuilder,
                 ruleKeyCacheScope.getCache(),
                 Optional.empty()),
-            new DefaultRuleDepsCache(actionGraphBuilder),
+            new DefaultRuleDepsCache(
+                actionGraphBuilder,
+                graphs.getActionGraphAndBuilder().getBuildEngineActionToBuildRuleResolver()),
             (buckEventBus, rule) -> () -> {});
 
     return RuleKeyUtils.calculateDefaultRuleKeys(
-            actionGraphBuilder, ruleKeyCalculator, eventBus, topLevelTargets)
+            actionGraphBuilder,
+            graphs.getActionGraphAndBuilder().getBuildEngineActionToBuildRuleResolver(),
+            eventBus,
+            topLevelTargets,
+            ruleKeyCalculator)
         .get();
   }
 

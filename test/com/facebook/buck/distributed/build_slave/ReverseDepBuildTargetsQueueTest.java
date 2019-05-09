@@ -28,6 +28,7 @@ import static com.facebook.buck.distributed.testutil.CustomActionGraphBuilderFac
 import static com.facebook.buck.distributed.testutil.CustomActionGraphBuilderFactory.createBuildGraphWithInterleavedUncacheables;
 import static com.facebook.buck.distributed.testutil.CustomActionGraphBuilderFactory.createBuildGraphWithUncachableLeaf;
 
+import com.facebook.buck.core.build.action.resolver.BuildEngineActionToBuildRuleResolver;
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -61,7 +62,7 @@ public class ReverseDepBuildTargetsQueueTest {
             resolver,
             new NoopArtifactCacheByBuildRule(),
             false,
-            new DefaultRuleDepsCache(resolver),
+            new DefaultRuleDepsCache(resolver, new BuildEngineActionToBuildRuleResolver()),
             false)
         .createBuildTargetsQueue(
             topLevelTargets,
@@ -377,7 +378,11 @@ public class ReverseDepBuildTargetsQueueTest {
 
     CacheOptimizedBuildTargetsQueueFactory factory =
         new CacheOptimizedBuildTargetsQueueFactory(
-            resolver, artifactCache, true, new DefaultRuleDepsCache(resolver), false);
+            resolver,
+            artifactCache,
+            true,
+            new DefaultRuleDepsCache(resolver, new BuildEngineActionToBuildRuleResolver()),
+            false);
 
     EasyMock.replay(artifactCache);
     factory.createBuildTargetsQueue(

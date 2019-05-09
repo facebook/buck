@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.core.build.action.resolver.BuildEngineActionToBuildRuleResolver;
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -49,10 +50,12 @@ public class RuleKeyUtils {
    */
   public static ListenableFuture<List<Pair<BuildRule, RuleKey>>> calculateDefaultRuleKeys(
       ActionGraphBuilder actionGraphBuilder,
-      ParallelRuleKeyCalculator<RuleKey> ruleKeyCalculator,
+      BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver,
       BuckEventBus eventBus,
-      Iterable<BuildTarget> topLevelTargets) {
-    Set<BuildRule> allRulesInGraph = findAllRulesInGraph(topLevelTargets, actionGraphBuilder);
+      Iterable<BuildTarget> topLevelTargets,
+      ParallelRuleKeyCalculator<RuleKey> ruleKeyCalculator) {
+    Set<BuildRule> allRulesInGraph =
+        findAllRulesInGraph(topLevelTargets, actionGraphBuilder, actionToBuildRuleResolver);
 
     List<ListenableFuture<Pair<BuildRule, RuleKey>>> ruleKeys =
         new ArrayList<>(allRulesInGraph.size());
@@ -71,10 +74,13 @@ public class RuleKeyUtils {
   }
 
   private static Set<BuildRule> findAllRulesInGraph(
-      Iterable<BuildTarget> topLevelTargets, BuildRuleResolver resolver) {
+      Iterable<BuildTarget> topLevelTargets,
+      BuildRuleResolver resolver,
+      BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver) {
     LOG.info("Finding all rules in graph...");
 
-    DefaultRuleDepsCache ruleDepsCache = new DefaultRuleDepsCache(resolver);
+    DefaultRuleDepsCache ruleDepsCache =
+        new DefaultRuleDepsCache(resolver, actionToBuildRuleResolver);
     Set<BuildRule> allRules = new HashSet<>();
 
     Queue<BuildRule> rulesToProcess =

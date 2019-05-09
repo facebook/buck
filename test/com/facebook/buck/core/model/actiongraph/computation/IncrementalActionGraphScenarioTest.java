@@ -1277,7 +1277,9 @@ public class IncrementalActionGraphScenarioTest {
 
   private void queryTransitiveDeps(ActionGraphAndBuilder result) {
     Set<BuildRule> visited = new HashSet<>();
-    RuleDepsCache depsCache = new DefaultRuleDepsCache(result.getActionGraphBuilder());
+    RuleDepsCache depsCache =
+        new DefaultRuleDepsCache(
+            result.getActionGraphBuilder(), result.getBuildEngineActionToBuildRuleResolver());
     for (BuildRule buildRule : result.getActionGraph().getNodes()) {
       queryTransitiveDeps(buildRule, depsCache, visited);
     }

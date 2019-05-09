@@ -989,7 +989,8 @@ public class TargetsCommand extends AbstractCommand {
                             result.getActionGraphBuilder(),
                             ruleKeyCacheScope.getCache(),
                             Optional.ofNullable(ruleKeyLogger)),
-                        new DefaultRuleDepsCache(graphBuilder.get()),
+                        new DefaultRuleDepsCache(
+                            graphBuilder.get(), result.getBuildEngineActionToBuildRuleResolver()),
                         (eventBus, rule) -> () -> {}));
           }
         }

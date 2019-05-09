@@ -25,12 +25,11 @@ import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
-import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
@@ -120,15 +119,16 @@ public class PerfRuleKeyCommand extends AbstractPerfCommand<PreparedState> {
 
       // Get a fresh action graph since we might unsafely run init from disks...
       // Also, we don't measure speed of this part.
-      ActionGraphBuilder graphBuilder =
-          params.getActionGraphProvider().getFreshActionGraph(targetGraph).getActionGraphBuilder();
+      ActionGraphAndBuilder graphAndBuilder =
+          params.getActionGraphProvider().getFreshActionGraph(targetGraph);
 
-      ImmutableList<BuildRule> rulesInGraph = getRulesInGraph(graphBuilder, targets);
+      ImmutableList<BuildRule> rulesInGraph =
+          getRulesInGraph(graphAndBuilder.getActionGraphBuilder(), targets);
 
       if (keyType == KeyType.DEPFILE || keyType == KeyType.MANIFEST) {
         if (unsafeInitFromDisk) {
           printWarning(params, "Unsafely initializing rules from disk.");
-          initializeRulesFromDisk(graphBuilder, rulesInGraph);
+          initializeRulesFromDisk(graphAndBuilder.getActionGraphBuilder(), rulesInGraph);
         } else {
           printWarning(
               params, "Computing depfile/manifest keys may fail without --unsafe-init-from-disk.");
@@ -155,7 +155,7 @@ public class PerfRuleKeyCommand extends AbstractPerfCommand<PreparedState> {
 
       StackedFileHashCache fileHashCache =
           preserveFileHashCache ? createStackedFileHashCache(params) : null;
-      return new PreparedState(service, graphBuilder, rulesInGraph, usedInputs, fileHashCache);
+      return new PreparedState(service, graphAndBuilder, rulesInGraph, usedInputs, fileHashCache);
     } catch (Exception e) {
       throw new BuckUncheckedExecutionException(
           e, "When inspecting serialization state of the action graph.");
@@ -165,19 +165,19 @@ public class PerfRuleKeyCommand extends AbstractPerfCommand<PreparedState> {
   /** The state prepared for us to compute keys. */
   static class PreparedState {
     private final ListeningExecutorService service;
-    private final BuildRuleResolver graphBuilder;
+    private final ActionGraphAndBuilder graphAndBuilder;
     private final ImmutableList<BuildRule> rulesInGraph;
     private final Map<BuildRule, ImmutableList<DependencyFileEntry>> usedInputs;
     @Nullable private final StackedFileHashCache fileHashCache;
 
     PreparedState(
         ListeningExecutorService service,
-        BuildRuleResolver graphBuilder,
+        ActionGraphAndBuilder graphAndBuilder,
         ImmutableList<BuildRule> rulesInGraph,
         Map<BuildRule, ImmutableList<DependencyFileEntry>> usedInputs,
         @Nullable StackedFileHashCache fileHashCache) {
       this.service = service;
-      this.graphBuilder = graphBuilder;
+      this.graphAndBuilder = graphAndBuilder;
       this.rulesInGraph = rulesInGraph;
       this.usedInputs = usedInputs;
       this.fileHashCache = fileHashCache;
@@ -197,7 +197,9 @@ public class PerfRuleKeyCommand extends AbstractPerfCommand<PreparedState> {
         new ParallelRuleKeyCalculator<>(
             state.service,
             keyFactory,
-            new DefaultRuleDepsCache(state.graphBuilder),
+            new DefaultRuleDepsCache(
+                state.graphAndBuilder.getActionGraphBuilder(),
+                state.graphAndBuilder.getBuildEngineActionToBuildRuleResolver()),
             (buckEventBus, buildRule) -> () -> {});
 
     List<ListenableFuture<?>> futures = new ArrayList<>();
@@ -221,7 +223,7 @@ public class PerfRuleKeyCommand extends AbstractPerfCommand<PreparedState> {
         RuleKeyFactories.of(
             params.getRuleKeyConfiguration(),
             fileHashCache,
-            context.graphBuilder,
+            context.graphAndBuilder.getActionGraphBuilder(),
             Long.MAX_VALUE,
             ruleKeyCache);
 

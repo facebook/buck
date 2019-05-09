@@ -146,7 +146,10 @@ public class DistBuildSlaveExecutor {
                             args.getRuleKeyCacheScope().getCache(),
                             Optional.empty()),
                         new DefaultRuleDepsCache(
-                            graphs.getActionGraphAndBuilder().getActionGraphBuilder()),
+                            graphs.getActionGraphAndBuilder().getActionGraphBuilder(),
+                            graphs
+                                .getActionGraphAndBuilder()
+                                .getBuildEngineActionToBuildRuleResolver()),
                         (buckEventBus, rule) -> () -> {});
                   },
                   MoreExecutors.directExecutor()),

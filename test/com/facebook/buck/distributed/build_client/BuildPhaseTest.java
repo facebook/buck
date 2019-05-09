@@ -303,7 +303,9 @@ public class BuildPhaseTest {
                     new TrackedRuleKeyCache<RuleKey>(
                         new DefaultRuleKeyCache<>(), new NoOpCacheStatsTracker()),
                     Optional.empty()),
-                new DefaultRuleDepsCache(graphs.getActionGraphAndBuilder().getActionGraphBuilder()),
+                new DefaultRuleDepsCache(
+                    graphs.getActionGraphAndBuilder().getActionGraphBuilder(),
+                    graphs.getActionGraphAndBuilder().getBuildEngineActionToBuildRuleResolver()),
                 (buckEventBus, rule) -> () -> {})));
 
     verify(mockDistBuildService);

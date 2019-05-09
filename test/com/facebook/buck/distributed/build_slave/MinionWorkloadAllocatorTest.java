@@ -22,6 +22,7 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
+import com.facebook.buck.core.build.action.resolver.BuildEngineActionToBuildRuleResolver;
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -58,10 +59,12 @@ public class MinionWorkloadAllocatorTest {
   private static final StampedeId STAMPEDE_ID = new StampedeId().setId("DUMMY_ID");
 
   private DistBuildTraceTracker tracker;
+  private BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver;
 
   @Before
   public void setUp() {
     this.tracker = new DistBuildTraceTracker(STAMPEDE_ID);
+    this.actionToBuildRuleResolver = new BuildEngineActionToBuildRuleResolver();
   }
 
   private BuildTargetsQueue createQueueUsingResolver(BuildRuleResolver resolver) {
@@ -72,7 +75,7 @@ public class MinionWorkloadAllocatorTest {
             resolver,
             new NoopArtifactCacheByBuildRule(),
             false,
-            new DefaultRuleDepsCache(resolver),
+            new DefaultRuleDepsCache(resolver, actionToBuildRuleResolver),
             false)
         .createBuildTargetsQueue(
             ImmutableList.of(target),

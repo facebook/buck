@@ -330,8 +330,12 @@ public class BuildPhase {
               ruleKeyCalculator ->
                   RuleKeyUtils.calculateDefaultRuleKeys(
                       buildGraphs.getActionGraphAndBuilder().getActionGraphBuilder(),
-                          ruleKeyCalculator,
-                      buildExecutorArgs.getBuckEventBus(), topLevelTargets),
+                      buildGraphs
+                          .getActionGraphAndBuilder()
+                          .getBuildEngineActionToBuildRuleResolver(),
+                      buildExecutorArgs.getBuckEventBus(),
+                      topLevelTargets,
+                      ruleKeyCalculator),
               Objects.requireNonNull(buildExecutorArgs.getExecutors().get(ExecutorPool.CPU)));
     }
 

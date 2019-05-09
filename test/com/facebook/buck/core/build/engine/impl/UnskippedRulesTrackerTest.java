@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.build.action.resolver.BuildEngineActionToBuildRuleResolver;
 import com.facebook.buck.core.build.engine.RuleDepsCache;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.model.BuildId;
@@ -67,7 +68,9 @@ public class UnskippedRulesTrackerTest {
   @Before
   public void setUp() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    RuleDepsCache depsCache = new DefaultRuleDepsCache(graphBuilder);
+    BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver =
+        new BuildEngineActionToBuildRuleResolver();
+    RuleDepsCache depsCache = new DefaultRuleDepsCache(graphBuilder, actionToBuildRuleResolver);
     unskippedRulesTracker = new UnskippedRulesTracker(depsCache, graphBuilder);
     eventBus = new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId());
     eventBus.register(

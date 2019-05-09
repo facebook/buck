@@ -45,6 +45,7 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.cli.CommandThreadManager;
+import com.facebook.buck.core.build.action.resolver.BuildEngineActionToBuildRuleResolver;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
@@ -267,6 +268,7 @@ public class CachingBuildEngineTest {
     protected FileHashCache fileHashCache;
     protected BuildEngineBuildContext buildContext;
     protected ActionGraphBuilder graphBuilder;
+    protected BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver;
     protected SourcePathResolver pathResolver;
     protected DefaultRuleKeyFactory defaultRuleKeyFactory;
     protected InputBasedRuleKeyFactory inputBasedRuleKeyFactory;
@@ -304,6 +306,7 @@ public class CachingBuildEngineTest {
       graphBuilder = new TestActionGraphBuilder();
       pathResolver = graphBuilder.getSourcePathResolver();
       defaultRuleKeyFactory = new DefaultRuleKeyFactory(FIELD_LOADER, fileHashCache, graphBuilder);
+      actionToBuildRuleResolver = new BuildEngineActionToBuildRuleResolver();
       inputBasedRuleKeyFactory =
           new TestInputBasedRuleKeyFactory(
               FIELD_LOADER, fileHashCache, graphBuilder, NO_INPUT_FILE_SIZE_LIMIT);
@@ -317,7 +320,10 @@ public class CachingBuildEngineTest {
     protected CachingBuildEngineFactory cachingBuildEngineFactory(
         RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
       return new CachingBuildEngineFactory(
-              graphBuilder, buildInfoStoreManager, remoteBuildRuleCompletionWaiter)
+              graphBuilder,
+              actionToBuildRuleResolver,
+              buildInfoStoreManager,
+              remoteBuildRuleCompletionWaiter)
           .setCachingBuildEngineDelegate(new LocalCachingBuildEngineDelegate(fileHashCache));
     }
 

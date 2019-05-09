@@ -16,6 +16,8 @@
 
 package com.facebook.buck.core.build.engine.impl;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
+import com.facebook.buck.core.build.action.resolver.BuildEngineActionToBuildRuleResolver;
 import com.facebook.buck.core.build.engine.RuleDepsCache;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -32,9 +34,12 @@ public class DefaultRuleDepsCache implements RuleDepsCache {
   private final Map<BuildRule, SortedSet<BuildRule>> allDepsCache;
   private final Map<BuildRule, SortedSet<BuildRule>> runtimeDepsCache;
   private final BuildRuleResolver resolver;
+  private final BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver;
 
-  public DefaultRuleDepsCache(BuildRuleResolver resolver) {
+  public DefaultRuleDepsCache(
+      BuildRuleResolver resolver, BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver) {
     this.resolver = resolver;
+    this.actionToBuildRuleResolver = actionToBuildRuleResolver;
     this.allDepsCache = new ConcurrentHashMap<>();
     this.runtimeDepsCache = new ConcurrentHashMap<>();
   }
@@ -51,6 +56,22 @@ public class DefaultRuleDepsCache implements RuleDepsCache {
   @Override
   public SortedSet<BuildRule> getRuntimeDeps(BuildRule rule) {
     return runtimeDepsCache.computeIfAbsent(rule, this::computeRuntimeDeps);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public SortedSet<BuildEngineAction> get(BuildEngineAction buildEngineAction) {
+    return (SortedSet<BuildEngineAction>)
+        (SortedSet<? extends BuildEngineAction>)
+            get(actionToBuildRuleResolver.resolve(buildEngineAction));
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public SortedSet<BuildEngineAction> getRuntimeDeps(BuildEngineAction buildEngineAction) {
+    return (SortedSet<BuildEngineAction>)
+        (SortedSet<? extends BuildEngineAction>)
+            getRuntimeDeps(actionToBuildRuleResolver.resolve(buildEngineAction));
   }
 
   private SortedSet<BuildRule> computeRuntimeDeps(BuildRule rule) {

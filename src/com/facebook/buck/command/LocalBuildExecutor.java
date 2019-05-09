@@ -243,6 +243,7 @@ public class LocalBuildExecutor implements BuildExecutor {
         engineConfig.getBuildMaxDepFileCacheEntries(),
         engineConfig.getBuildArtifactCacheSizeLimit(),
         actionGraphAndBuilder.getActionGraphBuilder(),
+        actionGraphAndBuilder.getBuildEngineActionToBuildRuleResolver(),
         targetConfigurationSerializer,
         args.getBuildInfoStoreManager(),
         engineConfig.getResourceAwareSchedulingInfo(),
