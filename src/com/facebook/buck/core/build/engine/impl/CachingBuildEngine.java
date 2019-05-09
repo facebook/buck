@@ -40,7 +40,6 @@ import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
-import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -50,7 +49,6 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
@@ -124,8 +122,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
 
-  private final CellProvider cellProvider;
-
   private final WeightedListeningExecutorService service;
   private final BuildType buildMode;
   private final MetadataStorage metadataStorage;
@@ -172,8 +168,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       boolean consoleLogBuildFailuresInline,
       RuleKeyFactories ruleKeyFactories,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
-      Optional<ManifestService> manifestService,
-      CellProvider cellProvider) {
+      Optional<ManifestService> manifestService) {
     this(
         cachingBuildEngineDelegate,
         customBuildRuleStrategy,
@@ -200,8 +195,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                     .getDefaultRuleKeyFactory()
                     .buildForDiagnostics(appendable, new StringRuleKeyHasher())),
         consoleLogBuildFailuresInline,
-        manifestService,
-        cellProvider);
+        manifestService);
   }
 
   /** This constructor MUST ONLY BE USED FOR TESTS. */
@@ -224,8 +218,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
       RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics,
       boolean consoleLogBuildFailuresInline,
-      Optional<ManifestService> manifestService,
-      CellProvider cellProvider) {
+      Optional<ManifestService> manifestService) {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
     this.customBuildRuleStrategy = customBuildRuleStrategy;
 
@@ -244,7 +237,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
     this.buildInfoStoreManager = buildInfoStoreManager;
     this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
-    this.cellProvider = cellProvider;
 
     this.ruleDeps = new DefaultRuleDepsCache(resolver, actionToBuildRuleResolver);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, resolver);
@@ -486,14 +478,15 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private ListenableFuture<BuildResult> processBuildRule(
       BuildRule rule, BuildEngineBuildContext buildContext, ExecutionContext executionContext) {
 
-    ProjectFilesystem filesystem = getFilesystemForRule(rule);
-
-    BuildInfoStore buildInfoStore = buildInfoStoreManager.get(filesystem, metadataStorage);
+    BuildInfoStore buildInfoStore =
+        buildInfoStoreManager.get(rule.getProjectFilesystem(), metadataStorage);
     OnDiskBuildInfo onDiskBuildInfo =
-        buildContext.createOnDiskBuildInfoFor(rule.getBuildTarget(), filesystem, buildInfoStore);
+        buildContext.createOnDiskBuildInfoFor(
+            rule.getBuildTarget(), rule.getProjectFilesystem(), buildInfoStore);
     BuildInfoRecorder buildInfoRecorder =
         buildContext
-            .createBuildInfoRecorder(rule.getBuildTarget(), filesystem, buildInfoStore)
+            .createBuildInfoRecorder(
+                rule.getBuildTarget(), rule.getProjectFilesystem(), buildInfoStore)
             .addBuildMetadata(
                 BuildInfo.MetadataKey.RULE_KEY,
                 ruleKeyFactories.getDefaultRuleKeyFactory().build(rule).toString())
@@ -533,10 +526,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       cachingBuildRuleBuilder.cancel(firstFailure.get());
     }
     return cachingBuildRuleBuilder.build();
-  }
-
-  private ProjectFilesystem getFilesystemForRule(BuildRule rule) {
-    return cellProvider.getBuildTargetCell(rule.getBuildTarget()).getFilesystem();
   }
 
   public static class DefaultBuildRuleBuilderDelegate

@@ -256,8 +256,7 @@ public class LocalBuildExecutor implements BuildExecutor {
             ruleKeyCacheScope.getCache(),
             ruleKeyLogger),
         remoteBuildRuleCompletionWaiter,
-        args.getManifestService(),
-        args.getRootCell().getCellProvider());
+        args.getManifestService());
   }
 
   public Build getBuild() {
