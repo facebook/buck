@@ -60,6 +60,7 @@ import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.support.exceptions.handler.ExceptionHandler;
 import com.facebook.buck.support.exceptions.handler.ExceptionHandlerRegistryFactory;
 import com.facebook.buck.testutil.AbstractWorkspace;
 import com.facebook.buck.testutil.ProcessResult;
@@ -562,19 +563,36 @@ public class ProjectWorkspace extends AbstractWorkspace {
                 WatchmanWatcher.FreshInstanceAction.NONE,
                 System.nanoTime(),
                 ImmutableList.copyOf(args));
-      } catch (InterruptedException e) {
-        e.printStackTrace(testConsole.getStdErr());
-        exitCode = ExitCode.BUILD_ERROR;
-        Threads.interruptCurrentThread();
-      } catch (CommandLineException e) {
-        testConsole.getStdErr().println(e.getMessage());
-        exitCode = ExitCode.COMMANDLINE_ERROR;
-      } catch (BuildFileParseException e) {
-        testConsole.getStdErr().println(e.getHumanReadableErrorMessage());
-        exitCode = ExitCode.PARSE_ERROR;
       } catch (Throwable t) {
         logger.logException(t);
-        exitCode = ExceptionHandlerRegistryFactory.create().handleException(t);
+        exitCode =
+            ExceptionHandlerRegistryFactory.create(
+                    new ExceptionHandler<InterruptedException, ExitCode>(
+                        InterruptedException.class) {
+                      @Override
+                      public ExitCode handleException(InterruptedException e) {
+                        e.printStackTrace(testConsole.getStdErr());
+                        Threads.interruptCurrentThread();
+                        return ExitCode.BUILD_ERROR;
+                      }
+                    },
+                    new ExceptionHandler<CommandLineException, ExitCode>(
+                        CommandLineException.class) {
+                      @Override
+                      public ExitCode handleException(CommandLineException e) {
+                        testConsole.getStdErr().println(e.getMessage());
+                        return ExitCode.COMMANDLINE_ERROR;
+                      }
+                    },
+                    new ExceptionHandler<BuildFileParseException, ExitCode>(
+                        BuildFileParseException.class) {
+                      @Override
+                      public ExitCode handleException(BuildFileParseException e) {
+                        testConsole.getStdErr().println(e.getHumanReadableErrorMessage());
+                        return ExitCode.PARSE_ERROR;
+                      }
+                    })
+                .handleException(t);
       }
 
       return new ProcessResult(
