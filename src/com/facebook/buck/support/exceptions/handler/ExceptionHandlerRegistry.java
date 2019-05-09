@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.core.exceptions.handler;
+package com.facebook.buck.support.exceptions.handler;
 
 import com.facebook.buck.core.exceptions.ThrowableCauseIterable;
 import com.google.common.collect.ImmutableList;

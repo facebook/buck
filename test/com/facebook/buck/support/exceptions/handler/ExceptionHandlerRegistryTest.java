@@ -14,14 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.cli.exception.handlers;
+package com.facebook.buck.support.exceptions.handler;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.exceptions.handler.ExceptionHandlerRegistry;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.BuckIsDyingException;
 import com.facebook.buck.util.CommandLineException;

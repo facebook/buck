@@ -27,7 +27,6 @@ java_immutables_library(
         "//src/com/facebook/buck/core/description/attr:attr",
         "//src/com/facebook/buck/core/description/impl:impl",
         "//src/com/facebook/buck/core/exceptions/config:config",
-        "//src/com/facebook/buck/core/exceptions/handler:handler",
         "//src/com/facebook/buck/core/files:files",
         "//src/com/facebook/buck/core/graph/transformation/executor/impl:impl",
         "//src/com/facebook/buck/core/graph/transformation/impl:impl",

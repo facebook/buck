@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.core.exceptions.handler;
+package com.facebook.buck.support.exceptions.handler;
 
 /** Abstract base class for handling certain type of exception */
 public abstract class ExceptionHandler<T extends Throwable, R> {

@@ -14,11 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.cli.exceptions.handlers;
+package com.facebook.buck.support.exceptions.handler;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.exceptions.handler.ExceptionHandler;
-import com.facebook.buck.core.exceptions.handler.ExceptionHandlerRegistry;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.BuckIsDyingException;
 import com.facebook.buck.util.CommandLineException;
@@ -29,7 +27,10 @@ import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.FileSystemLoopException;
 import java.util.Arrays;
 
-/** Util class for creating an {@link ExceptionHandlerRegistry} with the default handlers */
+/**
+ * Util class for creating an {@link
+ * com.facebook.buck.support.exceptions.handler.ExceptionHandlerRegistry} with the default handlers
+ */
 public class ExceptionHandlerRegistryFactory {
   /** @return a new ExceptionHandlerRegistry with the default handlers */
   public static ExceptionHandlerRegistry<ExitCode> create() {
