@@ -32,8 +32,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -357,6 +357,7 @@ public class WatchmanWatcher {
             perfEvent.appendFinishedInfo("files_sample", files.subList(0, TRACE_CHANGES_THRESHOLD));
           }
 
+          FileSystem fileSystem = cellPath.getFileSystem();
           for (Map<String, Object> file : files) {
             String fileName = (String) file.get("name");
             if (fileName == null) {
@@ -378,7 +379,8 @@ public class WatchmanWatcher {
               kind = WatchmanEvent.Kind.DELETE;
             }
             postWatchEvent(
-                buckEventBus, ImmutableWatchmanPathEvent.of(cellPath, kind, Paths.get(fileName)));
+                buckEventBus,
+                ImmutableWatchmanPathEvent.of(cellPath, kind, fileSystem.getPath(fileName)));
           }
 
           if (!files.isEmpty() || freshInstanceAction == FreshInstanceAction.NONE) {
