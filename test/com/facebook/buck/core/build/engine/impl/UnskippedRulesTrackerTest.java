@@ -52,7 +52,7 @@ import org.junit.Test;
 
 public class UnskippedRulesTrackerTest {
 
-  private UnskippedRulesTracker unskippedRulesTracker;
+  private UnskippedBuildEngineActionTracker unskippedRulesTracker;
   private BuckEventBus eventBus;
   private BlockingQueue<BuckEvent> events = new LinkedBlockingQueue<>();
 
@@ -71,7 +71,7 @@ public class UnskippedRulesTrackerTest {
     BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver =
         new BuildEngineActionToBuildRuleResolver();
     RuleDepsCache depsCache = new DefaultRuleDepsCache(graphBuilder, actionToBuildRuleResolver);
-    unskippedRulesTracker = new UnskippedRulesTracker(depsCache, graphBuilder);
+    unskippedRulesTracker = new UnskippedBuildEngineActionTracker(depsCache, graphBuilder);
     eventBus = new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId());
     eventBus.register(
         new Object() {

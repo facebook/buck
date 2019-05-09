@@ -135,7 +135,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private final ResourceAwareSchedulingInfo resourceAwareSchedulingInfo;
 
   private final RuleDepsCache ruleDeps;
-  private final Optional<UnskippedRulesTracker> unskippedRulesTracker;
+  private final Optional<UnskippedBuildEngineActionTracker> unskippedRulesTracker;
   private final BuildRuleDurationTracker buildRuleDurationTracker = new BuildRuleDurationTracker();
   private final RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics;
   private final BuildRulePipelinesRunner pipelinesRunner = new BuildRulePipelinesRunner();
@@ -286,13 +286,13 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     return resourceAwareSchedulingInfo.adjustServiceDefaultWeightsTo(defaultAmounts, service);
   }
 
-  private static Optional<UnskippedRulesTracker> createUnskippedRulesTracker(
+  private static Optional<UnskippedBuildEngineActionTracker> createUnskippedRulesTracker(
       BuildType buildMode, RuleDepsCache ruleDeps, BuildRuleResolver resolver) {
     if (buildMode == BuildType.DEEP || buildMode == BuildType.POPULATE_FROM_REMOTE_CACHE) {
       // Those modes never skip rules, there is no need to track unskipped rules.
       return Optional.empty();
     }
-    return Optional.of(new UnskippedRulesTracker(ruleDeps, resolver));
+    return Optional.of(new UnskippedBuildEngineActionTracker(ruleDeps, resolver));
   }
 
   @VisibleForTesting
