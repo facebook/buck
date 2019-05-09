@@ -18,10 +18,15 @@ package com.facebook.buck.core.files;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.event.FileHashCacheEvent;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.io.MoreFiles;
+import com.google.common.io.RecursiveDeleteOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import junitparams.JUnitParamsRunner;
@@ -144,6 +149,89 @@ public class DirectoryListCacheTest {
     assertFalse(dlist.isPresent());
 
     dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("dir1")));
+    assertFalse(dlist.isPresent());
+  }
+
+  @Test
+  public void whenFolderIsDeletedThenInvalidateParent() throws Exception {
+    Path root = tmp.getRoot();
+    DirectoryListCache cache = DirectoryListCache.of(root);
+    Path dir1 = root.resolve("dir1");
+    Files.createDirectory(dir1);
+    Files.createFile(dir1.resolve("file1"));
+    Path dir2 = dir1.resolve("dir2");
+    Files.createDirectory(dir2);
+    Files.createFile(dir2.resolve("file2"));
+
+    cache.put(
+        ImmutableDirectoryListKey.of(Paths.get("dir1")),
+        ImmutableDirectoryList.of(
+            ImmutableSortedSet.of(Paths.get("dir1/file1")),
+            ImmutableSortedSet.of(Paths.get("dir1/dir2")),
+            ImmutableSortedSet.of()));
+
+    cache.put(
+        ImmutableDirectoryListKey.of(Paths.get("dir1/dir2")),
+        ImmutableDirectoryList.of(
+            ImmutableSortedSet.of(Paths.get("dir1/dir2/file2")),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of()));
+
+    MoreFiles.deleteRecursively(dir2, RecursiveDeleteOption.ALLOW_INSECURE);
+
+    WatchmanPathEvent event =
+        WatchmanPathEvent.of(root, WatchmanPathEvent.Kind.DELETE, Paths.get("dir1/dir2/file2"));
+    FileHashCacheEvent.InvalidationStarted started = FileHashCacheEvent.invalidationStarted();
+    cache.getInvalidator().onInvalidationStart(started);
+    cache.getInvalidator().onFileSystemChange(event);
+    cache.getInvalidator().onInvalidationFinish(FileHashCacheEvent.invalidationFinished(started));
+
+    // should invalidate both folder and parent folder
+    Optional<DirectoryList> dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("dir1/dir2")));
+    assertFalse(dlist.isPresent());
+
+    dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("dir1")));
+    assertFalse(dlist.isPresent());
+  }
+
+  @Test
+  public void whenRootFolderIsDeletedThenInvalidateAll() throws Exception {
+    Path root = tmp.getRoot().resolve("root");
+    Files.createDirectory(root);
+
+    DirectoryListCache cache = DirectoryListCache.of(root);
+    Path dir = root.resolve("dir");
+    Files.createDirectory(dir);
+    Files.createFile(dir.resolve("file"));
+
+    cache.put(
+        ImmutableDirectoryListKey.of(Paths.get("")),
+        ImmutableDirectoryList.of(
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(Paths.get("dir")),
+            ImmutableSortedSet.of()));
+
+    cache.put(
+        ImmutableDirectoryListKey.of(Paths.get("dir")),
+        ImmutableDirectoryList.of(
+            ImmutableSortedSet.of(Paths.get("dir/file")),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of()));
+
+    MoreFiles.deleteRecursively(root, RecursiveDeleteOption.ALLOW_INSECURE);
+
+    WatchmanPathEvent event =
+        WatchmanPathEvent.of(root, WatchmanPathEvent.Kind.DELETE, Paths.get("dir/file"));
+    FileHashCacheEvent.InvalidationStarted started = FileHashCacheEvent.invalidationStarted();
+    cache.getInvalidator().onInvalidationStart(started);
+    cache.getInvalidator().onFileSystemChange(event);
+    cache.getInvalidator().onInvalidationFinish(FileHashCacheEvent.invalidationFinished(started));
+
+    // should invalidate root properly
+    Optional<DirectoryList> dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("")));
+    assertFalse(dlist.isPresent());
+
+    dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("dir")));
     assertFalse(dlist.isPresent());
   }
 }

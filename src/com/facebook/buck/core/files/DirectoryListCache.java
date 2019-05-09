@@ -17,12 +17,16 @@
 package com.facebook.buck.core.files;
 
 import com.facebook.buck.core.graph.transformation.GraphEngineCache;
+import com.facebook.buck.event.FileHashCacheEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.google.common.eventbus.Subscribe;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** Stores a list of files and subfolders per each folder */
@@ -67,10 +71,73 @@ public class DirectoryListCache implements GraphEngineCache<DirectoryListKey, Di
 
     private final DirectoryListCache dirListCache;
     private final Path rootPath;
+    private Set<Path> foldersWithDeletedFiles = new HashSet<>();
 
     private Invalidator(DirectoryListCache dirListCache, Path rootPath) {
       this.dirListCache = dirListCache;
       this.rootPath = rootPath;
+    }
+
+    /** Executes when invalidation is about to start */
+    @Subscribe
+    @SuppressWarnings("unused")
+    public void onInvalidationStart(FileHashCacheEvent.InvalidationStarted event) {
+      // reinstantiate just in case
+      foldersWithDeletedFiles = new HashSet<>();
+    }
+
+    /** Executes when all invalidation events were sent */
+    @Subscribe
+    @SuppressWarnings("unused")
+    public void onInvalidationFinish(FileHashCacheEvent.InvalidationFinished event) {
+      // TODO(sergeyb): replace with an event that sends all changed paths at once
+
+      // Check if a folder was entirely deleted, in which case invalidate also parent folders
+      // recursively
+      if (foldersWithDeletedFiles.isEmpty()) {
+        return;
+      }
+
+      HashSet<Path> deletedFolders = new HashSet<>();
+      HashSet<Path> existingFolders = new HashSet<>();
+
+      // First, build a list of folders that contain subfolders which were really deleted
+      // Do it recursively traversing folder structure up
+      for (Path folder : foldersWithDeletedFiles) {
+        findDeletedFolders(folder, deletedFolders, existingFolders);
+      }
+
+      // Then invalidate those paths
+      for (Path folder : deletedFolders) {
+        dirListCache.cache.remove(ImmutableDirectoryListKey.of(MorePaths.getParentOrEmpty(folder)));
+      }
+
+      foldersWithDeletedFiles = new HashSet<>();
+    }
+
+    private void findDeletedFolders(
+        Path folder, Set<Path> deletedFolders, Set<Path> existingFolders) {
+      if (deletedFolders.contains(folder) || existingFolders.contains(folder)) {
+        // avoid expensive filesystem operation if folder was already processed by some other
+        // codepath
+        return;
+      }
+
+      if (Files.exists(rootPath.resolve(folder))) {
+        // folder was not actually deleted, no need to invalidate its parents
+        existingFolders.add(folder);
+        return;
+      }
+
+      deletedFolders.add(folder);
+
+      if (MorePaths.isEmpty(folder)) {
+        // this is root, stop recursing
+        return;
+      }
+
+      // recurse up the tree
+      findDeletedFolders(MorePaths.getParentOrEmpty(folder), deletedFolders, existingFolders);
     }
 
     /** Invoked asynchronously by event bus when file system change is detected with Watchman */
@@ -90,6 +157,14 @@ public class DirectoryListCache implements GraphEngineCache<DirectoryListKey, Di
       Path folderPath = MorePaths.getParentOrEmpty(event.getPath());
       DirectoryListKey key = ImmutableDirectoryListKey.of(folderPath);
       dirListCache.cache.remove(key);
+
+      if (event.getKind() == WatchmanPathEvent.Kind.DELETE) {
+        // Watchman does not report when a folder is deleted, it reports deletions of all the files
+        // in that folder. If a folder is deleted, we have to invalidate also containing
+        // parent DirectoryList. So we keep track of all affected folders in order to possibly
+        // invalidate their parents.
+        foldersWithDeletedFiles.add(folderPath);
+      }
     }
 
     /**

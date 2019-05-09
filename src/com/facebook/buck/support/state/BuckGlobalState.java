@@ -200,10 +200,16 @@ public final class BuckGlobalState implements Closeable {
       // Track the file hash cache invalidation run time.
       FileHashCacheEvent.InvalidationStarted started = FileHashCacheEvent.invalidationStarted();
       eventBus.post(started);
+
+      // TODO(sergeyb): replace with one single invalidation event containing all changes
+      fileEventBus.post(started);
       try {
         watchmanWatcher.postEvents(eventBus, watchmanFreshInstanceAction);
       } finally {
-        eventBus.post(FileHashCacheEvent.invalidationFinished(started));
+        FileHashCacheEvent.InvalidationFinished finished =
+            FileHashCacheEvent.invalidationFinished(started);
+        eventBus.post(finished);
+        fileEventBus.post(finished);
         for (ProjectFileHashCache hashCache : hashCaches) {
           if (hashCache instanceof WatchedFileHashCache) {
             WatchedFileHashCache cache = (WatchedFileHashCache) hashCache;
