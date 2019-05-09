@@ -207,8 +207,7 @@ public class BuildCacheArtifactFetcher {
       // First, clear out the pre-existing metadata directory.  We have to do this *before*
       // unpacking the zipped artifact, as it includes files that will be stored in the metadata
       // directory.
-      BuildInfoStore buildInfoStore =
-          buildInfoStoreManager.get(rule.getProjectFilesystem(), metadataStorage);
+      BuildInfoStore buildInfoStore = buildInfoStoreManager.get(filesystem, metadataStorage);
 
       Preconditions.checkState(
           cacheResult.getMetadata().containsKey(BuildInfo.MetadataKey.ORIGIN_BUILD_ID),
