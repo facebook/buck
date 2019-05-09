@@ -34,6 +34,7 @@ import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -225,6 +226,8 @@ public class BuildRulePipelinesRunnerTest {
     private final List<TestPipelineRule> rules = new ArrayList<>();
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
+    private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
     private Future<?> pipelineRunnableFuture;
 
     public PipelineTester setNumRules(int numRules) {
@@ -259,7 +262,8 @@ public class BuildRulePipelinesRunnerTest {
 
     public PipelineTester startPipelineAtRule(int ruleNum) {
       pipelineRunnableFuture =
-          runner.runPipelineStartingAt(FakeBuildContext.NOOP_CONTEXT, rules.get(ruleNum), executor);
+          runner.runPipelineStartingAt(
+              FakeBuildContext.NOOP_CONTEXT, rules.get(ruleNum), filesystem, executor);
       return this;
     }
 
