@@ -115,3 +115,23 @@ apk_genrule(
 
 {/template}
 
+
+/***/
+{template .example_rdeps}
+
+<p>
+The following example, returns the targets in the transitive closure 
+of <code>//foo:bar</code> that depend directly on <code>//example:baz</code>. 
+</p>
+
+<p>
+<pre>
+{literal}
+buck query "rdeps('//foo:bar', '//example:baz', 1)"
+{/literal}
+</pre>
+</p>
+
+{/template}
+
+

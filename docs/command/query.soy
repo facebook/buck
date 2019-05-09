@@ -1097,6 +1097,7 @@ No owner was found for &lt;file&gt;
 <pre>
 {literal}
 rdeps(<em>u</em>, <em>x</em>)</code> 
+rdeps(<em>u</em>, <em>x</em>, <em>depth</em>)</code> 
 {/literal}
 </pre>
 </p>
@@ -1120,30 +1121,14 @@ the nodes from the argument set <code>x</code> itself.
 </p>
 
 <p>
-The <code>rdeps</code> operator accepts an optional third argument, which is
-an integer literal specifying an upper bound on the depth of the search.
-</p>
-
-<p>
-The following example,
-</p>
-
-<p>
-<pre>
-{literal}
-buck query "rdeps('//foo:bar', '//example:baz', 1)"
-{/literal}
-</pre>
-</p>
-
-<p>
-returns the targets in the transitive closure of <code>//foo:bar</code> that 
-depend directly on <code>//example:baz</code>. 
-</p>
-
-<p>
+The <code>rdeps</code> operator accepts an optional third argument,
+which is an integer literal specifying an upper bound on the depth of
+the search.  A value of one (<code>1</code>) specifies 
+that <code>buck query</code> should return only direct dependencies.  
 If the <em>depth</em> parameter is omitted, the search is unbounded.
 </p>
+
+{call buckquery.example_rdeps /}
 
 
 {call .section}
