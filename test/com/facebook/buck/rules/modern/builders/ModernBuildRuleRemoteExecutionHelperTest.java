@@ -47,7 +47,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import java.util.Optional;
 import org.junit.Before;
@@ -75,14 +74,7 @@ public class ModernBuildRuleRemoteExecutionHelperTest {
     Cell root = new TestCellBuilder().setFilesystem(filesystem).build();
     mbrHelper =
         new ModernBuildRuleRemoteExecutionHelper(
-            eventBus,
-            new GrpcProtocol(),
-            ruleFinder,
-            root.getCellPathResolver(),
-            root,
-            ImmutableSet.of(Optional.empty()),
-            tmp.getRoot(),
-            path -> HashCode.fromInt(0));
+            eventBus, new GrpcProtocol(), ruleFinder, root, path -> HashCode.fromInt(0));
   }
 
   public static class SimpleBuildable implements Buildable {

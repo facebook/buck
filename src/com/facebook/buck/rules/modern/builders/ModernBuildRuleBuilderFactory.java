@@ -82,7 +82,6 @@ public class ModernBuildRuleBuilderFactory {
                   remoteExecutionConfig.getStrategyConfig(),
                   remoteExecutionFactory.create(eventBus, metadataProvider),
                   resolver,
-                  cellResolver,
                   rootCell,
                   hashLoader::get,
                   metadataProvider));

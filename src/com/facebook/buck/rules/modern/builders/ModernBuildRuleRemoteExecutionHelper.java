@@ -94,7 +94,7 @@ import javax.annotation.Nullable;
  * (including plugin classpath) and run the action remotely with the {@link
  * OutOfProcessIsolatedBuilder} (via trampoline.sh).
  */
-public class ModernBuildRuleRemoteExecutionHelper {
+public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelper {
   private static final Logger LOG = Logger.get(ModernBuildRuleRemoteExecutionHelper.class);
   private static final Path TRAMPOLINE =
       Paths.get(
@@ -109,7 +109,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
   private final InputsMapBuilder inputsMapBuilder;
 
   /** Gets the shared path prefix of all the cells. */
-  public static Path getCellPathPrefix(
+  private static Path getCellPathPrefix(
       CellPathResolver cellResolver, ImmutableSet<Optional<String>> cellNames) {
     return MorePaths.splitOnCommonPrefix(
             cellNames.stream()
@@ -120,7 +120,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
   }
 
   /** Gets all the canonical cell names. */
-  public static ImmutableSet<Optional<String>> getCellNames(Cell rootCell) {
+  private static ImmutableSet<Optional<String>> getCellNames(Cell rootCell) {
     return rootCell.getCellProvider().getLoadedCells().values().stream()
         .map(Cell::getCanonicalName)
         .collect(ImmutableSet.toImmutableSet());
@@ -184,18 +184,16 @@ public class ModernBuildRuleRemoteExecutionHelper {
       BuckEventBus eventBus,
       Protocol protocol,
       SourcePathRuleFinder ruleFinder,
-      CellPathResolver cellResolver,
       Cell rootCell,
-      ImmutableSet<Optional<String>> cellNames,
-      Path cellPathPrefix,
       ThrowingFunction<Path, HashCode, IOException> fileHasher) {
+    ImmutableSet<Optional<String>> cellNames = getCellNames(rootCell);
+    this.cellResolver = rootCell.getCellPathResolver();
+    this.cellPathPrefix = getCellPathPrefix(cellResolver, cellNames);
+
     this.eventBus = eventBus;
     this.protocol = protocol;
 
-    this.cellResolver = cellResolver;
     this.pathResolver = ruleFinder.getSourcePathResolver();
-
-    this.cellPathPrefix = cellPathPrefix;
     this.projectRoot = cellPathPrefix.relativize(rootCell.getRoot());
 
     this.nodeMap = new ConcurrentHashMap<>();
@@ -328,7 +326,13 @@ public class ModernBuildRuleRemoteExecutionHelper {
             IOException.class);
   }
 
-  boolean supportsRemoteExecution(ModernBuildRule<?> rule) {
+  @Override
+  public Path getCellPathPrefix() {
+    return cellPathPrefix;
+  }
+
+  @Override
+  public boolean supportsRemoteExecution(ModernBuildRule<?> rule) {
     // TODO(cjhopman): We may want to extend this to support returning more information about what
     // is required from the RE system (i.e. toolchains/platforms/etc).
     try {
@@ -354,10 +358,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
     }
   }
 
-  /**
-   * Gets all the information needed to run the rule via Remote Execution (inputs merkle tree,
-   * action and digest, outputs).
-   */
+  @Override
   public RemoteExecutionActionInfo prepareRemoteExecution(
       ModernBuildRule<?> rule,
       Predicate<Digest> requiredDataPredicate,

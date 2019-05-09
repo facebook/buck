@@ -31,6 +31,7 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.builders.ModernBuildRuleRemoteExecutionHelper;
 import com.facebook.buck.rules.modern.builders.RemoteExecutionActionInfo;
+import com.facebook.buck.rules.modern.builders.RemoteExecutionHelper;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.concurrent.JobLimiter;
 import com.facebook.buck.util.types.Pair;
@@ -46,7 +47,6 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
@@ -106,18 +106,12 @@ public class PerfMbrPrepareRemoteExecutionCommand
   void runPerfTest(CommandRunnerParams params, PreparedState state) throws Exception {
     Cell rootCell = params.getCell();
     Protocol protocol = new GrpcProtocol();
-    ImmutableSet<Optional<String>> cellNames =
-        ModernBuildRuleRemoteExecutionHelper.getCellNames(rootCell);
-    ModernBuildRuleRemoteExecutionHelper helper =
+    RemoteExecutionHelper helper =
         new ModernBuildRuleRemoteExecutionHelper(
             params.getBuckEventBus(),
             protocol,
             state.graphBuilder,
-            rootCell.getCellPathResolver(),
             rootCell,
-            cellNames,
-            ModernBuildRuleRemoteExecutionHelper.getCellPathPrefix(
-                rootCell.getCellPathResolver(), cellNames),
             path -> HashCode.fromInt(path.hashCode()));
 
     // Use a service similar to a build. This helps with contention issues and really helps detect

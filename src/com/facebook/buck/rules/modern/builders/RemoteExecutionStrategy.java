@@ -21,7 +21,6 @@ import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.build.engine.BuildStrategyContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -53,7 +52,6 @@ import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -81,8 +79,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
 
   private final BuckEventBus eventBus;
   private final RemoteExecutionClients executionClients;
-  private final ModernBuildRuleRemoteExecutionHelper mbrHelper;
-  private final Path cellPathPrefix;
+  private final RemoteExecutionHelper mbrHelper;
 
   private final ListeningExecutorService service;
 
@@ -103,7 +100,6 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       RemoteExecutionStrategyConfig strategyConfig,
       RemoteExecutionClients executionClients,
       SourcePathRuleFinder ruleFinder,
-      CellPathResolver cellResolver,
       Cell rootCell,
       ThrowingFunction<Path, HashCode, IOException> fileHasher,
       MetadataProvider metadataProvider) {
@@ -119,22 +115,9 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     this.eventBus = eventBus;
     this.metadataProvider = metadataProvider;
 
-    ImmutableSet<Optional<String>> cellNames =
-        ModernBuildRuleRemoteExecutionHelper.getCellNames(rootCell);
-
-    this.cellPathPrefix =
-        ModernBuildRuleRemoteExecutionHelper.getCellPathPrefix(cellResolver, cellNames);
-
     this.mbrHelper =
         new ModernBuildRuleRemoteExecutionHelper(
-            eventBus,
-            this.executionClients.getProtocol(),
-            ruleFinder,
-            cellResolver,
-            rootCell,
-            cellNames,
-            cellPathPrefix,
-            fileHasher);
+            eventBus, this.executionClients.getProtocol(), ruleFinder, rootCell, fileHasher);
 
     this.requirementsProvider =
         new WorkerRequirementsProvider(
@@ -155,20 +138,12 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       RemoteExecutionStrategyConfig strategyConfig,
       RemoteExecutionClients clients,
       SourcePathRuleFinder ruleFinder,
-      CellPathResolver cellResolver,
       Cell rootCell,
       ThrowingFunction<Path, HashCode, IOException> fileHasher,
       MetadataProvider metadataProvider) {
     BuildRuleStrategy strategy =
         new RemoteExecutionStrategy(
-            eventBus,
-            strategyConfig,
-            clients,
-            ruleFinder,
-            cellResolver,
-            rootCell,
-            fileHasher,
-            metadataProvider);
+            eventBus, strategyConfig, clients, ruleFinder, rootCell, fileHasher, metadataProvider);
     if (strategyConfig.isLocalFallbackEnabled()) {
       strategy = new LocalFallbackStrategy(strategy, eventBus);
     }
@@ -480,7 +455,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         RemoteExecutionActionEvent.sendEvent(
             eventBus, State.DELETING_STALE_OUTPUTS, buildTarget, Optional.of(actionDigest))) {
       for (Path path : actionOutputs) {
-        MostFiles.deleteRecursivelyIfExists(cellPathPrefix.resolve(path));
+        MostFiles.deleteRecursivelyIfExists(mbrHelper.getCellPathPrefix().resolve(path));
       }
     }
 
@@ -490,7 +465,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
             .materializeOutputs(
                 result.getOutputDirectories(),
                 result.getOutputFiles(),
-                new FilesystemFileMaterializer(cellPathPrefix));
+                new FilesystemFileMaterializer(mbrHelper.getCellPathPrefix()));
 
     return Futures.transform(
         materializationFuture,
@@ -506,7 +481,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
               output ->
                   strategyContext
                       .getBuildableContext()
-                      .recordArtifact(filesystem.relativize(cellPathPrefix.resolve(output))));
+                      .recordArtifact(
+                          filesystem.relativize(mbrHelper.getCellPathPrefix().resolve(output))));
           return Optional.of(
               strategyContext.createBuildResult(
                   BuildRuleSuccessType.BUILT_LOCALLY, Optional.of("built remotely")));
