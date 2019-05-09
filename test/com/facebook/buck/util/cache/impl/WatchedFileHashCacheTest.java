@@ -25,9 +25,9 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.watchman.ImmutableWatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.ImmutableWatchmanPathEvent;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
-import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
@@ -76,7 +76,7 @@ public class WatchedFileHashCacheTest {
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
     cache.fileHashCacheEngine.putSize(path, 1234L);
-    cache.onFileSystemChange(WatchmanOverflowEvent.of(filesystem.getRootPath(), ""));
+    cache.onFileSystemChange(ImmutableWatchmanOverflowEvent.of(filesystem.getRootPath(), ""));
 
     assertFalse("Cache should not contain path", cache.getIfPresent(path).isPresent());
     assertThat(

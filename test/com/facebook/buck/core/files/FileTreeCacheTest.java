@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.watchman.ImmutableWatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.ImmutableWatchmanPathEvent;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
@@ -170,7 +171,7 @@ public class FileTreeCacheTest {
             ImmutableMap.of()));
 
     // should not invalidate
-    WatchmanOverflowEvent event = WatchmanOverflowEvent.of(tmp.getRoot(), "Test");
+    WatchmanOverflowEvent event = ImmutableWatchmanOverflowEvent.of(tmp.getRoot(), "Test");
     cache.getInvalidator().onFileSystemChange(event);
     Optional<FileTree> ftree = cache.get(ImmutableFileTreeKey.of(Paths.get("")));
     assertFalse(ftree.isPresent());

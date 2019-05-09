@@ -26,9 +26,9 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.watchman.ImmutableWatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.ImmutableWatchmanPathEvent;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
-import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
@@ -115,7 +115,7 @@ public class RuleKeyCacheRecyclerTest {
     assertTrue(cache.isCached(appendable2));
 
     // Send an overflow event and verify everything was invalidated.
-    recycler.onFilesystemChange(WatchmanOverflowEvent.of(FILESYSTEM.getRootPath(), ""));
+    recycler.onFilesystemChange(ImmutableWatchmanOverflowEvent.of(FILESYSTEM.getRootPath(), ""));
     assertFalse(cache.isCached(appendable1));
     assertFalse(cache.isCached(appendable2));
   }
