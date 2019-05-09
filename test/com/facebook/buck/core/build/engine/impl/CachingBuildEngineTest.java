@@ -3536,7 +3536,7 @@ public class CachingBuildEngineTest {
           pathResolver,
           ImmutableSet.of(input),
           ImmutableSet.of(input));
-      Path manifestPath = ManifestRuleKeyManagerTestUtil.getManifestPath(rule);
+      Path manifestPath = ManifestRuleKeyManagerTestUtil.getManifestPath(rule, filesystem);
       filesystem.mkdirs(manifestPath.getParent());
       try (OutputStream outputStream = filesystem.newFileOutputStream(manifestPath)) {
         manifest.serialize(outputStream);

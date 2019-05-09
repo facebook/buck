@@ -32,6 +32,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.LazyPath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.keys.RuleKeyAndInputs;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.util.cache.FileHashCache;
@@ -69,6 +70,7 @@ public class ManifestRuleKeyManager {
   private final BuildCacheArtifactFetcher buildCacheArtifactFetcher;
   private final ArtifactCache artifactCache;
   private final Supplier<Optional<RuleKeyAndInputs>> manifestBasedKeySupplier;
+  private final ProjectFilesystem filesystem;
   private ManifestRuleKeyService manifestRuleKeyService;
 
   public ManifestRuleKeyManager(
@@ -81,6 +83,7 @@ public class ManifestRuleKeyManager {
       BuildCacheArtifactFetcher buildCacheArtifactFetcher,
       ArtifactCache artifactCache,
       Supplier<Optional<RuleKeyAndInputs>> manifestBasedKeySupplier,
+      ProjectFilesystem filesystem,
       ManifestRuleKeyService manifestRuleKeyService) {
     this.depFiles = depFiles;
     this.rule = rule;
@@ -91,6 +94,7 @@ public class ManifestRuleKeyManager {
     this.buildCacheArtifactFetcher = buildCacheArtifactFetcher;
     this.artifactCache = artifactCache;
     this.manifestBasedKeySupplier = manifestBasedKeySupplier;
+    this.filesystem = filesystem;
     this.manifestRuleKeyService = manifestRuleKeyService;
   }
 
@@ -102,9 +106,8 @@ public class ManifestRuleKeyManager {
   }
 
   @VisibleForTesting
-  public static Path getManifestPath(BuildRule rule) {
-    return BuildInfo.getPathToOtherMetadataDirectory(
-            rule.getBuildTarget(), rule.getProjectFilesystem())
+  static Path getManifestPath(BuildRule rule, ProjectFilesystem filesystem) {
+    return BuildInfo.getPathToOtherMetadataDirectory(rule.getBuildTarget(), filesystem)
         .resolve(BuildInfo.MANIFEST);
   }
 
@@ -120,12 +123,12 @@ public class ManifestRuleKeyManager {
 
     ManifestStoreResult.Builder resultBuilder = ManifestStoreResult.builder();
 
-    Path manifestPath = getManifestPath(rule);
+    Path manifestPath = getManifestPath(rule, filesystem);
     Manifest manifest = new Manifest(manifestKey.getRuleKey());
     resultBuilder.setDidCreateNewManifest(true);
 
     // If we already have a manifest downloaded, use that.
-    if (rule.getProjectFilesystem().exists(manifestPath)) {
+    if (filesystem.exists(manifestPath)) {
       ManifestLoadResult existingManifest = loadManifest(manifestKey.getRuleKey());
       existingManifest.getError().ifPresent(resultBuilder::setManifestLoadError);
       if (existingManifest.getManifest().isPresent()
@@ -135,7 +138,7 @@ public class ManifestRuleKeyManager {
       }
     } else {
       // Ensure the path to manifest exist
-      rule.getProjectFilesystem().createParentDirs(manifestPath);
+      filesystem.createParentDirs(manifestPath);
     }
 
     // If the manifest is larger than the max size, just truncate it.  It might be nice to support
@@ -154,15 +157,14 @@ public class ManifestRuleKeyManager {
     resultBuilder.setManifestStats(manifest.getStats());
 
     // Serialize the manifest to disk.
-    try (OutputStream outputStream =
-        rule.getProjectFilesystem().newFileOutputStream(manifestPath)) {
+    try (OutputStream outputStream = filesystem.newFileOutputStream(manifestPath)) {
       manifest.serialize(outputStream);
     }
 
     Path tempFile = Files.createTempFile("buck.", ".manifest");
     // Upload the manifest to the cache.  We stage the manifest into a temp file first since the
     // `ArtifactCache` interface uses raw paths.
-    try (InputStream inputStream = rule.getProjectFilesystem().newFileInputStream(manifestPath);
+    try (InputStream inputStream = filesystem.newFileInputStream(manifestPath);
         OutputStream outputStream =
             new GZIPOutputStream(new BufferedOutputStream(Files.newOutputStream(tempFile)))) {
       ByteStreams.copy(inputStream, outputStream);
@@ -196,7 +198,7 @@ public class ManifestRuleKeyManager {
   public ListenableFuture<CacheResult> fetchManifest(RuleKey key) {
     Preconditions.checkState(useManifestCaching());
 
-    Path path = getManifestPath(rule);
+    Path path = getManifestPath(rule, filesystem);
 
     // Use a temp path to store the downloaded artifact.  We'll rename it into place on success to
     // make the process more atomic.
@@ -217,8 +219,8 @@ public class ManifestRuleKeyManager {
           }
 
           // Download is successful, so move the manifest into place.
-          rule.getProjectFilesystem().createParentDirs(path);
-          rule.getProjectFilesystem().deleteFileAtPathIfExists(path);
+          filesystem.createParentDirs(path);
+          filesystem.deleteFileAtPathIfExists(path);
 
           Path tempManifestPath = Files.createTempFile("buck.", "MANIFEST");
           try {
@@ -229,7 +231,7 @@ public class ManifestRuleKeyManager {
                 rule.getBuildTarget(), key, tempManifestPath);
             throw e;
           }
-          rule.getProjectFilesystem().move(tempManifestPath, path);
+          filesystem.move(tempManifestPath, path);
 
           LOG.verbose("%s: cache hit on manifest %s", rule.getBuildTarget(), key);
 
@@ -241,7 +243,7 @@ public class ManifestRuleKeyManager {
   private void ungzip(Path source, Path destination) throws IOException {
     try (InputStream inputStream =
             new GZIPInputStream(new BufferedInputStream(Files.newInputStream(source)));
-        OutputStream outputStream = rule.getProjectFilesystem().newFileOutputStream(destination)) {
+        OutputStream outputStream = filesystem.newFileOutputStream(destination)) {
       ByteStreams.copy(inputStream, outputStream);
     }
   }
@@ -249,13 +251,13 @@ public class ManifestRuleKeyManager {
   public ManifestLoadResult loadManifest(RuleKey key) {
     Preconditions.checkState(useManifestCaching());
 
-    Path path = getManifestPath(rule);
+    Path path = getManifestPath(rule, filesystem);
 
     // Deserialize the manifest.
     Manifest manifest;
     // Keep the file input stream in a separate variable so that it gets closed if the
     // GZIPInputStream constructor throws.
-    try (InputStream input = rule.getProjectFilesystem().newFileInputStream(path)) {
+    try (InputStream input = filesystem.newFileInputStream(path)) {
       manifest = new Manifest(input);
     } catch (Exception e) {
       LOG.warn(
@@ -322,7 +324,7 @@ public class ManifestRuleKeyManager {
           return Futures.transform(
               buildCacheArtifactFetcher
                   .tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
-                      depFileRuleKey.get(), artifactCache, rule.getProjectFilesystem()),
+                      depFileRuleKey.get(), artifactCache, filesystem),
               (@Nonnull CacheResult ruleCacheResult) -> {
                 manifestFetchResult.setRuleCacheResult(ruleCacheResult);
                 return manifestFetchResult.build();
