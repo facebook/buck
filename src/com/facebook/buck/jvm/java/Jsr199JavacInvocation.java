@@ -86,7 +86,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final BuildTarget libraryTarget;
   private final AbiGenerationMode abiCompatibilityMode;
   private final ImmutableList<String> options;
-  private final ImmutableList<JavacPluginJsr199Fields> pluginFields;
+  private final ImmutableList<JavacPluginJsr199Fields> annotationProcessors;
+  private final ImmutableList<JavacPluginJsr199Fields> javacPlugins;
   private final ImmutableSortedSet<Path> javaSourceFilePaths;
   private final Path pathToSrcsList;
   private final AbiGenerationMode abiGenerationMode;
@@ -103,7 +104,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
-      ImmutableList<JavacPluginJsr199Fields> pluginFields,
+      ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
+      ImmutableList<JavacPluginJsr199Fields> javacPlugins,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       boolean trackClassUsage,
@@ -122,7 +124,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
             : JavaAbis.getLibraryTarget(invokingRule);
     this.abiCompatibilityMode = abiCompatibilityMode;
     this.options = options;
-    this.pluginFields = pluginFields;
+    this.annotationProcessors = annotationProcessors;
+    this.javacPlugins = javacPlugins;
     this.javaSourceFilePaths = javaSourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
     this.trackClassUsage = trackClassUsage;
@@ -502,7 +505,13 @@ class Jsr199JavacInvocation implements Javac.Invocation {
               compiler.getStandardFileManager(null, null, null);
           addCloseable(standardFileManager);
 
-          StandardJavaFileManager fileManager;
+          // Ensure plugins are loaded from their own classloader.
+          PluginFactory pluginFactory =
+              new PluginFactory(
+                  compiler.getClass().getClassLoader(),
+                  context.getClassLoaderCache());
+
+          PluginLoaderJavaFileManager fileManager;
           if (libraryJarParameters != null) {
             Path directToJarPath =
                 context
@@ -514,10 +523,10 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                     directToJarPath,
                     libraryJarParameters.getRemoveEntryPredicate());
             addCloseable(inMemoryFileManager);
-            fileManager = inMemoryFileManager;
+            fileManager = new PluginLoaderJavaFileManager(inMemoryFileManager, pluginFactory, javacPlugins);
           } else {
             inMemoryFileManager = null;
-            fileManager = standardFileManager;
+            fileManager = new PluginLoaderJavaFileManager(standardFileManager, pluginFactory, javacPlugins);
           }
 
           Iterable<? extends JavaFileObject> compilationUnits;
@@ -604,7 +613,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                   invokingRule);
           addCloseable(processorFactory);
 
-          javacTask.setProcessors(processorFactory.createProcessors(pluginFields));
+          javacTask.setProcessors(processorFactory.createProcessors(annotationProcessors));
           lazyJavacTask = javacTask;
         } catch (IOException e) {
           LOG.error(e);
