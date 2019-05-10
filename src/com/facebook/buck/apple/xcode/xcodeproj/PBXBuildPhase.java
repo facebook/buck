@@ -54,6 +54,6 @@ public abstract class PBXBuildPhase extends PBXProjectItem {
     s.addField("files", files);
     name.ifPresent(phaseName -> s.addField("name", phaseName));
     runOnlyForDeploymentPostprocessing.ifPresent(
-        runOnly -> s.addField("runOnlyForDeploymentPostprocessing", runOnly ? 1 : 0));
+        runOnly -> s.addField("runOnlyForDeploymentPostprocessing", runOnly ? "1" : "0"));
   }
 }
