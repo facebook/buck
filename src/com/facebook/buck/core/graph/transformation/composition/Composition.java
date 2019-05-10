@@ -18,7 +18,7 @@ package com.facebook.buck.core.graph.transformation.composition;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
-import com.google.common.collect.Iterables;
+import java.util.Map;
 
 /**
  * Performs a composition over two {@link GraphComputation}s.
@@ -52,20 +52,21 @@ public class Composition {
    */
   @SuppressWarnings("unchecked")
   public static <
-          Key1 extends ComputeKey<?>,
+          KeyBase extends ComputeKey<?>,
+          Key1 extends ComputeKey<Result1>,
           Result1 extends ComputeResult,
           Key2 extends ComputeKey<Result2>,
           Result2 extends ComputeResult>
-      ComposedComputation<Key1, Result2> of(
+      ComposedComputation<KeyBase, Result2> of(
           Class<Result2> resultClass,
-          ComposedComputation<Key1, Result1> baseComputation,
+          ComposedComputation<KeyBase, Result1> baseComputation,
           KeyComposer<Key1, Result1, Key2> composer) {
 
     return new ComposingComputation<>(
         baseComputation.getIdentifier(),
         resultClass,
         composer,
-        identity -> (Result2) Iterables.getOnlyElement(identity.values()));
+        identity -> (Map<ComputeKey<Result2>, Result2>) identity);
   }
 
   /**

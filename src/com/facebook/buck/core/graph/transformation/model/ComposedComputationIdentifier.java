@@ -33,7 +33,7 @@ import com.google.common.collect.Interners;
  * uses {@code Key1} and {@code Result1} to compute {@code Result2}.
  */
 public class ComposedComputationIdentifier<ResultType extends ComputeResult>
-    implements ComputationIdentifier<ComposedResult<ResultType>> {
+    implements ComputationIdentifier<ComposedResult<ComputeKey<ResultType>, ResultType>> {
 
   private static final Interner<ComposedComputationIdentifier<?>> INTERNER =
       Interners.newWeakInterner();
@@ -58,8 +58,9 @@ public class ComposedComputationIdentifier<ResultType extends ComputeResult>
 
   @Override
   @SuppressWarnings("unchecked")
-  public Class<ComposedResult<ResultType>> getResultTypeClass() {
-    return (Class<ComposedResult<ResultType>>) (Class<?>) ComposedResult.class;
+  public Class<ComposedResult<ComputeKey<ResultType>, ResultType>> getResultTypeClass() {
+    return (Class<ComposedResult<ComputeKey<ResultType>, ResultType>>)
+        (Class<?>) ComposedResult.class;
   }
 
   /**

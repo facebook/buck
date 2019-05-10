@@ -25,7 +25,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.graph.transformation.model.ImmutableComposedResult;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -55,11 +55,12 @@ class ComposedWrapperComputation<Key1 extends ComputeKey<Result>, Result extends
   }
 
   @Override
-  public ComposedResult<Result> transform(
+  public ComposedResult<ComputeKey<Result>, Result> transform(
       ComposedKey<Key1, Result> key, ComputationEnvironment env) {
     // TODO(bobyf): figure out how to not do this computation twice
 
-    return ImmutableComposedResult.of(ImmutableList.of(env.getDep(key.getOriginKey())));
+    return ImmutableComposedResult.of(
+        ImmutableMap.of(key.getOriginKey(), env.getDep(key.getOriginKey())));
   }
 
   @Override
@@ -75,7 +76,9 @@ class ComposedWrapperComputation<Key1 extends ComputeKey<Result>, Result extends
   }
 
   @Override
-  public GraphComputationStage<ComposedKey<Key1, Result>, ComposedResult<Result>> asStage() {
+  public GraphComputationStage<
+          ComposedKey<Key1, Result>, ComposedResult<ComputeKey<Result>, Result>>
+      asStage() {
     return new GraphComputationStage<>(this, new NoOpGraphEngineCache<>());
   }
 }

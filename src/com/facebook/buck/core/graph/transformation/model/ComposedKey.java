@@ -25,7 +25,7 @@ import org.immutables.value.Value;
  */
 @Value.Immutable(builder = false, copy = false, prehash = true)
 public abstract class ComposedKey<KeyType1 extends ComputeKey<?>, ResultType2 extends ComputeResult>
-    implements ComputeKey<ComposedResult<ResultType2>> {
+    implements ComputeKey<ComposedResult<ComputeKey<ResultType2>, ResultType2>> {
 
   @Value.Parameter
   public abstract KeyType1 getOriginKey();
@@ -35,7 +35,8 @@ public abstract class ComposedKey<KeyType1 extends ComputeKey<?>, ResultType2 ex
 
   @Value.Derived
   @Override
-  public ComputationIdentifier<ComposedResult<ResultType2>> getIdentifier() {
+  public ComputationIdentifier<ComposedResult<ComputeKey<ResultType2>, ResultType2>>
+      getIdentifier() {
     return ComposedComputationIdentifier.of(getOriginKey().getIdentifier(), getTargetResultClass());
   }
 }

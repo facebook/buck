@@ -29,5 +29,6 @@ import java.util.Map;
 @FunctionalInterface
 public interface Transformer<ResultType extends ComputeResult> {
 
-  ResultType transform(Map<? extends ComputeKey<?>, ? extends ComputeResult> deps);
+  Map<ComputeKey<ResultType>, ResultType> transform(
+      Map<? extends ComputeKey<?>, ? extends ComputeResult> deps);
 }

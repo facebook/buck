@@ -37,30 +37,32 @@ import com.google.common.collect.ImmutableSet;
  * returning a set of dependencies necessary for the transform step. Then {@link Transformer} is
  * invoked with the dependencies.
  *
- * @param <Key1> the key type contained in the composed key of the base computation
+ * @param <BaseKey> the key type contained in the composed key of the base computation
  * @param <Result2> the result type contained in the composed result of this computation
  */
-public interface ComposedComputation<Key1 extends ComputeKey<?>, Result2 extends ComputeResult>
-    extends GraphComputation<ComposedKey<Key1, Result2>, ComposedResult<Result2>> {
+public interface ComposedComputation<BaseKey extends ComputeKey<?>, Result2 extends ComputeResult>
+    extends GraphComputation<
+        ComposedKey<BaseKey, Result2>, ComposedResult<ComputeKey<Result2>, Result2>> {
 
   @Override
   ComposedComputationIdentifier<Result2> getIdentifier();
 
   @Override
-  ComposedResult<Result2> transform(ComposedKey<Key1, Result2> key, ComputationEnvironment env)
-      throws Exception;
+  ComposedResult<ComputeKey<Result2>, Result2> transform(
+      ComposedKey<BaseKey, Result2> key, ComputationEnvironment env) throws Exception;
 
   @Override
   ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverDeps(
-      ComposedKey<Key1, Result2> key, ComputationEnvironment env) throws Exception;
+      ComposedKey<BaseKey, Result2> key, ComputationEnvironment env) throws Exception;
 
   @Override
   ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverPreliminaryDeps(
-      ComposedKey<Key1, Result2> key);
+      ComposedKey<BaseKey, Result2> key);
 
   /**
    * @return a non caching {@link GraphComputationStage} for registering this computation with the
    *     {@link com.facebook.buck.core.graph.transformation.GraphTransformationEngine}
    */
-  GraphComputationStage<ComposedKey<Key1, Result2>, ComposedResult<Result2>> asStage();
+  GraphComputationStage<ComposedKey<BaseKey, Result2>, ComposedResult<ComputeKey<Result2>, Result2>>
+      asStage();
 }

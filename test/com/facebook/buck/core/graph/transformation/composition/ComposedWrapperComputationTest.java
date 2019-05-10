@@ -24,7 +24,6 @@ import com.facebook.buck.core.graph.transformation.impl.ImmutableLongMultNode;
 import com.facebook.buck.core.graph.transformation.impl.ImmutableLongNode;
 import com.facebook.buck.core.graph.transformation.model.ImmutableComposedKey;
 import com.facebook.buck.core.graph.transformation.model.ImmutableComposedResult;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.junit.Test;
@@ -65,7 +64,8 @@ public class ComposedWrapperComputationTest {
         new ComposedWrapperComputation<>(LongNode.class, LongNode.IDENTIFIER);
 
     assertEquals(
-        ImmutableComposedResult.of(ImmutableList.of(ImmutableLongNode.of(1))),
+        ImmutableComposedResult.of(
+            ImmutableMap.of(ImmutableLongNode.of(1), ImmutableLongNode.of(1))),
         computation.transform(
             ImmutableComposedKey.of(ImmutableLongNode.of(1), LongNode.class), environment));
   }

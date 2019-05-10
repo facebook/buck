@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.graph.transformation.model;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.util.Iterator;
 import org.immutables.value.Value;
 
@@ -26,14 +26,15 @@ import org.immutables.value.Value;
  * @param <ResultType> the type of the results held
  */
 @Value.Immutable(builder = false, copy = false)
-public abstract class ComposedResult<ResultType extends ComputeResult>
+public abstract class ComposedResult<
+        KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
     implements ComputeResult, Iterable<ResultType> {
 
   @Value.Parameter
-  public abstract ImmutableList<ResultType> asList();
+  public abstract ImmutableMap<KeyType, ResultType> resultMap();
 
   @Override
   public Iterator<ResultType> iterator() {
-    return asList().iterator();
+    return resultMap().values().iterator();
   }
 }

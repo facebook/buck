@@ -24,12 +24,12 @@ import com.facebook.buck.core.graph.transformation.impl.ImmutableLongMultNode;
 import com.facebook.buck.core.graph.transformation.impl.ImmutableLongNode;
 import com.facebook.buck.core.graph.transformation.model.ComposedComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComposedKey;
+import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ImmutableComposedKey;
 import com.facebook.buck.core.graph.transformation.model.ImmutableComposedResult;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
+import java.util.Map;
 import org.junit.Test;
 
 public class ComposingComputationTest {
@@ -67,7 +67,8 @@ public class ComposingComputationTest {
     FakeComputationEnvironment environment =
         new FakeComputationEnvironment(
             ImmutableMap.of(
-                originComposedKey, ImmutableComposedResult.of(ImmutableList.of(originResult))));
+                originComposedKey,
+                ImmutableComposedResult.of(ImmutableMap.of(originKey, originResult))));
 
     Composer<LongNode, LongNode> composer =
         (key, result) -> {
@@ -97,7 +98,11 @@ public class ComposingComputationTest {
             ImmutableMap.of(
                 ImmutableComposedKey.of(ImmutableLongNode.of(1), LongNode.class),
                 ImmutableComposedResult.of(
-                    ImmutableList.of(ImmutableLongNode.of(1), ImmutableLongNode.of(2))),
+                    ImmutableMap.of(
+                        ImmutableLongNode.of(1),
+                        ImmutableLongNode.of(1),
+                        ImmutableLongNode.of(2),
+                        ImmutableLongNode.of(2))),
                 ImmutableLongMultNode.of(1),
                 ImmutableLongMultNode.of(1),
                 ImmutableLongMultNode.of(2),
@@ -106,7 +111,7 @@ public class ComposingComputationTest {
     Composer<LongNode, LongNode> composer =
         (key, result) -> ImmutableSet.of(ImmutableLongMultNode.of(result.get()));
     Transformer<LongMultNode> transformer =
-        deps -> (LongMultNode) Iterables.getOnlyElement(deps.values());
+        deps -> (Map<ComputeKey<LongMultNode>, LongMultNode>) deps;
 
     ComposedComputation<LongNode, LongMultNode> computation =
         new ComposingComputation<>(
@@ -117,7 +122,11 @@ public class ComposingComputationTest {
 
     assertEquals(
         ImmutableComposedResult.of(
-            ImmutableList.of(ImmutableLongMultNode.of(1), ImmutableLongMultNode.of(2))),
+            ImmutableMap.of(
+                ImmutableLongMultNode.of(1),
+                ImmutableLongMultNode.of(1),
+                ImmutableLongMultNode.of(2),
+                ImmutableLongMultNode.of(2))),
         computation.transform(
             ImmutableComposedKey.of(ImmutableLongNode.of(1), LongMultNode.class), environment));
   }
