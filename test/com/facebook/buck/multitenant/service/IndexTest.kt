@@ -29,15 +29,15 @@ class IndexTest {
     @Test
     fun getTargetsAndDeps() {
         val bt = ::parseOrdinaryBuildTarget
-        val index = Index(bt)
+        val (index, indexAppender) = IndexFactory.createIndex(bt)
 
-        val commits = populateIndexFromStream(index, IndexTest::class.java.getResourceAsStream("index_test_targets_and_deps.json"))
+        val commits = populateIndexFromStream(indexAppender, bt, IndexTest::class.java.getResourceAsStream("index_test_targets_and_deps.json"))
 
-        val generation1 = requireNotNull(index.getGeneration(commits[0]))
-        val generation2 = requireNotNull(index.getGeneration(commits[1]))
-        val generation3 = requireNotNull(index.getGeneration(commits[2]))
-        val generation4 = requireNotNull(index.getGeneration(commits[3]))
-        val generation5 = requireNotNull(index.getGeneration(commits[4]))
+        val generation1 = requireNotNull(indexAppender.getGeneration(commits[0]))
+        val generation2 = requireNotNull(indexAppender.getGeneration(commits[1]))
+        val generation3 = requireNotNull(indexAppender.getGeneration(commits[2]))
+        val generation4 = requireNotNull(indexAppender.getGeneration(commits[3]))
+        val generation5 = requireNotNull(indexAppender.getGeneration(commits[4]))
 
         assertEquals(
                 setOf(bt("//java/com/facebook/buck/base:base")),
@@ -99,10 +99,10 @@ class IndexTest {
     @Test
     fun getTargetNodes() {
         val bt = ::parseOrdinaryBuildTarget
-        val index = Index(bt)
+        val (index, indexAppender) = IndexFactory.createIndex(bt)
 
-        val commits = populateIndexFromStream(index, IndexTest::class.java.getResourceAsStream("index_test_targets_and_deps.json"))
-        val generation5 = requireNotNull(index.getGeneration(commits[4]))
+        val commits = populateIndexFromStream(indexAppender, bt, IndexTest::class.java.getResourceAsStream("index_test_targets_and_deps.json"))
+        val generation5 = requireNotNull(indexAppender.getGeneration(commits[4]))
 
         val targetNodes = index.getTargetNodes(generation5, listOf(
                 bt("//java/com/facebook/buck/base:base"),

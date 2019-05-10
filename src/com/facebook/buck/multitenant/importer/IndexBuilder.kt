@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.BuildPackage
 import com.facebook.buck.multitenant.service.Changes
-import com.facebook.buck.multitenant.service.Index
+import com.facebook.buck.multitenant.service.IndexAppender
 import com.facebook.buck.multitenant.service.RawBuildRule
 import com.facebook.buck.rules.visibility.VisibilityPattern
 import com.facebook.buck.util.json.ObjectMappers
@@ -38,17 +38,20 @@ import java.io.InputStream
  * Ultimately, we would like to use kotlinx.serialization for this, but we are currently blocked by
  * https://youtrack.jetbrains.com/issue/KT-30998.
  */
-fun populateIndexFromStream(index: Index, stream: InputStream): List<String> = ObjectMappers.createParser(stream)
+fun populateIndexFromStream(
+        indexAppender: IndexAppender,
+        parser: (target: String) -> UnconfiguredBuildTarget,
+        stream: InputStream): List<String> = ObjectMappers.createParser(stream)
         .enable(JsonParser.Feature.ALLOW_COMMENTS)
         .enable(JsonParser.Feature.ALLOW_TRAILING_COMMA)
         .readValueAsTree<JsonNode>()
         .asSequence().map { commit ->
             val hash = commit.get("commit").asText()
-            val added = toBuildPackages(index, commit.get("added"))
-            val modified = toBuildPackages(index, commit.get("modified"))
+            val added = toBuildPackages(parser, commit.get("added"))
+            val modified = toBuildPackages(parser, commit.get("modified"))
             val removed = toRemovedPackages(commit.get("removed"))
             val changes = Changes(added, modified, removed)
-            index.addCommitData(hash, changes)
+            indexAppender.addCommitData(hash, changes)
             hash
         }.toList()
 
@@ -70,7 +73,7 @@ fun parseOrdinaryBuildTarget(target: String): UnconfiguredBuildTarget {
 
 val FAKE_RULE_TYPE: RuleType = RuleTypeFactory.createBuildRule("fake_rule")
 
-private fun toBuildPackages(index: Index, node: JsonNode?): List<BuildPackage> {
+private fun toBuildPackages(parser: (target: String) -> UnconfiguredBuildTarget, node: JsonNode?): List<BuildPackage> {
     if (node == null) {
         return listOf()
     }
@@ -99,8 +102,8 @@ private fun toBuildPackages(index: Index, node: JsonNode?): List<BuildPackage> {
             }
             requireNotNull(name)
             requireNotNull(ruleType)
-            val buildTarget = index.buildTargetParser("//$path:$name")
-            createRawRule(index, buildTarget, ruleType, deps, attrs.build())
+            val buildTarget = parser("//$path:$name")
+            createRawRule(parser, buildTarget, ruleType, deps, attrs.build())
         }.toSet()
         BuildPackage(path, rules)
     }
@@ -128,13 +131,13 @@ private fun toRemovedPackages(node: JsonNode?): List<FsAgnosticPath> {
 }
 
 private fun createRawRule(
-        index: Index,
+        parser: (target: String) -> UnconfiguredBuildTarget,
         target: UnconfiguredBuildTarget,
         ruleType: String,
         deps: Set<String>,
         attrs: ImmutableMap<String, Any>): RawBuildRule {
     val node = ServiceRawTargetNode(target, RuleTypeFactory.createBuildRule(ruleType), attrs)
-    return RawBuildRule(node, deps.map { index.buildTargetParser(it) }.toSet())
+    return RawBuildRule(node, deps.map { parser(it) }.toSet())
 }
 
 /**

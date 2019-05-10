@@ -20,7 +20,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.importer.parseOrdinaryBuildTarget
 import com.facebook.buck.multitenant.importer.populateIndexFromStream
-import com.facebook.buck.multitenant.service.Index
+import com.facebook.buck.multitenant.service.IndexFactory
 import com.facebook.buck.query.QueryFileTarget
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -168,9 +168,9 @@ private fun asFileTargets(vararg path: String): Set<QueryFileTarget> {
 }
 
 private fun loadIndex(resource: String, commitIndex: Int): MultitenantQueryEnvironment {
-    val index = Index(::parseOrdinaryBuildTarget)
-    val commits = populateIndexFromStream(index, MultitenantQueryTest::class.java.getResourceAsStream(resource))
-    val generation = index.getGeneration(commits[commitIndex])
+    val (index, indexAppender) = IndexFactory.createIndex(::parseOrdinaryBuildTarget)
+    val commits = populateIndexFromStream(indexAppender, ::parseOrdinaryBuildTarget, MultitenantQueryTest::class.java.getResourceAsStream(resource))
+    val generation = indexAppender.getGeneration(commits[commitIndex])
     requireNotNull(generation)
     return MultitenantQueryEnvironment(index, generation)
 }

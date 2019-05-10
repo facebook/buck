@@ -135,7 +135,7 @@ private class TargetEvaluator(private val index: Index, private val generation: 
         // TODO: Cells (and flavors?) need to be supported.
         return when (buildTargetPattern.kind!!) {
             Kind.SINGLE -> {
-                ImmutableSet.of(index.buildTargetParser(buildTargetPattern.toString()))
+                ImmutableSet.of(index.parseBuildTarget(buildTargetPattern.toString()))
             }
             Kind.PACKAGE -> {
                 val basePath = buildTargetPattern.basePath

@@ -108,15 +108,21 @@ private class GenerationList<INFO, VALUE : Any> {
 }
 
 /**
- * [GenerationMap] is a glorified append-only multimap.
+ * [GenerationMap] provides a view over a glorified append-only multimap.
  */
 interface GenerationMap<KEY : Any, VALUE : Any, KEY_INFO> {
-    fun addVersion(key: KEY, value: VALUE?, generation: Int)
     fun getVersion(key: KEY, generation: Int): VALUE?
     /**
      * @param filter if null, all entries for the generation will be returned.
      */
     fun getEntries(generation: Int, filter: ((keyInfo: KEY_INFO) -> Boolean)? = null): Sequence<Pair<KEY_INFO, VALUE>>
+}
+
+/**
+ * [MutableGenerationMap] is a glorified append-only multimap.
+ */
+interface MutableGenerationMap<KEY : Any, VALUE : Any, KEY_INFO> : GenerationMap<KEY, VALUE, KEY_INFO> {
+    fun addVersion(key: KEY, value: VALUE?, generation: Int)
 }
 
 /**
@@ -126,7 +132,7 @@ interface GenerationMap<KEY : Any, VALUE : Any, KEY_INFO> {
  *
  * This class is not threadsafe: it must be synchronized externally.
  */
-class DefaultGenerationMap<KEY : Any, VALUE : Any, KEY_INFO>(val keyInfoDeriver: (key: KEY) -> KEY_INFO) : GenerationMap<KEY, VALUE, KEY_INFO> {
+class DefaultGenerationMap<KEY : Any, VALUE : Any, KEY_INFO>(val keyInfoDeriver: (key: KEY) -> KEY_INFO) : MutableGenerationMap<KEY, VALUE, KEY_INFO> {
     private val generationList = GenerationList<KEY_INFO, VALUE>()
     private val keyToBucketIndex = HashMap<KEY, Int>()
 
