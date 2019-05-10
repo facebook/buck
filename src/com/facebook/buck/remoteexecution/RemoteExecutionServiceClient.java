@@ -47,12 +47,18 @@ public interface RemoteExecutionServiceClient {
     ExecutedActionMetadata getActionMetadata();
   }
 
+  /** Handle for an execution in progress. */
+  interface ExecutionHandle {
+    ListenableFuture<ExecutionResult> getResult();
+
+    void cancel();
+  }
+
   /**
    * This should run the command with the provided environment and inputs.
    *
    * <p>Returns an ActionResult with exit code, outputs, stdout/stderr, etc.
    */
-  ListenableFuture<ExecutionResult> execute(
-      Digest actionDigest, String ruleName, MetadataProvider metadataProvider)
+  ExecutionHandle execute(Digest actionDigest, String ruleName, MetadataProvider metadataProvider)
       throws IOException, InterruptedException;
 }

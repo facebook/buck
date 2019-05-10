@@ -23,6 +23,7 @@ import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient;
+import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionHandle;
 import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionResult;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Action;
@@ -35,6 +36,7 @@ import com.facebook.buck.util.Scope;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -92,43 +94,53 @@ public class OutOfProcessIsolatedExecutionClients implements RemoteExecutionClie
             try (Scope ignored2 = LeafEvents.scope(eventBus, "uploading_results")) {
               Futures.getUnchecked(storage.addMissing(actionResult.requiredData));
             }
-            return Futures.immediateFuture(
-                new ExecutionResult() {
-                  @Override
-                  public ImmutableList<OutputDirectory> getOutputDirectories() {
-                    return actionResult.outputDirectories;
-                  }
+            ListenableFuture<ExecutionResult> executionResult =
+                Futures.immediateFuture(
+                    new ExecutionResult() {
+                      @Override
+                      public ImmutableList<OutputDirectory> getOutputDirectories() {
+                        return actionResult.outputDirectories;
+                      }
 
-                  @Override
-                  public ImmutableList<OutputFile> getOutputFiles() {
-                    return actionResult.outputFiles;
-                  }
+                      @Override
+                      public ImmutableList<OutputFile> getOutputFiles() {
+                        return actionResult.outputFiles;
+                      }
 
-                  @Override
-                  public int getExitCode() {
-                    return actionResult.exitCode;
-                  }
+                      @Override
+                      public int getExitCode() {
+                        return actionResult.exitCode;
+                      }
 
-                  @Override
-                  public Optional<String> getStdout() {
-                    return Optional.of(actionResult.stdout);
-                  }
+                      @Override
+                      public Optional<String> getStdout() {
+                        return Optional.of(actionResult.stdout);
+                      }
 
-                  @Override
-                  public Optional<String> getStderr() {
-                    return Optional.of(actionResult.stderr);
-                  }
+                      @Override
+                      public Optional<String> getStderr() {
+                        return Optional.of(actionResult.stderr);
+                      }
 
-                  @Override
-                  public Digest getActionResultDigest() {
-                    return protocol.newDigest("", 0);
-                  }
+                      @Override
+                      public Digest getActionResultDigest() {
+                        return protocol.newDigest("", 0);
+                      }
 
-                  @Override
-                  public ExecutedActionMetadata getActionMetadata() {
-                    return ExecutedActionMetadata.getDefaultInstance();
-                  }
-                });
+                      @Override
+                      public ExecutedActionMetadata getActionMetadata() {
+                        return ExecutedActionMetadata.getDefaultInstance();
+                      }
+                    });
+            return new ExecutionHandle() {
+              @Override
+              public ListenableFuture<ExecutionResult> getResult() {
+                return executionResult;
+              }
+
+              @Override
+              public void cancel() {}
+            };
           }
         };
   }

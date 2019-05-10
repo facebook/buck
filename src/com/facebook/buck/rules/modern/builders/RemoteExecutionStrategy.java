@@ -31,6 +31,7 @@ import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
+import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionHandle;
 import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionResult;
 import com.facebook.buck.remoteexecution.WorkerRequirementsProvider;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
@@ -62,8 +63,10 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 /**
  * A {@link BuildRuleStrategy} that uses a Remote Execution service for executing BuildRules. It
@@ -99,14 +102,11 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       BuckEventBus eventBus,
       RemoteExecutionStrategyConfig strategyConfig,
       RemoteExecutionClients executionClients,
-      SourcePathRuleFinder ruleFinder,
-      Cell rootCell,
-      ThrowingFunction<Path, HashCode, IOException> fileHasher,
-      MetadataProvider metadataProvider) {
+      MetadataProvider metadataProvider,
+      RemoteExecutionHelper mbrHelper,
+      ListeningExecutorService service) {
     this.executionClients = executionClients;
-    this.service =
-        MoreExecutors.listeningDecorator(
-            MostExecutors.newMultiThreadExecutor("remote-exec", strategyConfig.getThreads()));
+    this.service = service;
     this.computeActionLimiter = new JobLimiter(strategyConfig.getMaxConcurrentActionComputations());
     this.pendingUploadsLimiter = new JobLimiter(strategyConfig.getMaxConcurrentPendingUploads());
     this.executionLimiter = new JobLimiter(strategyConfig.getMaxConcurrentExecutions());
@@ -115,9 +115,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     this.eventBus = eventBus;
     this.metadataProvider = metadataProvider;
 
-    this.mbrHelper =
-        new ModernBuildRuleRemoteExecutionHelper(
-            eventBus, this.executionClients.getProtocol(), ruleFinder, rootCell, fileHasher);
+    this.mbrHelper = mbrHelper;
 
     this.requirementsProvider =
         new WorkerRequirementsProvider(
@@ -143,7 +141,14 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       MetadataProvider metadataProvider) {
     BuildRuleStrategy strategy =
         new RemoteExecutionStrategy(
-            eventBus, strategyConfig, clients, ruleFinder, rootCell, fileHasher, metadataProvider);
+            eventBus,
+            strategyConfig,
+            clients,
+            metadataProvider,
+            new ModernBuildRuleRemoteExecutionHelper(
+                eventBus, clients.getProtocol(), ruleFinder, rootCell, fileHasher),
+            MoreExecutors.listeningDecorator(
+                MostExecutors.newMultiThreadExecutor("remote-exec", strategyConfig.getThreads())));
     if (strategyConfig.isLocalFallbackEnabled()) {
       strategy = new LocalFallbackStrategy(strategy, eventBus);
     }
@@ -334,10 +339,14 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                       State.EXECUTING,
                       buildRule.getBuildTarget(),
                       Optional.of(actionDigest));
-              return Futures.transform(
+              ExecutionHandle executionHandle =
                   executionClients
                       .getRemoteExecutionService()
-                      .execute(actionDigest, ruleName, metadataProvider),
+                      .execute(actionDigest, ruleName, metadataProvider);
+
+              guardContext.onCancellation(reason -> executionHandle.cancel());
+              return Futures.transform(
+                  executionHandle.getResult(),
                   result -> {
                     executingScope.close();
                     if (!guardContext.tryStart()) {
@@ -495,6 +504,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     // the reason, a right value indicates that it has passed the point of no return and can no
     // longer be cancelled.
     AtomicReference<Either<Throwable, Object>> guard = new AtomicReference<>();
+    ConcurrentLinkedQueue<Consumer<Throwable>> callbackQueue = new ConcurrentLinkedQueue<>();
 
     public boolean isCancelled() {
       return guard.get() != null && guard.get().isLeft();
@@ -507,10 +517,35 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
 
     public void cancel(Throwable reason) {
       guard.compareAndSet(null, Either.ofLeft(reason));
+      if (isCancelled()) {
+        processCallbackQueue();
+      }
     }
 
     public boolean tryStart() {
       return guard.compareAndSet(null, Either.ofRight(new Object()));
+    }
+
+    public void onCancellation(Consumer<Throwable> cancelCallback) {
+      callbackQueue.add(cancelCallback);
+      if (isCancelled()) {
+        processCallbackQueue();
+      }
+    }
+
+    private void processCallbackQueue() {
+      Throwable cancelReason = getCancelReason();
+      while (!callbackQueue.isEmpty()) {
+        Consumer<Throwable> callback = callbackQueue.poll();
+        if (callback == null) {
+          break;
+        }
+        try {
+          callback.accept(cancelReason);
+        } catch (Exception e) {
+          LOG.warn(e, "Unexpected exception while processing cancellation callbacks.");
+        }
+      }
     }
   }
 }

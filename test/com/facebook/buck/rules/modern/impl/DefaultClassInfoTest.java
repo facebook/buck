@@ -30,7 +30,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -46,7 +45,6 @@ import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.InputRuleResolver;
-import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
@@ -299,23 +297,6 @@ public class DefaultClassInfoTest {
             BuildTargetFactory.newInstance("//some:target"),
             new FakeProjectFilesystem(),
             new TestActionGraphBuilder()));
-  }
-
-  static class NoOpModernBuildRule extends ModernBuildRule<NoOpModernBuildRule>
-      implements Buildable {
-    NoOpModernBuildRule(
-        BuildTarget buildTarget, ProjectFilesystem filesystem, SourcePathRuleFinder finder) {
-      super(buildTarget, filesystem, finder, NoOpModernBuildRule.class);
-    }
-
-    @Override
-    public ImmutableList<Step> getBuildSteps(
-        BuildContext buildContext,
-        ProjectFilesystem filesystem,
-        OutputPathResolver outputPathResolver,
-        BuildCellRelativePathFactory buildCellPathFactory) {
-      return ImmutableList.of();
-    }
   }
 
   @Test(expected = Exception.class)

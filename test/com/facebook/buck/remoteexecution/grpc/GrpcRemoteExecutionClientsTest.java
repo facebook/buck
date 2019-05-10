@@ -22,11 +22,9 @@ import build.bazel.remote.execution.v2.ActionResult;
 import build.bazel.remote.execution.v2.ExecuteRequest;
 import build.bazel.remote.execution.v2.ExecuteResponse;
 import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionImplBase;
-import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
+import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionHandle;
 import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionResult;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
@@ -34,7 +32,6 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
 import com.facebook.buck.remoteexecution.util.OutputsMaterializer.FilesystemFileMaterializer;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -43,11 +40,8 @@ import com.google.longrunning.Operation;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import io.grpc.BindableService;
-import io.grpc.ManagedChannel;
-import io.grpc.Server;
 import io.grpc.Status.Code;
-import io.grpc.inprocess.InProcessChannelBuilder;
-import io.grpc.inprocess.InProcessServerBuilder;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -56,50 +50,27 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class GrpcRemoteExecutionClientsTest {
   @Rule public TemporaryPaths temporaryPaths = new TemporaryPaths();
-  private BuckEventBus eventBus;
-  private Server server;
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
+  private List<BindableService> services = new ArrayList<>();
   private RemoteExecutionClients clients;
 
-  private List<BindableService> services;
-
-  @Before
-  public void setUp() {
-    services = new ArrayList<>();
-    eventBus = new DefaultBuckEventBus(new DefaultClock(), new BuildId("dontcare"));
-  }
-
   public void setupServer() throws IOException {
-    String serverName = "uniquish-" + new Random().nextLong();
-
-    InProcessServerBuilder serverBuilder =
-        InProcessServerBuilder.forName(serverName).directExecutor();
-    for (BindableService service : services) {
-      serverBuilder.addService(service);
-    }
-
-    server = serverBuilder.build().start();
-    ManagedChannel channel = InProcessChannelBuilder.forName(serverName).directExecutor().build();
-
-    clients =
-        new GrpcRemoteExecutionClients(
-            "buck", channel, channel, MetadataProviderFactory.emptyMetadataProvider(), eventBus);
+    clients = new TestRemoteExecutionClients(services);
   }
 
   @After
   public void tearDown() throws Exception {
     clients.close();
-    server.shutdownNow().awaitTermination(3, TimeUnit.SECONDS);
   }
 
   @Test
@@ -143,10 +114,42 @@ public class GrpcRemoteExecutionClientsTest {
                 clients.getProtocol().computeDigest("".getBytes(Charsets.UTF_8)),
                 "",
                 MetadataProviderFactory.emptyMetadataProvider())
+            .getResult()
             .get();
 
     assertEquals(0, executionResult.getExitCode());
     assertEquals(stderr, executionResult.getStderr().get());
+  }
+
+  @Test
+  public void testExecuteCancel() throws Exception {
+    AtomicReference<StreamObserver<Operation>> responseObserverCapture = new AtomicReference<>();
+
+    services.add(
+        new ExecutionImplBase() {
+          @Override
+          public void execute(ExecuteRequest request, StreamObserver<Operation> responseObserver) {
+            responseObserverCapture.set(responseObserver);
+          }
+        });
+
+    setupServer();
+
+    ExecutionHandle executionResult =
+        clients
+            .getRemoteExecutionService()
+            .execute(
+                clients.getProtocol().computeDigest("".getBytes(Charsets.UTF_8)),
+                "",
+                MetadataProviderFactory.emptyMetadataProvider());
+
+    responseObserverCapture.get().onNext(Operation.newBuilder().setDone(false).build());
+
+    executionResult.cancel();
+
+    // Check that the server is notified of cancellation.
+    expectedException.expect(StatusRuntimeException.class);
+    responseObserverCapture.get().onNext(Operation.newBuilder().setDone(false).build());
   }
 
   @Test
