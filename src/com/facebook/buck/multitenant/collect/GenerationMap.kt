@@ -130,18 +130,21 @@ class GenerationMap<KEY : Any, VALUE : Any, KEY_INFO>(val keyInfoDeriver: (key: 
         return generationList.getVersion(bucketIndex, generation)
     }
 
-    fun getAllInfoValuePairsForGeneration(generation: Int): Sequence<Pair<KEY_INFO, VALUE>> {
+    /**
+     * @param filter if null, all entries for the generation will be returned.
+     */
+    fun getEntries(generation: Int, filter: ((keyInfo: KEY_INFO) -> Boolean)? = null): Sequence<Pair<KEY_INFO, VALUE>> {
         // One thing that is special about iterating the generationList rather than the
         // keyToBucketIndex is that we can ensure we return a parallel Stream. Note that the
         // parallelStream() method defined on java.util.Collection (which includes the Set returned
         // by Map.entrySet()) is "possibly parallel," so true parallelism is not guaranteed. The
         // downside of iterating the generationList is that the key is not readily available, though
         // the keyInfo is.
-        return generationList.getAllInfoValuePairsForGeneration(generation)
-    }
-
-    fun filterEntriesByKeyInfo(generation: Int, filter: (keyInfo: KEY_INFO) -> Boolean): Sequence<Pair<KEY_INFO, VALUE>> {
-        return generationList.filterEntriesByKeyInfo(generation, filter)
+        return if (filter != null) {
+            generationList.filterEntriesByKeyInfo(generation, filter)
+        } else {
+            generationList.getAllInfoValuePairsForGeneration(generation)
+        }
     }
 
     private fun findOrCreateBucketIndex(key: KEY): Int {

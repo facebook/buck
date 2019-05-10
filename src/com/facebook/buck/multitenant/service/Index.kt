@@ -149,7 +149,7 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
      */
     fun getTargets(generation: Generation): List<UnconfiguredBuildTarget> {
         val pairs = rwLock.readLock().withLock {
-            ruleMap.getAllInfoValuePairsForGeneration(generation)
+            ruleMap.getEntries(generation)
         }
 
         // Note that we release the read lock before making a bunch of requests to the
@@ -192,7 +192,7 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
         }
 
         val entries = rwLock.readLock().withLock {
-            buildPackageMap.filterEntriesByKeyInfo(generation) { it.startsWith(basePath) }
+            buildPackageMap.getEntries(generation) { it.startsWith(basePath) }
         }
 
         return entries.flatMap {
