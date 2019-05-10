@@ -159,8 +159,7 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
   }
 
   @Override
-  public void updateBuildRuleResolver(
-      BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder) {
-    this.ruleFinder = ruleFinder;
+  public void updateBuildRuleResolver(BuildRuleResolver ruleResolver) {
+    this.ruleFinder = ruleResolver;
   }
 }

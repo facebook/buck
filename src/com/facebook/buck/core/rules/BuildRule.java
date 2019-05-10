@@ -129,7 +129,7 @@ public interface BuildRule
    * to be cached, it must update its BuildRuleResolver when a new action graph is constructed to
    * avoid leaking the entire action graph it was originally associated with.
    */
-  void updateBuildRuleResolver(BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder);
+  void updateBuildRuleResolver(BuildRuleResolver ruleResolver);
 
   /**
    * @return true if this rule, and all rules which that depend on it, should be built locally i.e.

@@ -316,9 +316,8 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
   }
 
   @Override
-  public void updateBuildRuleResolver(
-      BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder) {
-    this.ruleFinder = ruleFinder;
+  public void updateBuildRuleResolver(BuildRuleResolver ruleResolver) {
+    this.ruleFinder = ruleResolver;
     this.depsSupplier.updateRuleFinder(ruleFinder);
   }
 }

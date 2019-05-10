@@ -136,7 +136,7 @@ public class IncrementalActionGraphGenerator {
         // Update build rule resolvers for all reused rules. Build rules may use build rule
         // resolvers to locate and construct other build rules during construction. Furthermore, if
         // we didn't update them, we'd leak previous action graphs.
-        buildRule.updateBuildRuleResolver(graphBuilder, graphBuilder);
+        buildRule.updateBuildRuleResolver(graphBuilder);
 
         reusedRuleCount++;
       }

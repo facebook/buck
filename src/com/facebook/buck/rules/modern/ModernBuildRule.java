@@ -219,9 +219,8 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
   }
 
   @Override
-  public void updateBuildRuleResolver(
-      BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder) {
-    this.inputRuleResolver = new DefaultInputRuleResolver(ruleFinder);
+  public void updateBuildRuleResolver(BuildRuleResolver ruleResolver) {
+    this.inputRuleResolver = new DefaultInputRuleResolver(ruleResolver);
   }
 
   // -----------------------------------------------------------------------------------------------

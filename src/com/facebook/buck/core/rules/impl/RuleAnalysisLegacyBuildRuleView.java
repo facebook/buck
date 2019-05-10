@@ -21,7 +21,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.Artifact.BuildArtifact;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
@@ -118,8 +117,7 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule {
   }
 
   @Override
-  public void updateBuildRuleResolver(
-      BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder) {
+  public void updateBuildRuleResolver(BuildRuleResolver ruleResolver) {
     this.ruleResolver = ruleResolver;
     this.buildDepsSupplier = MoreSuppliers.memoize(this::getBuildDepsSupplier);
   }
