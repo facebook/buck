@@ -40,7 +40,7 @@ public class DownloadConfig {
     Optional<Long> proxyPort = delegate.getLong("download", "proxy_port");
     String proxyType = delegate.getValue("download", "proxy_type").orElse("HTTP");
 
-    LOG.debug("Got proxy: " + proxyHost + " " + proxyPort + " from " + delegate);
+    LOG.debug("Got proxy: " + proxyHost + " " + proxyPort + " from buck config");
     if (proxyHost.isPresent() && proxyPort.isPresent()) {
       Proxy.Type type = Proxy.Type.valueOf(proxyType);
       long port = proxyPort.get();
