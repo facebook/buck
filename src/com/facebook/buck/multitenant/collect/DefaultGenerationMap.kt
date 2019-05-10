@@ -108,32 +108,39 @@ private class GenerationList<INFO, VALUE : Any> {
 }
 
 /**
- * GenerationMap is a glorified append-only multimap.
- *
+ * [GenerationMap] is a glorified append-only multimap.
+ */
+interface GenerationMap<KEY : Any, VALUE : Any, KEY_INFO> {
+    fun addVersion(key: KEY, value: VALUE?, generation: Int)
+    fun getVersion(key: KEY, generation: Int): VALUE?
+    /**
+     * @param filter if null, all entries for the generation will be returned.
+     */
+    fun getEntries(generation: Int, filter: ((keyInfo: KEY_INFO) -> Boolean)? = null): Sequence<Pair<KEY_INFO, VALUE>>
+}
+
+/**
  * For convenience, derived info about the key can be stored inline with its versioned values for
  * quick retrieval. This may turn out to be a poor API choice: I just happened to have one other
  * use case for multitenant stuff where this was convenient.
  *
  * This class is not threadsafe: it must be synchronized externally.
  */
-class GenerationMap<KEY : Any, VALUE : Any, KEY_INFO>(val keyInfoDeriver: (key: KEY) -> KEY_INFO) {
+class DefaultGenerationMap<KEY : Any, VALUE : Any, KEY_INFO>(val keyInfoDeriver: (key: KEY) -> KEY_INFO) : GenerationMap<KEY, VALUE, KEY_INFO> {
     private val generationList = GenerationList<KEY_INFO, VALUE>()
     private val keyToBucketIndex = HashMap<KEY, Int>()
 
-    fun addVersion(key: KEY, value: VALUE?, generation: Int) {
+    override fun addVersion(key: KEY, value: VALUE?, generation: Int) {
         val bucketIndex = findOrCreateBucketIndex(key)
         generationList.addVersion(bucketIndex, value, generation)
     }
 
-    fun getVersion(key: KEY, generation: Int): VALUE? {
+    override fun getVersion(key: KEY, generation: Int): VALUE? {
         val bucketIndex = findOrCreateBucketIndex(key)
         return generationList.getVersion(bucketIndex, generation)
     }
 
-    /**
-     * @param filter if null, all entries for the generation will be returned.
-     */
-    fun getEntries(generation: Int, filter: ((keyInfo: KEY_INFO) -> Boolean)? = null): Sequence<Pair<KEY_INFO, VALUE>> {
+    override fun getEntries(generation: Int, filter: ((keyInfo: KEY_INFO) -> Boolean)?): Sequence<Pair<KEY_INFO, VALUE>> {
         // One thing that is special about iterating the generationList rather than the
         // keyToBucketIndex is that we can ensure we return a parallel Stream. Note that the
         // parallelStream() method defined on java.util.Collection (which includes the Set returned

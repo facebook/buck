@@ -17,7 +17,7 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
-import com.facebook.buck.multitenant.collect.GenerationMap
+import com.facebook.buck.multitenant.collect.DefaultGenerationMap
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.google.common.collect.ImmutableSet
 import java.util.concurrent.ConcurrentHashMap
@@ -54,7 +54,7 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
      * for the corresponding build package.
      */
     @GuardedBy("rwLock")
-    private val buildPackageMap = GenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath> { it }
+    private val buildPackageMap = DefaultGenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath> { it }
 
     /**
      * Map that captures the value of a build rule at a specific generation, indexed by BuildTarget.
@@ -63,7 +63,7 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
      * `getAllInfoValuePairsForGeneration()`.
      */
     @GuardedBy("rwLock")
-    private val ruleMap = GenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId> { it }
+    private val ruleMap = DefaultGenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId> { it }
 
     /**
      * If you need to look up multiple target nodes for the same commit, prefer [getTargetNodes].
