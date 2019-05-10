@@ -38,16 +38,15 @@
 {call buck.command}
 {param overview}
 <p>
-The <code>buck query</code> command provides functionality to query
-the <em>target-nodes</em> graph and return the build targets that 
-satisfy your query expression. 
+The <code>buck query</code> command provides functionality to query 
+the <em>target-nodes</em> graph ("target graph") and return the build
+targets that satisfy the query expression. 
 </p>
 
 <p>
-The query language implemented in <code>buck query</code>, enables you to 
-combine multiple operators in a single command.
-For example, to retrieve a list of all the tests
-for a build target, you can combine the <code>deps()</code> and <code>testsof()</code> operators 
+The query language enables you to combine multiple operators in a single 
+command.  For example, to retrieve a list of all the tests for a build 
+target, you can combine the <code>deps()</code> and <code>testsof()</code> operators 
 into a single call to <code>buck query</code>.
 </p>
 
@@ -64,187 +63,51 @@ buck query "testsof(deps('//java/com/example/app:amazing'))"
 <p>
 The Buck query language was inspired by 
 the <a href="http://bazel.io/docs/query.html"> Bazel Query Language</a>. 
-The Buck query language uses the same parser, so the lexical syntax is similar. 
-The Buck query language supports a subset of Bazel's query functionality with
-a few extensions, such as <code>attrfilter</code>, <code>inputs</code>,
+Buck's query language uses the same parser, so the lexical syntax is similar. 
+Buck's query language supports a <em>subset</em> of Bazel's query functionality
+but also adds a few operators, such as <code>attrfilter</code>, <code>inputs</code>,
 and <code>owner</code>.
 </p>
 
-<h3>Lexical Syntax</h3>
+<h3>Operators</h3>
 
-<p>Expressions in the query language are composed of the following tokens:</p>
+<p>
+  Buck's query language supports the following operators. The name of
+  the operator below is linked to a section that provides more detail
+  about that operator's functionality and syntax.
+</p>
 
-<ul>
-  <li>
-    <b>Keywords</b>, such as <code>deps</code> or <code>testsof</code>.
-    Keywords are the reserved words of the language. The complete set of
-    keywords is:
-    <ul style="line-height:0.5em">
-        <li><a href="#allpaths"><code>allpaths</code></a>: All dependency paths</li>
-        <li><a href="#attrfilter"><code>attrfilter</code></a>: Rule attribute filtering</li>
-        <li><a href="#buildfile"><code>buildfile</code></a>: Build files of targets</li>
-        <li><a href="#deps"><code>deps and first-order-deps</code></a>: Transitive closure of dependencies</li>
-        <li><a href="#set-operations"><code>except</code></a>: Set difference</li>
-        <li><a href="#filter"><code>filter</code></a>: Filter targets by name</li>
-        <li><a href="#inputs"><code>inputs</code></a>: Direct input files</li>
-        <li><a href="#set-operations"><code>intersect</code></a>: Set intersection</li>
-        <li><a href="#kind"><code>kind</code></a>: Filter targets by rule type</li>
-        <li><a href="#labels"><code>labels</code></a>: Extract content of rule attributes</li>
-        <li><a href="#owner"><code>owner</code></a>: Find targets that own specified files</li>
-        <li><a href="#rdeps"><code>rdeps</code></a>: Transitive closure of reverse dependencies</li>
-        <li><a href="#set"><code>set</code></a>: Group targets</li>
-        <li><a href="#testsof"><code>testsof</code></a>: List the tests of the specified targets</li>
-        <li><a href="#set-operations"><code>union</code></a>: Set union</li>
-    </ul>
-  </li>
-  <li>
-    <p>
-      <b>Words</b>, such as <code>//foo:bar</code> and <code>//foo:bar+lib"
-      </code>. 
-      If a character sequence is "quoted", that is, it begins and ends with a
-      single-quote (<code>'</code>), or begins and ends with a
-      double-quote (<code>"</code>), it is always parsed as a word. 
-      If a character sequence is not quoted, it is still parsed as a word if it adheres to
-      certain conditions: unquoted words are sequence of characters drawn 
-      from the set of alphabet characters, numerals, forward slash (<code>/</code>), 
-      colon (<code>:</code>), period (<code>.</code>), hyphen (<code>-</code>), 
-      underscore (<code>_</code>), and asterisk (<code>*</code>).
-      Unquoted words may not start with a hyphen or period.
-      This syntax makes quoting unnecessary in many cases.
-      For example, quoting <code>"java_test"</code> is unnecessary.
-    </p>
-
-    <p>
-      Consider the following additional examples:
-
-<pre>
-{literal}
-//foo:bar+wiz    # WRONG: scanned as //foo:bar + wiz.
-//foo:bar=wiz    # WRONG: scanned as //foo:bar = wiz.
-'//foo:bar+wiz'  # Okay.
-'//foo:bar=wiz'  # Okay.
-{/literal}
-</pre>
-
-    </p>
-
-    <p>
-      Note that quoting of words is in addition to any quoting that may be
-      required by your shell. In the following example, double-quotes
-      are used for the shell and single-quotes for the <code>build target</code> expression.
-
-<pre>
-{literal}
-buck query " '//foo:bar=wiz' "
-{/literal}
-</pre>
-
-    </p>
-
-    <p>
-      You should always use quotes when writing scripts that
-      construct <code>buck query</code> expressions <em>from user-supplied values</em>.
-    </p>
-
-  </li>
-  <li>
-    <b>Punctuation</b>, such as parentheses (<code>()</code>), period
-    (<code>.</code>) and comma (<code>,</code>), etc. Words containing
-    punctuation&mdash;other than the exceptions listed above under <b>Words</b>&mdash;must be quoted.
-  </li>
+<ul style="line-height:0.5em">
+    <li><a href="#allpaths"><code>allpaths</code></a>: All dependency paths</li>
+    <li><a href="#attrfilter"><code>attrfilter</code></a>: Rule attribute filtering</li>
+    <li><a href="#buildfile"><code>buildfile</code></a>: Build files of targets</li>
+    <li><a href="#deps"><code>deps and first-order-deps</code></a>: Transitive closure of dependencies</li>
+    <li><a href="#set-operations"><code>except</code></a>: Set difference</li>
+    <li><a href="#filter"><code>filter</code></a>: Filter targets by name</li>
+    <li><a href="#inputs"><code>inputs</code></a>: Direct input files</li>
+    <li><a href="#set-operations"><code>intersect</code></a>: Set intersection</li>
+    <li><a href="#kind"><code>kind</code></a>: Filter targets by rule type</li>
+    <li><a href="#labels"><code>labels</code></a>: Extract content of rule attributes</li>
+    <li><a href="#owner"><code>owner</code></a>: Find targets that own specified files</li>
+    <li><a href="#rdeps"><code>rdeps</code></a>: Transitive closure of reverse dependencies</li>
+    <li><a href="#set"><code>set</code></a>: Group targets</li>
+    <li><a href="#testsof"><code>testsof</code></a>: List the tests of the specified targets</li>
+    <li><a href="#set-operations"><code>union</code></a>: Set union</li>
 </ul>
 
-<p>
-Whitespace characters outside of a quoted word are ignored.
-</p>
-
-<h3>Expressions: syntax and semantics of the grammar</h3>
+<h3>Parameters to operators</h3>
 
 <p>
-This is the grammar of the query language, expressed in Extended Backus
-Naur Form (<a href="https://en.wikipedia.org/wiki/Extended_Backus-Naur_Form">EBNF</a>) notation:
-</p>
-
-<pre>
-{literal}
-expr ::= word
-       | (expr)
-       | expr intersect expr
-       | expr ^ expr
-       | expr union expr
-       | expr + expr
-       | expr except expr
-       | expr - expr
-       | allpaths(expr, expr)
-       | attrfilter(word, word, expr)
-       | buildfile(expr)
-       | deps(expr)
-       | deps(expr, depth)
-       | deps(expr, depth, expr)
-       | deps(expr, depth, first-order-deps(expr))
-       | filter(word, expr)
-       | inputs(expr)
-       | kind(word, expr)
-       | labels(word, expr)
-       | owner(word)
-       | rdeps(expr, expr)
-       | rdeps(expr, expr, depth)
-       | set(word *)
-       | testsof(expr)
-{/literal}
-</pre>
-
-<h4>Target Patterns</h4>
-
-<p>
-<pre>
-expr ::= word
-</pre>
+The most common parameter for a Buck query operator is an expression that
+evaluates to a build target or collection of build targets. Such an 
+expression could be an explicit {call buck.build_target /}, a {call
+buck.build_target_pattern /}, an {call buckconfig.alias /}, 
+or <em>the set of targets returned by another Buck query operator</em>.
 </p>
 
 <p>
-Syntactically, a <a href="{ROOT}concept/build_target_pattern.html">
-build target pattern</a>, or build target <em>expression</em>, is just a word.  
-A build target pattern evaluates to a set containing one or more elements.
-It is interpreted as an unordered set of targets. 
-</p>
-
-<p>
-For example, the word <code>//foo:bar</code> resolves to a set containing one
-build target, while <code>//foo/...</code> resolves to all targets in every directory
-beneath the </code>foo</code> directory.
-</p>
-
-
-<h4>Aliases</h4>
-
-<p>
-<pre>
-expr ::= word
-</pre>
-</p>
-
-<p>
-Aliases defined in {call buck.buckconfig_link /} can
-be used in queries. Aliases resolve to their corresponding build
-targets. Suppose there is the following alias 
-</p>
-
-<p>
-<pre>
-{literal}
-app = //apps/myapp:app
-{/literal}
-</pre>
-</p>
-
-<p>
-then <code>app</code> can be used
-instead of <code>//apps/myapp:app</code> in query expressions.
-</p>
-
-<p>
-You can also use <code>buck query</code> to resolve aliases. 
+<strong>Tip:</strong> You can pass an alias directly to 
+the <code>buck query</code> command line to see what it resolves to. 
 For example:
 </p>
 
@@ -257,20 +120,50 @@ $ buck query app
 </pre>
 </p>
 
-
-<h4>Parenthesized expressions</h4>
+<h4>Non-target parameters</h4>
 
 <p>
+In addition to target parameters, some Buck query operators take string
+parameters such as filenames (<a href="#owner"><code>owner()</code></a>) or 
+regular expressions (<a href="#filter"><code>filter()</code></a>).
+</p>
+
+<h4>Quoting of arguments</h4>
+
+  <p>
+    It is not necessary to quote arguments if they 
+    adhere to certain conditions. That is, they comprise sequences of characters drawn 
+    from the alphabet, numerals, forward slash (<code>/</code>), 
+    colon (<code>:</code>), period (<code>.</code>), hyphen (<code>-</code>), 
+    underscore (<code>_</code>), or asterisk (<code>*</code>)&mdash;and
+    they do not start with a hyphen or period.
+    For example, quoting <code>java_test</code> is unnecessary.
+  </p>
+
+  <p>
+    All that said, we <em>do</em> recommend that you quote arguments as a
+    best practice even when Buck doesn't require it.
+  </p>
+
+  <p>
+    You should always use quotes when writing scripts that 
+    construct <code>buck query</code> expressions <em>from user-supplied values</em>.
+  </p>
+
+  <p>
+    Note that argument quoting for <code>buck query</code> is in
+    addition to any quoting that your shell requires.  In the following 
+    example, double-quotes are used for the shell and
+    single-quotes are used for the <code>build target</code> expression.
+  </p>
+
 <pre>
-expr ::= (expr)
+{literal}
+buck query "'//foo:bar=wiz'"
+{/literal}
 </pre>
-</p>
 
-<p>
-Parentheses associate sub-expressions to force an order of evaluation.
-A parenthesized expression resolves to the value of the expression it
-encloses.
-</p>
+</ul>
 
 
 {call .section}
@@ -278,24 +171,42 @@ encloses.
 {param title: 'Algebraic set operations: intersection, union, set difference'/}
 {/call}
 
-<p>
-<pre>
-{literal}
-expr ::= expr intersect expr
-       | expr ^ expr
-       | expr union expr
-       | expr + expr
-       | expr except expr
-       | expr - expr
-{/literal}
-</pre>
-</p>
+<table>
+  <tr>
+    <th>Nominal</th>
+    <th>Symbolic</th>
+  </tr>
+  <tr> 
+    <td>  
+      <code class="not-inline">intersect</code>
+    </td>
+    <td style="text-align:center"> 
+      <code class="not-inline">^</code>
+    </td>
+  </tr>
+  <tr> 
+    <td>  
+      <code class="not-inline">union</code>
+    </td>
+    <td style="text-align:center"> 
+      <code class="not-inline">+</code>
+    </td>
+  </tr>
+  <tr> 
+    <td>  
+      <code class="not-inline">except</code>
+    </td>
+    <td style="text-align:center"> 
+      <code class="not-inline">-</code>
+    </td>
+  </tr>
+</table>
 
 <p>
 These three operators compute the corresponding set operations over their arguments.
 Each operator has two forms, a nominal form, such as <code>intersect</code>, 
 and a symbolic form, such as <code>^</code>. 
-Both forms are equivalent; the symbolic forms are just quicker to type. For example,
+the two forms are equivalent; the symbolic forms are just faster to type. For example,
 </p>
 
 <p>
@@ -315,21 +226,25 @@ buck query "deps('//foo:bar') ^ deps('//baz:lib')"
 </p>
 
 <p>
-both return the targets that appear in the transitive closure
+both return the targets that appear in the 
+{sp}<a href="https://en.wikipedia.org/wiki/Transitive_closure">transitive closure</a>{sp}
 of <code>//foo:bar</code> and <code>//baz:lib</code>. 
 </p>
-
 <p>
 The <code>intersect</code> (<code>^</code>)
-and <code>union</code> (<code>+</code>) operators are commutative
-(symmetric); however, the <code>except</code> (<code>-</code>) operator is asymmetric.
+and <code>union</code> (<code>+</code>) operators are commutative. 
+The <code>except</code> (<code>-</code>) operator is not commutative.
 </p>
 
 <p>
 The parser treats all three operators as left-associative and of equal
-precedence, so we strongly recommend that you use parentheses if you need to ensure a
-specific order of evaluation. For example, the first two 
-expressions are equivalent, but the third is not:
+precedence, so we recommend that you use parentheses if you
+need to ensure a specific order of evaluation. A parenthesized
+expression resolves to the value of the expression it encloses.  For
+example, the first two expressions are equivalent, but the third is not:
+</p>
+
+<p>
 </p>
 
 <p>
