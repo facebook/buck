@@ -167,7 +167,9 @@ public class RemoteExecutionEventListener
   /** Events from the LocalFallback stats. */
   @Subscribe
   public void onLocalFallbackEventFinished(LocalFallbackEvent.Finished event) {
-    localFallbackTotalExecutions.increment();
+    if (event.getRemoteResult() != Result.CANCELLED) {
+      localFallbackTotalExecutions.increment();
+    }
 
     if (event.getLocalResult() != Result.NOT_RUN) {
       localFallbackLocalExecutions.increment();
