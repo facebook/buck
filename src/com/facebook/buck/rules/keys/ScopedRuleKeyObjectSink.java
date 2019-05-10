@@ -18,8 +18,6 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.util.Scope;
-import java.io.IOException;
-import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 /**
@@ -40,14 +38,6 @@ public class ScopedRuleKeyObjectSink implements RuleKeyObjectSink {
   public RuleKeyObjectSink setReflectively(String key, @Nullable Object val) {
     try (Scope ignored = scope.elementScope()) {
       delegate.setReflectively(key, val);
-      return this;
-    }
-  }
-
-  @Override
-  public RuleKeyObjectSink setPath(Path absolutePath, Path ideallyRelative) throws IOException {
-    try (Scope ignored = scope.elementScope()) {
-      delegate.setPath(absolutePath, ideallyRelative);
       return this;
     }
   }

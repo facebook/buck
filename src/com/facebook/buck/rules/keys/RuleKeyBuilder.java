@@ -205,7 +205,6 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
   // that's being used for compilation or some such). This does mean that if a user renames a
   // file without changing the contents, we have a cache miss. We're going to assume that this
   // doesn't happen that often in practice.
-  @Override
   public RuleKeyBuilder<RULE_KEY> setPath(Path absolutePath, Path ideallyRelative)
       throws IOException {
     // TODO(simons): Enable this precondition once setPath(Path) has been removed.

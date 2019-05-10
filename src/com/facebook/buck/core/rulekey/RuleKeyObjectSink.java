@@ -16,20 +16,8 @@
 
 package com.facebook.buck.core.rulekey;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 public interface RuleKeyObjectSink {
-
   RuleKeyObjectSink setReflectively(String key, @Nullable Object val);
-
-  /**
-   * Do not use this method, instead call {@link #setReflectively(String, Object)} with the
-   * corresponding {@link com.facebook.buck.core.sourcepath.SourcePath} as a parameter.
-   *
-   * @deprecated
-   */
-  @Deprecated
-  RuleKeyObjectSink setPath(Path absolutePath, Path ideallyRelative) throws IOException;
 }

@@ -785,8 +785,7 @@ abstract class AbstractCxxSourceRuleFactory {
       this.commandHashCache = commandHashCache;
     }
 
-    @Override
-    public RuleKeyObjectSink setPath(Path absolutePath, Path ideallyRelative) {
+    public RuleKeyObjectSink setPath(Path ideallyRelative) {
       // This matches default rulekey computation (skipping the hash, though).
       if (ideallyRelative.isAbsolute()) {
         hasher.putString(ideallyRelative.getFileName().toString());
@@ -831,9 +830,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
     @Override
     protected AbstractRuleKeyBuilder<String> setSourcePath(SourcePath sourcePath) {
-      setPath(
-          getPathResolver().getAbsolutePath(sourcePath),
-          getPathResolver().getIdeallyRelativePath(sourcePath));
+      setPath(getPathResolver().getIdeallyRelativePath(sourcePath));
       return this;
     }
 

@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -92,11 +91,6 @@ public class ManifestEntriesTest {
               return this;
             }
             throw new IllegalArgumentException(key);
-          }
-
-          @Override
-          public RuleKeyObjectSink setPath(Path absolutePath, Path ideallyRelative) {
-            throw new UnsupportedOperationException();
           }
         };
 

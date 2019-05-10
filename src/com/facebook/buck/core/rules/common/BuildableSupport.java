@@ -17,7 +17,6 @@
 package com.facebook.buck.core.rules.common;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasCustomDepsLogic;
@@ -31,7 +30,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-import java.nio.file.Path;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -116,11 +114,6 @@ public final class BuildableSupport {
     }
 
     @Override
-    public RuleKeyObjectSink setPath(Path absolutePath, Path ideallyRelative) {
-      return this;
-    }
-
-    @Override
     protected AbstractRuleKeyBuilder<Stream<BuildRule>> setSingleValue(@Nullable Object val) {
       return this;
     }
@@ -166,11 +159,6 @@ public final class BuildableSupport {
     public InputsBuilder() {
       super(NoopRuleKeyScopedHasher.INSTANCE);
       this.streamBuilder = Stream.builder();
-    }
-
-    @Override
-    public RuleKeyObjectSink setPath(Path absolutePath, Path ideallyRelative) {
-      return this;
     }
 
     @Override
