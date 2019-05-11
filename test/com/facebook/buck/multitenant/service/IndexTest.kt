@@ -27,17 +27,14 @@ class IndexTest {
 
     @Test
     fun getTargetsAndDeps() {
+        val (index, generations) = loadIndex("index_test_targets_and_deps.json")
+        val generation1 = generations[0]
+        val generation2 = generations[1]
+        val generation3 = generations[2]
+        val generation4 = generations[3]
+        val generation5 = generations[4]
+
         val bt = BuildTargets::parseOrThrow
-        val (index, indexAppender) = IndexFactory.createIndex()
-
-        val commits = populateIndexFromStream(indexAppender, IndexTest::class.java.getResourceAsStream("index_test_targets_and_deps.json"))
-
-        val generation1 = requireNotNull(indexAppender.getGeneration(commits[0]))
-        val generation2 = requireNotNull(indexAppender.getGeneration(commits[1]))
-        val generation3 = requireNotNull(indexAppender.getGeneration(commits[2]))
-        val generation4 = requireNotNull(indexAppender.getGeneration(commits[3]))
-        val generation5 = requireNotNull(indexAppender.getGeneration(commits[4]))
-
         assertEquals(
                 setOf(bt("//java/com/facebook/buck/base:base")),
                 index.getTargets(generation1).toSet())
@@ -97,12 +94,10 @@ class IndexTest {
 
     @Test
     fun getTargetNodes() {
+        val (index, generations) = loadIndex("index_test_targets_and_deps.json")
+        val generation5 = generations[4]
+
         val bt = BuildTargets::parseOrThrow
-        val (index, indexAppender) = IndexFactory.createIndex()
-
-        val commits = populateIndexFromStream(indexAppender, IndexTest::class.java.getResourceAsStream("index_test_targets_and_deps.json"))
-        val generation5 = requireNotNull(indexAppender.getGeneration(commits[4]))
-
         val targetNodes = index.getTargetNodes(generation5, listOf(
                 bt("//java/com/facebook/buck/base:base"),
                 bt("//java/com/facebook/buck/model:model"),
@@ -115,4 +110,11 @@ class IndexTest {
         assertEquals(targetNodes[0], index.getTargetNode(generation5, bt("//java/com/facebook/buck/base:base")))
         assertEquals(targetNodes[1], null)
     }
+}
+
+private fun loadIndex(resource: String): Pair<Index, List<Int>> {
+    val (index, indexAppender) = IndexFactory.createIndex()
+    val commits = populateIndexFromStream(indexAppender, IndexTest::class.java.getResourceAsStream(resource))
+    val generations = commits.map { requireNotNull(indexAppender.getGeneration(it)) }
+    return Pair(index, generations)
 }
