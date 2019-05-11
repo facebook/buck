@@ -27,10 +27,7 @@ import com.google.common.collect.ImmutableSet
  */
 class Index internal constructor(
         private val indexGenerationData: IndexGenerationData,
-        private val buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>,
-        private val internalTypeMapper: InternalTypeMapper) {
-    fun parseBuildTarget(target: String): UnconfiguredBuildTarget = internalTypeMapper.buildTargetParser(target)
-
+        private val buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>) {
     /**
      * If you need to look up multiple target nodes for the same commit, prefer [getTargetNodes].
      *
@@ -140,7 +137,7 @@ class Index internal constructor(
         }
 
         return targetNames.asSequence().map {
-            internalTypeMapper.createBuildTarget(basePath, it)
+            BuildTargets.createBuildTargetFromParts(basePath, it)
         }.toList()
     }
 
@@ -165,7 +162,7 @@ class Index internal constructor(
             val basePath = it.first
             val names = it.second
             names.map {
-                internalTypeMapper.createBuildTarget(basePath, it)
+                BuildTargets.createBuildTargetFromParts(basePath, it)
             }.asSequence()
         }.toList()
     }

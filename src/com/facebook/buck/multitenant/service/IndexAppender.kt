@@ -28,8 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class IndexAppender internal constructor(
         private val indexGenerationData: MutableIndexGenerationData,
-        private val buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>,
-        private val internalTypeMapper: InternalTypeMapper) {
+        private val buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>) {
 
     /**
      * id of the current generation. should only be read and set by [addCommitData] as clients
@@ -63,7 +62,7 @@ class IndexAppender internal constructor(
         // First, determine if any of the changes from the commits require new values to be added
         // to the generation map.
         val currentGeneration = generation.get()
-        val deltas = determineDeltas(internalTypeMapper.toInternalChanges(changes), currentGeneration)
+        val deltas = determineDeltas(toInternalChanges(changes), currentGeneration)
 
         // If there are no updates to any of the generation maps, add a new entry for the current
         // commit using the existing generation in the commitToGeneration map.
@@ -140,7 +139,7 @@ class IndexAppender internal constructor(
 
                 buildPackageDeltas.add(BuildPackageDelta.Removed(removed))
                 for (ruleName in oldRules) {
-                    val buildTarget = internalTypeMapper.createBuildTarget(removed, ruleName)
+                    val buildTarget = BuildTargets.createBuildTargetFromParts(removed, ruleName)
                     ruleDeltas.add(RuleDelta.Removed(buildTarget))
                 }
             }
@@ -155,7 +154,7 @@ class IndexAppender internal constructor(
                     }
 
                     val oldRules = oldRuleNames.asSequence().map { oldRuleName: String ->
-                        val buildTarget = internalTypeMapper.createBuildTarget(modified.buildFileDirectory, oldRuleName)
+                        val buildTarget = BuildTargets.createBuildTargetFromParts(modified.buildFileDirectory, oldRuleName)
                         requireNotNull(ruleMap.getVersion(buildTargetCache.get(buildTarget),
                                 generation)) {
                             "Missing deps for $buildTarget at generation $generation"
@@ -176,6 +175,27 @@ class IndexAppender internal constructor(
         }
 
         return Deltas(buildPackageDeltas, ruleDeltas)
+    }
+
+    private fun toInternalChanges(changes: Changes): InternalChanges {
+        return InternalChanges(changes.addedBuildPackages.map { toInternalBuildPackage(it) }.toList(),
+                changes.modifiedBuildPackages.map { toInternalBuildPackage(it) }.toList(),
+                changes.removedBuildPackages
+        )
+    }
+
+    private fun toInternalBuildPackage(buildPackage: BuildPackage): InternalBuildPackage {
+        return InternalBuildPackage(buildPackage.buildFileDirectory, buildPackage.rules.map { toInternalRawBuildRule(it) }.toSet())
+    }
+
+    private fun toInternalRawBuildRule(rawBuildRule: RawBuildRule): InternalRawBuildRule {
+        return InternalRawBuildRule(rawBuildRule.targetNode, toBuildTargetSet(rawBuildRule.deps))
+    }
+
+    private fun toBuildTargetSet(targets: Set<UnconfiguredBuildTarget>): BuildTargetSet {
+        val ids = targets.map { buildTargetCache.get(it) }.toIntArray()
+        ids.sort()
+        return ids
     }
 }
 

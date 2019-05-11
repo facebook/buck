@@ -16,12 +16,12 @@
 
 package com.facebook.buck.multitenant.importer
 
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget
 import com.facebook.buck.core.model.RuleType
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.BuildPackage
+import com.facebook.buck.multitenant.service.BuildTargets
 import com.facebook.buck.multitenant.service.Changes
 import com.facebook.buck.multitenant.service.IndexAppender
 import com.facebook.buck.multitenant.service.RawBuildRule
@@ -40,40 +40,23 @@ import java.io.InputStream
  */
 fun populateIndexFromStream(
         indexAppender: IndexAppender,
-        parser: (target: String) -> UnconfiguredBuildTarget,
         stream: InputStream): List<String> = ObjectMappers.createParser(stream)
         .enable(JsonParser.Feature.ALLOW_COMMENTS)
         .enable(JsonParser.Feature.ALLOW_TRAILING_COMMA)
         .readValueAsTree<JsonNode>()
         .asSequence().map { commit ->
             val hash = commit.get("commit").asText()
-            val added = toBuildPackages(parser, commit.get("added"))
-            val modified = toBuildPackages(parser, commit.get("modified"))
+            val added = toBuildPackages(commit.get("added"))
+            val modified = toBuildPackages(commit.get("modified"))
             val removed = toRemovedPackages(commit.get("removed"))
             val changes = Changes(added, modified, removed)
             indexAppender.addCommitData(hash, changes)
             hash
         }.toList()
 
-/** Parses an "ordinary" fully-qualified build target with no cells or flavors. */
-fun parseOrdinaryBuildTarget(target: String): UnconfiguredBuildTarget {
-    if (!target.startsWith("//")) {
-        throw IllegalArgumentException("target '$target' did not start with //")
-    }
-
-    val index = target.lastIndexOf(':')
-    if (index < 0) {
-        throw IllegalArgumentException("target '$target' did not contain a colon")
-    }
-
-    return ImmutableUnconfiguredBuildTarget.of(
-            "", target.substring(0, index), target.substring(index + 1), UnconfiguredBuildTarget.NO_FLAVORS
-    )
-}
-
 val FAKE_RULE_TYPE: RuleType = RuleTypeFactory.createBuildRule("fake_rule")
 
-private fun toBuildPackages(parser: (target: String) -> UnconfiguredBuildTarget, node: JsonNode?): List<BuildPackage> {
+private fun toBuildPackages(node: JsonNode?): List<BuildPackage> {
     if (node == null) {
         return listOf()
     }
@@ -102,8 +85,9 @@ private fun toBuildPackages(parser: (target: String) -> UnconfiguredBuildTarget,
             }
             requireNotNull(name)
             requireNotNull(ruleType)
-            val buildTarget = parser("//$path:$name")
-            createRawRule(parser, buildTarget, ruleType, deps, attrs.build())
+            val buildTarget = BuildTargets.createBuildTargetFromParts(path, name)
+            val depsAsTargets = deps.map { BuildTargets.parseOrThrow(it) }.toSet()
+            createRawRule(buildTarget, ruleType, depsAsTargets, attrs.build())
         }.toSet()
         BuildPackage(path, rules)
     }
@@ -131,13 +115,12 @@ private fun toRemovedPackages(node: JsonNode?): List<FsAgnosticPath> {
 }
 
 private fun createRawRule(
-        parser: (target: String) -> UnconfiguredBuildTarget,
         target: UnconfiguredBuildTarget,
         ruleType: String,
-        deps: Set<String>,
+        deps: Set<UnconfiguredBuildTarget>,
         attrs: ImmutableMap<String, Any>): RawBuildRule {
     val node = ServiceRawTargetNode(target, RuleTypeFactory.createBuildRule(ruleType), attrs)
-    return RawBuildRule(node, deps.map { parser(it) }.toSet())
+    return RawBuildRule(node, deps)
 }
 
 /**

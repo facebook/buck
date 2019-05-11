@@ -17,7 +17,6 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
-import com.facebook.buck.multitenant.importer.parseOrdinaryBuildTarget
 import com.facebook.buck.multitenant.importer.populateIndexFromStream
 import com.google.common.collect.ImmutableSet
 import org.junit.Assert.assertEquals
@@ -28,10 +27,10 @@ class IndexTest {
 
     @Test
     fun getTargetsAndDeps() {
-        val bt = ::parseOrdinaryBuildTarget
-        val (index, indexAppender) = IndexFactory.createIndex(bt)
+        val bt = BuildTargets::parseOrThrow
+        val (index, indexAppender) = IndexFactory.createIndex()
 
-        val commits = populateIndexFromStream(indexAppender, bt, IndexTest::class.java.getResourceAsStream("index_test_targets_and_deps.json"))
+        val commits = populateIndexFromStream(indexAppender, IndexTest::class.java.getResourceAsStream("index_test_targets_and_deps.json"))
 
         val generation1 = requireNotNull(indexAppender.getGeneration(commits[0]))
         val generation2 = requireNotNull(indexAppender.getGeneration(commits[1]))
@@ -98,10 +97,10 @@ class IndexTest {
 
     @Test
     fun getTargetNodes() {
-        val bt = ::parseOrdinaryBuildTarget
-        val (index, indexAppender) = IndexFactory.createIndex(bt)
+        val bt = BuildTargets::parseOrThrow
+        val (index, indexAppender) = IndexFactory.createIndex()
 
-        val commits = populateIndexFromStream(indexAppender, bt, IndexTest::class.java.getResourceAsStream("index_test_targets_and_deps.json"))
+        val commits = populateIndexFromStream(indexAppender, IndexTest::class.java.getResourceAsStream("index_test_targets_and_deps.json"))
         val generation5 = requireNotNull(indexAppender.getGeneration(commits[4]))
 
         val targetNodes = index.getTargetNodes(generation5, listOf(

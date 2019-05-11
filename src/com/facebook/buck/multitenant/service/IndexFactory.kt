@@ -19,15 +19,11 @@ package com.facebook.buck.multitenant.service
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 
 object IndexFactory {
-    fun createIndex(buildTargetParser: (target: String) -> UnconfiguredBuildTarget): Pair<Index, IndexAppender> = createIndex(buildTargetParser, DefaultGenerationData())
-
-    private fun createIndex(
-            buildTargetParser: (target: String) -> UnconfiguredBuildTarget,
-            indexGenerationData: MutableIndexGenerationData): Pair<Index, IndexAppender> {
+    fun createIndex(): Pair<Index, IndexAppender> {
+        val indexGenerationData = DefaultGenerationData()
         val buildTargetCache = AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>()
-        val internalTypeMapper = InternalTypeMapper(buildTargetParser, buildTargetCache)
-        val index = Index(indexGenerationData, buildTargetCache, internalTypeMapper)
-        val indexAppender = IndexAppender(indexGenerationData, buildTargetCache, internalTypeMapper)
+        val index = Index(indexGenerationData, buildTargetCache)
+        val indexAppender = IndexAppender(indexGenerationData, buildTargetCache)
         return Pair(index, indexAppender)
     }
 }

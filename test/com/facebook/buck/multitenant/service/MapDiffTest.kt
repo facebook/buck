@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.importer.FAKE_RULE_TYPE
 import com.facebook.buck.multitenant.importer.ServiceRawTargetNode
-import com.facebook.buck.multitenant.importer.parseOrdinaryBuildTarget
 import com.google.common.collect.ImmutableMap
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -126,7 +125,7 @@ class MapDiffTest {
 
 private val BUILD_FILE_DIRECTORY: FsAgnosticPath = FsAgnosticPath.of("foo")
 private val BUILD_TARGET_PARSER: ((shortOrFullyQualifiedName: String) -> UnconfiguredBuildTarget) = {
-    parseOrdinaryBuildTarget("//%s:%s".format(BUILD_FILE_DIRECTORY, it))
+    BuildTargets.createBuildTargetFromParts(BUILD_FILE_DIRECTORY, it)
 }
 
 private fun createBuildTarget(shortName: String): UnconfiguredBuildTarget {

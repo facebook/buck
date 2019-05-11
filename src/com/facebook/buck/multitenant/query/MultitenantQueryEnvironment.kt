@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternData.Kind
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternDataParser
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
+import com.facebook.buck.multitenant.service.BuildTargets
 import com.facebook.buck.multitenant.service.Generation
 import com.facebook.buck.multitenant.service.Index
 import com.facebook.buck.query.DepsFunction
@@ -135,7 +136,11 @@ private class TargetEvaluator(private val index: Index, private val generation: 
         // TODO: Cells (and flavors?) need to be supported.
         return when (buildTargetPattern.kind!!) {
             Kind.SINGLE -> {
-                ImmutableSet.of(index.parseBuildTarget(buildTargetPattern.toString()))
+                val buildTarget = BuildTargets.createBuildTargetFromParts(
+                        buildTargetPattern.cell,
+                        FsAgnosticPath.of(buildTargetPattern.basePath),
+                        buildTargetPattern.targetName)
+                ImmutableSet.of(buildTarget)
             }
             Kind.PACKAGE -> {
                 val basePath = buildTargetPattern.basePath
