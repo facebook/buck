@@ -34,62 +34,54 @@ class IndexTest {
         val generation4 = generations[3]
         val generation5 = generations[4]
 
-        val bt = BuildTargets::parseOrThrow
         assertEquals(
-                setOf(bt("//java/com/facebook/buck/base:base")),
+                targetSet("//java/com/facebook/buck/base:base"),
                 index.getTargets(generation1).toSet())
         assertEquals(
-                setOf(
-                        bt("//java/com/facebook/buck/base:base"),
-                        bt("//java/com/facebook/buck/model:model")),
+                targetSet("//java/com/facebook/buck/base:base", "//java/com/facebook/buck/model:model"),
                 index.getTargets(generation2).toSet())
         assertEquals(
-                setOf(
-                        bt("//java/com/facebook/buck/base:base"),
-                        bt("//java/com/facebook/buck/model:model"),
-                        bt("//java/com/facebook/buck/util:util")),
+                targetSet(
+                        "//java/com/facebook/buck/base:base",
+                        "//java/com/facebook/buck/model:model",
+                        "//java/com/facebook/buck/util:util"),
                 index.getTargets(generation3).toSet())
         assertEquals(
-                setOf(
-                        bt("//java/com/facebook/buck/base:base"),
-                        bt("//java/com/facebook/buck/model:model"),
-                        bt("//java/com/facebook/buck/util:util")),
+                targetSet(
+                        "//java/com/facebook/buck/base:base",
+                        "//java/com/facebook/buck/model:model",
+                        "//java/com/facebook/buck/util:util"),
                 index.getTargets(generation4).toSet())
         assertEquals(
-                setOf(
-                        bt("//java/com/facebook/buck/base:base"),
-                        bt("//java/com/facebook/buck/util:util")),
+                targetSet(
+                        "//java/com/facebook/buck/base:base",
+                        "//java/com/facebook/buck/util:util"),
                 index.getTargets(generation5).toSet())
 
         assertEquals(
-                setOf(
-                        bt("//java/com/facebook/buck/base:base")
-                ),
-                index.getTransitiveDeps(generation2, bt("//java/com/facebook/buck/model:model"))
+                targetSet("//java/com/facebook/buck/base:base"),
+                index.getTransitiveDeps(generation2, "//java/com/facebook/buck/model:model".buildTarget())
         )
         assertEquals(
-                setOf(
-                        bt("//java/com/facebook/buck/base:base"),
-                        bt("//java/com/facebook/buck/util:util")
-                ),
-                index.getTransitiveDeps(generation3, bt("//java/com/facebook/buck/model:model"))
+                targetSet("//java/com/facebook/buck/base:base", "//java/com/facebook/buck/util:util"),
+                index.getTransitiveDeps(generation3, "//java/com/facebook/buck/model:model".buildTarget())
         )
 
         val commit1baseFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
-        index.getFwdDeps(generation1, listOf(bt("//java/com/facebook/buck/base:base")), commit1baseFwdDeps)
-        assertEquals(commit1baseFwdDeps.build(), setOf<UnconfiguredBuildTarget>())
+        index.getFwdDeps(generation1, targetList("//java/com/facebook/buck/base:base"), commit1baseFwdDeps)
+        assertEquals(commit1baseFwdDeps.build(), targetSet())
 
         val commit2modelFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
-        index.getFwdDeps(generation2, listOf(bt("//java/com/facebook/buck/model:model")), commit2modelFwdDeps)
-        assertEquals(commit2modelFwdDeps.build(), setOf(bt("//java/com/facebook/buck/base:base")))
+        index.getFwdDeps(generation2, targetList("//java/com/facebook/buck/model:model"), commit2modelFwdDeps)
+        assertEquals(commit2modelFwdDeps.build(), targetSet("//java/com/facebook/buck/base:base"))
 
         val commit3modelFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
-        index.getFwdDeps(generation3, listOf(bt("//java/com/facebook/buck/model:model")), commit3modelFwdDeps)
-        assertEquals(commit3modelFwdDeps.build(), setOf(bt("//java/com/facebook/buck/base:base"), bt("//java/com/facebook/buck/util:util")))
+        index.getFwdDeps(generation3, targetList("//java/com/facebook/buck/model:model"), commit3modelFwdDeps)
+        assertEquals(commit3modelFwdDeps.build(), targetSet("//java/com/facebook/buck/base:base", "//java/com/facebook/buck/util:util"))
 
         val commit3utilFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
-        index.getFwdDeps(generation3, listOf(bt("//java/com/facebook/buck/util:util")), commit3utilFwdDeps)
-        assertEquals(commit3utilFwdDeps.build(), setOf(bt("//java/com/facebook/buck/base:base")))
+        index.getFwdDeps(generation3, targetList("//java/com/facebook/buck/util:util"), commit3utilFwdDeps)
+        assertEquals(commit3utilFwdDeps.build(), targetSet("//java/com/facebook/buck/base:base"))
     }
 
     @Test
@@ -97,17 +89,16 @@ class IndexTest {
         val (index, generations) = loadIndex("index_test_targets_and_deps.json")
         val generation5 = generations[4]
 
-        val bt = BuildTargets::parseOrThrow
-        val targetNodes = index.getTargetNodes(generation5, listOf(
-                bt("//java/com/facebook/buck/base:base"),
-                bt("//java/com/facebook/buck/model:model"),
-                bt("//java/com/facebook/buck/util:util")
+        val targetNodes = index.getTargetNodes(generation5, targetList(
+                "//java/com/facebook/buck/base:base",
+                "//java/com/facebook/buck/model:model",
+                "//java/com/facebook/buck/util:util"
         ))
         assertEquals(targetNodes[0]!!.targetNode.ruleType.name, "java_library")
         assertNull("model was deleted at commit 5", targetNodes[1])
-        assertEquals(targetNodes[2]!!.deps, setOf(bt("//java/com/facebook/buck/base:base")))
+        assertEquals(targetNodes[2]!!.deps, targetSet("//java/com/facebook/buck/base:base"))
 
-        assertEquals(targetNodes[0], index.getTargetNode(generation5, bt("//java/com/facebook/buck/base:base")))
+        assertEquals(targetNodes[0], index.getTargetNode(generation5, "//java/com/facebook/buck/base:base".buildTarget()))
         assertEquals(targetNodes[1], null)
     }
 }
@@ -117,4 +108,14 @@ private fun loadIndex(resource: String): Pair<Index, List<Int>> {
     val commits = populateIndexFromStream(indexAppender, IndexTest::class.java.getResourceAsStream(resource))
     val generations = commits.map { requireNotNull(indexAppender.getGeneration(it)) }
     return Pair(index, generations)
+}
+
+private fun targetList(vararg targets: String): List<UnconfiguredBuildTarget> =
+        targets.map(BuildTargets::parseOrThrow)
+
+private fun targetSet(vararg targets: String): Set<UnconfiguredBuildTarget> =
+        targets.asSequence().map(BuildTargets::parseOrThrow).toSet()
+
+private fun String.buildTarget(): UnconfiguredBuildTarget {
+    return BuildTargets.parseOrThrow(this)
 }
