@@ -54,8 +54,6 @@ fun populateIndexFromStream(
             hash
         }.toList()
 
-val FAKE_RULE_TYPE: RuleType = RuleTypeFactory.createBuildRule("fake_rule")
-
 private fun toBuildPackages(node: JsonNode?): List<BuildPackage> {
     if (node == null) {
         return listOf()

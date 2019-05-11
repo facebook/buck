@@ -16,15 +16,18 @@
 
 package com.facebook.buck.multitenant.service
 
+import com.facebook.buck.core.model.RuleType
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
-import com.facebook.buck.multitenant.importer.FAKE_RULE_TYPE
+import com.facebook.buck.multitenant.importer.RuleTypeFactory
 import com.facebook.buck.multitenant.importer.ServiceRawTargetNode
 import com.google.common.collect.ImmutableMap
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+
+private val FAKE_RULE_TYPE: RuleType = RuleTypeFactory.createBuildRule("fake_rule")
 
 class MapDiffTest {
 

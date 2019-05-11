@@ -12,6 +12,7 @@ kotlin_test(
         "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
         "//src/com/facebook/buck/core/parser/buildtargetpattern:buildtargetpattern",
         "//src/com/facebook/buck/multitenant/fs:fs",
+        "//src/com/facebook/buck/multitenant/importer:RuleTypeFactory",
         "//src/com/facebook/buck/multitenant/importer:importer",
         "//src/com/facebook/buck/multitenant/service:service",
         "//test/com/facebook/buck/core/model:testutil",

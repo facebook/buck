@@ -24,6 +24,9 @@ java_library(
     srcs = [
         "RuleTypeFactory.java",
     ],
+    visibility = [
+        "//test/com/facebook/buck/multitenant/...",
+    ],
     deps = [
         "//src/com/facebook/buck/core/model:model",
     ],
