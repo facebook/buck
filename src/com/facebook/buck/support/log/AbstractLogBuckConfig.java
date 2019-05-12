@@ -57,16 +57,6 @@ public abstract class AbstractLogBuckConfig implements ConfigView<BuckConfig> {
   }
 
   @Value.Lazy
-  public boolean isCriticalPathAnalysisEnabled() {
-    return getDelegate().getBooleanValue(LOG_SECTION, "critical_path_analysis_enabled", false);
-  }
-
-  @Value.Lazy
-  public int getCriticalPathCount() {
-    return getDelegate().getInteger(LOG_SECTION, "critical_path_count").orElse(1);
-  }
-
-  @Value.Lazy
   public boolean isBuckConfigLocalWarningEnabled() {
     return getDelegate().getBooleanValue(LOG_SECTION, "buckconfig_local_warning_enabled", false);
   }
