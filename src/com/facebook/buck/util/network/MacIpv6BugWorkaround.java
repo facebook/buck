@@ -16,20 +16,21 @@
 
 package com.facebook.buck.util.network;
 
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.util.environment.Platform;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.NetworkInterface;
 
 /**
- * When attempting to communicate with IPV6-only servers, Java 8 and earlier will attempt to do so
+ * When attempting to communicate with IPV6-only servers, Java 10 and earlier will attempt to do so
  * using the wrong network interface (AirDrop or Touch Bar instead of one's actual wifi or ethernet
  * interface). To work around this, we use Reflection to force the default interface to be 0, which
  * appears to mean "let the system choose" and results in the correct behavior.
  */
 public class MacIpv6BugWorkaround {
   public static void apply() {
-    if (Platform.detect() != Platform.MACOS) {
+    if (Platform.detect() != Platform.MACOS || JavaVersion.getMajorVersion() >= 11) {
       return;
     }
 
