@@ -93,9 +93,10 @@ class DaemonicCellState {
   private final Map<Path, ImmutableMap<String, Optional<String>>> buildFileEnv;
 
   @GuardedBy("rawAndComputedNodesLock")
-  private final ConcurrentMapCache<Path, BuildFileManifest> allRawNodes;
-  // Tracks all targets in `allRawNodes`.  Used to verify that every target in `allComputedNodes`
-  // is also in `allRawNodes`, as we use the latter for bookkeeping invalidations.
+  private final ConcurrentMapCache<Path, BuildFileManifest> allBuildFileManifests;
+  // Tracks all targets in `allBuildFileManifests`.  Used to verify that every target in
+  // `allComputedNodes` is also in `allBuildFileManifests`, as we use the latter for bookkeeping
+  // invalidations.
   @GuardedBy("rawAndComputedNodesLock")
   private final Set<UnflavoredBuildTargetView> allRawNodeTargets;
 
@@ -113,7 +114,7 @@ class DaemonicCellState {
     this.buildFileDependents = HashMultimap.create();
     this.targetsCornucopia = HashMultimap.create();
     this.buildFileEnv = new HashMap<>();
-    this.allRawNodes = new ConcurrentMapCache<>(parsingThreads);
+    this.allBuildFileManifests = new ConcurrentMapCache<>(parsingThreads);
     this.allRawNodeTargets = new HashSet<>();
     this.typedNodeCaches = Maps.newConcurrentMap();
     this.rawAndComputedNodesLock = new AutoCloseableReadWriteUpdateLock();
@@ -149,26 +150,27 @@ class DaemonicCellState {
     }
   }
 
-  Optional<BuildFileManifest> lookupRawNodes(Path buildFile) {
+  Optional<BuildFileManifest> lookupBuildFileManifest(Path buildFile) {
     try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
-      return Optional.ofNullable(allRawNodes.getIfPresent(buildFile));
+      return Optional.ofNullable(allBuildFileManifests.getIfPresent(buildFile));
     }
   }
 
-  BuildFileManifest putRawNodesIfNotPresentAndStripMetaEntries(
+  BuildFileManifest putBuildFileManifestIfNotPresent(
       Path buildFile,
-      BuildFileManifest withoutMetaIncludes,
+      BuildFileManifest buildFileManifest,
       ImmutableSet<Path> dependentsOfEveryNode,
       ImmutableMap<String, Optional<String>> env) {
     try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
-      BuildFileManifest updated = allRawNodes.putIfAbsentAndGet(buildFile, withoutMetaIncludes);
+      BuildFileManifest updated =
+          allBuildFileManifests.putIfAbsentAndGet(buildFile, buildFileManifest);
       for (Map<String, Object> node : updated.getTargets().values()) {
         allRawNodeTargets.add(
             UnflavoredBuildTargetFactory.createFromRawNode(
                 cellRoot, cellCanonicalName, node, buildFile));
       }
       buildFileEnv.put(buildFile, env);
-      if (updated == withoutMetaIncludes) {
+      if (updated == buildFileManifest) {
         // We now know all the nodes. They all implicitly depend on everything in
         // the "dependentsOfEveryNode" set.
         for (Path dependent : dependentsOfEveryNode) {
@@ -182,7 +184,7 @@ class DaemonicCellState {
   int invalidatePath(Path path) {
     try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
       int invalidatedRawNodes = 0;
-      BuildFileManifest buildFileManifest = allRawNodes.getIfPresent(path);
+      BuildFileManifest buildFileManifest = allBuildFileManifests.getIfPresent(path);
       if (buildFileManifest != null) {
         ImmutableMap<String, Map<String, Object>> rawNodes = buildFileManifest.getTargets();
         // Increment the counter
@@ -198,7 +200,7 @@ class DaemonicCellState {
           targetsCornucopia.removeAll(target);
           allRawNodeTargets.remove(target);
         }
-        allRawNodes.invalidate(path);
+        allBuildFileManifests.invalidate(path);
       }
 
       // We may have been given a file that other build files depend on. Iteratively remove those.

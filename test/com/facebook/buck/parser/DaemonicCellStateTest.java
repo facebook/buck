@@ -49,7 +49,7 @@ public class DaemonicCellStateTest {
   private DaemonicCellState childState;
 
   private void populateDummyRawNode(DaemonicCellState state, BuildTarget target) {
-    state.putRawNodesIfNotPresentAndStripMetaEntries(
+    state.putBuildFileManifestIfNotPresent(
         target.getCellPath().resolve(target.getBasePath().resolve("BUCK")),
         BuildFileManifestFactory.create(
             ImmutableMap.of(
@@ -111,7 +111,7 @@ public class DaemonicCellStateTest {
     cache.putComputedNodeIfNotPresent(target, true);
     assertEquals(Optional.of(true), cache.lookupComputedNode(target));
 
-    childState.putRawNodesIfNotPresentAndStripMetaEntries(
+    childState.putBuildFileManifestIfNotPresent(
         targetPath,
         BuildFileManifestFactory.create(
             ImmutableMap.of(

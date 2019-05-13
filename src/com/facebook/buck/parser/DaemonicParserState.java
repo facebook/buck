@@ -171,7 +171,7 @@ public class DaemonicParserState {
       if (state == null) {
         return Optional.empty();
       }
-      return state.lookupRawNodes(buildFile);
+      return state.lookupBuildFileManifest(buildFile);
     }
 
     /**
@@ -212,7 +212,7 @@ public class DaemonicParserState {
       }
 
       return getOrCreateCellState(cell)
-          .putRawNodesIfNotPresentAndStripMetaEntries(
+          .putBuildFileManifestIfNotPresent(
               buildFile,
               manifest,
               dependentsOfEveryNode.build(),
