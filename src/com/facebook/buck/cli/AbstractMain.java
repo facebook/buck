@@ -62,6 +62,18 @@ abstract class AbstractMain {
   private final Console defaultConsole;
   private final CommandMode commandMode;
 
+  /**
+   * The constructor with certain defaults for use by {@link MainWithNailgun} and {@link
+   * MainWithoutNailgun}. The default {@link Console} will be constructed from the streams, and the
+   * command mode is default to {@link CommandMode#RELEASE}
+   *
+   * @param stdOut the output stream for which a {@link Console} is constructed
+   * @param stdErr the error output stream for which a {@link Console} is constructed
+   * @param stdIn the input stream
+   * @param clientEnvironment the environment variable mapping for this command
+   * @param platform the running platform
+   * @param ngContext the nailgun context
+   */
   protected AbstractMain(
       PrintStream stdOut,
       PrintStream stdErr,
@@ -84,6 +96,18 @@ abstract class AbstractMain {
         ngContext);
   }
 
+  /**
+   * Constructor without certain defaults for testing, so that the console, repo root can be
+   * overridden.
+   *
+   * @param console the console to use
+   * @param stdIn the input stream
+   * @param clientEnvironment the environment variable mapping for this command
+   * @param platform the current platform
+   * @param commandMode the {@link CommandMode} of either {@link CommandMode#RELEASE} or {@link
+   *     CommandMode#TEST}
+   * @param ngContext the nailgun context
+   */
   protected AbstractMain(
       Console console,
       InputStream stdIn,
@@ -120,10 +144,15 @@ abstract class AbstractMain {
         optionalNGContext);
   }
 
+  /** @return the {@link KnownRuleTypesFactoryFactory} for this command */
   protected KnownRuleTypesFactoryFactory getKnownRuleTypesFactory() {
     return DefaultKnownRuleTypesFactory::new;
   }
 
+  /**
+   * @return the inferred {@link BuildId} from the environment variable or create a new random
+   *     {@link BuildId}
+   */
   protected BuildId getBuildId() {
     @Nullable String specifiedBuildId = clientEnvironment.get(BUCK_BUILD_ID_ENV_VAR);
     if (specifiedBuildId == null) {
