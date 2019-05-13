@@ -249,6 +249,9 @@ class BuckTool(object):
     def _get_bootstrap_classpath(self):
         raise NotImplementedError()
 
+    def _get_buckfilesystem_classpath(self):
+        raise NotImplementedError()
+
     def _get_java_classpath(self):
         raise NotImplementedError()
 
@@ -276,7 +279,14 @@ class BuckTool(object):
 
     def _environ_for_buck(self):
         env = os.environ.copy()
-        env["CLASSPATH"] = str(self._get_bootstrap_classpath())
+
+        classpath = str(self._get_bootstrap_classpath())
+        # On Java 9 and higher, the BuckFileSystem jar gets loaded via the bootclasspath and doesn't
+        # need to be added here.
+        if self.get_buck_compiled_java_version() < 9:
+            classpath += os.pathsep + str(self._get_buckfilesystem_classpath())
+
+        env["CLASSPATH"] = classpath
         env["BUCK_CLASSPATH"] = str(self._get_java_classpath())
         env["BUCK_TTY"] = str(int(sys.stdin.isatty()))
         if os.name == "posix":
@@ -787,18 +797,28 @@ class BuckTool(object):
                 "-Dbuck.binary_hash={0}".format(self._get_buck_binary_hash()),
             ]
 
-            if (
-                "BUCK_DEFAULT_FILESYSTEM" not in os.environ
-                and (sys.platform == "darwin" or sys.platform.startswith("linux"))
-                and self.get_buck_compiled_java_version() <= 8
+            if "BUCK_DEFAULT_FILESYSTEM" not in os.environ and (
+                sys.platform == "darwin" or sys.platform.startswith("linux")
             ):
                 # Change default filesystem to custom filesystem for memory optimizations
                 # Calls like Paths.get() would return optimized Path implementation
-                # TODO: Temporarily disabled for Java 11 due to class loader issues.
                 java_args.append(
                     "-Djava.nio.file.spi.DefaultFileSystemProvider="
                     "com.facebook.buck.core.filesystems.BuckFileSystemProvider"
                 )
+
+                # In Java 9+, the default file system provider gets initialized in the middle of
+                # loading the jar for the main class (bootstrapper.jar for Buck). Due to a potential
+                # circular dependency, we can't place BuckFileSystemProvider in bootstrapper.jar, or
+                # even in a separate jar on the regular classpath. To ensure BuckFileSystemProvider
+                # is available early enough, we add it to the JVM bootstrap classloader (not to be
+                # confused with Buck's bootstrapper) via the bootclasspath. Note that putting
+                # everything in bootstrapper.jar and putting it on the bootclasspath is problematic
+                # due to subtle classloader issues during in-process Java compilation.
+                if self.get_buck_compiled_java_version() >= 9:
+                    java_args.append(
+                        "-Xbootclasspath/a:" + self._get_buckfilesystem_classpath()
+                    )
 
             resource_lock_path = self._get_resource_lock_path()
             if resource_lock_path is not None:

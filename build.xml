@@ -22,6 +22,8 @@
   <property name="bootstrapper.classes.dir.name" value="bootstrapper/classes" />
   <property name="bootstrapper.classes.dir" value="${build.dir}/${bootstrapper.classes.dir.name}" />
   <property name="bootstrapper.jar" value="${build.dir}/bootstrapper/bootstrapper.jar" />
+  <property name="buckfilesystem.classes.dir" value="${build.dir}/buckfilesystem/classes" />
+  <property name="buckfilesystem.jar" value="${build.dir}/buckfilesystem/buckfilesystem.jar" />
   <property name="tracing-api.src.dir" value="com/facebook/buck/event/api/" />
   <property name="tracing-api.classes.dir.name" value="tracing-api/classes" />
   <property name="tracing-api.classes.dir" value="${build.dir}/${tracing-api.classes.dir.name}" />
@@ -367,7 +369,6 @@
         <include name="com/facebook/buck/jvm/java/abi/source/api/*.java" />
         <include name="com/facebook/buck/jvm/java/lang/model/*.java" />
         <include name="com/facebook/buck/jvm/java/version/JavaVersion.java" />
-        <include name="com/facebook/buck/core/filesystems/*.java" />
       </javac-params>
     </compiler>
     <jar destfile="${bootstrapper.jar}">
@@ -380,6 +381,23 @@
       in the bootstrapper. Compiler plugins will have their own copy linked in, but the ClassLoaders
       will end up loading this one instead when they are run inside Buck. -->
       <zipfileset src="${tracing-api.jar}" />
+    </jar>
+  </target>
+
+  <path id="buckfilesystem-classpath">
+    <!-- Do not add dependencies. This jar gets added to the bootclasspath in Java 9+, and ends up
+    in the JVM bootstrap classloader, mixed with other critical JCL types. -->
+  </path>
+
+  <target name="buckfilesystem" depends="checkversion">
+    <mkdir dir="${buckfilesystem.classes.dir}" />
+    <compiler destdir="${buckfilesystem.classes.dir}" classpathref="buckfilesystem-classpath">
+      <javac-params>
+        <include name="com/facebook/buck/core/filesystems/*.java" />
+      </javac-params>
+    </compiler>
+    <jar destfile="${buckfilesystem.jar}">
+      <fileset dir="${buckfilesystem.classes.dir}" />
     </jar>
   </target>
 
@@ -542,7 +560,8 @@
 
   <target name="compile"
           depends="compile-buck-modules-annotation-processor, compile-testrunner, compile-aosp,
-                   compile-manual-gen-src, bootstrapper, package-resources, tracing-api, dx"
+                   compile-manual-gen-src, bootstrapper, buckfilesystem, package-resources,
+                   tracing-api, dx"
           description="compile Java source code">
     <mkdir dir="${classes.dir}" />
 

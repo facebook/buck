@@ -90,6 +90,7 @@ RESOURCES_NOT_AFFECTING_BUILD_ARTIFACTS = {
 # set to True.
 RESOURCES_AFFECTING_BUILD_ARTIFACTS = {
     "bootstrapper_jar": "//src/com/facebook/buck/cli/bootstrapper:bootstrapper",
+    "buckfilesystem_jar": "//src/com/facebook/buck/core/filesystems:filesystems",
     "buck_server": "//src/com/facebook/buck/cli:main-fixed",
     "dx": "//third-party/java/dx:etc_dx",
     "native_exopackage_fake_path": "//assets/android:native-exopackage-fakes.apk",

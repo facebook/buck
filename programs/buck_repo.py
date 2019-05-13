@@ -128,6 +128,9 @@ class BuckRepo(BuckTool):
     def _get_bootstrap_classpath(self):
         return self._join_buck_dir("ant-out/bootstrapper/bootstrapper.jar")
 
+    def _get_buckfilesystem_classpath(self):
+        return self._join_buck_dir("ant-out/buckfilesystem/buckfilesystem.jar")
+
     def _unpack_modules(self):
         pass
 
