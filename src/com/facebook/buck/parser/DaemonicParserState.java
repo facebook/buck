@@ -398,7 +398,7 @@ public class DaemonicParserState {
             // Added or removed files can affect globs, so invalidate the package build file
             // "containing" {@code path} unless its filename matches a temp file pattern.
             if (!cell.getFilesystem().isIgnored(path)) {
-              invalidateContainingBuildFile(cell, buildFiles, path);
+              invalidateContainingBuildFile(state, cell, buildFiles, path);
             } else {
               LOG.debug(
                   "Not invalidating the owning build file of %s because it is a temporary file.",
@@ -438,7 +438,8 @@ public class DaemonicParserState {
    * @param path A {@link Path}, relative to the project root and "contained" within the build file
    *     to find and invalidate.
    */
-  private void invalidateContainingBuildFile(Cell cell, BuildFileTree buildFiles, Path path) {
+  private void invalidateContainingBuildFile(
+      DaemonicCellState state, Cell cell, BuildFileTree buildFiles, Path path) {
     LOG.verbose("Invalidating rules dependent on change to %s in cell %s", path, cell);
     Set<Path> packageBuildFiles = new HashSet<>();
 
@@ -471,10 +472,6 @@ public class DaemonicParserState {
     buildFilesInvalidatedByFileAddOrRemoveCounter.inc(packageBuildFiles.size());
     pathsAddedOrRemovedInvalidatingBuildFiles.add(path.toString());
 
-    DaemonicCellState state;
-    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
-      state = cellPathToDaemonicState.get(cell.getRoot());
-    }
     // Invalidate all the packages we found.
     for (Path buildFile : packageBuildFiles) {
       invalidatePath(
