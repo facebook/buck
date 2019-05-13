@@ -26,7 +26,9 @@ public class PluginLoaderJavaFileManager extends ForwardingStandardJavaFileManag
 
   @Override
   public ClassLoader getClassLoader(Location location) {
-    if (StandardLocation.ANNOTATION_PROCESSOR_PATH.equals(location)) {
+    // We only provide the shared classloader if there are plugins defined.
+    if (StandardLocation.ANNOTATION_PROCESSOR_PATH.equals(location) &&
+        javacPlugins.size() > 0) {
       return pluginFactory.getClassLoaderForProcessorGroups(javacPlugins);
     }
     return super.getClassLoader(location);
