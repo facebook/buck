@@ -90,13 +90,10 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private final JobLimiter pendingUploadsLimiter;
   private final JobLimiter executionLimiter;
   private final JobLimiter handleResultLimiter;
-
   private final OptionalInt maxInputSizeBytes;
-
   private final WorkerRequirementsProvider requirementsProvider;
   private final MetadataProvider metadataProvider;
-
-  private Optional<RemoteExecutionSessionEvent.Started> remoteExecutionSessionStartedEvent;
+  private final RemoteExecutionSessionEvent.Started remoteExecutionSessionStartedEvent;
 
   RemoteExecutionStrategy(
       BuckEventBus eventBus,
@@ -114,20 +111,14 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     this.maxInputSizeBytes = strategyConfig.maxInputSizeBytes();
     this.eventBus = eventBus;
     this.metadataProvider = metadataProvider;
-
     this.mbrHelper = mbrHelper;
-
     this.requirementsProvider =
         new WorkerRequirementsProvider(
             strategyConfig.getWorkerRequirementsFilename(),
             strategyConfig.tryLargerWorkerOnOom(),
             WORKER_REQUIREMENTS_PROVIDER_MAX_CACHE_SIZE);
-
-    this.remoteExecutionSessionStartedEvent = Optional.empty();
-    if (!remoteExecutionSessionStartedEvent.isPresent()) {
-      remoteExecutionSessionStartedEvent = Optional.of(RemoteExecutionSessionEvent.started());
-      eventBus.post(remoteExecutionSessionStartedEvent.get());
-    }
+    this.remoteExecutionSessionStartedEvent = RemoteExecutionSessionEvent.started();
+    this.eventBus.post(remoteExecutionSessionStartedEvent);
   }
 
   /** Creates a BuildRuleStrategy for a particular */
@@ -168,9 +159,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   @Override
   public void close() throws IOException {
     executionClients.close();
-    if (remoteExecutionSessionStartedEvent.isPresent()) {
-      eventBus.post(RemoteExecutionSessionEvent.finished(remoteExecutionSessionStartedEvent.get()));
-    }
+    eventBus.post(RemoteExecutionSessionEvent.finished(remoteExecutionSessionStartedEvent));
   }
 
   @Override
@@ -404,16 +393,16 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
             exception = Optional.of(e.getCause());
           }
 
-          if (exception.isPresent()) {
-            RemoteExecutionActionEvent.sendTerminalEvent(
-                eventBus,
-                exception.get() instanceof InterruptedException
-                    ? State.ACTION_CANCELLED
-                    : State.ACTION_FAILED,
-                buildTarget,
-                Optional.of(actionDigest),
-                Optional.empty());
-          }
+          exception.ifPresent(
+              throwable ->
+                  RemoteExecutionActionEvent.sendTerminalEvent(
+                      eventBus,
+                      throwable instanceof InterruptedException
+                          ? State.ACTION_CANCELLED
+                          : State.ACTION_FAILED,
+                      buildTarget,
+                      Optional.of(actionDigest),
+                      Optional.empty()));
         },
         MoreExecutors.directExecutor());
 
