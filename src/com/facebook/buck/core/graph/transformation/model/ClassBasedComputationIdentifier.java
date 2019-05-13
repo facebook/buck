@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.graph.transformation.model;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 import java.util.Objects;
@@ -72,5 +73,14 @@ public class ClassBasedComputationIdentifier<ResultType extends ComputeResult>
   @Override
   public int hashCode() {
     return hash;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper("ClassBasedComputationIdentifier")
+        .omitNullValues()
+        .add("clazz", clazz)
+        .add("resultTypeClass", resultTypeClass)
+        .toString();
   }
 }

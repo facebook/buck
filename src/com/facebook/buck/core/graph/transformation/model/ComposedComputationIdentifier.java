@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.graph.transformation.model;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
@@ -86,5 +87,14 @@ public class ComposedComputationIdentifier<ResultType extends ComputeResult>
   @Override
   public int hashCode() {
     return hash;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper("ComposedComputationIdentifier")
+        .omitNullValues()
+        .add("originIdentifier", originIdentifier)
+        .add("targetResultClass", targetResultClass)
+        .toString();
   }
 }
