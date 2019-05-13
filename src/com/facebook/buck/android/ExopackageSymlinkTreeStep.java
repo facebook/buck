@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.ExopackageSymlinkTree;
 import com.facebook.buck.core.build.context.BuildContext;
@@ -22,6 +23,7 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -97,26 +99,36 @@ class ExopackageSymlinkTreeStep implements Step {
         .getExopackageInfo()
         .ifPresent(
             exoInfo -> {
-              // Set up a scratch path where we can lay out a symlink tree
-              ProjectFilesystem filesystem = installable.getProjectFilesystem();
-              Path exopackageSymlinkTreePath =
-                  getExopackageSymlinkTreePath(installable.getBuildTarget(), filesystem);
-              String packageName =
-                  AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, apk.getApkInfo());
-              try {
-                filesystem.deleteRecursivelyIfExists(exopackageSymlinkTreePath);
-                filesystem.mkdirs(exopackageSymlinkTreePath);
-                // Create a symlink tree which lays out files exactly how they should be pushed to
-                // the device
-                ExopackageSymlinkTree.createSymlinkTree(
-                    packageName, exoInfo, pathResolver, filesystem, exopackageSymlinkTreePath);
-              } catch (IOException e) {
-                throw new HumanReadableException(
-                    e,
-                    "Unable to install %s, could not set up symlink tree",
-                    installable.getBuildTarget());
-              }
+              createExopackageDirForExopackageInfo(
+                  exoInfo,
+                  installable.getProjectFilesystem(),
+                  installable.getBuildTarget(),
+                  pathResolver,
+                  apk.getApkInfo().getManifestPath());
             });
+  }
+
+  static void createExopackageDirForExopackageInfo(
+      ExopackageInfo exoInfo,
+      ProjectFilesystem filesystem,
+      BuildTarget buildTarget,
+      SourcePathResolver pathResolver,
+      SourcePath manifestPath) {
+    // Set up a scratch path where we can lay out a symlink tree
+    Path exopackageSymlinkTreePath = getExopackageSymlinkTreePath(buildTarget, filesystem);
+    String packageName =
+        AdbHelper.tryToExtractPackageNameFromManifest(pathResolver.getAbsolutePath(manifestPath));
+    try {
+      filesystem.deleteRecursivelyIfExists(exopackageSymlinkTreePath);
+      filesystem.mkdirs(exopackageSymlinkTreePath);
+      // Create a symlink tree which lays out files exactly how they should be pushed to
+      // the device
+      ExopackageSymlinkTree.createSymlinkTree(
+          packageName, exoInfo, pathResolver, filesystem, exopackageSymlinkTreePath);
+    } catch (IOException e) {
+      throw new HumanReadableException(
+          e, "Unable to install %s, could not set up symlink tree", buildTarget);
+    }
   }
 
   /**

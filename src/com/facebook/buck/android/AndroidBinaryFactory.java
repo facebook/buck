@@ -41,6 +41,7 @@ public class AndroidBinaryFactory {
 
   private static final Flavor ANDROID_MODULARITY_VERIFICATION_FLAVOR =
       InternalFlavor.of("modularity_verification");
+  static final Flavor EXO_SYMLINK_TREE = InternalFlavor.of("exo_symlink_tree");
 
   private final AndroidBuckConfig androidBuckConfig;
 
@@ -78,6 +79,16 @@ public class AndroidBinaryFactory {
     AndroidBinaryFilesInfo filesInfo =
         new AndroidBinaryFilesInfo(result, exopackageModes, args.isPackageAssetLibraries());
 
+    if (filesInfo.getExopackageInfo().isPresent()) {
+      AndroidBinaryExopackageSymlinkTree androidBinaryExopackageSymlinkTree =
+          new AndroidBinaryExopackageSymlinkTree(
+              buildTarget.withAppendedFlavors(EXO_SYMLINK_TREE),
+              projectFilesystem,
+              graphBuilder,
+              filesInfo.getExopackageInfo().get(),
+              result.getAndroidManifestPath());
+      graphBuilder.addToIndex(androidBinaryExopackageSymlinkTree);
+    }
     Optional<BuildRule> moduleVerification;
     if (args.getAndroidAppModularityResult().isPresent()) {
       moduleVerification =

@@ -127,7 +127,11 @@ public class ExopackageSymlinkTree {
       Path destPathRoot, Map<Path, String> pathsAndContents, ProjectFilesystem filesystem)
       throws IOException {
     for (Map.Entry<Path, String> entry : pathsAndContents.entrySet()) {
-      filesystem.writeContentsToPath(entry.getValue(), destPathRoot.resolve(entry.getKey()));
+      final Path destPath = destPathRoot.resolve(entry.getKey());
+      if (!filesystem.exists(destPath.getParent())) {
+        filesystem.createParentDirs(destPath);
+      }
+      filesystem.writeContentsToPath(entry.getValue(), destPath);
     }
   }
 
