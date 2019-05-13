@@ -159,7 +159,7 @@ public class CxxToolchainDescription
         new DefaultLinkerProvider(
             linkerType, ToolProviders.getToolProvider(args.getLinker()), true));
 
-    if (linkerType == LinkerProvider.Type.GNU || linkerType == LinkerProvider.Type.DARWIN) {
+    if (linkerType == LinkerProvider.Type.GNU) {
       cxxPlatform.setLdflags(
           ImmutableList.<String>builder()
               // Add a deterministic build ID.
