@@ -559,7 +559,7 @@ public class DaemonicParserState {
     try (AutoCloseableLock writeLock = cachedStateLock.writeLock()) {
       cachedIncludes.put(cell.getRoot(), defaultIncludes);
     }
-    if (invalidateCellCaches(cell) && invalidatedByDefaultIncludesChange) {
+    if (invalidateCellCaches(cell)) {
       LOG.warn(
           "Invalidating cache on default includes change (%s != %s)", expected, defaultIncludes);
       cacheInvalidatedByDefaultIncludesChangeCounter.inc();
