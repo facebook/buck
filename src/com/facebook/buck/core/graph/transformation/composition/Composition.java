@@ -39,6 +39,11 @@ public class Composition {
    * Creates a {@link ComposedComputation} from a base {@link ComposedComputation} used for chaining
    * multiple {@link GraphComputation} together.
    *
+   * <p>Chaining computations means to begin at a base computation that transforms K1 to R1, and
+   * then using the this method chain a second computation K2 to R2 to create one composed
+   * computation of K1 to R2. The resulting composed computation can be then used to chain more
+   * computations Kn to Rn, until we have computations K1 to Rn.
+   *
    * @param resultClass the result class of this composition
    * @param baseComputation the base computation
    * @param composer a {@link KeyComposer} that takes results of the base computation and determines
