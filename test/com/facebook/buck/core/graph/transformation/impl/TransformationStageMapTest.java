@@ -63,16 +63,6 @@ public class TransformationStageMapTest {
     map.get(new MyLongNode());
   }
 
-  static class MyLongNode implements ComputeKey<MyLongNode>, ComputeResult {
-    public static final ComputationIdentifier<MyLongNode> IDENTIFIER =
-        ClassBasedComputationIdentifier.of(MyLongNode.class, MyLongNode.class);
-
-    @Override
-    public ComputationIdentifier<MyLongNode> getIdentifier() {
-      return IDENTIFIER;
-    }
-  }
-
   static class FakeComputationStage<Key extends ComputeKey<Result>, Result extends ComputeResult>
       extends GraphComputationStage<Key, Result> {
 

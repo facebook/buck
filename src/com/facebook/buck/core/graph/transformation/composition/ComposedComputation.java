@@ -37,6 +37,11 @@ import com.google.common.collect.ImmutableSet;
  * returning a set of dependencies necessary for the transform step. Then {@link Transformer} is
  * invoked with the dependencies.
  *
+ * <p>The computation is identified by the base computation it begins at and the target result type
+ * class, which means that no two {@link ComposedComputation}s that begins and ends at the same
+ * computations can be registered with the graph engine, regardless of what intermediate paths they
+ * may differ at.
+ *
  * @param <BaseKey> the key type contained in the composed key of the base computation
  * @param <Result2> the result type contained in the composed result of this computation
  */

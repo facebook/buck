@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.graph.transformation.model;
 
+import com.google.common.base.Preconditions;
 import org.immutables.value.Value;
 
 /**
@@ -38,5 +39,10 @@ public abstract class ComposedKey<KeyType1 extends ComputeKey<?>, ResultType2 ex
   public ComputationIdentifier<ComposedResult<ComputeKey<ResultType2>, ResultType2>>
       getIdentifier() {
     return ComposedComputationIdentifier.of(getOriginKey().getIdentifier(), getTargetResultClass());
+  }
+
+  @Value.Check
+  protected void check() {
+    Preconditions.checkState(!(getOriginKey() instanceof ComposedKey));
   }
 }

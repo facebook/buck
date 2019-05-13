@@ -21,6 +21,7 @@ import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.core.graph.transformation.impl.ChildrenAdder.LongNode;
 import com.facebook.buck.core.graph.transformation.impl.ChildrenSumMultiplier.LongMultNode;
+import com.facebook.buck.core.graph.transformation.impl.MyLongNode;
 import org.junit.Test;
 
 public class ComposedComputationIdentifierTest {
@@ -58,5 +59,18 @@ public class ComposedComputationIdentifierTest {
         ComposedComputationIdentifier.of(LongMultNode.IDENTIFIER, LongNode.class);
 
     assertSame(identifier1, identifier2);
+  }
+
+  @Test
+  public void computationsEqualIfBaseAndResultTypeTheSame() {
+    ComposedComputationIdentifier<LongNode> identifier1 =
+        ComposedComputationIdentifier.of(LongMultNode.IDENTIFIER, LongNode.class);
+
+    ComposedComputationIdentifier<MyLongNode> identifier2 =
+        ComposedComputationIdentifier.of(identifier1, MyLongNode.class);
+    ComposedComputationIdentifier<MyLongNode> identifier3 =
+        ComposedComputationIdentifier.of(LongMultNode.IDENTIFIER, MyLongNode.class);
+
+    assertEquals(identifier2, identifier3);
   }
 }
