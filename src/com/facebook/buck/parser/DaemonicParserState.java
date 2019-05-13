@@ -378,12 +378,12 @@ public class DaemonicParserState {
     Path path = event.getPath();
     Path fullPath = event.getCellPath().resolve(event.getPath());
 
-    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
-      for (DaemonicCellState state : cellPathToDaemonicState.values()) {
-        try {
-          // We only care about creation and deletion events because modified should result in a
-          // rule key change.  For parsing, these are the only events we need to care about.
-          if (isPathCreateOrDeleteEvent(event)) {
+    // We only care about creation and deletion events because modified should result in a
+    // rule key change.  For parsing, these are the only events we need to care about.
+    if (isPathCreateOrDeleteEvent(event)) {
+      try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+        for (DaemonicCellState state : cellPathToDaemonicState.values()) {
+          try {
             Cell cell = state.getCell();
             BuildFileTree buildFiles = buildFileTrees.get(cell);
 
@@ -404,14 +404,14 @@ public class DaemonicParserState {
                   "Not invalidating the owning build file of %s because it is a temporary file.",
                   fullPath);
             }
-          }
-        } catch (ExecutionException | UncheckedExecutionException e) {
-          try {
-            Throwables.throwIfInstanceOf(e, BuildFileParseException.class);
-            Throwables.throwIfUnchecked(e);
-            throw new RuntimeException(e);
-          } catch (BuildFileParseException bfpe) {
-            LOG.warn("Unable to parse already parsed build file.", bfpe);
+          } catch (ExecutionException | UncheckedExecutionException e) {
+            try {
+              Throwables.throwIfInstanceOf(e, BuildFileParseException.class);
+              Throwables.throwIfUnchecked(e);
+              throw new RuntimeException(e);
+            } catch (BuildFileParseException bfpe) {
+              LOG.warn("Unable to parse already parsed build file.", bfpe);
+            }
           }
         }
       }
