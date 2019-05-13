@@ -126,7 +126,8 @@ public class LocationMacroExpanderTest {
 
     String transformedString = coerceAndStringify("$(location //foo:bar[sup])", rule);
 
-    assertEquals("/some_root/supplementary-sup", transformedString);
+    assertEquals(
+        filesystem.getRootPath().resolve("supplementary-sup").toString(), transformedString);
   }
 
   @Test
