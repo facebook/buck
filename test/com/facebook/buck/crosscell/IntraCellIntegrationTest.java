@@ -27,6 +27,7 @@ import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.TestParserFactory;
@@ -114,14 +115,16 @@ public class IntraCellIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "intracell/visibility", tmp);
     workspace.setUp();
     Cell cell = workspace.asCell();
-    assertEquals(cell.getFilesystem().getBuckPaths().getGenDir().toString(), "buck-out/gen");
+    assertEquals(
+        cell.getFilesystem().getBuckPaths().getGenDir().toString(),
+        MorePaths.pathWithPlatformSeparators("buck-out/gen"));
     Cell childCell =
         cell.getCell(
             BuildTargetFactory.newInstance(
                 workspace.getDestPath().resolve("child-repo"), "//:child-target"));
     assertEquals(
         childCell.getFilesystem().getBuckPaths().getGenDir().toString(),
-        "../buck-out/cells/child/gen");
+        MorePaths.pathWithPlatformSeparators("../buck-out/cells/child/gen"));
   }
 
   @Test
