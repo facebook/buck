@@ -170,7 +170,7 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
                     String.format(
                         "Failed execution request with metadata=[%s] and exception=[%s].",
                         stubAndMetadata.getMetadata(), t.toString());
-                LOG.error(t, msg);
+                LOG.warn(t, msg);
                 future.setException(new IOException(msg, t));
               }
 
