@@ -21,8 +21,8 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.BuildPackage
+import com.facebook.buck.multitenant.service.BuildPackageChanges
 import com.facebook.buck.multitenant.service.BuildTargets
-import com.facebook.buck.multitenant.service.Changes
 import com.facebook.buck.multitenant.service.IndexAppender
 import com.facebook.buck.multitenant.service.RawBuildRule
 import com.facebook.buck.rules.visibility.VisibilityPattern
@@ -49,7 +49,7 @@ fun populateIndexFromStream(
             val added = toBuildPackages(commit.get("added"))
             val modified = toBuildPackages(commit.get("modified"))
             val removed = toRemovedPackages(commit.get("removed"))
-            val changes = Changes(added, modified, removed)
+            val changes = BuildPackageChanges(added, modified, removed)
             indexAppender.addCommitData(hash, changes)
             hash
         }.toList()

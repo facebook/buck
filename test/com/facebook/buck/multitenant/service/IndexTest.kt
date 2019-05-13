@@ -115,13 +115,13 @@ class IndexTest {
     fun emptyChangesShouldReturnSameIndex() {
         val (index, generations) = loadIndex("index_test_targets_and_deps.json")
         val generation = generations[1]
-        val changes = Changes()
+        val changes = BuildPackageChanges()
         val localizedIndex = index.createIndexForGenerationWithLocalChanges(generation, changes)
         assertSame(index, localizedIndex)
     }
 
     /**
-     * If someone adds a comment to a build file, it should yield a non-empty [Changes], but the
+     * If someone adds a comment to a build file, it should yield a non-empty [BuildPackageChanges], but the
      * resulting [Deltas] should be empty, so [Index.createIndexForGenerationWithLocalChanges]
      * should still return the existing [Index].
      */
@@ -129,7 +129,7 @@ class IndexTest {
     fun emptyDeltasShouldReturnSameIndex() {
         val (index, generations) = loadIndex("index_test_targets_and_deps.json")
         val generation = generations[1]
-        val changes = Changes(
+        val changes = BuildPackageChanges(
                 modifiedBuildPackages = listOf(
                         BuildPackage(
                                 FsAgnosticPath.of("java/com/facebook/buck/model"),
@@ -150,7 +150,7 @@ class IndexTest {
         val (index, generations) = loadIndex("index_test_targets_and_deps.json")
         val generation = generations[1]
         // Modify :base so that it depends on a new target, :example.
-        val changes = Changes(
+        val changes = BuildPackageChanges(
                 addedBuildPackages = listOf(BuildPackage(
                         FsAgnosticPath.of("java/com/example"),
                         setOf(
@@ -194,7 +194,7 @@ class IndexTest {
         val (index, generations) = loadIndex("index_test_targets_and_deps.json")
         val generation = generations[3]
         // Remove :util and modify :model so it no longer depends on it.
-        val changes = Changes(
+        val changes = BuildPackageChanges(
                 modifiedBuildPackages = listOf(BuildPackage(
                         FsAgnosticPath.of("java/com/facebook/buck/model"),
                         setOf(

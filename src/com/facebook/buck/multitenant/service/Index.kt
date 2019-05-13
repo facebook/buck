@@ -31,18 +31,18 @@ class Index internal constructor(
 
     /**
      * Uses the repo state represented by this [Index] at the specified [Generation] and applies
-     * [Changes] to produce an [Index] whose behavior is guaranteed only for the specified
+     * [BuildPackageChanges] to produce an [Index] whose behavior is guaranteed only for the specified
      * [Generation]. Specifically, queries to the returned [Index] will be answered in terms of the
-     * state of the original [Index] with the [Changes] applied on top. Although the same value for
-     * [Generation] can be used with both the old and new [Index] objects, the same queries may
-     * yield different results based on the [Changes].
+     * state of the original [Index] with the [BuildPackageChanges] applied on top. Although the
+     * same value for [Generation] can be used with both the old and new [Index] objects, the same
+     * queries may yield different results based on the [BuildPackageChanges].
      *
      * Note: we may want to consider introducing a new type, `GenerationBoundIndex`, that has the
      * same API as Index, but with the `Generation` parameter removed from each of its public
      * methods to eliminate the possibility of the caller invoking one of its methods with an
      * unsupported generation.
      */
-    fun createIndexForGenerationWithLocalChanges(generation: Generation, changes: Changes): Index {
+    fun createIndexForGenerationWithLocalChanges(generation: Generation, changes: BuildPackageChanges): Index {
         if (changes.isEmpty()) {
             return this
         }

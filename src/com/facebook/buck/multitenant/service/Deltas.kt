@@ -19,8 +19,8 @@ package com.facebook.buck.multitenant.service
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 
 /**
- * Represents a collection of changes to apply to an [Index] to reflect [Changes] on top of a
- * [Generation].
+ * Represents a collection of changes to apply to an [Index] to reflect [BuildPackageChanges] on top
+ * of a [Generation].
  */
 internal data class Deltas(val buildPackageDeltas: List<BuildPackageDelta>,
                            val ruleDeltas: List<RuleDelta>) {
@@ -28,16 +28,16 @@ internal data class Deltas(val buildPackageDeltas: List<BuildPackageDelta>,
 }
 
 /**
- * Takes a repo state defined by a [Generation] and an [IndexGenerationData] and applies [Changes]
- * to produce the [Deltas] that could be applied incrementally to the existing repo state to yield
- * a new repo state that reflects the [Changes]. How the new repo state is realized is up to the
- * caller.
+ * Takes a repo state defined by a [Generation] and an [IndexGenerationData] and applies
+ * [BuildPackageChanges] to produce the [Deltas] that could be applied incrementally to the existing
+ * repo state to yield a new repo state that reflects the [BuildPackageChanges]. How the new repo
+ * state is realized is up to the caller.
  * @see Index.createIndexForGenerationWithLocalChanges
  * @see IndexAppender.addCommitData
  */
 internal fun determineDeltas(
         generation: Generation,
-        changes: Changes,
+        changes: BuildPackageChanges,
         indexGenerationData: IndexGenerationData,
         buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>
 ): Deltas {
@@ -105,7 +105,7 @@ internal fun determineDeltas(
     return Deltas(buildPackageDeltas, ruleDeltas)
 }
 
-private fun toInternalChanges(changes: Changes, buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>): InternalChanges {
+private fun toInternalChanges(changes: BuildPackageChanges, buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>): InternalChanges {
     return InternalChanges(changes.addedBuildPackages.map { toInternalBuildPackage(it, buildTargetCache) }.toList(),
             changes.modifiedBuildPackages.map { toInternalBuildPackage(it, buildTargetCache) }.toList(),
             changes.removedBuildPackages

@@ -50,9 +50,9 @@ class IndexAppender internal constructor(
      * serially (never concurrently) for each commit in a chain of version control history.
      *
      * The expectation is that the caller will use something like `buck audit rules` based on the
-     * changes in the commit to produce the Changes object to pass to this method.
+     * changes in the commit to produce the BuildPackageChanges object to pass to this method.
      */
-    fun addCommitData(commit: Commit, changes: Changes) {
+    fun addCommitData(commit: Commit, changes: BuildPackageChanges) {
         // Although the first portion of this method requires read-only access to all of the
         // data structures, we want to be sure that only one caller is invoking addCommitData() at a
         // time.

@@ -80,9 +80,9 @@ internal data class InternalBuildPackage(val buildFileDirectory: FsAgnosticPath,
  * By construction, the Path for each BuildPackage should be distinct across all of the
  * collections of build packages.
  */
-data class Changes(val addedBuildPackages: List<BuildPackage> = emptyList(),
-                   val modifiedBuildPackages: List<BuildPackage> = emptyList(),
-                   val removedBuildPackages: List<FsAgnosticPath> = emptyList()) {
+data class BuildPackageChanges(val addedBuildPackages: List<BuildPackage> = emptyList(),
+                               val modifiedBuildPackages: List<BuildPackage> = emptyList(),
+                               val removedBuildPackages: List<FsAgnosticPath> = emptyList()) {
     fun isEmpty(): Boolean = addedBuildPackages.isEmpty() && modifiedBuildPackages.isEmpty() && removedBuildPackages.isEmpty()
 }
 
