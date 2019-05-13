@@ -28,6 +28,58 @@ import com.google.common.collect.ImmutableSet
 class Index internal constructor(
         private val indexGenerationData: IndexGenerationData,
         private val buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>) {
+
+    /**
+     * Uses the repo state represented by this [Index] at the specified [Generation] and applies
+     * [Changes] to produce an [Index] whose behavior is guaranteed only for the specified
+     * [Generation]. Specifically, queries to the returned [Index] will be answered in terms of the
+     * state of the original [Index] with the [Changes] applied on top. Although the same value for
+     * [Generation] can be used with both the old and new [Index] objects, the same queries may
+     * yield different results based on the [Changes].
+     *
+     * Note: we may want to consider introducing a new type, `GenerationBoundIndex`, that has the
+     * same API as Index, but with the `Generation` parameter removed from each of its public
+     * methods to eliminate the possibility of the caller invoking one of its methods with an
+     * unsupported generation.
+     */
+    fun createIndexForGenerationWithLocalChanges(generation: Generation, changes: Changes): Index {
+        if (changes.isEmpty()) {
+            return this
+        }
+
+        val deltas = determineDeltas(generation, changes, indexGenerationData, buildTargetCache)
+        if (deltas.isEmpty()) {
+            return this
+        }
+
+        val buildPackageMap: Map<FsAgnosticPath, Set<String>?> =
+                deltas.buildPackageDeltas.asSequence().map { delta ->
+                    when (delta) {
+                        is BuildPackageDelta.Updated -> {
+                            delta.directory to delta.rules
+                        }
+                        is BuildPackageDelta.Removed -> {
+                            delta.directory to null
+                        }
+                    }
+                }.toMap()
+        val ruleMap: Map<BuildTargetId, InternalRawBuildRule?> =
+                deltas.ruleDeltas.asSequence().map { delta ->
+                    val (buildTarget, newNodeAndDeps) = when (delta) {
+                        is RuleDelta.Updated -> {
+                            Pair(delta.rule.targetNode.buildTarget, delta.rule)
+                        }
+                        is RuleDelta.Removed -> {
+                            Pair(delta.buildTarget, null)
+                        }
+                    }
+                    buildTargetCache.get(buildTarget) to newNodeAndDeps
+                }.toMap()
+        val indexData = indexGenerationData.createForwardingIndexGenerationData(
+                generation, buildPackageMap, ruleMap)
+        return Index(indexData, buildTargetCache)
+    }
+
     /**
      * If you need to look up multiple target nodes for the same commit, prefer [getTargetNodes].
      *

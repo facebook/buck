@@ -20,7 +20,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget
 
 object IndexFactory {
     fun createIndex(): Pair<Index, IndexAppender> {
-        val indexGenerationData = DefaultGenerationData()
+        val indexGenerationData = DefaultMutableIndexGenerationData()
         val buildTargetCache = AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>()
         val index = Index(indexGenerationData, buildTargetCache)
         val indexAppender = IndexAppender(indexGenerationData, buildTargetCache)

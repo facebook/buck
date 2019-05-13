@@ -43,9 +43,7 @@ class IndexAppender internal constructor(
      * @return the generation that corresponds to the specified commit or `null` if no such
      *     generation is available
      */
-    fun getGeneration(commit: Commit): Int? {
-        return commitToGeneration[commit]
-    }
+    fun getGeneration(commit: Commit): Int? = commitToGeneration[commit]
 
     /**
      * Currently, the caller is responsible for ensuring that addCommitData() is invoked
@@ -62,7 +60,7 @@ class IndexAppender internal constructor(
         // First, determine if any of the changes from the commits require new values to be added
         // to the generation map.
         val currentGeneration = generation.get()
-        val deltas = determineDeltas(toInternalChanges(changes), currentGeneration)
+        val deltas = determineDeltas(currentGeneration, changes, indexGenerationData, buildTargetCache)
 
         // If there are no updates to any of the generation maps, add a new entry for the current
         // commit using the existing generation in the commitToGeneration map.
@@ -112,100 +110,4 @@ class IndexAppender internal constructor(
         require(oldValue == null) { "Should not have existing value for $commit" }
         generation.set(nextGeneration)
     }
-
-    private fun determineDeltas(changes: InternalChanges, generation: Generation): Deltas {
-        val buildPackageDeltas = mutableListOf<BuildPackageDelta>()
-        val ruleDeltas = mutableListOf<RuleDelta>()
-
-        indexGenerationData.withBuildPackageMap { buildPackageMap ->
-            for (added in changes.addedBuildPackages) {
-                val oldRules = buildPackageMap.getVersion(added.buildFileDirectory, generation)
-                if (oldRules != null) {
-                    throw IllegalArgumentException("Build package to add already existed at ${added
-                            .buildFileDirectory} for generation $generation")
-                }
-
-                val ruleNames = getRuleNames(added.rules)
-                buildPackageDeltas.add(BuildPackageDelta.Updated(added.buildFileDirectory, ruleNames))
-                for (rule in added.rules) {
-                    ruleDeltas.add(RuleDelta.Updated(rule))
-                }
-            }
-
-            for (removed in changes.removedBuildPackages) {
-                val oldRules = requireNotNull(buildPackageMap.getVersion(removed, generation)) {
-                    "Build package to remove did not exist at $removed for generation $generation"
-                }
-
-                buildPackageDeltas.add(BuildPackageDelta.Removed(removed))
-                for (ruleName in oldRules) {
-                    val buildTarget = BuildTargets.createBuildTargetFromParts(removed, ruleName)
-                    ruleDeltas.add(RuleDelta.Removed(buildTarget))
-                }
-            }
-
-            indexGenerationData.withRuleMap { ruleMap ->
-                for (modified in changes.modifiedBuildPackages) {
-                    val oldRuleNames = requireNotNull(buildPackageMap.getVersion(modified
-                            .buildFileDirectory,
-                            generation)) {
-                        "No version found for build file in ${modified.buildFileDirectory} for " +
-                                "generation $generation"
-                    }
-
-                    val oldRules = oldRuleNames.asSequence().map { oldRuleName: String ->
-                        val buildTarget = BuildTargets.createBuildTargetFromParts(modified.buildFileDirectory, oldRuleName)
-                        requireNotNull(ruleMap.getVersion(buildTargetCache.get(buildTarget),
-                                generation)) {
-                            "Missing deps for $buildTarget at generation $generation"
-                        }
-                    }.toSet()
-
-                    val newRules = modified.rules
-                    // Compare oldRules and newRules to see whether the build package actually changed.
-                    // Keep track of the individual rule changes so we need not recompute them later.
-                    val ruleChanges = diffRules(oldRules, newRules)
-                    if (ruleChanges.isNotEmpty()) {
-                        buildPackageDeltas.add(BuildPackageDelta.Updated(modified
-                                .buildFileDirectory, getRuleNames(newRules)))
-                        ruleDeltas.addAll(ruleChanges)
-                    }
-                }
-            }
-        }
-
-        return Deltas(buildPackageDeltas, ruleDeltas)
-    }
-
-    private fun toInternalChanges(changes: Changes): InternalChanges {
-        return InternalChanges(changes.addedBuildPackages.map { toInternalBuildPackage(it) }.toList(),
-                changes.modifiedBuildPackages.map { toInternalBuildPackage(it) }.toList(),
-                changes.removedBuildPackages
-        )
-    }
-
-    private fun toInternalBuildPackage(buildPackage: BuildPackage): InternalBuildPackage {
-        return InternalBuildPackage(buildPackage.buildFileDirectory, buildPackage.rules.map { toInternalRawBuildRule(it) }.toSet())
-    }
-
-    private fun toInternalRawBuildRule(rawBuildRule: RawBuildRule): InternalRawBuildRule {
-        return InternalRawBuildRule(rawBuildRule.targetNode, toBuildTargetSet(rawBuildRule.deps))
-    }
-
-    private fun toBuildTargetSet(targets: Set<UnconfiguredBuildTarget>): BuildTargetSet {
-        val ids = targets.map { buildTargetCache.get(it) }.toIntArray()
-        ids.sort()
-        return ids
-    }
-}
-
-private data class Deltas(val buildPackageDeltas: List<BuildPackageDelta>,
-                          val ruleDeltas: List<RuleDelta>) {
-    fun isEmpty(): Boolean {
-        return buildPackageDeltas.isEmpty() && ruleDeltas.isEmpty()
-    }
-}
-
-private fun getRuleNames(rules: Set<InternalRawBuildRule>): Set<String> {
-    return rules.asSequence().map { it.targetNode.buildTarget.name }.toSet()
 }

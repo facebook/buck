@@ -16,6 +16,7 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.multitenant.collect.DefaultGenerationMap
+import com.facebook.buck.multitenant.collect.ForwardingGenerationMap
 import com.facebook.buck.multitenant.collect.GenerationMap
 import com.facebook.buck.multitenant.collect.MutableGenerationMap
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
@@ -34,6 +35,16 @@ internal interface IndexGenerationData {
      * @param action will be performed will the read lock is held for the [GenerationMap]
      */
     fun <T> withRuleMap(action: (map: GenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>) -> T): T
+
+    /**
+     * @return new IndexGenerationData based on this one with [GenerationMap]s that reflect the
+     *     specified local changes
+     */
+    fun createForwardingIndexGenerationData(
+            generation: Int,
+            localBuildPackageChanges: Map<FsAgnosticPath, Set<String>?>,
+            localRuleMapChanges: Map<BuildTargetId, InternalRawBuildRule?>
+    ): IndexGenerationData
 }
 
 /**
@@ -51,26 +62,21 @@ internal interface MutableIndexGenerationData : IndexGenerationData {
     fun <T> withMutableRuleMap(action: (map: MutableGenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>) -> T): T
 }
 
-internal class DefaultGenerationData : MutableIndexGenerationData {
-    // We use fair locks throughout to prioritize writer threads.
-
-    /**
-     * The key is the path for the directory relative to the Buck root that contains the build file
-     * for the corresponding build package.
-     */
-    private val buildPackageMap = DefaultGenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath> { it }
-    private val buildPackageMapLock = ReentrantReadWriteLock(/*fair*/ true)
-
-    /**
-     * Map that captures the value of a build rule at a specific generation, indexed by BuildTarget.
-     *
-     * We also specify the key as the keyInfo so that we get it back when we use
-     * `getAllInfoValuePairsForGeneration()`.
-     */
-    private val ruleMap = DefaultGenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId> { it }
-    private val ruleMapLock = ReentrantReadWriteLock(/*fair*/ true)
-
-    override inline fun <T> withBuildPackageMap(action: (map: GenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath>) -> T): T {
+/**
+ * Fair locks should be used throughout to prioritize writer threads.
+ *
+ * @param buildPackageMap the key is the path for the directory relative to the Buck root that contains the build file
+ *     for the corresponding build package.
+ * @param ruleMap captures the value of a build rule at a specific generation, indexed by BuildTarget.
+ *     We also specify the key as the keyInfo so that we get it back when we use `getAllInfoValuePairsForGeneration()`.
+ */
+internal open class DefaultIndexGenerationData(
+        protected val buildPackageMap: GenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath> = DefaultGenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath> { it },
+        protected val buildPackageMapLock: ReentrantReadWriteLock = ReentrantReadWriteLock(/*fair*/ true),
+        protected val ruleMap: GenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId> = DefaultGenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId> { it },
+        protected val ruleMapLock: ReentrantReadWriteLock = ReentrantReadWriteLock(/*fair*/ true)
+) : IndexGenerationData {
+    override final inline fun <T> withBuildPackageMap(action: (map: GenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath>) -> T): T {
         val readLock = buildPackageMapLock.readLock()
         readLock.lock()
         try {
@@ -80,17 +86,7 @@ internal class DefaultGenerationData : MutableIndexGenerationData {
         }
     }
 
-    override inline fun <T> withMutableBuildPackageMap(action: (map: MutableGenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath>) -> T): T {
-        val writeLock = buildPackageMapLock.writeLock()
-        writeLock.lock()
-        try {
-            return action(buildPackageMap)
-        } finally {
-            writeLock.unlock()
-        }
-    }
-
-    override inline fun <T> withRuleMap(action: (map: GenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>) -> T): T {
+    override final inline fun <T> withRuleMap(action: (map: GenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>) -> T): T {
         val readLock = ruleMapLock.readLock()
         readLock.lock()
         try {
@@ -100,11 +96,33 @@ internal class DefaultGenerationData : MutableIndexGenerationData {
         }
     }
 
+    override fun createForwardingIndexGenerationData(
+            generation: Int,
+            localBuildPackageChanges: Map<FsAgnosticPath, Set<String>?>,
+            localRuleMapChanges: Map<BuildTargetId, InternalRawBuildRule?>
+    ): IndexGenerationData {
+        val forwardingBuildPackageMap = ForwardingGenerationMap(generation, localBuildPackageChanges, buildPackageMap)
+        val forwardingRuleMap = ForwardingGenerationMap(generation, localRuleMapChanges, ruleMap)
+        return DefaultIndexGenerationData(forwardingBuildPackageMap, buildPackageMapLock, forwardingRuleMap, ruleMapLock)
+    }
+}
+
+internal class DefaultMutableIndexGenerationData() : DefaultIndexGenerationData(), MutableIndexGenerationData {
+    override inline fun <T> withMutableBuildPackageMap(action: (map: MutableGenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath>) -> T): T {
+        val writeLock = buildPackageMapLock.writeLock()
+        writeLock.lock()
+        try {
+            return action(buildPackageMap as MutableGenerationMap)
+        } finally {
+            writeLock.unlock()
+        }
+    }
+
     override inline fun <T> withMutableRuleMap(action: (map: MutableGenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>) -> T): T {
         val writeLock = ruleMapLock.writeLock()
         writeLock.lock()
         try {
-            return action(ruleMap)
+            return action(ruleMap as MutableGenerationMap)
         } finally {
             writeLock.unlock()
         }
