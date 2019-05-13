@@ -349,7 +349,7 @@ public class BuildCommand extends AbstractCommand {
         getArguments());
   }
 
-  /** @throw CommandLineException if arguments provided are incorrect */
+  /** @throws CommandLineException if arguments provided are incorrect */
   protected void assertArguments(CommandRunnerParams params) {
     if (!getArguments().isEmpty()) {
       return;
@@ -460,7 +460,7 @@ public class BuildCommand extends AbstractCommand {
       CommandThreadManager commandThreadManager,
       Function<ImmutableList<TargetNodeSpec>, ImmutableList<TargetNodeSpec>> targetNodeSpecEnhancer)
       throws Exception {
-    ExitCode exitCode = ExitCode.SUCCESS;
+    ExitCode exitCode;
     GraphsAndBuildTargets graphsAndBuildTargets;
     if (isUsingDistributedBuild()) {
       return Objects.requireNonNull(getDistBuildCommandDelegate())
@@ -615,7 +615,7 @@ public class BuildCommand extends AbstractCommand {
       GraphsAndBuildTargets graphsAndBuildTargets,
       RuleKeyCacheScope<RuleKey> ruleKeyCacheScope)
       throws IOException {
-    TreeMap<String, String> sortedJsonOutputs = new TreeMap<String, String>();
+    TreeMap<String, String> sortedJsonOutputs = new TreeMap<>();
     Optional<DefaultRuleKeyFactory> ruleKeyFactory = Optional.empty();
     ActionGraphBuilder graphBuilder =
         graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
@@ -773,10 +773,8 @@ public class BuildCommand extends AbstractCommand {
       // TODO(alisdair): ensure that all Stampede local builds re-use same calculator
       localRuleKeyCalculator.set(builder.getCachingBuildEngine().getRuleKeyCalculator());
 
-      if (initializeBuildLatch.isPresent()) {
-        // Signal to other threads that lastBuild has now been set.
-        initializeBuildLatch.get().countDown();
-      }
+      // Signal to other threads that lastBuild has now been set.
+      initializeBuildLatch.ifPresent(CountDownLatch::countDown);
 
       Iterable<BuildTarget> targets =
           FluentIterable.concat(
