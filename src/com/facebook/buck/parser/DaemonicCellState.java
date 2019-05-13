@@ -53,6 +53,7 @@ class DaemonicCellState {
    */
   class Cache<T> {
 
+    /** Unbounded cache for all computed objects associated with build targets. */
     @GuardedBy("rawAndComputedNodesLock")
     public final ConcurrentMapCache<BuildTarget, T> allComputedNodes =
         new ConcurrentMapCache<>(parsingThreads);
@@ -83,23 +84,53 @@ class DaemonicCellState {
   private final Optional<String> cellCanonicalName;
   private final AtomicReference<Cell> cell;
 
+  /**
+   * A mapping of a file path (usually explicit or implicit include) to a set of build file paths
+   * that depend on the key file path. In the case of includes it indicates that build files in the
+   * value include the file key file.
+   *
+   * <p>The purpose of this set is to invalidate build file manifests produced from the build files
+   * that include changes files.
+   */
   @GuardedBy("rawAndComputedNodesLock")
   private final SetMultimap<Path, Path> buildFileDependents;
 
+  /**
+   * Provides access to all flavored build targets created and stored in all of the caches for a
+   * given unflavored build target.
+   *
+   * <p>This map is used to locate all the build targets that need to be invalidated when a build
+   * build file that produced those build targets has changed.
+   */
   @GuardedBy("rawAndComputedNodesLock")
   private final SetMultimap<UnflavoredBuildTargetView, BuildTarget> targetsCornucopia;
 
+  /**
+   * Contains environment variables used during parsing of a particular build file.
+   *
+   * <p>The purpose of this map is to invalidate build file manifest if the values of environment
+   * variables used during parsing of a build file that produced that build file manifest have
+   * changed.
+   */
   @GuardedBy("rawAndComputedNodesLock")
   private final Map<Path, ImmutableMap<String, Optional<String>>> buildFileEnv;
 
+  /** Used as an unbounded cache to stored build file manifests by build file path. */
   @GuardedBy("rawAndComputedNodesLock")
   private final ConcurrentMapCache<Path, BuildFileManifest> allBuildFileManifests;
-  // Tracks all targets in `allBuildFileManifests`.  Used to verify that every target in
-  // `allComputedNodes` is also in `allBuildFileManifests`, as we use the latter for bookkeeping
-  // invalidations.
+
+  /**
+   * Contains all the unflavored build targets that were collected from all processed build file
+   * manifests.
+   *
+   * <p>Used to verify that every build target added to individual caches ({@link
+   * Cache#allComputedNodes}) is also in {@link #allBuildFileManifests}, as we use the latter to
+   * handle invalidations.
+   */
   @GuardedBy("rawAndComputedNodesLock")
   private final Set<UnflavoredBuildTargetView> allRawNodeTargets;
 
+  /** Keeps caches by the object type supported by the cache. */
   @GuardedBy("rawAndComputedNodesLock")
   private final ConcurrentMap<Class<?>, Cache<?>> typedNodeCaches;
 
