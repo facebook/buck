@@ -169,13 +169,13 @@ public class DaemonIntegrationTest {
             new MainForTests(
                 new TestConsole(),
                 new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
+                tmp.getRoot(),
                 EnvVariablesProvider.getSystemEnv(),
                 Optional.of(new TestContext()));
 
         MainRunner mainRunner = main.prepareMainRunner(manager);
         ExitCode exitCode =
             mainRunner.runMainWithExitCode(
-                tmp.getRoot(),
                 WatchmanWatcher.FreshInstanceAction.NONE,
                 System.nanoTime(),
                 ImmutableList.copyOf(args));

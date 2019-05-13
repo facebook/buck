@@ -517,6 +517,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
               knownRuleTypesFactoryFactory == null
                   ? DefaultKnownRuleTypesFactory::new
                   : knownRuleTypesFactoryFactory,
+              repoRoot,
               sanizitedEnv,
               context);
 
@@ -552,7 +553,6 @@ public class ProjectWorkspace extends AbstractWorkspace {
       try {
         exitCode =
             mainRunner.runMainWithExitCode(
-                repoRoot,
                 WatchmanWatcher.FreshInstanceAction.NONE,
                 System.nanoTime(),
                 ImmutableList.copyOf(args));

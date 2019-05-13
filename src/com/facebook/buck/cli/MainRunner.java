@@ -224,7 +224,6 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
@@ -368,6 +367,7 @@ public final class MainRunner {
   private final KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory;
   private final ImmutableMap<String, String> clientEnvironment;
   private final Platform platform;
+  private final Path projectRoot;
 
   private final PluginManager pluginManager;
   private final BuckModuleManager moduleManager;
@@ -394,6 +394,7 @@ public final class MainRunner {
    * @param buildId the {@link BuildId} for this command
    * @param clientEnvironment the environment variable map for this command
    * @param platform the current running {@link Platform}
+   * @param projectRoot the project root of the current command
    * @param pluginManager the {@link PluginManager} for this command
    * @param moduleManager the {@link BuckModuleManager} for this command
    * @param context the {@link NGContext} from nailgun for this command
@@ -406,6 +407,7 @@ public final class MainRunner {
       BuildId buildId,
       ImmutableMap<String, String> clientEnvironment,
       Platform platform,
+      Path projectRoot,
       PluginManager pluginManager,
       BuckModuleManager moduleManager,
       BackgroundTaskManager bgTaskManager,
@@ -414,6 +416,7 @@ public final class MainRunner {
     this.console = console;
     this.stdIn = stdIn;
     this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
+    this.projectRoot = projectRoot;
     this.pluginManager = pluginManager;
     this.moduleManager = moduleManager;
     this.bgTaskManager = bgTaskManager;
@@ -433,8 +436,6 @@ public final class MainRunner {
     try {
       installUncaughtExceptionHandler(context);
 
-      Path projectRoot = Paths.get(".");
-
       // Only post an overflow event if Watchman indicates a fresh instance event
       // after our initial query.
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction =
@@ -444,7 +445,7 @@ public final class MainRunner {
 
       exitCode =
           runMainWithExitCode(
-              projectRoot, watchmanFreshInstanceAction, initTimestamp, ImmutableList.copyOf(args));
+              watchmanFreshInstanceAction, initTimestamp, ImmutableList.copyOf(args));
     } catch (Throwable t) {
 
       HumanReadableExceptionAugmentor augmentor;
@@ -561,7 +562,6 @@ public final class MainRunner {
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
   public ExitCode runMainWithExitCode(
-      Path projectRoot,
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
       long initTimestamp,
       ImmutableList<String> unexpandedCommandLineArgs)

@@ -33,6 +33,8 @@ import com.facebook.nailgun.NGContext;
 import com.google.common.collect.ImmutableMap;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -57,6 +59,7 @@ abstract class AbstractMain {
 
   protected final ImmutableMap<String, String> clientEnvironment;
   protected final Platform platform;
+  private final Path projectRoot;
 
   private final Optional<NGContext> optionalNGContext; // TODO(bobyf): remove this dependency.
   private final Console defaultConsole;
@@ -64,8 +67,13 @@ abstract class AbstractMain {
 
   /**
    * The constructor with certain defaults for use by {@link MainWithNailgun} and {@link
-   * MainWithoutNailgun}. The default {@link Console} will be constructed from the streams, and the
-   * command mode is default to {@link CommandMode#RELEASE}
+   * MainWithoutNailgun}.
+   *
+   * <ul>
+   *   <li>The default {@link Console} will be constructed from the streams
+   *   <li>command mode is default to {@link CommandMode#RELEASE}
+   *   <li>The repo root is set to the current running directory which is at the nearest .buckconfig
+   * </ul>
    *
    * @param stdOut the output stream for which a {@link Console} is constructed
    * @param stdErr the error output stream for which a {@link Console} is constructed
@@ -92,6 +100,7 @@ abstract class AbstractMain {
         stdIn,
         clientEnvironment,
         platform,
+        Paths.get("."),
         CommandMode.RELEASE,
         ngContext);
   }
@@ -104,6 +113,8 @@ abstract class AbstractMain {
    * @param stdIn the input stream
    * @param clientEnvironment the environment variable mapping for this command
    * @param platform the current platform
+   * @param projectRoot the path to the root of the project being built, where the .buckconfig is.
+   *     This can be relative like "." or absolute as it is later converted to a "real" path
    * @param commandMode the {@link CommandMode} of either {@link CommandMode#RELEASE} or {@link
    *     CommandMode#TEST}
    * @param ngContext the nailgun context
@@ -113,12 +124,14 @@ abstract class AbstractMain {
       InputStream stdIn,
       ImmutableMap<String, String> clientEnvironment,
       Platform platform,
+      Path projectRoot,
       CommandMode commandMode,
       Optional<NGContext> ngContext) {
     this.stdIn = stdIn;
 
     this.clientEnvironment = clientEnvironment;
     this.platform = platform;
+    this.projectRoot = projectRoot;
     this.optionalNGContext = ngContext;
     this.commandMode = commandMode;
     this.defaultConsole = console;
@@ -137,6 +150,7 @@ abstract class AbstractMain {
         getBuildId(),
         clientEnvironment,
         platform,
+        projectRoot,
         pluginManager,
         moduleManager,
         bgTaskManager,

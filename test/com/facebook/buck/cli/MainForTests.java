@@ -25,6 +25,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.nailgun.NGContext;
 import com.google.common.collect.ImmutableMap;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -35,22 +36,53 @@ public class MainForTests extends AbstractMain {
 
   private final KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory;
 
+  /**
+   * @param console the console the test run will print to
+   * @param stdIn the stdin stream for the test command
+   * @param knownRuleTypesFactoryFactory the {@link KnownRuleTypesFactoryFactory} for this test
+   *     command
+   * @param clientEnvironment the client environment being tested
+   * @param projectRoot the root of the project for this test command
+   * @param ngContext the nailgun context for this test command.
+   */
   public MainForTests(
       Console console,
       InputStream stdIn,
       KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory,
+      Path projectRoot,
       ImmutableMap<String, String> clientEnvironment,
       Optional<NGContext> ngContext) {
-    super(console, stdIn, clientEnvironment, Platform.detect(), CommandMode.TEST, ngContext);
+    super(
+        console,
+        stdIn,
+        clientEnvironment,
+        Platform.detect(),
+        projectRoot,
+        CommandMode.TEST,
+        ngContext);
     this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
   }
 
+  /**
+   * @param console the console the test run will print to
+   * @param stdIn the stdin stream for the test command
+   * @param clientEnvironment the client environment being tested
+   * @param projectRoot the root of the project for this test command
+   * @param ngContext the nailgun context for this test command.
+   */
   public MainForTests(
       Console console,
       InputStream stdIn,
+      Path projectRoot,
       ImmutableMap<String, String> clientEnvironment,
       Optional<NGContext> ngContext) {
-    this(console, stdIn, DefaultKnownRuleTypesFactory::new, clientEnvironment, ngContext);
+    this(
+        console,
+        stdIn,
+        DefaultKnownRuleTypesFactory::new,
+        projectRoot,
+        clientEnvironment,
+        ngContext);
   }
 
   @Override
