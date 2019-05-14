@@ -46,8 +46,15 @@ class MultitenantQueryTest {
     fun packageWildcardQuery() {
         val env = loadIndex("diamond_dependency_graph.json", 0)
         assertEquals(
+                "Return empty set even though no build file exists.",
                 asOutput(),
                 env.evaluateQuery("//:")
+        )
+
+        assertEquals(
+                "Return empty set for a build file that defines no rules.",
+                asOutput(),
+                env.evaluateQuery("//empty/build/file:")
         )
 
         assertEquals(

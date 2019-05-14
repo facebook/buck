@@ -54,6 +54,13 @@
           },
         ],
       },
+      {
+        "path": "empty/build/file",
+        "rules": [
+          // In practice, we would not expect there to be a build file that
+          // does not define any build rules, but it is certainly possible.
+        ],
+      }
     ]
   }
 ]

@@ -159,7 +159,9 @@ private class TargetEvaluator(private val index: Index, private val generation: 
             }
             Kind.PACKAGE -> {
                 val basePath = buildTargetPattern.basePath
-                ImmutableSet.copyOf(index.getTargetsInBasePath(generation, FsAgnosticPath.of(basePath)))
+                val targets = index.getTargetsInBasePath(generation, FsAgnosticPath.of(basePath))
+                        ?: return ImmutableSet.of()
+                ImmutableSet.copyOf(targets)
             }
             Kind.RECURSIVE -> {
                 val basePath = buildTargetPattern.basePath
