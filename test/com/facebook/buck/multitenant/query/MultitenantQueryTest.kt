@@ -99,6 +99,27 @@ class MultitenantQueryTest {
     }
 
     @Test
+    fun buildfileQuerySingleTarget() {
+        val env = loadIndex("diamond_dependency_graph.json", 0)
+        assertEquals(
+                "Should find all build files for :C.",
+                asFileTargets("java/com/example/BUCK"),
+                env.evaluateQuery("buildfile(//java/com/example:C)"))
+    }
+
+    @Test
+    fun buildfileQueryWithWildcard() {
+        val env = loadIndex("diamond_dependency_graph.json", 0)
+        assertEquals(
+                "Should find all build files in the project.",
+                asFileTargets(
+                        "java/com/example/BUCK",
+                        "java/com/facebook/buck/BUCK"
+                ),
+                env.evaluateQuery("buildfile(//...)"))
+    }
+
+    @Test
     fun depsQuery() {
         val env = loadIndex("diamond_dependency_graph.json", 0)
         assertEquals(
@@ -172,5 +193,6 @@ private fun loadIndex(resource: String, commitIndex: Int): MultitenantQueryEnvir
     val commits = populateIndexFromStream(indexAppender, MultitenantQueryTest::class.java.getResourceAsStream(resource))
     val generation = indexAppender.getGeneration(commits[commitIndex])
     requireNotNull(generation)
-    return MultitenantQueryEnvironment(index, generation)
+    val cellToBuildFileName = mapOf("" to "BUCK")
+    return MultitenantQueryEnvironment(index, generation, cellToBuildFileName)
 }

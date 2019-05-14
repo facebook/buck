@@ -25,6 +25,7 @@ import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.BuildTargets
 import com.facebook.buck.multitenant.service.Generation
 import com.facebook.buck.multitenant.service.Index
+import com.facebook.buck.query.BuildFileFunction
 import com.facebook.buck.query.DepsFunction
 import com.facebook.buck.query.InputsFunction
 import com.facebook.buck.query.KindFunction
@@ -40,6 +41,7 @@ import java.util.function.Predicate
 import java.util.function.Supplier
 
 val QUERY_FUNCTIONS: List<QueryEnvironment.QueryFunction<out QueryTarget, UnconfiguredBuildTarget>> = listOf(
+        BuildFileFunction<UnconfiguredBuildTarget>(),
         DepsFunction<UnconfiguredBuildTarget>(),
         DepsFunction.FirstOrderDepsFunction<UnconfiguredBuildTarget>(),
         InputsFunction<UnconfiguredBuildTarget>(),
@@ -50,7 +52,10 @@ val QUERY_FUNCTIONS: List<QueryEnvironment.QueryFunction<out QueryTarget, Unconf
  * user's local changes. All queries that are satisfied by this environment are done in the context
  * of that state.
  */
-class MultitenantQueryEnvironment(private val index: Index, private val generation: Generation) : QueryEnvironment<UnconfiguredBuildTarget> {
+class MultitenantQueryEnvironment(
+        private val index: Index,
+        private val generation: Generation,
+        private val cellToBuildFileName: Map<String, String>) : QueryEnvironment<UnconfiguredBuildTarget> {
     private val targetEvaluator: Supplier<TargetEvaluator> = Suppliers.memoize {
         TargetEvaluator(index, generation)
     }
@@ -105,8 +110,14 @@ class MultitenantQueryEnvironment(private val index: Index, private val generati
         TODO("getTestsForTarget() not implemented")
     }
 
-    override fun getBuildFiles(targets: MutableSet<UnconfiguredBuildTarget>?): ImmutableSet<QueryFileTarget> {
-        TODO("getBuildFiles() not implemented")
+    override fun getBuildFiles(targets: Set<UnconfiguredBuildTarget>): ImmutableSet<QueryFileTarget> {
+        val out = ImmutableSet.builder<QueryFileTarget>()
+        targets.asSequence().forEach { target ->
+            val path = FsAgnosticSourcePath(FsAgnosticPath.of(
+                    "${target.baseName.substring(2)}/${cellToBuildFileName[target.cell]!!}"))
+            out.add(QueryFileTarget.of(path))
+        }
+        return out.build()
     }
 
     override fun getFileOwners(files: ImmutableList<String>?): ImmutableSet<UnconfiguredBuildTarget> {

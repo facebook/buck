@@ -106,7 +106,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
       ImmutableList.of(
           new AllPathsFunction(),
           new AttrFilterFunction(),
-          new BuildFileFunction(),
+          new BuildFileFunction<>(),
           new DepsFunction<>(),
           new DepsFunction.FirstOrderDepsFunction<>(),
           new DepsFunction.LookupFunction<QueryTarget, QueryBuildTarget>(),

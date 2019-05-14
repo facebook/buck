@@ -124,7 +124,8 @@ private class FakeMultitenantService(
                 ?: throw IllegalArgumentException("commit '${changes.commit}' not indexed by service")
         val buildPackageChanges = changeTranslator.translateChanges(changes)
         val localizedIndex = index.createIndexForGenerationWithLocalChanges(generation, buildPackageChanges)
-        var env = MultitenantQueryEnvironment(localizedIndex, generation)
+        val cellToBuildFileName = mapOf("" to "BUCK")
+        var env = MultitenantQueryEnvironment(localizedIndex, generation, cellToBuildFileName)
         val unconfiguredTargets = env.evaluateQuery(query)
         val rawNodesWithDeps = localizedIndex.getTargetNodes(generation, unconfiguredTargets.toList()).filterNotNull()
         return rawNodesWithDeps.map { it.targetNode.buildTarget.toString() }
