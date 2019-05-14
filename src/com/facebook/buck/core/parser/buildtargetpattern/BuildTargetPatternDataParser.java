@@ -53,17 +53,17 @@ public class BuildTargetPatternDataParser {
   public static BuildTargetPatternData parse(String pattern) throws BuildTargetParseException {
 
     check(
-        pattern.length() >= BuildTargetPatternData.ROOT_SYMBOL.length() + 1,
+        pattern.length() >= BuildTargetLanguageConstants.ROOT_SYMBOL.length() + 1,
         pattern,
         "pattern too short");
 
-    int root_pos = pattern.indexOf(BuildTargetPatternData.ROOT_SYMBOL);
+    int root_pos = pattern.indexOf(BuildTargetLanguageConstants.ROOT_SYMBOL);
     check(
         root_pos >= 0,
         pattern,
         "should start with either '%s' or a cell name followed by '%s'",
-        BuildTargetPatternData.ROOT_SYMBOL,
-        BuildTargetPatternData.ROOT_SYMBOL);
+        BuildTargetLanguageConstants.ROOT_SYMBOL,
+        BuildTargetLanguageConstants.ROOT_SYMBOL);
 
     // if pattern starts with // then cellName would be empty string
     String cellName = pattern.substring(0, root_pos);
@@ -71,42 +71,45 @@ public class BuildTargetPatternDataParser {
     String targetName = "";
     int endOfPathPos;
 
-    if (pattern.charAt(pattern.length() - 1) == BuildTargetPatternData.TARGET_SYMBOL) {
+    if (pattern.charAt(pattern.length() - 1) == BuildTargetLanguageConstants.TARGET_SYMBOL) {
       kind = Kind.PACKAGE;
       endOfPathPos = pattern.length() - 1;
-    } else if (pattern.endsWith(BuildTargetPatternData.RECURSIVE_SYMBOL)) {
+    } else if (pattern.endsWith(BuildTargetLanguageConstants.RECURSIVE_SYMBOL)) {
       kind = Kind.RECURSIVE;
-      endOfPathPos = pattern.length() - BuildTargetPatternData.RECURSIVE_SYMBOL.length() - 1;
+      endOfPathPos = pattern.length() - BuildTargetLanguageConstants.RECURSIVE_SYMBOL.length() - 1;
       check(
-          pattern.charAt(endOfPathPos) == BuildTargetPatternData.PATH_SYMBOL,
+          pattern.charAt(endOfPathPos) == BuildTargetLanguageConstants.PATH_SYMBOL,
           pattern,
           "'%s' should be preceded by a '%s'",
-          BuildTargetPatternData.RECURSIVE_SYMBOL,
-          BuildTargetPatternData.PATH_SYMBOL);
+          BuildTargetLanguageConstants.RECURSIVE_SYMBOL,
+          BuildTargetLanguageConstants.PATH_SYMBOL);
     } else {
       kind = Kind.SINGLE;
-      endOfPathPos = pattern.lastIndexOf(BuildTargetPatternData.TARGET_SYMBOL);
+      endOfPathPos = pattern.lastIndexOf(BuildTargetLanguageConstants.TARGET_SYMBOL);
       if (endOfPathPos < 0) {
         // Provided input does not have target delimiter and thus target name.
         // Assume target name to be the same as the last component of the base path (package name).
         endOfPathPos = pattern.length();
-        int startOfPackageName = pattern.lastIndexOf(BuildTargetPatternData.PATH_SYMBOL);
+        int startOfPackageName = pattern.lastIndexOf(BuildTargetLanguageConstants.PATH_SYMBOL);
         targetName = pattern.substring(startOfPackageName + 1);
       } else if (endOfPathPos < root_pos) {
         check(
             false,
             pattern,
             "cell name should not contain '%s'",
-            BuildTargetPatternData.TARGET_SYMBOL);
+            BuildTargetLanguageConstants.TARGET_SYMBOL);
       } else {
         targetName = pattern.substring(endOfPathPos + 1);
       }
     }
 
-    int startOfPathPos = root_pos + BuildTargetPatternData.ROOT_SYMBOL.length();
+    int startOfPathPos = root_pos + BuildTargetLanguageConstants.ROOT_SYMBOL.length();
 
     // three slashes will give absolute path - halt it early
-    check(pattern.charAt(startOfPathPos) != BuildTargetPatternData.PATH_SYMBOL, pattern, "'///'");
+    check(
+        pattern.charAt(startOfPathPos) != BuildTargetLanguageConstants.PATH_SYMBOL,
+        pattern,
+        "'///'");
 
     String path =
         endOfPathPos <= startOfPathPos ? "" : pattern.substring(startOfPathPos, endOfPathPos);
@@ -114,25 +117,26 @@ public class BuildTargetPatternDataParser {
     // following checks can be optimized with single pass
     // also, we might consider unsafe version of parsing function that does not check that
     check(
-        path.indexOf(BuildTargetPatternData.ROOT_SYMBOL) < 0,
+        path.indexOf(BuildTargetLanguageConstants.ROOT_SYMBOL) < 0,
         pattern,
         "'%s' can appear only once",
-        BuildTargetPatternData.ROOT_SYMBOL);
+        BuildTargetLanguageConstants.ROOT_SYMBOL);
     check(
-        path.indexOf(BuildTargetPatternData.RECURSIVE_SYMBOL) < 0,
+        path.indexOf(BuildTargetLanguageConstants.RECURSIVE_SYMBOL) < 0,
         pattern,
         "'%s' can appear only once",
-        BuildTargetPatternData.RECURSIVE_SYMBOL);
+        BuildTargetLanguageConstants.RECURSIVE_SYMBOL);
     check(
-        path.indexOf(BuildTargetPatternData.TARGET_SYMBOL) < 0,
+        path.indexOf(BuildTargetLanguageConstants.TARGET_SYMBOL) < 0,
         pattern,
         "'%s' can appear only once",
-        BuildTargetPatternData.TARGET_SYMBOL);
+        BuildTargetLanguageConstants.TARGET_SYMBOL);
     check(
-        path.length() == 0 || path.charAt(path.length() - 1) != BuildTargetPatternData.PATH_SYMBOL,
+        path.length() == 0
+            || path.charAt(path.length() - 1) != BuildTargetLanguageConstants.PATH_SYMBOL,
         pattern,
         "base path should not end with '%s'",
-        BuildTargetPatternData.PATH_SYMBOL);
+        BuildTargetLanguageConstants.PATH_SYMBOL);
 
     // This will work on both posix and Windows and always evaluates to relative path
     Path basePath = Paths.get(path);

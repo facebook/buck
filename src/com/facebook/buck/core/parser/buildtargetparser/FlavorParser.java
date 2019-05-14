@@ -23,7 +23,13 @@ import com.google.common.collect.Iterables;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-/** Parses a string containing one or more flavor names. */
+/**
+ * Parses a string containing one or more flavor names.
+ *
+ * <p>{@link com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser instead}
+ * which is stateless and environment-agnostic
+ */
+@Deprecated
 class FlavorParser {
   private static final Logger LOG = Logger.get(FlavorParser.class);
   private static final ImmutableMap<String, String> DEPRECATED_FLAVORS =

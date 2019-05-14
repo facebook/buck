@@ -35,6 +35,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Use {@link com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser
+ * instead} which is stateless and environment-agnostic
+ */
+@Deprecated
 class BuildTargetParser {
 
   /** The BuildTargetParser is stateless, so this single instance can be shared. */

@@ -25,15 +25,6 @@ import org.immutables.value.Value;
 @Value.Immutable(builder = false, copy = false, prehash = true)
 public abstract class BuildTargetPatternData {
 
-  /** Delimiter that splits cell name and the rest of the pattern */
-  public static final String ROOT_SYMBOL = "//";
-  /** Delimiter that splits path to a package root in the pattern */
-  public static final char PATH_SYMBOL = '/';
-  /** Delimiter that splits target name and the rest of the pattern */
-  public static final char TARGET_SYMBOL = ':';
-  /** Symbol that represents recursive pattern */
-  public static final String RECURSIVE_SYMBOL = "...";
-
   /** Type of a pattern */
   public enum Kind {
     /** Pattern is a single build target, like cell//path/to/package:target */
@@ -85,14 +76,19 @@ public abstract class BuildTargetPatternData {
 
   @Override
   public String toString() {
-    String result = getCell() + ROOT_SYMBOL + PathFormatter.pathWithUnixSeparators(getBasePath());
+    String result =
+        getCell()
+            + BuildTargetLanguageConstants.ROOT_SYMBOL
+            + PathFormatter.pathWithUnixSeparators(getBasePath());
     switch (getKind()) {
       case SINGLE:
-        return result + TARGET_SYMBOL + getTargetName();
+        return result + BuildTargetLanguageConstants.TARGET_SYMBOL + getTargetName();
       case PACKAGE:
-        return result + TARGET_SYMBOL;
+        return result + BuildTargetLanguageConstants.TARGET_SYMBOL;
       case RECURSIVE:
-        return result + PATH_SYMBOL + RECURSIVE_SYMBOL;
+        return result
+            + BuildTargetLanguageConstants.PATH_SYMBOL
+            + BuildTargetLanguageConstants.RECURSIVE_SYMBOL;
     }
     throw new IllegalStateException();
   }
