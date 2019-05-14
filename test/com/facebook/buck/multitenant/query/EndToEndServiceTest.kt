@@ -126,9 +126,8 @@ private class FakeMultitenantService(
         val localizedIndex = index.createIndexForGenerationWithLocalChanges(generation, buildPackageChanges)
         val cellToBuildFileName = mapOf("" to "BUCK")
         var env = MultitenantQueryEnvironment(localizedIndex, generation, cellToBuildFileName)
-        val unconfiguredTargets = env.evaluateQuery(query)
-        val rawNodesWithDeps = localizedIndex.getTargetNodes(generation, unconfiguredTargets.toList()).filterNotNull()
-        return rawNodesWithDeps.map { it.targetNode.buildTarget.toString() }
+        val queryTargets = env.evaluateQuery(query)
+        return queryTargets.map { it.toString() }
     }
 }
 

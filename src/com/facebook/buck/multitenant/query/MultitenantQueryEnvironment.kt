@@ -60,10 +60,14 @@ class MultitenantQueryEnvironment(
         TargetEvaluator(index, generation)
     }
 
-    fun evaluateQuery(query: String): ImmutableSet<UnconfiguredBuildTarget> {
+    /**
+     * Elements in the set returned by this method will be either instances of [QueryFileTarget] or
+     * [UnconfiguredBuildTarget]
+     */
+    fun evaluateQuery(query: String): ImmutableSet<QueryTarget> {
         val expr = QueryExpression.parse<UnconfiguredBuildTarget>(query, this)
         val evaluator = NoopQueryEvaluator<UnconfiguredBuildTarget>()
-        return evaluator.eval<UnconfiguredBuildTarget>(expr, this)
+        return evaluator.eval<QueryTarget>(expr, this)
     }
 
     override fun getFunctions(): Iterable<QueryEnvironment.QueryFunction<out QueryTarget, UnconfiguredBuildTarget>> {
