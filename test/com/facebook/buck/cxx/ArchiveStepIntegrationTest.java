@@ -114,7 +114,12 @@ public class ArchiveStepIntegrationTest {
   public void emptyArchives() throws IOException, InterruptedException {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     CxxPlatform platform =
-        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(
+                FakeBuckConfig.builder()
+                    .setFilesystem(filesystem)
+                    .setSections(CxxToolchainUtilsForTests.configureCxxToolchainsAndGetConfig())
+                    .build()));
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();

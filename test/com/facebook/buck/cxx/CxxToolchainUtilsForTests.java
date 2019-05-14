@@ -55,8 +55,15 @@ public class CxxToolchainUtilsForTests {
     if (isWindowsOs) {
       assumeWindowsCxxToolchainIsPresent();
     }
-    String config = isWindowsOs ? getWindowsCxxConfig() : getPosixConfig();
-    workspace.writeContentsToPath(config, ".buckconfig");
+    workspace.writeContentsToPath(configureCxxToolchainsAndGetConfig(), ".buckconfig");
+  }
+
+  public static String configureCxxToolchainsAndGetConfig() throws IOException {
+    boolean isWindowsOs = Platform.detect().getType() == PlatformType.WINDOWS;
+    if (isWindowsOs) {
+      assumeWindowsCxxToolchainIsPresent();
+    }
+    return isWindowsOs ? getWindowsCxxConfig() : getPosixConfig();
   }
 
   private static String getWindowsCxxConfig() throws IOException {
