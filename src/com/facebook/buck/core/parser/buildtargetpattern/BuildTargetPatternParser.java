@@ -17,12 +17,12 @@
 package com.facebook.buck.core.parser.buildtargetpattern;
 
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
-import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternData.Kind;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern.Kind;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * Factory that parses a string into {@link BuildTargetPatternData}
+ * Factory that parses a string into {@link BuildTargetPattern}
  *
  * <p>Pattern may be one of following formats:
  *
@@ -37,9 +37,9 @@ import java.nio.file.Paths;
  * <p>Cell component may be omitted in which case pattern will be evaluated in the context of
  * executing or owning cell
  */
-public class BuildTargetPatternDataParser {
+public class BuildTargetPatternParser {
 
-  private BuildTargetPatternDataParser() {}
+  private BuildTargetPatternParser() {}
 
   /**
    * Parse a string representing build target pattern
@@ -50,7 +50,7 @@ public class BuildTargetPatternDataParser {
    *     hope to make it checked one day; this type of exception would be properly handled as user
    *     error
    */
-  public static BuildTargetPatternData parse(String pattern) throws BuildTargetParseException {
+  public static BuildTargetPattern parse(String pattern) throws BuildTargetParseException {
 
     check(
         pattern.length() >= BuildTargetLanguageConstants.ROOT_SYMBOL.length() + 1,
@@ -67,7 +67,7 @@ public class BuildTargetPatternDataParser {
 
     // if pattern starts with // then cellName would be empty string
     String cellName = pattern.substring(0, root_pos);
-    BuildTargetPatternData.Kind kind;
+    BuildTargetPattern.Kind kind;
     String targetName = "";
     int endOfPathPos;
 
@@ -141,7 +141,7 @@ public class BuildTargetPatternDataParser {
     // This will work on both posix and Windows and always evaluates to relative path
     Path basePath = Paths.get(path);
 
-    return ImmutableBuildTargetPatternData.of(cellName, kind, basePath, targetName);
+    return ImmutableBuildTargetPattern.of(cellName, kind, basePath, targetName);
   }
 
   private static void check(boolean condition, String pattern, String message, Object... args)

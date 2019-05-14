@@ -21,9 +21,13 @@ import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
-/** Parsed representation of build target pattern */
+/**
+ * Parsed representation of build target pattern
+ *
+ * <p>Refer to {@link BuildTargetPatternParser} for acceptable pattern formats
+ */
 @Value.Immutable(builder = false, copy = false, prehash = true)
-public abstract class BuildTargetPatternData {
+public abstract class BuildTargetPattern {
 
   /** Type of a pattern */
   public enum Kind {
@@ -59,7 +63,7 @@ public abstract class BuildTargetPatternData {
   /**
    * Validate that target name is only present when necessary
    *
-   * <p>Should we move it to factory {@link BuildTargetPatternDataParser}?
+   * <p>Should we move it to factory {@link BuildTargetPatternParser}?
    */
   @Value.Check
   protected void check() {

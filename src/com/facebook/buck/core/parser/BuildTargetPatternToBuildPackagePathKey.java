@@ -19,7 +19,7 @@ package com.facebook.buck.core.parser;
 import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
-import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternData;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import org.immutables.value.Value;
 
 /** Transformation key containing build target pattern for which to discover package paths */
@@ -36,7 +36,7 @@ public abstract class BuildTargetPatternToBuildPackagePathKey
    * Pattern for which to discover paths to appropriate packages. Pattern can specify single target
    * like //package:target or multiple targets like //package: or //package/...
    */
-  public abstract BuildTargetPatternData getPattern();
+  public abstract BuildTargetPattern getPattern();
 
   @Override
   public ComputationIdentifier<BuildPackagePaths> getIdentifier() {

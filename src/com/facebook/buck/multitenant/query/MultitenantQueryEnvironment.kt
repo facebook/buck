@@ -19,8 +19,8 @@ import com.facebook.buck.core.exceptions.BuildTargetParseException
 import com.facebook.buck.core.model.QueryTarget
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
-import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternData.Kind
-import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternDataParser
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern.Kind
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.BuildTargets
 import com.facebook.buck.multitenant.service.Generation
@@ -143,7 +143,7 @@ private class TargetEvaluator(private val index: Index, private val generation: 
     override fun evaluateTarget(target: String): ImmutableSet<QueryTarget> {
         // TODO: We should probably also support aliases specified via .buckconfig here?
         val buildTargetPattern = try {
-            BuildTargetPatternDataParser.parse(target)
+            BuildTargetPatternParser.parse(target)
         } catch (e: BuildTargetParseException) {
             throw QueryException(e, "Error trying to parse '$target'")
         }

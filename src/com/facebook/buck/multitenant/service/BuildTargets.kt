@@ -19,13 +19,13 @@ package com.facebook.buck.multitenant.service
 import com.facebook.buck.core.exceptions.BuildTargetParseException
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
-import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternData
-import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternDataParser
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 
 /**
  * Collection of convenience methods for parsing build targets. Currently relies on
- * [BuildTargetPatternDataParser] and [BuildTargetPatternData] because they have fewer dependencies
+ * [BuildTargetPatternParser] and [BuildTargetPattern] because they have fewer dependencies
  * than other abstractions in Buck (they are filesystem-agnostic, which is a desirable property for
  * the multitenant service), but they are not quite right because they parse build target
  * <em>patterns</em>, not just build targets.
@@ -49,8 +49,8 @@ object BuildTargets {
      * @throws BuildTargetParseException
      */
     fun parseOrThrow(target: String): UnconfiguredBuildTarget {
-        val data = BuildTargetPatternDataParser.parse(target)
-        return if (data.kind == BuildTargetPatternData.Kind.SINGLE) {
+        val data = BuildTargetPatternParser.parse(target)
+        return if (data.kind == BuildTargetPattern.Kind.SINGLE) {
             createBuildTargetFromParts(
                     data.cell,
                     FsAgnosticPath.of(data.basePath),

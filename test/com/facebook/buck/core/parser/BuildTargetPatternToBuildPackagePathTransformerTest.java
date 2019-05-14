@@ -26,8 +26,8 @@ import com.facebook.buck.core.files.ImmutableDirectoryListKey;
 import com.facebook.buck.core.files.ImmutableFileTree;
 import com.facebook.buck.core.files.ImmutableFileTreeKey;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
-import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternData.Kind;
-import com.facebook.buck.core.parser.buildtargetpattern.ImmutableBuildTargetPatternData;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern.Kind;
+import com.facebook.buck.core.parser.buildtargetpattern.ImmutableBuildTargetPattern;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
@@ -66,7 +66,7 @@ public class BuildTargetPatternToBuildPackagePathTransformerTest {
 
     BuildTargetPatternToBuildPackagePathKey key =
         ImmutableBuildTargetPatternToBuildPackagePathKey.of(
-            ImmutableBuildTargetPatternData.of("", kind, Paths.get("dir1/dir2"), targetName));
+            ImmutableBuildTargetPattern.of("", kind, Paths.get("dir1/dir2"), targetName));
 
     BuildPackagePaths paths = transformer.transform(key, env);
 
@@ -110,7 +110,7 @@ public class BuildTargetPatternToBuildPackagePathTransformerTest {
 
     BuildTargetPatternToBuildPackagePathKey key =
         ImmutableBuildTargetPatternToBuildPackagePathKey.of(
-            ImmutableBuildTargetPatternData.of("", Kind.RECURSIVE, Paths.get("dir1"), ""));
+            ImmutableBuildTargetPattern.of("", Kind.RECURSIVE, Paths.get("dir1"), ""));
 
     BuildPackagePaths paths = transformer.transform(key, env);
 

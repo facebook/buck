@@ -18,7 +18,7 @@ package com.facebook.buck.core.parser.buildtargetpattern;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
-import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternData.Kind;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern.Kind;
 import java.nio.file.Paths;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -29,7 +29,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
-public class BuildTargetPatternDataParserTest {
+public class BuildTargetPatternParserTest {
 
   @Rule public ExpectedException exception = ExpectedException.none();
 
@@ -38,65 +38,59 @@ public class BuildTargetPatternDataParserTest {
     return new Object[] {
       new Object[] {
         "cell//path/to:target",
-        ImmutableBuildTargetPatternData.of("cell", Kind.SINGLE, Paths.get("path/to"), "target")
+        ImmutableBuildTargetPattern.of("cell", Kind.SINGLE, Paths.get("path/to"), "target")
       },
       new Object[] {
         "//path/to:target",
-        ImmutableBuildTargetPatternData.of("", Kind.SINGLE, Paths.get("path/to"), "target")
+        ImmutableBuildTargetPattern.of("", Kind.SINGLE, Paths.get("path/to"), "target")
       },
       new Object[] {
-        "//path/to", ImmutableBuildTargetPatternData.of("", Kind.SINGLE, Paths.get("path/to"), "to")
+        "//path/to", ImmutableBuildTargetPattern.of("", Kind.SINGLE, Paths.get("path/to"), "to")
       },
       new Object[] {
         "cell//path/to",
-        ImmutableBuildTargetPatternData.of("cell", Kind.SINGLE, Paths.get("path/to"), "to")
+        ImmutableBuildTargetPattern.of("cell", Kind.SINGLE, Paths.get("path/to"), "to")
       },
       new Object[] {
-        "//root", ImmutableBuildTargetPatternData.of("", Kind.SINGLE, Paths.get("root"), "root")
+        "//root", ImmutableBuildTargetPattern.of("", Kind.SINGLE, Paths.get("root"), "root")
       },
       new Object[] {
-        "//:target", ImmutableBuildTargetPatternData.of("", Kind.SINGLE, Paths.get(""), "target")
+        "//:target", ImmutableBuildTargetPattern.of("", Kind.SINGLE, Paths.get(""), "target")
       },
       new Object[] {
         "cell//path/to/...",
-        ImmutableBuildTargetPatternData.of("cell", Kind.RECURSIVE, Paths.get("path/to"), "")
+        ImmutableBuildTargetPattern.of("cell", Kind.RECURSIVE, Paths.get("path/to"), "")
       },
       new Object[] {
         "//path/to/...",
-        ImmutableBuildTargetPatternData.of("", Kind.RECURSIVE, Paths.get("path/to"), "")
+        ImmutableBuildTargetPattern.of("", Kind.RECURSIVE, Paths.get("path/to"), "")
+      },
+      new Object[] {"//...", ImmutableBuildTargetPattern.of("", Kind.RECURSIVE, Paths.get(""), "")},
+      new Object[] {
+        "cell//...", ImmutableBuildTargetPattern.of("cell", Kind.RECURSIVE, Paths.get(""), "")
       },
       new Object[] {
-        "//...", ImmutableBuildTargetPatternData.of("", Kind.RECURSIVE, Paths.get(""), "")
-      },
-      new Object[] {
-        "cell//...", ImmutableBuildTargetPatternData.of("cell", Kind.RECURSIVE, Paths.get(""), "")
-      },
-      new Object[] {
-        "//path/to:", ImmutableBuildTargetPatternData.of("", Kind.PACKAGE, Paths.get("path/to"), "")
+        "//path/to:", ImmutableBuildTargetPattern.of("", Kind.PACKAGE, Paths.get("path/to"), "")
       },
       new Object[] {
         "cell//path/to:",
-        ImmutableBuildTargetPatternData.of("cell", Kind.PACKAGE, Paths.get("path/to"), "")
+        ImmutableBuildTargetPattern.of("cell", Kind.PACKAGE, Paths.get("path/to"), "")
       },
-      new Object[] {"//:", ImmutableBuildTargetPatternData.of("", Kind.PACKAGE, Paths.get(""), "")},
+      new Object[] {"//:", ImmutableBuildTargetPattern.of("", Kind.PACKAGE, Paths.get(""), "")},
       new Object[] {
-        "a//b:c", ImmutableBuildTargetPatternData.of("a", Kind.SINGLE, Paths.get("b"), "c")
+        "a//b:c", ImmutableBuildTargetPattern.of("a", Kind.SINGLE, Paths.get("b"), "c")
       },
-      new Object[] {
-        "a//b", ImmutableBuildTargetPatternData.of("a", Kind.SINGLE, Paths.get("b"), "b")
-      },
-      new Object[] {
-        "//a", ImmutableBuildTargetPatternData.of("", Kind.SINGLE, Paths.get("a"), "a")
-      },
+      new Object[] {"a//b", ImmutableBuildTargetPattern.of("a", Kind.SINGLE, Paths.get("b"), "b")},
+      new Object[] {"//a", ImmutableBuildTargetPattern.of("", Kind.SINGLE, Paths.get("a"), "a")},
     };
   }
 
   @Test
   @Parameters(method = "dataParseSuccess")
   @TestCaseName("parsingSucceeds({0})")
-  public void parsingSucceeds(String pattern, BuildTargetPatternData expected)
+  public void parsingSucceeds(String pattern, BuildTargetPattern expected)
       throws BuildTargetParseException {
-    assertEquals(expected, BuildTargetPatternDataParser.parse(pattern));
+    assertEquals(expected, BuildTargetPatternParser.parse(pattern));
   }
 
   @Test
@@ -119,6 +113,6 @@ public class BuildTargetPatternDataParserTest {
   @TestCaseName("parsingFails({0})")
   public void parsingFails(String pattern) throws BuildTargetParseException {
     exception.expect(BuildTargetParseException.class);
-    BuildTargetPatternDataParser.parse(pattern);
+    BuildTargetPatternParser.parse(pattern);
   }
 }
