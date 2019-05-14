@@ -199,11 +199,15 @@ public class CxxToolchainDescription
     // User-configured cxx platforms are required to handle path sanitization themselves.
     cxxPlatform.setCompilerDebugPathSanitizer(NoopDebugPathSanitizer.INSTANCE);
 
-    // We require that untracked headers are errors and don't allow any whitelisting (the
-    // user-configured platform can implement it's only filtering of the produced depfiles).
+    // We require that untracked headers are errors.
     cxxPlatform.setHeaderVerification(
         HeaderVerification.of(
-            HeaderVerification.Mode.ERROR, ImmutableList.of(), ImmutableList.of()));
+            HeaderVerification.Mode.ERROR,
+            ImmutableList.of(),
+            // Ideally we don't allow any whitelisting (the user-configured platform can implement
+            // its own filtering of the produced depfiles), but currently we are relaxing this
+            // restriction.
+            args.getHeadersWhitelist()));
 
     SharedLibraryInterfaceParams.Type sharedLibraryInterfaceType =
         args.getSharedLibraryInterfaceType();
@@ -362,5 +366,11 @@ public class CxxToolchainDescription
     default boolean getFilepathLengthLimited() {
       return false;
     }
+
+    /**
+     * A list of regexes which match headers (belonging to the toolchain) to exempt from untracked
+     * header verification.
+     */
+    ImmutableList<String> getHeadersWhitelist();
   }
 }
