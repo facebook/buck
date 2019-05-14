@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -88,7 +88,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
       Optional<TargetGraph> targetGraph,
       TypeCoercerFactory typeCoercerFactory,
       CellPathResolver cellNames,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       String targetBaseName,
       Set<BuildTarget> declaredDeps,
       TargetConfiguration targetConfiguration) {
@@ -270,12 +270,12 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
     private final CellPathResolver cellNames;
     private final String targetBaseName;
     private final ImmutableSet<BuildTarget> declaredDeps;
-    private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
+    private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
     private final TargetConfiguration targetConfiguration;
 
     private TargetEvaluator(
         CellPathResolver cellNames,
-        UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
+        UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
         String targetBaseName,
         Set<BuildTarget> declaredDeps,
         TargetConfiguration targetConfiguration) {

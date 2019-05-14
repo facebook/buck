@@ -20,7 +20,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import java.nio.file.Path;
 
 /** Creates {@link UnconfiguredBuildTargetView} from a raw string. */
-public interface UnconfiguredBuildTargetFactory {
+public interface UnconfiguredBuildTargetViewFactory {
 
   /**
    * Given a fully-qualified target name returns {@link UnconfiguredBuildTargetView}.

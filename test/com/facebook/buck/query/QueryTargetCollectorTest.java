@@ -22,7 +22,7 @@ import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.QueryTarget;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
@@ -45,7 +45,7 @@ public class QueryTargetCollectorTest {
           Optional.empty(),
           new DefaultTypeCoercerFactory(),
           DefaultCellPathResolver.of(ROOT, ImmutableMap.of()),
-          new ParsingUnconfiguredBuildTargetFactory(),
+          new ParsingUnconfiguredBuildTargetViewFactory(),
           baseName,
           ImmutableSet.of(),
           EmptyTargetConfiguration.INSTANCE);

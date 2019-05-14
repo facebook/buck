@@ -21,7 +21,7 @@ import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import java.nio.file.Path;
@@ -30,10 +30,10 @@ import java.nio.file.Path;
 public class UnconfiguredBuildTargetTypeCoercer
     extends LeafTypeCoercer<UnconfiguredBuildTargetView> {
 
-  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
+  private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
 
   public UnconfiguredBuildTargetTypeCoercer(
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
   }
 

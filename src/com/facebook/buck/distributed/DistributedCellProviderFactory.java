@@ -24,7 +24,7 @@ import com.facebook.buck.core.cell.impl.ImmutableCell;
 import com.facebook.buck.core.cell.impl.RootCellFactory;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.DefaultToolchainProvider;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
@@ -46,7 +46,7 @@ public class DistributedCellProviderFactory {
       DistBuildCellParams rootCell,
       ImmutableMap<Path, DistBuildCellParams> cellParams,
       CellPathResolver rootCellPathResolver,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       Supplier<TargetConfiguration> targetConfiguration) {
     Map<String, Path> cellPaths =
         cellParams.values().stream()

@@ -29,7 +29,7 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.common.BuildRules;
@@ -419,7 +419,7 @@ public class CxxBinaryDescriptionTest {
                     unversionedTargetGraph, ImmutableSet.of(builder.getTarget())),
                 NUMBER_OF_THREADS,
                 new DefaultTypeCoercerFactory(),
-                new ParsingUnconfiguredBuildTargetFactory(),
+                new ParsingUnconfiguredBuildTargetViewFactory(),
                 20)
             .getTargetGraph();
 

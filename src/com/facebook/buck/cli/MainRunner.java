@@ -49,8 +49,8 @@ import com.facebook.buck.core.model.impl.HostTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
 import com.facebook.buck.core.model.impl.JsonTargetConfigurationSerializer;
 import com.facebook.buck.core.module.BuckModuleManager;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
@@ -623,8 +623,8 @@ public final class MainRunner {
       setupLogging(command, args);
 
       ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
-      UnconfiguredBuildTargetFactory buildTargetFactory =
-          new ParsingUnconfiguredBuildTargetFactory();
+      UnconfiguredBuildTargetViewFactory buildTargetFactory =
+          new ParsingUnconfiguredBuildTargetViewFactory();
 
       Config currentConfig = setupDefaultConfig(rootCellMapping, command);
       Config config;
@@ -1416,7 +1416,7 @@ public final class MainRunner {
   private Supplier<TargetConfiguration> createTargetConfigurationSupplier(
       Command command,
       BuckConfig buckConfig,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       CellPathResolver cellPathResolver) {
     if (command.getTargetPlatforms().isEmpty()) {
       Optional<UnconfiguredBuildTargetView> hostPlatformFromConfig =
@@ -1550,7 +1550,7 @@ public final class MainRunner {
       ExecutableFinder executableFinder,
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
       FileHashCache fileHashCache,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetSpecResolver targetSpecResolver)
       throws IOException, InterruptedException {
     Optional<WatchmanWatcher> watchmanWatcher = Optional.empty();

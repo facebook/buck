@@ -26,7 +26,7 @@ import com.facebook.buck.core.graph.transformation.executor.impl.ToposortBasedDe
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEvent;
@@ -59,7 +59,7 @@ public class VersionedTargetGraphCache {
       ImmutableMap<String, VersionUniverse> versionUniverses,
       int numberOfThreads,
       TypeCoercerFactory typeCoercerFactory,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       VersionTargetGraphMode versionTargetGraphMode,
       Map<VersionTargetGraphMode, Double> versionTargetGraphModeProbabilities,
       long timeoutSeconds,
@@ -137,7 +137,7 @@ public class VersionedTargetGraphCache {
       ImmutableMap<String, VersionUniverse> versionUniverses,
       int numberOfThreads,
       TypeCoercerFactory typeCoercerFactory,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       VersionTargetGraphMode versionTargetGraphMode,
       Map<VersionTargetGraphMode, Double> versionTargetGraphModeProbabilities,
       long timeoutSeconds,
@@ -200,7 +200,7 @@ public class VersionedTargetGraphCache {
       BuckEventBus eventBus,
       BuckConfig buckConfig,
       TypeCoercerFactory typeCoercerFactory,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       TargetConfiguration targetConfiguration,
       CacheStatsTracker statsTracker)
@@ -262,7 +262,7 @@ public class VersionedTargetGraphCache {
       BuckEventBus eventBus,
       ImmutableMap<String, VersionUniverse> versionUniverses,
       TypeCoercerFactory typeCoercerFactory,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       int numberOfThreads,
       CacheStatsTracker statsTracker)

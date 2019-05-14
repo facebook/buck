@@ -27,8 +27,8 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.features.python.PythonTestBuilder;
@@ -53,7 +53,7 @@ public class VersionedTargetGraphCacheTest {
       new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId());
   private static final int NUMBER_OF_THREADS = 1;
 
-  private UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
+  private UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
 
   private Version version1 = Version.of("v1");
   private Version version2 = Version.of("v2");
@@ -61,7 +61,7 @@ public class VersionedTargetGraphCacheTest {
 
   @Before
   public void setUp() {
-    unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetFactory();
+    unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetViewFactory();
   }
 
   @Test

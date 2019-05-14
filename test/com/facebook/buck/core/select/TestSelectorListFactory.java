@@ -17,7 +17,7 @@ package com.facebook.buck.core.select;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -34,7 +34,8 @@ public class TestSelectorListFactory {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SelectorFactory selectorFactory =
         new SelectorFactory(
-            new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory()));
+            new UnconfiguredBuildTargetTypeCoercer(
+                new ParsingUnconfiguredBuildTargetViewFactory()));
     ImmutableList.Builder<Selector<T>> selectorBuilder = ImmutableList.builder();
     for (Map<String, ?> selectorAttributes : selectors) {
       Selector<T> selector =

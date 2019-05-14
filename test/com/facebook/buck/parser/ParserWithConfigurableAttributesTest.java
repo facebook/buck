@@ -58,7 +58,7 @@ import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderB
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -223,7 +223,7 @@ public class ParserWithConfigurableAttributesTest {
                 getManifestSupplier(),
                 new FakeFileHashCache(
                     ImmutableMap.of(buildFile, HashCode.fromBytes(new byte[] {1}))),
-                new ParsingUnconfiguredBuildTargetFactory())
+                new ParsingUnconfiguredBuildTargetViewFactory())
             .create(
                 ParsingContext.builder(cell, executor).setProfilingEnabled(enableProfiling).build(),
                 parser.getPermState(),
@@ -2578,7 +2578,7 @@ public class ParserWithConfigurableAttributesTest {
                 eventBus,
                 getManifestSupplier(),
                 new FakeFileHashCache(hashes),
-                new ParsingUnconfiguredBuildTargetFactory())
+                new ParsingUnconfiguredBuildTargetViewFactory())
             .create(
                 ParsingContext.builder(cell, executor).build(),
                 parser.getPermState(),

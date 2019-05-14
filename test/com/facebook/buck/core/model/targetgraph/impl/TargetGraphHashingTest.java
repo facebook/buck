@@ -33,7 +33,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -120,7 +120,7 @@ public class TargetGraphHashingTest {
                 eventBus,
                 ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close),
                 new FakeFileHashCache(ImmutableMap.of()),
-                new ParsingUnconfiguredBuildTargetFactory())
+                new ParsingUnconfiguredBuildTargetViewFactory())
             .create(
                 ParsingContext.builder(cell, MoreExecutors.newDirectExecutorService()).build(),
                 parser.getPermState(),

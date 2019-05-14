@@ -27,7 +27,7 @@ import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.impl.ConfigurationRuleSelectableResolver;
@@ -75,7 +75,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
   private final ParserPythonInterpreterProvider parserPythonInterpreterProvider;
   private final Watchman watchman;
   private final BuckEventBus eventBus;
-  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
+  private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
 
   PerBuildStateFactoryWithConfigurableAttributes(
       TypeCoercerFactory typeCoercerFactory,
@@ -86,7 +86,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
       BuckEventBus eventBus,
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
       FileHashCache fileHashCache,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
     super(manifestServiceSupplier, fileHashCache);
     this.typeCoercerFactory = typeCoercerFactory;
     this.marshaller = marshaller;

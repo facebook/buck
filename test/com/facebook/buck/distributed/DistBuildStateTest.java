@@ -40,8 +40,8 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
@@ -114,14 +114,14 @@ public class DistBuildStateTest {
   private ExecutableFinder executableFinder;
   private BuckModuleManager moduleManager;
   private PluginManager pluginManager;
-  private UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
+  private UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
 
   private void setUp() {
     processExecutor = new DefaultProcessExecutor(new TestConsole());
     executableFinder = new ExecutableFinder();
     pluginManager = BuckPluginManagerFactory.createPluginManager();
     moduleManager = TestBuckModuleManagerFactory.create(pluginManager);
-    unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetFactory();
+    unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetViewFactory();
   }
 
   @Test

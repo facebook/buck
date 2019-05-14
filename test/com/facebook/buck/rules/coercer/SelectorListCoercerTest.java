@@ -29,7 +29,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
@@ -57,7 +57,7 @@ public class SelectorListCoercerTest {
         new SelectorListFactory(
             new SelectorFactory(
                 new UnconfiguredBuildTargetTypeCoercer(
-                    new ParsingUnconfiguredBuildTargetFactory())));
+                    new ParsingUnconfiguredBuildTargetViewFactory())));
   }
 
   @Test
@@ -83,7 +83,7 @@ public class SelectorListCoercerTest {
         new SelectorListCoercer<>(
             new BuildTargetTypeCoercer(
                 new UnconfiguredBuildTargetTypeCoercer(
-                    new ParsingUnconfiguredBuildTargetFactory())),
+                    new ParsingUnconfiguredBuildTargetViewFactory())),
             elementTypeCoercer,
             null);
     ImmutableSelectorValue selectorValue =

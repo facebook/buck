@@ -22,7 +22,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.BorrowablePath;
@@ -90,7 +90,7 @@ public class AbstractNetworkCacheTest {
                     TargetConfigurationSerializerForTests.create(cellPathResolver))
                 .setUnconfiguredBuildTargetFactory(
                     target ->
-                        new ParsingUnconfiguredBuildTargetFactory()
+                        new ParsingUnconfiguredBuildTargetViewFactory()
                             .create(cellPathResolver, target))
                 .setProjectFilesystem(filesystem)
                 .setBuckEventBus(BuckEventBusForTests.newInstance())

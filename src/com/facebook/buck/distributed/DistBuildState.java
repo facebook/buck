@@ -28,7 +28,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.module.BuckModuleManager;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
@@ -151,7 +151,7 @@ public class DistBuildState {
       BuckModuleManager moduleManager,
       PluginManager pluginManager,
       ProjectFilesystemFactory projectFilesystemFactory,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       Supplier<TargetConfiguration> targetConfiguration)
       throws IOException {
     ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
@@ -255,7 +255,7 @@ public class DistBuildState {
       ProjectFilesystem projectFilesystem,
       ImmutableMap<String, String> environment,
       CellPathResolver cellPathResolver,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
     return new BuckConfig(
         rawConfig,
         projectFilesystem,

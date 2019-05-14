@@ -18,7 +18,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -69,7 +69,7 @@ public class TestParserFactory {
             eventBus,
             getManifestSupplier(),
             new FakeFileHashCache(ImmutableMap.of()),
-            new ParsingUnconfiguredBuildTargetFactory()),
+            new ParsingUnconfiguredBuildTargetViewFactory()),
         eventBus);
   }
 

@@ -22,8 +22,8 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.util.function.Function;
 import org.junit.Before;
@@ -35,8 +35,8 @@ public class JsonTargetConfigurationSerializerTest {
 
   @Before
   public void setUp() {
-    UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
-        new ParsingUnconfiguredBuildTargetFactory();
+    UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory =
+        new ParsingUnconfiguredBuildTargetViewFactory();
     CellPathResolver cellPathResolver = TestCellPathResolver.get(new FakeProjectFilesystem());
     buildTargetProvider =
         buildTarget -> unconfiguredBuildTargetFactory.create(cellPathResolver, buildTarget);

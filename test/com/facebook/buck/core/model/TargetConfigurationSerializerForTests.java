@@ -17,8 +17,8 @@ package com.facebook.buck.core.model;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.impl.JsonTargetConfigurationSerializer;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 
 public class TargetConfigurationSerializerForTests implements TargetConfigurationSerializer {
 
@@ -30,8 +30,8 @@ public class TargetConfigurationSerializerForTests implements TargetConfiguratio
 
   @Override
   public String serialize(TargetConfiguration targetConfiguration) {
-    UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
-        new ParsingUnconfiguredBuildTargetFactory();
+    UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory =
+        new ParsingUnconfiguredBuildTargetViewFactory();
     return new JsonTargetConfigurationSerializer(
             targetName -> unconfiguredBuildTargetFactory.create(cellPathResolver, targetName))
         .serialize(targetConfiguration);

@@ -25,7 +25,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -211,7 +211,7 @@ public class PythonLibraryDescriptionTest {
                     ImmutableSet.of(builder.getTarget())),
                 NUMBER_OF_THREADS,
                 new DefaultTypeCoercerFactory(),
-                new ParsingUnconfiguredBuildTargetFactory(),
+                new ParsingUnconfiguredBuildTargetViewFactory(),
                 20)
             .getTargetGraph();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
@@ -261,7 +261,7 @@ public class PythonLibraryDescriptionTest {
                     ImmutableSet.of(builder.getTarget())),
                 NUMBER_OF_THREADS,
                 new DefaultTypeCoercerFactory(),
-                new ParsingUnconfiguredBuildTargetFactory(),
+                new ParsingUnconfiguredBuildTargetViewFactory(),
                 20)
             .getTargetGraph();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);

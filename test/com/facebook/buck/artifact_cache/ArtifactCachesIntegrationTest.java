@@ -27,8 +27,8 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -423,8 +423,8 @@ public class ArtifactCachesIntegrationTest {
       ProjectFilesystem projectFilesystem,
       ArtifactCacheBuckConfig cacheConfig) {
     CellPathResolver cellPathResolver = TestCellPathResolver.get(projectFilesystem);
-    UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
-        new ParsingUnconfiguredBuildTargetFactory();
+    UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory =
+        new ParsingUnconfiguredBuildTargetViewFactory();
     return new ArtifactCaches(
         cacheConfig,
         buckEventBus,

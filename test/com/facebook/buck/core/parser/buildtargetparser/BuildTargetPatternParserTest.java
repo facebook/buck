@@ -127,8 +127,8 @@ public class BuildTargetPatternParserTest {
     CellPathResolver otherCellPathResolver =
         new CellPathResolverView(
             rootCellPathResolver, ImmutableSet.of("root"), filesystem.getPath("other").normalize());
-    UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
-        new ParsingUnconfiguredBuildTargetFactory();
+    UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory =
+        new ParsingUnconfiguredBuildTargetViewFactory();
 
     // Root cell visibility from non-root cell
     Stream.of("other//lib:lib", "other//lib:", "other//lib/...")

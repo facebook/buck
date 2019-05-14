@@ -25,7 +25,7 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.HostTargetConfiguration;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -302,7 +302,7 @@ public class DistBuildSlaveExecutor {
   }
 
   private List<BuildTarget> getTopLevelTargetsToBuild() {
-    UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
+    UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory =
         args.getUnconfiguredBuildTargetFactory();
     return args.getState().getRemoteState().getTopLevelTargets().stream()
         .map(

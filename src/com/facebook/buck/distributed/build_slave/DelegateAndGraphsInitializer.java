@@ -25,7 +25,7 @@ import com.facebook.buck.core.model.impl.HostTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.DistBuildCachingEngineDelegate;
@@ -131,7 +131,7 @@ public class DelegateAndGraphsInitializer {
                       args.getBuckEventBus(),
                       args.getState().getRemoteRootCellConfig(),
                       new DefaultTypeCoercerFactory(),
-                      new ParsingUnconfiguredBuildTargetFactory(),
+                      new ParsingUnconfiguredBuildTargetViewFactory(),
                       targetGraphAndBuildTargets,
                       HostTargetConfiguration.INSTANCE)
                   .getTargetGraph();

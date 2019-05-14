@@ -25,7 +25,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -54,7 +54,7 @@ public class SelectorListFactoryTest {
         new SelectorListFactory(
             new SelectorFactory(
                 new UnconfiguredBuildTargetTypeCoercer(
-                    new ParsingUnconfiguredBuildTargetFactory())));
+                    new ParsingUnconfiguredBuildTargetViewFactory())));
   }
 
   @Test

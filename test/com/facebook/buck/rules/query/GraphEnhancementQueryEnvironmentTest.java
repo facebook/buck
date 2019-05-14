@@ -29,7 +29,7 @@ import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
@@ -70,7 +70,7 @@ public class GraphEnhancementQueryEnvironmentTest {
             Optional.of(TargetGraph.EMPTY),
             TYPE_COERCER_FACTORY,
             cellRoots,
-            new ParsingUnconfiguredBuildTargetFactory(),
+            new ParsingUnconfiguredBuildTargetViewFactory(),
             target.getBaseName(),
             ImmutableSet.of(),
             EmptyTargetConfiguration.INSTANCE);
@@ -91,7 +91,7 @@ public class GraphEnhancementQueryEnvironmentTest {
             Optional.of(TargetGraph.EMPTY),
             TYPE_COERCER_FACTORY,
             cellRoots,
-            new ParsingUnconfiguredBuildTargetFactory(),
+            new ParsingUnconfiguredBuildTargetViewFactory(),
             target.getBaseName(),
             ImmutableSet.of(),
             EmptyTargetConfiguration.INSTANCE);
@@ -122,7 +122,7 @@ public class GraphEnhancementQueryEnvironmentTest {
             Optional.of(TargetGraph.EMPTY),
             TYPE_COERCER_FACTORY,
             cellRoots,
-            new ParsingUnconfiguredBuildTargetFactory(),
+            new ParsingUnconfiguredBuildTargetViewFactory(),
             target.getBaseName(),
             ImmutableSet.of(dep1, dep2),
             EmptyTargetConfiguration.INSTANCE);
@@ -165,7 +165,7 @@ public class GraphEnhancementQueryEnvironmentTest {
         Optional.of(targetGraph),
         TYPE_COERCER_FACTORY,
         cellRoots,
-        new ParsingUnconfiguredBuildTargetFactory(),
+        new ParsingUnconfiguredBuildTargetViewFactory(),
         libNode.getBuildTarget().getBaseName(),
         ImmutableSet.of(sublibNode.getBuildTarget()),
         EmptyTargetConfiguration.INSTANCE);

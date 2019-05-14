@@ -20,7 +20,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
@@ -36,14 +36,14 @@ import java.util.concurrent.TimeUnit;
 public abstract class AbstractVersionedTargetGraphBuilder implements VersionedTargetGraphBuilder {
 
   protected final TypeCoercerFactory typeCoercerFactory;
-  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
+  private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
   protected final TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets;
   protected final long timeout;
   protected final TimeUnit timeUnit;
 
   protected AbstractVersionedTargetGraphBuilder(
       TypeCoercerFactory typeCoercerFactory,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
       long timeout,
       TimeUnit timeUnit) {

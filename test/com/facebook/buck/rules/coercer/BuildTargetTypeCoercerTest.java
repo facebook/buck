@@ -23,7 +23,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.lang.reflect.Proxy;
@@ -46,7 +46,7 @@ public class BuildTargetTypeCoercerTest {
   @Before
   public void setUp() {
     unconfiguredBuildTargetTypeCoercer =
-        new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory());
+        new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory());
   }
 
   @Test

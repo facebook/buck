@@ -30,7 +30,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.QueryTarget;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -134,7 +134,7 @@ public class BuckQueryEnvironmentTest {
             eventBus,
             getManifestSupplier(),
             new FakeFileHashCache(ImmutableMap.of()),
-            new ParsingUnconfiguredBuildTargetFactory());
+            new ParsingUnconfiguredBuildTargetViewFactory());
     Parser parser =
         TestParserFactory.create(depsAwareExecutor.get(), cell, perBuildStateFactory, eventBus);
     parserState =

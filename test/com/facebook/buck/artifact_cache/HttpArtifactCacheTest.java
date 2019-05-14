@@ -29,7 +29,7 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -150,7 +150,8 @@ public class HttpArtifactCacheTest {
                 TargetConfigurationSerializerForTests.create(cellPathResolver))
             .setUnconfiguredBuildTargetFactory(
                 target ->
-                    new ParsingUnconfiguredBuildTargetFactory().create(cellPathResolver, target))
+                    new ParsingUnconfiguredBuildTargetViewFactory()
+                        .create(cellPathResolver, target))
             .setProjectFilesystem(projectFilesystem)
             .setBuckEventBus(BUCK_EVENT_BUS)
             .setHttpWriteExecutorService(DIRECT_EXECUTOR_SERVICE)

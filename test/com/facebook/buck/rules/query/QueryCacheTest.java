@@ -29,8 +29,8 @@ import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -114,7 +114,7 @@ public class QueryCacheTest {
             Optional.of(targetGraph),
             TYPE_COERCER_FACTORY,
             TestCellPathResolver.get(new FakeProjectFilesystem()),
-            new ParsingUnconfiguredBuildTargetFactory(),
+            new ParsingUnconfiguredBuildTargetViewFactory(),
             targetA.getBaseName(),
             ImmutableSet.of(),
             EmptyTargetConfiguration.INSTANCE);
@@ -176,8 +176,8 @@ public class QueryCacheTest {
             JavaLibraryBuilder.createBuilder(targetB).build());
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
-        new ParsingUnconfiguredBuildTargetFactory();
+    UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory =
+        new ParsingUnconfiguredBuildTargetViewFactory();
 
     GraphEnhancementQueryEnvironment fooEnv =
         new GraphEnhancementQueryEnvironment(

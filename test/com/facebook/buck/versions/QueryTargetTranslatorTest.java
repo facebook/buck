@@ -23,7 +23,7 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.query.Query;
@@ -44,7 +44,7 @@ public class QueryTargetTranslatorTest {
     FixedTargetNodeTranslator translator =
         new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of(a, b));
     QueryTargetTranslator queryTranslator =
-        new QueryTargetTranslator(new ParsingUnconfiguredBuildTargetFactory());
+        new QueryTargetTranslator(new ParsingUnconfiguredBuildTargetViewFactory());
     assertThat(
         queryTranslator.translateTargets(
             CELL_PATH_RESOLVER,
@@ -59,7 +59,7 @@ public class QueryTargetTranslatorTest {
     FixedTargetNodeTranslator translator =
         new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of());
     QueryTargetTranslator queryTranslator =
-        new QueryTargetTranslator(new ParsingUnconfiguredBuildTargetFactory());
+        new QueryTargetTranslator(new ParsingUnconfiguredBuildTargetViewFactory());
     assertThat(
         queryTranslator.translateTargets(
             CELL_PATH_RESOLVER,

@@ -31,7 +31,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -130,7 +130,7 @@ public class TargetSpecResolverTest {
             eventBus,
             getManifestSupplier(),
             new FakeFileHashCache(ImmutableMap.of()),
-            new ParsingUnconfiguredBuildTargetFactory());
+            new ParsingUnconfiguredBuildTargetViewFactory());
 
     targetNodeTargetSpecResolver =
         TestTargetSpecResolverFactory.create(executor.get(), cell.getCellProvider(), eventBus);

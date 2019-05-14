@@ -19,7 +19,8 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 
 /** A factory that parses a given build target name using the provided {@link BuildTargetParser}. */
-public class ParsingUnconfiguredBuildTargetFactory implements UnconfiguredBuildTargetFactory {
+public class ParsingUnconfiguredBuildTargetViewFactory
+    implements UnconfiguredBuildTargetViewFactory {
 
   private final BuildTargetParser buildTargetParser = BuildTargetParser.INSTANCE;
 

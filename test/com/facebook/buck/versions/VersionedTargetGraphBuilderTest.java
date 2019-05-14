@@ -26,8 +26,8 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableMap;
@@ -49,12 +49,12 @@ import org.junit.runner.RunWith;
 public class VersionedTargetGraphBuilderTest {
 
   private DepsAwareExecutor executor;
-  private UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
+  private UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
 
   @Before
   public void setUp() {
     executor = DefaultDepsAwareExecutor.of(2);
-    unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetFactory();
+    unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetViewFactory();
   }
 
   @After
@@ -382,7 +382,7 @@ public class VersionedTargetGraphBuilderTest {
               VersionSelector versionSelector,
               TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
               TypeCoercerFactory typeCoercerFactory,
-              UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
+              UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
             return new ParallelVersionedTargetGraphBuilder(
                 2,
                 versionSelector,
@@ -407,7 +407,7 @@ public class VersionedTargetGraphBuilderTest {
               VersionSelector versionSelector,
               TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
               TypeCoercerFactory typeCoercerFactory,
-              UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
+              UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
             return new AsyncVersionedTargetGraphBuilder(
                 executor,
                 versionSelector,
@@ -432,6 +432,6 @@ public class VersionedTargetGraphBuilderTest {
         VersionSelector versionSelector,
         TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
         TypeCoercerFactory typeCoercerFactory,
-        UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory);
+        UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory);
   }
 }

@@ -41,7 +41,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -135,7 +135,8 @@ public class ThriftArtifactCacheTest {
                 TargetConfigurationSerializerForTests.create(cellPathResolver))
             .setUnconfiguredBuildTargetFactory(
                 target ->
-                    new ParsingUnconfiguredBuildTargetFactory().create(cellPathResolver, target))
+                    new ParsingUnconfiguredBuildTargetViewFactory()
+                        .create(cellPathResolver, target))
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)
@@ -270,7 +271,8 @@ public class ThriftArtifactCacheTest {
                 TargetConfigurationSerializerForTests.create(cellPathResolver))
             .setUnconfiguredBuildTargetFactory(
                 target ->
-                    new ParsingUnconfiguredBuildTargetFactory().create(cellPathResolver, target))
+                    new ParsingUnconfiguredBuildTargetViewFactory()
+                        .create(cellPathResolver, target))
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)
@@ -399,7 +401,8 @@ public class ThriftArtifactCacheTest {
                 TargetConfigurationSerializerForTests.create(cellPathResolver))
             .setUnconfiguredBuildTargetFactory(
                 target ->
-                    new ParsingUnconfiguredBuildTargetFactory().create(cellPathResolver, target))
+                    new ParsingUnconfiguredBuildTargetViewFactory()
+                        .create(cellPathResolver, target))
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)
@@ -492,7 +495,8 @@ public class ThriftArtifactCacheTest {
                 TargetConfigurationSerializerForTests.create(cellPathResolver))
             .setUnconfiguredBuildTargetFactory(
                 target ->
-                    new ParsingUnconfiguredBuildTargetFactory().create(cellPathResolver, target))
+                    new ParsingUnconfiguredBuildTargetViewFactory()
+                        .create(cellPathResolver, target))
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)

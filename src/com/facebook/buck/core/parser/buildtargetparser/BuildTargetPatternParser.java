@@ -34,8 +34,8 @@ public abstract class BuildTargetPatternParser<T> {
   private static final String WILDCARD_BUILD_RULE_SUFFIX = "...";
   private static final String BUILD_RULE_SEPARATOR = ":";
 
-  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
-      new ParsingUnconfiguredBuildTargetFactory();
+  private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory =
+      new ParsingUnconfiguredBuildTargetViewFactory();
 
   /**
    * 1. //src/com/facebook/buck/cli:cli will be converted to a single build target 2.

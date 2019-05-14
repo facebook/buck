@@ -20,7 +20,7 @@ import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.HostTargetConfiguration;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -76,7 +76,7 @@ public class RuleKeyDivergenceRunnerFactory {
       BuckEventBus eventBus,
       DistBuildState state,
       Cell rootCell,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
     return new AbstractDistBuildModeRunner() {
       @Override
       public ListenableFuture<?> getAsyncPrepFuture() {
@@ -192,7 +192,7 @@ public class RuleKeyDivergenceRunnerFactory {
   private static List<BuildTarget> getTopLevelTargetsToBuild(
       DistBuildState state,
       Cell rootCell,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
     return state.getRemoteState().getTopLevelTargets().stream()
         .map(
             target ->
