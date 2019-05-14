@@ -92,6 +92,19 @@ class FsAgnosticPath private constructor(private val path: String) : Comparable<
         }
     }
 
+    /**
+     * Similar to [Path.getParent], except it never returns `null`: it will return the empty path
+     * if the path does not have a parent.
+     */
+    fun dirname(): FsAgnosticPath {
+        val lastIndex = path.lastIndexOf('/')
+        return if (lastIndex == -1) {
+            return createWithoutVerification("")
+        } else {
+            return createWithoutVerification(path.substring(0, lastIndex))
+        }
+    }
+
     override fun equals(other: Any?): Boolean {
         return when {
             (this === other) -> true
