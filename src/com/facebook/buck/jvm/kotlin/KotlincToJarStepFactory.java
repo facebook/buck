@@ -56,7 +56,10 @@ import com.google.common.collect.Ordering;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
@@ -315,6 +318,19 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             buildableContext);
   }
 
+  /**
+   * Safely converts a URL to a File path. Use this instead of {@link URL#getFile} to ensure that
+   * htmlencoded literals are not present in the file path.
+   */
+  private static String urlToFile(URL url) {
+    try {
+      return Paths.get(url.toURI()).toFile().getPath();
+    } catch (URISyntaxException e) {
+      // In case of error, fall back to the original implementation.
+      return url.getFile();
+    }
+  }
+
   private void addKaptGenFolderStep(
       BuildTarget invokingRule,
       ImmutableList.Builder<Step> steps,
@@ -343,7 +359,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                             resolver, filesystem))
                 .map(JavacPluginJsr199Fields::getClasspath)
                 .flatMap(List::stream)
-                .map(url -> AP_CLASSPATH_ARG + url.getFile())
+                .map(url -> AP_CLASSPATH_ARG + urlToFile(url))
                 .collect(Collectors.toList()));
 
     ImmutableList<String> kaptPluginOptions =
