@@ -58,7 +58,11 @@ public class ResourceFilters {
           "xml",
           // "interpolator" is not officially documented in the above
           // link, but several support library aar files use it.
-          "interpolator");
+          "interpolator",
+          // "transition" is not documented in the above link,
+          // but the docs below claim it can be used
+          // https://developer.android.com/reference/android/transition/Transition
+          "transition");
 
   /**
    * Represents the names and values of valid densities for resources as defined in
