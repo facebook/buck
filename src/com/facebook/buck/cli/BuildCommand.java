@@ -43,6 +43,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.listener.FileSerializationOutputRuleDepsListener;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
@@ -55,6 +56,7 @@ import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.support.cli.config.AliasConfig;
+import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ListeningProcessExecutor;
@@ -115,6 +117,10 @@ public class BuildCommand extends AbstractCommand {
   private static final String DISTRIBUTED_LONG_ARG = "--distributed";
   static final String BUCK_BINARY_STRING_ARG = "--buck-binary";
   private static final String RULEKEY_LOG_PATH_LONG_ARG = "--rulekeys-log-path";
+
+  private static final String OUTPUT_RULE_DEPS_TO_FILE_ARG = "--output-rule-deps-to-file";
+  private static final String ACTION_GRAPH_FILE_NAME = "action_graph.json";
+  private static final String RULE_EXEC_TIME_FILE_NAME = "rule_exec_time.json";
 
   @Option(name = KEEP_GOING_LONG_ARG, usage = "Keep going when some targets can't be made.")
   private boolean keepGoing = false;
@@ -213,6 +219,11 @@ public class BuildCommand extends AbstractCommand {
       name = RULEKEY_LOG_PATH_LONG_ARG,
       usage = "If set, log a binary representation of rulekeys to this file.")
   private String ruleKeyLogPath = null;
+
+  @Option(
+      name = OUTPUT_RULE_DEPS_TO_FILE_ARG,
+      usage = "Serialize rule dependencies and execution time to the log directory")
+  private boolean outputRuleDeps = false;
 
   @Argument private List<String> arguments = new ArrayList<>();
 
@@ -330,13 +341,36 @@ public class BuildCommand extends AbstractCommand {
   BuildRunResult runWithoutHelpInternal(CommandRunnerParams params) throws Exception {
     assertArguments(params);
 
+    Optional<FileSerializationOutputRuleDepsListener> optionalListener =
+        outputRuleDeps
+            ? Optional.of(
+                new FileSerializationOutputRuleDepsListener(
+                    getSimulatorDir(params).resolve(RULE_EXEC_TIME_FILE_NAME)))
+            : Optional.empty();
+    optionalListener.ifPresent(params.getBuckEventBus()::register);
+
     ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
     try (CommandThreadManager pool =
             new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()));
-        BuildPrehook prehook = getPrehook(processExecutor, params)) {
+        BuildPrehook prehook = getPrehook(processExecutor, params);
+        CloseableWrapper<Optional<FileSerializationOutputRuleDepsListener>> ignored =
+            CloseableWrapper.of(
+                optionalListener,
+                listener -> listener.ifPresent(FileSerializationOutputRuleDepsListener::close))) {
       prehook.startPrehookScript();
       return run(params, pool, Function.identity(), ImmutableSet.of());
     }
+  }
+
+  private Path getSimulatorDir(CommandRunnerParams params) throws IOException {
+    ProjectFilesystem filesystem = params.getCell().getFilesystem();
+    Path simulatorDir = getLogDir(params).resolve("simulator").toAbsolutePath();
+    filesystem.mkdirs(simulatorDir);
+    return simulatorDir;
+  }
+
+  private Path getLogDir(CommandRunnerParams params) {
+    return params.getCell().getFilesystem().getBuckPaths().getLogDir();
   }
 
   BuildPrehook getPrehook(ListeningProcessExecutor processExecutor, CommandRunnerParams params) {
@@ -474,6 +508,15 @@ public class BuildCommand extends AbstractCommand {
                 commandThreadManager.getListeningExecutorService(),
                 targetNodeSpecEnhancer,
                 optionalRuleKeyLogger);
+
+        if (outputRuleDeps) {
+          ActionGraphBuilder actionGraphBuilder =
+              graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
+          ImmutableSet<BuildTarget> buildTargets = graphsAndBuildTargets.getBuildTargets();
+          Path outputPath = getSimulatorDir(params).resolve(ACTION_GRAPH_FILE_NAME);
+          new ActionGraphSerializer(actionGraphBuilder, buildTargets, outputPath).serialize();
+        }
+
         try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
             getDefaultRuleKeyCacheScope(
                 params, graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder())) {

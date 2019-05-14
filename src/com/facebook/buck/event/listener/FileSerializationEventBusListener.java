@@ -21,38 +21,24 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.eventbus.Subscribe;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-public class FileSerializationEventBusListener implements BuckEventListener {
-
-  private final BufferedWriter bufferedWriter;
+/**
+ * {@link BuckEventListener} that subscribes to {@link IndividualTestEvent.Finished} events and
+ * serialize them to outputFile in json-format.
+ */
+public class FileSerializationEventBusListener extends AbstractFileSerializationBuckEventListener {
 
   public FileSerializationEventBusListener(Path outputPath) throws IOException {
-    this.bufferedWriter =
-        Files.newBufferedWriter(
-            outputPath,
-            StandardCharsets.UTF_8,
-            StandardOpenOption.CREATE,
-            StandardOpenOption.WRITE,
-            StandardOpenOption.APPEND);
+    super(
+        outputPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND);
   }
 
   @Subscribe
-  public void writeEvent(IndividualTestEvent.Finished event) {
-    String json = serializeEvent(event);
-    try {
-      bufferedWriter.write(json + "\n");
-      bufferedWriter.flush();
-    } catch (IOException e) {
-      // Event listeners should avoid throwing, so catch and print.  Printing isn't guaranteed to
-      // actually print anything, due to the way listeners are isolated by buck.
-      e.printStackTrace();
-    }
+  public void subscribe(IndividualTestEvent.Finished event) {
+    writeLine(serializeEvent(event));
   }
 
   private String serializeEvent(BuckEvent event) {
@@ -63,10 +49,5 @@ public class FileSerializationEventBusListener implements BuckEventListener {
           "{\"errorType\":\"%s\",\"errorMessage\":\"%s\"}",
           e.getClass().toString(), e.getMessage().replace('"', '\''));
     }
-  }
-
-  @Override
-  public void close() throws IOException {
-    bufferedWriter.close();
   }
 }
