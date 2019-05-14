@@ -17,21 +17,17 @@
 package com.facebook.buck.multitenant.query
 
 import com.facebook.buck.core.sourcepath.SourcePath
-import com.facebook.buck.multitenant.fs.FsAgnosticPath
 
 /**
- * Implementation of [SourcePath] that makes sense in the context of
- * `com.facebook.buck.multitenant`. It is designed to be used with
- * [com.facebook.buck.query.QueryFileTarget].
+ * Implementation of [SourcePath] that is something other than [FsAgnosticSourcePath] so that we can
+ * exercise the "compareClasses" logic in [FsAgnosticSourcePath.compareTo] in a unit test.
+ *
+ * Ideally, we would just use [com.facebook.buck.core.sourcepath.PathSourcePath], but that requires
+ * a [com.facebook.buck.io.filesystem.ProjectFilesystem], and it appears to be incredibly difficult
+ * to make [com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem] available to a unit test in
+ * the multitenant module in IntelliJ. Getting it to work with `buck test` is not an issue, though.
  */
-data class FsAgnosticSourcePath(private val path: FsAgnosticPath) : SourcePath {
-    companion object {
-        /**
-         * @param path must be a normalized, relative path.
-         */
-        fun of(path: String): FsAgnosticSourcePath = FsAgnosticSourcePath(FsAgnosticPath.of(path))
-    }
-
+class DummySourcePath(val path: String) : SourcePath {
     override fun compareTo(other: SourcePath): Int {
         if (this === other) {
             return 0
@@ -42,9 +38,7 @@ data class FsAgnosticSourcePath(private val path: FsAgnosticPath) : SourcePath {
             return classComparison
         }
 
-        val that = other as FsAgnosticSourcePath
+        val that = other as DummySourcePath
         return path.compareTo(that.path)
     }
-
-    override fun toString(): String = path.toString()
 }

@@ -1,3 +1,14 @@
+kotlin_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.kt"],
+        exclude = ["*Test.kt"],
+    ),
+    deps = [
+        "//src/com/facebook/buck/core/sourcepath:types",
+    ],
+)
+
 kotlin_test(
     name = "query",
     srcs = glob(["*Test.kt"]),
@@ -6,6 +17,7 @@ kotlin_test(
     ],
     resources = glob(["*.json"]),
     deps = [
+        ":testutil",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
         "//src/com/facebook/buck/core/sourcepath:types",
