@@ -31,14 +31,15 @@ public abstract class StepEvent extends AbstractBuckEvent
 
   private final String shortName;
   private final String description;
-
   @JsonIgnore private final UUID uuid;
+  private final String parentTarget;
 
-  protected StepEvent(String shortName, String description, UUID uuid) {
+  protected StepEvent(String shortName, String description, UUID uuid, String parentTarget) {
     super(EventKey.slowValueKey("StepEvent", uuid));
     this.shortName = shortName;
     this.description = description;
     this.uuid = uuid;
+    this.parentTarget = parentTarget;
   }
 
   @Override
@@ -55,6 +56,10 @@ public abstract class StepEvent extends AbstractBuckEvent
     return uuid;
   }
 
+  public String getParentTarget() {
+    return parentTarget;
+  }
+
   @Override
   public String getCategory() {
     return getShortStepName();
@@ -65,8 +70,8 @@ public abstract class StepEvent extends AbstractBuckEvent
     return getShortStepName();
   }
 
-  public static Started started(String shortName, String description, UUID uuid) {
-    return new Started(shortName, description, uuid);
+  public static Started started(String shortName, String description, UUID uuid, String parentTarget) {
+    return new Started(shortName, description, uuid, parentTarget);
   }
 
   public static Finished finished(Started started, int exitCode) {
@@ -74,8 +79,8 @@ public abstract class StepEvent extends AbstractBuckEvent
   }
 
   public static class Started extends StepEvent {
-    protected Started(String shortName, String description, UUID uuid) {
-      super(shortName, description, uuid);
+    protected Started(String shortName, String description, UUID uuid, String parentTarget) {
+      super(shortName, description, uuid, parentTarget);
     }
 
     @Override
@@ -88,7 +93,7 @@ public abstract class StepEvent extends AbstractBuckEvent
     private final int exitCode;
 
     protected Finished(Started started, int exitCode) {
-      super(started.getShortStepName(), started.getDescription(), started.getUuid());
+      super(started.getShortStepName(), started.getDescription(), started.getUuid(), started.getParentTarget());
       this.exitCode = exitCode;
     }
 

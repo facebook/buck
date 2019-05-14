@@ -58,7 +58,6 @@ import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;

@@ -366,7 +366,9 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         "buck",
         started.getShortStepName(),
         ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.of(),
+        ImmutableMap.of(
+            "description", started.getDescription(),
+            "target", started.getParentTarget()),
         started);
   }
 
@@ -378,6 +380,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         ChromeTraceEvent.Phase.END,
         ImmutableMap.of(
             "description", finished.getDescription(),
+            "target", finished.getParentTarget(),
             "exit_code", Integer.toString(finished.getExitCode())),
         finished);
   }

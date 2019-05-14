@@ -44,11 +44,15 @@ public final class StepRunner {
     if (context.getVerbosity().shouldPrintCommand()) {
       context.getStdErr().println(step.getDescription(context));
     }
+    String parentTarget = "";
+    if (buildTarget.isPresent()) {
+      parentTarget = buildTarget.get().getFullyQualifiedName();
+    }
 
     String stepShortName = step.getShortName();
     String stepDescription = step.getDescription(context);
     UUID stepUuid = UUID.randomUUID();
-    StepEvent.Started started = StepEvent.started(stepShortName, stepDescription, stepUuid);
+    StepEvent.Started started = StepEvent.started(stepShortName, stepDescription, stepUuid, parentTarget);
     LOG.verbose(started.toString());
     context.getBuckEventBus().post(started);
     StepExecutionResult executionResult = StepExecutionResults.ERROR;
