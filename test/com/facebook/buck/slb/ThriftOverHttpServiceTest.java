@@ -39,7 +39,7 @@ public class ThriftOverHttpServiceTest {
 
   @Before
   public void setUp() {
-    httpService = EasyMock.createMock(HttpService.class);
+    httpService = EasyMock.createNiceMock(HttpService.class);
     config = ThriftOverHttpServiceConfig.builder().setService(httpService).build();
     service = new ThriftOverHttpServiceImpl<FrontendRequest, FrontendResponse>(config);
   }
@@ -54,7 +54,7 @@ public class ThriftOverHttpServiceTest {
     response.setType(FrontendRequestType.START_BUILD);
 
     Capture<Request.Builder> requestBuilder = EasyMock.newCapture();
-    HttpResponse httpResponse = EasyMock.createMock(HttpResponse.class);
+    HttpResponse httpResponse = EasyMock.createNiceMock(HttpResponse.class);
     EasyMock.expect(httpResponse.statusCode()).andReturn(404).atLeastOnce();
     EasyMock.expect(httpResponse.statusMessage()).andReturn("topspin").atLeastOnce();
     EasyMock.expect(httpResponse.requestUrl()).andReturn("super url").atLeastOnce();

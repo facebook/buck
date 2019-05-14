@@ -129,7 +129,7 @@ public class ExternalJavacTest extends EasyMockSupport {
         new ExternalJavacProvider(executor, FakeSourcePath.of(javac))
             .resolve(new TestActionGraphBuilder());
     RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
-    Capture<Supplier<Tool>> identifier = new Capture<>();
+    Capture<Supplier<Tool>> identifier = Capture.newInstance();
     expect(sink.setReflectively(eq(".class"), anyObject())).andReturn(sink);
     expect(sink.setReflectively(eq("javac"), capture(identifier))).andReturn(sink);
     replay(sink);
@@ -202,7 +202,7 @@ public class ExternalJavacTest extends EasyMockSupport {
         new ExternalJavacProvider(executor, DefaultBuildTargetSourcePath.of(javacTarget))
             .resolve(graphBuilder);
     RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
-    Capture<Supplier<Tool>> identifier = new Capture<>();
+    Capture<Supplier<Tool>> identifier = Capture.newInstance();
     expect(sink.setReflectively(eq(".class"), anyObject())).andReturn(sink);
     expect(sink.setReflectively(eq("javac"), capture(identifier))).andReturn(sink);
     replay(sink);
@@ -232,7 +232,7 @@ public class ExternalJavacTest extends EasyMockSupport {
             .resolve(new TestActionGraphBuilder());
 
     RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
-    Capture<Supplier<Tool>> identifier = new Capture<>();
+    Capture<Supplier<Tool>> identifier = Capture.newInstance();
     expect(sink.setReflectively(eq(".class"), anyObject())).andReturn(sink);
     expect(sink.setReflectively(eq("javac"), capture(identifier))).andReturn(sink);
     replay(sink);
