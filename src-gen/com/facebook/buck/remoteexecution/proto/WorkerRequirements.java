@@ -215,6 +215,10 @@ private static final long serialVersionUID = 0L;
      * <code>LARGE = 2;</code>
      */
     LARGE(2),
+    /**
+     * <code>XLARGE = 3;</code>
+     */
+    XLARGE(3),
     UNRECOGNIZED(-1),
     ;
 
@@ -230,6 +234,10 @@ private static final long serialVersionUID = 0L;
      * <code>LARGE = 2;</code>
      */
     public static final int LARGE_VALUE = 2;
+    /**
+     * <code>XLARGE = 3;</code>
+     */
+    public static final int XLARGE_VALUE = 3;
 
 
     public final int getNumber() {
@@ -253,6 +261,7 @@ private static final long serialVersionUID = 0L;
         case 0: return SMALL;
         case 1: return MEDIUM;
         case 2: return LARGE;
+        case 3: return XLARGE;
         default: return null;
       }
     }
