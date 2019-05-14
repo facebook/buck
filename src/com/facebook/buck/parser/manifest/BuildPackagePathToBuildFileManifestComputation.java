@@ -30,23 +30,27 @@ import java.nio.file.Path;
 public class BuildPackagePathToBuildFileManifestComputation
     implements GraphComputation<BuildPackagePathToBuildFileManifestKey, BuildFileManifest> {
 
+  private final Path root;
   private final ProjectBuildFileParser parser;
   private final Path buildFileName;
 
   private BuildPackagePathToBuildFileManifestComputation(
-      ProjectBuildFileParser parser, Path buildFileName) {
+      ProjectBuildFileParser parser, Path buildFileName, Path root) {
     this.parser = parser;
     this.buildFileName = buildFileName;
+    this.root = root;
   }
 
   /**
    * Create new instance of {@link BuildPackagePathToBuildFileManifestComputation}
    *
    * @param parser Parser used to parse build file. This parser should be thread-safe.
+   * @param buildFileName File name of the build file (like BUCK) expressed as a {@link Path}
+   * @param root Absolute {@link Path} to the build root, usually cell root
    */
   public static BuildPackagePathToBuildFileManifestComputation of(
-      ProjectBuildFileParser parser, Path buildFileName) {
-    return new BuildPackagePathToBuildFileManifestComputation(parser, buildFileName);
+      ProjectBuildFileParser parser, Path buildFileName, Path root) {
+    return new BuildPackagePathToBuildFileManifestComputation(parser, buildFileName, root);
   }
 
   @Override
@@ -57,7 +61,7 @@ public class BuildPackagePathToBuildFileManifestComputation
   @Override
   public BuildFileManifest transform(
       BuildPackagePathToBuildFileManifestKey key, ComputationEnvironment env) throws Exception {
-    return parser.getBuildFileManifest(key.getPath().resolve(buildFileName));
+    return parser.getBuildFileManifest(root.resolve(key.getPath()).resolve(buildFileName));
   }
 
   @Override
