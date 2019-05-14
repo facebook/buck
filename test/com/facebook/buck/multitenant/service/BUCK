@@ -15,7 +15,6 @@ kotlin_test(
         "//src/com/facebook/buck/multitenant/importer:RuleTypeFactory",
         "//src/com/facebook/buck/multitenant/importer:importer",
         "//src/com/facebook/buck/multitenant/service:service",
-        "//test/com/facebook/buck/core/model:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
     ],
