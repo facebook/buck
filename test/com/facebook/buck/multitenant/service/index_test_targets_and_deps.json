@@ -81,6 +81,20 @@
           // In practice, we would not expect there to be a build file that
           // does not define any build rules, but it is certainly possible.
         ],
+      },
+      {
+        "path": "deep/package",
+        "rules": [
+          {
+            "name": "lib",
+            "buck.type": "java_library",
+            // Imagine this were defined in the build file as
+            // `glob(["src/**/*.java"])`.
+            "srcs": [
+              "src/com/example/Example.java"
+            ],
+          }
+        ],
       }
     ],
   }

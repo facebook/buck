@@ -133,6 +133,32 @@ class IndexTest {
     }
 
     @Test
+    fun getTargetsInOwningBuildPackage() {
+        val (index, generations) = loadIndex("index_test_targets_and_deps.json")
+        val generation = generations[5]
+
+        assertEquals(
+                "Should return null for directory with no build file ancestor.",
+                null,
+                index.getTargetsInOwningBuildPackage(generation, FsAgnosticPath.of("empty/build")))
+
+        assertEquals(
+                "Should return empty list for build file that defines no rules",
+                Pair(FsAgnosticPath.of("empty/build/file"), emptyList<UnconfiguredBuildTarget>()),
+                index.getTargetsInOwningBuildPackage(generation, FsAgnosticPath.of("empty/build/file")))
+
+        assertEquals(
+                "Should return singleton list for build file that defines one rule.",
+                Pair(FsAgnosticPath.of("java/com/facebook/buck/base"), targetList("//java/com/facebook/buck/base:base")),
+                index.getTargetsInOwningBuildPackage(generation, FsAgnosticPath.of("java/com/facebook/buck/base")))
+
+        assertEquals(
+                "Should find appropriate build target in ancestor directory.",
+                Pair(FsAgnosticPath.of("deep/package"), targetList("//deep/package:lib")),
+                index.getTargetsInOwningBuildPackage(generation, FsAgnosticPath.of("deep/package/src/com/example")))
+    }
+
+    @Test
     fun emptyChangesShouldReturnSameIndex() {
         val (index, generations) = loadIndex("index_test_targets_and_deps.json")
         val generation = generations[1]

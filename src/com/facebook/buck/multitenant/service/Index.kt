@@ -17,6 +17,7 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.multitenant.collect.GenerationMap
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.google.common.collect.ImmutableSet
 
@@ -192,6 +193,33 @@ class Index internal constructor(
         return targetNames.asSequence().map {
             BuildTargets.createBuildTargetFromParts(basePath, it)
         }.toList()
+    }
+
+    /**
+     * This is similar to [getTargetsInBasePath], except when there is no build file under
+     * `basePath`, it will recursively check the parent directory until it finds a build file and
+     * returns  all of the build targets defined in that build package. In the unlikely event
+     * that it reaches the root of the tree and still has not found a build file, it returns null.
+     */
+    fun getTargetsInOwningBuildPackage(generation: Generation, basePath: FsAgnosticPath): Pair<FsAgnosticPath, List<UnconfiguredBuildTarget>>? {
+        var candidateBasePath = basePath
+        val targetNames = indexGenerationData.withBuildPackageMap(
+                fun(buildPackageMap: GenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath>): Set<String>? {
+                    do {
+                        val targetNames = buildPackageMap.getVersion(candidateBasePath, generation)
+                        if (targetNames != null) {
+                            return targetNames
+                        } else {
+                            candidateBasePath = candidateBasePath.dirname()
+                        }
+                    } while (!candidateBasePath.isEmpty())
+                    return null
+                }) ?: return null
+
+        val buildTargets = targetNames.asSequence().map {
+            BuildTargets.createBuildTargetFromParts(candidateBasePath, it)
+        }.toList()
+        return Pair(candidateBasePath, buildTargets)
     }
 
     /**
