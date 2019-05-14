@@ -17,8 +17,10 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.log.Logger;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.UUID;
 
 /** Utility class for running {@link Step}s */
@@ -37,7 +39,7 @@ public final class StepRunner {
    * @throws StepFailedException if the step failed
    * @throws InterruptedException if an interrupt occurred while executing the {@link Step}
    */
-  public static void runStep(ExecutionContext context, Step step)
+  public static void runStep(ExecutionContext context, Step step, Optional<BuildTarget> buildTarget)
       throws StepFailedException, InterruptedException {
     if (context.getVerbosity().shouldPrintCommand()) {
       context.getStdErr().println(step.getDescription(context));
