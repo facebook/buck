@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
+import com.facebook.buck.parser.BuildTargetMatcherTargetNodeParser;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.facebook.buck.support.cli.config.AliasConfig;
@@ -29,16 +29,16 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /**
- * A helper wrapper over {@link BuildTargetPatternTargetNodeParser} to normalize user input before
+ * A helper wrapper over {@link BuildTargetMatcherTargetNodeParser} to normalize user input before
  * parsing, resolve aliases and validate that base path exists
  */
 public class CommandLineTargetNodeSpecParser {
 
   private final BuckConfig config;
-  private final BuildTargetPatternTargetNodeParser parser;
+  private final BuildTargetMatcherTargetNodeParser parser;
 
   public CommandLineTargetNodeSpecParser(
-      BuckConfig config, BuildTargetPatternTargetNodeParser parser) {
+      BuckConfig config, BuildTargetMatcherTargetNodeParser parser) {
     this.config = config;
     this.parser = parser;
   }

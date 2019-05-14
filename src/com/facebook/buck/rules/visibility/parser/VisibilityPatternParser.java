@@ -16,8 +16,8 @@
 package com.facebook.buck.rules.visibility.parser;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.rules.visibility.ObeysVisibility;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
@@ -30,8 +30,8 @@ import org.immutables.value.Value;
 public class VisibilityPatternParser {
   public static final String VISIBILITY_PUBLIC = "PUBLIC";
 
-  private static final BuildTargetPatternParser<BuildTargetPattern> buildTargetPatternParser =
-      BuildTargetPatternParser.forVisibilityArgument();
+  private static final BuildTargetMatcherParser<BuildTargetMatcher> buildTargetPatternParser =
+      BuildTargetMatcherParser.forVisibilityArgument();
 
   public static VisibilityPattern parse(CellPathResolver cellNames, String buildTargetPattern) {
     if (VISIBILITY_PUBLIC.equals(buildTargetPattern)) {
@@ -49,7 +49,7 @@ public class VisibilityPatternParser {
   abstract static class AbstractBuildTargetVisibilityPattern implements VisibilityPattern {
 
     @JsonProperty("pattern")
-    abstract BuildTargetPattern getViewerPattern();
+    abstract BuildTargetMatcher getViewerPattern();
 
     @Override
     @JsonIgnore

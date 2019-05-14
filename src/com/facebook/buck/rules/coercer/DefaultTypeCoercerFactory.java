@@ -21,8 +21,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.select.SelectorList;
@@ -95,10 +95,10 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     // This has no implementation, but is here so that constructor succeeds so that it can be
     // queried. This is only used for the visibility field, which is not actually handled by the
     // coercer.
-    TypeCoercer<BuildTargetPattern> buildTargetPatternTypeCoercer =
-        new IdentityTypeCoercer<BuildTargetPattern>(BuildTargetPattern.class) {
+    TypeCoercer<BuildTargetMatcher> buildTargetPatternTypeCoercer =
+        new IdentityTypeCoercer<BuildTargetMatcher>(BuildTargetMatcher.class) {
           @Override
-          public BuildTargetPattern coerce(
+          public BuildTargetMatcher coerce(
               CellPathResolver cellRoots,
               ProjectFilesystem filesystem,
               Path pathRelativeToProjectRoot,
@@ -109,7 +109,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
             // deps fields.
             // TODO(csarbora): make this work for all types of BuildTargetPatterns
             // probably differentiate them by inheritance
-            return BuildTargetPatternParser.forVisibilityArgument()
+            return BuildTargetMatcherParser.forVisibilityArgument()
                 .parse(cellRoots, (String) object);
           }
         };

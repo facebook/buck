@@ -31,8 +31,8 @@ import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
@@ -444,11 +444,11 @@ public class IjProjectCommandHelper {
       CellPathResolver cellPathResolver,
       ImmutableSet<String> includes,
       ImmutableSet<String> excludes) {
-    BuildTargetPatternParser<BuildTargetPattern> parser =
-        BuildTargetPatternParser.forVisibilityArgument();
-    ImmutableSet<BuildTargetPattern> includePatterns =
+    BuildTargetMatcherParser<BuildTargetMatcher> parser =
+        BuildTargetMatcherParser.forVisibilityArgument();
+    ImmutableSet<BuildTargetMatcher> includePatterns =
         getPatterns(parser, cellPathResolver, includes);
-    ImmutableSet<BuildTargetPattern> excludePatterns =
+    ImmutableSet<BuildTargetMatcher> excludePatterns =
         getPatterns(parser, cellPathResolver, excludes);
     return RichStream.from(testTargets)
         .filter(
@@ -460,8 +460,8 @@ public class IjProjectCommandHelper {
         .toImmutableSet();
   }
 
-  private static ImmutableSet<BuildTargetPattern> getPatterns(
-      BuildTargetPatternParser<BuildTargetPattern> parser,
+  private static ImmutableSet<BuildTargetMatcher> getPatterns(
+      BuildTargetMatcherParser<BuildTargetMatcher> parser,
       CellPathResolver cellPathResolver,
       ImmutableSet<String> patterns) {
     return RichStream.from(patterns)

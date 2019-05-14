@@ -17,10 +17,11 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
 import java.nio.file.Path;
 
-public class BuildTargetPatternTargetNodeParser extends BuildTargetPatternParser<TargetNodeSpec> {
+/** Parses a string to {@link TargetNodeSpec} */
+public class BuildTargetMatcherTargetNodeParser extends BuildTargetMatcherParser<TargetNodeSpec> {
 
   @Override
   public TargetNodeSpec createForDescendants(Path cellPath, Path basePath) {

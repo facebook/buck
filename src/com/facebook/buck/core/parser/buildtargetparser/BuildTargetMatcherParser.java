@@ -28,7 +28,7 @@ import java.util.Optional;
  * Context for parsing build target names. Fully-qualified target names are parsed the same
  * regardless of the context.
  */
-public abstract class BuildTargetPatternParser<T> {
+public abstract class BuildTargetMatcherParser<T> {
 
   private static final String BUILD_RULE_PREFIX = "//";
   private static final String WILDCARD_BUILD_RULE_SUFFIX = "...";
@@ -41,7 +41,7 @@ public abstract class BuildTargetPatternParser<T> {
    * 1. //src/com/facebook/buck/cli:cli will be converted to a single build target 2.
    * //src/com/facebook/buck/cli: will match all in the same directory. 3.
    * //src/com/facebook/buck/cli/... will match all in or under that directory. For case 2 and 3,
-   * parseContext is expected to be {@link BuildTargetPatternParser#forVisibilityArgument()}.
+   * parseContext is expected to be {@link BuildTargetMatcherParser#forVisibilityArgument()}.
    */
   public final T parse(CellPathResolver cellNames, String buildTargetPattern) {
     Preconditions.checkArgument(
@@ -105,7 +105,7 @@ public abstract class BuildTargetPatternParser<T> {
   }
 
   /** Used when parsing target names in the {@code visibility} argument to a build rule. */
-  public static BuildTargetPatternParser<BuildTargetPattern> forVisibilityArgument() {
+  public static BuildTargetMatcherParser<BuildTargetMatcher> forVisibilityArgument() {
     return new VisibilityContext();
   }
 
@@ -120,21 +120,21 @@ public abstract class BuildTargetPatternParser<T> {
 
   protected abstract T createForSingleton(UnconfiguredBuildTargetView target);
 
-  private static class VisibilityContext extends BuildTargetPatternParser<BuildTargetPattern> {
+  private static class VisibilityContext extends BuildTargetMatcherParser<BuildTargetMatcher> {
 
     @Override
-    public BuildTargetPattern createForDescendants(Path cellPath, Path basePath) {
-      return SubdirectoryBuildTargetPattern.of(cellPath, basePath);
+    public BuildTargetMatcher createForDescendants(Path cellPath, Path basePath) {
+      return SubdirectoryBuildTargetMatcher.of(cellPath, basePath);
     }
 
     @Override
-    public BuildTargetPattern createForChildren(Path cellPath, Path basePath) {
-      return ImmediateDirectoryBuildTargetPattern.of(cellPath, basePath);
+    public BuildTargetMatcher createForChildren(Path cellPath, Path basePath) {
+      return ImmediateDirectoryBuildTargetMatcher.of(cellPath, basePath);
     }
 
     @Override
-    public BuildTargetPattern createForSingleton(UnconfiguredBuildTargetView target) {
-      return SingletonBuildTargetPattern.of(
+    public BuildTargetMatcher createForSingleton(UnconfiguredBuildTargetView target) {
+      return SingletonBuildTargetMatcher.of(
           target.getUnflavoredBuildTargetView().getCellPath(), target.getFullyQualifiedName());
     }
   }

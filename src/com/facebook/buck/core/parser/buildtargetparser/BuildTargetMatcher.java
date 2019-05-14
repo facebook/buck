@@ -18,7 +18,7 @@ package com.facebook.buck.core.parser.buildtargetparser;
 import com.facebook.buck.core.model.BuildTarget;
 
 /** A pattern that matches one or more build targets. */
-public interface BuildTargetPattern {
+public interface BuildTargetMatcher {
 
   boolean matches(BuildTarget target);
 

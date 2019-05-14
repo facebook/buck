@@ -19,32 +19,28 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
 
-public class SubdirectoryBuildTargetPatternTest {
+public class SingletonBuildTargetMatcherTest {
 
-  private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
+  private static final Path ROOT = Paths.get("/opt/src/buck");
 
   @Test
   public void testApply() {
-    SubdirectoryBuildTargetPattern pattern =
-        SubdirectoryBuildTargetPattern.of(
-            filesystem.getRootPath(), Paths.get("src/com/facebook/buck/"));
+    SingletonBuildTargetMatcher pattern =
+        SingletonBuildTargetMatcher.of(ROOT, "//src/com/facebook/buck:buck");
 
     assertTrue(
-        pattern.matches(
-            BuildTargetFactory.newInstance(
-                filesystem.getRootPath(), "//src/com/facebook/buck:buck")));
-    assertTrue(
-        pattern.matches(
-            BuildTargetFactory.newInstance(
-                filesystem.getRootPath(), "//src/com/facebook/buck/bar:bar")));
+        pattern.matches(BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck", "buck")));
     assertFalse(
         pattern.matches(
-            BuildTargetFactory.newInstance(
-                filesystem.getRootPath(), "//src/com/facebook/foo:foo")));
+            BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck", "otherTarget")));
+    assertFalse(
+        pattern.matches(BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/foo", "foo")));
+    assertFalse(
+        pattern.matches(
+            BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck/bar", "bar")));
   }
 }

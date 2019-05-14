@@ -24,7 +24,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
+import com.facebook.buck.parser.BuildTargetMatcherTargetNodeParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.TargetNodeSpec;
@@ -70,7 +70,7 @@ class TargetPatternEvaluator {
     this.buckConfig = buckConfig;
     this.projectRoot = rootCell.getFilesystem().getRootPath();
     this.targetNodeSpecParser =
-        new CommandLineTargetNodeSpecParser(buckConfig, new BuildTargetPatternTargetNodeParser());
+        new CommandLineTargetNodeSpecParser(buckConfig, new BuildTargetMatcherTargetNodeParser());
     this.targetConfiguration = targetConfiguration;
   }
 

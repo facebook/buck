@@ -23,22 +23,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
 
-public class SingletonBuildTargetPatternTest {
+public class ImmediateDirectoryBuildTargetMatcherTest {
 
   private static final Path ROOT = Paths.get("/opt/src/buck");
 
   @Test
   public void testApply() {
-    SingletonBuildTargetPattern pattern =
-        SingletonBuildTargetPattern.of(ROOT, "//src/com/facebook/buck:buck");
+    ImmediateDirectoryBuildTargetMatcher pattern =
+        ImmediateDirectoryBuildTargetMatcher.of(ROOT, Paths.get("src/com/facebook/buck/"));
 
     assertTrue(
         pattern.matches(BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck", "buck")));
     assertFalse(
-        pattern.matches(
-            BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck", "otherTarget")));
-    assertFalse(
-        pattern.matches(BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/foo", "foo")));
+        pattern.matches(BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/foo/", "foo")));
     assertFalse(
         pattern.matches(
             BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck/bar", "bar")));

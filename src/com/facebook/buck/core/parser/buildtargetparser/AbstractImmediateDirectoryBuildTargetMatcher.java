@@ -25,7 +25,7 @@ import org.immutables.value.Value;
 /** A pattern matches build targets that are all in the same directory. */
 @Value.Immutable(builder = false, copy = false)
 @BuckStylePackageVisibleTuple
-abstract class AbstractImmediateDirectoryBuildTargetPattern implements BuildTargetPattern {
+abstract class AbstractImmediateDirectoryBuildTargetMatcher implements BuildTargetMatcher {
 
   protected abstract Path getCellPath();
 

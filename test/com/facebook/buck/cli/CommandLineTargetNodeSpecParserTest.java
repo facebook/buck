@@ -27,7 +27,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.BuildFileSpec;
-import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
+import com.facebook.buck.parser.BuildTargetMatcherTargetNodeParser;
 import com.facebook.buck.parser.BuildTargetSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.google.common.collect.ImmutableSet;
@@ -49,7 +49,7 @@ public class CommandLineTargetNodeSpecParserTest {
               .setSections(
                   "[alias]", "  foo = //some:thing", "  bar = //some:thing //some/other:thing")
               .build(),
-          new BuildTargetPatternTargetNodeParser());
+          new BuildTargetMatcherTargetNodeParser());
 
   @Rule public ExpectedException exception = ExpectedException.none();
 

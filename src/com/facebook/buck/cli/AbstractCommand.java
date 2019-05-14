@@ -32,7 +32,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.LogConfigSetup;
-import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
+import com.facebook.buck.parser.BuildTargetMatcherTargetNodeParser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.TargetNodeSpec;
@@ -316,7 +316,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       Cell owningCell, BuckConfig config, Iterable<String> targetsAsArgs) {
     ImmutableList.Builder<TargetNodeSpec> specs = ImmutableList.builder();
     CommandLineTargetNodeSpecParser parser =
-        new CommandLineTargetNodeSpecParser(config, new BuildTargetPatternTargetNodeParser());
+        new CommandLineTargetNodeSpecParser(config, new BuildTargetMatcherTargetNodeParser());
     for (String arg : targetsAsArgs) {
       specs.addAll(parser.parse(owningCell, arg));
     }

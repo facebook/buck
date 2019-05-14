@@ -26,7 +26,7 @@ import org.immutables.value.Value;
 /** A pattern that matches only one build target. */
 @Value.Immutable(builder = false, copy = false)
 @BuckStylePackageVisibleTuple
-abstract class AbstractSingletonBuildTargetPattern implements BuildTargetPattern {
+abstract class AbstractSingletonBuildTargetMatcher implements BuildTargetMatcher {
 
   protected abstract UnflavoredBuildTargetView getTarget();
 
@@ -34,10 +34,10 @@ abstract class AbstractSingletonBuildTargetPattern implements BuildTargetPattern
    * @param fullyQualifiedName The fully qualified name of valid target. It is expected to match the
    *     value returned from a {@link BuildTarget#getFullyQualifiedName()} call.
    */
-  public static SingletonBuildTargetPattern of(Path cellPath, String fullyQualifiedName) {
+  public static SingletonBuildTargetMatcher of(Path cellPath, String fullyQualifiedName) {
     int buildTarget = fullyQualifiedName.indexOf("//");
     int colon = fullyQualifiedName.lastIndexOf(':');
-    return SingletonBuildTargetPattern.of(
+    return SingletonBuildTargetMatcher.of(
         ImmutableUnflavoredBuildTargetView.of(
             cellPath,
             Optional.empty(),
