@@ -36,6 +36,7 @@ class BuiltTargetVerifier {
 
   private static final Logger LOG = Logger.get(BuiltTargetVerifier.class);
 
+  /** @param buildFile Absolute path to build file that contains build target being verified */
   void verifyBuildTarget(
       Cell cell,
       RuleType buildRuleType,

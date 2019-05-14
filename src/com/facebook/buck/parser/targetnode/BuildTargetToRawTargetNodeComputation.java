@@ -26,12 +26,14 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.RawTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.parser.manifest.BuildPackagePathToBuildFileManifestKey;
 import com.facebook.buck.parser.manifest.ImmutableBuildPackagePathToBuildFileManifestKey;
 import com.google.common.collect.ImmutableSet;
+import java.nio.file.Path;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -41,11 +43,16 @@ public class BuildTargetToRawTargetNodeComputation
 
   private final RawTargetNodeFactory<Map<String, Object>> rawTargetNodeFactory;
   private final Cell cell;
+  private final Path buildFileName;
 
   private BuildTargetToRawTargetNodeComputation(
       RawTargetNodeFactory<Map<String, Object>> rawTargetNodeFactory, Cell cell) {
     this.rawTargetNodeFactory = rawTargetNodeFactory;
     this.cell = cell;
+    buildFileName =
+        cell.getRoot()
+            .getFileSystem()
+            .getPath(cell.getBuckConfigView(ParserConfig.class).getBuildFileName());
   }
 
   /**
@@ -83,7 +90,7 @@ public class BuildTargetToRawTargetNodeComputation
 
     return rawTargetNodeFactory.create(
         cell,
-        unconfiguredBuildTargetView.getBasePath(),
+        cell.getRoot().resolve(unconfiguredBuildTargetView.getBasePath()).resolve(buildFileName),
         unconfiguredBuildTargetView,
         rawAttributes);
   }
