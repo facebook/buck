@@ -372,7 +372,14 @@ public class MultiArtifactCacheTest {
   @Test
   public void cacheFetchPushesMetadataToHigherCache() throws Exception {
     InMemoryArtifactCache cache1 = new InMemoryArtifactCache();
-    InMemoryArtifactCache cache2 = new InMemoryArtifactCache();
+    InMemoryArtifactCache cache2 =
+        new InMemoryArtifactCache() {
+          @Override
+          public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+            // The second cache shouldn't receive a store call.
+            throw new RuntimeException();
+          }
+        };
     MultiArtifactCache multiArtifactCache =
         new MultiArtifactCache(ImmutableList.of(cache1, cache2));
 
@@ -395,7 +402,14 @@ public class MultiArtifactCacheTest {
   @Test
   public void cacheAsyncFetchPushesMetadataToHigherCache() throws Exception {
     InMemoryArtifactCache cache1 = new InMemoryArtifactCache();
-    InMemoryArtifactCache cache2 = new InMemoryArtifactCache();
+    InMemoryArtifactCache cache2 =
+        new InMemoryArtifactCache() {
+          @Override
+          public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+            // The second cache shouldn't receive a store call.
+            throw new RuntimeException();
+          }
+        };
     MultiArtifactCache multiArtifactCache =
         new MultiArtifactCache(ImmutableList.of(cache1, cache2));
 
