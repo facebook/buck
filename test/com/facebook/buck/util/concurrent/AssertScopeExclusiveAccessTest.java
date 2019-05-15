@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util.concurrent;
 
-import java.util.NoSuchElementException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -36,7 +35,7 @@ public class AssertScopeExclusiveAccessTest {
     AssertScopeExclusiveAccess singleThreadedAccess = new AssertScopeExclusiveAccess();
 
     try (AssertScopeExclusiveAccess.Scope scope = singleThreadedAccess.scope()) {
-      expectedException.expect(NoSuchElementException.class);
+      expectedException.expect(IllegalStateException.class);
       AssertScopeExclusiveAccess.Scope scope2 = singleThreadedAccess.scope();
       scope2.close();
     }

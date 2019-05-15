@@ -17,8 +17,7 @@
 package com.facebook.buck.util.concurrent;
 
 import com.facebook.buck.core.util.log.Logger;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Makes it simple to assert that access to a piece of code should be done from one thread at a time
@@ -27,32 +26,27 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class AssertScopeExclusiveAccess {
   private static final Logger LOG = Logger.get(AssertScopeExclusiveAccess.class);
 
-  private final AtomicBoolean inScope;
-  private Optional<Throwable> inScopeStack;
+  private final AtomicReference<Throwable> inScope = new AtomicReference<>();
 
-  public AssertScopeExclusiveAccess() {
-    inScope = new AtomicBoolean();
-    inScopeStack = Optional.empty();
-  }
-
+  /**
+   * Try to enter a scope, validating only one thread can get inside the same scope.
+   *
+   * @throws IllegalStateException when another thread wants to enter the same scope.
+   * @return Closeable object to be used with try-with-resources to indicate the end of validated
+   *     block
+   */
   public Scope scope() {
-    boolean firstOneInScope = inScope.compareAndSet(false, true);
-    if (firstOneInScope && LOG.isVerboseEnabled()) {
-      inScopeStack = Optional.of(new Throwable());
-    }
+
+    boolean firstOneInScope = inScope.compareAndSet(null, new Throwable());
 
     if (!firstOneInScope) {
-      LOG.verbose(inScopeStack.get(), "Indicating previous access to single threaded scope.");
+      LOG.verbose(inScope.get(), "Indicating previous access to single threaded scope.");
 
       throw new IllegalStateException(
           "More than one thread attempting access to single-threaded scope.");
     }
 
-    return () -> {
-      if (firstOneInScope) {
-        inScope.set(false);
-      }
-    };
+    return () -> inScope.set(null);
   }
 
   public interface Scope extends AutoCloseable {
