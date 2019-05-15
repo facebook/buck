@@ -58,6 +58,7 @@ public class BuildThreadStateRendererTest {
   private static final BuildRule RULE2 = createFakeRule(TARGET2);
   private static final BuildRule RULE3 = createFakeRule(TARGET3);
   private static final BuildRule RULE4 = createFakeRule(TARGET4);
+  private static final String BUILD_TARGET_NAME = "//test:target";
 
   @Test
   public void emptyInput() {
@@ -202,7 +203,7 @@ public class BuildThreadStateRendererTest {
       long threadId, long timeMs, String name) {
     return Optional.of(
         TestEventConfigurator.configureTestEventAtTime(
-            StepEvent.started(name, name + " description", UUID.randomUUID()),
+            StepEvent.started(name, name + " description", UUID.randomUUID(), BUILD_TARGET_NAME),
             timeMs,
             TimeUnit.MILLISECONDS,
             threadId));

@@ -478,7 +478,7 @@ public class ChromeTraceBuildListenerTest {
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(rule, durationTracker);
     eventBus.post(started);
-    eventBus.post(StepEvent.started(stepShortName, stepDescription, stepUuid));
+    eventBus.post(StepEvent.started(stepShortName, stepDescription, stepUuid, rule.getFullyQualifiedName()));
 
     JavacPhaseEvent.Started runProcessorsStartedEvent =
         JavacPhaseEvent.started(
@@ -516,7 +516,7 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(JavacPhaseEvent.finished(runProcessorsStartedEvent, ImmutableMap.of()));
 
     eventBus.post(
-        StepEvent.finished(StepEvent.started(stepShortName, stepDescription, stepUuid), 0));
+        StepEvent.finished(StepEvent.started(stepShortName, stepDescription, stepUuid, rule.getFullyQualifiedName()), 0));
     eventBus.post(
         BuildRuleEvent.finished(
             started,

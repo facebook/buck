@@ -70,7 +70,8 @@ public abstract class StepEvent extends AbstractBuckEvent
     return getShortStepName();
   }
 
-  public static Started started(String shortName, String description, UUID uuid, String parentTarget) {
+  public static Started started(
+      String shortName, String description, UUID uuid, String parentTarget) {
     return new Started(shortName, description, uuid, parentTarget);
   }
 
@@ -93,7 +94,11 @@ public abstract class StepEvent extends AbstractBuckEvent
     private final int exitCode;
 
     protected Finished(Started started, int exitCode) {
-      super(started.getShortStepName(), started.getDescription(), started.getUuid(), started.getParentTarget());
+      super(
+          started.getShortStepName(),
+          started.getDescription(),
+          started.getUuid(),
+          started.getParentTarget());
       this.exitCode = exitCode;
     }
 

@@ -52,7 +52,8 @@ public final class StepRunner {
     String stepShortName = step.getShortName();
     String stepDescription = step.getDescription(context);
     UUID stepUuid = UUID.randomUUID();
-    StepEvent.Started started = StepEvent.started(stepShortName, stepDescription, stepUuid, parentTarget);
+    StepEvent.Started started =
+        StepEvent.started(stepShortName, stepDescription, stepUuid, parentTarget);
     LOG.verbose(started.toString());
     context.getBuckEventBus().post(started);
     StepExecutionResult executionResult = StepExecutionResults.ERROR;
