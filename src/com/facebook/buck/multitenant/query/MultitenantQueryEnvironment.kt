@@ -97,8 +97,8 @@ class MultitenantQueryEnvironment(
         return extractInputs(targetNode)
     }
 
-    override fun getTransitiveClosure(targets: MutableSet<UnconfiguredBuildTarget>?): MutableSet<UnconfiguredBuildTarget> {
-        TODO("getTransitiveClosure() not implemented")
+    override fun getTransitiveClosure(targets: Set<UnconfiguredBuildTarget>): Set<UnconfiguredBuildTarget> {
+        return index.getTransitiveDeps(generation, targets.asSequence())
     }
 
     override fun buildTransitiveClosure(targetNodes: MutableSet<out QueryTarget>, maxDepth: Int) {

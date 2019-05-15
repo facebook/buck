@@ -117,13 +117,12 @@ class Index internal constructor(
     }
 
     /**
-     * @return the transitive deps of the specified target (includes target)
+     * @return the transitive deps of the specified targets (includes targets)
      */
-    fun getTransitiveDeps(generation: Generation, target: UnconfiguredBuildTarget): Set<UnconfiguredBuildTarget> {
-        val rootBuildTargetId = buildTargetCache.get(target)
-        val toVisit = LinkedHashSet<Int>()
-        toVisit.add(rootBuildTargetId)
-        val visited = mutableSetOf<Int>()
+    fun getTransitiveDeps(generation: Generation, targets: Sequence<UnconfiguredBuildTarget>): Set<UnconfiguredBuildTarget> {
+        val toVisit = LinkedHashSet<BuildTargetId>()
+        targets.mapTo(toVisit) { buildTargetCache.get(it) }
+        val visited = mutableSetOf<BuildTargetId>()
 
         indexGenerationData.withRuleMap { ruleMap ->
             while (toVisit.isNotEmpty()) {
@@ -143,7 +142,9 @@ class Index internal constructor(
             }
         }
 
-        return visited.asSequence().map { buildTargetCache.getByIndex(it) }.toSet()
+        // We use a HashSet instead of a Kotlin Set so we can specify the initialCapacity.
+        val out = HashSet<UnconfiguredBuildTarget>(visited.size)
+        return visited.mapTo(out) { buildTargetCache.getByIndex(it) }
     }
 
     fun getFwdDeps(generation: Generation, targets: Iterable<UnconfiguredBuildTarget>, out: ImmutableSet.Builder<UnconfiguredBuildTarget>) {

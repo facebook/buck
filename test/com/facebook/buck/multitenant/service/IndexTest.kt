@@ -72,7 +72,7 @@ class IndexTest {
                         "//java/com/facebook/buck/base:base",
                         "//java/com/facebook/buck/model:model"
                 ),
-                index.getTransitiveDeps(generation2, "//java/com/facebook/buck/model:model".buildTarget())
+                index.getTransitiveDeps(generation2, targetSequence("//java/com/facebook/buck/model:model"))
         )
         assertEquals(
                 targetSet(
@@ -80,7 +80,7 @@ class IndexTest {
                         "//java/com/facebook/buck/model:model",
                         "//java/com/facebook/buck/util:util"
                 ),
-                index.getTransitiveDeps(generation3, "//java/com/facebook/buck/model:model".buildTarget())
+                index.getTransitiveDeps(generation3, targetSequence("//java/com/facebook/buck/model:model"))
         )
 
         val commit1baseFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
@@ -235,7 +235,7 @@ class IndexTest {
                         "//java/com/facebook/buck/base:base",
                         "//java/com/facebook/buck/model:model"
                 ),
-                localizedIndex.getTransitiveDeps(generation, "//java/com/facebook/buck/model:model".buildTarget()))
+                localizedIndex.getTransitiveDeps(generation, targetSequence("//java/com/facebook/buck/model:model")))
         assertEquals(
                 ":example should appear under its corresponding base path.",
                 targetList(
@@ -276,7 +276,7 @@ class IndexTest {
                         "//java/com/facebook/buck/base:base",
                         "//java/com/facebook/buck/model:model"
                 ),
-                localizedIndex.getTransitiveDeps(generation, "//java/com/facebook/buck/model:model".buildTarget()))
+                localizedIndex.getTransitiveDeps(generation, targetSequence("//java/com/facebook/buck/model:model")))
     }
 }
 
@@ -290,8 +290,11 @@ private fun loadIndex(resource: String): Pair<Index, List<Int>> {
 private fun targetList(vararg targets: String): List<UnconfiguredBuildTarget> =
         targets.map(BuildTargets::parseOrThrow)
 
+private fun targetSequence(vararg targets: String): Sequence<UnconfiguredBuildTarget> =
+        targets.asSequence().map(BuildTargets::parseOrThrow)
+
 private fun targetSet(vararg targets: String): Set<UnconfiguredBuildTarget> =
-        targets.asSequence().map(BuildTargets::parseOrThrow).toSet()
+        targetSequence(*targets).toSet()
 
 private fun String.buildTarget(): UnconfiguredBuildTarget {
     return BuildTargets.parseOrThrow(this)
