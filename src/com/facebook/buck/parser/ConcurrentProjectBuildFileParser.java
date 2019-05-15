@@ -68,7 +68,9 @@ public class ConcurrentProjectBuildFileParser implements ProjectBuildFileParser 
    * Create new instance of {@link ConcurrentProjectBuildFileParser}
    *
    * @param projectBuildFileParserFactory Factory that will be used for creating new instances of
-   *     {@link ProjectBuildFileParser} on demand
+   *     {@link ProjectBuildFileParser} on demand. In order to make wrapped {@link
+   *     ProjectBuildFileParser} thread-safe this factory should create instances for each
+   *     invocation, not memoize them, otherwise the same object will be used for all threads.
    */
   public ConcurrentProjectBuildFileParser(
       Supplier<ProjectBuildFileParser> projectBuildFileParserFactory) {
