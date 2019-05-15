@@ -89,7 +89,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
               ConsoleEvent.info(
                   "'buck audit dependencies' is deprecated. Please use 'buck query' instead.\n"
                       + "The equivalent 'buck query' command is:\n$ %s\n\nThe query language is documented at "
-                      + "https://buckbuild.com/command/query.html",
+                      + "https://buck.build/command/query.html",
                   QueryCommand.buildAuditDependenciesQueryExpression(
                       getArguments(),
                       shouldShowTransitiveDependencies(),

@@ -48,7 +48,7 @@ large number of calls to <code>builder.register()</code>.
 </pre>
 
 What is <code>YourDescription</code>? It's an implementation of the <a
-href="https://buckbuild.com/javadoc/com/facebook/buck/rules/Description.html"><code>Description</code></a>
+href="https://buck.build/javadoc/com/facebook/buck/core/description/Description.html"><code>Description</code></a>
 {sp}interface. This interface serves three roles in Buck:
 
 <ol>
@@ -56,7 +56,7 @@ href="https://buckbuild.com/javadoc/com/facebook/buck/rules/Description.html"><c
     eg. <code>java_library</code></li>
 <li>It makes clear the parameters which are accepted by a rule</li>
 <li>It acts as a factory of <a
-    href="https://buckbuild.com/javadoc/com/facebook/buck/rules/BuildRule.html"><code>BuildRule</code></a>
+    href="https://buck.build/javadoc/com/facebook/buck/rules/BuildRule.html"><code>BuildRule</code></a>
     {sp}instances.</li>
 </ol>
 
@@ -75,14 +75,14 @@ You may use primitives, enums, generic types, collections (including
 generic collections), and custom types for the fields of the
 constructor arg. If you are using a custom type which Buck does not
 know how to marshal from JSON, then you must implement a <a
-href="https://buckbuild.com/javadoc/com/facebook/buck/rules/coercer/TypeCoercer.html"><code>TypeCoercer</code></a>. How
+href="https://buck.build/javadoc/com/facebook/buck/rules/coercer/TypeCoercer.html"><code>TypeCoercer</code></a>. How
 to do this is beyond the scope of this doc.
 
 <p>
 
 Note: if a parameter might either be a local file or an output of a
 {sp}<code>BuildRule</code>, then you can use a <a
-href="https://buckbuild.com/javadoc/com/facebook/buck/rules/SourcePath.html"><code>SourcePath</code></a>
+href="https://buck.build/javadoc/com/facebook/buck/rules/SourcePath.html"><code>SourcePath</code></a>
 to represent that parameter.
 
 <p>
@@ -105,7 +105,7 @@ The <code>createBuildRule</code> method is responsible for returning
 an instantiated <code>BuildRule</code> that can be used to construct
 whatever it is that we're adding this build rule for. The current
 instances typically inherit from <a
-href="https://buckbuild.com/javadoc/com/facebook/buck/rules/AbstractBuildRule.html"><code>AbstractBuildRule</code></a>,
+href="https://buck.build/javadoc/com/facebook/buck/rules/AbstractBuildRule.html"><code>AbstractBuildRule</code></a>,
 and we suggest you do so too.
 
 <p>
@@ -134,7 +134,7 @@ the output of your rule.
 You can think of a <code>Description</code> as a factory of
 {sp}<code>BuildRule</code> instances. Similarly, you can think of a
 {sp}<code>BuildRule</code> as a factory of <a
-href="https://buckbuild.com/javadoc/com/facebook/buck/step/Step.html"><code>Step</code>s</a>
+href="https://buck.build/javadoc/com/facebook/buck/step/Step.html"><code>Step</code>s</a>
 {sp}that must be executed in order to create a specific output. Unlike
 rules, steps are executed sequentially in the order in which they are
 returned.
@@ -144,7 +144,7 @@ returned.
 If your rule extends <code>AbstractBuildRule</code>, then it's enough
 to simply annotate any field on that rule that contributes to its
 uniqueness with <a
-href="https://buckbuild.com/javadoc/com/facebook/buck/rules/AddToRuleKey.html"><code>@AddToRuleKey</code></a>. This
+href="https://buck.build/javadoc/com/facebook/buck/rules/AddToRuleKey.html"><code>@AddToRuleKey</code></a>. This
 is used by Buck to calculate the rule key, which, if the value changes
 between builds, will cause Buck to re-execute your
 {sp}<code>BuildRule</code>.
@@ -169,9 +169,9 @@ In your IDE, take a look at the key interfaces and classes to discover
 more about what you can do within Buck:
 
 <ul>
-  <li><a href="https://buckbuild.com/javadoc/com/facebook/buck/rules/Description.html"><code>Description</code></a></li>
-  <li><a href="https://buckbuild.com/javadoc/com/facebook/buck/rules/AbstractBuildRule.html"><code>AbstractBuildRule</code></a></li>
-  <li><a href="https://buckbuild.com/javadoc/com/facebook/buck/step/Step.html"><code>Step</code></a></li>
+  <li><a href="https://buck.build/javadoc/com/facebook/buck/rules/Description.html"><code>Description</code></a></li>
+  <li><a href="https://buck.build/javadoc/com/facebook/buck/rules/AbstractBuildRule.html"><code>AbstractBuildRule</code></a></li>
+  <li><a href="https://buck.build/javadoc/com/facebook/buck/step/Step.html"><code>Step</code></a></li>
 </ul>
 
 </div> // close overview

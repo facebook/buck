@@ -116,7 +116,7 @@ public class ThrowingPackageBoundaryCheckerTest {
         "Target '//a/b:c' refers to file '"
             + MorePaths.pathWithPlatformSeparators("a/b/Test.java")
             + "', which doesn't belong to any package. "
-            + "More info at:\nhttps://buckbuild.com/about/overview.html\n");
+            + "More info at:\nhttps://buck.build/about/overview.html\n");
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().build(),
         BuildTargetFactory.newInstance("//a/b:c"),
@@ -159,7 +159,7 @@ public class ThrowingPackageBoundaryCheckerTest {
             + testPath
             + "' and use that in '//a/b:c'\ninstead of directly referencing '"
             + testPath
-            + "'.\nMore info at:\nhttps://buckbuild.com/concept/build_rule.html\n"
+            + "'.\nMore info at:\nhttps://buck.build/concept/build_rule.html\n"
             + "\nThis issue might also be caused by a bug in buckd's caching.\n"
             + "Please check whether using `buck kill` resolves it.");
 

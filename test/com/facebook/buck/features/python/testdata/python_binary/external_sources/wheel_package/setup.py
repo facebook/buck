@@ -5,7 +5,7 @@ setup(
     version="0.0.1",
     description="A sample Python project",
     long_description="A sample Python project",
-    url="https://buckbuild.com",
+    url="https://buck.build",
     author="Buck",
     license="Apache License 2.0",
     packages=["wheel_package"],

@@ -345,7 +345,7 @@ public class TargetsCommand extends AbstractCommand {
     // when they didn't intend to.
     if (arguments.isEmpty() && this.referencedFiles.get().isEmpty()) {
       throw new CommandLineException(
-          "Must specify at least one build target pattern. See https://buckbuild.com/concept/build_target_pattern.html");
+          "Must specify at least one build target pattern. See https://buck.build/concept/build_target_pattern.html");
     }
   }
 

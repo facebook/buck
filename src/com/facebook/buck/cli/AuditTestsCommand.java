@@ -67,7 +67,7 @@ public class AuditTestsCommand extends AbstractCommand {
           .post(
               ConsoleEvent.info(
                   "'buck audit tests' is deprecated. Please use 'buck query' instead. e.g.\n\t%s\n\n"
-                      + "The query language is documented at https://buckbuild.com/command/query.html",
+                      + "The query language is documented at https://buck.build/command/query.html",
                   QueryCommand.buildAuditTestsQueryExpression(
                       getArguments(), shouldGenerateJsonOutput())));
     }

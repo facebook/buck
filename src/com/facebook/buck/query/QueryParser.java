@@ -139,7 +139,7 @@ final class QueryParser<NODE_TYPE> {
     return new QueryException(
         cause,
         "`%s` when parsing call to the function `%s(%s)`.  Please see "
-            + "https://buckbuild.com/command/query.html#%s for complete documentation.",
+            + "https://buck.build/command/query.html#%s for complete documentation.",
         cause.getMessage(),
         function.getName(),
         argumentsString.toString(),

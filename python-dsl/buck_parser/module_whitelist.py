@@ -92,7 +92,7 @@ class ImportWhitelistManager(object):
             "Importing module {0} is forbidden. "
             "If you really need to import this module, read about "
             "the allow_unsafe_import() function documented at: "
-            "https://buckbuild.com/function/allow_unsafe_import.html".format(name)
+            "https://buck.build/function/allow_unsafe_import.html".format(name)
         )
 
     @staticmethod
@@ -104,7 +104,7 @@ class ImportWhitelistManager(object):
                 "Using function {0} is forbidden in the safe version of "
                 "module {1}. If you really need to use this function read about "
                 "allow_unsafe_import() documented at: "
-                "https://buckbuild.com/function/allow_unsafe_import.html".format(
+                "https://buck.build/function/allow_unsafe_import.html".format(
                     name, module
                 )
             )

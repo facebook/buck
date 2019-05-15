@@ -145,7 +145,7 @@ abstract class AbstractImmutableTargetNode<T> implements TargetNode<T> {
   public void isVisibleToOrThrow(TargetNode<?> viewer) {
     if (!isVisibleTo(viewer)) {
       throw new HumanReadableException(
-          "%s depends on %s, which is not visible. More info at:\nhttps://buckbuild.com/concept/visibility.html",
+          "%s depends on %s, which is not visible. More info at:\nhttps://buck.build/concept/visibility.html",
           viewer, getBuildTarget());
     }
   }

@@ -42,7 +42,7 @@ public interface BuckCellManager {
      * <p>By default, this is {@code BUCK}, but cells may override it by setting the buck config
      * property {@code buildfile.name}.
      *
-     * @see <a href="https://buckbuild.com/concept/build_file.html">The buck documentation on build
+     * @see <a href="https://buck.build/concept/build_file.html">The buck documentation on build
      *     files</a>
      */
     String getBuildfileName();

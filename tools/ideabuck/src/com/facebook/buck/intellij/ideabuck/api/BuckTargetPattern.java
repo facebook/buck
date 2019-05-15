@@ -28,7 +28,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Syntactic representation of a build pattern, which may specify one or more {@link BuckTarget}s.
  *
- * @see <a href=https://buckbuild.com/concept/build_target_pattern.html">the Buck documentation for
+ * @see <a href=https://buck.build/concept/build_target_pattern.html">the Buck documentation for
  *     build target patterns</a>
  */
 public class BuckTargetPattern {
@@ -38,7 +38,7 @@ public class BuckTargetPattern {
   @Nullable private final String suffix;
   @Nullable private final String ruleName;
 
-  // Based on regex from https://buckbuild.com/concept/build_target.html,
+  // Based on regex from https://buck.build/concept/build_target.html,
   // which says [A-Za-z0-9._-]* //[A-Za-z0-9/._-]*:[A-Za-z0-9_/.=,@~+-]+
   // Should also match variations that aren't valid BuckTargets, but are valid target patterns.
   //

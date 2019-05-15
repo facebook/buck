@@ -515,7 +515,7 @@ public class ParserWithConfigurableAttributesTest {
         containsString(
             "android-unknown: Please make sure you have the Android SDK/NDK "
                 + "installed and set up. "
-                + "See https://buckbuild.com/setup/install.html#locate-android-sdk"));
+                + "See https://buck.build/setup/install.html#locate-android-sdk"));
     parser.buildTargetGraph(parsingContext, ImmutableSortedSet.of(flavored));
   }
 

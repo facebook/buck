@@ -37,7 +37,7 @@ index() ::= <% $page(title="Buck", content={
 <h1>Resources</h1>
 
 <ul>
-  <li><a href="http://buckbuild.com/">Documentation</a>
+  <li><a href="http://buck.build/">Documentation</a>
   <li><a href="https://github.com/facebook/buck">Source code on GitHub</a>
 </ul>
 

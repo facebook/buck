@@ -84,7 +84,7 @@ public class StackedDownloader implements Downloader {
               e,
               "Error occurred when attempting to use %s "
                   + "as a local Maven repository as configured in .buckconfig.  See "
-                  + "https://buckbuild.com/concept/buckconfig.html#maven_repositories for how to "
+                  + "https://buck.build/concept/buckconfig.html#maven_repositories for how to "
                   + "configure this setting",
               repo);
         } catch (MalformedURLException e) {
@@ -101,7 +101,7 @@ public class StackedDownloader implements Downloader {
               e,
               "Error occurred when attempting to use %s "
                   + "as a local Maven repository as configured in .buckconfig.  See "
-                  + "https://buckbuild.com/concept/buckconfig.html#maven_repositories for how to "
+                  + "https://buck.build/concept/buckconfig.html#maven_repositories for how to "
                   + "configure this setting",
               repo);
         }

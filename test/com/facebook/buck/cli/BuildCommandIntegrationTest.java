@@ -327,7 +327,7 @@ public class BuildCommandIntegrationTest {
     MatcherAssert.assertThat(
         result.getStderr(),
         Matchers.containsString(
-            "Must specify at least one build target. See https://buckbuild.com/concept/build_target_pattern.html"));
+            "Must specify at least one build target. See https://buck.build/concept/build_target_pattern.html"));
   }
 
   @Test

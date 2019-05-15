@@ -155,7 +155,7 @@ public class ErrorLoggerTest {
     assertEquals(
         linesToText(
             "Buck ran out of memory, you may consider increasing heap size with java args "
-                + "(see https://buckbuild.com/files-and-dirs/buckjavaargs.html)",
+                + "(see https://buck.build/files-and-dirs/buckjavaargs.html)",
             "java.lang.OutOfMemoryError: No more memory!"),
         errors.userVisibleInternal);
   }

@@ -48,7 +48,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
         "`buck build` should display an error message if no targets are provided.",
         result.getStderr(),
         containsString(
-            "Must specify at least one build target. See https://buckbuild.com/concept/build_target_pattern.html"
+            "Must specify at least one build target. See https://buck.build/concept/build_target_pattern.html"
                 + System.lineSeparator()));
   }
 
@@ -68,7 +68,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
         containsString(
             Joiner.on(System.lineSeparator())
                     .join(
-                        "Must specify at least one build target. See https://buckbuild.com/concept/build_target_pattern.html",
+                        "Must specify at least one build target. See https://buck.build/concept/build_target_pattern.html",
                         "Try building one of the following targets:",
                         "myapp")
                 + System.lineSeparator()));
@@ -97,7 +97,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
         containsString(
             Joiner.on(System.lineSeparator())
                     .join(
-                        "Must specify at least one build target. See https://buckbuild.com/concept/build_target_pattern.html",
+                        "Must specify at least one build target. See https://buck.build/concept/build_target_pattern.html",
                         "Try building one of the following targets:",
                         "myapp my_app mi_app mon_app mein_app")
                 + System.lineSeparator()));
@@ -126,7 +126,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
         containsString(
             Joiner.on(System.lineSeparator())
                     .join(
-                        "Must specify at least one build target. See https://buckbuild.com/concept/build_target_pattern.html",
+                        "Must specify at least one build target. See https://buck.build/concept/build_target_pattern.html",
                         "Try building one of the following targets:",
                         "myapp my_app mi_app mon_app mein_app alias0 alias1 alias2 alias3 alias4")
                 + System.lineSeparator()));

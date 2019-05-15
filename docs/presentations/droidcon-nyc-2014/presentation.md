@@ -1256,10 +1256,10 @@ name: thank-you
 
 * Code: https://github.com/facebook/buck
 
-* Docs: http://buckbuild.com
+* Docs: http://buck.build
 
 * Example of migrating a Gradle project to
-Buck with exopackage: http://buckbuild.com/article/exopackage.html
+Buck with exopackage: http://buck.build/article/exopackage.html
 
 ???
 

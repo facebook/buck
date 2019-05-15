@@ -152,7 +152,7 @@ public class ErrorLogger {
       if (rootCause instanceof OutOfMemoryError) {
         message =
             "Buck ran out of memory, you may consider increasing heap size with java args "
-                + "(see https://buckbuild.com/files-and-dirs/buckjavaargs.html)"
+                + "(see https://buck.build/files-and-dirs/buckjavaargs.html)"
                 + System.lineSeparator();
       }
 

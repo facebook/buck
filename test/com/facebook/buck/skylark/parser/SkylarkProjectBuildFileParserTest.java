@@ -502,7 +502,7 @@ public class SkylarkProjectBuildFileParserTest {
         eventCollector.iterator().next().getMessage(),
         stringContainsInOrder(
             "prebuilt_jar requires name and binary_jar but they are not provided.",
-            "Need help? See https://buckbuild.com/rule/prebuilt_jar"));
+            "Need help? See https://buck.build/rule/prebuilt_jar"));
   }
 
   @Test

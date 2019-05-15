@@ -106,7 +106,7 @@ public class QueryParserTest {
     thrown.expect(QueryException.class);
     thrown.expectCause(Matchers.isA(QueryException.class));
     thrown.expectMessage("rdeps(EXPRESSION, EXPRESSION [, INTEGER ])");
-    thrown.expectMessage("https://buckbuild.com/command/query.html#rdeps");
+    thrown.expectMessage("https://buck.build/command/query.html#rdeps");
     String query = "rdeps('')";
     QueryParser.parse(query, queryEnvironment);
   }
@@ -117,7 +117,7 @@ public class QueryParserTest {
     thrown.expectCause(Matchers.isA(QueryException.class));
     thrown.expectMessage("expected an integer literal");
     thrown.expectMessage("deps(EXPRESSION [, INTEGER [, EXPRESSION ] ])");
-    thrown.expectMessage("https://buckbuild.com/command/query.html#deps");
+    thrown.expectMessage("https://buck.build/command/query.html#deps");
     String query = "deps(//foo:bar, //bar:foo)";
     QueryParser.parse(query, queryEnvironment);
   }

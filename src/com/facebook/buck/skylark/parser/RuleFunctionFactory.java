@@ -48,7 +48,7 @@ public class RuleFunctionFactory {
   private static final ImmutableSet<String> IMPLICIT_ATTRIBUTES =
       ImmutableSet.of("visibility", "within_view");
   // URL prefix for all build rule documentation pages
-  private static final String BUCK_RULE_DOC_URL_PREFIX = "https://buckbuild.com/rule/";
+  private static final String BUCK_RULE_DOC_URL_PREFIX = "https://buck.build/rule/";
 
   private final TypeCoercerFactory typeCoercerFactory;
 

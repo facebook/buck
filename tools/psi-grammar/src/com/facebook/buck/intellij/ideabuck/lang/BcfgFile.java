@@ -25,7 +25,7 @@ import javax.swing.Icon;
  * File that is part of the {@code .buckconfig} family of config files.
  *
  * <p>This includes files imported using the syntax: {@code <file:path-to-included-file>} plus the
- * files at locations listed in: {@url https://buckbuild.com/files-and-dirs/buckconfig.html}.
+ * files at locations listed in: {@url https://buck.build/files-and-dirs/buckconfig.html}.
  */
 public class BcfgFile extends PsiFileBase {
 

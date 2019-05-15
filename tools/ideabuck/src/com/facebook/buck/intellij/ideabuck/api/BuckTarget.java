@@ -31,7 +31,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Syntactic representation of a buck target.
  *
- * @see <a href=https://buckbuild.com/concept/build_target.html">the Buck documentation for build
+ * @see <a href=https://buck.build/concept/build_target.html">the Buck documentation for build
  *     targets</a>
  */
 public class BuckTarget {
@@ -39,7 +39,7 @@ public class BuckTarget {
   @Nullable private final String cellPath;
   private final String ruleName;
 
-  // This regex from https://buckbuild.com/concept/build_target.html,
+  // This regex from https://buck.build/concept/build_target.html,
   // which says [A-Za-z0-9._-]*//[A-Za-z0-9/._-]*:[A-Za-z0-9_/.=,@~+-]+
   private static final Pattern PATTERN =
       Pattern.compile(

@@ -168,7 +168,7 @@ public class WindowsFS {
             ". You are running an OS earlier than Windows 10 Creator. Either upgrade to a\r\n"
                 + "post-Creator version and enable Developer Mode, or run Buck in elevated mode\r\n"
                 + "for symlink creation to work.\r\n"
-                + "See https://buckbuild.com/setup/getting_started.html for more details.";
+                + "See https://buck.build/setup/getting_started.html for more details.";
       }
       throw new IOException(message);
     }

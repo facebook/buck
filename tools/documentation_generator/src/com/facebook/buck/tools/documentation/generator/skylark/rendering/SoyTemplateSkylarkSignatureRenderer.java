@@ -74,7 +74,7 @@ public class SoyTemplateSkylarkSignatureRenderer {
     return stringTemplate.render();
   }
 
-  /** Renders a table of contents for the Skylark functions subsection on buckbuild.com website. */
+  /** Renders a table of contents for the Skylark functions subsection on buck.build website. */
   public String renderTableOfContents(Iterable<SkylarkCallable> signatures) {
     ST stringTemplate = createTemplate(TABLE_OF_CONTENTS_TEMPLATE_NAME);
     stringTemplate.add("openCurly", "{");
@@ -111,9 +111,7 @@ public class SoyTemplateSkylarkSignatureRenderer {
         "doc",
         skylarkSignature.doc(),
         "parameters",
-        parameters
-            .build()
-            .stream()
+        parameters.build().stream()
             .map(SoyTemplateSkylarkSignatureRenderer::toMap)
             .collect(Collectors.toList()));
   }

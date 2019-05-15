@@ -160,7 +160,7 @@ public class AndroidBuildToolsResolver {
         "Unable to find build-tools version "
             + targetBuildToolsVersion.get()
             + ", which is specified by your config.  Please see "
-            + "https://buckbuild.com/concept/buckconfig.html#android.build_tools_version for more "
+            + "https://buck.build/concept/buckconfig.html#android.build_tools_version for more "
             + "details about the setting.  To install the correct version of the tools, run `"
             + Escaper.escapeAsShellString(sdkPath.resolve("tools/bin/sdkmanager").toString())
             + " \"build-tools;"
