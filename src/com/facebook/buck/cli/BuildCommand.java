@@ -56,7 +56,6 @@ import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.support.cli.config.AliasConfig;
-import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ListeningProcessExecutor;
@@ -341,22 +340,17 @@ public class BuildCommand extends AbstractCommand {
   BuildRunResult runWithoutHelpInternal(CommandRunnerParams params) throws Exception {
     assertArguments(params);
 
-    Optional<FileSerializationOutputRuleDepsListener> optionalListener =
-        outputRuleDeps
-            ? Optional.of(
-                new FileSerializationOutputRuleDepsListener(
-                    getSimulatorDir(params).resolve(RULE_EXEC_TIME_FILE_NAME)))
-            : Optional.empty();
-    optionalListener.ifPresent(params.getBuckEventBus()::register);
+    if (outputRuleDeps) {
+      FileSerializationOutputRuleDepsListener fileSerializationOutputRuleDepsListener =
+          new FileSerializationOutputRuleDepsListener(
+              getSimulatorDir(params).resolve(RULE_EXEC_TIME_FILE_NAME));
+      params.getBuckEventBus().register(fileSerializationOutputRuleDepsListener);
+    }
 
     ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
     try (CommandThreadManager pool =
             new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()));
-        BuildPrehook prehook = getPrehook(processExecutor, params);
-        CloseableWrapper<Optional<FileSerializationOutputRuleDepsListener>> ignored =
-            CloseableWrapper.of(
-                optionalListener,
-                listener -> listener.ifPresent(FileSerializationOutputRuleDepsListener::close))) {
+        BuildPrehook prehook = getPrehook(processExecutor, params)) {
       prehook.startPrehookScript();
       return run(params, pool, Function.identity(), ImmutableSet.of());
     }

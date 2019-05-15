@@ -53,7 +53,11 @@ abstract class AbstractFileSerializationBuckEventListener implements BuckEventLi
   }
 
   @Override
-  public final void close() {
+  public void close() {
+    closeWriter();
+  }
+
+  protected final void closeWriter() {
     try {
       writer.close();
     } catch (IOException e) {

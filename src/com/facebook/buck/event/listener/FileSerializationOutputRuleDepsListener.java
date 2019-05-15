@@ -19,6 +19,7 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.core.build.event.BuildRuleExecutionEvent;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -60,6 +61,18 @@ public class FileSerializationOutputRuleDepsListener
           ruleExecutionTimeData,
           outputPath);
     }
+  }
+
+  @Override
+  public void close() {
+    // do nothing. do not need to close writer at that moment because we still can receive events
+  }
+
+  // i/o stream should be closed only after we finished command execution
+  @Subscribe
+  public void commandFinished(CommandEvent.Finished event) {
+    LOG.info("Received command finished event for command : %s", event.getCommandName());
+    closeWriter();
   }
 
   /** Data object that is used to serialize rule execution information into a file */
