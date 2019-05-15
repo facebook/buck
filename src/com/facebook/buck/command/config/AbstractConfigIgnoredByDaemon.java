@@ -46,9 +46,24 @@ public abstract class AbstractConfigIgnoredByDaemon implements ConfigView<BuckCo
     ignoreFieldsForDaemonRestartBuilder.put("build", ImmutableSet.of("threads"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "cache",
-        ImmutableSet.of("dir", "dir_mode", "http_mode", "http_url", "mode", "slb_server_pool"));
+        ImmutableSet.of(
+            "dir",
+            "dir_mode",
+            "http_mode",
+            "http_url",
+            "http_client_tls_cert_required",
+            "http_client_tls_for_slb",
+            "http_client_tls_cert",
+            "http_client_tls_cert_env_var",
+            "http_client_tls_key",
+            "http_client_tls_key_env_var",
+            "http_client_tls_ca",
+            "http_client_tls_ca_env_var",
+            "mode",
+            "slb_server_pool"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "client", ImmutableSet.of("id", "skip-action-graph-cache"));
+    ignoreFieldsForDaemonRestartBuilder.put("doctor", ImmutableSet.of("slb_server_pool"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "intellij", ImmutableSet.of("multi_cell_module_support"));
     ignoreFieldsForDaemonRestartBuilder.put(
@@ -60,7 +75,8 @@ public abstract class AbstractConfigIgnoredByDaemon implements ConfigView<BuckCo
             "public_announcements",
             "log_build_id_to_console_enabled",
             "build_details_template",
-            "build_details_commands"));
+            "build_details_commands",
+            "slb_server_pool"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "project", ImmutableSet.of("ide_prompt", "ide_force_kill"));
     ignoreFieldsForDaemonRestartBuilder.put(
