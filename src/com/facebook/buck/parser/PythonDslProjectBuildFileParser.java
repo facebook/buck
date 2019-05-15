@@ -602,14 +602,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
           ObjectMappers.createParser(Objects.requireNonNull(buckPyProcessInput).getInputStream());
     }
     LOG.verbose("Parsing output of process %s...", buckPyProcess);
-    BuildFilePythonResult resultObject;
-    try {
-      resultObject = buckPyProcessJsonParser.readValueAs(BuildFilePythonResult.class);
-    } catch (IOException e) {
-      LOG.warn(e, "Parser exited while decoding JSON data");
-      throw e;
-    }
-    return resultObject;
+    return buckPyProcessJsonParser.readValueAs(BuildFilePythonResult.class);
   }
 
   private static void handleDiagnostics(
