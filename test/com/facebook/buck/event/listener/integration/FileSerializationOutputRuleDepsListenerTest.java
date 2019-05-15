@@ -51,7 +51,8 @@ public class FileSerializationOutputRuleDepsListenerTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckBuild("--output-rule-deps-to-file", "//:foo");
+    ProcessResult result =
+        workspace.runBuckBuild("--no-cache", "--output-rule-deps-to-file", "//:foo");
     result.assertSuccess();
 
     Path simulatorDir = workspace.getBuckPaths().getLogDir().resolve("simulator").toAbsolutePath();

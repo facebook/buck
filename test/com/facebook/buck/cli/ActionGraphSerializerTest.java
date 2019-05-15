@@ -30,7 +30,9 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -92,8 +94,7 @@ public class ActionGraphSerializerTest {
     actionGraphSerializer.serialize(
         actionGraphNodes -> {
           Iterator<ActionGraphNode> iterator = actionGraphNodes.iterator();
-          assertActionGraphNode(iterator.next(), "h");
-          assertActionGraphNode(iterator.next(), "m");
+          assertLeaves(Arrays.asList(iterator.next(), iterator.next()), "h", "m");
           assertActionGraphNode(iterator.next(), "l", "m");
           assertActionGraphNode(iterator.next(), "k", "l");
           assertActionGraphNode(iterator.next(), "j", "k");
@@ -101,12 +102,12 @@ public class ActionGraphSerializerTest {
           assertActionGraphNode(iterator.next(), "g", "h", "i");
           assertActionGraphNode(iterator.next(), "f", "g");
           assertActionGraphNode(iterator.next(), "d", "f");
-          assertActionGraphNode(iterator.next(), "r1");
-          assertActionGraphNode(iterator.next(), "r2");
+          assertLeaves(Arrays.asList(iterator.next(), iterator.next()), "r1", "r2");
           assertActionGraphNode(iterator.next(), "a", Arrays.asList("d"), "r1", "r2");
           assertActionGraphNode(iterator.next(), "e", "g");
           assertActionGraphNode(iterator.next(), "b", "e");
           assertActionGraphNode(iterator.next(), "c", "f");
+          assertThat(iterator.hasNext(), is(false));
         });
   }
 
@@ -127,6 +128,22 @@ public class ActionGraphSerializerTest {
     buildRule.updateBuildRuleResolver(buildRuleResolver);
     buildRuleResolver.addToIndex(buildRule);
     return buildRule;
+  }
+
+  private void assertLeaves(Collection<ActionGraphNode> leaves, String... expectedNames) {
+    assertThat(leaves.size(), equalTo(expectedNames.length));
+
+    List<String> extractedNames = new ArrayList<>();
+    for (ActionGraphNode leaf : leaves) {
+      assertThat(leaf.getBuildDeps(), is(empty()));
+      assertThat(leaf.getRuntimeDeps(), is(empty()));
+
+      BuildTarget buildTarget = leaf.getBuildTarget();
+      String name = buildTarget.getFullyQualifiedName();
+      extractedNames.add(name.replace("//:", ""));
+    }
+
+    assertThat(extractedNames, containsInAnyOrder(expectedNames));
   }
 
   private void assertActionGraphNode(ActionGraphNode node, String expectedName, String... deps) {
