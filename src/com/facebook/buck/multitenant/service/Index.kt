@@ -117,7 +117,7 @@ class Index internal constructor(
     }
 
     /**
-     * @return the transitive deps of the specified target (does not include target)
+     * @return the transitive deps of the specified target (includes target)
      */
     fun getTransitiveDeps(generation: Generation, target: UnconfiguredBuildTarget): Set<UnconfiguredBuildTarget> {
         val rootBuildTargetId = buildTargetCache.get(target)
@@ -143,7 +143,6 @@ class Index internal constructor(
             }
         }
 
-        visited.remove(rootBuildTargetId)
         return visited.asSequence().map { buildTargetCache.getByIndex(it) }.toSet()
     }
 

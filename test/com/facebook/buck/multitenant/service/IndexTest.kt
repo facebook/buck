@@ -68,11 +68,18 @@ class IndexTest {
                 index.getTargets(generation5).toSet())
 
         assertEquals(
-                targetSet("//java/com/facebook/buck/base:base"),
+                targetSet(
+                        "//java/com/facebook/buck/base:base",
+                        "//java/com/facebook/buck/model:model"
+                ),
                 index.getTransitiveDeps(generation2, "//java/com/facebook/buck/model:model".buildTarget())
         )
         assertEquals(
-                targetSet("//java/com/facebook/buck/base:base", "//java/com/facebook/buck/util:util"),
+                targetSet(
+                        "//java/com/facebook/buck/base:base",
+                        "//java/com/facebook/buck/model:model",
+                        "//java/com/facebook/buck/util:util"
+                ),
                 index.getTransitiveDeps(generation3, "//java/com/facebook/buck/model:model".buildTarget())
         )
 
@@ -225,7 +232,8 @@ class IndexTest {
                 ":example should be included in the transitive deps of :model.",
                 targetSet(
                         "//java/com/example:example",
-                        "//java/com/facebook/buck/base:base"
+                        "//java/com/facebook/buck/base:base",
+                        "//java/com/facebook/buck/model:model"
                 ),
                 localizedIndex.getTransitiveDeps(generation, "//java/com/facebook/buck/model:model".buildTarget()))
         assertEquals(
@@ -265,7 +273,8 @@ class IndexTest {
         assertEquals(
                 ":base is now the lone target in the transitive deps of :model.",
                 targetSet(
-                        "//java/com/facebook/buck/base:base"
+                        "//java/com/facebook/buck/base:base",
+                        "//java/com/facebook/buck/model:model"
                 ),
                 localizedIndex.getTransitiveDeps(generation, "//java/com/facebook/buck/model:model".buildTarget()))
     }
