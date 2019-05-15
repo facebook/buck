@@ -12,8 +12,13 @@
           },
           {
             "name": "B",
-            "srcs": ["B.java"],
+            "srcs": [
+              "B/com/example/B.java",
+            ],
             "buck.type": "java_library",
+            "resources": [
+              "vector.cpp",
+            ],
             "deps": [
               "//java/com/example:A"
             ],

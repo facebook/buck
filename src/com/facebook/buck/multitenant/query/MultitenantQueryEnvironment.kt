@@ -30,6 +30,7 @@ import com.facebook.buck.query.DepsFunction
 import com.facebook.buck.query.InputsFunction
 import com.facebook.buck.query.KindFunction
 import com.facebook.buck.query.NoopQueryEvaluator
+import com.facebook.buck.query.OwnerFunction
 import com.facebook.buck.query.QueryEnvironment
 import com.facebook.buck.query.QueryException
 import com.facebook.buck.query.QueryExpression
@@ -45,7 +46,8 @@ val QUERY_FUNCTIONS: List<QueryEnvironment.QueryFunction<out QueryTarget, Unconf
         DepsFunction<UnconfiguredBuildTarget>(),
         DepsFunction.FirstOrderDepsFunction<UnconfiguredBuildTarget>(),
         InputsFunction<UnconfiguredBuildTarget>(),
-        KindFunction<UnconfiguredBuildTarget>())
+        KindFunction<UnconfiguredBuildTarget>(),
+        OwnerFunction<UnconfiguredBuildTarget>())
 
 /**
  * Each instance of a [MultitenantQueryEnvironment] is parameterized by a generation and the
@@ -124,8 +126,39 @@ class MultitenantQueryEnvironment(
         return out.build()
     }
 
-    override fun getFileOwners(files: ImmutableList<String>?): ImmutableSet<UnconfiguredBuildTarget> {
-        TODO("getFileOwners() not implemented")
+    /**
+     * @param files are assumed to be paths relative to the root cell
+     */
+    override fun getFileOwners(files: ImmutableList<String>): ImmutableSet<UnconfiguredBuildTarget> {
+        val relativePaths = files.asSequence().map { FsAgnosticPath.of(it) }
+        val relativePathToTrueBasePath = mutableMapOf<FsAgnosticPath, FsAgnosticPath>()
+        val basePathToTargets = mutableMapOf<FsAgnosticPath, List<UnconfiguredBuildTarget>>()
+
+        relativePaths.forEach { relativePath ->
+            val basePath = relativePath.dirname()
+            val pathAndTargets = index.getTargetsInOwningBuildPackage(generation, basePath)
+            if (pathAndTargets != null) {
+                val (trueBasePath, targets) = pathAndTargets
+                relativePathToTrueBasePath[relativePath] = trueBasePath
+                basePathToTargets[trueBasePath] = targets
+            }
+        }
+
+        val out = ImmutableSet.builder<UnconfiguredBuildTarget>()
+        relativePaths.forEach { relativePath ->
+            // Note it is possible that there are no owner candidates for the relative path, in
+            // which case it will have no entry in the relativePathToTrueBasePath map.
+            val basePath = relativePathToTrueBasePath[relativePath] ?: return@forEach
+            val candidateTargets = basePathToTargets.getValue(basePath)
+
+            candidateTargets.forEach { candidateTarget ->
+                val inputs = getInputs(candidateTarget)
+                if (inputs.contains(QueryFileTarget.of(FsAgnosticSourcePath(relativePath)))) {
+                    out.add(candidateTarget)
+                }
+            }
+        }
+        return out.build()
     }
 
     override fun getTargetsInAttribute(target: UnconfiguredBuildTarget?, attribute: String?): ImmutableSet<out QueryTarget> {
@@ -176,7 +209,7 @@ private class TargetEvaluator(private val index: Index, private val generation: 
  * SourcePaths. As noted in extractInputs(), this should go away once we move to using
  * RawTargetNodeToTargetNodeFactory.
  */
-val SRC_LIST_ATTRIBUTES = listOf("srcs", "exported_headers")
+val SRC_LIST_ATTRIBUTES = listOf("resources", "srcs", "exported_headers")
 
 private fun extractInputs(targetNode: RawTargetNode): Set<QueryFileTarget> {
     // Ideally, we would use RawTargetNodeToTargetNodeFactory and invoke its getInputs() method.

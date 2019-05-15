@@ -179,11 +179,36 @@ class MultitenantQueryTest {
         assertEquals(
                 asFileTargets(
                         "java/com/example/A.java",
-                        "java/com/example/B.java",
+                        "java/com/example/B/com/example/B.java",
                         "java/com/example/D.java",
                         "java/com/example/vector.cpp",
                         "java/com/example/vector.h"),
                 env.evaluateQuery("inputs(//java/com/example/...)"))
+    }
+
+    @Test
+    fun ownersQuery() {
+        val env = loadIndex("diamond_dependency_graph.json", 0)
+        assertEquals(
+                "Requesting the owner of a non-existent file should return the empty set, not blow up.",
+                asOutput(),
+                env.evaluateQuery("owner('non/existent/file.txt')")
+        )
+        assertEquals(
+                "Nominal single owner case.",
+                asOutput("//java/com/example:A"),
+                env.evaluateQuery("owner('java/com/example/A.java')")
+        )
+        assertEquals(
+                "Should be able to find multiple owners, if appropriate.",
+                asOutput("//java/com/example:B", "//java/com/example:C"),
+                env.evaluateQuery("owner('java/com/example/vector.cpp')")
+        )
+        assertEquals(
+                "Should be able to find owner in non-parent, ancestor directory.",
+                asOutput("//java/com/example:B"),
+                env.evaluateQuery("owner('java/com/example/B/com/example/B.java')")
+        )
     }
 }
 
