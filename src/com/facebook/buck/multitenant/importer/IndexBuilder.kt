@@ -97,6 +97,7 @@ private fun normalizeJsonValue(value: JsonNode): Any {
     return when {
         value.isBoolean -> value.asBoolean()
         value.isTextual -> value.asText()
+        value.isInt -> value.asInt()
         value.isLong -> value.asLong()
         value.isDouble -> value.asDouble()
         value.isArray -> (value as ArrayNode).map { normalizeJsonValue(it) }

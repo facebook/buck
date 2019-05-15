@@ -35,6 +35,7 @@ import com.facebook.buck.query.QueryEnvironment
 import com.facebook.buck.query.QueryException
 import com.facebook.buck.query.QueryExpression
 import com.facebook.buck.query.QueryFileTarget
+import com.facebook.buck.query.TestsOfFunction
 import com.google.common.base.Suppliers
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
@@ -47,7 +48,8 @@ val QUERY_FUNCTIONS: List<QueryEnvironment.QueryFunction<out QueryTarget, Unconf
         DepsFunction.FirstOrderDepsFunction<UnconfiguredBuildTarget>(),
         InputsFunction<UnconfiguredBuildTarget>(),
         KindFunction<UnconfiguredBuildTarget>(),
-        OwnerFunction<UnconfiguredBuildTarget>())
+        OwnerFunction<UnconfiguredBuildTarget>(),
+        TestsOfFunction<UnconfiguredBuildTarget>())
 
 /**
  * Each instance of a [MultitenantQueryEnvironment] is parameterized by a generation and the
@@ -112,8 +114,9 @@ class MultitenantQueryEnvironment(
         return rawBuildRule.targetNode.ruleType.toString()
     }
 
-    override fun getTestsForTarget(target: UnconfiguredBuildTarget?): ImmutableSet<UnconfiguredBuildTarget> {
-        TODO("getTestsForTarget() not implemented")
+    override fun getTestsForTarget(target: UnconfiguredBuildTarget): ImmutableSet<UnconfiguredBuildTarget> {
+        val targetNode = requireNotNull(index.getTargetNode(generation, target)).targetNode
+        return extractTests(targetNode)
     }
 
     override fun getBuildFiles(targets: Set<UnconfiguredBuildTarget>): ImmutableSet<QueryFileTarget> {
@@ -228,7 +231,7 @@ private fun extractInputs(targetNode: RawTargetNode): Set<QueryFileTarget> {
 
             // If "//" appears at the beginning, it is an absolute build target. If it appears in
             // the middle, then it is an absolute build target within a cell.
-            // TODO(buck_team): Replace the heuristic below with proper target parser logic.
+            // TODO(sergeyb): Replace the heuristic below with proper target parser logic.
             if (!src.startsWith(":") && !src.contains("//")) {
                 val fullPath = basePath.resolve(FsAgnosticPath.of(src))
                 inputs.add(QueryFileTarget.of(FsAgnosticSourcePath(fullPath)))
@@ -240,4 +243,25 @@ private fun extractInputs(targetNode: RawTargetNode): Set<QueryFileTarget> {
 
 private fun toBasePath(target: UnconfiguredBuildTarget): FsAgnosticPath {
     return FsAgnosticPath.of(target.baseName.substring(2))
+}
+
+private fun extractTests(targetNode: RawTargetNode): ImmutableSet<UnconfiguredBuildTarget> {
+    val testsAttr = targetNode.attributes["tests"] as? List<*> ?: return ImmutableSet.of()
+    val out = ImmutableSet.Builder<UnconfiguredBuildTarget>()
+    val basePath = toBasePath(targetNode.buildTarget)
+    testsAttr.forEach(fun (value: Any?) {
+        val test = value as? String ?: return
+        // TODO(sergeyb): Replace the heuristics below with proper target parser logic.
+        when {
+            (test.startsWith(":")) -> {
+                // Relative build target.
+                out.add(BuildTargets.createBuildTargetFromParts(basePath, test.substring(1)))
+            }
+            (test.contains("//")) -> {
+                // Absolute build target.
+                out.add(BuildTargets.parseOrThrow(test))
+            }
+        }
+    })
+    return out.build()
 }

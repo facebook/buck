@@ -36,7 +36,9 @@ class MultitenantQueryTest {
                         "//java/com/example:B",
                         "//java/com/example:C",
                         "//java/com/example:D",
-                        "//java/com/facebook/buck:buck"
+                        "//java/com/facebook/buck:buck",
+                        "//test/com/example:script",
+                        "//test/com/example:test"
                 ),
                 env.evaluateQuery("//...")
         )
@@ -121,7 +123,8 @@ class MultitenantQueryTest {
                 "Should find all build files in the project.",
                 asFileTargets(
                         "java/com/example/BUCK",
-                        "java/com/facebook/buck/BUCK"
+                        "java/com/facebook/buck/BUCK",
+                        "test/com/example/BUCK"
                 ),
                 env.evaluateQuery("buildfile(//...)"))
     }
@@ -208,6 +211,56 @@ class MultitenantQueryTest {
                 "Should be able to find owner in non-parent, ancestor directory.",
                 asOutput("//java/com/example:B"),
                 env.evaluateQuery("owner('java/com/example/B/com/example/B.java')")
+        )
+    }
+
+    @Test
+    fun testsofWithNoTestsAttribute() {
+        val env = loadIndex("diamond_dependency_graph.json", 0)
+        assertEquals(
+                "Empty set for rule that does not declare any tests.",
+                asOutput(),
+                env.evaluateQuery("testsof(//java/com/example:A)")
+        )
+    }
+
+    @Test
+    fun testsofWithEmptyTestsAttribute() {
+        val env = loadIndex("diamond_dependency_graph.json", 0)
+        assertEquals(
+                "Empty set for rule that declares an empty tests array.",
+                asOutput(),
+                env.evaluateQuery("testsof(//java/com/example:B)")
+        )
+    }
+
+    @Test
+    fun testsofWithTestsAttributeThatDoesNotIdentifyValidBuildTargets() {
+        val env = loadIndex("diamond_dependency_graph.json", 0)
+        assertEquals(
+                "Empty set for rule that declares values that are not build targets.",
+                asOutput(),
+                env.evaluateQuery("testsof(//java/com/example:C)")
+        )
+    }
+
+    @Test
+    fun testsofWithLocalBuildTarget() {
+        val env = loadIndex("diamond_dependency_graph.json", 0)
+        assertEquals(
+                "tests is :test",
+                asOutput("//test/com/example:test"),
+                env.evaluateQuery("testsof(//test/com/example:script)")
+        )
+    }
+
+    @Test
+    fun testsofWithFullyQualifiedBuildTarget() {
+        val env = loadIndex("diamond_dependency_graph.json", 0)
+        assertEquals(
+                "tests is //test/com/example:test",
+                asOutput("//test/com/example:test"),
+                env.evaluateQuery("testsof(//java/com/example:D)")
         )
     }
 }

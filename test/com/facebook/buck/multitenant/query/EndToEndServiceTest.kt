@@ -83,7 +83,9 @@ class EndToEndServiceTest {
                         "//java/com/example:C",
                         "//java/com/example:D",
                         "//java/com/facebook/buck:buck",
-                        "//java/com/newpkg:buck"
+                        "//java/com/newpkg:buck",
+                        "//test/com/example:script",
+                        "//test/com/example:test"
                 ), universeWithBuildFileAddition.toSet())
     }
 
