@@ -35,6 +35,7 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableSet;
 import java.lang.reflect.Field;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -159,7 +160,7 @@ public abstract class AbstractBuildRule implements BuildRule {
       BuildableContext buildableContext)
       throws StepFailedException, InterruptedException {
     for (Step step : getBuildSteps(buildContext, buildableContext)) {
-      StepRunner.runStep(executionContext, step);
+      StepRunner.runStep(executionContext, step, Optional.of(getBuildTarget()));
     }
   }
 }
