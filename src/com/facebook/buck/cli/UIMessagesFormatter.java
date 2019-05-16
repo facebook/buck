@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.command.config.ConfigDifference;
+import com.facebook.buck.command.config.ConfigDifference.ConfigChange;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.util.config.Configs;
@@ -24,6 +26,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,39 +34,20 @@ import java.util.stream.Collectors;
 /** Formats messages that will be displayed in console */
 class UIMessagesFormatter {
 
-  private static final int MAX_LINES_IN_COMPARISON = 3;
-  static final String COMPARISON_KEY_PREFIX = "\t-\t";
   static final String COMPARISON_MESSAGE_PREFIX =
       "Running with reused config, some configuration changes would not be applied: ";
   static final String USING_ADDITIONAL_CONFIGURATION_OPTIONS_PREFIX =
       "Using additional configuration options from ";
 
   /** Formats comparison of {@link BuckConfig}s into UI message */
-  static Optional<String> configComparisonMessage(ImmutableSet<String> diff) {
+  static Optional<String> reusedConfigWarning(Map<String, ConfigChange> diff) {
     if (diff.isEmpty()) {
       return Optional.empty();
     }
-
     StringBuilder diffBuilder = new StringBuilder(COMPARISON_MESSAGE_PREFIX);
-    diffBuilder.append(System.lineSeparator());
-
-    diff.stream()
-        .limit(MAX_LINES_IN_COMPARISON)
-        .forEach(
-            diffValue ->
-                diffBuilder
-                    .append(COMPARISON_KEY_PREFIX)
-                    .append(diffValue)
-                    .append(System.lineSeparator()));
-
-    if (diff.size() > MAX_LINES_IN_COMPARISON) {
-      diffBuilder
-          .append(COMPARISON_KEY_PREFIX)
-          .append("... and ")
-          .append(diff.size() - MAX_LINES_IN_COMPARISON)
-          .append(" more.");
-    }
-
+    diffBuilder
+        .append(System.lineSeparator())
+        .append(ConfigDifference.formatConfigDiffShort(diff, 4));
     return Optional.of(diffBuilder.toString());
   }
 

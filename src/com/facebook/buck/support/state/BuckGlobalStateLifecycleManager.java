@@ -16,6 +16,8 @@
 
 package com.facebook.buck.support.state;
 
+import com.facebook.buck.command.config.ConfigDifference;
+import com.facebook.buck.command.config.ConfigDifference.ConfigChange;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
@@ -25,10 +27,11 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
-import com.facebook.buck.support.state.BuckGlobalStateCompatibilityCellChecker.IsCompatibleForCaching;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import javax.annotation.Nullable;
@@ -72,21 +75,6 @@ public class BuckGlobalStateLifecycleManager {
           return "Available / configured toolchains changed between invocations";
         default:
           throw new AssertionError(String.format("Unknown value: %s", this));
-      }
-    }
-
-    private static LifecycleStatus fromCellInvalidation(IsCompatibleForCaching compatible) {
-      switch (compatible) {
-        case FILESYSTEM_CHANGED:
-          return LifecycleStatus.INVALIDATED_FILESYSTEM_CHANGED;
-        case BUCK_CONFIG_CHANGED:
-          return LifecycleStatus.INVALIDATED_BUCK_CONFIG_CHANGED;
-        case TOOLCHAINS_INCOMPATIBLE:
-          return LifecycleStatus.INVALIDATED_TOOLCHAINS_INCOMPATIBLE;
-        case IS_COMPATIBLE:
-          return LifecycleStatus.REUSED;
-        default:
-          throw new AssertionError(String.format("Unknown value: %s", compatible));
       }
     }
 
@@ -155,16 +143,29 @@ public class BuckGlobalStateLifecycleManager {
       buckGlobalState = null;
     }
 
+    Map<String, ConfigChange> configDifference = ImmutableMap.of();
     // If Buck config has changed or SDKs have changed, drop all caches
     if (buckGlobalState != null) {
-      IsCompatibleForCaching cacheCompat =
-          BuckGlobalStateCompatibilityCellChecker.areCellsCompatibleForCaching(
-              buckGlobalState.getRootCell(), rootCell);
-      if (cacheCompat != IsCompatibleForCaching.IS_COMPATIBLE) {
+      // Check if current cell and cell for cached state are similar enough to re-use global state.
+      // Considers only a subset of the information provided by the cells.
+      Cell stateCell = buckGlobalState.getRootCell();
+      if (!stateCell.getFilesystem().equals(rootCell.getFilesystem())) {
+        lifecycleStatus = LifecycleStatus.INVALIDATED_FILESYSTEM_CHANGED;
+      } else {
+        configDifference =
+            ConfigDifference.compareForCaching(stateCell.getBuckConfig(), rootCell.getBuckConfig());
+        if (!configDifference.isEmpty()) {
+          lifecycleStatus = LifecycleStatus.INVALIDATED_BUCK_CONFIG_CHANGED;
+        } else if (!BuckGlobalStateCompatibilityCellChecker.areToolchainsCompatibleForCaching(
+            stateCell, rootCell)) {
+          lifecycleStatus = LifecycleStatus.INVALIDATED_TOOLCHAINS_INCOMPATIBLE;
+        }
+      }
+
+      if (lifecycleStatus != LifecycleStatus.REUSED) {
         LOG.info(
             "Shutting down and restarting daemon state on config or directory graphBuilder change (%s != %s)",
-            buckGlobalState.getRootCell(), rootCell);
-        lifecycleStatus = LifecycleStatus.fromCellInvalidation(cacheCompat);
+            stateCell, rootCell);
         buckGlobalState = null;
       }
     }
@@ -173,17 +174,23 @@ public class BuckGlobalStateLifecycleManager {
     if (buckGlobalState == null
         && currentState != null
         && console.getVerbosity().shouldPrintStandardInformation()) {
+
+      StringBuilder warning =
+          new StringBuilder(
+              String.format(
+                  "Invalidating internal cached state: %s. This may cause slower builds.",
+                  lifecycleStatus.toHumanReadableError()));
+      if (!configDifference.isEmpty()) {
+        warning
+            .append(System.lineSeparator())
+            .append(ConfigDifference.formatConfigDiffShort(configDifference, 2));
+        LOG.info("Config changes: %s", ConfigDifference.formatConfigDiff(configDifference));
+      }
       // Use the raw stream because otherwise this will stop superconsole from ever printing again
       console
           .getStdErr()
           .getRawStream()
-          .println(
-              console
-                  .getAnsi()
-                  .asWarningText(
-                      String.format(
-                          "Invalidating internal cached state: %s. This may cause slower builds.",
-                          lifecycleStatus.toHumanReadableError())));
+          .println(console.getAnsi().asWarningText(warning.toString()));
     }
 
     // start new daemon, clean old one if needed

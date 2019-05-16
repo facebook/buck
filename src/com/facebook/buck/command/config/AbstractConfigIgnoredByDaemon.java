@@ -27,10 +27,7 @@ import com.google.common.collect.Sets;
 import java.util.Map;
 import org.immutables.value.Value;
 
-/**
- * Contains configuration options that are not affecting daemon state and not causing the daemon to
- * restart.
- */
+/** A view of a config that excludes configuration options that do not invalidate global state. */
 @BuckStyleTuple
 @Value.Immutable(builder = false, copy = false)
 public abstract class AbstractConfigIgnoredByDaemon implements ConfigView<BuckConfig> {

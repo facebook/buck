@@ -25,6 +25,8 @@ import com.facebook.buck.artifact_cache.ClientCertificateHandler;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig.Executor;
 import com.facebook.buck.command.config.BuildBuckConfig;
+import com.facebook.buck.command.config.ConfigDifference;
+import com.facebook.buck.command.config.ConfigDifference.ConfigChange;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellName;
@@ -230,6 +232,7 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalLong;
@@ -641,14 +644,13 @@ public final class MainRunner {
             buckGlobalStateLifecycleManager
                 .getBuckConfig()
                 .orElseThrow(
-                    () -> new IllegalStateException("Deamon is present but config is missing."));
+                    () -> new IllegalStateException("Daemon is present but config is missing."));
         config = buckConfig.getConfig();
         filesystem = buckConfig.getFilesystem();
         cellPathResolver = DefaultCellPathResolver.of(filesystem.getRootPath(), config);
 
-        ImmutableSet<String> configDiff =
-            config.getRawConfig().compare(currentConfig.getRawConfig());
-        UIMessagesFormatter.configComparisonMessage(configDiff).ifPresent(this::printWarnMessage);
+        Map<String, ConfigChange> configDiff = ConfigDifference.compare(config, currentConfig);
+        UIMessagesFormatter.reusedConfigWarning(configDiff).ifPresent(this::printWarnMessage);
       } else {
         config = currentConfig;
         filesystem = projectFilesystemFactory.createProjectFilesystem(canonicalRootPath, config);

@@ -15,13 +15,10 @@
  */
 package com.facebook.buck.support.state;
 
-import com.facebook.buck.command.config.ConfigIgnoredByDaemon;
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.toolchain.ComparableToolchain;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.google.common.annotations.VisibleForTesting;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -33,50 +30,9 @@ import java.util.Set;
  * <p>{@link BuckGlobalStateLifecycleManager} for more information about daemon lifecycle.
  */
 class BuckGlobalStateCompatibilityCellChecker {
-  /** Whether or not the cell has changed significantly enough to invalidate caches */
-  enum IsCompatibleForCaching {
-    IS_COMPATIBLE,
-    FILESYSTEM_CHANGED,
-    BUCK_CONFIG_CHANGED,
-    TOOLCHAINS_INCOMPATIBLE,
-  }
-
   private BuckGlobalStateCompatibilityCellChecker() {}
 
-  /**
-   * Compares two cells to figure out if they are equals enough for a purpose of re-using the daemon
-   * global state.
-   *
-   * <p>The check performed by this method is basically a comparison of some subset of information
-   * provided by the cells. Some information provided by the cells is excluded from the comparison,
-   * for example, some configuration options that affect parts of Buck that don't require daemon
-   * restart when these configuration options change.
-   */
-  public static IsCompatibleForCaching areCellsCompatibleForCaching(Cell cell1, Cell cell2) {
-    if (!cell1.getFilesystem().equals(cell2.getFilesystem())) {
-      return IsCompatibleForCaching.FILESYSTEM_CHANGED;
-    }
-    if (!equalsForBuckGlobalStateInvalidation(cell1.getBuckConfig(), cell2.getBuckConfig())) {
-      return IsCompatibleForCaching.BUCK_CONFIG_CHANGED;
-    }
-    if (!areToolchainsCompatibleForCaching(cell1, cell2)) {
-      return IsCompatibleForCaching.TOOLCHAINS_INCOMPATIBLE;
-    }
-    return IsCompatibleForCaching.IS_COMPATIBLE;
-  }
-
-  // This is a hack. A cleaner approach would be to expose a narrow view of the config to any code
-  // that affects the state cached.
-  @VisibleForTesting
-  static boolean equalsForBuckGlobalStateInvalidation(
-      BuckConfig buckConfig1, BuckConfig buckConfig2) {
-    return buckConfig1
-        .getView(ConfigIgnoredByDaemon.class)
-        .getRawConfigForParser()
-        .equals(buckConfig2.getView(ConfigIgnoredByDaemon.class).getRawConfigForParser());
-  }
-
-  private static boolean areToolchainsCompatibleForCaching(Cell cell1, Cell cell2) {
+  static boolean areToolchainsCompatibleForCaching(Cell cell1, Cell cell2) {
     ToolchainProvider toolchainProvider = cell1.getToolchainProvider();
     ToolchainProvider otherToolchainProvider = cell2.getToolchainProvider();
 

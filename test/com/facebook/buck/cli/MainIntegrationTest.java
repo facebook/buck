@@ -173,14 +173,18 @@ public class MainIntegrationTest {
         containsString(
             "Running with reused config, some configuration changes would not be applied:"));
     assertThat(
-        "show config key in the diff", stderr, containsString("\t-\tui.json_attribute_format"));
+        "show config key in the diff",
+        stderr,
+        containsString("  Removed value ui.json_attribute_format='snake_case'"));
     assertThat(
         "show whitelisted config settings in the diff",
         stderr,
-        containsString("\t-\tui.warn_on_config_file_overrides"));
+        containsString("  Removed value ui.warn_on_config_file_overrides='true'"));
     assertThat(
-        "show whitelisted config settings in the diff", stderr, containsString("\t-\tclient.id"));
-    assertThat(stderr, containsString("\t-\t... and 2 more."));
+        "show whitelisted config settings in the diff",
+        stderr,
+        containsString("  Removed value client.id='123'"));
+    assertThat(stderr, containsString("  ... and 2 more. See logs for all changes"));
 
     // the third execution without specific configuration params for ui.json_attribute_format and
     // without --reuse-current-config param
