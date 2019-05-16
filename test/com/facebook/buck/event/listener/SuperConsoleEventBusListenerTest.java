@@ -485,7 +485,8 @@ public class SuperConsoleEventBusListenerTest {
     String innerBuildTargetName = "//other:target";
     UUID innerStepUuid = UUID.randomUUID();
     StepEvent.Started innerStepEventStarted =
-        StepEvent.started(innerStepShortName, innerStepDescription, innerStepUuid, innerBuildTargetName);
+        StepEvent.started(
+            innerStepShortName, innerStepDescription, innerStepUuid, innerBuildTargetName);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             innerStepEventStarted, 800L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
@@ -1861,7 +1862,8 @@ public class SuperConsoleEventBusListenerTest {
             " - //:test... 0.1 sec"));
 
     UUID stepUuid = new UUID(0, 1);
-    StepEvent.Started stepEventStarted = StepEvent.started("step_name", "step_desc", stepUuid, "//target:name");
+    StepEvent.Started stepEventStarted =
+        StepEvent.started("step_name", "step_desc", stepUuid, "//target:name");
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             stepEventStarted, 3300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
@@ -2168,7 +2170,8 @@ public class SuperConsoleEventBusListenerTest {
             " - //:test... 0.1 sec"));
 
     UUID stepUuid = new UUID(0, 1);
-    StepEvent.Started stepEventStarted = StepEvent.started("step_name", "step_desc", stepUuid, "//target:name");
+    StepEvent.Started stepEventStarted =
+        StepEvent.started("step_name", "step_desc", stepUuid, "//target:name");
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             stepEventStarted, 3300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
@@ -2496,7 +2499,8 @@ public class SuperConsoleEventBusListenerTest {
             " - //:test... 0.1 sec"));
 
     UUID stepUuid = new UUID(0, 1);
-    StepEvent.Started stepEventStarted = StepEvent.started("step_name", "step_desc", stepUuid, "//target:name");
+    StepEvent.Started stepEventStarted =
+        StepEvent.started("step_name", "step_desc", stepUuid, "//target:name");
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             stepEventStarted, 3300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
