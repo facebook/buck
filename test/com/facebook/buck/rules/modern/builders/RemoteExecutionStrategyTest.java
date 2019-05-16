@@ -18,6 +18,7 @@ package com.facebook.buck.rules.modern.builders;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import build.bazel.remote.execution.v2.ExecuteOperationMetadata;
 import build.bazel.remote.execution.v2.ExecutedActionMetadata;
 import com.facebook.buck.core.build.engine.BuildStrategyContext;
 import com.facebook.buck.core.model.BuildTarget;
@@ -190,6 +191,11 @@ public class RemoteExecutionStrategyTest {
               }
 
               @Override
+              public ListenableFuture<ExecuteOperationMetadata> getExecutionStarted() {
+                return SettableFuture.create();
+              }
+
+              @Override
               public void cancel() {
                 result.setException(new IllegalAccessException());
               }
@@ -319,6 +325,11 @@ public class RemoteExecutionStrategyTest {
                   return ExecutedActionMetadata.newBuilder().build();
                 }
               });
+        }
+
+        @Override
+        public ListenableFuture<ExecuteOperationMetadata> getExecutionStarted() {
+          return SettableFuture.create();
         }
 
         @Override

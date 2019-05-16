@@ -17,6 +17,7 @@
 package com.facebook.buck.remoteexecution.grpc;
 
 import build.bazel.remote.execution.v2.ActionResult;
+import build.bazel.remote.execution.v2.ExecuteOperationMetadata;
 import build.bazel.remote.execution.v2.ExecuteRequest;
 import build.bazel.remote.execution.v2.ExecuteResponse;
 import build.bazel.remote.execution.v2.ExecutedActionMetadata;
@@ -42,6 +43,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.longrunning.Operation;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import io.grpc.stub.ClientCallStreamObserver;
 import io.grpc.stub.ClientResponseObserver;
 import java.io.IOException;
@@ -79,7 +81,9 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
 
     SettableFuture<ClientCallStreamObserver<?>> clientObserver = SettableFuture.create();
 
-    SettableFuture<ExecutionResult> future = SettableFuture.create();
+    SettableFuture<ExecutionResult> resultFuture = SettableFuture.create();
+
+    SettableFuture<ExecuteOperationMetadata> startedExecutionFuture = SettableFuture.create();
 
     public ExecutionState(RemoteExecutionMetadata metadata) {
       this.metadata = metadata;
@@ -103,10 +107,10 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
                   operation.toString()));
         }
 
-        future.set(
+        resultFuture.set(
             getExecutionResult(operation.getResponse().unpack(ExecuteResponse.class).getResult()));
       } catch (Exception e) {
-        future.setException(
+        resultFuture.setException(
             new BuckUncheckedExecutionException(
                 e, "For execution result with Metadata=[%s].", metadata));
       }
@@ -128,6 +132,12 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
 
     public void registerClientObserver(ClientCallStreamObserver<?> requestStream) {
       clientObserver.set(requestStream);
+    }
+
+    public void setCurrentOpMetadata(ExecuteOperationMetadata metadata) {
+      if (metadata.getStage() == ExecuteOperationMetadata.Stage.EXECUTING) {
+        startedExecutionFuture.set(metadata);
+      }
     }
   }
 
@@ -162,6 +172,12 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
               @Override
               public void onNext(Operation value) {
                 state.currentOp = value;
+                try {
+                  state.setCurrentOpMetadata(
+                      state.currentOp.getMetadata().unpack(ExecuteOperationMetadata.class));
+                } catch (InvalidProtocolBufferException e) {
+                  LOG.warn("Unable to parse ExecuteOperationMetadata from Operation");
+                }
               }
 
               @Override
@@ -183,7 +199,12 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
     return new ExecutionHandle() {
       @Override
       public ListenableFuture<ExecutionResult> getResult() {
-        return state.future;
+        return state.resultFuture;
+      }
+
+      @Override
+      public ListenableFuture<ExecuteOperationMetadata> getExecutionStarted() {
+        return state.startedExecutionFuture;
       }
 
       @Override

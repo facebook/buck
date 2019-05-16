@@ -16,6 +16,7 @@
 
 package com.facebook.buck.remoteexecution.util;
 
+import build.bazel.remote.execution.v2.ExecuteOperationMetadata;
 import build.bazel.remote.execution.v2.ExecutedActionMetadata;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
@@ -37,6 +38,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -136,6 +138,11 @@ public class OutOfProcessIsolatedExecutionClients implements RemoteExecutionClie
               @Override
               public ListenableFuture<ExecutionResult> getResult() {
                 return executionResult;
+              }
+
+              @Override
+              public ListenableFuture<ExecuteOperationMetadata> getExecutionStarted() {
+                return SettableFuture.create();
               }
 
               @Override

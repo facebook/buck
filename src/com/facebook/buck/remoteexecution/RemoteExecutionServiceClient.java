@@ -16,6 +16,7 @@
 
 package com.facebook.buck.remoteexecution;
 
+import build.bazel.remote.execution.v2.ExecuteOperationMetadata;
 import build.bazel.remote.execution.v2.ExecutedActionMetadata;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
@@ -50,6 +51,8 @@ public interface RemoteExecutionServiceClient {
   /** Handle for an execution in progress. */
   interface ExecutionHandle {
     ListenableFuture<ExecutionResult> getResult();
+
+    ListenableFuture<ExecuteOperationMetadata> getExecutionStarted();
 
     void cancel();
   }

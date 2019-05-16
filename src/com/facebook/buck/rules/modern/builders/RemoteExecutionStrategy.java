@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import build.bazel.remote.execution.v2.ExecuteOperationMetadata;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.build.engine.BuildStrategyContext;
@@ -54,6 +55,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -67,6 +69,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 
 /**
  * A {@link BuildRuleStrategy} that uses a Remote Execution service for executing BuildRules. It
@@ -334,11 +337,26 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                       .execute(actionDigest, ruleName, metadataProvider);
 
               guardContext.onCancellation(reason -> executionHandle.cancel());
+              Futures.addCallback(
+                  executionHandle.getExecutionStarted(),
+                  new FutureCallback<ExecuteOperationMetadata>() {
+                    @Override
+                    public void onSuccess(@Nullable ExecuteOperationMetadata result) {
+                      guardContext.tryStart();
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {}
+                  },
+                  MoreExecutors.directExecutor());
               return Futures.transform(
                   executionHandle.getResult(),
                   result -> {
                     executingScope.close();
-                    if (!guardContext.tryStart()) {
+                    // Try Start so that if Executing Started was never sent, we can don't block
+                    // cancellation till the result is ready.
+                    guardContext.tryStart();
+                    if (guardContext.isCancelled()) {
                       cancelled.set(guardContext.getCancelReason());
                       RemoteExecutionActionEvent.sendTerminalEvent(
                           eventBus,
