@@ -3,6 +3,6 @@
     "buck-out",
     ".idea",
     ".buckd",
-    "ant-out",
+    "ant-out"
   ]
 }
