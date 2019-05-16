@@ -67,14 +67,14 @@ class Index internal constructor(
         val ruleMap: Map<BuildTargetId, InternalRawBuildRule?> =
                 deltas.ruleDeltas.asSequence().map { delta ->
                     val (buildTarget, newNodeAndDeps) = when (delta) {
-                        is RuleDeltaUpdate -> {
+                        is RuleDelta.Added -> {
                             Pair(delta.rule.targetNode.buildTarget, delta.rule)
                         }
-                        is RuleDelta.Removed -> {
-                            Pair(delta.buildTarget, null)
+                        is RuleDelta.Modified -> {
+                            Pair(delta.newRule.targetNode.buildTarget, delta.newRule)
                         }
-                        else -> {
-                            throw IllegalStateException("Unexpected delta: $delta")
+                        is RuleDelta.Removed -> {
+                            Pair(delta.rule.targetNode.buildTarget, null)
                         }
                     }
                     buildTargetCache.get(buildTarget) to newNodeAndDeps

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.multitenant.service
 
-import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 
 /**
@@ -30,20 +29,12 @@ internal sealed class BuildPackageDelta {
 }
 
 /**
- * Interface so that [RuleDelta.Added] and [RuleDelta.Modified] can be handled by the same case in
- * a `when` expression.
- */
-internal interface RuleDeltaUpdate {
-    val rule: InternalRawBuildRule
-}
-
-/**
  * Represents a change between versions of a build rule. This should be extended to reflect a
  * change in any attribute of a build rule (including its type!) whereas currently this only
  * reflects a change in its deps.
  */
 internal sealed class RuleDelta {
-    data class Added(override val rule: InternalRawBuildRule) : RuleDelta(), RuleDeltaUpdate
-    data class Modified(override val rule: InternalRawBuildRule) : RuleDelta(), RuleDeltaUpdate
-    data class Removed(val buildTarget: UnconfiguredBuildTarget) : RuleDelta()
+    data class Added(val rule: InternalRawBuildRule) : RuleDelta()
+    data class Modified(val newRule: InternalRawBuildRule, val oldRule: InternalRawBuildRule) : RuleDelta()
+    data class Removed(val rule: InternalRawBuildRule) : RuleDelta()
 }

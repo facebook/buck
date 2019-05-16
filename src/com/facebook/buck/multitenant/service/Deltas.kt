@@ -43,6 +43,7 @@ internal fun determineDeltas(
 ): Deltas {
     val internalChanges = toInternalChanges(changes, buildTargetCache)
     val buildPackageDeltas = mutableListOf<BuildPackageDelta>()
+    val buildTargetIdsOfRemovedRules = mutableListOf<UnconfiguredBuildTarget>()
     val ruleDeltas = mutableListOf<RuleDelta>()
 
     indexGenerationData.withBuildPackageMap { buildPackageMap ->
@@ -66,13 +67,23 @@ internal fun determineDeltas(
             }
 
             buildPackageDeltas.add(BuildPackageDelta.Removed(removed))
+            // Record the build targets of the removed rules. We must wait until we acquire the
+            // read lock on the rule map to get the deps so we can record the corresponding
+            // RuleDelta.Removed objects.
             for (ruleName in oldRules) {
                 val buildTarget = BuildTargets.createBuildTargetFromParts(removed, ruleName)
-                ruleDeltas.add(RuleDelta.Removed(buildTarget))
+                buildTargetIdsOfRemovedRules.add(buildTarget)
             }
         }
 
         indexGenerationData.withRuleMap { ruleMap ->
+            for (buildTarget in buildTargetIdsOfRemovedRules) {
+                val removedRule = requireNotNull(ruleMap.getVersion(buildTargetCache.get(buildTarget), generation)) {
+                    "No rule found for '$buildTarget' at generation $generation"
+                }
+                ruleDeltas.add(RuleDelta.Removed(removedRule))
+            }
+
             for (modified in internalChanges.modifiedBuildPackages) {
                 val oldRuleNames = requireNotNull(buildPackageMap.getVersion(modified
                         .buildFileDirectory,
@@ -106,7 +117,7 @@ internal fun determineDeltas(
                                 // Nothing to do!
                             }
                             is RuleDelta.Removed -> {
-                                newRuleNames = newRuleNames.remove(ruleChange.buildTarget.name)
+                                newRuleNames = newRuleNames.remove(ruleChange.rule.targetNode.buildTarget.name)
                             }
                         }
                     }
