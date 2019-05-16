@@ -118,6 +118,12 @@ public class JavacPipelineState implements RulePipelineState {
                   .map(properties -> properties.getJavacPluginJsr199Fields(resolver, filesystem))
                   .collect(Collectors.toList()));
 
+      ImmutableList<JavacPluginJsr199Fields> javaPlugins =
+          ImmutableList.copyOf(
+              javacOptions.getStandardJavacPluginParams().getPluginProperties().stream()
+                  .map(properties -> properties.getJavacPluginJsr199Fields(resolver, filesystem))
+                  .collect(Collectors.toList()));
+
       invocation =
           getJavac()
               .newBuildInvocation(
@@ -127,6 +133,7 @@ public class JavacPipelineState implements RulePipelineState {
                   getOptions(
                       context, compilerParameters.getClasspathEntries(), filesystem, resolver),
                   annotationProcessors,
+                  javaPlugins,
                   compilerParameters.getSourceFilePaths(),
                   compilerParameters.getOutputPaths().getPathToSourcesList(),
                   compilerParameters.getOutputPaths().getWorkingDirectory(),

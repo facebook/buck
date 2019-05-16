@@ -171,6 +171,8 @@ java_immutables_library(
         "MavenPublishable.java",
         "MaybeRequiredForSourceOnlyAbi.java",
         "OptionsConsumer.java",
+        "PluginFactory.java",
+        "PluginLoaderJavaFileManager.java",
         "RemoveClassesPatternsMatcher.java",
         "ResolvedJavacPluginProperties.java",
         "StandardJavaFileManagerFactory.java",
