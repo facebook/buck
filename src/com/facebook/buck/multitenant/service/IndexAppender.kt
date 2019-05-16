@@ -90,16 +90,15 @@ class IndexAppender internal constructor(
 
         indexGenerationData.withMutableRuleMap { ruleMap ->
             for (delta in deltas.ruleDeltas) {
-                val buildTarget: UnconfiguredBuildTarget
-                val newNodeAndDeps: InternalRawBuildRule?
-                when (delta) {
-                    is RuleDelta.Updated -> {
-                        buildTarget = delta.rule.targetNode.buildTarget
-                        newNodeAndDeps = delta.rule
+                val (buildTarget, newNodeAndDeps) = when (delta) {
+                    is RuleDeltaUpdate -> {
+                        Pair(delta.rule.targetNode.buildTarget, delta.rule)
                     }
                     is RuleDelta.Removed -> {
-                        buildTarget = delta.buildTarget
-                        newNodeAndDeps = null
+                        Pair(delta.buildTarget, null)
+                    }
+                    else -> {
+                        throw IllegalStateException("Unexpected delta: $delta")
                     }
                 }
                 ruleMap.addVersion(buildTargetCache.get(buildTarget), newNodeAndDeps, nextGeneration)

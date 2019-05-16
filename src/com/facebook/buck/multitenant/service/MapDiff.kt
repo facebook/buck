@@ -35,16 +35,16 @@ internal fun diffRules(oldRules: Set<InternalRawBuildRule>, newRules: Set<Intern
         if (rule == null) {
             // Entry exists in large map but not small map.
             if (smallMapHasTheOldRules) {
-                deltas.add(RuleDelta.Updated(entry.value))
+                deltas.add(RuleDelta.Added(entry.value))
             } else {
                 deltas.add(RuleDelta.Removed(entry.value.targetNode.buildTarget))
             }
         } else if (rule != entry.value) {
             // Entry exists in both maps, but it has been modified.
             if (smallMapHasTheOldRules) {
-                deltas.add(RuleDelta.Updated(entry.value))
+                deltas.add(RuleDelta.Modified(entry.value))
             } else {
-                deltas.add(RuleDelta.Updated(rule))
+                deltas.add(RuleDelta.Modified(rule))
             }
         }
     }
@@ -54,7 +54,7 @@ internal fun diffRules(oldRules: Set<InternalRawBuildRule>, newRules: Set<Intern
         if (smallMapHasTheOldRules) {
             deltas.add(RuleDelta.Removed(rule.targetNode.buildTarget))
         } else {
-            deltas.add(RuleDelta.Updated(rule))
+            deltas.add(RuleDelta.Added(rule))
         }
     }
 

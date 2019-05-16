@@ -45,8 +45,8 @@ class MapDiffTest {
         val newRules = setOf(createRule("one", intArrayOf(1)), createRule("two", intArrayOf(2, 3)))
         val deltas = diffRules(oldRules, newRules)
         assertEquals(setOf(
-                RuleDelta.Updated(createRule("one", intArrayOf(1))),
-                RuleDelta.Updated(createRule("two", intArrayOf(2, 3)))
+                RuleDelta.Added(createRule("one", intArrayOf(1))),
+                RuleDelta.Added(createRule("two", intArrayOf(2, 3)))
         ), deltas.toSet())
     }
 
@@ -73,8 +73,8 @@ class MapDiffTest {
                 createRule("baz", intArrayOf(5)))
         val deltas = diffRules(oldRules, newRules)
         assertEquals(setOf(
-                RuleDelta.Updated(createRule("bar", intArrayOf(2, 3))),
-                RuleDelta.Updated(createRule("baz", intArrayOf(5)))
+                RuleDelta.Modified(createRule("bar", intArrayOf(2, 3))),
+                RuleDelta.Modified(createRule("baz", intArrayOf(5)))
         ), deltas.toSet())
     }
 
@@ -91,8 +91,8 @@ class MapDiffTest {
                 createRule("baz", intArrayOf(5)))
         val deltas = diffRules(oldRules, newRules)
         assertEquals(setOf(
-                RuleDelta.Updated(createRule("bar", intArrayOf(2, 3))),
-                RuleDelta.Updated(createRule("baz", intArrayOf(5))),
+                RuleDelta.Modified(createRule("bar", intArrayOf(2, 3))),
+                RuleDelta.Modified(createRule("baz", intArrayOf(5))),
                 RuleDelta.Removed(createBuildTarget("foobazbar"))
         ), deltas.toSet())
     }
@@ -110,9 +110,9 @@ class MapDiffTest {
                 createRule("foobazbar", intArrayOf(0)))
         val deltas = diffRules(oldRules, newRules)
         assertEquals(setOf(
-                RuleDelta.Updated(createRule("bar", intArrayOf(2, 3))),
-                RuleDelta.Updated(createRule("baz", intArrayOf(5))),
-                RuleDelta.Updated(createRule("foobazbar", intArrayOf(0)))
+                RuleDelta.Modified(createRule("bar", intArrayOf(2, 3))),
+                RuleDelta.Modified(createRule("baz", intArrayOf(5))),
+                RuleDelta.Added(createRule("foobazbar", intArrayOf(0)))
         ), deltas.toSet())
     }
 

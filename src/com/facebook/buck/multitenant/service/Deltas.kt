@@ -56,7 +56,7 @@ internal fun determineDeltas(
             val ruleNames = getRuleNames(added.rules)
             buildPackageDeltas.add(BuildPackageDelta.Updated(added.buildFileDirectory, ruleNames))
             for (rule in added.rules) {
-                ruleDeltas.add(RuleDelta.Updated(rule))
+                ruleDeltas.add(RuleDelta.Added(rule))
             }
         }
 
@@ -99,11 +99,11 @@ internal fun determineDeltas(
                     var newRuleNames = oldRuleNames
                     for (ruleChange in ruleChanges) {
                         when (ruleChange) {
-                            is RuleDelta.Updated -> {
-                                // For a RuleDelta, Updated means either "added" or "modified," so
-                                // we categorically try to add the name even though it might be a
-                                // no-op.
+                            is RuleDelta.Added -> {
                                 newRuleNames = newRuleNames.add(ruleChange.rule.targetNode.buildTarget.name)
+                            }
+                            is RuleDelta.Modified -> {
+                                // Nothing to do!
                             }
                             is RuleDelta.Removed -> {
                                 newRuleNames = newRuleNames.remove(ruleChange.buildTarget.name)
