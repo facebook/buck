@@ -169,7 +169,7 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
       return toolchains.get(toolchainName);
     } catch (ExecutionException | UncheckedExecutionException e) {
       if (e.getCause() instanceof ToolchainInstantiationException) {
-        LOG.warn(
+        LOG.info(
             String.format(
                 "Cannot create a toolchain: %s. Cause: %s",
                 toolchainName, e.getCause().getMessage()));
