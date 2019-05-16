@@ -16,8 +16,6 @@
 
 package com.facebook.buck.remoteexecution.config;
 
-import static com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy.REMOTE;
-
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
@@ -25,8 +23,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
-import com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy;
-import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import java.nio.file.Files;
@@ -43,7 +39,6 @@ import org.immutables.value.Value;
 abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final Logger LOG = Logger.get(RemoteExecutionConfig.class);
   public static final String SECTION = "remoteexecution";
-  public static final String OLD_SECTION = ModernBuildRuleConfig.SECTION;
 
   public static final int DEFAULT_REMOTE_PORT = 19030;
   public static final int DEFAULT_CAS_PORT = 19031;
@@ -108,19 +103,19 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final String TRY_LARGER_WORKER_ON_OOM = "try_larger_worker_on_oom";
 
   public String getRemoteHost() {
-    return getValueWithFallback("remote_host").orElse("localhost");
+    return getValue("remote_host").orElse("localhost");
   }
 
   public int getRemotePort() {
-    return getValueWithFallback("remote_port").map(Integer::parseInt).orElse(DEFAULT_REMOTE_PORT);
+    return getValue("remote_port").map(Integer::parseInt).orElse(DEFAULT_REMOTE_PORT);
   }
 
   public String getCasHost() {
-    return getValueWithFallback("cas_host").orElse("localhost");
+    return getValue("cas_host").orElse("localhost");
   }
 
   public int getCasPort() {
-    return getValueWithFallback("cas_port").map(Integer::parseInt).orElse(DEFAULT_CAS_PORT);
+    return getValue("cas_port").map(Integer::parseInt).orElse(DEFAULT_CAS_PORT);
   }
 
   public boolean getInsecure() {
@@ -147,8 +142,7 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   }
 
   private String getDebugURLFormatString() {
-    return getValueWithFallback(DEBUG_FORMAT_STRING_URL_KEY)
-        .orElse(FORMAT_SESSION_ID_VARIABLE_STRING);
+    return getValue(DEBUG_FORMAT_STRING_URL_KEY).orElse(FORMAT_SESSION_ID_VARIABLE_STRING);
   }
 
   public String getDebugURLString(RESessionID reSessionID) {
@@ -293,58 +287,7 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public RemoteExecutionType getType() {
     Optional<RemoteExecutionType> specifiedType =
         getDelegate().getEnum(SECTION, "type", RemoteExecutionType.class);
-    if (specifiedType.isPresent()) {
-      return specifiedType.get();
-    }
-
-    ModernBuildRuleBuildStrategy fallbackStrategy =
-        getDelegate().getView(ModernBuildRuleConfig.class).getBuildStrategy();
-    // Try the old modern_build_rule way.
-    switch (fallbackStrategy) {
-      case HYBRID_LOCAL:
-      case DEBUG_RECONSTRUCT:
-      case DEBUG_PASSTHROUGH:
-      case REMOTE:
-      case NONE:
-        break;
-
-      case GRPC_REMOTE:
-        specifiedType = Optional.of(RemoteExecutionType.GRPC);
-        break;
-      case DEBUG_ISOLATED_OUT_OF_PROCESS_GRPC:
-        specifiedType = Optional.of(RemoteExecutionType.DEBUG_GRPC_IN_PROCESS);
-        break;
-      case DEBUG_GRPC_SERVICE_IN_PROCESS:
-        specifiedType = Optional.of(RemoteExecutionType.DEBUG_GRPC_LOCAL);
-        break;
-    }
-
-    if (!specifiedType.isPresent()) {
-      return RemoteExecutionType.DEFAULT;
-    }
-
-    String currentConfig = String.format("%s.strategy=%s", OLD_SECTION, fallbackStrategy);
-    String newStrategy = String.format("%s.strategy=%s", OLD_SECTION, REMOTE);
-    String newRemoteType = String.format("%s.type=%s", SECTION, specifiedType.get());
-
-    LOG.error(
-        "Configuration %s is deprecated. This should be configured by setting both %s and %s.",
-        currentConfig, newStrategy, newRemoteType);
-    return specifiedType.get();
-  }
-
-  public Optional<String> getValueWithFallback(String key) {
-    Optional<String> value = getDelegate().getValue(SECTION, key);
-    if (value.isPresent()) {
-      return value;
-    }
-    value = getDelegate().getValue(OLD_SECTION, key);
-    if (value.isPresent()) {
-      LOG.error(
-          "Configuration should be specified with %s.%s, not %s.%s.",
-          SECTION, key, OLD_SECTION, key);
-    }
-    return value;
+    return specifiedType.orElse(RemoteExecutionType.DEFAULT);
   }
 
   /** Whether Console output of Remote Execution information is enabled. */
@@ -353,7 +296,7 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   }
 
   public String getReSessionLabel() {
-    return getDelegate().getValue(SECTION, RE_SESSION_LABEL_KEY).orElse("");
+    return getValue(RE_SESSION_LABEL_KEY).orElse("");
   }
 
   public void validateCertificatesOrThrow() {
@@ -396,5 +339,9 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   private Optional<Path> getPathWithEnv(String field) {
     return ArtifactCacheBuckConfig.getStringOrEnvironmentVariable(getDelegate(), SECTION, field)
         .map(Paths::get);
+  }
+
+  private Optional<String> getValue(String key) {
+    return getDelegate().getValue(SECTION, key);
   }
 }

@@ -34,19 +34,6 @@ public enum ModernBuildRuleBuildStrategy {
   DEBUG_RECONSTRUCT,
   // Creates a strategy that just forwards to the default behavior.
   DEBUG_PASSTHROUGH,
-
-  // The following are all deprecated. They should be configured with a combination of
-  // modern_build_rule.strategy=remote and an appropriate value for remoteexecution.type.
-  GRPC_REMOTE,
-  DEBUG_GRPC_SERVICE_IN_PROCESS,
-  /**
-   * This strategy will construct a separate isolated build directory for each rule. The rule will
-   * be serialized to data files in that directory, and all inputs required (including buck configs)
-   * will be materialized there. Buck's own classpath will also be materialized there and then a
-   * separate subprocess will be created to deserialize and run the rule. Outputs will then be
-   * copied back to the real build directory.
-   */
-  DEBUG_ISOLATED_OUT_OF_PROCESS_GRPC,
   ;
 
   static final ModernBuildRuleBuildStrategy DEFAULT = NONE;

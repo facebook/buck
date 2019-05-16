@@ -73,9 +73,6 @@ public class ModernBuildRuleBuilderFactory {
                   eventBus,
                   metadataProvider));
         case REMOTE:
-        case GRPC_REMOTE:
-        case DEBUG_GRPC_SERVICE_IN_PROCESS:
-        case DEBUG_ISOLATED_OUT_OF_PROCESS_GRPC:
           return Optional.of(
               RemoteExecutionStrategy.createRemoteExecutionStrategy(
                   eventBus,

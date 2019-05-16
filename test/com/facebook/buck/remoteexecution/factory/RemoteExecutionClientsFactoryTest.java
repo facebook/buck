@@ -65,40 +65,6 @@ public class RemoteExecutionClientsFactoryTest {
     }
   }
 
-  @Test
-  public void deprecatedGrpcConfiguration() throws IOException {
-    BuckConfig config =
-        FakeBuckConfig.builder().setSections("[modern_build_rule]", "strategy=grpc_remote").build();
-
-    try (RemoteExecutionClients remoteExecutionClients = createClients(config)) {
-      assertTrue(remoteExecutionClients instanceof GrpcRemoteExecutionClients);
-    }
-  }
-
-  @Test
-  public void deprecatedGrpcrpcLocalConfiguration() throws IOException {
-    BuckConfig config =
-        FakeBuckConfig.builder()
-            .setSections("[modern_build_rule]", "strategy=debug_grpc_service_in_process")
-            .build();
-
-    try (RemoteExecutionClients remoteExecutionClients = createClients(config)) {
-      assertTrue(remoteExecutionClients instanceof GrpcRemoteExecutionClients);
-    }
-  }
-
-  @Test
-  public void deprecatedGrpcrpcInProcessConfiguration() throws IOException {
-    BuckConfig config =
-        FakeBuckConfig.builder()
-            .setSections("[modern_build_rule]", "strategy=debug_isolated_out_of_process_grpc")
-            .build();
-
-    try (RemoteExecutionClients remoteExecutionClients = createClients(config)) {
-      assertTrue(remoteExecutionClients instanceof OutOfProcessIsolatedExecutionClients);
-    }
-  }
-
   private RemoteExecutionClients createClients(BuckConfig config) throws IOException {
     return new RemoteExecutionClientsFactory(config.getView(RemoteExecutionConfig.class))
         .create(
