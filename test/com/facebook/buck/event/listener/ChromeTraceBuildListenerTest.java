@@ -478,7 +478,8 @@ public class ChromeTraceBuildListenerTest {
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(rule, durationTracker);
     eventBus.post(started);
-    eventBus.post(StepEvent.started(stepShortName, stepDescription, stepUuid, rule.getFullyQualifiedName()));
+    eventBus.post(
+        StepEvent.started(stepShortName, stepDescription, stepUuid, rule.getFullyQualifiedName()));
 
     JavacPhaseEvent.Started runProcessorsStartedEvent =
         JavacPhaseEvent.started(
@@ -516,7 +517,10 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(JavacPhaseEvent.finished(runProcessorsStartedEvent, ImmutableMap.of()));
 
     eventBus.post(
-        StepEvent.finished(StepEvent.started(stepShortName, stepDescription, stepUuid, rule.getFullyQualifiedName()), 0));
+        StepEvent.finished(
+            StepEvent.started(
+                stepShortName, stepDescription, stepUuid, rule.getFullyQualifiedName()),
+            0));
     eventBus.post(
         BuildRuleEvent.finished(
             started,
@@ -646,7 +650,13 @@ public class ChromeTraceBuildListenerTest {
     assertNextResult(
         resultListCopy, "//fake:rule", ChromeTraceEvent.Phase.BEGIN, ImmutableMap.of());
 
-    assertNextResult(resultListCopy, "fakeStep", ChromeTraceEvent.Phase.BEGIN, emptyArgs);
+    assertNextResult(
+        resultListCopy,
+        "fakeStep",
+        ChromeTraceEvent.Phase.BEGIN,
+        ImmutableMap.of(
+            "description", "I'm a Fake Step!",
+            "target", "//fake:rule"));
 
     assertNextResult(
         resultListCopy, "run annotation processors", ChromeTraceEvent.Phase.BEGIN, emptyArgs);
@@ -693,6 +703,7 @@ public class ChromeTraceBuildListenerTest {
         ChromeTraceEvent.Phase.END,
         ImmutableMap.of(
             "description", "I'm a Fake Step!",
+            "target", "//fake:rule",
             "exit_code", "0"));
 
     assertNextResult(
