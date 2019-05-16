@@ -29,7 +29,7 @@ internal interface IndexGenerationData {
     /**
      * @param action will be performed will the read lock is held for the [GenerationMap]
      */
-    fun <T> withBuildPackageMap(action: (map: GenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath>) -> T): T
+    fun <T> withBuildPackageMap(action: (map: GenerationMap<FsAgnosticPath, BuildRuleNames, FsAgnosticPath>) -> T): T
 
     /**
      * @param action will be performed will the read lock is held for the [GenerationMap]
@@ -42,7 +42,7 @@ internal interface IndexGenerationData {
      */
     fun createForwardingIndexGenerationData(
             generation: Int,
-            localBuildPackageChanges: Map<FsAgnosticPath, Set<String>?>,
+            localBuildPackageChanges: Map<FsAgnosticPath, BuildRuleNames?>,
             localRuleMapChanges: Map<BuildTargetId, InternalRawBuildRule?>
     ): IndexGenerationData
 }
@@ -54,7 +54,7 @@ internal interface MutableIndexGenerationData : IndexGenerationData {
     /**
      * @param action will be performed will the write lock is held for the [GenerationMap]
      */
-    fun <T> withMutableBuildPackageMap(action: (map: MutableGenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath>) -> T): T
+    fun <T> withMutableBuildPackageMap(action: (map: MutableGenerationMap<FsAgnosticPath, BuildRuleNames, FsAgnosticPath>) -> T): T
 
     /**
      * @param action will be performed will the write lock is held for the [GenerationMap]
@@ -71,12 +71,12 @@ internal interface MutableIndexGenerationData : IndexGenerationData {
  *     We also specify the key as the keyInfo so that we get it back when we use `getAllInfoValuePairsForGeneration()`.
  */
 internal open class DefaultIndexGenerationData(
-        protected val buildPackageMap: GenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath> = DefaultGenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath> { it },
+        protected val buildPackageMap: GenerationMap<FsAgnosticPath, BuildRuleNames, FsAgnosticPath> = DefaultGenerationMap<FsAgnosticPath, BuildRuleNames, FsAgnosticPath> { it },
         protected val buildPackageMapLock: ReentrantReadWriteLock = ReentrantReadWriteLock(/*fair*/ true),
         protected val ruleMap: GenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId> = DefaultGenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId> { it },
         protected val ruleMapLock: ReentrantReadWriteLock = ReentrantReadWriteLock(/*fair*/ true)
 ) : IndexGenerationData {
-    override final inline fun <T> withBuildPackageMap(action: (map: GenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath>) -> T): T {
+    override final inline fun <T> withBuildPackageMap(action: (map: GenerationMap<FsAgnosticPath, BuildRuleNames, FsAgnosticPath>) -> T): T {
         val readLock = buildPackageMapLock.readLock()
         readLock.lock()
         try {
@@ -98,7 +98,7 @@ internal open class DefaultIndexGenerationData(
 
     override fun createForwardingIndexGenerationData(
             generation: Int,
-            localBuildPackageChanges: Map<FsAgnosticPath, Set<String>?>,
+            localBuildPackageChanges: Map<FsAgnosticPath, BuildRuleNames?>,
             localRuleMapChanges: Map<BuildTargetId, InternalRawBuildRule?>
     ): IndexGenerationData {
         val forwardingBuildPackageMap = ForwardingGenerationMap(generation, localBuildPackageChanges, buildPackageMap)
@@ -108,7 +108,7 @@ internal open class DefaultIndexGenerationData(
 }
 
 internal class DefaultMutableIndexGenerationData() : DefaultIndexGenerationData(), MutableIndexGenerationData {
-    override inline fun <T> withMutableBuildPackageMap(action: (map: MutableGenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath>) -> T): T {
+    override inline fun <T> withMutableBuildPackageMap(action: (map: MutableGenerationMap<FsAgnosticPath, BuildRuleNames, FsAgnosticPath>) -> T): T {
         val writeLock = buildPackageMapLock.writeLock()
         writeLock.lock()
         try {

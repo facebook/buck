@@ -53,7 +53,7 @@ class Index internal constructor(
             return this
         }
 
-        val buildPackageMap: Map<FsAgnosticPath, Set<String>?> =
+        val buildPackageMap: Map<FsAgnosticPath, BuildRuleNames?> =
                 deltas.buildPackageDeltas.asSequence().map { delta ->
                     when (delta) {
                         is BuildPackageDelta.Updated -> {
@@ -204,7 +204,7 @@ class Index internal constructor(
     fun getTargetsInOwningBuildPackage(generation: Generation, basePath: FsAgnosticPath): Pair<FsAgnosticPath, List<UnconfiguredBuildTarget>>? {
         var candidateBasePath = basePath
         val targetNames = indexGenerationData.withBuildPackageMap(
-                fun(buildPackageMap: GenerationMap<FsAgnosticPath, Set<String>, FsAgnosticPath>): Set<String>? {
+                fun(buildPackageMap: GenerationMap<FsAgnosticPath, BuildRuleNames, FsAgnosticPath>): BuildRuleNames? {
                     do {
                         val targetNames = buildPackageMap.getVersion(candidateBasePath, generation)
                         if (targetNames != null) {

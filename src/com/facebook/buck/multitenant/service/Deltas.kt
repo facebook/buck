@@ -94,8 +94,24 @@ internal fun determineDeltas(
                 // Keep track of the individual rule changes so we need not recompute them later.
                 val ruleChanges = diffRules(oldRules, newRules)
                 if (ruleChanges.isNotEmpty()) {
-                    buildPackageDeltas.add(BuildPackageDelta.Updated(modified
-                            .buildFileDirectory, getRuleNames(newRules)))
+                    // Note that oldRuleNames is a persistent collection, so we want to derive
+                    // newRuleNames from oldRuleNames so they can share as much memory as possible.
+                    var newRuleNames = oldRuleNames
+                    for (ruleChange in ruleChanges) {
+                        when (ruleChange) {
+                            is RuleDelta.Updated -> {
+                                // For a RuleDelta, Updated means either "added" or "modified," so
+                                // we categorically try to add the name even though it might be a
+                                // no-op.
+                                newRuleNames = newRuleNames.add(ruleChange.rule.targetNode.buildTarget.name)
+                            }
+                            is RuleDelta.Removed -> {
+                                newRuleNames = newRuleNames.remove(ruleChange.buildTarget.name)
+                            }
+                        }
+                    }
+
+                    buildPackageDeltas.add(BuildPackageDelta.Updated(modified.buildFileDirectory, newRuleNames))
                     ruleDeltas.addAll(ruleChanges)
                 }
             }
@@ -126,6 +142,6 @@ private fun toBuildTargetSet(targets: Set<UnconfiguredBuildTarget>, buildTargetC
     return ids
 }
 
-private fun getRuleNames(rules: Set<InternalRawBuildRule>): Set<String> {
-    return rules.asSequence().map { it.targetNode.buildTarget.name }.toSet()
+private fun getRuleNames(rules: Set<InternalRawBuildRule>): BuildRuleNames {
+    return rules.asSequence().map { it.targetNode.buildTarget.name }.toBuildRuleNames()
 }

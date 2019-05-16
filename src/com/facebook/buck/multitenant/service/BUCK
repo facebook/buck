@@ -17,5 +17,6 @@ kotlin_library(
         "//src/com/facebook/buck/multitenant/fs:fs",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
+        "//third-party/java/vavr:vavr",
     ],
 )

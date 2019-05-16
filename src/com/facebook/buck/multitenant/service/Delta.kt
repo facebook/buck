@@ -24,7 +24,7 @@ import com.facebook.buck.multitenant.fs.FsAgnosticPath
  */
 internal sealed class BuildPackageDelta {
     /** Note that this is an "added" or "modified" package. */
-    data class Updated(val directory: FsAgnosticPath, val rules: Set<String>) : BuildPackageDelta()
+    data class Updated(val directory: FsAgnosticPath, val rules: BuildRuleNames) : BuildPackageDelta()
 
     data class Removed(val directory: FsAgnosticPath) : BuildPackageDelta()
 }
