@@ -53,6 +53,7 @@ import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.event.BuildRuleExecutionEvent;
+import com.facebook.buck.core.build.event.FinalizingBuildRuleEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
@@ -557,6 +558,7 @@ class CachingBuildRuleBuilder {
       // The BuildInfoRecorder should not be accessed after this point. It does not accurately
       // reflect the state of the buildrule.
       buildInfoRecorder.discard();
+      FinalizingBuildRuleEvent.postEvent(eventBus, rule);
     }
   }
 

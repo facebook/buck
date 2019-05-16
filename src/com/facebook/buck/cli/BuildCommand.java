@@ -42,7 +42,9 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.DistBuildConfig;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.listener.CriticalPathEventListener;
 import com.facebook.buck.event.listener.FileSerializationOutputRuleDepsListener;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -116,6 +118,7 @@ public class BuildCommand extends AbstractCommand {
   private static final String DISTRIBUTED_LONG_ARG = "--distributed";
   static final String BUCK_BINARY_STRING_ARG = "--buck-binary";
   private static final String RULEKEY_LOG_PATH_LONG_ARG = "--rulekeys-log-path";
+  public static final String CRITICAL_PATH_FILE_NAME = "critical_path.log";
 
   private static final String OUTPUT_RULE_DEPS_TO_FILE_ARG = "--output-rule-deps-to-file";
   private static final String ACTION_GRAPH_FILE_NAME = "action_graph.json";
@@ -340,17 +343,20 @@ public class BuildCommand extends AbstractCommand {
   BuildRunResult runWithoutHelpInternal(CommandRunnerParams params) throws Exception {
     assertArguments(params);
 
+    BuckEventBus buckEventBus = params.getBuckEventBus();
     if (outputRuleDeps) {
       FileSerializationOutputRuleDepsListener fileSerializationOutputRuleDepsListener =
           new FileSerializationOutputRuleDepsListener(
               getSimulatorDir(params).resolve(RULE_EXEC_TIME_FILE_NAME));
-      params.getBuckEventBus().register(fileSerializationOutputRuleDepsListener);
+      buckEventBus.register(fileSerializationOutputRuleDepsListener);
     }
 
-    ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
+    buckEventBus.register(
+        new CriticalPathEventListener(getCriticalPathDir(params).resolve(CRITICAL_PATH_FILE_NAME)));
+
     try (CommandThreadManager pool =
             new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()));
-        BuildPrehook prehook = getPrehook(processExecutor, params)) {
+        BuildPrehook prehook = getPrehook(new ListeningProcessExecutor(), params)) {
       prehook.startPrehookScript();
       return run(params, pool, Function.identity(), ImmutableSet.of());
     }
@@ -358,13 +364,17 @@ public class BuildCommand extends AbstractCommand {
 
   private Path getSimulatorDir(CommandRunnerParams params) throws IOException {
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
-    Path simulatorDir = getLogDir(params).resolve("simulator").toAbsolutePath();
+    Path simulatorDir = filesystem.getBuckPaths().getLogDir().resolve("simulator").toAbsolutePath();
     filesystem.mkdirs(simulatorDir);
     return simulatorDir;
   }
 
-  private Path getLogDir(CommandRunnerParams params) {
-    return params.getCell().getFilesystem().getBuckPaths().getLogDir();
+  private Path getCriticalPathDir(CommandRunnerParams params) throws IOException {
+    Path logDirectoryPath = params.getInvocationInfo().get().getLogDirectoryPath();
+    ProjectFilesystem filesystem = params.getCell().getFilesystem();
+    Path criticalPathDir = filesystem.resolve(logDirectoryPath);
+    filesystem.mkdirs(criticalPathDir);
+    return criticalPathDir;
   }
 
   BuildPrehook getPrehook(ListeningProcessExecutor processExecutor, CommandRunnerParams params) {
