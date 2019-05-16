@@ -61,7 +61,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalInt;
+import java.util.OptionalLong;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -267,8 +267,8 @@ public class RemoteExecutionStrategyTest {
     }
 
     @Override
-    public OptionalInt maxInputSizeBytes() {
-      return OptionalInt.empty();
+    public OptionalLong maxInputSizeBytes() {
+      return OptionalLong.empty();
     }
 
     @Override

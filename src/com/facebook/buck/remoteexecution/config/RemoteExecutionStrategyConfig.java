@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.remoteexecution.config;
 
-import java.util.OptionalInt;
+import java.util.OptionalLong;
 
 /** Configuration for the remote execution strategy. */
 public interface RemoteExecutionStrategyConfig {
@@ -31,7 +31,7 @@ public interface RemoteExecutionStrategyConfig {
 
   boolean isLocalFallbackEnabled();
 
-  OptionalInt maxInputSizeBytes();
+  OptionalLong maxInputSizeBytes();
 
   String getWorkerRequirementsFilename();
 

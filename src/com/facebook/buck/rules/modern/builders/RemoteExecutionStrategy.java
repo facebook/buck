@@ -64,7 +64,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.OptionalInt;
+import java.util.OptionalLong;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -93,7 +93,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private final JobLimiter pendingUploadsLimiter;
   private final JobLimiter executionLimiter;
   private final JobLimiter handleResultLimiter;
-  private final OptionalInt maxInputSizeBytes;
+  private final OptionalLong maxInputSizeBytes;
   private final WorkerRequirementsProvider requirementsProvider;
   private final MetadataProvider metadataProvider;
   private final RemoteExecutionSessionEvent.Started remoteExecutionSessionStartedEvent;
@@ -219,12 +219,12 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       BuildTarget buildTarget, RemoteExecutionActionInfo actionInfo) throws Exception {
     Objects.requireNonNull(actionInfo);
     if (maxInputSizeBytes.isPresent()
-        && maxInputSizeBytes.getAsInt() < actionInfo.getTotalInputSize()) {
+        && maxInputSizeBytes.getAsLong() < actionInfo.getTotalInputSize()) {
       throw new RuntimeException(
           "Max file size exceeded for Remote Execution, action contains: "
               + actionInfo.getTotalInputSize()
               + " bytes, max allowed: "
-              + maxInputSizeBytes.getAsInt());
+              + maxInputSizeBytes.getAsLong());
     }
     Digest actionDigest = actionInfo.getActionDigest();
     Scope uploadingInputsScope =

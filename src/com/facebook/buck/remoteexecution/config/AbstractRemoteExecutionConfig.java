@@ -34,7 +34,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalInt;
+import java.util.OptionalLong;
 import org.immutables.value.Value;
 
 /** Config object for the [remoteexecution] section of .buckconfig. */
@@ -192,7 +192,11 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
         getDelegate()
             .getBooleanValue(
                 SECTION, IS_LOCAL_FALLBACK_ENABLED_KEY, DEFAULT_IS_LOCAL_FALLBACK_ENABLED);
-    OptionalInt maxInputSizeBytes = getDelegate().getInteger(SECTION, MAX_INPUT_SIZE_BYTES);
+    OptionalLong maxInputSizeBytes =
+        getDelegate()
+            .getValue(SECTION, MAX_INPUT_SIZE_BYTES)
+            .map(size -> OptionalLong.of(Long.parseLong(size)))
+            .orElseGet(OptionalLong::empty);
 
     String workerRequirementsFilename =
         getDelegate()
@@ -270,7 +274,7 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
       }
 
       @Override
-      public OptionalInt maxInputSizeBytes() {
+      public OptionalLong maxInputSizeBytes() {
         return maxInputSizeBytes;
       }
 
