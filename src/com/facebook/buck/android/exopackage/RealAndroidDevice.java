@@ -26,6 +26,7 @@ import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -229,6 +230,14 @@ public class RealAndroidDevice implements AndroidDevice {
     Objects.requireNonNull(versionCode, "Could not find versionCode");
     if (!codePath.equals(resourcePath)) {
       throw new IllegalStateException("Code and resource path do not match");
+    }
+    if (!pmPath.contains(codePath)) {
+      throw new HumanReadableException(
+          String.format(
+              "The output of `pm path %s`: %s and `dumpsys package %s`: %s do not agree. "
+                  + "This usually means that you have multiple apps installed with the same package name. "
+                  + "You must uninstall the other versions of your app before you can install this one.",
+              packageName, packageName, pmPath, codePath));
     }
 
     // Lollipop doesn't give the full path to the apk anymore.  Not sure why it's "base.apk".
