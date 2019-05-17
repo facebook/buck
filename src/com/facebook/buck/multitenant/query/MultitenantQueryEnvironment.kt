@@ -36,6 +36,7 @@ import com.facebook.buck.query.QueryEnvironment
 import com.facebook.buck.query.QueryException
 import com.facebook.buck.query.QueryExpression
 import com.facebook.buck.query.QueryFileTarget
+import com.facebook.buck.query.RdepsFunction
 import com.facebook.buck.query.TestsOfFunction
 import com.google.common.base.Suppliers
 import com.google.common.collect.ImmutableList
@@ -51,6 +52,7 @@ val QUERY_FUNCTIONS: List<QueryEnvironment.QueryFunction<out QueryTarget, Unconf
         InputsFunction<UnconfiguredBuildTarget>(),
         KindFunction<UnconfiguredBuildTarget>(),
         OwnerFunction<UnconfiguredBuildTarget>(),
+        RdepsFunction<UnconfiguredBuildTarget>(),
         TestsOfFunction<UnconfiguredBuildTarget>())
 
 /**

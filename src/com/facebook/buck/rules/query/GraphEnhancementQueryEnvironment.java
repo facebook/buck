@@ -259,7 +259,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
               new FilterFunction<QueryBuildTarget>(),
               new LabelsFunction(),
               new InputsFunction<>(),
-              new RdepsFunction());
+              new RdepsFunction<>());
 
   @Override
   public Iterable<QueryEnvironment.QueryFunction<?, QueryBuildTarget>> getFunctions() {

@@ -115,7 +115,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
           new KindFunction<>(),
           new LabelsFunction(),
           new OwnerFunction<QueryBuildTarget>(),
-          new RdepsFunction(),
+          new RdepsFunction<>(),
           new TestsOfFunction<>());
 
   private final Parser parser;

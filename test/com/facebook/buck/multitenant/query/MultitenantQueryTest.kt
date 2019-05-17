@@ -243,6 +243,28 @@ class MultitenantQueryTest {
     }
 
     @Test
+    fun rdepsQuery() {
+        val env = loadIndex("diamond_dependency_graph.json", 0)
+        assertEquals(
+                "rdeps is unbounded by default.",
+                asOutput(
+                        "//java/com/example:A",
+                        "//java/com/example:B",
+                        "//java/com/example:C",
+                        "//java/com/example:D"),
+                env.evaluateQuery("rdeps(//..., //java/com/example:A)")
+        )
+        assertEquals(
+                "specifying a depth of 1 should return immediate deps only.",
+                asOutput(
+                        "//java/com/example:A",
+                        "//java/com/example:B",
+                        "//java/com/example:C"),
+                env.evaluateQuery("rdeps(//..., //java/com/example:A, 1)")
+        )
+    }
+
+    @Test
     fun testsofWithNoTestsAttribute() {
         val env = loadIndex("diamond_dependency_graph.json", 0)
         assertEquals(
