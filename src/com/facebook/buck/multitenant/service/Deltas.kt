@@ -17,6 +17,7 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.multitenant.fs.FsAgnosticPath
 
 /**
  * Represents a collection of changes to apply to an [Index] to reflect [BuildPackageChanges] on top
@@ -43,114 +44,143 @@ internal fun determineDeltas(
         buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>
 ): Deltas {
     val internalChanges = toInternalChanges(changes, buildTargetCache)
-    val buildPackageDeltas = mutableListOf<BuildPackageDelta>()
-    val buildTargetIdsOfRemovedRules = mutableListOf<UnconfiguredBuildTarget>()
+    // Perform lookupBuildPackages() before processing addedBuildPackages below because
+    // lookupBuildPackages() performs some sanity checks on addedBuildPackages.
+    val (modified, removed) = lookupBuildPackages(generation, internalChanges, indexGenerationData)
+
     val ruleDeltas = mutableListOf<RuleDelta>()
-
     val rdepsUpdates = mutableListOf<Pair<BuildTargetId, BuildTargetSetDelta>>()
-    indexGenerationData.withBuildPackageMap { buildPackageMap ->
-        for (added in internalChanges.addedBuildPackages) {
-            val oldRules = buildPackageMap.getVersion(added.buildFileDirectory, generation)
-            if (oldRules != null) {
-                throw IllegalArgumentException("Build package to add already existed at ${added
-                        .buildFileDirectory} for generation $generation")
-            }
+    val buildPackageDeltas = mutableListOf<BuildPackageDelta>()
+    for (added in internalChanges.addedBuildPackages) {
+        val ruleNames = ArrayList<String>(added.rules.size)
+        for (rule in added.rules) {
+            val buildTarget = rule.targetNode.buildTarget
+            ruleNames.add(buildTarget.name)
+            ruleDeltas.add(RuleDelta.Added(rule))
+            val add = BuildTargetSetDelta.Add(buildTargetCache.get(buildTarget))
+            rule.deps.mapTo(rdepsUpdates) { dep -> Pair(dep, add) }
+        }
+        buildPackageDeltas.add(BuildPackageDelta.Updated(
+                added.buildFileDirectory,
+                ruleNames.asSequence().toBuildRuleNames()))
+    }
 
-            val ruleNames = ArrayList<String>(added.rules.size)
-            for (rule in added.rules) {
-                val buildTarget = rule.targetNode.buildTarget
-                ruleNames.add(buildTarget.name)
-                ruleDeltas.add(RuleDelta.Added(rule))
-                val add = BuildTargetSetDelta.Add(buildTargetCache.get(buildTarget))
-                rule.deps.mapTo(rdepsUpdates) { dep -> Pair(dep, add) }
+    val buildTargetIdsOfRemovedRules = mutableListOf<UnconfiguredBuildTarget>()
+    removed.forEach { (removed, oldRuleNames) ->
+        buildPackageDeltas.add(BuildPackageDelta.Removed(removed))
+        // Record the build targets of the removed rules. We must wait until we acquire the
+        // read lock on the rule map to get the deps so we can record the corresponding
+        // RuleDelta.Removed objects.
+        oldRuleNames.forEach { ruleName ->
+            val buildTarget = BuildTargets.createBuildTargetFromParts(removed, ruleName)
+            buildTargetIdsOfRemovedRules.add(buildTarget)
+        }
+    }
+
+    indexGenerationData.withRuleMap { ruleMap ->
+        for (buildTarget in buildTargetIdsOfRemovedRules) {
+            val buildTargetId = buildTargetCache.get(buildTarget)
+            val removedRule = requireNotNull(ruleMap.getVersion(buildTargetId, generation)) {
+                "No rule found for '$buildTarget' at generation $generation"
             }
-            buildPackageDeltas.add(BuildPackageDelta.Updated(
-                    added.buildFileDirectory,
-                    ruleNames.asSequence().toBuildRuleNames()))
+            ruleDeltas.add(RuleDelta.Removed(removedRule))
+            val remove = BuildTargetSetDelta.Remove(buildTargetId)
+            removedRule.deps.mapTo(rdepsUpdates) { dep -> Pair(dep, remove) }
         }
 
-        for (removed in internalChanges.removedBuildPackages) {
-            val oldRules = requireNotNull(buildPackageMap.getVersion(removed, generation)) {
-                "Build package to remove did not exist at $removed for generation $generation"
-            }
-
-            buildPackageDeltas.add(BuildPackageDelta.Removed(removed))
-            // Record the build targets of the removed rules. We must wait until we acquire the
-            // read lock on the rule map to get the deps so we can record the corresponding
-            // RuleDelta.Removed objects.
-            for (ruleName in oldRules) {
-                val buildTarget = BuildTargets.createBuildTargetFromParts(removed, ruleName)
-                buildTargetIdsOfRemovedRules.add(buildTarget)
-            }
-        }
-
-        indexGenerationData.withRuleMap { ruleMap ->
-            for (buildTarget in buildTargetIdsOfRemovedRules) {
-                val buildTargetId = buildTargetCache.get(buildTarget)
-                val removedRule = requireNotNull(ruleMap.getVersion(buildTargetId, generation)) {
-                    "No rule found for '$buildTarget' at generation $generation"
-                }
-                ruleDeltas.add(RuleDelta.Removed(removedRule))
-                val remove = BuildTargetSetDelta.Remove(buildTargetId)
-                removedRule.deps.mapTo(rdepsUpdates) { dep -> Pair(dep, remove) }
-            }
-
-            for (modified in internalChanges.modifiedBuildPackages) {
-                val oldRuleNames = requireNotNull(buildPackageMap.getVersion(modified
-                        .buildFileDirectory,
+        modified.forEach { (modified, oldRuleNames) ->
+            val oldRules = oldRuleNames.asSequence().map { oldRuleName: String ->
+                val buildTarget = BuildTargets.createBuildTargetFromParts(modified.buildFileDirectory, oldRuleName)
+                requireNotNull(ruleMap.getVersion(buildTargetCache.get(buildTarget),
                         generation)) {
-                    "No version found for build file in ${modified.buildFileDirectory} for " +
-                            "generation $generation"
+                    "Missing deps for $buildTarget at generation $generation"
                 }
+            }.toSet()
 
-                val oldRules = oldRuleNames.asSequence().map { oldRuleName: String ->
-                    val buildTarget = BuildTargets.createBuildTargetFromParts(modified.buildFileDirectory, oldRuleName)
-                    requireNotNull(ruleMap.getVersion(buildTargetCache.get(buildTarget),
-                            generation)) {
-                        "Missing deps for $buildTarget at generation $generation"
-                    }
-                }.toSet()
-
-                val newRules = modified.rules
-                // Compare oldRules and newRules to see whether the build package actually changed.
-                // Keep track of the individual rule changes so we need not recompute them later.
-                val ruleChanges = diffRules(oldRules, newRules)
-                if (ruleChanges.isNotEmpty()) {
-                    // Note that oldRuleNames is a persistent collection, so we want to derive
-                    // newRuleNames from oldRuleNames so they can share as much memory as possible.
-                    var newRuleNames = oldRuleNames
-                    ruleChanges.forEach { ruleChange ->
-                        when (ruleChange) {
-                            is RuleDelta.Added -> {
-                                val buildTarget = ruleChange.rule.targetNode.buildTarget
-                                newRuleNames = newRuleNames.add(buildTarget.name)
-                                val add = BuildTargetSetDelta.Add(buildTargetCache.get(buildTarget))
-                                ruleChange.rule.deps.mapTo(rdepsUpdates) { dep -> Pair(dep, add) }
-                            }
-                            is RuleDelta.Modified -> {
-                                // Because the rule has been modified, newRuleNames will be
-                                // unaffected, but the rule's deps may have changed.
-                                val buildTargetId = buildTargetCache.get(ruleChange.oldRule.targetNode.buildTarget)
-                                diffDeps(ruleChange.oldRule.deps, ruleChange.newRule.deps, rdepsUpdates, buildTargetId)
-                            }
-                            is RuleDelta.Removed -> {
-                                val buildTarget = ruleChange.rule.targetNode.buildTarget
-                                newRuleNames = newRuleNames.remove(buildTarget.name)
-                                val remove = BuildTargetSetDelta.Remove(buildTargetCache.get(buildTarget))
-                                ruleChange.rule.deps.mapTo(rdepsUpdates) { dep -> Pair(dep, remove) }
-                            }
+            val newRules = modified.rules
+            // Compare oldRules and newRules to see whether the build package actually changed.
+            // Keep track of the individual rule changes so we need not recompute them later.
+            val ruleChanges = diffRules(oldRules, newRules)
+            if (ruleChanges.isNotEmpty()) {
+                // Note that oldRuleNames is a persistent collection, so we want to derive
+                // newRuleNames from oldRuleNames so they can share as much memory as possible.
+                var newRuleNames = oldRuleNames
+                ruleChanges.forEach { ruleChange ->
+                    when (ruleChange) {
+                        is RuleDelta.Added -> {
+                            val buildTarget = ruleChange.rule.targetNode.buildTarget
+                            newRuleNames = newRuleNames.add(buildTarget.name)
+                            val add = BuildTargetSetDelta.Add(buildTargetCache.get(buildTarget))
+                            ruleChange.rule.deps.mapTo(rdepsUpdates) { dep -> Pair(dep, add) }
+                        }
+                        is RuleDelta.Modified -> {
+                            // Because the rule has been modified, newRuleNames will be
+                            // unaffected, but the rule's deps may have changed.
+                            val buildTargetId = buildTargetCache.get(ruleChange.oldRule.targetNode.buildTarget)
+                            diffDeps(ruleChange.oldRule.deps, ruleChange.newRule.deps, rdepsUpdates, buildTargetId)
+                        }
+                        is RuleDelta.Removed -> {
+                            val buildTarget = ruleChange.rule.targetNode.buildTarget
+                            newRuleNames = newRuleNames.remove(buildTarget.name)
+                            val remove = BuildTargetSetDelta.Remove(buildTargetCache.get(buildTarget))
+                            ruleChange.rule.deps.mapTo(rdepsUpdates) { dep -> Pair(dep, remove) }
                         }
                     }
-
-                    buildPackageDeltas.add(BuildPackageDelta.Updated(modified.buildFileDirectory, newRuleNames))
-                    ruleDeltas.addAll(ruleChanges)
                 }
+
+                buildPackageDeltas.add(BuildPackageDelta.Updated(modified.buildFileDirectory, newRuleNames))
+                ruleDeltas.addAll(ruleChanges)
             }
         }
     }
 
     val localRdepsRuleMapChanges = deriveRdepsDeltas(rdepsUpdates, generation, indexGenerationData)
     return Deltas(buildPackageDeltas, ruleDeltas, localRdepsRuleMapChanges)
+}
+
+/**
+ * While holding the read lock for the `buildPackageMap`, extracts the data needed by
+ * [determineDeltas] and nothing more so the lock is held as briefly as possible.
+ */
+private fun lookupBuildPackages(
+        generation: Generation,
+        internalChanges: InternalChanges,
+        indexGenerationData: IndexGenerationData
+): Pair<List<Pair<InternalBuildPackage, BuildRuleNames>>, List<Pair<FsAgnosticPath, BuildRuleNames>>> {
+    // We allocate the arrays before taking the lock to reduce the number of allocations made while
+    // holding the lock.
+    val modified = ArrayList<Pair<InternalBuildPackage, BuildRuleNames>>(internalChanges.modifiedBuildPackages.size)
+    val removed = ArrayList<Pair<FsAgnosticPath, BuildRuleNames>>(internalChanges.removedBuildPackages.size)
+
+    indexGenerationData.withBuildPackageMap { buildPackageMap ->
+        // As a sanity check, make sure there are no oldRules for any of the "added" packages.
+        internalChanges.addedBuildPackages.forEach { added ->
+            val oldRuleNames = buildPackageMap.getVersion(added.buildFileDirectory, generation)
+            if (oldRuleNames != null) {
+                throw IllegalArgumentException("Build package to add already existed at ${added
+                        .buildFileDirectory} for generation $generation")
+            }
+        }
+
+        internalChanges.modifiedBuildPackages.mapTo(modified) { modified ->
+            val oldRuleNames = requireNotNull(buildPackageMap.getVersion(
+                    modified.buildFileDirectory,
+                    generation)) {
+                "No version found for build file in ${modified.buildFileDirectory} for " +
+                        "generation $generation"
+            }
+            Pair(modified, oldRuleNames)
+        }
+
+        internalChanges.removedBuildPackages.mapTo(removed) { removed ->
+            val oldRuleNames = requireNotNull(buildPackageMap.getVersion(removed, generation)) {
+                "Build package to remove did not exist at $removed for generation $generation"
+            }
+            Pair(removed, oldRuleNames)
+        }
+
+    }
+    return Pair(modified, removed)
 }
 
 /** Diff the deps between old and new and add the updates directly to the specified list. */
