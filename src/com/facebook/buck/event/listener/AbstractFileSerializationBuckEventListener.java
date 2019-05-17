@@ -18,12 +18,15 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Abstract class that implements {@link BuckEventListener} and has a basic logic for creating file
@@ -33,8 +36,11 @@ abstract class AbstractFileSerializationBuckEventListener implements BuckEventLi
 
   protected final Logger LOG = Logger.get(getClass());
 
+  private final ExecutorService executor =
+      MostExecutors.newSingleThreadExecutor(getClass().getSimpleName());
+
   private final BufferedWriter writer;
-  protected final Path outputPath;
+  private final Path outputPath;
 
   public AbstractFileSerializationBuckEventListener(Path outputPath, OpenOption... openOptions)
       throws IOException {
@@ -42,7 +48,11 @@ abstract class AbstractFileSerializationBuckEventListener implements BuckEventLi
     this.writer = Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8, openOptions);
   }
 
-  protected final void writeLine(String line) {
+  protected final void scheduleWrite(String line) {
+    executor.submit(() -> writeLine(line));
+  }
+
+  private void writeLine(String line) {
     try {
       writer.write(line);
       writer.newLine();
@@ -54,10 +64,25 @@ abstract class AbstractFileSerializationBuckEventListener implements BuckEventLi
 
   @Override
   public void close() {
+    shutdownExecutorService();
     closeWriter();
   }
 
-  protected final void closeWriter() {
+  private void shutdownExecutorService() {
+    executor.shutdown();
+    try {
+      if (!executor.awaitTermination(100, TimeUnit.MILLISECONDS)) {
+        LOG.warn(
+            "ExecutorService failed to shutdown for a specified amount of time."
+                + " Invoking force shutdown method.");
+        executor.shutdownNow();
+      }
+    } catch (InterruptedException e) {
+      LOG.warn(e, "Failed to shutdown ExecutorService");
+    }
+  }
+
+  private final void closeWriter() {
     try {
       writer.close();
     } catch (IOException e) {

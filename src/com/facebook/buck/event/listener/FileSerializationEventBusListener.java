@@ -38,7 +38,7 @@ public class FileSerializationEventBusListener extends AbstractFileSerialization
 
   @Subscribe
   public void subscribe(IndividualTestEvent.Finished event) {
-    writeLine(serializeEvent(event));
+    scheduleWrite(serializeEvent(event));
   }
 
   private String serializeEvent(BuckEvent event) {

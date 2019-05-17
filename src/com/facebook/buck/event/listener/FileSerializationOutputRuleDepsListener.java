@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.eventbus.Subscribe;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -51,16 +52,16 @@ public class FileSerializationOutputRuleDepsListener
     RuleExecutionTimeData ruleExecutionTimeData =
         new ImmutableRuleExecutionTimeData(targetId, elapsedTimeMillis);
 
+    convertToJson(ruleExecutionTimeData).ifPresent(this::scheduleWrite);
+  }
+
+  Optional<String> convertToJson(RuleExecutionTimeData ruleExecutionTimeData) {
     try {
-      String data = ObjectMappers.WRITER.writeValueAsString(ruleExecutionTimeData);
-      writeLine(data);
+      return Optional.of(ObjectMappers.WRITER.writeValueAsString(ruleExecutionTimeData));
     } catch (IOException e) {
-      LOG.error(
-          e,
-          "I/O exception during serializing data %s to the file: %s",
-          ruleExecutionTimeData,
-          outputPath);
+      LOG.error(e, "I/O exception during serializing data %s to json", ruleExecutionTimeData);
     }
+    return Optional.empty();
   }
 
   @Override
@@ -72,7 +73,7 @@ public class FileSerializationOutputRuleDepsListener
   @Subscribe
   public void commandFinished(CommandEvent.Finished event) {
     LOG.info("Received command finished event for command : %s", event.getCommandName());
-    closeWriter();
+    super.close();
   }
 
   /** Data object that is used to serialize rule execution information into a file */
