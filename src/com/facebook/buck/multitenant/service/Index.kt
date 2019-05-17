@@ -151,14 +151,16 @@ class Index internal constructor(
     }
 
     fun getFwdDeps(generation: Generation, targets: Iterable<UnconfiguredBuildTarget>, out: ImmutableSet.Builder<UnconfiguredBuildTarget>) {
-        // Compute the list of target ids before taking the lock.
         val targetIds = targets.map { buildTargetCache.get(it) }
-        indexGenerationData.withRuleMap { ruleMap ->
-            for (targetId in targetIds) {
-                val node = ruleMap.getVersion(targetId, generation) ?: continue
-                for (dep in node.deps) {
-                    out.add(buildTargetCache.getByIndex(dep))
-                }
+        val rules: List<InternalRawBuildRule> = indexGenerationData.withRuleMap { ruleMap ->
+            targetIds.mapNotNull { targetId ->
+                ruleMap.getVersion(targetId, generation)
+            }
+        }
+
+        rules.forEach { rule ->
+            rule.deps.forEach { dep ->
+                out.add(buildTargetCache.getByIndex(dep))
             }
         }
     }
