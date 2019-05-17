@@ -23,12 +23,15 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class MoreFuturesTest {
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
-  public void testIsSuccess() throws InterruptedException {
+  public void isSuccessReturnsTrueOnlyWhenFutureSuccessful() throws InterruptedException {
     SettableFuture<Object> unresolvedFuture = SettableFuture.create();
     assertFalse(MoreFutures.isSuccess(unresolvedFuture));
 
@@ -46,32 +49,38 @@ public class MoreFuturesTest {
   }
 
   @Test
-  public void testGetFailure() throws InterruptedException {
+  public void getFailureReturnsTheFailingException() throws InterruptedException {
     Throwable failure = new Throwable();
     ListenableFuture<Object> failedFuture = Futures.immediateFailedFuture(failure);
     assertEquals(failure, MoreFutures.getFailure(failedFuture));
   }
 
-  @Test(expected = NullPointerException.class)
-  public void testGetFailureRejectsNullFuture() throws InterruptedException {
+  @Test
+  public void getFailureRejectsNullFuture() throws InterruptedException {
+    expectedException.expect(NullPointerException.class);
     MoreFutures.getFailure(null);
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testGetFailureRequiresSatisfiedFuture() throws InterruptedException {
+  @Test
+  public void getFailureRequiresSatisfiedFuture() throws InterruptedException {
+    expectedException.expect(IllegalArgumentException.class);
     MoreFutures.getFailure(SettableFuture.create());
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testGetFailureRequiresUnsuccessfulFuture() throws InterruptedException {
+  @Test
+  public void getFailureRequiresUnsuccessfulFuture() throws InterruptedException {
     ListenableFuture<Object> success = Futures.immediateFuture(new Object());
+
+    expectedException.expect(IllegalArgumentException.class);
     MoreFutures.getFailure(success);
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void testGetFailureRequiresNonCancelledFuture() throws InterruptedException {
+  @Test
+  public void getFailureRequiresNonCancelledFuture() throws InterruptedException {
     ListenableFuture<?> canceledFuture = SettableFuture.create();
     canceledFuture.cancel(/* mayInterruptIfRunning */ true);
+
+    expectedException.expect(IllegalStateException.class);
     MoreFutures.getFailure(canceledFuture);
   }
 }
