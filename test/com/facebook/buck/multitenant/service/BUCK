@@ -17,5 +17,6 @@ kotlin_test(
         "//src/com/facebook/buck/multitenant/service:service",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
+        "//third-party/java/vavr:vavr",
     ],
 )
