@@ -22,8 +22,11 @@ import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -101,6 +104,10 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   // Should ree try to reschedule OOMed action on a larger worker
   public static final String TRY_LARGER_WORKER_ON_OOM = "try_larger_worker_on_oom";
+
+  public static final String AUTO_RE_BUILD_PROJECTS_WHITELIST_KEY =
+      "auto_re_build_projects_whitelist";
+  public static final String AUTO_RE_BUILD_USERS_BLACKLIST_KEY = "auto_re_build_users_blacklist";
 
   public String getRemoteHost() {
     return getValue("remote_host").orElse("localhost");
@@ -318,6 +325,25 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
     if (!errors.isEmpty()) {
       throw new HumanReadableException(Joiner.on("\n").join(errors));
     }
+  }
+
+  public boolean isBuildWhitelistedForRemoteExecution(
+      String username, List<String> commandArguments) {
+    Optional<ImmutableList<String>> optionalUsersBlacklist =
+        getDelegate().getOptionalListWithoutComments(SECTION, AUTO_RE_BUILD_USERS_BLACKLIST_KEY);
+    if (optionalUsersBlacklist.isPresent() && optionalUsersBlacklist.get().contains(username)) {
+      return false;
+    }
+
+    Optional<ImmutableList<String>> optionalProjectsWhitelist =
+        getDelegate().getOptionalListWithoutComments(SECTION, AUTO_RE_BUILD_PROJECTS_WHITELIST_KEY);
+    ImmutableSet<String> projectWhitelist =
+        optionalProjectsWhitelist.isPresent()
+            ? ImmutableSet.copyOf(optionalProjectsWhitelist.get())
+            : ImmutableSet.of();
+    // TODO(msienkiewicz): Once Stampede/DistBuild is fully deprecated, move this util here.
+    return DistBuildUtil.doTargetsMatchProjectWhitelist(
+        commandArguments, projectWhitelist, getDelegate());
   }
 
   private Optional<String> getErrorOnInvalidFile(String configName, Optional<Path> certPath) {

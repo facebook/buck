@@ -53,6 +53,7 @@ import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
@@ -795,6 +796,12 @@ public class BuildCommand extends AbstractCommand {
 
     ActionGraphAndBuilder actionGraphAndBuilder =
         graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder();
+    boolean whitelistedForRemoteExecution =
+        params
+            .getBuckConfig()
+            .getView(RemoteExecutionConfig.class)
+            .isBuildWhitelistedForRemoteExecution(
+                params.getBuildEnvironmentDescription().getUser(), getArguments());
     LocalBuildExecutor builder =
         new LocalBuildExecutor(
             params.createBuilderArgs(),
@@ -812,8 +819,8 @@ public class BuildCommand extends AbstractCommand {
             params.getMetadataProvider(),
             params.getUnconfiguredBuildTargetFactory(),
             params.getTargetConfiguration(),
-            params.getTargetConfigurationSerializer());
-
+            params.getTargetConfigurationSerializer(),
+            whitelistedForRemoteExecution);
     // TODO(buck_team): use try-with-resources instead
     try {
       buildReference.set(builder.getBuild());

@@ -30,6 +30,7 @@ import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.factory.RemoteExecutionClientsFactory;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.rules.modern.config.HybridLocalBuildStrategyConfig;
+import com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleStrategyConfig;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.util.concurrent.Futures;
@@ -50,11 +51,14 @@ public class ModernBuildRuleBuilderFactory {
       CellPathResolver cellResolver,
       FileHashLoader hashLoader,
       BuckEventBus eventBus,
-      MetadataProvider metadataProvider) {
+      MetadataProvider metadataProvider,
+      boolean whitelistedForRemoteExecution) {
+    ModernBuildRuleBuildStrategy strategy;
     try {
       RemoteExecutionClientsFactory remoteExecutionFactory =
           new RemoteExecutionClientsFactory(remoteExecutionConfig);
-      switch (config.getBuildStrategy()) {
+      strategy = config.getBuildStrategy(whitelistedForRemoteExecution);
+      switch (strategy) {
         case NONE:
           return Optional.empty();
         case DEBUG_RECONSTRUCT:
@@ -71,7 +75,8 @@ public class ModernBuildRuleBuilderFactory {
                   cellResolver,
                   hashLoader,
                   eventBus,
-                  metadataProvider));
+                  metadataProvider,
+                  whitelistedForRemoteExecution));
         case REMOTE:
           return Optional.of(
               RemoteExecutionStrategy.createRemoteExecutionStrategy(
@@ -86,8 +91,7 @@ public class ModernBuildRuleBuilderFactory {
     } catch (IOException e) {
       throw new BuckUncheckedExecutionException(e, "When creating MBR build strategy.");
     }
-    throw new IllegalStateException(
-        "Unrecognized build strategy " + config.getBuildStrategy() + ".");
+    throw new IllegalStateException("Unrecognized build strategy " + strategy + ".");
   }
 
   private static BuildRuleStrategy createHybridLocal(
@@ -98,7 +102,8 @@ public class ModernBuildRuleBuilderFactory {
       CellPathResolver cellResolver,
       FileHashLoader hashLoader,
       BuckEventBus eventBus,
-      MetadataProvider metadataProvider) {
+      MetadataProvider metadataProvider,
+      boolean whitelistedForRemoteExecution) {
     BuildRuleStrategy delegate =
         getBuildStrategy(
                 hybridLocalConfig.getDelegateConfig(),
@@ -108,7 +113,8 @@ public class ModernBuildRuleBuilderFactory {
                 cellResolver,
                 hashLoader,
                 eventBus,
-                metadataProvider)
+                metadataProvider,
+                whitelistedForRemoteExecution)
             .orElseThrow(
                 () -> new HumanReadableException("Delegate config configured incorrectly."));
     return new HybridLocalStrategy(

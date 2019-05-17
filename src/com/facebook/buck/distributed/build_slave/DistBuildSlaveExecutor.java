@@ -297,7 +297,8 @@ public class DistBuildSlaveExecutor {
                 args.getMetadataProvider(),
                 args.getUnconfiguredBuildTargetFactory(),
                 HostTargetConfiguration.INSTANCE,
-                args.getTargetConfigurationSerializer()),
+                args.getTargetConfigurationSerializer(),
+                false),
         args.getExecutorService());
   }
 

@@ -108,7 +108,8 @@ public class LocalBuildExecutor implements BuildExecutor {
       MetadataProvider metadataProvider,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetConfiguration targetConfiguration,
-      TargetConfigurationSerializer targetConfigurationSerializer) {
+      TargetConfigurationSerializer targetConfigurationSerializer,
+      boolean whitelistedForRemoteExecution) {
     this.actionGraphAndBuilder = actionGraphAndBuilder;
     this.executorService = executorService;
     this.args = args;
@@ -123,7 +124,7 @@ public class LocalBuildExecutor implements BuildExecutor {
     this.targetConfigurationSerializer = targetConfigurationSerializer;
 
     // Init resources.
-    this.cachingBuildEngine = createCachingBuildEngine();
+    this.cachingBuildEngine = createCachingBuildEngine(whitelistedForRemoteExecution);
     this.build =
         new Build(
             actionGraphAndBuilder.getActionGraphBuilder(),
@@ -215,7 +216,7 @@ public class LocalBuildExecutor implements BuildExecutor {
                     .configure(targetConfiguration)));
   }
 
-  private CachingBuildEngine createCachingBuildEngine() {
+  private CachingBuildEngine createCachingBuildEngine(boolean whitelistedForRemoteExecution) {
     try {
       MetadataChecker.checkAndCleanIfNeeded(args.getRootCell());
     } catch (IOException e) {
@@ -235,7 +236,8 @@ public class LocalBuildExecutor implements BuildExecutor {
             args.getRootCell().getCellPathResolver(),
             cachingBuildEngineDelegate.getFileHashCache(),
             args.getBuckEventBus(),
-            metadataProvider),
+            metadataProvider,
+            whitelistedForRemoteExecution),
         executorService,
         buildEngineMode.orElse(engineConfig.getBuildEngineMode()),
         engineConfig.getBuildMetadataStorage(),

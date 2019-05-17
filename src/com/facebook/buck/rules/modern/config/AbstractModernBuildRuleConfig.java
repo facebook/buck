@@ -34,8 +34,8 @@ abstract class AbstractModernBuildRuleConfig
   }
 
   @Override
-  public ModernBuildRuleBuildStrategy getBuildStrategy() {
-    return getDefaultStrategyConfig().getBuildStrategy();
+  public ModernBuildRuleBuildStrategy getBuildStrategy(boolean whitelistedForRemoteExecution) {
+    return getDefaultStrategyConfig().getBuildStrategy(whitelistedForRemoteExecution);
   }
 
   @Override

@@ -689,7 +689,8 @@ public final class MainRunner {
 
       // Automatically use distributed build for supported repositories and users, unless
       // Remote Execution is in use. All RE builds should not use distributed build.
-      final boolean isRemoteExecutionBuild = isRemoteExecutionBuild(command, buckConfig);
+      final boolean isRemoteExecutionBuild =
+          isRemoteExecutionBuild(command, buckConfig, executionEnvironment.getUsername());
       if (command.subcommand instanceof BuildCommand) {
         BuildCommand subcommand = (BuildCommand) command.subcommand;
         isUsingDistributedBuild = subcommand.isUsingDistributedBuild();
@@ -1489,18 +1490,26 @@ public final class MainRunner {
     }
   }
 
-  private boolean isRemoteExecutionBuild(BuckCommand command, BuckConfig config) {
+  private boolean isRemoteExecutionBuild(BuckCommand command, BuckConfig config, String username) {
     if (!command.getSubcommand().isPresent()
         || !(command.getSubcommand().get() instanceof BuildCommand)) {
       return false;
     }
 
+    BuildCommand subcommand = (BuildCommand) command.getSubcommand().get();
+    boolean whitelistedForRemoteExecution =
+        config
+            .getView(RemoteExecutionConfig.class)
+            .isBuildWhitelistedForRemoteExecution(username, subcommand.getArguments());
+
     ModernBuildRuleStrategyConfig strategyConfig =
         config.getView(ModernBuildRuleConfig.class).getDefaultStrategyConfig();
-    while (strategyConfig.getBuildStrategy() == ModernBuildRuleBuildStrategy.HYBRID_LOCAL) {
+    while (strategyConfig.getBuildStrategy(whitelistedForRemoteExecution)
+        == ModernBuildRuleBuildStrategy.HYBRID_LOCAL) {
       strategyConfig = strategyConfig.getHybridLocalConfig().getDelegateConfig();
     }
-    return strategyConfig.getBuildStrategy() == ModernBuildRuleBuildStrategy.REMOTE;
+    return strategyConfig.getBuildStrategy(whitelistedForRemoteExecution)
+        == ModernBuildRuleBuildStrategy.REMOTE;
   }
 
   private ImmutableList<AdditionalConsoleLineProvider> createAdditionalConsoleLinesProviders(
