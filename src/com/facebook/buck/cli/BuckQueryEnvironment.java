@@ -104,7 +104,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   /** List of the default query functions. */
   private static final List<QueryFunction<?, QueryBuildTarget>> QUERY_FUNCTIONS =
       ImmutableList.of(
-          new AllPathsFunction(),
+          new AllPathsFunction<>(),
           new AttrFilterFunction(),
           new BuildFileFunction<>(),
           new DepsFunction<>(),

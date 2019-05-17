@@ -25,6 +25,7 @@ import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.BuildTargets
 import com.facebook.buck.multitenant.service.Generation
 import com.facebook.buck.multitenant.service.Index
+import com.facebook.buck.query.AllPathsFunction
 import com.facebook.buck.query.BuildFileFunction
 import com.facebook.buck.query.DepsFunction
 import com.facebook.buck.query.InputsFunction
@@ -43,6 +44,7 @@ import java.util.function.Predicate
 import java.util.function.Supplier
 
 val QUERY_FUNCTIONS: List<QueryEnvironment.QueryFunction<out QueryTarget, UnconfiguredBuildTarget>> = listOf(
+        AllPathsFunction<UnconfiguredBuildTarget>(),
         BuildFileFunction<UnconfiguredBuildTarget>(),
         DepsFunction<UnconfiguredBuildTarget>(),
         DepsFunction.FirstOrderDepsFunction<UnconfiguredBuildTarget>(),
@@ -88,9 +90,9 @@ class MultitenantQueryEnvironment(
         return fwdDeps.build()
     }
 
-    override fun getReverseDeps(targets: Iterable<UnconfiguredBuildTarget>?): MutableSet<UnconfiguredBuildTarget> {
-        TODO("getReverseDeps() not implemented")
-    }
+    override fun getReverseDeps(
+            targets: Iterable<UnconfiguredBuildTarget>
+    ): Set<UnconfiguredBuildTarget> = index.getReverseDeps(generation, targets)
 
     override fun getInputs(target: UnconfiguredBuildTarget): Set<QueryFileTarget> {
         val targetNode = requireNotNull(index.getTargetNode(generation, target)).targetNode

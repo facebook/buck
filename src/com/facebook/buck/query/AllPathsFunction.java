@@ -30,6 +30,7 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
@@ -48,7 +49,7 @@ import java.util.Set;
  *
  * <pre>expr ::= ALLPATHS '(' expr ',' expr ')'</pre>
  */
-public class AllPathsFunction implements QueryFunction<QueryBuildTarget, QueryBuildTarget> {
+public class AllPathsFunction<T extends QueryTarget> implements QueryFunction<T, T> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.EXPRESSION, ArgumentType.EXPRESSION);
@@ -71,16 +72,14 @@ public class AllPathsFunction implements QueryFunction<QueryBuildTarget, QueryBu
   }
 
   @Override
-  public ImmutableSet<QueryBuildTarget> eval(
-      QueryEvaluator<QueryBuildTarget> evaluator,
-      QueryEnvironment<QueryBuildTarget> env,
-      ImmutableList<Argument<QueryBuildTarget>> args)
+  public ImmutableSet<T> eval(
+      QueryEvaluator<T> evaluator, QueryEnvironment<T> env, ImmutableList<Argument<T>> args)
       throws QueryException {
-    QueryExpression<QueryBuildTarget> from = args.get(0).getExpression();
-    QueryExpression<QueryBuildTarget> to = args.get(1).getExpression();
+    QueryExpression<T> from = args.get(0).getExpression();
+    QueryExpression<T> to = args.get(1).getExpression();
 
-    Set<QueryBuildTarget> fromSet = evaluator.eval(from, env);
-    Set<QueryBuildTarget> toSet = evaluator.eval(to, env);
+    Set<T> fromSet = evaluator.eval(from, env);
+    Set<T> toSet = evaluator.eval(to, env);
 
     // Algorithm:
     // 1) compute "reachableFromX", the forward transitive closure of the "from" set;
@@ -90,13 +89,13 @@ public class AllPathsFunction implements QueryFunction<QueryBuildTarget, QueryBu
 
     env.buildTransitiveClosure(fromSet, Integer.MAX_VALUE);
 
-    Set<QueryBuildTarget> reachableFromX = env.getTransitiveClosure(fromSet);
-    Set<QueryBuildTarget> result = intersection(reachableFromX, toSet);
-    Collection<QueryBuildTarget> worklist = result;
+    Set<T> reachableFromX = env.getTransitiveClosure(fromSet);
+    Set<T> result = intersection(reachableFromX, toSet);
+    Collection<T> worklist = result;
     while (!worklist.isEmpty()) {
-      Collection<QueryBuildTarget> reverseDeps = env.getReverseDeps(worklist);
+      Collection<T> reverseDeps = env.getReverseDeps(worklist);
       worklist = new ArrayList<>();
-      for (QueryBuildTarget target : reverseDeps) {
+      for (T target : reverseDeps) {
         if (reachableFromX.contains(target) && result.add(target)) {
           worklist.add(target);
         }

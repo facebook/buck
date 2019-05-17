@@ -108,6 +108,34 @@ class MultitenantQueryTest {
     }
 
     @Test
+    fun allpathsQuery() {
+        val env = loadIndex("diamond_dependency_graph.json", 0)
+        assertEquals(
+                "Everything in the ABCD diamond is on the path from :D to :A.",
+                asOutput(
+                        "//java/com/example:A",
+                        "//java/com/example:B",
+                        "//java/com/example:C",
+                        "//java/com/example:D"
+                ),
+                env.evaluateQuery("allpaths(//java/com/example:D, //java/com/example:A)")
+        )
+        assertEquals(
+                "There is only one path from :D to :B.",
+                asOutput(
+                        "//java/com/example:B",
+                        "//java/com/example:D"
+                ),
+                env.evaluateQuery("allpaths(//java/com/example:D, //java/com/example:B)")
+        )
+        assertEquals(
+                "There are no paths from :A to :D.",
+                asOutput(),
+                env.evaluateQuery("allpaths(//java/com/example:A, //java/com/example:D)")
+        )
+    }
+
+    @Test
     fun buildfileQuerySingleTarget() {
         val env = loadIndex("diamond_dependency_graph.json", 0)
         assertEquals(
