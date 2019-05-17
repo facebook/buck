@@ -266,15 +266,12 @@ class Index internal constructor(
             buildPackageMap.getEntries(generation) { it.startsWith(basePath) }
         }
 
-        return entries.flatMap {
-            val basePath = it.first
-            val names = it.second
-            names.map {
-                BuildTargets.createBuildTargetFromParts(basePath, it)
-            }.asSequence()
+        return entries.flatMap { (basePath, names) ->
+            names.asSequence().map { name ->
+                BuildTargets.createBuildTargetFromParts(basePath, name)
+            }
         }.toList()
     }
-
 }
 
 /**
