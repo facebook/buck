@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilde
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -88,7 +89,7 @@ public class ParallelActionGraphFactory implements ActionGraphFactoryDelegate {
 
     // Wait for completion. The results are ignored as we only care about the rules populated in
     // the graphBuilder, which is a superset of the rules generated directly from target nodes.
-    Futures.getUnchecked(Futures.allAsList(futures.values()));
+    MoreFutures.getUncheckedInterruptibly(Futures.allAsList(futures.values()));
     LOG.debug("end target graph walk");
 
     return ActionGraphAndBuilder.builder()

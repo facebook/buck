@@ -23,13 +23,13 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.Parallelizer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
@@ -296,7 +296,7 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
 
     private V get() {
       tryComplete();
-      return Futures.getUnchecked(future);
+      return MoreFutures.getUncheckedInterruptibly(future);
     }
 
     private boolean isBeingWorkedOnByCurrentThread() {
@@ -343,7 +343,7 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
 
     private void setFutureValue(V value) {
       if (!future.set(value)) {
-        V oldValue = Futures.getUnchecked(future);
+        V oldValue = MoreFutures.getUncheckedInterruptibly(future);
         Preconditions.checkState(
             oldValue == value,
             "A build rule for this target has already been created: " + oldValue);
