@@ -278,6 +278,103 @@ class IndexTest {
                 ),
                 localizedIndex.getTransitiveDeps(generation, targetSequence("//java/com/facebook/buck/model:model")))
     }
+
+    @Test
+    fun getReverseDeps() {
+        val (index, generations) = loadIndex("graph_with_many_edges.json")
+        val generation0 = generations[0]
+        assertEquals(
+                "Nothing depends on //:A.",
+                targetSet(),
+                index.getReverseDeps(generation0, targetList("//:A"))
+        )
+        assertEquals(
+                "Some rules depend on //:D.",
+                targetSet("//:A", "//:B"),
+                index.getReverseDeps(generation0, targetList("//:D"))
+        )
+        assertEquals(
+                "Note that //:A is included in the output even though it is one of the inputs " +
+                "because it is an rdep of //:D.",
+                targetSet("//:A", "//:B"),
+                index.getReverseDeps(generation0, targetList("//:A", "//:D"))
+        )
+        assertEquals(
+                "Many rules depend on //:I.",
+                targetSet("//:A", "//:D", "//:E", "//:F", "//:G", "//other:pkg"),
+                index.getReverseDeps(generation0, targetList("//:I"))
+        )
+
+        val generation1 = generations[1]
+        assertEquals(
+                "//other:pkg is removed in generation1.",
+                targetSet("//:A", "//:D", "//:E", "//:F", "//:G"),
+                index.getReverseDeps(generation1, targetList("//:I"))
+        )
+
+        fun performAssertions(generation: Int, index: Index) {
+            assertEquals(
+                    "//:A is removed in generation2.",
+                    targetSet(),
+                    index.getReverseDeps(generation, targetList("//:A"))
+            )
+            assertEquals(
+                    targetSet("//:F", "//:G", "//:Z"),
+                    index.getReverseDeps(generation, targetList("//:I"))
+            )
+            assertEquals(
+                    targetSet("//:I", "//:Z"),
+                    index.getReverseDeps(generation, targetList("//:Y"))
+            )
+            assertEquals(
+                    targetSet("//:B"),
+                    index.getReverseDeps(generation, targetList("//:Z"))
+            )
+        }
+
+        val generation2 = generations[2]
+        performAssertions(generation2, index)
+
+        // Perform the same changes in generation2 as if they were local changes and verify that all
+        // of the assertions still hold.
+        val changes = BuildPackageChanges(
+                modifiedBuildPackages = listOf(BuildPackage(
+                        FsAgnosticPath.of(""),
+                        setOf(
+                                createRawRule(
+                                        "//:B",
+                                        listOf("//:Z")
+                                ),
+                                createRawRule(
+                                        "//:C",
+                                        listOf()
+                                ),
+                                createRawRule(
+                                        "//:F",
+                                        listOf("//:I")
+                                ),
+                                createRawRule(
+                                        "//:G",
+                                        listOf("//:I")
+                                ),
+                                createRawRule(
+                                        "//:I",
+                                        listOf("//:Y")
+                                ),
+                                createRawRule(
+                                        "//:Y",
+                                        listOf()
+                                ),
+                                createRawRule(
+                                        "//:Z",
+                                        listOf("//:F", "//:I", "//:Y")
+                                )
+                        )
+                ))
+        )
+        val localizedIndex = index.createIndexForGenerationWithLocalChanges(generation1, changes)
+        performAssertions(generation1, localizedIndex)
+    }
 }
 
 private fun loadIndex(resource: String): Pair<Index, List<Int>> {

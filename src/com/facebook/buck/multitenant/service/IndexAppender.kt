@@ -105,6 +105,12 @@ class IndexAppender internal constructor(
             }
         }
 
+        indexGenerationData.withMutableRdepsMap { rdepsMap ->
+            deltas.rdepsDeltas.forEach { buildTargetId, rdepsSet ->
+                rdepsMap.addVersion(buildTargetId, rdepsSet, nextGeneration)
+            }
+        }
+
         val oldValue = commitToGeneration.putIfAbsent(commit, nextGeneration)
         require(oldValue == null) { "Should not have existing value for $commit" }
         generation.set(nextGeneration)

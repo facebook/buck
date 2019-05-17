@@ -1,0 +1,144 @@
+[
+  {
+    /*
+Dependency graph that roughly looks like the following:
+
+         A
+     /  /  \ \
+    B  |   |  C
+     \ |   |  /
+       D   E
+     / |   | \
+    F  |   |  G
+     \ |   | /
+       H   I <----- //other:pkg
+
+Though there are additional dependencies on H and I that
+are not shown in the ASCII diagram. The idea is that we
+want to add enough edges so that deps and rdeps queries
+are interesting.
+    */
+    "commit": "608fd7bdf9",
+    "added": [
+      {
+        "path": "",
+        "rules": [
+          {
+            "name": "A",
+            "buck.type": "java_library",
+            "deps": ["//:B", "//:C", "//:D", "//:E", "//:H", "//:I"],
+          },
+          {
+            "name": "B",
+            "buck.type": "java_library",
+            "deps": ["//:D"],
+          },
+          {
+            "name": "C",
+            "buck.type": "java_library",
+            "deps": ["//:E"],
+          },
+          {
+            "name": "D",
+            "buck.type": "java_library",
+            "deps": ["//:F", "//:H", "//:I"],
+          },
+          {
+            "name": "E",
+            "buck.type": "java_library",
+            "deps": ["//:G", "//:H", "//:I"],
+          },
+          {
+            "name": "F",
+            "buck.type": "java_library",
+            "deps": ["//:H", "//:I"],
+          },
+          {
+            "name": "G",
+            "buck.type": "java_library",
+            "deps": ["//:H", "//:I"],
+          },
+          {
+            "name": "H",
+            "buck.type": "java_library",
+            "deps": [],
+          },
+          {
+            "name": "I",
+            "buck.type": "java_library",
+            "deps": [],
+          },
+        ],
+      },
+      {
+        "path": "other",
+        "rules": [
+          {
+            "name": "pkg",
+            "buck.type": "java_library",
+            "deps": ["//:I"],
+          },
+        ]
+      }
+    ]
+  },
+
+  // Remove the other package.
+  {
+    "commit": "9efba3bca1",
+    "removed": [
+        "other",
+    ],
+  },
+
+  // Remove :A, :E, and :H.
+  // Replace :D with :Z.
+  // Add a new rule, :Y, and update :I and :Z to depend on it.
+  {
+    "commit": "1b522b5b47",
+    "modified": [
+      {
+        "path": "",
+        "rules": [
+          {
+            "name": "B",
+            "buck.type": "java_library",
+            "deps": ["//:Z"],
+          },
+          {
+            "name": "C",
+            "buck.type": "java_library",
+            "deps": [],
+          },
+          {
+            "name": "F",
+            "buck.type": "java_library",
+            "deps": ["//:I"],
+          },
+          {
+            "name": "G",
+            "buck.type": "java_library",
+            "deps": ["//:I"],
+          },
+          {
+            "name": "I",
+            "buck.type": "java_library",
+            "deps": [
+              "//:Y",
+            ],
+          },
+          {
+            "name": "Y",
+            "buck.type": "java_library",
+            "deps": [],
+          },
+          {
+            "name": "Z",
+            "buck.type": "java_library",
+            "deps": ["//:F", "//:I", "//:Y"],
+          },
+        ],
+      },
+    ],
+  }
+]

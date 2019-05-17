@@ -80,7 +80,7 @@ class Index internal constructor(
                     buildTargetCache.get(buildTarget) to newNodeAndDeps
                 }.toMap()
         val indexData = indexGenerationData.createForwardingIndexGenerationData(
-                generation, buildPackageMap, ruleMap)
+                generation, buildPackageMap, ruleMap, deltas.rdepsDeltas)
         return Index(indexData, buildTargetCache)
     }
 
@@ -161,6 +161,28 @@ class Index internal constructor(
                 }
             }
         }
+    }
+
+    /**
+     * For all of the specified targets at the specified generation, returns the union of their
+     * <em>immediate</em> reverse dependencies. Note that unless one target is an immediate
+     * reverse dependency of another, none of the targets is included in the output.
+     */
+    fun getReverseDeps(generation: Generation, targets: Iterable<UnconfiguredBuildTarget>): Set<UnconfiguredBuildTarget> {
+        val targetIds = targets.map { buildTargetCache.get(it) }
+        val rdepsSets = indexGenerationData.withRdepsMap { rdepsMap ->
+            targetIds.mapNotNull { targetId ->
+                rdepsMap.getVersion(targetId, generation)
+            }
+        }
+
+        val out = mutableSetOf<UnconfiguredBuildTarget>()
+        rdepsSets.forEach { rdepsSet ->
+            rdepsSet.forEach { dep ->
+                out.add(buildTargetCache.getByIndex(dep))
+            }
+        }
+        return out
     }
 
     /**

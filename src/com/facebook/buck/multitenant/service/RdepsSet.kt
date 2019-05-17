@@ -55,6 +55,47 @@ internal sealed class BuildTargetSetDelta : Comparable<BuildTargetSetDelta> {
 }
 
 /**
+ * Takes a list of individual rdeps updates applied to a repo at a point in time and computes the
+ * aggregate changes that need to be made to an rdepsMap.
+ */
+internal fun deriveRdepsDeltas(
+        rdepsUpdates: List<Pair<BuildTargetId, BuildTargetSetDelta>>,
+        generation: Generation,
+        indexGenerationData: IndexGenerationData): Map<BuildTargetId, RdepsSet?> {
+    val deltasByTarget = collectDeltasByTarget(rdepsUpdates)
+    val deltaDeriveInfos = indexGenerationData.withRdepsMap { rdepsMap ->
+        deltasByTarget.map { (buildTargetId, buildTargetSetDeltas) ->
+            val oldRdeps = rdepsMap.getVersion(buildTargetId, generation)
+            DeltaDeriveInfo(buildTargetId, oldRdeps, buildTargetSetDeltas)
+        }
+    }
+
+    return aggregateDeltaDeriveInfos(deltaDeriveInfos)
+}
+
+/**
+ * Iterates the `deltas` and for each [BuildTargetId], collects its corresponding deltas into its
+ * own [List]. In the returned [List], every [Pair] will have a distinct [BuildTargetId].
+ */
+private fun collectDeltasByTarget(
+        deltas: List<Pair<BuildTargetId, BuildTargetSetDelta>>
+): List<Pair<BuildTargetId, MutableList<BuildTargetSetDelta>>> {
+    // targetToRdepsUpdates is effectively a multimap, but none of the Guava ListMultimap
+    // implementations work for us here because we want to be able to sort the List for each
+    // entry when we are done populating the map and Guava's ListMultimap returns the List for
+    // each entry as an unmodifiable view.
+    val targetToRdepsUpdates = mutableMapOf<BuildTargetId, MutableList<BuildTargetSetDelta>>()
+    deltas.forEach { (buildTargetId, buildTargetSetDelta) ->
+        val rdepsUpdates = targetToRdepsUpdates[buildTargetId] ?: mutableListOf()
+        if (rdepsUpdates.isEmpty()) {
+            targetToRdepsUpdates[buildTargetId] = rdepsUpdates
+        }
+        rdepsUpdates.add(buildTargetSetDelta)
+    }
+    return targetToRdepsUpdates.toList()
+}
+
+/**
  * Information needed to derive a new RdepsSet from an existing one.
  * @property buildTargetId target whose rdeps this represents
  * @property oldRdeps previous version of rdeps for the target
