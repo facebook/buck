@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.concurrent;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -29,6 +30,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -145,6 +147,26 @@ public class MoreFutures {
         },
         executor);
     return waiter;
+  }
+
+  /**
+   * Waits for the given future to complete and returns the result. On interrupt, this method throws
+   * {@link CancellationException}. All exceptions thrown are wrapped with {@link
+   * com.facebook.buck.core.exceptions.BuckUncheckedExecutionException}
+   *
+   * @param future the {@link Future} to wait for
+   * @param <V> the result type of the {@link Future}
+   * @return the result of the {@link Future} when completed
+   */
+  public static <V> V getUncheckedInterruptibly(Future<V> future) {
+    try {
+      return future.get();
+    } catch (InterruptedException e) {
+      throw new CancellationException(
+          String.format("Future was cancelled with InterruptedException: %s", e));
+    } catch (ExecutionException e) {
+      throw new BuckUncheckedExecutionException(e);
+    }
   }
 
   public static <X extends Throwable> void propagateCauseIfInstanceOf(Throwable e, Class<X> type) {

@@ -23,6 +23,8 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutorService;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -82,5 +84,27 @@ public class MoreFuturesTest {
 
     expectedException.expect(IllegalStateException.class);
     MoreFutures.getFailure(canceledFuture);
+  }
+
+  @Test
+  public void getFuturesUncheckedInterruptiblyBlocksUntilFutureCompletes() {
+    SettableFuture<Boolean> future = SettableFuture.create();
+
+    ExecutorService executor = MostExecutors.newSingleThreadExecutor("test");
+    executor.submit(() -> future.set(true));
+
+    assertTrue(MoreFutures.getUncheckedInterruptibly(future));
+
+    executor.shutdownNow();
+  }
+
+  @Test
+  public void getFuturesUncheckedInterruptiblyThrowsCancelledExceptionWhenFutureCancelled() {
+    SettableFuture<?> future = SettableFuture.create();
+
+    future.cancel(true);
+
+    expectedException.expect(CancellationException.class);
+    MoreFutures.getUncheckedInterruptibly(future);
   }
 }
