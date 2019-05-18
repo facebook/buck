@@ -33,11 +33,11 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -55,15 +55,19 @@ public class FileSerializationOutputRuleDepsListenerTest {
         workspace.runBuckBuild("--no-cache", "--output-rule-deps-to-file", "//:foo");
     result.assertSuccess();
 
-    Path simulatorDir = workspace.getBuckPaths().getLogDir().resolve("simulator").toAbsolutePath();
+    Path simulatorDir = workspace.resolve(workspace.getBuckPaths().getSimulatorDir());
 
+    String actionGraphFileContent =
+        workspace.getFileContents(simulatorDir.resolve("action_graph.json"));
     Map<String, List<ActionGraphData>> actionGraphData =
-        Files.lines(simulatorDir.resolve("action_graph.json"))
+        Stream.of(actionGraphFileContent.split(System.lineSeparator()))
             .map(line -> convertToObject(line, ImmutableActionGraphData.class))
             .collect(Collectors.groupingBy(ActionGraphData::getTargetId));
 
+    String ruleExecutionTimeFileContent =
+        workspace.getFileContents(simulatorDir.resolve("rule_exec_time.json"));
     Map<String, List<RuleExecutionTimeData>> executionTime =
-        Files.lines(simulatorDir.resolve("rule_exec_time.json"))
+        Stream.of(ruleExecutionTimeFileContent.split(System.lineSeparator()))
             .map(line -> convertToObject(line, ImmutableRuleExecutionTimeData.class))
             .collect(Collectors.groupingBy(RuleExecutionTimeData::getTargetId));
 

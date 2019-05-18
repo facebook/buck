@@ -119,7 +119,7 @@ public class BuildCommand extends AbstractCommand {
   private static final String DISTRIBUTED_LONG_ARG = "--distributed";
   static final String BUCK_BINARY_STRING_ARG = "--buck-binary";
   private static final String RULEKEY_LOG_PATH_LONG_ARG = "--rulekeys-log-path";
-  public static final String CRITICAL_PATH_FILE_NAME = "critical_path.log";
+  private static final String CRITICAL_PATH_FILE_NAME = "critical_path.log";
 
   private static final String OUTPUT_RULE_DEPS_TO_FILE_ARG = "--output-rule-deps-to-file";
   private static final String ACTION_GRAPH_FILE_NAME = "action_graph.json";
@@ -365,7 +365,7 @@ public class BuildCommand extends AbstractCommand {
 
   private Path getSimulatorDir(CommandRunnerParams params) throws IOException {
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
-    Path simulatorDir = filesystem.getBuckPaths().getLogDir().resolve("simulator").toAbsolutePath();
+    Path simulatorDir = filesystem.resolve(filesystem.getBuckPaths().getSimulatorDir());
     filesystem.mkdirs(simulatorDir);
     return simulatorDir;
   }

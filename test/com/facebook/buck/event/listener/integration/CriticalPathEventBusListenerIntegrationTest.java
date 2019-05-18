@@ -18,7 +18,6 @@ package com.facebook.buck.event.listener.integration;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.BuildCommand;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -52,9 +51,7 @@ public class CriticalPathEventBusListenerIntegrationTest {
     Path criticalPathDestinationDir = getDestinationPath(workspace.resolve(logDir));
 
     String fileContents =
-        workspace.getFileContents(
-            criticalPathDestinationDir.resolve(BuildCommand.CRITICAL_PATH_FILE_NAME));
-
+        workspace.getFileContents(criticalPathDestinationDir.resolve("critical_path.log"));
     List<CriticalPathItem> criticalPaths =
         Stream.of(fileContents.split(System.lineSeparator()))
             // skip header
