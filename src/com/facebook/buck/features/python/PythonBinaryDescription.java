@@ -281,7 +281,7 @@ public class PythonBinaryDescription
     // If `main` is set, add it to the map of modules for this binary and also set it as the
     // `mainModule`, otherwise, use the explicitly set main module.
     if (args.getMain().isPresent()) {
-      LOG.warn(
+      LOG.info(
           "%s: parameter `main` is deprecated, please use `main_module` instead.", buildTarget);
       String mainName =
           graphBuilder.getSourcePathResolver().getSourcePathName(buildTarget, args.getMain().get());
