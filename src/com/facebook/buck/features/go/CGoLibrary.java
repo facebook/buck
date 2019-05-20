@@ -170,6 +170,10 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                         cgo,
                         args.getCgoCompilerFlags(),
                         ppFlags,
+                        platform
+                            .getCxxPlatform()
+                            .getCpp()
+                            .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
                         platform));
 
     // generated c files needs to be compiled and linked into a single object

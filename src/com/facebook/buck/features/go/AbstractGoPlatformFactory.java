@@ -95,7 +95,7 @@ abstract class AbstractGoPlatformFactory {
         .setCompiler(getGoTool(section, goRoot, "compiler", "compile", "compiler_flags"))
         .setAssembler(getGoTool(section, goRoot, "assembler", "asm", "asm_flags"))
         .setAssemblerIncludeDirs(ImmutableList.of(goRoot.resolve("pkg").resolve("include")))
-        .setCGo(getGoTool(section, goRoot, "cgo", "cgo", ""))
+        .setCGo(getGoTool(section, goRoot, "cgo", "cgo", "cgo_compiler_flags"))
         .setPacker(getGoTool(section, goRoot, "packer", "pack", ""))
         .setLinker(getGoTool(section, goRoot, "linker", "link", "linker_flags"))
         .setCover(getGoTool(section, goRoot, "cover", "cover", ""))
