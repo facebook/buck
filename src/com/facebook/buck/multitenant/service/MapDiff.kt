@@ -16,8 +16,14 @@
 
 package com.facebook.buck.multitenant.service
 
-/** oldRules and newRules must come from the same build package. */
-internal fun diffRules(oldRules: Set<InternalRawBuildRule>, newRules: Set<InternalRawBuildRule>): List<RuleDelta> {
+/**
+ * oldRules and newRules must come from the same build package.
+ *
+ * Even though oldRules is a List, the caller is responsible for ensuring that none of the values
+ * is `equals()` to another. In practice, we know many collections have unique elements by
+ * construction, so conversion to a Set is just extra overhead.
+ */
+internal fun diffRules(oldRules: List<InternalRawBuildRule>, newRules: Set<InternalRawBuildRule>): List<RuleDelta> {
     val deltas: MutableList<RuleDelta> = mutableListOf()
     val smallMap: MutableMap<String, InternalRawBuildRule>
     val largeMap: Map<String, InternalRawBuildRule>

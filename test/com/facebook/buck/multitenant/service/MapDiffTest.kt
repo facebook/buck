@@ -33,7 +33,7 @@ class MapDiffTest {
 
     @Test
     fun emptyRulesShouldHaveNoDeltas() {
-        val oldRules = setOf<InternalRawBuildRule>()
+        val oldRules = listOf<InternalRawBuildRule>()
         val newRules = setOf<InternalRawBuildRule>()
         val deltas = diffRules(oldRules, newRules)
         assertTrue(deltas.isEmpty())
@@ -41,7 +41,7 @@ class MapDiffTest {
 
     @Test
     fun emptyOldRulesWithNewRules() {
-        val oldRules = setOf<InternalRawBuildRule>()
+        val oldRules = listOf<InternalRawBuildRule>()
         val newRules = setOf(createRule("one", intArrayOf(1)), createRule("two", intArrayOf(2, 3)))
         val deltas = diffRules(oldRules, newRules)
         assertEquals(setOf(
@@ -52,7 +52,7 @@ class MapDiffTest {
 
     @Test
     fun nonEmptyOldRulesWithEmptyNewRules() {
-        val oldRules = setOf(createRule("one", intArrayOf(1)), createRule("two", intArrayOf(2, 3)))
+        val oldRules = listOf(createRule("one", intArrayOf(1)), createRule("two", intArrayOf(2, 3)))
         val newRules = setOf<InternalRawBuildRule>()
         val deltas = diffRules(oldRules, newRules)
         assertEquals(setOf(
@@ -63,7 +63,7 @@ class MapDiffTest {
 
     @Test
     fun detectModifiedRulesWithSameSizeMaps() {
-        val oldRules = setOf(
+        val oldRules = listOf(
                 createRule("foo", intArrayOf(1)),
                 createRule("bar", intArrayOf(2)),
                 createRule("baz", intArrayOf(4, 5)))
@@ -80,7 +80,7 @@ class MapDiffTest {
 
     @Test
     fun detectModifiedRulesWithMoreOldRules() {
-        val oldRules = setOf(
+        val oldRules = listOf(
                 createRule("foo", intArrayOf(1)),
                 createRule("bar", intArrayOf(2)),
                 createRule("baz", intArrayOf(4, 5)),
@@ -99,7 +99,7 @@ class MapDiffTest {
 
     @Test
     fun detectModifiedRulesWithMoreNewRules() {
-        val oldRules = setOf(
+        val oldRules = listOf(
                 createRule("foo", intArrayOf(1)),
                 createRule("bar", intArrayOf(2)),
                 createRule("baz", intArrayOf(4, 5)))
