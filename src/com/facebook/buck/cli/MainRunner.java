@@ -1106,6 +1106,9 @@ public final class MainRunner {
                         s.get().close();
                       }
                     });
+            CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
+                depsAwareExecutorSupplier =
+                    getDepsAwareExecutorSupplier(buckConfig.getView(ResourcesConfig.class));
 
             // This will get executed first once it gets out of try block and just wait for
             // event bus to dispatch all pending events before we proceed to termination
@@ -1258,11 +1261,6 @@ public final class MainRunner {
                       : OptionalLong.empty(),
                   getBuckPID());
           buildEventBus.post(startedEvent);
-
-          ResourcesConfig resourceConfig = buckConfig.getView(ResourcesConfig.class);
-
-          CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
-              depsAwareExecutorSupplier = getDepsAwareExecutorSupplier(resourceConfig);
 
           TargetSpecResolver targetSpecResolver =
               new TargetSpecResolver(
