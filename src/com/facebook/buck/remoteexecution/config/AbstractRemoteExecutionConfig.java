@@ -56,6 +56,9 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   private static final String CONFIG_CERT = "cert";
   private static final String CONFIG_KEY = "key";
 
+  /** Tenant ID that will be attached to each action * */
+  public static final String TENANT_ID_KEY = "tenant_id";
+
   /**
    * Limit on the number of outstanding execution requests. This is probably the value that's most
    * likely to be non-default.
@@ -150,6 +153,10 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   private String getDebugURLFormatString() {
     return getValue(DEBUG_FORMAT_STRING_URL_KEY).orElse(FORMAT_SESSION_ID_VARIABLE_STRING);
+  }
+
+  public String getTenantId() {
+    return getValue(TENANT_ID_KEY).orElse("");
   }
 
   public String getDebugURLString(RESessionID reSessionID) {

@@ -114,4 +114,8 @@ message RemoteExecutionMetadata {
   WorkerRequirements worker_requirements = 8;
   // Do not use index 9 - reserved for server side.
   ClientActionInfo client_action_info = 10;
+
+  // Tells workers of this tenant type to give priority to this action.
+  // Note: it might still be picked up by a different worker
+  string tenant_id = 11;
 }

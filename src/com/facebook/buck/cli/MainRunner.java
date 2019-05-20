@@ -918,7 +918,8 @@ public final class MainRunner {
               executionEnvironment.getUsername(),
               cacheBuckConfig.getRepository(),
               cacheBuckConfig.getScheduleType(),
-              remoteExecutionConfig.getReSessionLabel());
+              remoteExecutionConfig.getReSessionLabel(),
+              remoteExecutionConfig.getTenantId());
 
       LogBuckConfig logBuckConfig = buckConfig.getView(LogBuckConfig.class);
 

@@ -95,7 +95,7 @@ public final class RemoteExecutionMetadataProto {
       "\":\n\nWorkerSize\022\t\n\005SMALL\020\000\022\n\n\006MEDIUM\020\001\022\t\n" +
       "\005LARGE\020\002\022\n\n\006XLARGE\020\003\"W\n\020ClientActionInfo" +
       "\022\022\n\nrepository\030\001 \001(\t\022\025\n\rschedule_type\030\002 " +
-      "\001(\t\022\030\n\020re_session_label\030\003 \001(\t\"\341\004\n\027Remote" +
+      "\001(\t\022\030\n\020re_session_label\030\003 \001(\t\"\364\004\n\027Remote" +
       "ExecutionMetadata\022=\n\rre_session_id\030\001 \001(\013" +
       "2&.facebook.remote_execution.RESessionID" +
       "\0226\n\tbuck_info\030\002 \001(\0132#.facebook.remote_ex" +
@@ -111,9 +111,9 @@ public final class RemoteExecutionMetadataProto {
       "\0132-.facebook.remote_execution.WorkerRequ" +
       "irements\022G\n\022client_action_info\030\n \001(\0132+.f" +
       "acebook.remote_execution.ClientActionInf" +
-      "oBI\n\'com.facebook.buck.remoteexecution.p" +
-      "rotoB\034RemoteExecutionMetadataProtoP\001b\006pr" +
-      "oto3"
+      "o\022\021\n\ttenant_id\030\013 \001(\tBI\n\'com.facebook.buc" +
+      "k.remoteexecution.protoB\034RemoteExecution" +
+      "MetadataProtoP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -186,7 +186,7 @@ public final class RemoteExecutionMetadataProto {
     internal_static_facebook_remote_execution_RemoteExecutionMetadata_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_RemoteExecutionMetadata_descriptor,
-        new java.lang.String[] { "ReSessionId", "BuckInfo", "TraceInfo", "CreatorInfo", "EngineInfo", "WorkerInfo", "CasClientInfo", "WorkerRequirements", "ClientActionInfo", });
+        new java.lang.String[] { "ReSessionId", "BuckInfo", "TraceInfo", "CreatorInfo", "EngineInfo", "WorkerInfo", "CasClientInfo", "WorkerRequirements", "ClientActionInfo", "TenantId", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

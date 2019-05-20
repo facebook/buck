@@ -64,7 +64,8 @@ public class MetadataProviderFactory {
       String username,
       String repository,
       String scheduleType,
-      String reSessionLabel) {
+      String reSessionLabel,
+      String tenantId) {
     return new MetadataProvider() {
       final RemoteExecutionMetadata metadata;
       RemoteExecutionMetadata.Builder builder;
@@ -93,7 +94,8 @@ public class MetadataProviderFactory {
                 .setBuckInfo(buckInfo)
                 .setCreatorInfo(creatorInfo)
                 .setCasClientInfo(casClientInfo)
-                .setClientActionInfo(clientActionInfo);
+                .setClientActionInfo(clientActionInfo)
+                .setTenantId(tenantId);
         metadata = builder.build();
       }
 
