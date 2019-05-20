@@ -15,7 +15,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util/function:function",
         "//src/com/facebook/buck/util/timing:timing",
         "//src/com/facebook/buck/util/types:types",
-        "//third-party/java/okhttp:okhttp",
+        "//third-party/java/okhttp:okhttp-tls",
         "//third-party/java/thrift:libthrift",
     ],
 )

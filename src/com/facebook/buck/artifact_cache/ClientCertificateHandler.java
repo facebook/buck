@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -72,13 +73,23 @@ public class ClientCertificateHandler {
   /** Create a new ClientCertificateHandler based on client tls settings in configuration */
   public static Optional<ClientCertificateHandler> fromConfiguration(
       ArtifactCacheBuckConfig config) {
+    return fromConfiguration(config, Optional.empty());
+  }
+
+  /**
+   * Create a new ClientCertificateHandler based on client tls settings in configuration, with
+   * optional HostnameVerifier to allow for ignoring hostname mismatches in tests
+   */
+  public static Optional<ClientCertificateHandler> fromConfiguration(
+      ArtifactCacheBuckConfig config, Optional<HostnameVerifier> hostnameVerifier) {
     Optional<Path> key = config.getClientTlsKey();
     Optional<Path> certificate = config.getClientTlsCertificate();
+    Optional<Path> trustedCertificates = config.getClientTlsTrustedCertificates();
     boolean required = config.getClientTlsCertRequired();
-    return parseHandshakeCertificates(key, certificate, required)
+    return parseHandshakeCertificates(key, certificate, trustedCertificates, required)
         .map(
             handshakeCertificates ->
-                new ClientCertificateHandler(handshakeCertificates, Optional.empty()));
+                new ClientCertificateHandler(handshakeCertificates, hostnameVerifier));
   }
 
   /**
@@ -111,7 +122,6 @@ public class ClientCertificateHandler {
    */
   private static boolean isFileAvailable(Optional<Path> filePath, String label, boolean required) {
     if (!filePath.isPresent()) {
-
       throwIfRequired(required, "Required option for %s unset", label);
       return false;
     }
@@ -164,7 +174,7 @@ public class ClientCertificateHandler {
   }
 
   /**
-   * Parses a PEM encoded X509 certificate
+   * Parses a PEM encoded X509 certificate (which may contain other types of PEM sections)
    *
    * @param certPathOptional The location of the certificate
    * @param required whether to throw or ignore on unset / missing / expired certificates
@@ -197,8 +207,59 @@ public class ClientCertificateHandler {
     return Optional.empty();
   }
 
+  /**
+   * Parses a file containing PEM encoded X509 certificates
+   *
+   * @param certPathOptional The location of the certificates file
+   * @param required whether to throw or ignore on unset / missing / expired certificates
+   * @throws {@link HumanReadableException} on issues with a certificate
+   */
+  public static ImmutableList<X509Certificate> parseCertificates(
+      Optional<Path> certPathOptional, boolean required) {
+    if (!isFileAvailable(certPathOptional, "certificate", required)) {
+      return ImmutableList.of();
+    }
+    Path certPath = certPathOptional.get();
+    try (InputStream certificateIn = Files.newInputStream(certPath)) {
+      return CertificateFactory.getInstance("X.509").generateCertificates(certificateIn).stream()
+          .map(cert -> (X509Certificate) cert)
+          .filter(
+              cert -> {
+                try {
+                  cert.checkValidity();
+                  return true;
+                } catch (CertificateExpiredException e) {
+                  throwIfRequired(required, e, "The certificate at %s has expired", certPath);
+                } catch (CertificateNotYetValidException e) {
+                  throwIfRequired(required, e, "The certificate at %s is not yet valid", certPath);
+                }
+                return false;
+              })
+          .collect(ImmutableList.toImmutableList());
+    } catch (CertificateException e) {
+      throw new HumanReadableException(
+          e,
+          "Some Certificate(s) in %s do not appear to be valid X509 certificates" + e.toString(),
+          certPath);
+    } catch (IOException e) {
+      throw new HumanReadableException(e, "Could not read certificate(s) file at %s", certPath);
+    }
+  }
+
   private static Optional<HandshakeCertificates> parseHandshakeCertificates(
-      Optional<Path> keyPath, Optional<Path> certPath, boolean required) {
+      Optional<Path> keyPath,
+      Optional<Path> certPath,
+      Optional<Path> trustedCaCertificates,
+      boolean required) {
+    HandshakeCertificates.Builder hsBuilder = new HandshakeCertificates.Builder();
+    boolean shouldReturnHandshakeCerts = false;
+    hsBuilder.addPlatformTrustedCertificates();
+    ImmutableList<X509Certificate> extraCaCertificates =
+        parseCertificates(trustedCaCertificates, false);
+    if (!extraCaCertificates.isEmpty()) {
+      extraCaCertificates.stream().forEachOrdered(hsBuilder::addTrustedCertificate);
+      shouldReturnHandshakeCerts = true;
+    }
     // Load the client certificate
     Optional<X509Certificate> certificate = parseCertificate(certPath, required);
     if (certificate.isPresent()) {
@@ -207,13 +268,11 @@ public class ClientCertificateHandler {
         HeldCertificate cert =
             new HeldCertificate(
                 new KeyPair(certificate.get().getPublicKey(), privateKey.get()), certificate.get());
-        HandshakeCertificates.Builder hsBuilder = new HandshakeCertificates.Builder();
-        hsBuilder.addPlatformTrustedCertificates();
         hsBuilder.heldCertificate(cert);
-        return Optional.of(hsBuilder.build());
+        shouldReturnHandshakeCerts = true;
       }
     }
-    return Optional.empty();
+    return shouldReturnHandshakeCerts ? Optional.of(hsBuilder.build()) : Optional.empty();
   }
 
   public HandshakeCertificates getHandshakeCertificates() {

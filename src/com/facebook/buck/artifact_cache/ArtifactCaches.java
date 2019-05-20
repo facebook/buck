@@ -63,6 +63,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import javax.net.ssl.HostnameVerifier;
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
 import okhttp3.MediaType;
@@ -642,6 +643,14 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
                       addHeadersToBuilder(chain.request().newBuilder(), readHeaders).build()));
     }
 
+    Optional<HandshakeCertificates> handshakeCertificates = Optional.empty();
+    Optional<HostnameVerifier> hostnameVerifier = Optional.empty();
+    if (config.getClientTlsForSlb() && clientCertificateHandler.isPresent()) {
+      handshakeCertificates =
+          Optional.of(clientCertificateHandler.get().getHandshakeCertificates());
+      hostnameVerifier = clientCertificateHandler.get().getHostnameVerifier();
+    }
+
     fetchClientBuilder
         .networkInterceptors()
         .add(
@@ -659,7 +668,10 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     switch (config.getLoadBalancingType()) {
       case CLIENT_SLB:
         HttpLoadBalancer clientSideSlb =
-            config.getSlbConfig().createClientSideSlb(new DefaultClock(), buckEventBus);
+            config
+                .getSlbConfig()
+                .createClientSideSlb(
+                    new DefaultClock(), buckEventBus, handshakeCertificates, hostnameVerifier);
         fetchService =
             new RetryingHttpService(
                 buckEventBus,

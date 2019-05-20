@@ -396,9 +396,17 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   }
 
   /**
+   * If true, use TLS client authentication certificate, private key and extra trusted certificates
+   * also for CLIENT_SLB mode alive pings.
+   */
+  public boolean getClientTlsForSlb() {
+    return buckConfig.getBooleanValue(CACHE_SECTION_NAME, "http_client_tls_for_slb", false);
+  }
+
+  /**
    * Gets the path to a PEM encoded X509 certificate to use as the TLS client certificate for HTTP
-   * cache requests, from the content of the env var specified in http_client_tls_cert_env_var if
-   * set or the field value
+   * cache requests from the content of the env var specified in http_client_tls_cert_env_var if set
+   * or the field value
    *
    * <p>Both the key and certificate must be set for client TLS certificates to be used
    */
@@ -407,7 +415,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   }
 
   /**
-   * Gets the path to a PEM encoded PCKS#8 key to use as the TLS client key for HTTP cache requests,
+   * Gets the path to a PEM encoded PCKS#8 key to use as the TLS client key for HTTP cache requests
    * from the content of the env var specified in http_client_tls_key_env_var if set or the field
    * value. This may be a file that contains both the private key and the certificate if both
    * objects are newline delimited.
@@ -416,6 +424,17 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
    */
   public Optional<Path> getClientTlsKey() {
     return getPathWithEnv("http_client_tls_key");
+  }
+
+  /**
+   * Gets the path to a file containing PEM encoded X509 certificates to use as an additional list
+   * of trusted certificates from the content of the env var specified in http_client_tls_ca_env_var
+   * if set or the field value.
+   *
+   * <p>Both the key and certificate must be set for client TLS certificates to be used
+   */
+  public Optional<Path> getClientTlsTrustedCertificates() {
+    return getPathWithEnv("http_client_tls_ca");
   }
 
   /** Thread pools that are available for task execution. */

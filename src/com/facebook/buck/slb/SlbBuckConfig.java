@@ -25,9 +25,11 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import java.net.URI;
 import java.util.Optional;
+import javax.net.ssl.HostnameVerifier;
 import okhttp3.Connection;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
+import okhttp3.tls.HandshakeCertificates;
 
 public class SlbBuckConfig {
 
@@ -72,18 +74,45 @@ public class SlbBuckConfig {
   }
 
   public ClientSideSlb createClientSideSlb(Clock clock, BuckEventBus eventBus) {
-    return new ClientSideSlb(createConfig(clock, eventBus), createOkHttpClientBuilder());
+    return new ClientSideSlb(
+        createConfig(clock, eventBus),
+        createOkHttpClientBuilder(Optional.empty(), Optional.empty()));
+  }
+
+  public ClientSideSlb createClientSideSlb(
+      Clock clock,
+      BuckEventBus eventBus,
+      Optional<HandshakeCertificates> handshakeCertificates,
+      Optional<HostnameVerifier> hostnameVerifier) {
+    return new ClientSideSlb(
+        createConfig(clock, eventBus),
+        createOkHttpClientBuilder(handshakeCertificates, hostnameVerifier));
   }
 
   public Optional<ClientSideSlb> tryCreatingClientSideSlb(Clock clock, BuckEventBus eventBus) {
     ClientSideSlbConfig config = createConfig(clock, eventBus);
     return ClientSideSlb.isSafeToCreate(config)
-        ? Optional.of(new ClientSideSlb(config, createOkHttpClientBuilder()))
+        ? Optional.of(
+            new ClientSideSlb(
+                config, createOkHttpClientBuilder(Optional.empty(), Optional.empty())))
         : Optional.empty();
   }
 
-  private OkHttpClient.Builder createOkHttpClientBuilder() {
+  private OkHttpClient.Builder createOkHttpClientBuilder(
+      Optional<HandshakeCertificates> handshakeCertificates,
+      Optional<HostnameVerifier> hostnameVerifier) {
     OkHttpClient.Builder clientBuilder = new OkHttpClient().newBuilder();
+
+    // Add client TLS information if present
+    if (handshakeCertificates.isPresent()) {
+      clientBuilder.sslSocketFactory(
+          handshakeCertificates.get().sslSocketFactory(),
+          handshakeCertificates.get().trustManager());
+    }
+    if (hostnameVerifier.isPresent()) {
+      clientBuilder.hostnameVerifier(hostnameVerifier.get());
+    }
+
     clientBuilder
         .networkInterceptors()
         .add(

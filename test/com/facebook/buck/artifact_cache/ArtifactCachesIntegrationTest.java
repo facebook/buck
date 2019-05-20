@@ -48,18 +48,13 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.KeyPair;
-import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import javax.net.ssl.X509KeyManager;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import okhttp3.tls.HandshakeCertificates;
-import okhttp3.tls.HeldCertificate;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.junit.After;
@@ -216,7 +211,7 @@ public class ArtifactCachesIntegrationTest {
   private Path serverCertPath;
   private Path serverKeyPath;
   private Path caCertPath;
-  private ClientCertificateHandler clientCertificateHandler;
+  private X509Certificate clientCert;
 
   @Before
   public void setUp() throws IOException {
@@ -234,8 +229,7 @@ public class ArtifactCachesIntegrationTest {
     Files.write(serverCertPath, SAMPLE_SERVER_CERT.getBytes(Charsets.UTF_8));
     Files.write(serverKeyPath, SAMPLE_SERVER_KEY.getBytes(Charsets.UTF_8));
     Files.write(caCertPath, SAMPLE_CA_CERT.getBytes(Charsets.UTF_8));
-    clientCertificateHandler =
-        createClientCertificateHandler(clientKeyPath, clientCertPath, caCertPath);
+    clientCert = ClientCertificateHandler.parseCertificate(Optional.of(clientCertPath), true).get();
   }
 
   @After
@@ -247,11 +241,6 @@ public class ArtifactCachesIntegrationTest {
   @Test
   public void testUsesClientTlsCertsForHttpsFetch() throws Exception {
     NotFoundHandler handler = new NotFoundHandler(false, false);
-
-    X509KeyManager keyManager = clientCertificateHandler.getHandshakeCertificates().keyManager();
-    X509Certificate clientCert =
-        keyManager.getCertificateChain(keyManager.getClientAliases("RSA", null)[0])[0];
-
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
 
@@ -265,7 +254,8 @@ public class ArtifactCachesIntegrationTest {
               "mode = http",
               "http_url = " + server.getRootUri(),
               "http_client_tls_key = " + clientKeyPath.toString(),
-              "http_client_tls_cert = " + clientCertPath.toString());
+              "http_client_tls_cert = " + clientCertPath.toString(),
+              "http_client_tls_ca = " + caCertPath.toString());
 
       CacheResult result;
       try (ArtifactCache artifactCache =
@@ -291,11 +281,6 @@ public class ArtifactCachesIntegrationTest {
   @Test
   public void testUsesClientTlsCertsForThriftFetch() throws Exception {
     NotFoundHandler handler = new NotFoundHandler(true, false);
-
-    X509KeyManager keyManager = clientCertificateHandler.getHandshakeCertificates().keyManager();
-    X509Certificate clientCert =
-        keyManager.getCertificateChain(keyManager.getClientAliases("RSA", null)[0])[0];
-
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
 
@@ -310,7 +295,8 @@ public class ArtifactCachesIntegrationTest {
               "http_url = " + server.getRootUri(),
               "hybrid_thrift_endpoint = /hybrid_thrift",
               "http_client_tls_key = " + clientKeyPath.toString(),
-              "http_client_tls_cert = " + clientCertPath.toString());
+              "http_client_tls_cert = " + clientCertPath.toString(),
+              "http_client_tls_ca = " + caCertPath.toString());
 
       CacheResult result;
       try (ArtifactCache artifactCache =
@@ -336,11 +322,6 @@ public class ArtifactCachesIntegrationTest {
   @Test
   public void testUsesClientTlsCertsForHttpsStore() throws Exception {
     NotFoundHandler handler = new NotFoundHandler(false, true);
-
-    X509KeyManager keyManager = clientCertificateHandler.getHandshakeCertificates().keyManager();
-    X509Certificate clientCert =
-        keyManager.getCertificateChain(keyManager.getClientAliases("RSA", null)[0])[0];
-
     String data = "data";
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -356,7 +337,8 @@ public class ArtifactCachesIntegrationTest {
               "mode = http",
               "http_url = " + server.getRootUri(),
               "http_client_tls_key = " + clientKeyPath.toString(),
-              "http_client_tls_cert = " + clientCertPath.toString());
+              "http_client_tls_cert = " + clientCertPath.toString(),
+              "http_client_tls_ca = " + caCertPath.toString());
 
       try (ArtifactCache artifactCache =
           newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
@@ -378,11 +360,6 @@ public class ArtifactCachesIntegrationTest {
   @Test
   public void testUsesClientTlsCertsForThriftStore() throws Exception {
     NotFoundHandler handler = new NotFoundHandler(true, true);
-
-    X509KeyManager keyManager = clientCertificateHandler.getHandshakeCertificates().keyManager();
-    X509Certificate clientCert =
-        keyManager.getCertificateChain(keyManager.getClientAliases("RSA", null)[0])[0];
-
     String data = "data";
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -399,7 +376,8 @@ public class ArtifactCachesIntegrationTest {
               "http_url = " + server.getRootUri(),
               "hybrid_thrift_endpoint = /hybrid_thrift",
               "http_client_tls_key = " + clientKeyPath.toString(),
-              "http_client_tls_cert = " + clientCertPath.toString());
+              "http_client_tls_cert = " + clientCertPath.toString(),
+              "http_client_tls_ca = " + caCertPath.toString());
 
       try (ArtifactCache artifactCache =
           newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
@@ -425,6 +403,9 @@ public class ArtifactCachesIntegrationTest {
     CellPathResolver cellPathResolver = TestCellPathResolver.get(projectFilesystem);
     UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory =
         new ParsingUnconfiguredBuildTargetViewFactory();
+    Optional<ClientCertificateHandler> clientCertificateHandler =
+        ClientCertificateHandler.fromConfiguration(
+            cacheConfig, Optional.of((url, session) -> true));
     return new ArtifactCaches(
         cacheConfig,
         buckEventBus,
@@ -439,30 +420,7 @@ public class ArtifactCachesIntegrationTest {
         managerScope,
         "test://",
         "myhostname",
-        Optional.of(clientCertificateHandler));
-  }
-
-  /**
-   * Create a ClientCertificateHandler that accepts all hostnames (so that we don't have to setup
-   * hostnames for tests), and that accepts certs signed by the CA
-   */
-  private ClientCertificateHandler createClientCertificateHandler(
-      Path clientKeyPath, Path clientCertPath, Path caCertPath) {
-    X509Certificate certificate =
-        ClientCertificateHandler.parseCertificate(Optional.of(clientCertPath), true).get();
-    X509Certificate caCertificate =
-        ClientCertificateHandler.parseCertificate(Optional.of(caCertPath), true).get();
-    PrivateKey privateKey =
-        ClientCertificateHandler.parsePrivateKey(Optional.of(clientKeyPath), certificate, true)
-            .get();
-
-    HeldCertificate cert =
-        new HeldCertificate(new KeyPair(certificate.getPublicKey(), privateKey), certificate);
-    HandshakeCertificates.Builder hsBuilder = new HandshakeCertificates.Builder();
-    hsBuilder.addPlatformTrustedCertificates();
-    hsBuilder.addTrustedCertificate(caCertificate);
-    hsBuilder.heldCertificate(cert);
-    return new ClientCertificateHandler(hsBuilder.build(), Optional.of((s, sslSession) -> true));
+        clientCertificateHandler);
   }
 
   class NotFoundHandler extends AbstractHandler {
