@@ -48,24 +48,6 @@ import org.junit.Test;
 public class HybridLocalStrategyTest {
 
   @Test
-  public void testCanBuild() throws Exception {
-    BuildRule good = new FakeBuildRule("//:target");
-    BuildRule bad = new FakeBuildRule("//:target");
-    BuildRuleStrategy delegate =
-        new SimpleBuildRuleStrategy() {
-          @Override
-          public boolean canBuild(BuildRule instance) {
-            return instance == good;
-          }
-        };
-
-    try (HybridLocalStrategy strategy = new HybridLocalStrategy(1, 1, delegate)) {
-      assertTrue(strategy.canBuild(good));
-      assertFalse(strategy.canBuild(bad));
-    }
-  }
-
-  @Test
   public void testLocalJobsLimited() throws Exception {
     int maxJobs = 1;
     ListeningExecutorService service =
@@ -95,6 +77,60 @@ public class HybridLocalStrategyTest {
 
         Futures.allAsList(results).get(1, TimeUnit.SECONDS);
         for (ListenableFuture<Optional<BuildResult>> r : results) {
+          assertTrue(r.isDone());
+          assertTrue(r.get().get().isSuccess());
+        }
+      }
+    } finally {
+      service.shutdownNow();
+    }
+  }
+
+  @Test
+  public void testPreferLocalJobs() throws Exception {
+    int maxJobs = 1;
+    ListeningExecutorService service =
+        MoreExecutors.listeningDecorator(MostExecutors.newMultiThreadExecutor("test", 4));
+
+    try {
+      BuildRuleStrategy delegate =
+          new SimpleBuildRuleStrategy() {
+            @Override
+            public boolean canBuild(BuildRule rule) {
+              return rule.getFullyQualifiedName().contains("delegate");
+            }
+          };
+      JobLimitingStrategyContextFactory contextFactory =
+          new JobLimitingStrategyContextFactory(maxJobs, service);
+
+      try (HybridLocalStrategy strategy = new HybridLocalStrategy(1, 0, delegate)) {
+        List<ListenableFuture<Optional<BuildResult>>> delegateResults = new ArrayList<>();
+        List<ListenableFuture<Optional<BuildResult>>> localResults = new ArrayList<>();
+
+        for (int i = 0; i < 10; i++) {
+          boolean isLocal = i % 2 == 0;
+          FakeBuildRule rule =
+              new FakeBuildRule("//:" + (isLocal ? "local" : "delegate") + "-" + i);
+          ListenableFuture<Optional<BuildResult>> future =
+              Futures.submitAsync(
+                  () -> strategy.build(rule, contextFactory.createContext(rule)).getBuildResult(),
+                  service);
+          if (isLocal) {
+            localResults.add(future);
+          } else {
+            delegateResults.add(future);
+          }
+        }
+        contextFactory.waiting.release(5);
+        Futures.allAsList(localResults).get(1, TimeUnit.SECONDS);
+
+        for (ListenableFuture<Optional<BuildResult>> r : localResults) {
+          assertTrue(r.isDone());
+          assertTrue(r.get().get().isSuccess());
+        }
+        contextFactory.waiting.release(5);
+        Futures.allAsList(delegateResults).get(1, TimeUnit.SECONDS);
+        for (ListenableFuture<Optional<BuildResult>> r : delegateResults) {
           assertTrue(r.isDone());
           assertTrue(r.get().get().isSuccess());
         }

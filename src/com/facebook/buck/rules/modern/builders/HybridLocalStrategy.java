@@ -54,7 +54,10 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
 
   private final BuildRuleStrategy delegate;
 
-  private final ConcurrentLinkedQueue<Job> pendingQueue;
+  // Queue for Jobs that cannot be run on the delegate
+  private final ConcurrentLinkedQueue<Job> pendingLocalQueue;
+  // Queue for Jobs that can be run on the delegate or locally
+  private final ConcurrentLinkedQueue<Job> pendingDelegateQueue;
 
   private final Semaphore localSemaphore;
   private final Semaphore delegateSemaphore;
@@ -105,7 +108,8 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
     this.delegate = delegate;
     this.localSemaphore = new Semaphore(numLocalJobs);
     this.delegateSemaphore = new Semaphore(numDelegateJobs);
-    this.pendingQueue = new ConcurrentLinkedQueue<>();
+    this.pendingDelegateQueue = new ConcurrentLinkedQueue<>();
+    this.pendingLocalQueue = new ConcurrentLinkedQueue<>();
   }
 
   private class Job {
@@ -257,7 +261,12 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
   @Override
   public StrategyBuildResult build(BuildRule rule, BuildStrategyContext strategyContext) {
     Job job = new Job(strategyContext, rule);
-    pendingQueue.add(job);
+    if (delegate.canBuild(rule)) {
+      pendingDelegateQueue.add(job);
+    } else {
+      pendingLocalQueue.add(job);
+    }
+
     scheduler.submit(this::schedule);
     return new StrategyBuildResult() {
       @Override
@@ -289,7 +298,10 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
       semaphoreScopedSchedule(
           localSemaphore,
           () -> {
-            Job job = pendingQueue.poll();
+            Job job = pendingLocalQueue.poll();
+            if (job == null) {
+              job = pendingDelegateQueue.poll();
+            }
             return job == null ? tracker.stealFromDelegate() : job.scheduleLocally();
           });
 
@@ -297,7 +309,7 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
       semaphoreScopedSchedule(
           delegateSemaphore,
           () -> {
-            Job job = pendingQueue.poll();
+            Job job = pendingDelegateQueue.poll();
             return job == null ? null : job.scheduleWithDelegate();
           });
     } catch (Throwable t) {
@@ -309,9 +321,13 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
   }
 
   private void cancelAllPendingJobs() {
-    while (!pendingQueue.isEmpty()) {
-      // Only the scheduling thread pulls from the queue, so this is safe.
-      Objects.requireNonNull(pendingQueue.poll()).cancel(Objects.requireNonNull(hardFailure));
+    // Only the scheduling thread pulls from the queue, so polling from queues is safe.
+    while (!pendingDelegateQueue.isEmpty()) {
+      Objects.requireNonNull(pendingDelegateQueue.poll())
+          .cancel(Objects.requireNonNull(hardFailure));
+    }
+    while (!pendingLocalQueue.isEmpty()) {
+      Objects.requireNonNull(pendingLocalQueue.poll()).cancel(Objects.requireNonNull(hardFailure));
     }
   }
 
@@ -343,7 +359,7 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
 
   @Override
   public boolean canBuild(BuildRule instance) {
-    return delegate.canBuild(instance);
+    return true;
   }
 
   @Override
