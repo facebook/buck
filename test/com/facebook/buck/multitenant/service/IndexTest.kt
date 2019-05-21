@@ -190,7 +190,8 @@ class IndexTest {
                                 setOf(
                                         createRawRule(
                                                 "//java/com/facebook/buck/model:model",
-                                                listOf("//java/com/facebook/buck/base:base"))
+                                                listOf("//java/com/facebook/buck/base:base"),
+                                                mapOf("buck.type" to "java_library"))
                                 )
                         )
                 )
@@ -397,6 +398,6 @@ private fun String.buildTarget(): UnconfiguredBuildTarget {
     return BuildTargets.parseOrThrow(this)
 }
 
-private fun createTargetNode(target: String): RawTargetNode = ServiceRawTargetNode(target.buildTarget(), JAVA_LIBRARY, ImmutableMap.of())
+private fun createTargetNode(target: String, attributes: Map<String, Any> = mapOf()): RawTargetNode = ServiceRawTargetNode(target.buildTarget(), JAVA_LIBRARY, ImmutableMap.copyOf(attributes))
 
-private fun createRawRule(target: String, deps: List<String>) = RawBuildRule(createTargetNode(target), targetSet(*deps.toTypedArray()))
+private fun createRawRule(target: String, deps: List<String>, attributes: Map<String, Any> = mapOf()) = RawBuildRule(createTargetNode(target, attributes), targetSet(*deps.toTypedArray()))

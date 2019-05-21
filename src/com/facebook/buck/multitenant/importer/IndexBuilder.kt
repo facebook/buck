@@ -61,27 +61,24 @@ private fun toBuildPackages(node: JsonNode?): List<BuildPackage> {
 
     return node.map { buildPackageItem ->
         val path = FsAgnosticPath.of(buildPackageItem.get("path").asText())
-        val rulesAttr = buildPackageItem.get("rules")
-        val rules = rulesAttr.elements().asSequence().map { rule ->
-            var name: String? = null
+        val nodesAttr = buildPackageItem.get("nodes")
+        val rules = nodesAttr.fields().asSequence().map { (name, rule) ->
             var ruleType: String? = null
             val deps = mutableSetOf<String>()
             val attrs = ImmutableMap.builder<String, Any>()
             for (field in rule.fields()) {
                 when (field.key) {
-                    "name" -> name = field.value.asText()
-                    "buck.type" -> ruleType = field.value.asText()
-                    "deps" -> deps.addAll(field.value.asSequence().map { it.asText() })
-                    else -> {
-                        // Properties that start with "buck." have a special meaning that must be
-                        // handled explicitly.
-                        if (!field.key.startsWith("buck.")) {
-                            attrs.put(field.key, normalizeJsonValue(field.value))
+                    "attributes" -> {
+                        for (attr in field.value.fields()) {
+                            attrs.put(attr.key, normalizeJsonValue(attr.value))
+                            if (attr.key == "buck.type") {
+                                ruleType = attr.value.asText()
+                            }
                         }
                     }
+                    "deps" -> deps.addAll(field.value.asSequence().map { it.asText() })
                 }
             }
-            requireNotNull(name)
             requireNotNull(ruleType)
             val buildTarget = BuildTargets.createBuildTargetFromParts(path, name)
             val depsAsTargets = deps.map { BuildTargets.parseOrThrow(it) }.toSet()

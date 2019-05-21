@@ -22,75 +22,110 @@ are interesting.
     "added": [
       {
         "path": "",
-        "rules": [
-          {
-            "name": "A",
-            "buck.type": "java_library",
-            "deps": ["//:B", "//:C", "//:D", "//:E", "//:H", "//:I"],
+        "nodes": {
+          "A": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:B",
+              "//:C",
+              "//:D",
+              "//:E",
+              "//:H",
+              "//:I"
+            ]
           },
-          {
-            "name": "B",
-            "buck.type": "java_library",
-            "deps": ["//:D"],
+          "B": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:D"
+            ]
           },
-          {
-            "name": "C",
-            "buck.type": "java_library",
-            "deps": ["//:E"],
+          "C": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:E"
+            ]
           },
-          {
-            "name": "D",
-            "buck.type": "java_library",
-            "deps": ["//:F", "//:H", "//:I"],
+          "D": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:F",
+              "//:H",
+              "//:I"
+            ]
           },
-          {
-            "name": "E",
-            "buck.type": "java_library",
-            "deps": ["//:G", "//:H", "//:I"],
+          "E": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:G",
+              "//:H",
+              "//:I"
+            ]
           },
-          {
-            "name": "F",
-            "buck.type": "java_library",
-            "deps": ["//:H", "//:I"],
+          "F": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:H",
+              "//:I"
+            ]
           },
-          {
-            "name": "G",
-            "buck.type": "java_library",
-            "deps": ["//:H", "//:I"],
+          "G": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:H",
+              "//:I"
+            ]
           },
-          {
-            "name": "H",
-            "buck.type": "java_library",
-            "deps": [],
+          "H": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": []
           },
-          {
-            "name": "I",
-            "buck.type": "java_library",
-            "deps": [],
-          },
-        ],
+          "I": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": []
+          }
+        }
       },
       {
         "path": "other",
-        "rules": [
-          {
-            "name": "pkg",
-            "buck.type": "java_library",
-            "deps": ["//:I"],
-          },
-        ]
+        "nodes": {
+          "pkg": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:I"
+            ]
+          }
+        }
       }
     ]
   },
-
   // Remove the other package.
   {
     "commit": "9efba3bca1",
     "removed": [
-        "other",
-    ],
+      "other"
+    ]
   },
-
   // Remove :A, :E, and :H.
   // Replace :D with :Z.
   // Add a new rule, :Y, and update :I and :Z to depend on it.
@@ -99,46 +134,63 @@ are interesting.
     "modified": [
       {
         "path": "",
-        "rules": [
-          {
-            "name": "B",
-            "buck.type": "java_library",
-            "deps": ["//:Z"],
-          },
-          {
-            "name": "C",
-            "buck.type": "java_library",
-            "deps": [],
-          },
-          {
-            "name": "F",
-            "buck.type": "java_library",
-            "deps": ["//:I"],
-          },
-          {
-            "name": "G",
-            "buck.type": "java_library",
-            "deps": ["//:I"],
-          },
-          {
-            "name": "I",
-            "buck.type": "java_library",
+        "nodes": {
+          "B": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
             "deps": [
-              "//:Y",
-            ],
+              "//:Z"
+            ]
           },
-          {
-            "name": "Y",
-            "buck.type": "java_library",
-            "deps": [],
+          "C": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": []
           },
-          {
-            "name": "Z",
-            "buck.type": "java_library",
-            "deps": ["//:F", "//:I", "//:Y"],
+          "F": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:I"
+            ]
           },
-        ],
-      },
-    ],
+          "G": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:I"
+            ]
+          },
+          "I": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:Y"
+            ]
+          },
+          "Y": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": []
+          },
+          "Z": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:F",
+              "//:I",
+              "//:Y"
+            ]
+          }
+        }
+      }
+    ]
   }
 ]
