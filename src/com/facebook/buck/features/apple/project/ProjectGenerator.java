@@ -105,11 +105,9 @@ import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
-import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription.CommonArg;
-import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.CxxPrecompiledHeaderTemplate;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxSource;
@@ -3989,7 +3987,7 @@ public class ProjectGenerator {
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
             .resolve(targetNode.getBuildTarget().getBasePath());
     ImmutableSortedSet<String> includeDirectories =
-        TargetNodes.castArg(targetNode, CxxConstructorArg.class)
+        TargetNodes.castArg(targetNode, CxxLibraryDescription.CommonArg.class)
             .map(input -> input.getConstructorArg().getIncludeDirectories())
             .orElse(ImmutableSortedSet.of());
     return FluentIterable.from(includeDirectories)
@@ -4001,7 +3999,7 @@ public class ProjectGenerator {
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
             .resolve(targetNode.getBuildTarget().getBasePath());
     ImmutableSortedSet<String> includeDirectories =
-        TargetNodes.castArg(targetNode, CxxLibraryDescriptionArg.class)
+        TargetNodes.castArg(targetNode, CxxLibraryDescription.CommonArg.class)
             .map(input -> input.getConstructorArg().getPublicIncludeDirectories())
             .orElse(ImmutableSortedSet.of());
     return FluentIterable.from(includeDirectories)
@@ -4013,7 +4011,7 @@ public class ProjectGenerator {
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
             .resolve(targetNode.getBuildTarget().getBasePath());
     ImmutableSortedSet<String> includeDirectories =
-        TargetNodes.castArg(targetNode, CxxLibraryDescriptionArg.class)
+        TargetNodes.castArg(targetNode, CxxLibraryDescription.CommonArg.class)
             .map(input -> input.getConstructorArg().getPublicSystemIncludeDirectories())
             .orElse(ImmutableSortedSet.of());
     return FluentIterable.from(includeDirectories)
