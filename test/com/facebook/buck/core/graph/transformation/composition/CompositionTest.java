@@ -37,16 +37,16 @@ import org.junit.Test;
 public class CompositionTest {
 
   @Test
-  public void composedComputationReturnsCorrectPreliminaryDeps() {
+  public void leftComposedComputationReturnsCorrectPreliminaryDeps() {
     ComposedComputation<LongNode, LongNode> baseComputation =
-        new ComposingComputation<>(
+        new LeftComposingComputation<>(
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
             LongNode.class,
             (ignored1, ignored2) -> ImmutableSet.of(),
             identity -> (Map<ComputeKey<LongNode>, LongNode>) identity);
 
     ComposedComputation<LongNode, LongMultNode> composedComputation =
-        Composition.of(LongMultNode.class, baseComputation, (ignored1, ignored2) -> null);
+        Composition.composeLeft(LongMultNode.class, baseComputation, (ignored1, ignored2) -> null);
 
     assertEquals(
         ImmutableSet.of(ImmutableComposedKey.of(ImmutableLongNode.of(1), LongNode.class)),
@@ -55,7 +55,7 @@ public class CompositionTest {
   }
 
   @Test
-  public void composedComputationReturnsCorrectDeps() throws Exception {
+  public void leftComposedComputationReturnsCorrectDeps() throws Exception {
 
     LongNode originKey = ImmutableLongNode.of(1);
     LongNode originResult = ImmutableLongNode.of(2);
@@ -66,7 +66,7 @@ public class CompositionTest {
         ImmutableSet.of(ImmutableLongMultNode.of(1), ImmutableLongMultNode.of(2));
 
     ComposedComputation<LongNode, LongNode> baseComputation =
-        new ComposingComputation<>(
+        new LeftComposingComputation<>(
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
             LongNode.class,
             (ignored1, ignored2) -> ImmutableSet.of(),
@@ -80,7 +80,7 @@ public class CompositionTest {
         };
 
     ComposedComputation<LongNode, LongMultNode> composedComputation =
-        Composition.of(LongMultNode.class, baseComputation, composer);
+        Composition.composeLeft(LongMultNode.class, baseComputation, composer);
 
     FakeComputationEnvironment environment =
         new FakeComputationEnvironment(
@@ -95,7 +95,7 @@ public class CompositionTest {
   }
 
   @Test
-  public void composedComputationTransformsProperly() throws Exception {
+  public void leftComposedComputationTransformsProperly() throws Exception {
     FakeComputationEnvironment environment =
         new FakeComputationEnvironment(
             ImmutableMap.of(
@@ -115,14 +115,14 @@ public class CompositionTest {
         (key, result) -> ImmutableSet.of(ImmutableLongMultNode.of(result.get()));
 
     ComposedComputation<LongNode, LongNode> baseComputation =
-        new ComposingComputation<>(
+        new LeftComposingComputation<>(
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
             LongNode.class,
             (ignored1, ignored2) -> ImmutableSet.of(),
             identity -> (Map<ComputeKey<LongNode>, LongNode>) identity);
 
     ComposedComputation<LongNode, LongMultNode> composedComputation =
-        Composition.of(LongMultNode.class, baseComputation, composer);
+        Composition.composeLeft(LongMultNode.class, baseComputation, composer);
 
     assertEquals(
         ImmutableComposedResult.of(

@@ -34,13 +34,13 @@ import java.util.Map.Entry;
 /**
  * An implementation of {@link ComposedComputation} that takes a base {@link ComposedComputation}, a
  * {@link Composer}, and {@link Transformer} and returns a new {@link ComposedResult} of {@link
- * Result2} type.
+ * Result2} type. This is composing from the left to the right.
  *
  * @param <BaseKey> the key of the base computation
  * @param <Result1> the result type of the base computation
  * @param <Result2> the result type of this computation
  */
-public class ComposingComputation<
+public class LeftComposingComputation<
         BaseKey extends ComputeKey<?>,
         Key1 extends ComputeKey<Result1>,
         Result1 extends ComputeResult,
@@ -67,7 +67,7 @@ public class ComposingComputation<
    * @param transformer the {@link Transformer} to run on the dependencies to return results of
    *     {@link Result2}
    */
-  ComposingComputation(
+  LeftComposingComputation(
       ComposedComputationIdentifier<Result1> baseComputationIdentifer,
       Class<Result2> resultClass,
       Composer<Key1, Result1> composer,

@@ -38,7 +38,7 @@ import org.junit.Test;
 public class CompositionIntegrationTest {
 
   @Test
-  public void graphEngineComputesThreeComposedComputations() {
+  public void graphEngineComputesThreeLeftComposedComputations() {
     NoOpComputation<MyLongNode> noOpComputation1 = new NoOpComputation<>(MyLongNode.IDENTIFIER);
     NoOpComputation<LongNode> noOpComputation2 = new NoOpComputation<>(LongNode.IDENTIFIER);
     NoOpComputation<LongMultNode> noOpComputation3 = new NoOpComputation<>(LongMultNode.IDENTIFIER);
@@ -46,13 +46,13 @@ public class CompositionIntegrationTest {
     ComposedComputation<MyLongNode, MyLongNode> composed1 =
         Composition.asComposition(MyLongNode.class, noOpComputation1);
     ComposedComputation<MyLongNode, LongNode> composed2 =
-        Composition.of(
+        Composition.composeLeft(
             LongNode.class,
             composed1,
             (KeyComposer<MyLongNode, MyLongNode, LongNode>)
                 (key, result) -> ImmutableSet.of(ImmutableLongNode.of(1)));
     ComposedComputation<MyLongNode, LongMultNode> composed3 =
-        Composition.of(
+        Composition.composeLeft(
             LongMultNode.class,
             composed2,
             (KeyComposer<LongNode, LongNode, LongMultNode>)

@@ -30,8 +30,7 @@ import java.util.Map;
  * ComposedKey(K1, R2) to ComposedResult(R2). This is under a {@link Composer} that takes K1 and R1
  * and returns a set of K2's to be computed.
  *
- * <p>TODO(bobyf): currently composition only builds properly left to right. It should be
- * associative.
+ * <p>TODO(bobyf): currently composition only builds properly left to right.
  */
 public class Composition {
 
@@ -41,8 +40,10 @@ public class Composition {
    *
    * <p>Chaining computations means to begin at a base computation that transforms K1 to R1, and
    * then using the this method chain a second computation K2 to R2 to create one composed
-   * computation of K1 to R2. The resulting composed computation can be then used to chain more
-   * computations Kn to Rn, until we have computations K1 to Rn.
+   * computation of K1 to Composed[R2]. The resulting composed computation can be then used to chain
+   * more computations Kn to Rn, until we have computations K1 to Rn. Note that since we create a
+   * Composed[Rn], all subsequent compositions are required to wait for the completion of all Rn's.
+   * This is a reduce and not ideal for creating computations that resembles trees in its fan out.
    *
    * @param resultClass the result class of this composition
    * @param baseComputation the base computation
@@ -62,12 +63,12 @@ public class Composition {
           Result1 extends ComputeResult,
           Key2 extends ComputeKey<Result2>,
           Result2 extends ComputeResult>
-      ComposedComputation<KeyBase, Result2> of(
+      ComposedComputation<KeyBase, Result2> composeLeft(
           Class<Result2> resultClass,
           ComposedComputation<KeyBase, Result1> baseComputation,
           KeyComposer<Key1, Result1, Key2> composer) {
 
-    return new ComposingComputation<>(
+    return new LeftComposingComputation<>(
         baseComputation.getIdentifier(),
         resultClass,
         composer,

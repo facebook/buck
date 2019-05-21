@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Map;
 import org.junit.Test;
 
-public class ComposingComputationTest {
+public class LeftComposingComputationTest {
 
   @Test
   public void composedComputationReturnsCorrectPreliminaryDeps() {
@@ -42,7 +42,7 @@ public class ComposingComputationTest {
     Composer<LongNode, LongNode> composer = (ignored1, ignored2) -> null;
     Transformer<LongMultNode> transformer = ignored -> null;
     ComposedComputation<LongNode, LongMultNode> computation =
-        new ComposingComputation<>(
+        new LeftComposingComputation<>(
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
             LongMultNode.class,
             composer,
@@ -78,7 +78,7 @@ public class ComposingComputationTest {
         };
     Transformer<LongMultNode> transformer = ignored -> null;
     ComposedComputation<LongNode, LongMultNode> computation =
-        new ComposingComputation<>(
+        new LeftComposingComputation<>(
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
             LongMultNode.class,
             composer,
@@ -114,7 +114,7 @@ public class ComposingComputationTest {
         deps -> (Map<ComputeKey<LongMultNode>, LongMultNode>) deps;
 
     ComposedComputation<LongNode, LongMultNode> computation =
-        new ComposingComputation<>(
+        new LeftComposingComputation<>(
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
             LongMultNode.class,
             composer,
