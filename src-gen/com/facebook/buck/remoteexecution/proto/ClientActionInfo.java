@@ -26,6 +26,7 @@ private static final long serialVersionUID = 0L;
     repository_ = "";
     scheduleType_ = "";
     reSessionLabel_ = "";
+    tenantId_ = "";
   }
 
   @java.lang.Override
@@ -68,6 +69,12 @@ private static final long serialVersionUID = 0L;
             java.lang.String s = input.readStringRequireUtf8();
 
             reSessionLabel_ = s;
+            break;
+          }
+          case 34: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            tenantId_ = s;
             break;
           }
           default: {
@@ -228,6 +235,50 @@ private static final long serialVersionUID = 0L;
     }
   }
 
+  public static final int TENANT_ID_FIELD_NUMBER = 4;
+  private volatile java.lang.Object tenantId_;
+  /**
+   * <pre>
+   * Tells workers of this tenant type to give priority to this action.
+   * Note: it might still be picked up by a different worker
+   * </pre>
+   *
+   * <code>string tenant_id = 4;</code>
+   */
+  public java.lang.String getTenantId() {
+    java.lang.Object ref = tenantId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      tenantId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <pre>
+   * Tells workers of this tenant type to give priority to this action.
+   * Note: it might still be picked up by a different worker
+   * </pre>
+   *
+   * <code>string tenant_id = 4;</code>
+   */
+  public com.google.protobuf.ByteString
+      getTenantIdBytes() {
+    java.lang.Object ref = tenantId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      tenantId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -251,6 +302,9 @@ private static final long serialVersionUID = 0L;
     if (!getReSessionLabelBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 3, reSessionLabel_);
     }
+    if (!getTenantIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 4, tenantId_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -268,6 +322,9 @@ private static final long serialVersionUID = 0L;
     }
     if (!getReSessionLabelBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, reSessionLabel_);
+    }
+    if (!getTenantIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, tenantId_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -291,6 +348,8 @@ private static final long serialVersionUID = 0L;
         .equals(other.getScheduleType());
     result = result && getReSessionLabel()
         .equals(other.getReSessionLabel());
+    result = result && getTenantId()
+        .equals(other.getTenantId());
     result = result && unknownFields.equals(other.unknownFields);
     return result;
   }
@@ -308,6 +367,8 @@ private static final long serialVersionUID = 0L;
     hash = (53 * hash) + getScheduleType().hashCode();
     hash = (37 * hash) + RE_SESSION_LABEL_FIELD_NUMBER;
     hash = (53 * hash) + getReSessionLabel().hashCode();
+    hash = (37 * hash) + TENANT_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getTenantId().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -452,6 +513,8 @@ private static final long serialVersionUID = 0L;
 
       reSessionLabel_ = "";
 
+      tenantId_ = "";
+
       return this;
     }
 
@@ -481,6 +544,7 @@ private static final long serialVersionUID = 0L;
       result.repository_ = repository_;
       result.scheduleType_ = scheduleType_;
       result.reSessionLabel_ = reSessionLabel_;
+      result.tenantId_ = tenantId_;
       onBuilt();
       return result;
     }
@@ -539,6 +603,10 @@ private static final long serialVersionUID = 0L;
       }
       if (!other.getReSessionLabel().isEmpty()) {
         reSessionLabel_ = other.reSessionLabel_;
+        onChanged();
+      }
+      if (!other.getTenantId().isEmpty()) {
+        tenantId_ = other.tenantId_;
         onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
@@ -833,6 +901,100 @@ private static final long serialVersionUID = 0L;
   checkByteStringIsUtf8(value);
       
       reSessionLabel_ = value;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object tenantId_ = "";
+    /**
+     * <pre>
+     * Tells workers of this tenant type to give priority to this action.
+     * Note: it might still be picked up by a different worker
+     * </pre>
+     *
+     * <code>string tenant_id = 4;</code>
+     */
+    public java.lang.String getTenantId() {
+      java.lang.Object ref = tenantId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        tenantId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <pre>
+     * Tells workers of this tenant type to give priority to this action.
+     * Note: it might still be picked up by a different worker
+     * </pre>
+     *
+     * <code>string tenant_id = 4;</code>
+     */
+    public com.google.protobuf.ByteString
+        getTenantIdBytes() {
+      java.lang.Object ref = tenantId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        tenantId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <pre>
+     * Tells workers of this tenant type to give priority to this action.
+     * Note: it might still be picked up by a different worker
+     * </pre>
+     *
+     * <code>string tenant_id = 4;</code>
+     */
+    public Builder setTenantId(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  
+      tenantId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * Tells workers of this tenant type to give priority to this action.
+     * Note: it might still be picked up by a different worker
+     * </pre>
+     *
+     * <code>string tenant_id = 4;</code>
+     */
+    public Builder clearTenantId() {
+      
+      tenantId_ = getDefaultInstance().getTenantId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * Tells workers of this tenant type to give priority to this action.
+     * Note: it might still be picked up by a different worker
+     * </pre>
+     *
+     * <code>string tenant_id = 4;</code>
+     */
+    public Builder setTenantIdBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+      
+      tenantId_ = value;
       onChanged();
       return this;
     }

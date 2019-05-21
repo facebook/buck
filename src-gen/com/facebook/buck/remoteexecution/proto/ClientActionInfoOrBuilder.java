@@ -62,4 +62,24 @@ public interface ClientActionInfoOrBuilder extends
    */
   com.google.protobuf.ByteString
       getReSessionLabelBytes();
+
+  /**
+   * <pre>
+   * Tells workers of this tenant type to give priority to this action.
+   * Note: it might still be picked up by a different worker
+   * </pre>
+   *
+   * <code>string tenant_id = 4;</code>
+   */
+  java.lang.String getTenantId();
+  /**
+   * <pre>
+   * Tells workers of this tenant type to give priority to this action.
+   * Note: it might still be picked up by a different worker
+   * </pre>
+   *
+   * <code>string tenant_id = 4;</code>
+   */
+  com.google.protobuf.ByteString
+      getTenantIdBytes();
 }
