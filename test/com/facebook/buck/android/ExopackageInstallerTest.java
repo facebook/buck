@@ -19,13 +19,11 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.NativeExoHelper;
 import com.facebook.buck.android.exopackage.PackageInfo;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -111,36 +109,6 @@ public class ExopackageInstallerTest {
         RealAndroidDevice.parsePathAndPackageInfo("com.facebook.katana", lines);
 
     assertFalse(optionalInfo.isPresent());
-  }
-
-  @Test
-  public void testParsePackageInfoErrorConditions() {
-    String lines =
-        "package:/data/app/com.facebook.buck.android.agent-1.apk\r\n"
-            + "  Package [com.facebook.buck.android.agent] (3f784d07):\r\n"
-            + "    userId=10062 gids=[]\r\n"
-            + "    pkg=Package{81b1e34 com.facebook.buck.android.agent}\r\n"
-            + "    codePath=/system/app/built_in_agent\r\n"
-            + "    resourcePath=/system/app/built_in_agent\r\n"
-            + "    legacyNativeLibraryDir=/system/app/built_in_agent/lib\r\n"
-            + "    primaryCpuAbi=armeabi-v7a\r\n"
-            + "    secondaryCpuAbi=null\r\n"
-            + "    versionCode=3 targetSdk=19\r\n"
-            + "    versionName=3\r\n"
-            + "";
-    try {
-      RealAndroidDevice.parsePathAndPackageInfo("com.facebook.buck.android.agent", lines);
-      fail("Expected parsing inconsistent data to throw an exception!");
-    } catch (HumanReadableException e) {
-      assertEquals(
-          "The output of `pm path com.facebook.buck.android.agent`: "
-              + "com.facebook.buck.android.agent and "
-              + "`dumpsys package package:/data/app/com.facebook.buck.android.agent-1.apk`: "
-              + "/system/app/built_in_agent do not agree. "
-              + "This usually means that you have multiple apps installed with the same package name. "
-              + "You must uninstall the other versions of your app before you can install this one.",
-          e.getHumanReadableErrorMessage());
-    }
   }
 
   @Test
