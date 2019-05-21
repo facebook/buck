@@ -132,7 +132,7 @@ public class BuildPackagePathToRawTargetNodePackageComputation
       builder.put(unconfiguredBuildTarget.getName(), rawTargetNodeWithDeps);
     }
 
-    return ImmutableRawTargetNodeWithDepsPackage.of(builder.build());
+    return new ImmutableRawTargetNodeWithDepsPackage(key.getPath(), builder.build());
   }
 
   @Override

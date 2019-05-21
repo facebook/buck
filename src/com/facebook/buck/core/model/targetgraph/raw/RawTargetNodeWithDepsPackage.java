@@ -17,22 +17,26 @@
 package com.facebook.buck.core.model.targetgraph.raw;
 
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableMap;
-import org.immutables.value.Value;
+import java.nio.file.Path;
 
 /** Represents all {@link RawTargetNodeWithDeps} that result from parsing a single build file */
-@Value.Immutable(builder = false, copy = false)
+@BuckStyleValue
 @JsonDeserialize
 public abstract class RawTargetNodeWithDepsPackage implements ComputeResult {
+
+  /** Package path, relative to parse root, usually cell root */
+  @JsonProperty("path")
+  public abstract Path getPackagePath();
 
   /**
    * All {@link RawTargetNodeWithDeps} which comes from the same build package, i.e. result from
    * parsing a single build file. Key is a string representing short build target name (last part of
    * the name after the colon) and value is corresponding target.
    */
-  @Value.Parameter
   @JsonProperty("nodes")
   public abstract ImmutableMap<String, RawTargetNodeWithDeps> getRawTargetNodesWithDeps();
 }

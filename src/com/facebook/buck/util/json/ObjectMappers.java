@@ -25,13 +25,17 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.core.type.WritableTypeId;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
+import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
@@ -42,6 +46,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -175,7 +180,42 @@ public class ObjectMappers {
     // prefix. That does not work well with custom filesystems that Buck uses. Following hack
     // restores legacy behavior to serialize Paths using toString().
     SimpleModule pathModule = new SimpleModule("PathToString");
-    pathModule.addSerializer(Path.class, new ToStringSerializer());
+
+    /**
+     * Custom Path serializer that serializes using {@link Object#toString()} method and also
+     * translates all {@link Path} implementations to use generic base type
+     */
+    class PathSerializer extends ToStringSerializer {
+      public PathSerializer() {
+        super(Path.class);
+      }
+
+      @Override
+      public void serializeWithType(
+          Object value, JsonGenerator g, SerializerProvider provider, TypeSerializer typeSer)
+          throws IOException {
+        WritableTypeId typeIdDef =
+            typeSer.writeTypePrefix(g, typeSer.typeId(value, Path.class, JsonToken.VALUE_STRING));
+        serialize(value, g, provider);
+        typeSer.writeTypeSuffix(g, typeIdDef);
+      }
+    }
+
+    pathModule.addSerializer(Path.class, new PathSerializer());
+    pathModule.addDeserializer(
+        Path.class,
+        new FromStringDeserializer<Path>(Path.class) {
+          @Override
+          protected Path _deserialize(String value, DeserializationContext ctxt) {
+            return Paths.get(value);
+          }
+
+          @Override
+          protected Path _deserializeFromEmptyString() {
+            // by default it returns null but we want empty Path
+            return Paths.get("");
+          }
+        });
     mapper.registerModule(pathModule);
 
     return mapper;

@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.nio.file.Paths;
 import org.junit.Test;
 
 public class RawTargetNodeWithDepsPackageTest {
@@ -77,7 +78,8 @@ public class RawTargetNodeWithDepsPackageTest {
         ImmutableRawTargetNodeWithDeps.of(rawTargetNode2, ImmutableSet.of());
 
     RawTargetNodeWithDepsPackage rawTargetNodeWithDepsPackage =
-        ImmutableRawTargetNodeWithDepsPackage.of(
+        new ImmutableRawTargetNodeWithDepsPackage(
+            Paths.get("base"),
             ImmutableMap.of("target1", rawTargetNodeWithDeps1, "target2", rawTargetNodeWithDeps2));
 
     return rawTargetNodeWithDepsPackage;
