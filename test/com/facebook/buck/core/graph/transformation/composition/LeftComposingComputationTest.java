@@ -25,6 +25,7 @@ import com.facebook.buck.core.graph.transformation.impl.ImmutableLongNode;
 import com.facebook.buck.core.graph.transformation.model.ComposedComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComposedKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.graph.transformation.model.ImmutableComposedKey;
 import com.facebook.buck.core.graph.transformation.model.ImmutableComposedResult;
 import com.google.common.collect.ImmutableMap;
@@ -40,7 +41,8 @@ public class LeftComposingComputationTest {
         ImmutableComposedKey.of(ImmutableLongNode.of(1), LongNode.class);
 
     Composer<LongNode, LongNode> composer = (ignored1, ignored2) -> null;
-    Transformer<LongMultNode> transformer = ignored -> null;
+    Transformer<ComputeKey<ComputeResult>, ComputeResult, LongMultNode> transformer =
+        ignored -> null;
     ComposedComputation<LongNode, LongMultNode> computation =
         new LeftComposingComputation<>(
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
@@ -76,7 +78,8 @@ public class LeftComposingComputationTest {
           assertEquals(originResult, result);
           return expectedDeps;
         };
-    Transformer<LongMultNode> transformer = ignored -> null;
+    Transformer<ComputeKey<ComputeResult>, ComputeResult, LongMultNode> transformer =
+        ignored -> null;
     ComposedComputation<LongNode, LongMultNode> computation =
         new LeftComposingComputation<>(
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
@@ -110,8 +113,10 @@ public class LeftComposingComputationTest {
 
     Composer<LongNode, LongNode> composer =
         (key, result) -> ImmutableSet.of(ImmutableLongMultNode.of(result.get()));
-    Transformer<LongMultNode> transformer =
-        deps -> (Map<ComputeKey<LongMultNode>, LongMultNode>) deps;
+    Transformer<ComputeKey<ComputeResult>, ComputeResult, LongMultNode> transformer =
+        deps ->
+            (Map<ComputeKey<LongMultNode>, LongMultNode>)
+                (Map<? extends ComputeKey<?>, ? extends ComputeResult>) deps;
 
     ComposedComputation<LongNode, LongMultNode> computation =
         new LeftComposingComputation<>(

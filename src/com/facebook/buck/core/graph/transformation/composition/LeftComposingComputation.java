@@ -48,7 +48,7 @@ public class LeftComposingComputation<
     implements ComposedComputation<BaseKey, Result2> {
 
   private final Composer<Key1, Result1> composer;
-  private final Transformer<Result2> transformer;
+  private final Transformer<ComputeKey<ComputeResult>, ComputeResult, Result2> transformer;
 
   private final ComposedComputationIdentifier<Result1> baseIdentifier;
   private final ComposedComputationIdentifier<Result2> identifier;
@@ -71,7 +71,7 @@ public class LeftComposingComputation<
       ComposedComputationIdentifier<Result1> baseComputationIdentifer,
       Class<Result2> resultClass,
       Composer<Key1, Result1> composer,
-      Transformer<Result2> transformer) {
+      Transformer<ComputeKey<ComputeResult>, ComputeResult, Result2> transformer) {
     this.composer = composer;
     this.transformer = transformer;
     this.baseIdentifier = baseComputationIdentifer;
@@ -97,9 +97,11 @@ public class LeftComposingComputation<
     for (Entry<ComputeKey<Result1>, Result1> result : results.resultMap().entrySet()) {
       Map<ComputeKey<Result2>, Result2> values =
           transformer.transform(
-              Maps.filterKeys(
-                  env.getDeps(),
-                  composer.transitionWith((Key1) result.getKey(), result.getValue())::contains));
+              (Map<ComputeKey<ComputeResult>, ComputeResult>)
+                  Maps.filterKeys(
+                      env.getDeps(),
+                      composer.transitionWith((Key1) result.getKey(), result.getValue())
+                          ::contains));
       resultBuilder.putAll(values);
     }
     return ImmutableComposedResult.of(resultBuilder.build());

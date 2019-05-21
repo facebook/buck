@@ -26,6 +26,7 @@ import com.facebook.buck.core.graph.transformation.impl.ImmutableLongNode;
 import com.facebook.buck.core.graph.transformation.model.ComposedComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComposedKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.graph.transformation.model.ImmutableComposedKey;
 import com.facebook.buck.core.graph.transformation.model.ImmutableComposedResult;
 import com.google.common.collect.ImmutableMap;
@@ -43,7 +44,9 @@ public class CompositionTest {
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
             LongNode.class,
             (ignored1, ignored2) -> ImmutableSet.of(),
-            identity -> (Map<ComputeKey<LongNode>, LongNode>) identity);
+            identity ->
+                (Map<ComputeKey<LongNode>, LongNode>)
+                    (Map<? extends ComputeKey<?>, ? extends ComputeResult>) identity);
 
     ComposedComputation<LongNode, LongMultNode> composedComputation =
         Composition.composeLeft(LongMultNode.class, baseComputation, (ignored1, ignored2) -> null);
@@ -70,7 +73,9 @@ public class CompositionTest {
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
             LongNode.class,
             (ignored1, ignored2) -> ImmutableSet.of(),
-            identity -> (Map<ComputeKey<LongNode>, LongNode>) identity);
+            identity ->
+                (Map<ComputeKey<LongNode>, LongNode>)
+                    (Map<? extends ComputeKey<?>, ? extends ComputeResult>) identity);
 
     KeyComposer<LongNode, LongNode, LongMultNode> composer =
         (key, result) -> {
@@ -119,7 +124,9 @@ public class CompositionTest {
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
             LongNode.class,
             (ignored1, ignored2) -> ImmutableSet.of(),
-            identity -> (Map<ComputeKey<LongNode>, LongNode>) identity);
+            identity ->
+                (Map<ComputeKey<LongNode>, LongNode>)
+                    (Map<? extends ComputeKey<?>, ? extends ComputeResult>) identity);
 
     ComposedComputation<LongNode, LongMultNode> composedComputation =
         Composition.composeLeft(LongMultNode.class, baseComputation, composer);

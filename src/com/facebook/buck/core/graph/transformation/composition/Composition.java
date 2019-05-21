@@ -72,7 +72,9 @@ public class Composition {
         baseComputation.getIdentifier(),
         resultClass,
         composer,
-        identity -> (Map<ComputeKey<Result2>, Result2>) identity);
+        identity ->
+            (Map<ComputeKey<Result2>, Result2>)
+                (Map<? extends ComputeKey<?>, ? extends ComputeResult>) identity);
   }
 
   /**

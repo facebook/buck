@@ -24,11 +24,21 @@ import java.util.Map;
  * Generic transform API that given all dependencies through the {@link ComputationEnvironment},
  * computes the desired result of ResultType.
  *
+ * @param <KeyInput> the key type that the {@link #transform(Map)} receive
+ * @param <ResultInput> the result type that the {@link #transform(Map)} receive
  * @param <ResultType> the type of the result from this transform
  */
 @FunctionalInterface
-public interface Transformer<ResultType extends ComputeResult> {
+public interface Transformer<
+    KeyInput extends ComputeKey<ResultInput>,
+    ResultInput extends ComputeResult,
+    ResultType extends ComputeResult> {
 
-  Map<ComputeKey<ResultType>, ResultType> transform(
-      Map<? extends ComputeKey<?>, ? extends ComputeResult> deps);
+  /**
+   * @param deps the results that the correspond to the keys {@link Composer} returned
+   * @return the results to be aggregate into a {@link
+   *     com.facebook.buck.core.graph.transformation.model.ComposedResult} by the {@link
+   *     ComposedComputation}
+   */
+  Map<ComputeKey<ResultType>, ResultType> transform(Map<KeyInput, ResultInput> deps);
 }
