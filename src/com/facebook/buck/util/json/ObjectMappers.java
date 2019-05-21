@@ -17,6 +17,7 @@
 package com.facebook.buck.util.json;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDeps;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -145,7 +146,7 @@ public class ObjectMappers {
   private static final JsonFactory jsonFactory;
 
   static {
-    mapper = create();
+    mapper = create_without_type();
     READER = mapper.reader();
     WRITER = mapper.writer();
     jsonFactory = mapper.getFactory();
@@ -174,6 +175,15 @@ public class ObjectMappers {
     mapper.registerModule(pathModule);
 
     return mapper;
+  }
+
+  private static ObjectMapper create_without_type() {
+    // with this mixin RawTargetNode properties are flattened with RawTargetNodeWithDeps properties
+    // for prettier view. It only works for non-typed serialization.
+    return create()
+        .addMixIn(
+            RawTargetNodeWithDeps.class,
+            RawTargetNodeWithDeps.RawTargetNodeWithDepsUnwrappedMixin.class);
   }
 
   private static ObjectMapper create_with_type() {

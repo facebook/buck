@@ -17,12 +17,15 @@
 package com.facebook.buck.core.model.targetgraph.raw;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -30,9 +33,7 @@ import org.junit.Test;
 
 public class RawTargetNodeWithDepsPackageTest {
 
-  @Test
-  public void canSerializeAndDeserializeJson() throws IOException {
-
+  private RawTargetNodeWithDepsPackage getData() {
     ImmutableMap<String, Object> rawAttributes1 =
         ImmutableMap.of(
             "name",
@@ -79,6 +80,14 @@ public class RawTargetNodeWithDepsPackageTest {
         ImmutableRawTargetNodeWithDepsPackage.of(
             ImmutableMap.of("target1", rawTargetNodeWithDeps1, "target2", rawTargetNodeWithDeps2));
 
+    return rawTargetNodeWithDepsPackage;
+  }
+
+  @Test
+  public void canSerializeAndDeserializeJson() throws IOException {
+
+    RawTargetNodeWithDepsPackage rawTargetNodeWithDepsPackage = getData();
+
     byte[] data = ObjectMappers.WRITER_WITH_TYPE.writeValueAsBytes(rawTargetNodeWithDepsPackage);
 
     RawTargetNodeWithDepsPackage rawTargetNodeWithDepsPackageDeserialized =
@@ -87,5 +96,20 @@ public class RawTargetNodeWithDepsPackageTest {
             .readValue(data);
 
     assertEquals(rawTargetNodeWithDepsPackage, rawTargetNodeWithDepsPackageDeserialized);
+  }
+
+  @Test
+  public void canSerializeWithoutTypeAndFlatten() throws IOException {
+    RawTargetNodeWithDepsPackage rawTargetNodeWithDepsPackage = getData();
+
+    String data = ObjectMappers.WRITER.writeValueAsString(rawTargetNodeWithDepsPackage);
+
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode node = mapper.readTree(data);
+
+    // Validate property from RawTargetNode ("buildTarget") is flattened so it is at the same level
+    // as non-flattened property ("deps")
+    assertNotNull(node.get("nodes").get("target1").get("buildTarget"));
+    assertNotNull(node.get("nodes").get("target1").get("deps"));
   }
 }

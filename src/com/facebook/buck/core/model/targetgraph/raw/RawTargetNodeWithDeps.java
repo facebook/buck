@@ -19,13 +19,14 @@ package com.facebook.buck.core.model.targetgraph.raw;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;
 
 /** A pair of {@link RawTargetNode} and its dependencies */
 @Value.Immutable(builder = false, copy = false)
-@JsonSerialize
+@JsonDeserialize
 public abstract class RawTargetNodeWithDeps implements ComputeResult {
 
   /** Raw target node, i.e. a target node with partially resolved attributes */
@@ -45,5 +46,15 @@ public abstract class RawTargetNodeWithDeps implements ComputeResult {
   public static RawTargetNodeWithDeps of(
       RawTargetNode rawTargetNode, Iterable<? extends UnconfiguredBuildTarget> deps) {
     return ImmutableRawTargetNodeWithDeps.of(rawTargetNode, deps);
+  }
+
+  /**
+   * This mixin is used by JSON serializer to flatten {@link RawTargetNode} properties We cannot use
+   * {@link JsonUnwrapped} directly on {@link RawTargetNodeWithDeps#getRawTargetNode()} because it
+   * is not supported by typed deserializer
+   */
+  public interface RawTargetNodeWithDepsUnwrappedMixin {
+    @JsonUnwrapped
+    RawTargetNode getRawTargetNode();
   }
 }

@@ -12,6 +12,7 @@ java_library(
     ],
     deps = [
         "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
         "//third-party/java/guava:guava",
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-datatype-guava",
