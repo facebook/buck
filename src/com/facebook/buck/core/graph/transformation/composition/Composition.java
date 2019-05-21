@@ -16,8 +16,13 @@
 package com.facebook.buck.core.graph.transformation.composition;
 
 import com.facebook.buck.core.graph.transformation.GraphComputation;
+import com.facebook.buck.core.graph.transformation.model.ComposedKey;
+import com.facebook.buck.core.graph.transformation.model.ComposedResult;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
+import com.facebook.buck.core.graph.transformation.model.ImmutableComposedKey;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.Map;
 
 /**
@@ -75,6 +80,62 @@ public class Composition {
         identity ->
             (Map<ComputeKey<Result2>, Result2>)
                 (Map<? extends ComputeKey<?>, ? extends ComputeResult>) identity);
+  }
+
+  /**
+   * Creates a {@link ComposedComputation} from a base {@link ComposedComputation} used for chaining
+   * multiple {@link GraphComputation} together.
+   *
+   * <p>Chaining computations means to begin at a base computation that transforms K1 to R1, and
+   * then using this method chain a second composed computation composed(K2) to composed(R2) to
+   * create one composed computation of K1 to Composed[R2]. The resulting composed computation can
+   * be then used to chain more computations Kn to Rn, until we have computations K1 to Rn. Note
+   * that for this, we start at the right, which helps create fan-out tree structured graph
+   * computation.
+   *
+   * @param resultClass the result class of this composition
+   * @param baseComputation the base computation
+   * @param composer a {@link KeyComposer} that takes results of the base computation and determines
+   *     how to trigger the computation for the result class desired.
+   * @param <KeyIntermediate> the type of the key of the right {@link ComposedComputation}
+   * @param <Key1> the type of base computation key
+   * @param <Result1> the type of base computation result
+   * @param <Key2> the type of the key corresponding to the final result type
+   * @param <Result2> the result type of the right {@link ComposedComputation}
+   * @return a {@link ComposedComputation} that takes in a composed key from {@link Key1} to {@link
+   *     com.facebook.buck.core.graph.transformation.model.ComposedResult} of {@link Result2}
+   */
+  public static <
+          KeyIntermediate extends ComputeKey<?>,
+          Key1 extends ComputeKey<Result1>,
+          Result1 extends ComputeResult,
+          Key2 extends ComputeKey<Result2>,
+          Result2 extends ComputeResult>
+      ComposedComputation<Key1, Result2> composeRight(
+          Class<Result2> resultClass,
+          GraphComputation<Key1, Result1> baseComputation,
+          KeyComposer<Key1, Result1, KeyIntermediate> composer) {
+
+    return new RightComposingComputation<>(
+        baseComputation.getIdentifier(),
+        resultClass,
+        (key1, result1) -> {
+          ImmutableSet.Builder<ComposedKey<KeyIntermediate, Result2>> results =
+              ImmutableSet.builder();
+          for (KeyIntermediate key2 : composer.transitionWith(key1, result1)) {
+            results.add(ImmutableComposedKey.of(key2, resultClass));
+          }
+          return results.build();
+        },
+        (Transformer<
+                ComputeKey<ComposedResult<Key2, Result2>>, ComposedResult<Key2, Result2>, Result2>)
+            deps -> {
+              ImmutableMap.Builder<ComputeKey<Result2>, Result2> results = ImmutableMap.builder();
+              for (ComposedResult<Key2, Result2> dep : deps.values()) {
+                results.putAll(dep.resultMap());
+              }
+              return results.build();
+            });
   }
 
   /**

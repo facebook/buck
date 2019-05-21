@@ -23,6 +23,7 @@ import com.facebook.buck.core.graph.transformation.impl.ChildrenSumMultiplier.Lo
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.impl.ImmutableLongMultNode;
 import com.facebook.buck.core.graph.transformation.impl.ImmutableLongNode;
+import com.facebook.buck.core.graph.transformation.impl.NoOpComputation;
 import com.facebook.buck.core.graph.transformation.model.ComposedComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComposedKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
@@ -167,5 +168,84 @@ public class CompositionTest {
             ImmutableMap.of(ImmutableLongNode.of(1), ImmutableLongNode.of(1))),
         baseComputation.transform(
             ImmutableComposedKey.of(ImmutableLongNode.of(1), LongNode.class), environment));
+  }
+
+  @Test
+  public void rightComposedComputationReturnsCorrectPreliminaryDeps() {
+
+    ComposedComputation<LongNode, LongMultNode> composedComputation =
+        Composition.composeRight(
+            LongMultNode.class,
+            new NoOpComputation<>(LongNode.IDENTIFIER),
+            (ignored1, ignored2) -> null);
+
+    assertEquals(
+        ImmutableSet.of(ImmutableLongNode.of(1)),
+        composedComputation.discoverPreliminaryDeps(
+            ImmutableComposedKey.of(ImmutableLongNode.of(1), LongMultNode.class)));
+  }
+
+  @Test
+  public void rightComposedComputationReturnsCorrectDeps() throws Exception {
+
+    LongNode originKey = ImmutableLongNode.of(1);
+    LongNode originResult = ImmutableLongNode.of(2);
+
+    ImmutableSet<LongMultNode> expectedDeps =
+        ImmutableSet.of(ImmutableLongMultNode.of(1), ImmutableLongMultNode.of(2));
+
+    KeyComposer<LongNode, LongNode, LongMultNode> composer =
+        (key, result) -> {
+          assertEquals(originKey, key);
+          assertEquals(originResult, result);
+          return expectedDeps;
+        };
+
+    ComposedComputation<LongNode, LongMultNode> composedComputation =
+        Composition.composeRight(
+            LongMultNode.class, new NoOpComputation<>(LongNode.IDENTIFIER), composer);
+
+    FakeComputationEnvironment environment =
+        new FakeComputationEnvironment(ImmutableMap.of(originKey, originResult));
+
+    assertEquals(
+        ImmutableSet.of(
+            ImmutableComposedKey.of(ImmutableLongMultNode.of(1), LongMultNode.class),
+            ImmutableComposedKey.of(ImmutableLongMultNode.of(2), LongMultNode.class)),
+        composedComputation.discoverDeps(
+            ImmutableComposedKey.of(ImmutableLongNode.of(1), LongMultNode.class), environment));
+  }
+
+  @Test
+  public void rightComposedComputationTransformsProperly() throws Exception {
+    FakeComputationEnvironment environment =
+        new FakeComputationEnvironment(
+            ImmutableMap.of(
+                ImmutableComposedKey.of(ImmutableLongNode.of(1), LongNode.class),
+                ImmutableComposedResult.of(
+                    ImmutableMap.of(
+                        ImmutableLongNode.of(1),
+                        ImmutableLongNode.of(1),
+                        ImmutableLongNode.of(2),
+                        ImmutableLongNode.of(2))),
+                ImmutableLongMultNode.of(1),
+                ImmutableLongMultNode.of(1)));
+
+    KeyComposer<LongMultNode, LongMultNode, LongNode> composer =
+        (key, result) -> ImmutableSet.of(ImmutableLongNode.of(result.get()));
+
+    ComposedComputation<LongMultNode, LongNode> composedComputation =
+        Composition.composeRight(
+            LongNode.class, new NoOpComputation<>(LongMultNode.IDENTIFIER), composer);
+
+    assertEquals(
+        ImmutableComposedResult.of(
+            ImmutableMap.of(
+                ImmutableLongNode.of(1),
+                ImmutableLongNode.of(1),
+                ImmutableLongNode.of(2),
+                ImmutableLongNode.of(2))),
+        composedComputation.transform(
+            ImmutableComposedKey.of(ImmutableLongMultNode.of(1), LongNode.class), environment));
   }
 }

@@ -79,4 +79,43 @@ public class CompositionIntegrationTest {
             ImmutableMap.of(ImmutableLongMultNode.of(1), ImmutableLongMultNode.of(1))),
         engine.computeUnchecked(ImmutableComposedKey.of(new MyLongNode(), LongMultNode.class)));
   }
+
+  @Test
+  public void graphEngineComputesThreeRightComposedComputations() {
+    NoOpComputation<MyLongNode> noOpComputation1 = new NoOpComputation<>(MyLongNode.IDENTIFIER);
+    NoOpComputation<LongNode> noOpComputation2 = new NoOpComputation<>(LongNode.IDENTIFIER);
+    NoOpComputation<LongMultNode> noOpComputation3 = new NoOpComputation<>(LongMultNode.IDENTIFIER);
+
+    ComposedComputation<LongMultNode, LongMultNode> composed3 =
+        Composition.asComposition(LongMultNode.class, noOpComputation3);
+    ComposedComputation<LongNode, LongMultNode> composed2 =
+        Composition.composeRight(
+            LongMultNode.class,
+            noOpComputation2,
+            (KeyComposer<LongNode, LongNode, LongMultNode>)
+                (key, result) -> ImmutableSet.of(ImmutableLongMultNode.of(result.get())));
+    ComposedComputation<MyLongNode, LongMultNode> composed1 =
+        Composition.composeRight(
+            LongMultNode.class,
+            noOpComputation1,
+            (KeyComposer<MyLongNode, MyLongNode, LongNode>)
+                (key, result) -> ImmutableSet.of(ImmutableLongNode.of(1)));
+
+    GraphTransformationEngine engine =
+        new DefaultGraphTransformationEngine(
+            ImmutableList.of(
+                new GraphComputationStage<>(noOpComputation1, new NoOpGraphEngineCache<>()),
+                new GraphComputationStage<>(noOpComputation2, new NoOpGraphEngineCache<>()),
+                new GraphComputationStage<>(noOpComputation3, new NoOpGraphEngineCache<>()),
+                composed1.asStage(),
+                composed2.asStage(),
+                composed3.asStage()),
+            1,
+            DefaultDepsAwareExecutor.of(1));
+
+    assertEquals(
+        ImmutableComposedResult.of(
+            ImmutableMap.of(ImmutableLongMultNode.of(1), ImmutableLongMultNode.of(1))),
+        engine.computeUnchecked(ImmutableComposedKey.of(new MyLongNode(), LongMultNode.class)));
+  }
 }
