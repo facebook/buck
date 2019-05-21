@@ -17,17 +17,21 @@
 package com.facebook.buck.util.json;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDeps;
+import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
@@ -178,12 +182,28 @@ public class ObjectMappers {
   }
 
   private static ObjectMapper create_without_type() {
+    ObjectMapper mapper = create();
+
     // with this mixin RawTargetNode properties are flattened with RawTargetNodeWithDeps properties
     // for prettier view. It only works for non-typed serialization.
-    return create()
-        .addMixIn(
-            RawTargetNodeWithDeps.class,
-            RawTargetNodeWithDeps.RawTargetNodeWithDepsUnwrappedMixin.class);
+    mapper.addMixIn(
+        RawTargetNodeWithDeps.class,
+        RawTargetNodeWithDeps.RawTargetNodeWithDepsUnwrappedMixin.class);
+
+    // Serialize and deserialize UnconfiguredBuildTarget as string
+    SimpleModule buildTargetModule = new SimpleModule("BuildTarget");
+    buildTargetModule.addSerializer(UnconfiguredBuildTarget.class, new ToStringSerializer());
+    buildTargetModule.addDeserializer(
+        UnconfiguredBuildTarget.class,
+        new FromStringDeserializer<UnconfiguredBuildTarget>(UnconfiguredBuildTarget.class) {
+          @Override
+          protected UnconfiguredBuildTarget _deserialize(
+              String value, DeserializationContext ctxt) {
+            return UnconfiguredBuildTargetParser.parse(value);
+          }
+        });
+    mapper.registerModule(buildTargetModule);
+    return mapper;
   }
 
   private static ObjectMapper create_with_type() {
