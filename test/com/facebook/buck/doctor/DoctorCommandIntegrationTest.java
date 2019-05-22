@@ -34,6 +34,7 @@ import com.facebook.buck.doctor.config.DoctorJsonResponse;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
 import com.facebook.buck.doctor.config.DoctorSuggestion;
 import com.facebook.buck.doctor.config.ImmutableDoctorEndpointResponse;
+import com.facebook.buck.doctor.config.ImmutableDoctorJsonResponse;
 import com.facebook.buck.doctor.config.ImmutableDoctorSuggestion;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -279,7 +280,7 @@ public class DoctorCommandIntegrationTest {
               }
 
               DoctorJsonResponse json =
-                  DoctorJsonResponse.of(
+                  new ImmutableDoctorJsonResponse(
                       /* isRequestSuccessful */ true,
                       /* errorMessage */ Optional.empty(),
                       /* rageUrl */ Optional.of("http://remoteUrlToVisit"),

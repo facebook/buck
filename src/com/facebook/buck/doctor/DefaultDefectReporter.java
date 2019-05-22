@@ -22,6 +22,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorJsonResponse;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
+import com.facebook.buck.doctor.config.ImmutableDoctorJsonResponse;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.slb.ClientSideSlb;
@@ -239,7 +240,7 @@ public class DefaultDefectReporter implements DefectReporter {
           DoctorJsonResponse json =
               ObjectMappers.READER.readValue(
                   ObjectMappers.createParser(responseBody.getBytes(Charsets.UTF_8)),
-                  DoctorJsonResponse.class);
+                  ImmutableDoctorJsonResponse.class);
           return defectSubmitResult
               .setIsRequestSuccessful(json.getRequestSuccessful())
               .setReportSubmitErrorMessage(json.getErrorMessage())

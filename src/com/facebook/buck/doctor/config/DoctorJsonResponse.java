@@ -16,30 +16,24 @@
 
 package com.facebook.buck.doctor.config;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Optional;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-@JsonDeserialize(as = DoctorJsonResponse.class)
-abstract class AbstractDoctorJsonResponse {
+@BuckStyleValue
+@JsonDeserialize(as = ImmutableDoctorJsonResponse.class)
+public interface DoctorJsonResponse {
 
   /** @return if the request and processing was successful from the server side. */
-  @Value.Parameter
-  abstract boolean getRequestSuccessful();
+  boolean getRequestSuccessful();
 
   /** @return get the error message if it exists. */
-  @Value.Parameter
-  abstract Optional<String> getErrorMessage();
+  Optional<String> getErrorMessage();
 
   /** @return if the server wants to redirect or point to a remote url it will be here. */
-  @Value.Parameter
   @JsonDeserialize
-  abstract Optional<String> getRageUrl();
+  Optional<String> getRageUrl();
 
   /** @return the message which is Json in the format/content that the server uses. */
-  @Value.Parameter
-  abstract Optional<String> getMessage();
+  Optional<String> getMessage();
 }
