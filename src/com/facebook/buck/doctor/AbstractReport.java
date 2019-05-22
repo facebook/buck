@@ -20,6 +20,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
+import com.facebook.buck.doctor.config.ImmutableSourceControlInfo;
 import com.facebook.buck.doctor.config.SourceControlInfo;
 import com.facebook.buck.doctor.config.UserLocalConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -91,7 +92,7 @@ public abstract class AbstractReport {
     }
     FullVersionControlStats versionControlStats = versionControlStatsOptional.get();
     return Optional.of(
-        SourceControlInfo.of(
+        new ImmutableSourceControlInfo(
             versionControlStats.getCurrentRevisionId(),
             versionControlStats.getBaseBookmarks(),
             Optional.of(versionControlStats.getBranchedFromMasterRevisionId()),

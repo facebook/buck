@@ -16,17 +16,15 @@
 
 package com.facebook.buck.doctor.config;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.versioncontrol.VersionControlSupplier;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableSet;
 import java.io.InputStream;
 import java.util.Optional;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleTuple
-interface AbstractSourceControlInfo {
+@BuckStyleValue
+public interface SourceControlInfo {
   /* Commit hash of the current revision. */
   String getCurrentRevisionId();
   /* A list of bookmarks that the current commit is based and also exist in TRACKED_BOOKMARKS */
