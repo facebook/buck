@@ -22,6 +22,7 @@ import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.ImmutableSourceControlInfo;
 import com.facebook.buck.doctor.config.SourceControlInfo;
+import com.facebook.buck.doctor.config.ImmutableUserLocalConfiguration;
 import com.facebook.buck.doctor.config.UserLocalConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigPaths;
@@ -135,7 +136,7 @@ public abstract class AbstractReport {
     Optional<FileChangesIgnoredReport> fileChangesIgnoredReport = getFileChangesIgnoredReport();
 
     UserLocalConfiguration userLocalConfiguration =
-        UserLocalConfiguration.of(
+        new ImmutableUserLocalConfiguration(
             isNoBuckCheckPresent(), getLocalConfigs(), getConfigOverrides(selectedBuilds));
 
     ImmutableSet<Path> includedPaths =

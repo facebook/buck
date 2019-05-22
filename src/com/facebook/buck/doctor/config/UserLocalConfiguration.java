@@ -16,21 +16,16 @@
 
 package com.facebook.buck.doctor.config;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractUserLocalConfiguration {
+@BuckStyleValue
+public interface UserLocalConfiguration {
 
-  @Value.Parameter
-  abstract boolean isNoBuckCheckPresent();
+  boolean isNoBuckCheckPresent();
 
-  @Value.Parameter
-  abstract ImmutableMap<Path, String> getLocalConfigsContents();
+  ImmutableMap<Path, String> getLocalConfigsContents();
 
-  @Value.Parameter
-  abstract ImmutableMap<String, String> getConfigOverrides();
+  ImmutableMap<String, String> getConfigOverrides();
 }

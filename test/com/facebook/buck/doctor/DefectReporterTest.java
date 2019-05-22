@@ -22,6 +22,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.ImmutableDoctorConfig;
 import com.facebook.buck.doctor.config.ImmutableSourceControlInfo;
+import com.facebook.buck.doctor.config.ImmutableUserLocalConfiguration;
 import com.facebook.buck.doctor.config.UserLocalConfiguration;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -65,7 +66,7 @@ public class DefectReporterTest {
   @Test
   public void testAttachesPaths() throws Exception {
     UserLocalConfiguration userLocalConfiguration =
-        UserLocalConfiguration.of(
+        new ImmutableUserLocalConfiguration(
             true,
             ImmutableMap.of(
                 Paths.get(".buckconfig.local"),
@@ -103,7 +104,7 @@ public class DefectReporterTest {
   @Test
   public void testAttachesReport() throws Exception {
     UserLocalConfiguration testUserLocalConfiguration =
-        UserLocalConfiguration.of(
+        new ImmutableUserLocalConfiguration(
             true,
             ImmutableMap.of(
                 Paths.get(".buckconfig.local"),
@@ -164,7 +165,7 @@ public class DefectReporterTest {
   @Test
   public void testSourceControlExceptionAllowsGeneratingReport() throws Exception {
     UserLocalConfiguration testUserLocalConfiguration =
-        UserLocalConfiguration.of(true, ImmutableMap.of(), ImmutableMap.of());
+        new ImmutableUserLocalConfiguration(true, ImmutableMap.of(), ImmutableMap.of());
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
     DoctorConfig config = new ImmutableDoctorConfig(FakeBuckConfig.builder().build());
