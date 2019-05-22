@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser
+import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 
 /**
@@ -49,14 +50,6 @@ object BuildTargets {
      * @throws BuildTargetParseException
      */
     fun parseOrThrow(target: String): UnconfiguredBuildTarget {
-        val data = BuildTargetPatternParser.parse(target)
-        return if (data.kind == BuildTargetPattern.Kind.SINGLE) {
-            createBuildTargetFromParts(
-                    data.cell,
-                    FsAgnosticPath.of(data.basePath),
-                    data.targetName)
-        } else {
-            throw BuildTargetParseException("$data must be SINGLE build target but was ${data.kind}")
-        }
+        return UnconfiguredBuildTargetParser.parse(target)
     }
 }

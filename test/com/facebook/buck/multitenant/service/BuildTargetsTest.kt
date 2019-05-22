@@ -66,7 +66,6 @@ class BuildTargetsTest {
     }
 
     @Test(expected = BuildTargetParseException::class)
-    @Ignore("BuildTargetPatternParser allows this even though multitenant thinks it should not.")
     fun parseNoColonShouldThrow() {
         BuildTargets.parseOrThrow("//foo/bar")
     }
