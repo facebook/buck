@@ -100,6 +100,20 @@
             }
           }
         }
+      },
+      {
+        "path": "nested/attributes",
+        "nodes": {
+          "nested": {
+            "attributes": {
+              "buck.type": "java_library",
+              "res": {
+                "res1": "resource1.jpg",
+                "res2": "resource2.jpg"
+              }
+            }
+          }
+        }
       }
     ]
   }

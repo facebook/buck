@@ -30,6 +30,7 @@ import com.facebook.buck.util.json.ObjectMappers
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import java.io.InputStream
@@ -98,7 +99,10 @@ private fun normalizeJsonValue(value: JsonNode): Any {
         value.isLong -> value.asLong()
         value.isDouble -> value.asDouble()
         value.isArray -> (value as ArrayNode).map { normalizeJsonValue(it) }
-        else -> throw IllegalArgumentException("normalizeJsonValue() not supported for $value")
+        value.isObject -> (value as ObjectNode).fields().asSequence().map {
+            it.key to normalizeJsonValue(it.value)
+        }.toMap()
+        else -> value.asText()
     }
 }
 
