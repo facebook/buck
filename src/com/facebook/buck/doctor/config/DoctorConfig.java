@@ -18,7 +18,7 @@ package com.facebook.buck.doctor.config;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.collect.ImmutableList;
@@ -26,9 +26,8 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@Value.Immutable(builder = false, copy = false)
-@BuckStyleImmutable
-abstract class AbstractDoctorConfig implements ConfigView<BuckConfig> {
+@BuckStyleValue
+public abstract class DoctorConfig implements ConfigView<BuckConfig> {
 
   public static final String DOCTOR_SECTION = "doctor";
   public static final String PROTOCOL_VERSION_FIELD = "protocol_version";
@@ -54,7 +53,6 @@ abstract class AbstractDoctorConfig implements ConfigView<BuckConfig> {
   public static final String DEFAULT_REPORT_UPLOAD_PATH = "/rage/upload";
 
   @Override
-  @Value.Parameter
   public abstract BuckConfig getDelegate();
 
   @Value.Lazy

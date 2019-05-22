@@ -33,6 +33,7 @@ import com.facebook.buck.doctor.config.DoctorEndpointResponse;
 import com.facebook.buck.doctor.config.DoctorJsonResponse;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
 import com.facebook.buck.doctor.config.DoctorSuggestion;
+import com.facebook.buck.doctor.config.ImmutableDoctorConfig;
 import com.facebook.buck.doctor.config.ImmutableDoctorEndpointResponse;
 import com.facebook.buck.doctor.config.ImmutableDoctorJsonResponse;
 import com.facebook.buck.doctor.config.ImmutableDoctorSuggestion;
@@ -146,7 +147,7 @@ public class DoctorCommandIntegrationTest {
         createDoctorHelper(
             workspace,
             userInputFixture.getUserInput(),
-            DoctorConfig.of(FakeBuckConfig.builder().build()));
+            new ImmutableDoctorConfig(FakeBuckConfig.builder().build()));
     BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
