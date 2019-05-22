@@ -23,6 +23,7 @@ import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_INVOCATION_I
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.doctor.config.BuildLogEntry;
+import com.facebook.buck.doctor.config.ImmutableBuildLogEntry;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.util.BuckConstant;
@@ -76,72 +77,74 @@ public class BuildLogHelper {
   }
 
   private BuildLogEntry newBuildLogEntry(Path logFile) throws IOException {
-    BuildLogEntry.Builder builder = BuildLogEntry.builder();
 
-    Path machineReadableLogFile =
-        logFile.getParent().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME);
+    Optional<Path> machineReadableLogFile =
+        Optional.of(logFile.getParent().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME))
+            .filter(path -> projectFilesystem.isFile(path));
 
-    if (projectFilesystem.isFile(machineReadableLogFile)) {
+    Optional<Integer> exitCode =
+        machineReadableLogFile.flatMap(
+            machineFile -> readObjectFieldFromLog(machineFile, PREFIX_EXIT_CODE, "exitCode"));
 
-      Optional<InvocationInfo> invocationInfo =
-          readObjectFromLog(
-              machineReadableLogFile,
-              PREFIX_INVOCATION_INFO,
-              new TypeReference<InvocationInfo>() {});
-      Optional<Long> startTimestampMs = Optional.empty();
+    Optional<InvocationInfo> invocationInfo =
+        machineReadableLogFile.flatMap(
+            machineLogFile ->
+                readObjectFromLog(
+                    machineLogFile,
+                    PREFIX_INVOCATION_INFO,
+                    new TypeReference<InvocationInfo>() {}));
 
-      if (invocationInfo.isPresent()) {
-        builder.setCommandArgs(
-            Optional.ofNullable(invocationInfo.get().getUnexpandedCommandArgs()));
-        startTimestampMs = Optional.of(invocationInfo.get().getTimestampMillis());
-      }
+    Optional<List<String>> commandArgs =
+        invocationInfo.flatMap(iInfo -> Optional.ofNullable(iInfo.getUnexpandedCommandArgs()));
 
-      builder.setBuildId(
-          Optional.of(
-              invocationInfo.isPresent()
-                  ? invocationInfo.get().getBuildId()
-                  : new BuildId("unknown")));
-      builder.setMachineReadableLogFile(machineReadableLogFile);
-      Optional<Integer> exitCode =
-          readObjectFieldFromLog(machineReadableLogFile, PREFIX_EXIT_CODE, "exitCode");
-      Optional<Long> finishTimestampMs =
-          readObjectFieldFromLog(machineReadableLogFile, PREFIX_BUILD_FINISHED, "timestamp");
+    Optional<BuildId> buildId =
+        machineReadableLogFile.map(
+            machineLogFile ->
+                invocationInfo.map(InvocationInfo::getBuildId).orElse(new BuildId("unknown")));
 
-      builder.setExitCode(exitCode.map(OptionalInt::of).orElseGet(OptionalInt::empty));
-      if (finishTimestampMs.isPresent() && startTimestampMs.isPresent()) {
-        builder.setBuildTimeMs(
-            OptionalInt.of((int) (finishTimestampMs.get() - startTimestampMs.get())));
-      }
-    }
+    Optional<Long> startTimestampMs = invocationInfo.map(InvocationInfo::getTimestampMillis);
 
-    Path ruleKeyLoggerFile = logFile.getParent().resolve(BuckConstant.RULE_KEY_LOGGER_FILE_NAME);
-    if (projectFilesystem.isFile(ruleKeyLoggerFile)) {
-      builder.setRuleKeyLoggerLogFile(ruleKeyLoggerFile);
-    }
+    Optional<Long> finishTimestampMs =
+        machineReadableLogFile.flatMap(
+            machineFile -> readObjectFieldFromLog(machineFile, PREFIX_BUILD_FINISHED, "timestamp"));
 
-    Path ruleKeyDiagKeysFile =
-        logFile.getParent().resolve(BuckConstant.RULE_KEY_DIAG_KEYS_FILE_NAME);
-    if (projectFilesystem.isFile(ruleKeyDiagKeysFile)) {
-      builder.setRuleKeyDiagKeysFile(ruleKeyDiagKeysFile);
-    }
+    OptionalInt buildTimeMs =
+        finishTimestampMs.isPresent() && startTimestampMs.isPresent()
+            ? OptionalInt.of((int) (finishTimestampMs.get() - startTimestampMs.get()))
+            : OptionalInt.empty();
 
-    Path ruleKeyDiagGraphFile =
-        logFile.getParent().resolve(BuckConstant.RULE_KEY_DIAG_GRAPH_FILE_NAME);
-    if (projectFilesystem.isFile(ruleKeyDiagGraphFile)) {
-      builder.setRuleKeyDiagGraphFile(ruleKeyDiagGraphFile);
-    }
+    Optional<Path> ruleKeyLoggerFile =
+        Optional.of(logFile.getParent().resolve(BuckConstant.RULE_KEY_LOGGER_FILE_NAME))
+            .filter(path -> projectFilesystem.isFile(path));
+
+    Optional<Path> ruleKeyDiagKeysFile =
+        Optional.of(logFile.getParent().resolve(BuckConstant.RULE_KEY_DIAG_KEYS_FILE_NAME))
+            .filter(path -> projectFilesystem.isFile(path));
+
+    Optional<Path> ruleKeyDiagGraphFile =
+        Optional.of(logFile.getParent().resolve(BuckConstant.RULE_KEY_DIAG_GRAPH_FILE_NAME))
+            .filter(path -> projectFilesystem.isFile(path));
 
     Optional<Path> traceFile =
-        projectFilesystem.getFilesUnderPath(logFile.getParent()).stream()
+        projectFilesystem.asView()
+            .getFilesUnderPath(logFile.getParent(), EnumSet.of(FileVisitOption.FOLLOW_LINKS))
+            .stream()
             .filter(input -> input.toString().endsWith(".trace"))
             .findFirst();
 
-    return builder
-        .setRelativePath(logFile)
-        .setSize(projectFilesystem.getFileSize(logFile))
-        .setLastModifiedTime(Date.from(projectFilesystem.getLastModifiedTime(logFile).toInstant()))
-        .setTraceFile(traceFile)
-        .build();
+    return ImmutableBuildLogEntry.of(
+        logFile,
+        buildId,
+        commandArgs,
+        exitCode.map(OptionalInt::of).orElseGet(OptionalInt::empty),
+        buildTimeMs,
+        ruleKeyLoggerFile,
+        machineReadableLogFile,
+        ruleKeyDiagKeysFile,
+        ruleKeyDiagGraphFile,
+        traceFile,
+        projectFilesystem.getFileSize(logFile),
+        Date.from(projectFilesystem.getLastModifiedTime(logFile).toInstant()));
   }
 
   private <T> Optional<T> readObjectFromLog(

@@ -16,7 +16,6 @@
 package com.facebook.buck.doctor.config;
 
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.util.Date;
@@ -25,35 +24,47 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractBuildLogEntry {
-  public abstract Path getRelativePath();
+@Value.Immutable(copy = false, builder = false)
+public interface BuildLogEntry {
 
-  public abstract Optional<BuildId> getBuildId();
+  @Value.Parameter
+  Path getRelativePath();
 
-  public abstract Optional<List<String>> getCommandArgs();
+  @Value.Parameter
+  Optional<BuildId> getBuildId();
 
-  public abstract OptionalInt getExitCode();
+  @Value.Parameter
+  Optional<List<String>> getCommandArgs();
 
-  public abstract OptionalInt getBuildTimeMs();
+  @Value.Parameter
+  OptionalInt getExitCode();
 
-  public abstract Optional<Path> getRuleKeyLoggerLogFile();
+  @Value.Parameter
+  OptionalInt getBuildTimeMs();
 
-  public abstract Optional<Path> getMachineReadableLogFile();
+  @Value.Parameter
+  Optional<Path> getRuleKeyLoggerLogFile();
 
-  public abstract Optional<Path> getRuleKeyDiagKeysFile();
+  @Value.Parameter
+  Optional<Path> getMachineReadableLogFile();
 
-  public abstract Optional<Path> getRuleKeyDiagGraphFile();
+  @Value.Parameter
+  Optional<Path> getRuleKeyDiagKeysFile();
 
-  public abstract Optional<Path> getTraceFile();
+  @Value.Parameter
+  Optional<Path> getRuleKeyDiagGraphFile();
 
-  public abstract long getSize();
+  @Value.Parameter
+  Optional<Path> getTraceFile();
 
-  public abstract Date getLastModifiedTime();
+  @Value.Parameter
+  long getSize();
+
+  @Value.Parameter
+  Date getLastModifiedTime();
 
   @Value.Check
-  void pathIsRelative() {
+  default void pathIsRelative() {
     Preconditions.checkState(!getRelativePath().isAbsolute());
     if (getRuleKeyLoggerLogFile().isPresent()) {
       Preconditions.checkState(!getRuleKeyLoggerLogFile().get().isAbsolute());

@@ -24,6 +24,7 @@ import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorEndpointResponse;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
+import com.facebook.buck.doctor.config.ImmutableBuildLogEntry;
 import com.facebook.buck.doctor.config.ImmutableDoctorEndpointResponse;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -33,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Optional;
+import java.util.OptionalInt;
 import okhttp3.Interceptor.Chain;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -139,14 +141,25 @@ public class DoctorReportHelperTest {
                 })
             .build();
 
+    BuildLogEntry testLogEntry =
+        ImmutableBuildLogEntry.of(
+            Paths.get("test"),
+            Optional.empty(),
+            Optional.empty(),
+            OptionalInt.empty(),
+            OptionalInt.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            10,
+            new Date());
+
     helper.uploadRequest(
         testClient,
         helper.generateEndpointRequest(
-            BuildLogEntry.builder()
-                .setRelativePath(Paths.get("test"))
-                .setSize(10)
-                .setLastModifiedTime(new Date())
-                .build(),
+            testLogEntry,
             DefectSubmitResult.builder().setRequestProtocol(DoctorProtocolVersion.JSON).build()));
   }
 }
