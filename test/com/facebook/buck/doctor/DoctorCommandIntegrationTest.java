@@ -33,6 +33,7 @@ import com.facebook.buck.doctor.config.DoctorEndpointResponse;
 import com.facebook.buck.doctor.config.DoctorJsonResponse;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
 import com.facebook.buck.doctor.config.DoctorSuggestion;
+import com.facebook.buck.doctor.config.ImmutableDoctorEndpointResponse;
 import com.facebook.buck.doctor.config.ImmutableDoctorSuggestion;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -115,7 +116,7 @@ public class DoctorCommandIntegrationTest {
             .build();
 
     doctorResponse =
-        DoctorEndpointResponse.of(
+        new ImmutableDoctorEndpointResponse(
             Optional.empty(),
             ImmutableList.of(
                 new ImmutableDoctorSuggestion(

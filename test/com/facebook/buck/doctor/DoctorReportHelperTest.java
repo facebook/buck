@@ -24,6 +24,7 @@ import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorEndpointResponse;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
+import com.facebook.buck.doctor.config.ImmutableDoctorEndpointResponse;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -69,7 +70,7 @@ public class DoctorReportHelperTest {
 
     String errorMessage = "This is an error message.";
     DoctorEndpointResponse response =
-        DoctorEndpointResponse.of(Optional.of(errorMessage), ImmutableList.of());
+        new ImmutableDoctorEndpointResponse(Optional.of(errorMessage), ImmutableList.of());
 
     helper.presentResponse(response);
     assertEquals("=> " + errorMessage + System.lineSeparator(), console.getTextWrittenToStdOut());
@@ -87,7 +88,7 @@ public class DoctorReportHelperTest {
             doctorConfig);
 
     DoctorEndpointResponse response =
-        DoctorEndpointResponse.of(Optional.empty(), ImmutableList.of());
+        new ImmutableDoctorEndpointResponse(Optional.empty(), ImmutableList.of());
 
     helper.presentResponse(response);
     assertEquals(

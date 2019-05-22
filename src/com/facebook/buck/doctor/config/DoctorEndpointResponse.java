@@ -16,20 +16,16 @@
 
 package com.facebook.buck.doctor.config;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-@JsonDeserialize(as = DoctorEndpointResponse.class)
-abstract class AbstractDoctorEndpointResponse {
+@BuckStyleValue
+@JsonDeserialize(as = ImmutableDoctorEndpointResponse.class)
+public interface DoctorEndpointResponse {
 
-  @Value.Parameter
-  abstract Optional<String> getErrorMessage();
+  Optional<String> getErrorMessage();
 
-  @Value.Parameter
-  abstract ImmutableList<DoctorSuggestion> getSuggestions();
+  ImmutableList<DoctorSuggestion> getSuggestions();
 }
