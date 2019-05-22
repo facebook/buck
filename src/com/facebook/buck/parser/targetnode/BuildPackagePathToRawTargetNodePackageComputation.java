@@ -153,7 +153,8 @@ public class BuildPackagePathToRawTargetNodePackageComputation
                   cell.getCanonicalName().orElse(""),
                   baseName,
                   target,
-                  UnconfiguredBuildTarget.NO_FLAVORS));
+                  UnconfiguredBuildTarget.NO_FLAVORS),
+              key.getPath());
       builder.add(depkey);
     }
     return builder.build();

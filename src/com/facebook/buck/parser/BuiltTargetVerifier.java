@@ -32,7 +32,7 @@ import java.nio.file.Path;
 import java.util.Map;
 
 /** Verifies that the {@link BuildTarget} is valid during parsing */
-class BuiltTargetVerifier {
+public class BuiltTargetVerifier {
 
   private static final Logger LOG = Logger.get(BuiltTargetVerifier.class);
 

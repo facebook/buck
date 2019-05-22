@@ -112,9 +112,11 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
             ImmutableBuildPackagePathToRawTargetNodePackageKey.of(Paths.get("")),
             new FakeComputationEnvironment(
                 ImmutableMap.of(
-                    ImmutableBuildTargetToRawTargetNodeKey.of(unconfiguredBuildTarget1),
+                    ImmutableBuildTargetToRawTargetNodeKey.of(
+                        unconfiguredBuildTarget1, Paths.get("")),
                     rawTargetNode1,
-                    ImmutableBuildTargetToRawTargetNodeKey.of(unconfiguredBuildTarget2),
+                    ImmutableBuildTargetToRawTargetNodeKey.of(
+                        unconfiguredBuildTarget2, Paths.get("")),
                     rawTargetNode2)));
 
     ImmutableMap<String, RawTargetNodeWithDeps> allTargets =

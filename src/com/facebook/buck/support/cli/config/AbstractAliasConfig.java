@@ -23,11 +23,13 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Streams;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -54,6 +56,17 @@ abstract class AbstractAliasConfig implements ConfigView<BuckConfig> {
 
   public ImmutableMap<String, String> getEntries() {
     return getDelegate().getEntriesForSection(SECTION);
+  }
+
+  /**
+   * Accept a list of strings and for those of them which are configured aliases, convert them to
+   * appropriate aliased values. The order of the resulting list does not change.
+   */
+  public ImmutableList<String> resolveAliases(Iterable<String> input) {
+    ImmutableMap<String, String> entries = getEntries();
+    return Streams.stream(input)
+        .map(it -> entries.getOrDefault(it, it))
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Value.Lazy

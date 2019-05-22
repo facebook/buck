@@ -109,13 +109,14 @@ class ProjectBuildFileParserPool implements AutoCloseable {
                 ResourcePool.ResourceUsageErrorPolicy.RETIRE,
                 () ->
                     projectBuildFileParserFactory.createBuildFileParser(
-                        buckEventBus, c, watchman)));
+                        buckEventBus, c, watchman, false)));
   }
 
   private synchronized ProjectBuildFileParser getParserForCell(
       BuckEventBus buckEventBus, Cell cell, Watchman watchman) {
     return nonPooledCells.computeIfAbsent(
-        cell, c -> projectBuildFileParserFactory.createBuildFileParser(buckEventBus, c, watchman));
+        cell,
+        c -> projectBuildFileParserFactory.createBuildFileParser(buckEventBus, c, watchman, false));
   }
 
   private void reportProfile() {

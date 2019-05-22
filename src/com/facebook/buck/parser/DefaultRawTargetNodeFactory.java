@@ -38,7 +38,7 @@ import java.util.Objects;
  * Creates {@link RawTargetNode} instances from raw data coming in form the {@link
  * ProjectBuildFileParser}.
  */
-class DefaultRawTargetNodeFactory implements RawTargetNodeFactory<Map<String, Object>> {
+public class DefaultRawTargetNodeFactory implements RawTargetNodeFactory<Map<String, Object>> {
 
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final BuiltTargetVerifier builtTargetVerifier;

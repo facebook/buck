@@ -63,6 +63,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 
 public class DefaultProjectBuildFileParserFactory implements ProjectBuildFileParserFactory {
   private final TypeCoercerFactory typeCoercerFactory;
@@ -137,7 +138,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
    */
   @Override
   public ProjectBuildFileParser createBuildFileParser(
-      BuckEventBus eventBus, Cell cell, Watchman watchman) {
+      BuckEventBus eventBus, Cell cell, Watchman watchman, boolean threadSafe) {
 
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
 
@@ -177,7 +178,13 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             .build();
     return EventReportingProjectBuildFileParser.of(
         createProjectBuildFileParser(
-            cell, typeCoercerFactory, console, eventBus, parserConfig, buildFileParserOptions),
+            cell,
+            typeCoercerFactory,
+            console,
+            eventBus,
+            parserConfig,
+            buildFileParserOptions,
+            threadSafe),
         eventBus);
   }
 
@@ -210,16 +217,26 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       Console console,
       BuckEventBus eventBus,
       ParserConfig parserConfig,
-      ProjectBuildFileParserOptions buildFileParserOptions) {
+      ProjectBuildFileParserOptions buildFileParserOptions,
+      boolean threadSafe) {
     ProjectBuildFileParser parser;
     Syntax defaultBuildFileSyntax = parserConfig.getDefaultBuildFileSyntax();
+
+    // Skylark parser is thread-safe, but Python parser is not, so whenever we instantiate
+    // Python parser we wrap it with ConcurrentParser to get thread safety
+
     if (parserConfig.isPolyglotParsingEnabled()) {
       parser =
           HybridProjectBuildFileParser.using(
               ImmutableMap.of(
                   Syntax.PYTHON_DSL,
                   newPythonParser(
-                      cell, typeCoercerFactory, console, eventBus, buildFileParserOptions),
+                      cell,
+                      typeCoercerFactory,
+                      console,
+                      eventBus,
+                      buildFileParserOptions,
+                      threadSafe),
                   Syntax.SKYLARK,
                   addCachingDecoratorIfEnabled(
                       cell.getBuckConfig(),
@@ -249,7 +266,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
           break;
         case PYTHON_DSL:
           parser =
-              newPythonParser(cell, typeCoercerFactory, console, eventBus, buildFileParserOptions);
+              newPythonParser(
+                  cell, typeCoercerFactory, console, eventBus, buildFileParserOptions, threadSafe);
           break;
         default:
           throw new HumanReadableException(
@@ -265,19 +283,26 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
     return parser;
   }
 
-  private PythonDslProjectBuildFileParser newPythonParser(
+  private ProjectBuildFileParser newPythonParser(
       Cell cell,
       TypeCoercerFactory typeCoercerFactory,
       Console console,
       BuckEventBus eventBus,
-      ProjectBuildFileParserOptions buildFileParserOptions) {
-    return new PythonDslProjectBuildFileParser(
-        buildFileParserOptions,
-        typeCoercerFactory,
-        cell.getBuckConfig().getEnvironment(),
-        eventBus,
-        new DefaultProcessExecutor(console),
-        processedBytes);
+      ProjectBuildFileParserOptions buildFileParserOptions,
+      boolean threadSafe) {
+    Supplier<ProjectBuildFileParser> parserSupplier =
+        () ->
+            new PythonDslProjectBuildFileParser(
+                buildFileParserOptions,
+                typeCoercerFactory,
+                cell.getBuckConfig().getEnvironment(),
+                eventBus,
+                new DefaultProcessExecutor(console),
+                processedBytes);
+    if (!threadSafe) {
+      return parserSupplier.get();
+    }
+    return new ConcurrentProjectBuildFileParser(parserSupplier);
   }
 
   private static SkylarkProjectBuildFileParser newSkylarkParser(

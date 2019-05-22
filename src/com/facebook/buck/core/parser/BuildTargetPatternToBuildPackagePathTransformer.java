@@ -37,7 +37,6 @@ import java.nio.file.Path;
  */
 public class BuildTargetPatternToBuildPackagePathTransformer
     implements GraphComputation<BuildTargetPatternToBuildPackagePathKey, BuildPackagePaths> {
-
   private final String buildFileName;
 
   private BuildTargetPatternToBuildPackagePathTransformer(String buildFileName) {

@@ -93,7 +93,8 @@ public class RawTargetNodeToRawTargetNodeWithDepsComputationTest {
             ImmutableRawTargetNodeToRawTargetNodeWithDepsKey.of(rawTargetNode1, Paths.get("")),
             new FakeComputationEnvironment(
                 ImmutableMap.of(
-                    ImmutableBuildTargetToRawTargetNodeKey.of(unconfiguredBuildTarget1),
+                    ImmutableBuildTargetToRawTargetNodeKey.of(
+                        unconfiguredBuildTarget1, Paths.get("")),
                     rawTargetNode1)));
 
     ImmutableSet<UnconfiguredBuildTarget> deps = rawTargetNode.getDeps();

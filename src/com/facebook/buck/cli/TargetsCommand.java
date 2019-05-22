@@ -18,9 +18,16 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.HasTests;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
+import com.facebook.buck.core.graph.transformation.model.ComposedKey;
+import com.facebook.buck.core.graph.transformation.model.ComposedResult;
+import com.facebook.buck.core.graph.transformation.model.ComputeKey;
+import com.facebook.buck.core.graph.transformation.model.ImmutableComposedKey;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
@@ -33,6 +40,11 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphHashing;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
+import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDepsPackage;
+import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathKey;
+import com.facebook.buck.core.parser.ImmutableBuildTargetPatternToBuildPackagePathKey;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -64,6 +76,7 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
+import com.facebook.buck.support.cli.config.AliasConfig;
 import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.support.cli.config.JsonAttributeFormat;
 import com.facebook.buck.util.CommandLineException;
@@ -76,6 +89,7 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionException;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -91,6 +105,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.google.common.io.Closer;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
@@ -138,6 +153,9 @@ public class TargetsCommand extends AbstractCommand {
           "Modifies the --referenced-file and --show-target-hash flags to pretend that "
               + "targets depend on their tests (experimental)")
   private boolean isDetectTestChanges;
+
+  @Option(name = "--show-parse-state", usage = "Serializes all the build targets (experimental)")
+  private boolean isShowParseState;
 
   @Option(
       name = "--type",
@@ -311,6 +329,13 @@ public class TargetsCommand extends AbstractCommand {
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     assertArguments();
 
+    // Shortcut to parse the provided patterns using Graph Engine and display the result
+    // All other parameters are effectively ignored
+    if (isShowParseState) {
+      outputParseStateWithGraphEngine(params);
+      return ExitCode.SUCCESS;
+    }
+
     try (CommandThreadManager pool =
         new CommandThreadManager("Targets", getConcurrencyLimit(params.getBuckConfig()))) {
       // Exit early if --resolve-alias is passed in: no need to parse any build files.
@@ -343,10 +368,102 @@ public class TargetsCommand extends AbstractCommand {
     // referencedFiles can try to find targets based on a file, so make sure at least
     // /something/ is provided. We don't want people accidentally crawling a whole repo
     // when they didn't intend to.
-    if (arguments.isEmpty() && this.referencedFiles.get().isEmpty()) {
+    if (arguments.isEmpty() && (this.referencedFiles.get().isEmpty() || isShowParseState)) {
       throw new CommandLineException(
           "Must specify at least one build target pattern. See https://buck.build/concept/build_target_pattern.html");
     }
+  }
+
+  // Graph Engine implementation of parsing the spec, serializing target nodes with dependencies,
+  // and outputting it to console
+  private void outputParseStateWithGraphEngine(CommandRunnerParams params) throws IOException {
+
+    // Convert aliases to build target patterns
+    ImmutableSet<String> targetPatterns =
+        ImmutableSet.copyOf(AliasConfig.from(params.getBuckConfig()).resolveAliases(arguments));
+
+    // Parse target patterns
+    ImmutableSet<BuildTargetPattern> buildTargetPatterns =
+        targetPatterns.stream()
+            .map(BuildTargetPatternParser::parse)
+            .collect(ImmutableSet.toImmutableSet());
+
+    // Group all specs by cell
+    // TODO: figure out how to group by with ImmutableMap
+    Map<String, List<BuildTargetPattern>> patternsPerCell =
+        buildTargetPatterns.stream().collect(Collectors.groupingBy(pattern -> pattern.getCell()));
+
+    // Build graph engines for each cell in provided specs and evaluate
+    List<RawTargetNodeWithDepsPackage> nodes = new ArrayList<>();
+    Closer closer = Closer.create();
+    try {
+      // For each cell, build a Graph Engine which will parse that cell's targets
+      // In the returned result, the key is a cell name and the value is Graph Engine instance
+      // configured for this cell
+      ImmutableMap<String, GraphTransformationEngine> enginesPerCell =
+          buildGraphEngineForEachCell(
+              ImmutableSet.copyOf(patternsPerCell.keySet()), closer, params);
+
+      // Execute graph engine for each cell sequentially
+      // TODO(buck_team): parallelize it with Graph Engine
+      for (Map.Entry<String, List<BuildTargetPattern>> cellAndPatterns :
+          patternsPerCell.entrySet()) {
+        GraphTransformationEngine engine = enginesPerCell.get(cellAndPatterns.getKey());
+
+        ImmutableSet<
+                ComposedKey<BuildTargetPatternToBuildPackagePathKey, RawTargetNodeWithDepsPackage>>
+            keys =
+                cellAndPatterns.getValue().stream()
+                    .map(
+                        pattern ->
+                            ImmutableComposedKey.of(
+                                (BuildTargetPatternToBuildPackagePathKey)
+                                    ImmutableBuildTargetPatternToBuildPackagePathKey.of(pattern),
+                                RawTargetNodeWithDepsPackage.class))
+                    .collect(ImmutableSet.toImmutableSet());
+
+        ImmutableMap<
+                ComposedKey<BuildTargetPatternToBuildPackagePathKey, RawTargetNodeWithDepsPackage>,
+                ComposedResult<
+                    ComputeKey<RawTargetNodeWithDepsPackage>, RawTargetNodeWithDepsPackage>>
+            results = engine.computeAllUnchecked(keys);
+
+        results.values().forEach(result -> nodes.addAll(result.resultMap().values()));
+      }
+    } catch (Throwable th) {
+      // required by Closer to properly throw main exception along with suppressed ones
+      closer.rethrow(th);
+    } finally {
+      closer.close();
+    }
+
+    // output
+    try (JsonGenerator generator =
+        ObjectMappers.createGenerator(params.getConsole().getStdOut()).useDefaultPrettyPrinter()) {
+      ObjectMappers.WRITER.writeValue(generator, nodes);
+    }
+  }
+
+  private ImmutableMap<String, GraphTransformationEngine> buildGraphEngineForEachCell(
+      ImmutableSet<String> cellNames, Closer closer, CommandRunnerParams params) {
+    ImmutableMap.Builder<String, GraphTransformationEngine> builder =
+        ImmutableMap.builderWithExpectedSize(cellNames.size());
+    for (String cellName : cellNames) {
+
+      // Linear scan to find a cell that corresponds to the name. It is not supposed to have a lot
+      // of cells so this is probably fine for now.
+      // TODO(buck_team): add a method to resolve cell by name from the context
+      Cell cell =
+          params.getCell().getAllCells().stream()
+              .filter(name -> name.getCanonicalName().orElse("").equals(cellName))
+              .findFirst()
+              .orElseThrow(() -> new BuckUncheckedExecutionException("Unknown cell " + cellName));
+
+      GraphTransformationEngine engine = GraphEngineFactory.create(cell, closer, params);
+
+      builder.put(cellName, engine);
+    }
+    return builder.build();
   }
 
   private ExitCode runWithExecutor(CommandRunnerParams params, ListeningExecutorService executor)

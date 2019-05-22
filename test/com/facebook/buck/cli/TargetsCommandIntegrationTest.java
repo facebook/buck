@@ -51,6 +51,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,6 +60,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.apache.thrift.TException;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -1186,6 +1188,39 @@ public class TargetsCommandIntegrationTest {
     assertNotEquals(
         foundTargetsAndHashesWithConfigA.get("//:echo"),
         foundTargetsAndHashesWithConfigB.get("//:echo"));
+  }
+
+  @Test
+  public void canParseAndSerializeStateWithGraphEngine() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "target_command", tmp);
+    workspace.setUp();
+
+    ProcessResult resultAll = workspace.runBuckCommand("targets", "--show-parse-state", "//...");
+    resultAll.assertSuccess();
+
+    JsonNode result = ObjectMappers.READER.readTree(resultAll.getStdout());
+
+    assertNotNull("should be a list of packages at top level", result.isArray());
+    assertEquals("should parse exactly one package", 1, result.size());
+
+    JsonNode buildPackage = result.get(0);
+
+    assertEquals("package path should be root path", "", buildPackage.get("path").asText());
+
+    JsonNode nodes = buildPackage.get("nodes");
+
+    assertEquals("should parse all nodes", 3, nodes.size());
+
+    assertNotNull("should parse node B", nodes.get("B"));
+    assertNotNull("should parse node A", nodes.get("A"));
+    assertNotNull("should parse node test_library", nodes.get("test-library"));
+    assertThat(
+        "B should depend on both A and test_library",
+        Streams.stream(nodes.get("B").get("deps"))
+            .map(node -> node.asText())
+            .collect(Collectors.toList()),
+        Matchers.containsInAnyOrder("//:A", "//:test-library"));
   }
 
   private static ImmutableList<String> extractTargetsFromOutput(String output) {

@@ -21,6 +21,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /** Transformation key containing build target to get {@link RawTargetNode} for. */
@@ -33,6 +34,13 @@ public abstract class BuildTargetToRawTargetNodeKey implements ComputeKey<RawTar
   /** Build target that uniquely identifies {@link RawTargetNode} */
   @Value.Parameter
   public abstract UnconfiguredBuildTarget getBuildTarget();
+
+  /**
+   * {@link Path} to the root of a package that has this {@link RawTargetNode}, relative to parse
+   * root, usually cell root
+   */
+  @Value.Parameter
+  public abstract Path getPackagePath();
 
   @Override
   public ComputationIdentifier<RawTargetNode> getIdentifier() {
