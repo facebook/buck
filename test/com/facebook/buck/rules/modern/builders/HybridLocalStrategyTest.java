@@ -122,14 +122,14 @@ public class HybridLocalStrategyTest {
           }
         }
         contextFactory.waiting.release(5);
-        Futures.allAsList(localResults).get(1, TimeUnit.SECONDS);
+        Futures.allAsList(localResults).get(2, TimeUnit.SECONDS);
 
         for (ListenableFuture<Optional<BuildResult>> r : localResults) {
           assertTrue(r.isDone());
           assertTrue(r.get().get().isSuccess());
         }
         contextFactory.waiting.release(5);
-        Futures.allAsList(delegateResults).get(1, TimeUnit.SECONDS);
+        Futures.allAsList(delegateResults).get(2, TimeUnit.SECONDS);
         for (ListenableFuture<Optional<BuildResult>> r : delegateResults) {
           assertTrue(r.isDone());
           assertTrue(r.get().get().isSuccess());
