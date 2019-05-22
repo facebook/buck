@@ -35,6 +35,30 @@ private val JAVA_LIBRARY: RuleType = RuleTypeFactory.createBuildRule("java_libra
 class IndexTest {
 
     @Test
+    fun getLatestCommit() {
+        val (_, indexAppender) = IndexFactory.createIndex()
+        assertNull("Empty Index should not have a latest commit.", indexAppender.getLatestCommit())
+
+        val commit1 = "e69ef4691d6af7b6c6b5b3cdc1b8b2efcc4ad64b"
+        indexAppender.addCommitData(commit1, BuildPackageChanges())
+        assertEquals(commit1, indexAppender.getLatestCommit())
+        assertEquals(
+                "No graph changes, so generation should still be 0.",
+                0,
+                indexAppender.getGeneration(commit1))
+
+        val commit2 = "1d76d7640394be3685980da4c0f2109424678937"
+        indexAppender.addCommitData(commit2, BuildPackageChanges(addedBuildPackages = listOf(
+                BuildPackage(FsAgnosticPath.of("foo"), setOf(createRawRule("//foo:bar", listOf())))
+        )))
+        assertEquals(commit2, indexAppender.getLatestCommit())
+        assertEquals(
+                "Graph changes should increment generation to 1.",
+                1,
+                indexAppender.getGeneration(commit2))
+    }
+
+    @Test
     fun getTargetsAndDeps() {
         val (index, generations) = loadIndex("index_test_targets_and_deps.json")
         val generation1 = generations[0]

@@ -19,6 +19,7 @@ package com.facebook.buck.multitenant.service
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Appends data that backs an [Index].
@@ -36,6 +37,8 @@ class IndexAppender internal constructor(
      */
     private val generation = AtomicInteger()
 
+    private val latestCommit = AtomicReference<Commit>()
+
     /** Stores commit to generation mappings created by [addCommitData]. */
     private val commitToGeneration = ConcurrentHashMap<Commit, Int>()
 
@@ -44,6 +47,13 @@ class IndexAppender internal constructor(
      *     generation is available
      */
     fun getGeneration(commit: Commit): Int? = commitToGeneration[commit]
+
+    /**
+     * @return the commit most recently added to the index or `null` if no commits have been added.
+     *     If the result is non-null, then it is guaranteed to return a non-null value when used
+     *     with [getGeneration].
+     */
+    fun getLatestCommit(): Commit? = latestCommit.get()
 
     /**
      * Currently, the caller is responsible for ensuring that addCommitData() is invoked
@@ -65,8 +75,7 @@ class IndexAppender internal constructor(
         // If there are no updates to any of the generation maps, add a new entry for the current
         // commit using the existing generation in the commitToGeneration map.
         if (deltas.isEmpty()) {
-            val oldValue = commitToGeneration.putIfAbsent(commit, currentGeneration)
-            require(oldValue == null) { "Should not have existing value for $commit" }
+            addMapping(commit, currentGeneration, updateGeneration = false)
             return
         }
 
@@ -111,8 +120,15 @@ class IndexAppender internal constructor(
             }
         }
 
+        addMapping(commit, nextGeneration, updateGeneration = true)
+    }
+
+    private fun addMapping(commit: Commit, nextGeneration: Generation, updateGeneration: Boolean) {
         val oldValue = commitToGeneration.putIfAbsent(commit, nextGeneration)
         require(oldValue == null) { "Should not have existing value for $commit" }
-        generation.set(nextGeneration)
+        latestCommit.set(commit)
+        if (updateGeneration) {
+            generation.set(nextGeneration)
+        }
     }
 }
