@@ -32,12 +32,13 @@ import com.google.common.collect.ImmutableSortedMap;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection<AlterRuleKey>> {
   private static final Comparator<ValueExtractor> COMPARATOR =
@@ -54,7 +55,7 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
 
     // Collect the superclasses first so that they are added before interfaces. That seems more
     // aesthetically pleasing to me.
-    for (Class<?> current = key; !Object.class.equals(current); current = current.getSuperclass()) {
+    for (Class<?> current = key; isBuckType(current); current = current.getSuperclass()) {
       superClasses.add(current);
     }
 
@@ -63,7 +64,8 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
     while (!workQueue.isEmpty()) {
       Class<?> cls = workQueue.poll();
       if (superClassesAndInterfaces.add(cls)) {
-        workQueue.addAll(Arrays.asList(cls.getInterfaces()));
+        workQueue.addAll(
+            Stream.of(cls.getInterfaces()).filter(x -> isBuckType(x)).collect(Collectors.toList()));
       }
     }
 
@@ -106,6 +108,10 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
       builder.addAll(sortedExtractors.build().values());
     }
     return builder.build();
+  }
+
+  private static boolean isBuckType(Class<?> current) {
+    return current.getName().startsWith("com.facebook.buck.");
   }
 
   private boolean hasImmutableAnnotation(Class<?> current) {
