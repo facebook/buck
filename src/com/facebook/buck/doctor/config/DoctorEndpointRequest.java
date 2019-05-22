@@ -17,20 +17,16 @@
 package com.facebook.buck.doctor.config;
 
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.util.Optional;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractDoctorEndpointRequest {
+@BuckStyleValue
+public interface DoctorEndpointRequest {
 
-  @Value.Parameter
-  abstract Optional<BuildId> getBuildId();
+  Optional<BuildId> getBuildId();
 
   /** @return the directory where all logs are under. */
-  @Value.Parameter
-  abstract String getLogDirPath();
+  String getLogDirPath();
 
   /**
    * For more information how MachineReadableLog works check {@link
@@ -38,14 +34,11 @@ abstract class AbstractDoctorEndpointRequest {
    *
    * @return the contents of the machine readable logs. Each line marks a different key to json.
    */
-  @Value.Parameter
-  abstract Optional<String> getMachineReadableLog();
+  Optional<String> getMachineReadableLog();
 
   /** @return the contents of the message that endpoint returned. */
-  @Value.Parameter
-  abstract Optional<String> getEndpointMessage();
+  Optional<String> getEndpointMessage();
 
   /** @return if report command returned a redirect link this will be saved here. */
-  @Value.Parameter
-  abstract Optional<String> getReportUrl();
+  Optional<String> getReportUrl();
 }
