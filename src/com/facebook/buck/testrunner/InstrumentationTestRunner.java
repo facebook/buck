@@ -53,7 +53,8 @@ public class InstrumentationTestRunner {
   private final String testRunner;
   private final File outputDirectory;
   private final String exopackageLocalPath;
-  private final boolean attemptUninstall;
+  private final boolean attemptUninstallApkUnderTest;
+  private final boolean attemptUninstallInstrumentationApk;
   private final Map<String, String> extraInstrumentationArguments;
   private final boolean debug;
   private final boolean codeCoverage;
@@ -73,7 +74,8 @@ public class InstrumentationTestRunner {
       String apkUnderTestPath,
       String exopackageLocalPath,
       String apkUnderTestExopackageLocalPath,
-      boolean attemptUninstall,
+      boolean attemptUninstallApkUnderTest,
+      boolean attemptUninstallInstrumentationApk,
       boolean debug,
       boolean codeCoverage,
       String codeCoverageOutputFile,
@@ -88,7 +90,8 @@ public class InstrumentationTestRunner {
     this.apkUnderTestPath = apkUnderTestPath;
     this.exopackageLocalPath = exopackageLocalPath;
     this.apkUnderTestExopackageLocalPath = apkUnderTestExopackageLocalPath;
-    this.attemptUninstall = attemptUninstall;
+    this.attemptUninstallApkUnderTest = attemptUninstallApkUnderTest;
+    this.attemptUninstallInstrumentationApk = attemptUninstallInstrumentationApk;
     this.codeCoverageOutputFile = codeCoverageOutputFile;
     this.extraInstrumentationArguments = extraInstrumentationArguments;
     this.debug = debug;
@@ -106,7 +109,8 @@ public class InstrumentationTestRunner {
     String codeCoverageOutputFile = null;
     String exopackageLocalPath = null;
     String apkUnderTestExopackageLocalPath = null;
-    boolean attemptUninstall = false;
+    boolean attemptUninstallApkUnderTest = false;
+    boolean attemptUninstallInstrumentationApk = false;
     boolean debug = false;
     boolean codeCoverage = false;
     Map<String, String> extraInstrumentationArguments = new HashMap<String, String>();
@@ -145,7 +149,14 @@ public class InstrumentationTestRunner {
           apkUnderTestExopackageLocalPath = args[++i];
           break;
         case "--attempt-uninstall":
-          attemptUninstall = true;
+          attemptUninstallApkUnderTest = true;
+          attemptUninstallInstrumentationApk = true;
+          break;
+        case "--attempt-uninstall-apk-under-test":
+          attemptUninstallApkUnderTest = true;
+          break;
+        case "--attempt-uninstall-instrumentation-apk":
+          attemptUninstallInstrumentationApk = true;
           break;
         case "--debug":
           debug = true;
@@ -210,7 +221,8 @@ public class InstrumentationTestRunner {
         apkUnderTestPath,
         exopackageLocalPath,
         apkUnderTestExopackageLocalPath,
-        attemptUninstall,
+        attemptUninstallApkUnderTest,
+        attemptUninstallInstrumentationApk,
         debug,
         codeCoverage,
         codeCoverageOutputFile,
@@ -308,9 +320,11 @@ public class InstrumentationTestRunner {
             "/data/data/" + this.packageName + "/files/coverage.ec", this.codeCoverageOutputFile);
       }
     } finally {
-      if (this.attemptUninstall) {
+      if (this.attemptUninstallInstrumentationApk) {
         // Best effort uninstall from the emulator/device.
         device.uninstallPackage(this.packageName);
+      }
+      if (this.attemptUninstallApkUnderTest) {
         device.uninstallPackage(this.targetPackageName);
       }
     }
