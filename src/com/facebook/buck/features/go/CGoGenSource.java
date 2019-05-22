@@ -139,6 +139,7 @@ public class CGoGenSource extends AbstractBuildRule {
     this.buildDeps =
         ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(BuildableSupport.getDepsCollection(cgo, ruleFinder))
+            .addAll(BuildableSupport.getDepsCollection(cpp, ruleFinder))
             .addAll(ppFlags.getDeps(ruleFinder))
             .addAll(ruleFinder.filterBuildRuleInputs(cgoSrcs))
             .add(headerSymlinkTree)
