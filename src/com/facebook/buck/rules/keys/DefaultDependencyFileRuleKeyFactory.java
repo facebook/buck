@@ -114,6 +114,7 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
     private final SupportsDependencyFileRuleKey rule;
     private final KeyType keyType;
     private final ImmutableSet<DependencyFileEntry> depFileEntriesSet;
+    private final ImmutableSet<Path> depFilePossiblePaths;
 
     private final Predicate<SourcePath> coveredPathPredicate;
     private final Predicate<SourcePath> interestingPathPredicate;
@@ -134,8 +135,23 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
       this.keyType = keyType;
       this.rule = rule;
       this.depFileEntriesSet = ImmutableSet.copyOf(depFileEntries);
+      this.depFilePossiblePaths = getDepfilePossiblePaths(depFileEntries);
       this.coveredPathPredicate = coveredPathPredicate;
       this.interestingPathPredicate = interestingPathPredicate;
+    }
+
+    /**
+     * To optimize the common case where a path isn't part of the depfile, we create a set of
+     * possible Paths that may be the pathToFile for a DependencyFileEntry.
+     */
+    private ImmutableSet<Path> getDepfilePossiblePaths(
+        ImmutableList<DependencyFileEntry> depFileEntries) {
+      ImmutableSet.Builder<Path> builder =
+          ImmutableSet.builderWithExpectedSize(depFileEntries.size());
+      for (DependencyFileEntry entry : depFileEntries) {
+        builder.add(entry.pathToFile());
+      }
+      return builder.build();
     }
 
     @Override
@@ -210,15 +226,21 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
           // 1: If this path is not covered by dep-file, then add it to the builder directly.
           this.setSourcePathDirectly(input);
         } else {
-          // 2,3,4: This input path is covered by the dep-file
-          DependencyFileEntry entry =
-              DependencyFileEntry.fromSourcePath(input, ruleFinder.getSourcePathResolver());
-          if (depFileEntriesSet.contains(entry)) {
-            // 2: input was declared as a real dependency by the dep-file entries so add to key
-            this.setSourcePathDirectly(input);
-            sourcePaths.add(input);
-            accountedEntries.add(entry);
-          } else if (interestingPathPredicate.test(input)) {
+          if (depFilePossiblePaths.contains(
+              DependencyFileEntry.getPathToFile(ruleFinder.getSourcePathResolver(), input))) {
+            // 2,3,4: This input path is covered by the dep-file
+            DependencyFileEntry entry =
+                DependencyFileEntry.fromSourcePath(input, ruleFinder.getSourcePathResolver());
+            if (depFileEntriesSet.contains(entry)) {
+              // 2: input was declared as a real dependency by the dep-file entries so add to key
+              this.setSourcePathDirectly(input);
+              sourcePaths.add(input);
+              accountedEntries.add(entry);
+              return this;
+            }
+          }
+
+          if (interestingPathPredicate.test(input)) {
             // 3: path not present in the dep-file, however the existence is of interest
             this.setNonHashingSourcePath(input);
           }
