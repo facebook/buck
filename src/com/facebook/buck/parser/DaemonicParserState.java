@@ -493,11 +493,26 @@ public class DaemonicParserState {
       }
     }
 
-    if (configurationBuildFiles.contains(fullPath)) {
+    if (configurationBuildFiles.contains(fullPath) || configurationRulesDependOn(path)) {
       invalidateAllCaches();
     } else {
       invalidatePath(fullPath);
     }
+  }
+
+  /**
+   * Check whether at least one build file in {@link #configurationBuildFiles} depends on the given
+   * file.
+   */
+  private boolean configurationRulesDependOn(Path path) {
+    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+      for (DaemonicCellState state : cellPathToDaemonicState.values()) {
+        if (state.pathDependentPresentIn(path, configurationBuildFiles)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   public void invalidatePath(Path path) {

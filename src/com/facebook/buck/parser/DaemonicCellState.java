@@ -32,6 +32,7 @@ import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -276,5 +277,10 @@ class DaemonicCellState {
       }
     }
     return Optional.empty();
+  }
+
+  /** @return {@code true} if the given path has dependencies that are present in the given set. */
+  boolean pathDependentPresentIn(Path path, Set<Path> buildFiles) {
+    return !Collections.disjoint(buildFileDependents.get(cellRoot.resolve(path)), buildFiles);
   }
 }
