@@ -52,13 +52,10 @@ public class PrebuiltRustLibraryDescription
       PrebuiltRustLibraryDescriptionArg args) {
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
-    return new PrebuiltRustLibrary(buildTarget, context.getProjectFilesystem(), params) {
-
-      @Override
-      protected SourcePath getRlib() {
-        return args.getRlib();
-      }
-
+    // TODO(cjhopman): This shouldn't be an anonymous class, it's capturing a ton of information
+    // that isn't being reflected in rulekeys.
+    return new PrebuiltRustLibrary(
+        buildTarget, context.getProjectFilesystem(), params, args.getRlib()) {
       @Override
       public com.facebook.buck.rules.args.Arg getLinkerArg(
           boolean direct,

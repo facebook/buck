@@ -19,7 +19,7 @@ package com.facebook.buck.features.rust;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
@@ -37,32 +37,25 @@ import com.google.common.collect.ImmutableList;
  */
 abstract class PrebuiltRustLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements RustLinkable {
+  @AddToRuleKey private final SourcePath rlib;
 
   public PrebuiltRustLibrary(
-      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      SourcePath rlib) {
     super(buildTarget, projectFilesystem, params);
+    this.rlib = rlib;
   }
-
-  /**
-   * Get the name of the pre-built Rust library (typically with a .rlib extension)
-   *
-   * @return Path to prebuilt library.
-   */
-  protected abstract SourcePath getRlib();
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return ForwardingBuildTargetSourcePath.of(getBuildTarget(), getRlib());
+    return ForwardingBuildTargetSourcePath.of(getBuildTarget(), rlib);
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("rlib", getRlib());
   }
 }
