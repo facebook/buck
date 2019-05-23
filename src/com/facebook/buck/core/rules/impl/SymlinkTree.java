@@ -20,7 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -60,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 
@@ -70,6 +71,14 @@ public class SymlinkTree extends AbstractBuildRule
   private final String category;
   private final Path root;
   private final ImmutableSortedMap<Path, SourcePath> links;
+
+  @AddToRuleKey
+  private final Supplier<ImmutableSortedMap<String, NonHashableSourcePathContainer>>
+      linksForRuleKey = this::getLinksForRuleKey;
+
+  @AddToRuleKey
+  private final Supplier<ImmutableSortedMap<String, ImmutableList<SourcePath>>>
+      directoriesToMergeForRuleKey = this::directoriesToMergeForRuleKey;
 
   private final String type;
   private final ImmutableMultimap<Path, SourcePath> directoriesToMerge;
@@ -117,21 +126,16 @@ public class SymlinkTree extends AbstractBuildRule
     this.type = category + "_symlink_tree";
   }
 
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("links", getLinksForRuleKey());
-    // TODO: For now, this will hash the directory and the contents of the files. We should add
-    //       something similar to NonHashableSourcePathContainer that only looks at paths that
-    //       exist, and ignores their contents.
-    sink.setReflectively(
-        "merge_dirs",
-        // Turn our multimap into something properly ordered by path with the multimap values sorted
-        directoriesToMerge.keySet().stream()
-            .collect(
-                ImmutableSortedMap.toImmutableSortedMap(
-                    String::compareTo,
-                    Path::toString,
-                    k -> ImmutableList.sortedCopyOf(directoriesToMerge.get(k)))));
+  // Turn our multimap into something properly ordered by path with the multimap values sorted
+  // TODO(cjhopman): We should just hold the sorted version of this list and then an unsorted
+  // keylist to tell us what order to process them in.
+  private ImmutableSortedMap<String, ImmutableList<SourcePath>> directoriesToMergeForRuleKey() {
+    return directoriesToMerge.keySet().stream()
+        .collect(
+            ImmutableSortedMap.toImmutableSortedMap(
+                String::compareTo,
+                Path::toString,
+                k -> ImmutableList.sortedCopyOf(directoriesToMerge.get(k))));
   }
 
   /**
