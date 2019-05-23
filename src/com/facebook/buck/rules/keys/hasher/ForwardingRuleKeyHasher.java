@@ -120,7 +120,7 @@ public abstract class ForwardingRuleKeyHasher<HASH, HASH2> implements RuleKeyHas
   }
 
   @Override
-  public ForwardingRuleKeyHasher<HASH, HASH2> putNonHashingPath(String path) {
+  public ForwardingRuleKeyHasher<HASH, HASH2> putNonHashingPath(Path path) {
     secondHasher.putNonHashingPath(path);
     delegate.putNonHashingPath(path);
     return this;

@@ -141,8 +141,8 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
   }
 
   @Override
-  public GuavaRuleKeyHasher putNonHashingPath(String path) {
-    return this.putStringified(RuleKeyHasherTypes.NON_HASHING_PATH, path);
+  public GuavaRuleKeyHasher putNonHashingPath(Path path) {
+    return this.putStringified(RuleKeyHasherTypes.NON_HASHING_PATH, path.toString());
   }
 
   @Override

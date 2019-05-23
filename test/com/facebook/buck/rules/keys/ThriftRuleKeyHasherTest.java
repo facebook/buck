@@ -159,7 +159,7 @@ public class ThriftRuleKeyHasherTest {
         Paths.get("member_path"),
         HashCode.fromString("f9d8ff855a16a3a3d28bfb445cc440502d6e895a"));
     hasher.putKey(".archive_member_path_value");
-    hasher.putNonHashingPath("non_hashing_test");
+    hasher.putNonHashingPath(Paths.get("non_hashing_test"));
     hasher.putKey(".non_hashing_path_value");
     hasher.putRuleKey(new RuleKey(HashCode.fromString("d0c852385a66458b6e960c89fac580e5eb6d6aec")));
     hasher.putKey(".rule_key_value");

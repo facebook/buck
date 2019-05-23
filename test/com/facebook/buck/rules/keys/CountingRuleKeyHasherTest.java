@@ -177,14 +177,17 @@ public class CountingRuleKeyHasherTest {
             .putArchiveMemberPath(Paths.get("42/42"), Paths.get("2"), HashCode.fromInt(42))
             .hash());
     assertEquals(
-        newGuavaHasher().putNonHashingPath("").hash(),
-        newCountHasher().putNonHashingPath("").hash());
+        newGuavaHasher().putNonHashingPath(Paths.get("")).hash(),
+        newCountHasher().putNonHashingPath(Paths.get("")).hash());
     assertEquals(
-        newGuavaHasher().putNonHashingPath("42").hash(),
-        newCountHasher().putNonHashingPath("42").hash());
+        newGuavaHasher().putNonHashingPath(Paths.get("42")).hash(),
+        newCountHasher().putNonHashingPath(Paths.get("42")).hash());
     assertEquals(
-        newGuavaHasher().putNonHashingPath("4").putNonHashingPath("2").hash(),
-        newCountHasher().putNonHashingPath("4").putNonHashingPath("2").hash());
+        newGuavaHasher().putNonHashingPath(Paths.get("4")).putNonHashingPath(Paths.get("2")).hash(),
+        newCountHasher()
+            .putNonHashingPath(Paths.get("4"))
+            .putNonHashingPath(Paths.get("2"))
+            .hash());
     assertEquals(
         newGuavaHasher().putRuleKey(RULE_KEY_1).hash(),
         newCountHasher().putRuleKey(RULE_KEY_1).hash());
@@ -341,9 +344,9 @@ public class CountingRuleKeyHasherTest {
         .putArchiveMemberPath(Paths.get("42/42"), Paths.get("2"), HashCode.fromInt(42))
         .putArchiveMemberPath(Paths.get("43/43"), Paths.get("3"), HashCode.fromInt(43));
     assertEquals(count += 2, hasher.getCount());
-    hasher.putNonHashingPath("");
+    hasher.putNonHashingPath(Paths.get(""));
     assertEquals(++count, hasher.getCount());
-    hasher.putNonHashingPath("42").putNonHashingPath("43");
+    hasher.putNonHashingPath(Paths.get("42")).putNonHashingPath(Paths.get("43"));
     assertEquals(count += 2, hasher.getCount());
     hasher.putRuleKey(RULE_KEY_1);
     assertEquals(++count, hasher.getCount());

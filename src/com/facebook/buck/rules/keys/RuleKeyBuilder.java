@@ -244,9 +244,9 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
   final RuleKeyBuilder<RULE_KEY> setNonHashingSourcePathDirectly(SourcePath sourcePath) {
     SourcePathResolver resolver = ruleFinder.getSourcePathResolver();
     if (sourcePath instanceof BuildTargetSourcePath) {
-      hasher.putNonHashingPath(resolver.getRelativePath(sourcePath).toString());
+      hasher.putNonHashingPath(resolver.getRelativePath(sourcePath));
     } else if (sourcePath instanceof PathSourcePath) {
-      hasher.putNonHashingPath(resolver.getRelativePath(sourcePath).toString());
+      hasher.putNonHashingPath(resolver.getRelativePath(sourcePath));
     } else if (sourcePath instanceof ArchiveMemberSourcePath) {
       ArchiveMemberSourcePath archiveSourcePath = (ArchiveMemberSourcePath) sourcePath;
       Path relativeArchivePath = resolver.getRelativePath(archiveSourcePath.getArchiveSourcePath());

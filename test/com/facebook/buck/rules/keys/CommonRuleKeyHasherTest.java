@@ -135,11 +135,11 @@ public final class CommonRuleKeyHasherTest {
                     h ->
                         h.putArchiveMemberPath(
                             Paths.get("42/42"), Paths.get("42/42"), HashCode.fromInt(42))),
-                pair.apply("NonHashingPath<>", h -> h.putNonHashingPath("")),
-                pair.apply("NonHashingPath<42>", h -> h.putNonHashingPath("42")),
+                pair.apply("NonHashingPath<>", h -> h.putNonHashingPath(Paths.get(""))),
+                pair.apply("NonHashingPath<42>", h -> h.putNonHashingPath(Paths.get("42"))),
                 pair.apply(
                     "NonHashingPath<4>, NonHashingPath<2>",
-                    h -> h.putNonHashingPath("4").putNonHashingPath("2")),
+                    h -> h.putNonHashingPath(Paths.get("4")).putNonHashingPath(Paths.get("2"))),
                 pair.apply(String.format("RuleKey<%s>", RULE_KEY_1), h -> h.putRuleKey(RULE_KEY_1)),
                 pair.apply(String.format("RuleKey<%s>", RULE_KEY_2), h -> h.putRuleKey(RULE_KEY_2)),
                 pair.apply("RuleType<>", h -> h.putRuleType(RuleType.of("", RuleType.Kind.BUILD))),
@@ -325,7 +325,8 @@ public final class CommonRuleKeyHasherTest {
     @Test
     public void testConsistencyForNonHashingPath() {
       assertEquals(
-          newHasher().putNonHashingPath("42").hash(), newHasher().putNonHashingPath("42").hash());
+          newHasher().putNonHashingPath(Paths.get("42")).hash(),
+          newHasher().putNonHashingPath(Paths.get("42")).hash());
     }
 
     @Test

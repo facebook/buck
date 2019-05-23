@@ -138,8 +138,8 @@ public class ThriftRuleKeyHasher implements RuleKeyHasher<FullRuleKey> {
   }
 
   @Override
-  public RuleKeyHasher<FullRuleKey> putNonHashingPath(String path) {
-    return push(Value.path(new NonHashedPath(path)));
+  public RuleKeyHasher<FullRuleKey> putNonHashingPath(Path path) {
+    return push(Value.path(new NonHashedPath(path.toString())));
   }
 
   @Override

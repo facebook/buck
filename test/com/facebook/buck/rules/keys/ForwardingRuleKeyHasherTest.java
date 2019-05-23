@@ -150,8 +150,8 @@ public class ForwardingRuleKeyHasherTest {
     expect(guavaHasher.hash()).andReturn(hash);
     expect(stringHasher.hash()).andReturn(string);
 
-    expect(guavaHasher.putNonHashingPath("42")).andReturn(guavaHasher);
-    expect(stringHasher.putNonHashingPath("42")).andReturn(stringHasher);
+    expect(guavaHasher.putNonHashingPath(Paths.get("42"))).andReturn(guavaHasher);
+    expect(stringHasher.putNonHashingPath(Paths.get("42"))).andReturn(stringHasher);
     expect(guavaHasher.hash()).andReturn(hash);
     expect(stringHasher.hash()).andReturn(string);
 
@@ -244,8 +244,8 @@ public class ForwardingRuleKeyHasherTest {
             stringHasher.putArchiveMemberPath(
                 Paths.get("45"), Paths.get("45"), HashCode.fromInt(45)))
         .andReturn(stringHasher);
-    expect(guavaHasher.putNonHashingPath("45")).andReturn(guavaHasher);
-    expect(stringHasher.putNonHashingPath("45")).andReturn(stringHasher);
+    expect(guavaHasher.putNonHashingPath(Paths.get("45"))).andReturn(guavaHasher);
+    expect(stringHasher.putNonHashingPath(Paths.get("45"))).andReturn(stringHasher);
     expect(guavaHasher.putRuleKey(RULE_KEY_1)).andReturn(guavaHasher);
     expect(stringHasher.putRuleKey(RULE_KEY_1)).andReturn(stringHasher);
     expect(guavaHasher.putRuleType(RuleType.of("45", RuleType.Kind.BUILD))).andReturn(guavaHasher);
@@ -290,7 +290,7 @@ public class ForwardingRuleKeyHasherTest {
     newHasher(guavaHasher, stringHasher)
         .putArchiveMemberPath(Paths.get("42/42"), Paths.get("42/42"), HashCode.fromInt(42))
         .hash();
-    newHasher(guavaHasher, stringHasher).putNonHashingPath("42").hash();
+    newHasher(guavaHasher, stringHasher).putNonHashingPath(Paths.get("42")).hash();
     newHasher(guavaHasher, stringHasher).putRuleKey(RULE_KEY_1).hash();
     newHasher(guavaHasher, stringHasher).putRuleType(RuleType.of("42", RuleType.Kind.BUILD)).hash();
     newHasher(guavaHasher, stringHasher).putBuildTarget(TARGET_1).hash();
@@ -317,7 +317,7 @@ public class ForwardingRuleKeyHasherTest {
         .putSha1(Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c"))
         .putPath(Paths.get("45"), HashCode.fromInt(45))
         .putArchiveMemberPath(Paths.get("45"), Paths.get("45"), HashCode.fromInt(45))
-        .putNonHashingPath("45")
+        .putNonHashingPath(Paths.get("45"))
         .putRuleKey(RULE_KEY_1)
         .putRuleType(RuleType.of("45", RuleType.Kind.BUILD))
         .putBuildTarget(TARGET_1)

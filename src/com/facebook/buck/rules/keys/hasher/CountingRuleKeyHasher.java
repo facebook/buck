@@ -118,7 +118,7 @@ public class CountingRuleKeyHasher<HASH> implements RuleKeyHasher<HASH> {
   }
 
   @Override
-  public CountingRuleKeyHasher<HASH> putNonHashingPath(String path) {
+  public CountingRuleKeyHasher<HASH> putNonHashingPath(Path path) {
     count++;
     delegate.putNonHashingPath(path);
     return this;

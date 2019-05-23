@@ -103,7 +103,7 @@ public class StringRuleKeyHasher implements RuleKeyHasher<String> {
   }
 
   @Override
-  public StringRuleKeyHasher putNonHashingPath(String path) {
+  public StringRuleKeyHasher putNonHashingPath(Path path) {
     parts.add(String.format("path(%s)", path));
     return this;
   }

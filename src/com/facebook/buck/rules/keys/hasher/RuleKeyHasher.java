@@ -100,7 +100,7 @@ public interface RuleKeyHasher<HASH> {
   RuleKeyHasher<HASH> putArchiveMemberPath(
       Path relativeArchivePath, Path archiveMemberPath, HashCode hash);
 
-  RuleKeyHasher<HASH> putNonHashingPath(String path);
+  RuleKeyHasher<HASH> putNonHashingPath(Path path);
 
   RuleKeyHasher<HASH> putRuleKey(RuleKey ruleKey);
 
