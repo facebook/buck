@@ -3963,7 +3963,7 @@ public class ProjectGenerator {
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.BUILDING,
                 targetNode,
-                ImmutableSet.of(CxxLibraryDescription.class)))
+                ImmutableSet.of(CxxLibraryDescription.class, AppleLibraryDescription.class)))
         .append(targetNode)
         .transformAndConcat(this::extractPublicIncludeDirectories);
   }
@@ -3977,7 +3977,7 @@ public class ProjectGenerator {
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.BUILDING,
                 targetNode,
-                ImmutableSet.of(CxxLibraryDescription.class)))
+                ImmutableSet.of(CxxLibraryDescription.class, AppleLibraryDescription.class)))
         .append(targetNode)
         .transformAndConcat(this::extractPublicSystemIncludeDirectories);
   }
