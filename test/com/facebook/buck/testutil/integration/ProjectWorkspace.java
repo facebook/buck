@@ -280,11 +280,12 @@ public class ProjectWorkspace extends AbstractWorkspace {
     return runBuckCommand(totalArgs);
   }
 
-  private ImmutableMap<String, String> buildMultipleAndReturnStringOutputs(String... args) {
+  private ImmutableMap<String, String> buildMultipleAndReturnStringOutputs(
+      Optional<NGContext> context, String... args) {
     // Add in `--show-output` to the build, so we can parse the output paths after the fact.
     ImmutableList<String> buildArgs =
         ImmutableList.<String>builder().add("--show-output").add(args).build();
-    ProcessResult buildResult = runBuckBuild(buildArgs.toArray(new String[0]));
+    ProcessResult buildResult = runBuckBuild(context, buildArgs.toArray(new String[0]));
     buildResult.assertSuccess();
 
     // Build outputs are contained on stdout
@@ -317,14 +318,23 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public ImmutableMap<String, Path> buildMultipleAndReturnOutputs(String... args) {
-    return buildMultipleAndReturnStringOutputs(args).entrySet().stream()
+    return buildMultipleAndReturnOutputs(Optional.empty(), args);
+  }
+
+  public ImmutableMap<String, Path> buildMultipleAndReturnOutputs(
+      Optional<NGContext> context, String... args) {
+    return buildMultipleAndReturnStringOutputs(context, args).entrySet().stream()
         .collect(
             ImmutableMap.toImmutableMap(
                 entry -> entry.getKey(), entry -> getPath(entry.getValue())));
   }
 
   public Path buildAndReturnOutput(String... args) {
-    ImmutableMap<String, Path> outputs = buildMultipleAndReturnOutputs(args);
+    return buildAndReturnOutput(Optional.empty(), args);
+  }
+
+  public Path buildAndReturnOutput(Optional<NGContext> context, String... args) {
+    ImmutableMap<String, Path> outputs = buildMultipleAndReturnOutputs(context, args);
 
     // Verify we only have a single output.
     assertThat(
@@ -338,7 +348,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public ImmutableMap<String, Path> buildMultipleAndReturnRelativeOutputs(String... args) {
-    return buildMultipleAndReturnStringOutputs(args).entrySet().stream()
+    return buildMultipleAndReturnStringOutputs(Optional.empty(), args).entrySet().stream()
         .collect(
             ImmutableMap.toImmutableMap(
                 entry -> entry.getKey(), entry -> Paths.get(entry.getValue())));

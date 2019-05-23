@@ -174,7 +174,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
     // which can lead to deadlocks.
     ParsePipeline<TargetNode<?>> nonResolvingTargetNodeParsePipeline =
         new RawTargetNodeToTargetNodeParsePipeline(
-            daemonicParserState.getOrCreateNodeCache(TargetNode.class),
+            daemonicParserState.getOrCreateNodeCacheForConfigurationTargets(TargetNode.class),
             MoreExecutors.newDirectExecutorService(),
             rawTargetNodePipeline,
             eventBus,

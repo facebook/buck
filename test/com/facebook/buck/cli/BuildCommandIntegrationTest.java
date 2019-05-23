@@ -583,4 +583,45 @@ public class BuildCommandIntegrationTest {
         .runBuckCommand("build", "--target-platforms", "//config:linux_x86-64", "//:lib")
         .assertSuccess();
   }
+
+  @Test
+  public void changesInConfigurationRulesAreDetected() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
+    workspace.setUp();
+
+    try (TestContext context = new TestContext()) {
+
+      Path output =
+          workspace.buildAndReturnOutput(
+              Optional.of(context),
+              "//:platform_dependent_genrule",
+              "--target-platforms",
+              "//config-change:linux_x86-64");
+      String linuxOutput = String.join(" ", Files.readAllLines(output)).trim();
+      workspace.getBuildLog().assertTargetBuiltLocally("//:platform_dependent_genrule");
+
+      assertEquals("linux", linuxOutput);
+
+      workspace.writeContentsToPath(
+          "platform(\n"
+              + "    name = \"linux\",\n"
+              + "    constraint_values = [\n"
+              + "        \"buck//config/constraints:osx\",\n"
+              + "    ],\n"
+              + ")\n",
+          "config-change/platform-dep/BUCK");
+
+      output =
+          workspace.buildAndReturnOutput(
+              Optional.of(context),
+              "//:platform_dependent_genrule",
+              "--target-platforms",
+              "//config-change:linux_x86-64");
+      String osxOutput = String.join(" ", Files.readAllLines(output)).trim();
+      workspace.getBuildLog().assertTargetBuiltLocally("//:platform_dependent_genrule");
+
+      assertEquals("osx", osxOutput);
+    }
+  }
 }

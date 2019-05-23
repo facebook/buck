@@ -238,6 +238,36 @@ public class DaemonicParserState {
     }
   }
 
+  /**
+   * An extension to {@link DaemonicCacheView} that keeps track of all processed build files.
+   *
+   * <p>This is used to collect build files that contain configuration targets.
+   */
+  private class DaemonicCacheViewWithTrackingBuildFiles<T> extends DaemonicCacheView<T> {
+
+    private final Set<Path> buildFiles;
+
+    /**
+     * Creates a view that accumulates the paths of build files that contain targets accessed
+     * through this view.
+     */
+    private DaemonicCacheViewWithTrackingBuildFiles(Class<T> type, Set<Path> buildFiles) {
+      super(type);
+      this.buildFiles = buildFiles;
+    }
+
+    @Override
+    public T putComputedNodeIfNotPresent(
+        Cell cell, BuildTarget target, T targetNode, BuckEventBus eventBus)
+        throws BuildTargetException {
+      Path buildFile =
+          cell.getBuckConfigView(ParserConfig.class)
+              .getAbsolutePathToBuildFileUnsafe(cell, target.getUnconfiguredBuildTargetView());
+      buildFiles.add(buildFile);
+      return super.putComputedNodeIfNotPresent(cell, target, targetNode, eventBus);
+    }
+  }
+
   private final TagSetCounter cacheInvalidatedByEnvironmentVariableChangeCounter;
   private final IntegerCounter cacheInvalidatedByDefaultIncludesChangeCounter;
   private final IntegerCounter cacheInvalidatedByWatchOverflowCounter;
@@ -256,6 +286,29 @@ public class DaemonicParserState {
 
   private final LoadingCache<Class<?>, DaemonicCacheView<?>> typedNodeCaches =
       CacheBuilder.newBuilder().build(CacheLoader.from(cls -> new DaemonicCacheView<>(cls)));
+
+  /**
+   * Build files that contain configuration targets.
+   *
+   * <p>These files are used to invalidate parser state when there is a change in a build file.
+   */
+  // TODO: remove logic around this field when proper tracking of dependencies on
+  // configuration rules is implemented
+  private final Set<Path> configurationBuildFiles = ConcurrentHashMap.newKeySet();
+
+  /**
+   * Cache similar to {@link #typedNodeCaches}, but keeping information about all accessed build
+   * files in {@link #configurationBuildFiles}.
+   */
+  private final LoadingCache<Class<?>, DaemonicCacheView<?>>
+      typedNodeCachesWithTrackingConfigurationBuildFiles =
+          CacheBuilder.newBuilder()
+              .build(
+                  CacheLoader.from(
+                      cls ->
+                          new DaemonicCacheViewWithTrackingBuildFiles<>(
+                              cls, configurationBuildFiles)));
+
   private final DaemonicRawCacheView rawNodeCache;
 
   private final int parsingThreads;
@@ -331,6 +384,29 @@ public class DaemonicParserState {
   public <T> PipelineNodeCache.Cache<BuildTarget, T> getOrCreateNodeCache(Class<?> cacheType) {
     try {
       return (PipelineNodeCache.Cache<BuildTarget, T>) typedNodeCaches.get(cacheType);
+    } catch (ExecutionException e) {
+      throw new IllegalStateException("typedNodeCaches CacheLoader should not throw.", e);
+    }
+  }
+
+  /**
+   * Retrieve the cache view to cache configuration targets.
+   *
+   * <p>Changes in configuration targets are handled differently from the changes in build targets.
+   * Whenever there is a change in configuration targets the state in all cells is reset. Parser
+   * state doesn't provide information about dependencies among build rules and configuration rules
+   * and changes in configuration rules can affect build targets (including build targets in other
+   * cells).
+   *
+   * <p>Note that the output type is not constrained to the type of the Class object to allow for
+   * types with generics. Care should be taken to ensure that the correct class object is passed in.
+   */
+  @SuppressWarnings("unchecked")
+  public <T> PipelineNodeCache.Cache<BuildTarget, T> getOrCreateNodeCacheForConfigurationTargets(
+      Class<?> cacheType) {
+    try {
+      return (PipelineNodeCache.Cache<BuildTarget, T>)
+          typedNodeCachesWithTrackingConfigurationBuildFiles.get(cacheType);
     } catch (ExecutionException e) {
       throw new IllegalStateException("typedNodeCaches CacheLoader should not throw.", e);
     }
@@ -417,7 +493,11 @@ public class DaemonicParserState {
       }
     }
 
-    invalidatePath(fullPath);
+    if (configurationBuildFiles.contains(fullPath)) {
+      invalidateAllCaches();
+    } else {
+      invalidatePath(fullPath);
+    }
   }
 
   public void invalidatePath(Path path) {
@@ -585,6 +665,7 @@ public class DaemonicParserState {
       boolean invalidated = !cellPathToDaemonicState.isEmpty();
       cellPathToDaemonicState.clear();
       buildFileTrees.invalidateAll();
+      configurationBuildFiles.clear();
       if (invalidated) {
         LOG.debug("Cache data invalidated.");
       } else {

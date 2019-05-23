@@ -619,6 +619,48 @@ public class ParserWithConfigurableAttributesTest {
   }
 
   @Test
+  public void whenNotifiedOfBuildFileWithConfigurationRulesThenCacheRulesAreInvalidated()
+      throws BuildFileParseException, IOException {
+
+    tempDir.newFolder("config");
+    Path configBuckFile = tempDir.newFile("config/BUCK");
+    Files.write(
+        configBuckFile,
+        ("config_setting(name = 'config', values = {})").getBytes(UTF_8),
+        StandardOpenOption.APPEND);
+
+    Path buckFile = tempDir.newFile("BUCK");
+    Files.write(
+        buckFile,
+        ("java_library("
+                + "  name = 'cake',"
+                + "  target = select({"
+                + "    '//config:config': '7',"
+                + "    'DEFAULT': '8',"
+                + "  })"
+                + ")"
+                + "\n")
+            .getBytes(UTF_8),
+        StandardOpenOption.APPEND);
+
+    parser.getTargetNode(parsingContext, buildTarget);
+
+    assertEquals(2, counter.calls);
+
+    WatchmanPathEvent event =
+        ImmutableWatchmanPathEvent.of(
+            filesystem.getRootPath(),
+            Kind.MODIFY,
+            MorePaths.relativize(tempDir.getRoot().toRealPath(), configBuckFile));
+    parser.getPermState().invalidateBasedOn(event);
+
+    parser.getTargetNode(parsingContext, buildTarget);
+
+    // Test that the second call triggers re-parsing of all files.
+    assertEquals("Should have invalidated cache.", 4, counter.calls);
+  }
+
+  @Test
   public void whenEnvironmentNotChangedThenCacheRulesAreNotInvalidated()
       throws BuildFileParseException, IOException, InterruptedException {
     BuckConfig config =
