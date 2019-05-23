@@ -21,7 +21,10 @@ import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
+import com.facebook.buck.core.rulekey.ThrowingSerialization;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -41,7 +44,15 @@ import org.immutables.value.Value;
 
 /** Rule for generating an apple package via external script. */
 public class ExternallyBuiltApplePackage extends Genrule {
-  private ApplePackageConfigAndPlatformInfo packageConfigAndPlatformInfo;
+  @AddToRuleKey private String sdkVersion;
+  @AddToRuleKey private Optional<String> platformBuildVersion;
+
+  @ExcludeFromRuleKey(
+      reason =
+          "We add only the sdk version and platform build version to rulekeys and hope that it's correct.",
+      serialization = ThrowingSerialization.class,
+      inputs = DefaultFieldInputs.class)
+  private Path sdkPath;
 
   public ExternallyBuiltApplePackage(
       BuildTarget buildTarget,
@@ -75,7 +86,9 @@ public class ExternallyBuiltApplePackage extends Genrule {
         androidNdk,
         androidSdkLocation,
         false);
-    this.packageConfigAndPlatformInfo = packageConfigAndPlatformInfo;
+    this.sdkPath = packageConfigAndPlatformInfo.getSdkPath();
+    this.sdkVersion = packageConfigAndPlatformInfo.getSdkVersion();
+    this.platformBuildVersion = packageConfigAndPlatformInfo.getPlatformBuildVersion();
   }
 
   @Override
@@ -83,14 +96,7 @@ public class ExternallyBuiltApplePackage extends Genrule {
       SourcePathResolver pathResolver,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
     super.addEnvironmentVariables(pathResolver, environmentVariablesBuilder);
-    environmentVariablesBuilder.put(
-        "SDKROOT", packageConfigAndPlatformInfo.getSdkPath().toString());
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("sdkVersion", packageConfigAndPlatformInfo.getSdkVersion())
-        .setReflectively("buildVersion", packageConfigAndPlatformInfo.getPlatformBuildVersion());
+    environmentVariablesBuilder.put("SDKROOT", sdkPath.toString());
   }
 
   /** Value type for tracking a package config and information about the platform. */
