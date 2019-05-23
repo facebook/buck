@@ -108,7 +108,9 @@ public class FakeFileHashCache implements FileHashCache {
   }
 
   @Override
-  public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
+  public HashCode getForArchiveMember(Path relativeArchivePath, Path memberPath)
+      throws IOException {
+    ArchiveMemberPath archiveMemberPath = ArchiveMemberPath.of(relativeArchivePath, memberPath);
     if (usePathsForArchives) {
       return get(Paths.get(archiveMemberPath.toString()));
     }

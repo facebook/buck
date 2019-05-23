@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util.hashing;
 
-import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -94,7 +93,7 @@ public class FilePathHashLoader implements FileHashLoader {
   }
 
   @Override
-  public HashCode get(ArchiveMemberPath archiveMemberPath) {
+  public HashCode getForArchiveMember(Path relativeArchivePath, Path memberPath) {
     throw new UnsupportedOperationException("Not implemented");
   }
 

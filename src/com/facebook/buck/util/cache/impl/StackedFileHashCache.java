@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util.cache.impl;
 
-import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
@@ -107,21 +106,6 @@ public class StackedFileHashCache implements FileHashCache {
     return Optional.empty();
   }
 
-  private Optional<Pair<ProjectFileHashCache, ArchiveMemberPath>> lookup(ArchiveMemberPath path) {
-    Preconditions.checkArgument(path.isAbsolute());
-    for (ProjectFileHashCache cache : caches) {
-      Optional<ArchiveMemberPath> relativePath =
-          cache
-              .getFilesystem()
-              .getPathRelativeToProjectRoot(path.getArchivePath())
-              .map(path::withArchivePath);
-      if (relativePath.isPresent() && cache.willGet(relativePath.get())) {
-        return Optional.of(new Pair<>(cache, relativePath.get()));
-      }
-    }
-    return Optional.empty();
-  }
-
   @Override
   public void invalidate(Path path) {
     for (ProjectFileHashCache cache : caches) {
@@ -158,12 +142,13 @@ public class StackedFileHashCache implements FileHashCache {
   }
 
   @Override
-  public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-    Optional<Pair<ProjectFileHashCache, ArchiveMemberPath>> found = lookup(archiveMemberPath);
+  public HashCode getForArchiveMember(Path relativeArchivePath, Path memberPath)
+      throws IOException {
+    Optional<Pair<ProjectFileHashCache, Path>> found = lookup(relativeArchivePath);
     if (!found.isPresent()) {
-      throw new NoSuchFileException(archiveMemberPath.toString());
+      throw new NoSuchFileException(relativeArchivePath.toString());
     }
-    return found.get().getFirst().get(found.get().getSecond());
+    return found.get().getFirst().getForArchiveMember(found.get().getSecond(), memberPath);
   }
 
   @Override
@@ -203,11 +188,12 @@ public class StackedFileHashCache implements FileHashCache {
   }
 
   @Override
-  public HashCode get(ProjectFilesystem filesystem, ArchiveMemberPath path) throws IOException {
-    return lookup(filesystem, path.getArchivePath())
+  public HashCode getForArchiveMember(
+      ProjectFilesystem filesystem, Path relativeArchivePath, Path memberPath) throws IOException {
+    return lookup(filesystem, relativeArchivePath)
         .orElseThrow(
-            () -> new NoSuchFileException(filesystem.resolve(path.getArchivePath()).toString()))
-        .get(path);
+            () -> new NoSuchFileException(filesystem.resolve(relativeArchivePath).toString()))
+        .getForArchiveMember(relativeArchivePath, memberPath);
   }
 
   @Override

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.testutil;
 
-import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.google.common.hash.HashCode;
@@ -43,8 +42,9 @@ public class DummyFileHashCache implements FileHashCache {
   }
 
   @Override
-  public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-    throw new NoSuchFileException(archiveMemberPath.toString());
+  public HashCode getForArchiveMember(Path relativeArchivePath, Path memberPath)
+      throws IOException {
+    throw new NoSuchFileException(relativeArchivePath.toString());
   }
 
   @Override

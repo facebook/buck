@@ -79,16 +79,15 @@ public class RemoteStateBasedFileHashCache implements ProjectFileHashCache {
   }
 
   @Override
-  public HashCode get(ArchiveMemberPath archiveMemberRelPath) throws IOException {
+  public HashCode getForArchiveMember(Path relativeArchivePath, Path memberPath)
+      throws IOException {
     HashCode hashCode =
-        remoteArchiveHashes.get(
-            archiveMemberRelPath.withArchivePath(
-                filesystem.resolve(archiveMemberRelPath.getArchivePath())));
+        remoteArchiveHashes.get(ArchiveMemberPath.of(relativeArchivePath, memberPath));
     if (hashCode != null) {
       return hashCode;
     }
 
-    return delegate.get(archiveMemberRelPath);
+    return delegate.getForArchiveMember(relativeArchivePath, memberPath);
   }
 
   @Override

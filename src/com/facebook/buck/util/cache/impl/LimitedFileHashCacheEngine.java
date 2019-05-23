@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.util.cache.impl;
 
-import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCacheEngine;
@@ -212,14 +211,14 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
   }
 
   @Override
-  public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-    Path relativeFilePath = archiveMemberPath.getArchivePath().normalize();
+  public HashCode getForArchiveMember(Path archiveRelativePath, Path memberPath)
+      throws IOException {
+    Path relativeFilePath = archiveRelativePath.normalize();
     Preconditions.checkState(isArchive(relativeFilePath), relativeFilePath + " is not an archive.");
     Data data = fileSystemMap.get(relativeFilePath);
-    Path memberPath = archiveMemberPath.getMemberPath();
     HashCode hashCode = data.getJarContentsHashes().get(memberPath);
     if (hashCode == null) {
-      throw new NoSuchFileException(archiveMemberPath.toString());
+      throw new NoSuchFileException(archiveRelativePath.toString());
     }
     return hashCode;
   }

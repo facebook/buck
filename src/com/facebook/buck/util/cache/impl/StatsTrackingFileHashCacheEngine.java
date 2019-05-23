@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util.cache.impl;
 
-import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.FileHashCacheEvent;
 import com.facebook.buck.util.cache.DelegatingFileHashCacheEngine;
@@ -66,9 +65,10 @@ public class StatsTrackingFileHashCacheEngine extends DelegatingFileHashCacheEng
   }
 
   @Override
-  public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
+  public HashCode getForArchiveMember(Path archiveRelativePath, Path memberPath)
+      throws IOException {
     long start = System.nanoTime();
-    HashCode sha1 = super.get(archiveMemberPath);
+    HashCode sha1 = super.getForArchiveMember(archiveRelativePath, memberPath);
     cacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
     numberOfRetrievals++;
     return sha1;

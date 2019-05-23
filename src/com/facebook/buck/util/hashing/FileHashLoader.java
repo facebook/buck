@@ -28,7 +28,7 @@ public interface FileHashLoader {
 
   long getSize(Path path) throws IOException;
 
-  HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException;
+  HashCode getForArchiveMember(Path relativeArchivePath, Path memberPath) throws IOException;
 
   /**
    * Return the {@link HashCode} for the given relative {@link Path} under the given {@link
@@ -42,8 +42,9 @@ public interface FileHashLoader {
    * Return the {@link HashCode} for the given relative {@link ArchiveMemberPath} under the given
    * {@link ProjectFilesystem}.
    */
-  default HashCode get(ProjectFilesystem filesystem, ArchiveMemberPath path) throws IOException {
-    return get(path.withArchivePath(filesystem.resolve(path.getArchivePath())));
+  default HashCode getForArchiveMember(
+      ProjectFilesystem filesystem, Path relativeArchivePath, Path memberPath) throws IOException {
+    return getForArchiveMember(filesystem.resolve(relativeArchivePath), memberPath);
   }
 
   /**

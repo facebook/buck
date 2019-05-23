@@ -18,7 +18,6 @@ package com.facebook.buck.rules.keys.hasher;
 
 import static com.facebook.buck.log.thrift.rulekeys.Value._Fields.STRING_VALUE;
 
-import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -130,13 +129,12 @@ public class ThriftRuleKeyHasher implements RuleKeyHasher<FullRuleKey> {
   }
 
   @Override
-  public RuleKeyHasher<FullRuleKey> putArchiveMemberPath(ArchiveMemberPath path, HashCode hash) {
+  public RuleKeyHasher<FullRuleKey> putArchiveMemberPath(
+      Path relativeArchivePath, Path archiveMemberPath, HashCode hash) {
     return push(
         Value.archiveMemberPath(
             new com.facebook.buck.log.thrift.rulekeys.ArchiveMemberPath(
-                path.getArchivePath().toString(),
-                path.getMemberPath().toString(),
-                hash.toString())));
+                relativeArchivePath.toString(), archiveMemberPath.toString(), hash.toString())));
   }
 
   @Override

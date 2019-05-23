@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.keys.hasher;
 
-import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -94,7 +93,12 @@ public interface RuleKeyHasher<HASH> {
 
   RuleKeyHasher<HASH> putPath(Path path, HashCode hash);
 
-  RuleKeyHasher<HASH> putArchiveMemberPath(ArchiveMemberPath path, HashCode hash);
+  /**
+   * @param relativeArchivePath relative path to archive.
+   * @param archiveMemberPath path to archive member.
+   */
+  RuleKeyHasher<HASH> putArchiveMemberPath(
+      Path relativeArchivePath, Path archiveMemberPath, HashCode hash);
 
   RuleKeyHasher<HASH> putNonHashingPath(String path);
 

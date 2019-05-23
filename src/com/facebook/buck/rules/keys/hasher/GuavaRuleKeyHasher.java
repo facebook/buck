@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.keys.hasher;
 
-import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -133,8 +132,10 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
   }
 
   @Override
-  public GuavaRuleKeyHasher putArchiveMemberPath(ArchiveMemberPath path, HashCode hash) {
-    this.putStringified(RuleKeyHasherTypes.ARCHIVE_MEMBER_PATH, path.toString());
+  public GuavaRuleKeyHasher putArchiveMemberPath(
+      Path relativeArchivePath, Path archiveMemberPath, HashCode hash) {
+    this.putStringified(RuleKeyHasherTypes.ARCHIVE_MEMBER_PATH, relativeArchivePath.toString());
+    this.putStringified(RuleKeyHasherTypes.ARCHIVE_MEMBER_PATH, archiveMemberPath.toString());
     this.putBytes(RuleKeyHasherTypes.ARCHIVE_MEMBER_PATH, hash.asBytes());
     return this;
   }

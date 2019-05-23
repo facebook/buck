@@ -27,7 +27,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
@@ -942,7 +941,7 @@ public class RuleKeyTest {
           }
 
           @Override
-          public HashCode get(ArchiveMemberPath archiveMemberPath) {
+          public HashCode getForArchiveMember(Path relativeArchivePath, Path memberPath) {
             return HashCode.fromString("deadbeef");
           }
 

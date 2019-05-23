@@ -448,7 +448,7 @@ public class DefaultJavaLibrary
 
   @Override
   public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
-    return getBuildable().getExistenceOfInterestPredicate(pathResolver);
+    return getBuildable().getExistenceOfInterestPredicate();
   }
 
   @Override

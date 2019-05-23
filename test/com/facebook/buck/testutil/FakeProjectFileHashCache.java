@@ -97,8 +97,9 @@ public class FakeProjectFileHashCache implements ProjectFileHashCache {
   }
 
   @Override
-  public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-    throw new NoSuchFileException(archiveMemberPath.toString());
+  public HashCode getForArchiveMember(Path relativeArchivePath, Path memberPath)
+      throws IOException {
+    throw new NoSuchFileException(relativeArchivePath.toString());
   }
 
   @Override

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.build.engine.manifest;
 
+import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -160,11 +161,20 @@ public class Manifest {
       SourcePath path, FileHashLoader fileHashLoader, SourcePathResolver resolver)
       throws IOException {
     if (path instanceof ArchiveMemberSourcePath) {
-      return fileHashLoader.get(
-          resolver.getFilesystem(path), resolver.getRelativeArchiveMemberPath(path));
+      ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) path;
+      return fileHashLoader.getForArchiveMember(
+          resolver.getFilesystem(path),
+          resolver.getRelativePath(archiveMemberSourcePath.getArchiveSourcePath()),
+          archiveMemberSourcePath.getMemberPath());
     } else {
       return fileHashLoader.get(resolver.getFilesystem(path), resolver.getRelativePath(path));
     }
+  }
+
+  private static ArchiveMemberPath getArchiveMemberPath(
+      SourcePathResolver resolver, ArchiveMemberSourcePath archivePath) {
+    return ArchiveMemberPath.of(
+        resolver.getRelativePath(archivePath.getArchiveSourcePath()), archivePath.getMemberPath());
   }
 
   private boolean hashesMatch(
@@ -236,7 +246,7 @@ public class Manifest {
    */
   private static Object sourcePathToManifestPathKey(SourcePath input, SourcePathResolver resolver) {
     if (input instanceof ArchiveMemberSourcePath) {
-      return resolver.getRelativeArchiveMemberPath(input);
+      return getArchiveMemberPath(resolver, (ArchiveMemberSourcePath) input);
     } else {
       return resolver.getRelativePath(input);
     }

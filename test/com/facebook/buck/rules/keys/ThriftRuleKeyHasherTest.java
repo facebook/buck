@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.keys;
 
-import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
@@ -156,7 +155,8 @@ public class ThriftRuleKeyHasherTest {
         new File("test").toPath(), HashCode.fromString("0503e9786d39160e3811ea609c512530c7f66e82"));
     hasher.putKey(".path_value");
     hasher.putArchiveMemberPath(
-        ArchiveMemberPath.of(new File("archive_path").toPath(), new File("member_path").toPath()),
+        Paths.get("archive_path"),
+        Paths.get("member_path"),
         HashCode.fromString("f9d8ff855a16a3a3d28bfb445cc440502d6e895a"));
     hasher.putKey(".archive_member_path_value");
     hasher.putNonHashingPath("non_hashing_test");

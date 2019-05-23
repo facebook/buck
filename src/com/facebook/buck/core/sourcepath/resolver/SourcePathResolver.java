@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.sourcepath.resolver;
 
-import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -35,8 +34,6 @@ public interface SourcePathResolver {
   ProjectFilesystem getFilesystem(SourcePath sourcePath);
 
   Path getAbsolutePath(SourcePath sourcePath);
-
-  ArchiveMemberPath getRelativeArchiveMemberPath(SourcePath sourcePath);
 
   ImmutableSortedSet<Path> getAllAbsolutePaths(Collection<? extends SourcePath> sourcePaths);
 

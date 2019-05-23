@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.keys.hasher;
 
-import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -90,8 +89,10 @@ public class StringRuleKeyHasher implements RuleKeyHasher<String> {
   }
 
   @Override
-  public StringRuleKeyHasher putArchiveMemberPath(ArchiveMemberPath path, HashCode hash) {
-    parts.add(String.format("archiveMember(%s:%s)", path.toString(), hash));
+  public StringRuleKeyHasher putArchiveMemberPath(
+      Path relativeArchivePath, Path archiveMemberPath, HashCode hash) {
+    parts.add(
+        String.format("archiveMember(%s!/%s:%s)", relativeArchivePath, archiveMemberPath, hash));
     return this;
   }
 

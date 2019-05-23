@@ -19,7 +19,6 @@ import com.facebook.buck.cli.PerfManifestCommand.Context;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.manifest.Manifest;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
-import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -279,8 +278,8 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
       }
 
       @Override
-      public HashCode get(ArchiveMemberPath archiveMemberPath) {
-        return hashFunction.newHasher().putInt(getSeedFor(archiveMemberPath.hashCode())).hash();
+      public HashCode getForArchiveMember(Path relativeArchivePath, Path memberPath) {
+        return hashFunction.newHasher().putInt(getSeedFor(relativeArchivePath.hashCode())).hash();
       }
     };
   }

@@ -430,7 +430,10 @@ public class DistBuildFileHashesTest {
           ArchiveMemberPath.of(readProjectFilesystem.resolve(f.archivePath), f.archiveMemberPath);
       assertThat(fileHashCache.willGet(archiveMemberPath), Matchers.is(true));
 
-      assertThat(fileHashCache.get(archiveMemberPath), Matchers.is(f.archiveMemberHash));
+      assertThat(
+          fileHashCache.getForArchiveMember(
+              archiveMemberPath.getArchivePath(), archiveMemberPath.getMemberPath()),
+          Matchers.is(f.archiveMemberHash));
     }
   }
 

@@ -115,22 +115,26 @@ public final class CommonRuleKeyHasherTest {
                     "Path<42/42, 42>", h -> h.putPath(Paths.get("42/42"), HashCode.fromInt(42))),
                 pair.apply(
                     "ArchiveMember<:, 0>",
-                    h -> h.putArchiveMemberPath(newArchiveMember("", ""), HashCode.fromInt(0))),
+                    h -> h.putArchiveMemberPath(Paths.get(""), Paths.get(""), HashCode.fromInt(0))),
                 pair.apply(
                     "ArchiveMember<:, 0>",
-                    h -> h.putArchiveMemberPath(newArchiveMember("", ""), HashCode.fromInt(42))),
+                    h ->
+                        h.putArchiveMemberPath(Paths.get(""), Paths.get(""), HashCode.fromInt(42))),
                 pair.apply(
                     "ArchiveMember<42:42, 0>",
-                    h -> h.putArchiveMemberPath(newArchiveMember("42", "42"), HashCode.fromInt(0))),
+                    h ->
+                        h.putArchiveMemberPath(
+                            Paths.get("42"), Paths.get("42"), HashCode.fromInt(0))),
                 pair.apply(
                     "ArchiveMember<42:42, 42>",
                     h ->
-                        h.putArchiveMemberPath(newArchiveMember("42", "42"), HashCode.fromInt(42))),
+                        h.putArchiveMemberPath(
+                            Paths.get("42"), Paths.get("42"), HashCode.fromInt(42))),
                 pair.apply(
                     "ArchiveMember<42/42:42/42, 42>",
                     h ->
                         h.putArchiveMemberPath(
-                            newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))),
+                            Paths.get("42/42"), Paths.get("42/42"), HashCode.fromInt(42))),
                 pair.apply("NonHashingPath<>", h -> h.putNonHashingPath("")),
                 pair.apply("NonHashingPath<42>", h -> h.putNonHashingPath("42")),
                 pair.apply(
@@ -311,10 +315,10 @@ public final class CommonRuleKeyHasherTest {
     public void testConsistencyForArchiveMemberPath() {
       assertEquals(
           newHasher()
-              .putArchiveMemberPath(newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))
+              .putArchiveMemberPath(Paths.get("42/42"), Paths.get("42/42"), HashCode.fromInt(42))
               .hash(),
           newHasher()
-              .putArchiveMemberPath(newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))
+              .putArchiveMemberPath(Paths.get("42/42"), Paths.get("42/42"), HashCode.fromInt(42))
               .hash());
     }
 

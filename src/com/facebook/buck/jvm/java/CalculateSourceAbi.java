@@ -187,7 +187,7 @@ public class CalculateSourceAbi
 
   @Override
   public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
-    return getBuildable().jarBuildStepsFactory.getExistenceOfInterestPredicate(pathResolver);
+    return getBuildable().jarBuildStepsFactory.getExistenceOfInterestPredicate();
   }
 
   @Override

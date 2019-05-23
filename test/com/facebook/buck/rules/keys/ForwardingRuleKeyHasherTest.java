@@ -141,11 +141,11 @@ public class ForwardingRuleKeyHasherTest {
 
     expect(
             guavaHasher.putArchiveMemberPath(
-                newArchiveMember("42/42", "42/42"), HashCode.fromInt(42)))
+                Paths.get("42/42"), Paths.get("42/42"), HashCode.fromInt(42)))
         .andReturn(guavaHasher);
     expect(
             stringHasher.putArchiveMemberPath(
-                newArchiveMember("42/42", "42/42"), HashCode.fromInt(42)))
+                Paths.get("42/42"), Paths.get("42/42"), HashCode.fromInt(42)))
         .andReturn(stringHasher);
     expect(guavaHasher.hash()).andReturn(hash);
     expect(stringHasher.hash()).andReturn(string);
@@ -238,9 +238,11 @@ public class ForwardingRuleKeyHasherTest {
         .andReturn(stringHasher);
     expect(guavaHasher.putPath(Paths.get("45"), HashCode.fromInt(45))).andReturn(guavaHasher);
     expect(stringHasher.putPath(Paths.get("45"), HashCode.fromInt(45))).andReturn(stringHasher);
-    expect(guavaHasher.putArchiveMemberPath(newArchiveMember("45", "45"), HashCode.fromInt(45)))
+    expect(guavaHasher.putArchiveMemberPath(Paths.get("45"), Paths.get("45"), HashCode.fromInt(45)))
         .andReturn(guavaHasher);
-    expect(stringHasher.putArchiveMemberPath(newArchiveMember("45", "45"), HashCode.fromInt(45)))
+    expect(
+            stringHasher.putArchiveMemberPath(
+                Paths.get("45"), Paths.get("45"), HashCode.fromInt(45)))
         .andReturn(stringHasher);
     expect(guavaHasher.putNonHashingPath("45")).andReturn(guavaHasher);
     expect(stringHasher.putNonHashingPath("45")).andReturn(stringHasher);
@@ -286,7 +288,7 @@ public class ForwardingRuleKeyHasherTest {
         .hash();
     newHasher(guavaHasher, stringHasher).putPath(Paths.get("42/42"), HashCode.fromInt(42)).hash();
     newHasher(guavaHasher, stringHasher)
-        .putArchiveMemberPath(newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))
+        .putArchiveMemberPath(Paths.get("42/42"), Paths.get("42/42"), HashCode.fromInt(42))
         .hash();
     newHasher(guavaHasher, stringHasher).putNonHashingPath("42").hash();
     newHasher(guavaHasher, stringHasher).putRuleKey(RULE_KEY_1).hash();
@@ -314,7 +316,7 @@ public class ForwardingRuleKeyHasherTest {
         .putPattern(PATTERN)
         .putSha1(Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c"))
         .putPath(Paths.get("45"), HashCode.fromInt(45))
-        .putArchiveMemberPath(newArchiveMember("45", "45"), HashCode.fromInt(45))
+        .putArchiveMemberPath(Paths.get("45"), Paths.get("45"), HashCode.fromInt(45))
         .putNonHashingPath("45")
         .putRuleKey(RULE_KEY_1)
         .putRuleType(RuleType.of("45", RuleType.Kind.BUILD))

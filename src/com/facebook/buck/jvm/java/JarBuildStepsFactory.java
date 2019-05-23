@@ -265,7 +265,7 @@ public class JarBuildStepsFactory
         ::contains;
   }
 
-  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
+  public Predicate<SourcePath> getExistenceOfInterestPredicate() {
     // Annotation processors might enumerate all files under a certain path and then generate
     // code based on that list (without actually reading the files), making the list of files
     // itself a used dependency that must be part of the dependency-based key. We don't
@@ -274,10 +274,7 @@ public class JarBuildStepsFactory
     // the listing of META-INF to the rule key.
     return (SourcePath path) ->
         (path instanceof ArchiveMemberSourcePath)
-            && pathResolver
-                .getRelativeArchiveMemberPath(path)
-                .getMemberPath()
-                .startsWith(METADATA_DIR);
+            && ((ArchiveMemberSourcePath) path).getMemberPath().startsWith(METADATA_DIR);
   }
 
   public boolean useRulePipelining() {

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util.cache.impl;
 
-import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -97,13 +96,13 @@ class ComboFileHashCache implements FileHashCacheEngine {
   }
 
   @Override
-  public HashCode get(ArchiveMemberPath archiveMemberPath) {
+  public HashCode getForArchiveMember(Path archiveRelativePath, Path memberPath) {
     List<HashCode> hashes =
         fileHashCacheEngines.stream()
             .map(
                 fhc -> {
                   try {
-                    return fhc.get(archiveMemberPath);
+                    return fhc.getForArchiveMember(archiveRelativePath, memberPath);
                   } catch (IOException e) {
                     throw new RuntimeException(e);
                   }

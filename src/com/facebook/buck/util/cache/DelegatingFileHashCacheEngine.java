@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util.cache;
 
-import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
@@ -58,8 +57,9 @@ public class DelegatingFileHashCacheEngine implements FileHashCacheEngine {
   }
 
   @Override
-  public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-    return delegate.get(archiveMemberPath);
+  public HashCode getForArchiveMember(Path archiveRelativePath, Path memberPath)
+      throws IOException {
+    return delegate.getForArchiveMember(archiveRelativePath, memberPath);
   }
 
   @Nullable

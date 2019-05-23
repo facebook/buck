@@ -391,10 +391,11 @@ class MaterializerDummyFileHashCache implements ProjectFileHashCache {
   }
 
   @Override
-  public HashCode get(ArchiveMemberPath archiveMemberRelPath) throws IOException {
-    materializeIfNeededAsync(archiveMemberRelPath.getArchivePath());
+  public HashCode getForArchiveMember(Path relativeArchivePath, Path memberPath)
+      throws IOException {
+    materializeIfNeededAsync(relativeArchivePath);
     if (getMaterializationFuturesAsList().isDone()) {
-      return delegate.get(archiveMemberRelPath);
+      return delegate.getForArchiveMember(relativeArchivePath, memberPath);
     } else {
       // Return a fake. This class is not meant for actually computing HashCodes.
       return HashCode.fromInt(0);

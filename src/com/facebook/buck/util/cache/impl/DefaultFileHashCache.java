@@ -275,10 +275,11 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   }
 
   @Override
-  public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-    Preconditions.checkArgument(!archiveMemberPath.isAbsolute());
-    checkNotIgnored(archiveMemberPath.getArchivePath());
-    return fileHashCacheEngine.get(archiveMemberPath);
+  public HashCode getForArchiveMember(Path relativeArchivePath, Path memberPath)
+      throws IOException {
+    Preconditions.checkArgument(!relativeArchivePath.isAbsolute());
+    checkNotIgnored(relativeArchivePath);
+    return fileHashCacheEngine.getForArchiveMember(relativeArchivePath, memberPath);
   }
 
   @Override

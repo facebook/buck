@@ -24,7 +24,6 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -369,25 +368,6 @@ public class SourcePathResolverTest {
             new FakeProjectFilesystem(), Paths.get("cheese").toAbsolutePath().toString());
 
     pathResolver.getRelativePath(path);
-  }
-
-  @Test
-  public void testGetRelativePathForArchiveMemberSourcePath() {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
-
-    BuildRule rule = graphBuilder.addToIndex(new FakeBuildRule("//foo:bar"));
-    Path archivePath = filesystem.getBuckPaths().getGenDir().resolve("foo.jar");
-    SourcePath archiveSourcePath =
-        ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), archivePath);
-    Path memberPath = Paths.get("foo.class");
-
-    ArchiveMemberSourcePath path = ArchiveMemberSourcePath.of(archiveSourcePath, memberPath);
-
-    ArchiveMemberPath relativePath = pathResolver.getRelativeArchiveMemberPath(path);
-    assertEquals(archivePath, relativePath.getArchivePath());
-    assertEquals(memberPath, relativePath.getMemberPath());
   }
 
   private static class PathReferenceRule extends AbstractBuildRule {

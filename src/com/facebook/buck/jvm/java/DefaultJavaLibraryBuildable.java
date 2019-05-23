@@ -27,7 +27,6 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -189,8 +188,8 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     return jarBuildStepsFactory.getCoveredByDepFilePredicate(ruleFinder);
   }
 
-  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
-    return jarBuildStepsFactory.getExistenceOfInterestPredicate(pathResolver);
+  public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+    return jarBuildStepsFactory.getExistenceOfInterestPredicate();
   }
 
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(

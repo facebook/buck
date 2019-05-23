@@ -338,10 +338,11 @@ public class RecordingProjectFileHashCache implements ProjectFileHashCache {
   }
 
   @Override
-  public HashCode get(ArchiveMemberPath relPath) throws IOException {
-    checkIsRelative(relPath.getArchivePath());
-    HashCode hashCode = delegate.get(relPath);
-    record(relPath, Optional.of(hashCode));
+  public HashCode getForArchiveMember(Path relativeArchivePath, Path memberPath)
+      throws IOException {
+    checkIsRelative(relativeArchivePath);
+    HashCode hashCode = delegate.getForArchiveMember(relativeArchivePath, memberPath);
+    record(ArchiveMemberPath.of(relativeArchivePath, memberPath), Optional.of(hashCode));
     return hashCode;
   }
 

@@ -17,7 +17,6 @@
 package com.facebook.buck.core.sourcepath.resolver.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -99,16 +98,6 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
     } else {
       throw new UnsupportedOperationException(sourcePath.getClass() + " is not supported here!");
     }
-  }
-
-  @Override
-  public ArchiveMemberPath getRelativeArchiveMemberPath(SourcePath sourcePath) {
-    Preconditions.checkState(sourcePath instanceof ArchiveMemberSourcePath);
-    ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) sourcePath;
-
-    Path archiveRelativePath = getRelativePath(archiveMemberSourcePath.getArchiveSourcePath());
-
-    return ArchiveMemberPath.of(archiveRelativePath, archiveMemberSourcePath.getMemberPath());
   }
 
   @Override

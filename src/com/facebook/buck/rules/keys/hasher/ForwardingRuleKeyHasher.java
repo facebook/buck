@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.keys.hasher;
 
-import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -114,9 +113,9 @@ public abstract class ForwardingRuleKeyHasher<HASH, HASH2> implements RuleKeyHas
 
   @Override
   public ForwardingRuleKeyHasher<HASH, HASH2> putArchiveMemberPath(
-      ArchiveMemberPath path, HashCode hash) {
-    secondHasher.putArchiveMemberPath(path, hash);
-    delegate.putArchiveMemberPath(path, hash);
+      Path relativeArchivePath, Path archiveMemberPath, HashCode hash) {
+    secondHasher.putArchiveMemberPath(relativeArchivePath, archiveMemberPath, hash);
+    delegate.putArchiveMemberPath(relativeArchivePath, archiveMemberPath, hash);
     return this;
   }
 
