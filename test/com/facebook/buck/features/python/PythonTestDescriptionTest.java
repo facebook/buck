@@ -59,7 +59,6 @@ import com.facebook.buck.shell.ShBinary;
 import com.facebook.buck.shell.ShBinaryBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableList;
@@ -549,8 +548,7 @@ public class PythonTestDescriptionTest {
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
             new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create()),
-            StackedFileHashCache.createDefaultHashCaches(
-                rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT),
+            StackedFileHashCache.createDefaultHashCaches(rule.getProjectFilesystem()),
             ruleResolver);
     return ruleKeyFactory.build(rule);
   }

@@ -48,7 +48,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -163,9 +162,7 @@ public class GenAidlTest {
   @Test
   public void testTransitiveAidlDependenciesAffectTheRuleKey() throws IOException {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    StackedFileHashCache hashCache =
-        StackedFileHashCache.createDefaultHashCaches(
-            stubFilesystem, FileHashCacheMode.LOADING_CACHE);
+    StackedFileHashCache hashCache = StackedFileHashCache.createDefaultHashCaches(stubFilesystem);
     DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(hashCache, ruleFinder);
     stubFilesystem.touch(stubFilesystem.getRootPath().resolve(pathToAidl.getRelativePath()));
 

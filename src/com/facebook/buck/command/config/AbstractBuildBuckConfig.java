@@ -22,7 +22,6 @@ import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -230,14 +229,6 @@ public abstract class AbstractBuildBuckConfig implements ConfigView<BuckConfig> 
   @Value.Lazy
   public boolean getShouldDeleteTemporaries() {
     return getDelegate().getBooleanValue(BUILD_SECTION, "delete_temporaries", false);
-  }
-
-  /** @return whether to enable new file hash cache engine. */
-  @Value.Lazy
-  public FileHashCacheMode getFileHashCacheMode() {
-    return getDelegate()
-        .getEnum("build", "file_hash_cache_mode", FileHashCacheMode.class)
-        .orElse(FileHashCacheMode.DEFAULT);
   }
 
   /** @return a target that points to a {@code platform} rule that describes the host platform. */

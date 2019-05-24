@@ -75,7 +75,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.config.Config;
@@ -399,9 +398,7 @@ public class DistBuildStateTest {
         actionGraph,
         ruleResolver,
         new StackedFileHashCache(
-            ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(
-                    projectFilesystem, FileHashCacheMode.DEFAULT))),
+            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem))),
         new DistBuildCellIndexer(rootCell),
         MoreExecutors.newDirectExecutorService(),
         TestRuleKeyConfigurationFactory.create(),

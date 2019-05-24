@@ -30,7 +30,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.timing.DefaultClock;
@@ -142,9 +141,7 @@ public class BuildInfoRecorderTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     FileHashCache fileHashCache =
         new StackedFileHashCache(
-            ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(
-                    filesystem, FileHashCacheMode.DEFAULT)));
+            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
     BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder(filesystem);
 
     byte[] contents = "contents".getBytes();

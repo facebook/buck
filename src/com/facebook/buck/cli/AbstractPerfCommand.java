@@ -36,7 +36,6 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.Statistics;
-import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
@@ -231,8 +230,6 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
    */
   protected StackedFileHashCache createStackedFileHashCache(CommandRunnerParams params)
       throws InterruptedException {
-    FileHashCacheMode cacheMode =
-        params.getCell().getBuckConfig().getView(BuildBuckConfig.class).getFileHashCacheMode();
 
     return new StackedFileHashCache(
         ImmutableList.<ProjectFileHashCache>builder()
@@ -267,21 +264,17 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
                       public ProjectFilesystem createOrThrow(Path path) {
                         return createProjectFilesystem(path);
                       }
-                    },
-                    cacheMode))
+                    }))
             .build());
   }
 
   private Stream<? extends ProjectFileHashCache> createFileHashCaches(Cell cell) {
     ProjectFilesystem realFilesystem = cell.getFilesystem();
-    // Just use the root cell's mode.
-    FileHashCacheMode cacheMode =
-        cell.getBuckConfig().getView(BuildBuckConfig.class).getFileHashCacheMode();
     ProjectFilesystem hashFakingFilesystem = createHashFakingFilesystem(realFilesystem);
 
     return Stream.of(
-        DefaultFileHashCache.createBuckOutFileHashCache(hashFakingFilesystem, cacheMode),
-        DefaultFileHashCache.createDefaultFileHashCache(hashFakingFilesystem, cacheMode));
+        DefaultFileHashCache.createBuckOutFileHashCache(hashFakingFilesystem),
+        DefaultFileHashCache.createDefaultFileHashCache(hashFakingFilesystem));
   }
 
   private DefaultProjectFilesystem createHashFakingFilesystem(ProjectFilesystem realFilesystem) {

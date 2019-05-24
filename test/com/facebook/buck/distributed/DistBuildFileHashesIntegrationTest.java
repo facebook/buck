@@ -48,7 +48,6 @@ import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
@@ -204,18 +203,13 @@ public class DistBuildFileHashesIntegrationTest {
     DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(rootCell);
 
     ImmutableList.Builder<ProjectFileHashCache> allCaches = ImmutableList.builder();
-    allCaches.add(
-        DefaultFileHashCache.createDefaultFileHashCache(
-            rootCell.getFilesystem(), FileHashCacheMode.DEFAULT));
+    allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(rootCell.getFilesystem()));
     for (Path cellPath : rootCell.getKnownRoots()) {
       Cell cell = rootCell.getCell(cellPath);
-      allCaches.add(
-          DefaultFileHashCache.createDefaultFileHashCache(
-              cell.getFilesystem(), FileHashCacheMode.DEFAULT));
+      allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(cell.getFilesystem()));
     }
     allCaches.addAll(
-        DefaultFileHashCache.createOsRootDirectoriesCaches(
-            new DefaultProjectFilesystemFactory(), FileHashCacheMode.DEFAULT));
+        DefaultFileHashCache.createOsRootDirectoriesCaches(new DefaultProjectFilesystemFactory()));
     StackedFileHashCache stackedCache = new StackedFileHashCache(allCaches.build());
 
     return new DistBuildFileHashes(

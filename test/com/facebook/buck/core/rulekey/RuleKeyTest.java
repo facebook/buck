@@ -65,7 +65,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.google.common.collect.ImmutableList;
@@ -103,9 +102,7 @@ public class RuleKeyTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     FileHashCache hashCache =
         new StackedFileHashCache(
-            ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(
-                    filesystem, FileHashCacheMode.DEFAULT)));
+            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
     ActionGraphBuilder graphBuilder1 = new TestActionGraphBuilder();
     ActionGraphBuilder graphBuilder2 = new TestActionGraphBuilder();
     DefaultRuleKeyFactory ruleKeyFactory = new TestDefaultRuleKeyFactory(hashCache, graphBuilder1);
@@ -517,8 +514,7 @@ public class RuleKeyTest {
     FileHashCache hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(
-                    new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT)));
+                DefaultFileHashCache.createDefaultFileHashCache(new FakeProjectFilesystem())));
 
     BuildRule buildRule1 =
         new TestRuleKeyAppendableBuildRule(target, projectFilesystem, params, "foo", "bar");
@@ -568,8 +564,7 @@ public class RuleKeyTest {
     FileHashCache hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(
-                    new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT)));
+                DefaultFileHashCache.createDefaultFileHashCache(new FakeProjectFilesystem())));
 
     RuleKey ruleKey1 =
         new TestDefaultRuleKeyFactory(0, hashCache, ruleFinder)
@@ -590,8 +585,7 @@ public class RuleKeyTest {
     FileHashCache hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(
-                    new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT)));
+                DefaultFileHashCache.createDefaultFileHashCache(new FakeProjectFilesystem())));
 
     BuildRule buildRule1 =
         new TestRuleKeyAppendableBuildRule(target, projectFilesystem, params, "foo", "bar");

@@ -43,7 +43,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.hashing.FileHashLoader;
@@ -172,8 +171,7 @@ public class DirectHeaderMapTest {
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
-                    TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
-                    FileHashCacheMode.DEFAULT)));
+                    TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()))));
     RuleKey key1 = new TestDefaultRuleKeyFactory(hashCache, ruleFinder).build(buildRule);
     RuleKey key2 = new TestDefaultRuleKeyFactory(hashCache, ruleFinder).build(modifiedBuildRule);
     assertNotEquals(key1, key2);
@@ -191,8 +189,7 @@ public class DirectHeaderMapTest {
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =
         DefaultFileHashCache.createDefaultFileHashCache(
-            TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
-            FileHashCacheMode.DEFAULT);
+            TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()));
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
 
     RuleKey defaultKey1 = new TestDefaultRuleKeyFactory(hashLoader, ruleFinder).build(buildRule);

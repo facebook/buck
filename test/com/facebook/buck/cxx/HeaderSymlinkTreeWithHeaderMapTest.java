@@ -46,7 +46,6 @@ import com.facebook.buck.step.fs.SymlinkTreeMergeStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.hashing.FileHashLoader;
@@ -173,8 +172,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =
         DefaultFileHashCache.createDefaultFileHashCache(
-            TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
-            FileHashCacheMode.DEFAULT);
+            TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()));
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     RuleKey key1 =
         new TestDefaultRuleKeyFactory(hashLoader, graphBuilder).build(symlinkTreeBuildRule);
@@ -189,8 +187,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
 
     DefaultFileHashCache hashCache =
         DefaultFileHashCache.createDefaultFileHashCache(
-            TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()),
-            FileHashCacheMode.DEFAULT);
+            TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot()));
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     DefaultRuleKeyFactory ruleKeyFactory = new TestDefaultRuleKeyFactory(hashLoader, graphBuilder);
 

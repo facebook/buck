@@ -23,5 +23,5 @@ public enum FileHashCacheMode {
   LIMITED_PREFIX_TREE,
   LIMITED_PREFIX_TREE_PARALLEL,
   PARALLEL_COMPARISON;
-  public static final FileHashCacheMode DEFAULT = PREFIX_TREE;
+  public static final FileHashCacheMode DEFAULT = LIMITED_PREFIX_TREE;
 }

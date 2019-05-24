@@ -20,7 +20,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
-import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.google.common.eventbus.Subscribe;
 import java.nio.file.Path;
 
@@ -28,9 +27,8 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
 
   private static final Logger LOG = Logger.get(WatchedFileHashCache.class);
 
-  public WatchedFileHashCache(
-      ProjectFilesystem projectFilesystem, FileHashCacheMode fileHashCacheMode) {
-    super(projectFilesystem, getDefaultPathPredicate(projectFilesystem), fileHashCacheMode);
+  public WatchedFileHashCache(ProjectFilesystem projectFilesystem) {
+    super(projectFilesystem, getDefaultPathPredicate(projectFilesystem));
   }
 
   /**

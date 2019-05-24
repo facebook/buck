@@ -49,7 +49,6 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.slb.ThriftUtil;
-import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
@@ -142,17 +141,13 @@ public class DistBuildFileHashesTest {
 
     private StackedFileHashCache createFileHashCache() {
       ImmutableList.Builder<ProjectFileHashCache> cacheList = ImmutableList.builder();
-      cacheList.add(
-          DefaultFileHashCache.createDefaultFileHashCache(
-              projectFilesystem, FileHashCacheMode.DEFAULT));
-      cacheList.add(
-          DefaultFileHashCache.createDefaultFileHashCache(
-              secondProjectFilesystem, FileHashCacheMode.DEFAULT));
+      cacheList.add(DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem));
+      cacheList.add(DefaultFileHashCache.createDefaultFileHashCache(secondProjectFilesystem));
       for (Path path : javaFs.getRootDirectories()) {
         if (Files.isDirectory(path)) {
           cacheList.add(
               DefaultFileHashCache.createDefaultFileHashCache(
-                  TestProjectFilesystems.createProjectFilesystem(path), FileHashCacheMode.DEFAULT));
+                  TestProjectFilesystems.createProjectFilesystem(path)));
         }
       }
       return new StackedFileHashCache(cacheList.build());
