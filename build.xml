@@ -345,6 +345,9 @@
            classpathref="testrunner.classpath"
            debug="on"
            includeAntRuntime="no"
+           source="8"
+           target="8"
+           bootclasspath="third-party/java/jdk/jdk8-rt-stub.jar"
            >
       <compilerarg value="-Xlint:rawtypes" />
       <compilerarg value="-Xlint:unchecked" />

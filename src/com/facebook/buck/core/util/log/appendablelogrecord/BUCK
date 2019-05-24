@@ -1,6 +1,9 @@
 java_library(
     name = "appendablelogrecord",
     srcs = glob(["*java"]),
+    # This target is pulled in by testrunner, which needs to compile against Java 8.
+    source = "8",
+    target = "8",
     visibility = [
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/log:",

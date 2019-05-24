@@ -5,6 +5,8 @@ java_library(
         "CheckDependency.java",
         "TestResult.java",
     ],
+    source = "8",
+    target = "8",
     deps = [
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/test/selectors:selectors",
@@ -54,6 +56,8 @@ java_library(
         "InstrumentationTestRunner.java",
     ],
     required_for_source_only_abi = True,
+    source = "8",
+    target = "8",
     tests = [
         "//test/com/facebook/buck/testrunner:testrunner",
     ],
@@ -69,6 +73,8 @@ java_library(
         "TestNGMain.java",
         "TestNGRunner.java",
     ],
+    source = "8",
+    target = "8",
     deps = [
         ":base",
         "//src/com/facebook/buck/test/result/type:type",

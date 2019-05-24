@@ -21,6 +21,9 @@ java_immutables_library(
 java_library(
     name = "concurrent_for_junit_runner",
     srcs = ["MostExecutors.java"],
+    # This target is pulled in by testrunner, which needs to compile against Java 8.
+    source = "8",
+    target = "8",
     visibility = [
         "//src/com/facebook/buck/testrunner:junit",
         "//test/...",

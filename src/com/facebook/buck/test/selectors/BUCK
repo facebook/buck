@@ -2,6 +2,9 @@ java_library(
     name = "selectors",
     srcs = glob(["*.java"]),
     required_for_source_only_abi = True,
+    # This target is pulled in by testrunner, which needs to compile against Java 8.
+    source = "8",
+    target = "8",
     tests = [
         "//test/com/facebook/buck/test/selectors:selectors",
     ],
