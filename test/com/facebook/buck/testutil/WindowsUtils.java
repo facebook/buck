@@ -16,8 +16,11 @@
 
 package com.facebook.buck.testutil;
 
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 /** An implementation of {@link PlatformUtils} for Windows platforms */
@@ -57,5 +60,13 @@ public class WindowsUtils extends PlatformUtils {
   @Override
   public ImmutableList.Builder<String> getBuckCommandBuilder() {
     return getCommandBuilder().add(BUCK_EXE);
+  }
+
+  @Override
+  public String getPython2Executable() {
+    return getExecutableFinder()
+        .getOptionalExecutable(Paths.get("python2.7.exe"), EnvVariablesProvider.getSystemEnv())
+        .map(Path::toString)
+        .orElse("python.exe");
   }
 }

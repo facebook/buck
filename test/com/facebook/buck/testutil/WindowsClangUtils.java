@@ -58,4 +58,9 @@ public class WindowsClangUtils extends PlatformUtils {
   public ImmutableList.Builder<String> getBuckCommandBuilder() {
     return getCommandBuilder().add(BUCK_EXE);
   }
+
+  @Override
+  public String getPython2Executable() {
+    return new WindowsUtils().getPython2Executable();
+  }
 }

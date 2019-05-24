@@ -46,6 +46,10 @@ public abstract class PlatformUtils {
     return Optional.empty();
   }
 
+  protected ExecutableFinder getExecutableFinder() {
+    return executableFinder;
+  }
+
   protected String findExecutable(String bin) {
     try {
       Path executablePath =
@@ -89,6 +93,8 @@ public abstract class PlatformUtils {
    * to launch buck in the given environment
    */
   public abstract ImmutableList.Builder<String> getBuckCommandBuilder();
+
+  public abstract String getPython2Executable();
 
   /** Gets a base command builder for the given platform */
   public abstract ImmutableList.Builder<String> getCommandBuilder();
