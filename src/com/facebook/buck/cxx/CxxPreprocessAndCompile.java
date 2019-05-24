@@ -342,6 +342,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
           sanitizer,
           outputPathResolver.getTempPath(),
           useArgfile,
+          compilerDelegate.getPreArgfileArgs(),
           compilerDelegate.getCompiler(),
           Optional.of(
               CxxLogInfo.builder()

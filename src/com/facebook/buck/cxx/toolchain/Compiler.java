@@ -34,6 +34,8 @@ public interface Compiler extends Tool {
 
   boolean isArgFileSupported();
 
+  ImmutableList<String> getPreArgfileArgs();
+
   ImmutableList<String> outputArgs(String outputPath);
 
   ImmutableList<String> outputDependenciesArgs(String outputPath);

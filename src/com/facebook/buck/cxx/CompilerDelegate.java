@@ -70,6 +70,10 @@ class CompilerDelegate implements AddsToRuleKey {
         .build();
   }
 
+  public ImmutableList<String> getPreArgfileArgs() {
+    return compiler.getPreArgfileArgs();
+  }
+
   public CxxToolFlags getCompilerFlags() {
     return compilerFlags;
   }

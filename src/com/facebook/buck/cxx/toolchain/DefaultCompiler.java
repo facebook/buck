@@ -51,6 +51,11 @@ public abstract class DefaultCompiler extends DelegatingTool implements Compiler
   }
 
   @Override
+  public ImmutableList<String> getPreArgfileArgs() {
+    return ImmutableList.of();
+  }
+
+  @Override
   public ImmutableList<String> outputArgs(String outputPath) {
     return ImmutableList.of("-o", outputPath);
   }

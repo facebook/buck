@@ -93,6 +93,7 @@ public class CxxCompileStepIntegrationTest {
             sanitizer,
             scratchDir,
             true,
+            ImmutableList.of(),
             compiler,
             Optional.empty());
 
@@ -160,6 +161,7 @@ public class CxxCompileStepIntegrationTest {
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
             scratchDir,
             true,
+            ImmutableList.of(),
             compiler,
             Optional.empty());
 

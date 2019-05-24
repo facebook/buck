@@ -71,6 +71,7 @@ class CxxPreprocessAndCompileStep implements Step {
   private final Path scratchDir;
 
   private final boolean useArgfile;
+  private final ImmutableList<String> preArgfileArgs;
 
   private static final FileLastModifiedDateContentsScrubber FILE_LAST_MODIFIED_DATE_SCRUBBER =
       new FileLastModifiedDateContentsScrubber();
@@ -92,6 +93,7 @@ class CxxPreprocessAndCompileStep implements Step {
       DebugPathSanitizer sanitizer,
       Path scratchDir,
       boolean useArgfile,
+      ImmutableList<String> preArgfileArgs,
       Compiler compiler,
       Optional<CxxLogInfo> cxxLogInfo) {
     this.filesystem = filesystem;
@@ -105,6 +107,7 @@ class CxxPreprocessAndCompileStep implements Step {
     this.sanitizer = sanitizer;
     this.scratchDir = scratchDir;
     this.useArgfile = useArgfile;
+    this.preArgfileArgs = preArgfileArgs;
     this.compiler = compiler;
     this.cxxLogInfo = cxxLogInfo;
   }
@@ -197,6 +200,7 @@ class CxxPreprocessAndCompileStep implements Step {
       builder.setCommand(
           ImmutableList.<String>builder()
               .addAll(command.getCommandPrefix())
+              .addAll(preArgfileArgs)
               .add("@" + getArgfile())
               .build());
     } else {

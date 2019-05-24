@@ -24,8 +24,8 @@ import java.nio.file.Path;
  * Compiler implementation for the Clang for Windows toolchain.
  *
  * <p>This uses clang.exe directly, not simply clang-cl which is a CL-compatible front end for
- * clang. This implementation exists basically only because of argfile differences. See comments on
- * `isArgFileSupported` for details.
+ * clang. This implementation exists basically only because of argfile differences.
+ * --rsp-quoting=windows should be added to use argfile on Windows.
  */
 public class ClangWindowsCompiler extends ClangCompiler {
 
@@ -44,9 +44,8 @@ public class ClangWindowsCompiler extends ClangCompiler {
   }
 
   @Override
-  public boolean isArgFileSupported() {
-    // Requires --rsp-quoting=windows to be passed to clang.exe before the argfile to
-    // work correctly on Windows, but it is not necessary when driving clang on Unix.
-    return false;
+  public ImmutableList<String> getPreArgfileArgs() {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    return builder.add("--rsp-quoting=windows").build();
   }
 }
