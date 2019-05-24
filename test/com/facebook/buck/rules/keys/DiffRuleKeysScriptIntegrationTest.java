@@ -230,21 +230,28 @@ public class DiffRuleKeysScriptIntegrationTest {
     String newHash3 = getFileSha1Hash(workspace, "JavaLib3.java");
     invokeBuckCommand(workspace, "buck-1.log");
 
+    String output = runRuleKeyDiffer(workspace, "");
     assertThat(
-        runRuleKeyDiffer(workspace, ""),
-        // TODO: The fact that it shows only the rule key difference for jarBuildStepsFactory
-        // rather than the change in the srcs property of that class is a bug in the differ.
+        output,
         Matchers.stringContainsInOrder(
             "Change details for [//:java_lib_2->jarBuildStepsFactory]",
             "  (srcs):",
             "    -[<missing>]",
             "    -[container(LIST,len=1)]",
             "    +[container(LIST,len=2)]",
-            String.format("    +[path(JavaLib3.java:%s)]", newHash3),
+            String.format("    +[path(JavaLib3.java:%s)]", newHash3)));
+    assertThat(
+        output,
+        Matchers.stringContainsInOrder(
             "Change details for [//:java_lib_1->jarBuildStepsFactory]",
             "  (srcs):",
             String.format("    -[path(JavaLib1.java:%s)]", oldHash1),
-            String.format("    +[path(JavaLib1.java:%s)]", newHash1),
+            String.format("    +[path(JavaLib1.java:%s)]", newHash1)));
+    assertThat(
+        output,
+        // TODO: The fact that it shows only the rule key difference for jarBuildStepsFactory
+        // rather than the change in the srcs property of that class is a bug in the differ.
+        Matchers.stringContainsInOrder(
             "Change details for [//:java_lib_all]",
             "  (jarBuildStepsFactory):",
             "    -[ruleKey(sha1=" /* some rulekey */,
