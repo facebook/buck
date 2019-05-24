@@ -21,8 +21,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -45,7 +45,7 @@ public class HttpFileDescriptionTest {
   public @Rule ExpectedException thrown = ExpectedException.none();
 
   private HttpFileDescription description;
-  private SingleThreadedActionGraphBuilder graphBuilder;
+  private ActionGraphBuilder graphBuilder;
   private ProjectFilesystem filesystem;
   private TargetGraph targetGraph;
 

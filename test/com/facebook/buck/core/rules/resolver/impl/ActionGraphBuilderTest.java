@@ -48,8 +48,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -60,15 +58,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-@RunWith(Parameterized.class)
 public class ActionGraphBuilderTest {
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
@@ -82,53 +76,19 @@ public class ActionGraphBuilderTest {
     }
   }
 
-  enum ClassToTest {
-    SINGLE_THREADED,
-    MULTI_THREADED
-  }
-
-  @Parameterized.Parameters(name = "{0}")
-  public static Collection<Object[]> data() {
-    return Arrays.asList(
-        new Object[][] {
-          {
-            ClassToTest.SINGLE_THREADED,
-          },
-          {
-            ClassToTest.MULTI_THREADED,
-          },
-        });
-  }
-
-  @Parameterized.Parameter() public ClassToTest classToTest;
-
   public ActionGraphBuilderFactory actionGraphBuilderFactory;
   public ExecutorService executorService;
 
   @Before
   public void setUp() {
-    switch (classToTest) {
-      case SINGLE_THREADED:
-        this.executorService = MoreExecutors.newDirectExecutorService();
-        this.actionGraphBuilderFactory =
-            (graph, transformer) ->
-                new SingleThreadedActionGraphBuilder(
-                    graph, transformer, new TestCellBuilder().build().getCellProvider());
-        break;
-      case MULTI_THREADED:
-        this.executorService = Executors.newFixedThreadPool(4);
-        this.actionGraphBuilderFactory =
-            (graph, transformer) ->
-                new MultiThreadedActionGraphBuilder(
-                    MoreExecutors.listeningDecorator(this.executorService),
-                    graph,
-                    transformer,
-                    new TestCellBuilder().build().getCellProvider());
-
-        break;
-      default:
-        throw new RuntimeException();
-    }
+    this.executorService = Executors.newFixedThreadPool(4);
+    this.actionGraphBuilderFactory =
+        (graph, transformer) ->
+            new MultiThreadedActionGraphBuilder(
+                MoreExecutors.listeningDecorator(this.executorService),
+                graph,
+                transformer,
+                new TestCellBuilder().build().getCellProvider());
   }
 
   @After
@@ -266,8 +226,6 @@ public class ActionGraphBuilderTest {
 
   @Test
   public void accessingTargetBeingBuildInDifferentThreadsWaitsForItsCompletion() throws Exception {
-    Assume.assumeTrue(classToTest == ClassToTest.MULTI_THREADED);
-
     BuildTarget target1 = BuildTargetFactory.newInstance("//foo:bar1");
     TargetNode<?> library1 = JavaLibraryBuilder.createBuilder(target1).build();
 
@@ -324,8 +282,6 @@ public class ActionGraphBuilderTest {
 
   @Test(timeout = 10000)
   public void deadLockOnDependencyTest() throws ExecutionException, InterruptedException {
-    Assume.assumeTrue(classToTest == ClassToTest.MULTI_THREADED);
-
     // TODO(cjhopman): This test probably doesn't make sense anymore.
 
     /**

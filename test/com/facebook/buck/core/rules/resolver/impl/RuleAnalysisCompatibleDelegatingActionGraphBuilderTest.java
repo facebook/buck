@@ -59,8 +59,10 @@ import com.facebook.buck.util.function.TriFunction;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Test;
 
@@ -141,7 +143,11 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
         new RuleAnalysisCompatibleDelegatingActionGraphBuilder(
             new DefaultTargetNodeToBuildRuleTransformer(),
             transformer ->
-                new SingleThreadedActionGraphBuilder(targetGraph, transformer, cellProvider) {
+                new MultiThreadedActionGraphBuilder(
+                    MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
+                    targetGraph,
+                    transformer,
+                    cellProvider) {
                   @Override
                   public BuildRule requireRule(BuildTarget buildTarget) {
                     delegateActionGraphBuilderCalled.set(true);

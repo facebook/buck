@@ -21,7 +21,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
@@ -32,9 +32,11 @@ import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Map;
+import java.util.concurrent.Executors;
 import org.kohsuke.args4j.Option;
 
 /** Verify the contents of our FileHashCache. */
@@ -67,8 +69,11 @@ public class VerifyCachesCommand extends AbstractCommand {
     ImmutableList<Map.Entry<BuildRule, RuleKey>> contents = recycler.getCachedBuildRules();
     RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(ruleKeyConfiguration);
     ActionGraphBuilder graphBuilder =
-        new SingleThreadedActionGraphBuilder(
-            TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer(), cellProvider);
+        new MultiThreadedActionGraphBuilder(
+            MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
+            TargetGraph.EMPTY,
+            new DefaultTargetNodeToBuildRuleTransformer(),
+            cellProvider);
     contents.forEach(e -> graphBuilder.addToIndex(e.getKey()));
     DefaultRuleKeyFactory defaultRuleKeyFactory =
         new DefaultRuleKeyFactory(fieldLoader, fileHashCache, graphBuilder);

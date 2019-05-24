@@ -38,7 +38,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
-import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEvent;
@@ -46,7 +46,9 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.google.common.eventbus.Subscribe;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
@@ -653,7 +655,8 @@ public class IncrementalActionGraphGeneratorTest {
   }
 
   private ActionGraphBuilder createActionGraphBuilder(TargetGraph targetGraph) {
-    return new SingleThreadedActionGraphBuilder(
+    return new MultiThreadedActionGraphBuilder(
+        MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
         targetGraph,
         new DefaultTargetNodeToBuildRuleTransformer(),
         new TestCellBuilder().build().getCellProvider());

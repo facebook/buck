@@ -40,7 +40,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Map;
-import java.util.function.Supplier;
 
 public class ActionGraphFactory {
 
@@ -49,39 +48,15 @@ public class ActionGraphFactory {
       CellProvider cellProvider,
       ImmutableMap<ExecutorPool, ListeningExecutorService> executorSupplier,
       CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutor,
-      ActionGraphParallelizationMode parallelizationMode,
-      RuleAnalysisComputationMode ruleAnalysisComputationMode,
-      boolean shouldInstrumentGraphBuilding,
-      Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
-    return new ActionGraphFactory(
-        createDelegate(
-            eventBus,
-            cellProvider,
-            () -> executorSupplier.get(ExecutorPool.GRAPH_CPU),
-            parallelizationMode,
-            shouldInstrumentGraphBuilding),
-        ruleAnalysisComputationMode,
-        eventBus,
-        incrementalActionGraphExperimentGroups,
-        depsAwareExecutor);
-  }
-
-  public static ActionGraphFactory create(
-      BuckEventBus eventBus,
-      CellProvider cellProvider,
-      ImmutableMap<ExecutorPool, ListeningExecutorService> executorSupplier,
-      CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutor,
       BuckConfig buckConfig) {
     ActionGraphConfig actionGraphConfig = buckConfig.getView(ActionGraphConfig.class);
-    return create(
-        eventBus,
-        cellProvider,
-        executorSupplier,
-        depsAwareExecutor,
-        actionGraphConfig.getActionGraphParallelizationMode(),
+    return new ActionGraphFactory(
+        new ParallelActionGraphFactory(
+            () -> executorSupplier.get(ExecutorPool.GRAPH_CPU), cellProvider),
         buckConfig.getView(RuleAnalysisConfig.class).getComputationMode(),
-        actionGraphConfig.getShouldInstrumentActionGraph(),
-        actionGraphConfig.getIncrementalActionGraphExperimentGroups());
+        eventBus,
+        actionGraphConfig.getIncrementalActionGraphExperimentGroups(),
+        depsAwareExecutor);
   }
 
   private final ActionGraphFactoryDelegate delegate;
@@ -142,53 +117,6 @@ public class ActionGraphFactory {
       graphBuilderDecorator = builderConstructor -> builderConstructor.apply(transformer);
     }
     return delegate.create(transformer, targetGraph, listener, graphBuilderDecorator);
-  }
-
-  private static ActionGraphFactoryDelegate createDelegate(
-      BuckEventBus eventBus,
-      CellProvider cellProvider,
-      Supplier<ListeningExecutorService> executorSupplier,
-      ActionGraphParallelizationMode parallelizationMode,
-      boolean shouldInstrumentGraphBuilding) {
-
-    switch (parallelizationMode) {
-      case EXPERIMENT:
-        parallelizationMode =
-            RandomizedTrial.getGroupStable(
-                "action_graph_parallelization", ActionGraphParallelizationMode.class);
-        eventBus.post(
-            new ExperimentEvent(
-                "action_graph_parallelization", parallelizationMode.toString(), "", null, null));
-        break;
-      case EXPERIMENT_UNSTABLE:
-        parallelizationMode =
-            RandomizedTrial.getGroup(
-                "action_graph_parallelization",
-                eventBus.getBuildId().toString(),
-                ActionGraphParallelizationMode.class);
-        eventBus.post(
-            new ExperimentEvent(
-                "action_graph_parallelization_unstable",
-                parallelizationMode.toString(),
-                "",
-                null,
-                null));
-        break;
-      case ENABLED:
-      case DISABLED:
-        break;
-    }
-    switch (parallelizationMode) {
-      case ENABLED:
-        return new ParallelActionGraphFactory(executorSupplier, cellProvider);
-      case DISABLED:
-        return new SerialActionGraphFactory(eventBus, cellProvider, shouldInstrumentGraphBuilding);
-      case EXPERIMENT_UNSTABLE:
-      case EXPERIMENT:
-        throw new AssertionError(
-            "EXPERIMENT* values should have been resolved to ENABLED or DISABLED.");
-    }
-    throw new AssertionError("Unexpected parallelization mode value: " + parallelizationMode);
   }
 
   interface ActionGraphCreationLifecycleListener {

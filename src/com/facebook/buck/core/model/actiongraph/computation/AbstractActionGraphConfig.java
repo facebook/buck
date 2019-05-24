@@ -45,14 +45,6 @@ public abstract class AbstractActionGraphConfig implements ConfigView<BuckConfig
             "cache", "incremental_action_graph_experiment", IncrementalActionGraphMode.class);
   }
 
-  /** Whether to parallelize action graph creation. */
-  @Value.Derived
-  public ActionGraphParallelizationMode getActionGraphParallelizationMode() {
-    return getDelegate()
-        .getEnum("build", "action_graph_parallelization", ActionGraphParallelizationMode.class)
-        .orElse(ActionGraphParallelizationMode.DEFAULT);
-  }
-
   @Value.Derived
   public boolean isActionGraphCheckingEnabled() {
     return getDelegate().getBooleanValue("cache", "action_graph_cache_check_enabled", false);
@@ -69,10 +61,5 @@ public abstract class AbstractActionGraphConfig implements ConfigView<BuckConfig
   @Value.Derived
   public boolean isSkipActionGraphCache() {
     return getDelegate().getBooleanValue("client", "skip-action-graph-cache", false);
-  }
-
-  /** Whether to instrument the action graph and record performance */
-  public boolean getShouldInstrumentActionGraph() {
-    return getDelegate().getBooleanValue("instrumentation", "action_graph", false);
   }
 }

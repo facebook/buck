@@ -28,14 +28,20 @@ import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.util.Map;
+import java.util.concurrent.Executors;
 import javax.annotation.Nullable;
 
 public class ActionGraphProviderBuilder {
 
   @Nullable private ActionGraphCache actionGraphCache;
 
-  @Nullable private ImmutableMap<ExecutorPool, ListeningExecutorService> executors;
+  @Nullable
+  private ImmutableMap<ExecutorPool, ListeningExecutorService> executors =
+      ImmutableMap.of(
+          ExecutorPool.GRAPH_CPU,
+          MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()));
 
   @Nullable
   private CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
@@ -46,8 +52,6 @@ public class ActionGraphProviderBuilder {
   @Nullable private RuleKeyConfiguration ruleKeyConfiguration;
 
   @Nullable private CellProvider cellProvider;
-
-  @Nullable private ActionGraphParallelizationMode parallelizationMode;
 
   @Nullable private RuleAnalysisComputationMode ruleAnalysisComputationMode;
 
@@ -95,12 +99,6 @@ public class ActionGraphProviderBuilder {
 
   public ActionGraphProviderBuilder withCellProvider(CellProvider cellProvider) {
     this.cellProvider = cellProvider;
-    return this;
-  }
-
-  public ActionGraphProviderBuilder withParallelizationMode(
-      ActionGraphParallelizationMode parallelizationMode) {
-    this.parallelizationMode = parallelizationMode;
     return this;
   }
 
@@ -156,10 +154,6 @@ public class ActionGraphProviderBuilder {
         this.cellProvider == null
             ? new TestCellBuilder().build().getCellProvider()
             : this.cellProvider;
-    ActionGraphParallelizationMode parallelizationMode =
-        this.parallelizationMode == null
-            ? ActionGraphParallelizationMode.DISABLED
-            : this.parallelizationMode;
     RuleAnalysisComputationMode ruleAnalysisComputationMode =
         this.ruleAnalysisComputationMode == null
             ? RuleAnalysisComputationMode.DISABLED
@@ -177,15 +171,13 @@ public class ActionGraphProviderBuilder {
 
     return new ActionGraphProvider(
         eventBus,
-        ActionGraphFactory.create(
-            eventBus,
-            cellProvider,
-            executors,
-            depsAwareExecutorSupplier,
-            parallelizationMode,
+        new ActionGraphFactory(
+            new ParallelActionGraphFactory(
+                () -> executors.get(ExecutorPool.GRAPH_CPU), cellProvider),
             ruleAnalysisComputationMode,
-            false,
-            incrementalActionGraphExperimentGroups),
+            eventBus,
+            incrementalActionGraphExperimentGroups,
+            depsAwareExecutorSupplier),
         actionGraphCache,
         ruleKeyConfiguration,
         checkActionGraphs,

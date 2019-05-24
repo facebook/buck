@@ -23,29 +23,35 @@ import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.util.concurrent.MoreExecutors;
+import java.util.concurrent.Executors;
 
-public class TestActionGraphBuilder extends SingleThreadedActionGraphBuilder {
+public class TestActionGraphBuilder extends MultiThreadedActionGraphBuilder {
+
+  public TestActionGraphBuilder(
+      TargetGraph targetGraph,
+      TargetNodeToBuildRuleTransformer buildRuleGenerator,
+      CellProvider cellProvider) {
+    super(
+        MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
+        targetGraph,
+        buildRuleGenerator,
+        cellProvider);
+  }
 
   public TestActionGraphBuilder(
       TargetGraph targetGraph,
       TargetNodeToBuildRuleTransformer buildRuleGenerator,
       ToolchainProvider toolchainProvider) {
-    super(
+    this(
         targetGraph,
         buildRuleGenerator,
         new TestCellBuilder().setToolchainProvider(toolchainProvider).build().getCellProvider());
   }
 
   public TestActionGraphBuilder(
-      TargetGraph targetGraph,
-      TargetNodeToBuildRuleTransformer buildRuleGenerator,
-      CellProvider cellProvider) {
-    super(targetGraph, buildRuleGenerator, cellProvider);
-  }
-
-  public TestActionGraphBuilder(
       TargetGraph targetGraph, TargetNodeToBuildRuleTransformer buildRuleGenerator) {
-    super(targetGraph, buildRuleGenerator, new TestCellBuilder().build().getCellProvider());
+    this(targetGraph, buildRuleGenerator, new TestCellBuilder().build().getCellProvider());
   }
 
   public TestActionGraphBuilder(TargetNodeToBuildRuleTransformer buildRuleGenerator) {
