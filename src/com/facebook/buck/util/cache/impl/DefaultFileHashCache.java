@@ -21,6 +21,7 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.cache.FileHashCacheEngine;
+import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
 import com.facebook.buck.util.cache.JarHashCodeAndFileType;
@@ -55,9 +56,19 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   @VisibleForTesting FileHashCacheEngine fileHashCacheEngine;
 
   protected DefaultFileHashCache(
-      ProjectFilesystem projectFilesystem, Predicate<Path> ignoredPredicate) {
+      ProjectFilesystem projectFilesystem,
+      Predicate<Path> ignoredPredicate,
+      FileHashCacheMode fileHashCacheMode) {
     this.projectFilesystem = projectFilesystem;
     this.ignoredPredicate = ignoredPredicate;
+    FileHashCacheEngine.ValueLoader<HashCodeAndFileType> hashLoader =
+        path -> {
+          try {
+            return getHashCodeAndFileType(path);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        };
 
     FileHashCacheEngine.ValueLoader<Long> sizeLoader =
         path -> {
@@ -85,22 +96,48 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
             throw new RuntimeException(e);
           }
         };
-    fileHashCacheEngine =
-        new StatsTrackingFileHashCacheEngine(
-            new LimitedFileHashCacheEngine(
-                projectFilesystem, fileHashLoader, dirHashLoader, sizeLoader),
-            "limited");
+    switch (fileHashCacheMode) {
+      case PARALLEL_COMPARISON:
+        fileHashCacheEngine = new ComboFileHashCache(hashLoader, sizeLoader, projectFilesystem);
+        break;
+      case LOADING_CACHE:
+        fileHashCacheEngine = LoadingCacheFileHashCache.createWithStats(hashLoader, sizeLoader);
+        break;
+      case PREFIX_TREE:
+        fileHashCacheEngine =
+            FileSystemMapFileHashCache.createWithStats(hashLoader, sizeLoader, projectFilesystem);
+        break;
+      case LIMITED_PREFIX_TREE:
+        fileHashCacheEngine =
+            new StatsTrackingFileHashCacheEngine(
+                new LimitedFileHashCacheEngine(
+                    projectFilesystem, fileHashLoader, dirHashLoader, sizeLoader),
+                "limited");
+        break;
+      case LIMITED_PREFIX_TREE_PARALLEL:
+        fileHashCacheEngine =
+            new ComboFileHashCache(
+                LoadingCacheFileHashCache.createWithStats(hashLoader, sizeLoader),
+                new StatsTrackingFileHashCacheEngine(
+                    new LimitedFileHashCacheEngine(
+                        projectFilesystem, fileHashLoader, dirHashLoader, sizeLoader),
+                    "limited"));
+        break;
+      default:
+        throw new RuntimeException("Unsupported file hash cache engine: " + fileHashCacheMode);
+    }
   }
 
   public static DefaultFileHashCache createBuckOutFileHashCache(
-      ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem, FileHashCacheMode fileHashCacheMode) {
     return new DefaultFileHashCache(
-        projectFilesystem, (path) -> !isInBuckOut(projectFilesystem, path));
+        projectFilesystem, (path) -> !isInBuckOut(projectFilesystem, path), fileHashCacheMode);
   }
 
   public static DefaultFileHashCache createDefaultFileHashCache(
-      ProjectFilesystem projectFilesystem) {
-    return new DefaultFileHashCache(projectFilesystem, getDefaultPathPredicate(projectFilesystem));
+      ProjectFilesystem projectFilesystem, FileHashCacheMode fileHashCacheMode) {
+    return new DefaultFileHashCache(
+        projectFilesystem, getDefaultPathPredicate(projectFilesystem), fileHashCacheMode);
   }
 
   /**
@@ -126,7 +163,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   }
 
   public static ImmutableList<? extends ProjectFileHashCache> createOsRootDirectoriesCaches(
-      ProjectFilesystemFactory projectFilesystemFactory) {
+      ProjectFilesystemFactory projectFilesystemFactory, FileHashCacheMode fileHashCacheMode) {
     ImmutableList.Builder<ProjectFileHashCache> allCaches = ImmutableList.builder();
     for (Path root : FileSystems.getDefault().getRootDirectories()) {
       if (!root.toFile().exists()) {
@@ -142,7 +179,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
       // A cache which caches hashes of absolute paths which my be accessed by certain
       // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
       // multiple times in a single run.
-      allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem));
+      allCaches.add(
+          DefaultFileHashCache.createDefaultFileHashCache(projectFilesystem, fileHashCacheMode));
     }
 
     return allCaches.build();

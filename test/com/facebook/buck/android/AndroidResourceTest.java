@@ -40,6 +40,7 @@ import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -185,7 +186,8 @@ public class AndroidResourceTest {
     AndroidResource resource =
         (AndroidResource) graphBuilder.requireRule(resourceNode.getBuildTarget());
 
-    FileHashCache fileHashCache = StackedFileHashCache.createDefaultHashCaches(filesystem);
+    FileHashCache fileHashCache =
+        StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     filesystem.writeContentsToPath(
         "something",
         graphBuilder.getSourcePathResolver().getRelativePath(dep.getPathToTextSymbolsFile()));

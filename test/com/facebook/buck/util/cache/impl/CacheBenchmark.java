@@ -19,14 +19,13 @@ package com.facebook.buck.util.cache.impl;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.watchman.ImmutableWatchmanPathEvent;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
+import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.google.caliper.BeforeExperiment;
 import com.google.caliper.Benchmark;
 import com.google.caliper.Param;
 import com.google.common.collect.Lists;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Random;
@@ -42,13 +41,11 @@ public class CacheBenchmark {
   private List<String> leaves = Lists.newArrayList();
 
   private WatchedFileHashCache cache;
-  private FakeProjectFilesystem filesystem;
 
   @Before
   public void setUpTest() {
     setUpBenchmark();
-    filesystem = new FakeProjectFilesystem();
-    cache = new WatchedFileHashCache(filesystem);
+    cache = new WatchedFileHashCache(new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT);
   }
 
   private static String generateRandomString() {
@@ -93,14 +90,8 @@ public class CacheBenchmark {
   private void addEntries() {
     leaves.forEach(
         leaf -> {
-          Path path = Paths.get(leaf);
-          try {
-            filesystem.touch(path);
-          } catch (IOException e) {
-            throw new RuntimeException(e);
-          }
           HashCode hashCode = Hashing.sha1().newHasher().putBytes(leaf.getBytes()).hash();
-          cache.set(path, hashCode);
+          cache.set(Paths.get(leaf), hashCode);
         });
   }
 

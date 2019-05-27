@@ -149,6 +149,7 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
@@ -292,7 +293,8 @@ public class CachingBuildEngineTest {
       Files.createDirectories(filesystem.resolve(filesystem.getBuckPaths().getScratchDir()));
       buildInfoStore = buildInfoStoreManager.get(filesystem, metadataStorage);
       defaultRemoteBuildRuleCompletionWaiter = new NoOpRemoteBuildRuleCompletionWaiter();
-      fileHashCache = StackedFileHashCache.createDefaultHashCaches(filesystem);
+      fileHashCache =
+          StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
       buildContext =
           BuildEngineBuildContext.builder()
               .setBuildContext(FakeBuildContext.NOOP_CONTEXT)

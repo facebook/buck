@@ -180,20 +180,26 @@ public class DelegateAndGraphsInitializer {
     return cachingBuildEngineDelegate;
   }
 
-  private StackedFileHashCache createStackOfDefaultFileHashCache() {
+  private StackedFileHashCache createStackOfDefaultFileHashCache() throws InterruptedException {
     ImmutableList.Builder<ProjectFileHashCache> allCachesBuilder = ImmutableList.builder();
     Cell rootCell = args.getState().getRootCell();
+    BuildBuckConfig buildBuckConfig = rootCell.getBuckConfig().getView(BuildBuckConfig.class);
 
     // 1. Add all cells (including the root cell).
     for (Path cellPath : rootCell.getKnownRoots()) {
       Cell cell = rootCell.getCell(cellPath);
-      allCachesBuilder.add(DefaultFileHashCache.createDefaultFileHashCache(cell.getFilesystem()));
-      allCachesBuilder.add(DefaultFileHashCache.createBuckOutFileHashCache(cell.getFilesystem()));
+      allCachesBuilder.add(
+          DefaultFileHashCache.createDefaultFileHashCache(
+              cell.getFilesystem(), buildBuckConfig.getFileHashCacheMode()));
+      allCachesBuilder.add(
+          DefaultFileHashCache.createBuckOutFileHashCache(
+              cell.getFilesystem(), buildBuckConfig.getFileHashCacheMode()));
     }
 
     // 2. Add the Operating System roots.
     allCachesBuilder.addAll(
-        DefaultFileHashCache.createOsRootDirectoriesCaches(args.getProjectFilesystemFactory()));
+        DefaultFileHashCache.createOsRootDirectoriesCaches(
+            args.getProjectFilesystemFactory(), buildBuckConfig.getFileHashCacheMode()));
 
     return new StackedFileHashCache(allCachesBuilder.build());
   }

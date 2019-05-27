@@ -18,6 +18,7 @@ package com.facebook.buck.util.cache.impl;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.types.Pair;
@@ -70,11 +71,12 @@ public class StackedFileHashCache implements FileHashCache {
     this.caches = caches;
   }
 
-  public static StackedFileHashCache createDefaultHashCaches(ProjectFilesystem filesystem) {
+  public static StackedFileHashCache createDefaultHashCaches(
+      ProjectFilesystem filesystem, FileHashCacheMode fileHashCacheMode) {
     return new StackedFileHashCache(
         ImmutableList.of(
-            DefaultFileHashCache.createDefaultFileHashCache(filesystem),
-            DefaultFileHashCache.createBuckOutFileHashCache(filesystem)));
+            DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode),
+            DefaultFileHashCache.createBuckOutFileHashCache(filesystem, fileHashCacheMode)));
   }
 
   /**

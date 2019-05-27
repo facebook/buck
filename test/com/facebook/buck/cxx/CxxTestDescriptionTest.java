@@ -53,6 +53,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.google.common.collect.ImmutableList;
@@ -397,7 +398,8 @@ public class CxxTestDescriptionTest {
     FileHashCache fileHashCache =
         new StackedFileHashCache(
             ImmutableList.of(
-                DefaultFileHashCache.createDefaultFileHashCache(rule.getProjectFilesystem())));
+                DefaultFileHashCache.createDefaultFileHashCache(
+                    rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT)));
     DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashCache, resolver);
     return factory.build(rule);
   }

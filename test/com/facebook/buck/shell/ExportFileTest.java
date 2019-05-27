@@ -49,6 +49,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.google.common.collect.ImmutableList;
@@ -223,7 +224,9 @@ public class ExportFileTest {
 
     FileHashCache hashCache =
         new StackedFileHashCache(
-            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(
+                    filesystem, FileHashCacheMode.DEFAULT)));
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     DefaultRuleKeyFactory ruleKeyFactory = new TestDefaultRuleKeyFactory(hashCache, ruleFinder);
 
@@ -245,7 +248,9 @@ public class ExportFileTest {
 
     hashCache =
         new StackedFileHashCache(
-            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(
+                    filesystem, FileHashCacheMode.DEFAULT)));
     ruleFinder = new TestActionGraphBuilder();
     ruleKeyFactory = new TestDefaultRuleKeyFactory(hashCache, ruleFinder);
     RuleKey refreshed = ruleKeyFactory.build(rule);

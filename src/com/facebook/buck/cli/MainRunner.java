@@ -854,6 +854,7 @@ public final class MainRunner {
       // uses the defaults.
       ProjectFilesystem rootCellProjectFilesystem =
           projectFilesystemFactory.createOrThrow(rootCell.getFilesystem().getRootPath());
+      BuildBuckConfig buildBuckConfig = rootCell.getBuckConfig().getView(BuildBuckConfig.class);
       allCaches.addAll(buckGlobalState.getFileHashCaches());
 
       rootCell
@@ -862,16 +863,20 @@ public final class MainRunner {
               cell -> {
                 if (!cell.equals(rootCell)) {
                   allCaches.add(
-                      DefaultFileHashCache.createBuckOutFileHashCache(cell.getFilesystem()));
+                      DefaultFileHashCache.createBuckOutFileHashCache(
+                          cell.getFilesystem(), buildBuckConfig.getFileHashCacheMode()));
                 }
               });
 
       // A cache which caches hashes of cell-relative paths which may have been ignore by
       // the main cell cache, and only serves to prevent rehashing the same file multiple
       // times in a single run.
-      allCaches.add(DefaultFileHashCache.createDefaultFileHashCache(rootCellProjectFilesystem));
+      allCaches.add(
+          DefaultFileHashCache.createDefaultFileHashCache(
+              rootCellProjectFilesystem, buildBuckConfig.getFileHashCacheMode()));
       allCaches.addAll(
-          DefaultFileHashCache.createOsRootDirectoriesCaches(projectFilesystemFactory));
+          DefaultFileHashCache.createOsRootDirectoriesCaches(
+              projectFilesystemFactory, buildBuckConfig.getFileHashCacheMode()));
 
       StackedFileHashCache fileHashCache = new StackedFileHashCache(allCaches.build());
 

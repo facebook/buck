@@ -29,6 +29,7 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
 import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.google.common.collect.ImmutableList;
@@ -43,7 +44,9 @@ public class CxxHeadersDirTest {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     FileHashCache fileHashCache =
         new StackedFileHashCache(
-            ImmutableList.of(DefaultFileHashCache.createDefaultFileHashCache(filesystem)));
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(
+                    filesystem, FileHashCacheMode.DEFAULT)));
     DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashCache, ruleFinder);
     UncachedRuleKeyBuilder builder = new UncachedRuleKeyBuilder(ruleFinder, fileHashCache, factory);
     AlterRuleKeys.amendKey(builder, cxxHeaders);

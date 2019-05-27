@@ -75,6 +75,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.ShBinary;
 import com.facebook.buck.shell.ShBinaryBuilder;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.FluentIterable;
@@ -924,7 +925,8 @@ public class PythonBinaryDescriptionTest {
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
             new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create()),
-            StackedFileHashCache.createDefaultHashCaches(rule.getProjectFilesystem()),
+            StackedFileHashCache.createDefaultHashCaches(
+                rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT),
             ruleResolver);
     return ruleKeyFactory.build(rule);
   }
