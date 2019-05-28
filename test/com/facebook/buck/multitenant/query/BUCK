@@ -25,6 +25,7 @@ kotlin_test(
         "//src/com/facebook/buck/multitenant/importer:RuleTypeFactory",
         "//src/com/facebook/buck/multitenant/importer:importer",
         "//src/com/facebook/buck/multitenant/query:query",
+        "//src/com/facebook/buck/multitenant/runner:runner_lib",
         "//src/com/facebook/buck/multitenant/service:service",
         "//src/com/facebook/buck/query:query",
         "//third-party/java/guava:guava",

@@ -20,14 +20,13 @@ import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.importer.RuleTypeFactory
 import com.facebook.buck.multitenant.importer.ServiceRawTargetNode
 import com.facebook.buck.multitenant.importer.populateIndexFromStream
+import com.facebook.buck.multitenant.runner.FakeMultitenantService
 import com.facebook.buck.multitenant.service.BuildPackage
 import com.facebook.buck.multitenant.service.BuildPackageChanges
 import com.facebook.buck.multitenant.service.BuildTargets
 import com.facebook.buck.multitenant.service.FsChange
 import com.facebook.buck.multitenant.service.FsChanges
 import com.facebook.buck.multitenant.service.FsToBuildPackageChangeTranslator
-import com.facebook.buck.multitenant.service.Index
-import com.facebook.buck.multitenant.service.IndexAppender
 import com.facebook.buck.multitenant.service.IndexFactory
 import com.facebook.buck.multitenant.service.RawBuildRule
 import com.google.common.collect.ImmutableMap
@@ -112,28 +111,6 @@ class EndToEndServiceTest {
 }
 
 /**
- * Note that a real implementation of the service would subscribe to new commits to the repo and use
- * the changeTranslator to take the commit data and turn it into a [BuildPackageChanges] that it can
- * record via [IndexAppender.addCommitData].
- */
-private class FakeMultitenantService(
-        private val index: Index,
-        private val indexAppender: IndexAppender,
-        private val changeTranslator: FsToBuildPackageChangeTranslator
-) {
-    fun handleBuckQueryRequest(query: String, changes: FsChanges): List<String> {
-        val generation = indexAppender.getGeneration(changes.commit)
-                ?: throw IllegalArgumentException("commit '${changes.commit}' not indexed by service")
-        val buildPackageChanges = changeTranslator.translateChanges(changes)
-        val localizedIndex = index.createIndexForGenerationWithLocalChanges(generation, buildPackageChanges)
-        val cellToBuildFileName = mapOf("" to "BUCK")
-        var env = MultitenantQueryEnvironment(localizedIndex, generation, cellToBuildFileName)
-        val queryTargets = env.evaluateQuery(query)
-        return queryTargets.map { it.toString() }
-    }
-}
-
-/**
  * Fake implementation of [FsToBuildPackageChangeTranslator] that looks for very specific changes.
  * In a true implementation of this interface, if a `BUCK` or `.bzl` file were modified, we would
  * need to re-parse it to determine the build package changes. Also, the addition or removal of
@@ -146,8 +123,8 @@ private class FakeFsToBuildPackageChangeTranslator : FsToBuildPackageChangeTrans
         val modifiedBuildPackageChanges: MutableList<BuildPackage> = mutableListOf()
         val removedBuildPackages: MutableList<FsAgnosticPath> = mutableListOf()
 
-        fsChanges.added.forEach(fun(added: FsChange.Added) {
-            val contents = added.contents ?: return
+        fsChanges.added.forEach { added ->
+            val contents = added.contents ?: return@forEach
             if (added.path == FsAgnosticPath.of("java/com/newpkg/BUCK") &&
                     contents.contentEquals(BUCK_RULE_WITH_DEPS.toByteArray())) {
                 addedBuildPackageChanges.add(
@@ -163,12 +140,11 @@ private class FakeFsToBuildPackageChangeTranslator : FsToBuildPackageChangeTrans
                                 ))
                         )
                 )
-
             }
-        })
+        }
 
-        fsChanges.modified.forEach(fun(modified: FsChange.Modified) {
-            val contents = modified.contents ?: return
+        fsChanges.modified.forEach { modified ->
+            val contents = modified.contents ?: return@forEach
             if (modified.path == FsAgnosticPath.of("java/com/facebook/buck/BUCK") &&
                     contents.contentEquals(BUCK_RULE_WITH_DEPS.toByteArray())) {
                 modifiedBuildPackageChanges.add(
@@ -185,7 +161,7 @@ private class FakeFsToBuildPackageChangeTranslator : FsToBuildPackageChangeTrans
                         )
                 )
             }
-        })
+        }
 
         return BuildPackageChanges(addedBuildPackageChanges, modifiedBuildPackageChanges, removedBuildPackages)
     }
