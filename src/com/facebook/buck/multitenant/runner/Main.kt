@@ -17,6 +17,7 @@
 package com.facebook.buck.multitenant.runner
 
 import com.facebook.buck.multitenant.service.FsChanges
+import java.io.File
 import java.io.PrintStream
 import kotlin.system.measureTimeMillis
 
@@ -27,12 +28,18 @@ fun main(args: Array<String>) {
     // TODO: proper command line options
     val jsonFile = args[0]
 
+    msg("Loading index from $jsonFile (${File(jsonFile).length()} bytes)")
+
     var corpusToIndex = mapOf<String, IndexComponents>()
     val timeIndexLoadMs = measureTimeMillis {
         corpusToIndex = createIndexes(jsonFile)
     }
 
-    msg("Index loaded in ${timeIndexLoadMs / 1000} sec. Available commands are: basecommit, corpus, query, out, quit.")
+    msg("Index loaded in ${timeIndexLoadMs / 1000} sec. Collecting garbage...")
+
+    System.gc()
+
+    msg("Service started. Available commands are: basecommit, corpus, query, out, quit.")
 
     var indexComponents: IndexComponents? = null
     var basecommit = ""
