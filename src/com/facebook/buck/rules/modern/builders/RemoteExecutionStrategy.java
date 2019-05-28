@@ -463,10 +463,6 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
           StepExecutionResult.of(result.getExitCode(), result.getStderr()));
     }
 
-    Scope materializationScope =
-        RemoteExecutionActionEvent.sendEvent(
-            eventBus, State.MATERIALIZING_OUTPUTS, buildTarget, Optional.of(actionDigest));
-
     try (Scope ignored1 =
         RemoteExecutionActionEvent.sendEvent(
             eventBus, State.DELETING_STALE_OUTPUTS, buildTarget, Optional.of(actionDigest))) {
@@ -474,6 +470,10 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         MostFiles.deleteRecursivelyIfExists(mbrHelper.getCellPathPrefix().resolve(path));
       }
     }
+
+    Scope materializationScope =
+        RemoteExecutionActionEvent.sendEvent(
+            eventBus, State.MATERIALIZING_OUTPUTS, buildTarget, Optional.of(actionDigest));
 
     ListenableFuture<Void> materializationFuture =
         executionClients
