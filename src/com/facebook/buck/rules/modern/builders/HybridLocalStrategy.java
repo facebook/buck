@@ -121,12 +121,14 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
     // are in the process of) cancelling the delegate.
     @Nullable StrategyBuildResult delegateResult;
     volatile boolean cancelledOnDelegate;
+    final boolean canBuildOnDelegate;
 
-    Job(BuildStrategyContext strategyContext, BuildRule rule) {
+    Job(BuildStrategyContext strategyContext, BuildRule rule, boolean canBuildOnDelegate) {
       this.strategyContext = strategyContext;
       this.rule = rule;
       this.future = SettableFuture.create();
       this.cancelledOnDelegate = false;
+      this.canBuildOnDelegate = canBuildOnDelegate;
     }
 
     // TODO(cjhopman): These schedule functions might not be resilient in the face of exceptions
@@ -147,7 +149,9 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
                         BuildResult.builder()
                             .from(result.get())
                             .setStrategyResult(
-                                "hybrid local" + (cancelledOnDelegate ? " - stolen" : ""))
+                                "hybrid local"
+                                    + (canBuildOnDelegate ? " - delegate" : " - nondelegate")
+                                    + (cancelledOnDelegate ? " - stolen" : ""))
                             .build()),
                 MoreExecutors.directExecutor());
         future.setFuture(localFuture);
@@ -260,8 +264,9 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
 
   @Override
   public StrategyBuildResult build(BuildRule rule, BuildStrategyContext strategyContext) {
-    Job job = new Job(strategyContext, rule);
-    if (delegate.canBuild(rule)) {
+    boolean canBuildOnDelegate = delegate.canBuild(rule);
+    Job job = new Job(strategyContext, rule, canBuildOnDelegate);
+    if (canBuildOnDelegate) {
       pendingDelegateQueue.add(job);
     } else {
       pendingLocalQueue.add(job);
