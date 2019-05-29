@@ -16,25 +16,29 @@
 package com.facebook.buck.apple.clang;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 public class UmbrellaHeader {
 
   private final String targetName;
   private final ImmutableList<String> headerNames;
+  private final ImmutableSet<String> headersToExclude;
 
   public UmbrellaHeader(String targetName, ImmutableList<String> headerNames) {
     this.targetName = targetName;
     this.headerNames = headerNames;
-  }
 
-  public String render() {
-    String swiftGeneratedHeader = String.format("%s-Swift.h", targetName);
-    return headerNames.stream()
-        // Remove the Target-Swift.h header file from the list of header names.
+    this.headersToExclude = ImmutableSet.of(
+        // Target-Swift.h header file should be excluded from the list of header names.
         // The umbrella header should not import the generated Objective-C header.
         // It is the job of the module map to make sure that Swift code is accessible
         // to Objective-C via the Target-Swift.h header file.
-        .filter(x -> !x.equals(swiftGeneratedHeader))
+        String.format("%s-Swift.h", targetName));
+  }
+
+  public String render() {
+    return headerNames.stream()
+        .filter(x -> !headersToExclude.contains(x))
         .map(x -> String.format("#import <%s/%s>\n", targetName, x))
         .reduce("", String::concat);
   }
