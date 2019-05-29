@@ -1,0 +1,12 @@
+java_library(
+    name = "console",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/util:process_executor",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

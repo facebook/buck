@@ -38,6 +38,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionType;
@@ -73,14 +74,14 @@ import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class ModernBuildRuleStrategyIntegrationTest {
-  private String simpleTarget = "//:simple";
-  private String failingTarget = "//:failing";
-  private String failingStepTarget = "//:failing_step";
-  private String largeDynamicTarget = "//:large_dynamic";
-  private String hugeDynamicTarget = "//:huge_dynamic";
-  private String duplicateOutputFilesTarget = "//:duplicate_output_files";
-  private String duplicateOutputDirsTarget = "//:duplicate_output_dirs";
-  private String checkSerializationTarget = "//:check_serialization";
+  private static final String SIMPLE_TARGET = "//:simple";
+  private static final String FAILING_TARGET = "//:failing";
+  private static final String FAILING_STEP_TARGET = "//:failing_step";
+  private static final String LARGE_DYNAMIC_TARGET = "//:large_dynamic";
+  private static final String HUGE_DYNAMIC_TARGET = "//:huge_dynamic";
+  private static final String DUPLICATE_OUTPUT_FILES_TARGET = "//:duplicate_output_files";
+  private static final String DUPLICATE_OUTPUT_DIRS_TARGET = "//:duplicate_output_dirs";
+  private static final String CHECK_SERIALIZATION_TARGET = "//:check_serialization";
 
   @Parameterized.Parameters(name = "{0}.{1}")
   public static Collection<Object[]> data() {
@@ -263,6 +264,9 @@ public class ModernBuildRuleStrategyIntegrationTest {
   private static class FailingRule extends ModernBuildRule<FailingRule> implements Buildable {
     private static final String FAILING_STEP_MESSAGE = "FailingStep";
     private static final String FAILING_RULE_MESSAGE = "FailingRule";
+    private static final String STEP_CONSOLE_EVENT_MESSAGE = "Step Console event!";
+    private static final String RULE_CONSOLE_EVENT_MESSAGE = "Rule Console event!";
+    private static final String RULE_CONSOLE_EVENT_INFO_MESSAGE = "INFO level Rule Console event!";
 
     @AddToRuleKey private final OutputPath output = new OutputPath("some.file");
     @AddToRuleKey private final boolean stepFailure;
@@ -282,15 +286,18 @@ public class ModernBuildRuleStrategyIntegrationTest {
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
+      buildContext.getEventBus().post(ConsoleEvent.info(RULE_CONSOLE_EVENT_INFO_MESSAGE));
       if (stepFailure) {
         return ImmutableList.of(
             new AbstractExecutionStep("throwing_step") {
               @Override
               public StepExecutionResult execute(ExecutionContext context) {
+                context.getBuckEventBus().post(ConsoleEvent.severe(STEP_CONSOLE_EVENT_MESSAGE));
                 throw new HumanReadableException(FAILING_STEP_MESSAGE);
               }
             });
       }
+      buildContext.getEventBus().post(ConsoleEvent.warning(RULE_CONSOLE_EVENT_MESSAGE));
       throw new HumanReadableException(FAILING_RULE_MESSAGE);
     }
   }
@@ -371,19 +378,19 @@ public class ModernBuildRuleStrategyIntegrationTest {
 
   @Test
   public void testBuildSimpleRule() throws Exception {
-    ProcessResult result = workspace.runBuckBuild(simpleTarget);
+    ProcessResult result = workspace.runBuckBuild(SIMPLE_TARGET);
     result.assertSuccess();
-    workspace.getBuildLog().assertTargetBuiltLocally(simpleTarget);
+    workspace.getBuildLog().assertTargetBuiltLocally(SIMPLE_TARGET);
     assertEquals(
         "",
         workspace.getFileContents(
-            new DefaultOutputPathResolver(filesystem, BuildTargetFactory.newInstance(simpleTarget))
+            new DefaultOutputPathResolver(filesystem, BuildTargetFactory.newInstance(SIMPLE_TARGET))
                 .resolvePath(new OutputPath("some.path"))));
   }
 
   @Test
   public void testAbstractBuildRuleFieldSerialization() {
-    ProcessResult result = workspace.runBuckBuild(checkSerializationTarget);
+    ProcessResult result = workspace.runBuckBuild(CHECK_SERIALIZATION_TARGET);
     result.assertSuccess();
   }
 
@@ -461,72 +468,78 @@ public class ModernBuildRuleStrategyIntegrationTest {
 
   @Test
   public void testBuildRuleWithDuplicateOutputFiles() {
-    ProcessResult result = workspace.runBuckBuild(duplicateOutputFilesTarget);
+    ProcessResult result = workspace.runBuckBuild(DUPLICATE_OUTPUT_FILES_TARGET);
     result.assertSuccess();
   }
 
   @Test
   public void testBuildRuleWithDuplicateOutputDirs() {
-    ProcessResult result = workspace.runBuckBuild(duplicateOutputDirsTarget);
+    ProcessResult result = workspace.runBuckBuild(DUPLICATE_OUTPUT_DIRS_TARGET);
     result.assertSuccess();
   }
 
   @Test
   public void testBuildFailingRule() throws Exception {
-    ProcessResult result = workspace.runBuckBuild(failingTarget);
+    ProcessResult result = workspace.runBuckBuild(FAILING_TARGET);
     result.assertFailure();
-    workspace.getBuildLog().assertTargetFailed(failingTarget);
-    assertThat(result.getStderr(), containsString(FailingRule.FAILING_RULE_MESSAGE));
+    workspace.getBuildLog().assertTargetFailed(FAILING_TARGET);
+    String stderr = result.getStderr();
+    assertThat(stderr, containsString(FailingRule.FAILING_RULE_MESSAGE));
+    assertThat(stderr, containsString(FailingRule.RULE_CONSOLE_EVENT_MESSAGE));
+    assertThat(stderr, containsString(FailingRule.RULE_CONSOLE_EVENT_INFO_MESSAGE));
   }
 
   @Test
   public void testBuildRuleWithFailingStep() throws Exception {
-    ProcessResult result = workspace.runBuckBuild(failingStepTarget);
+    ProcessResult result = workspace.runBuckBuild(FAILING_STEP_TARGET);
     result.assertFailure();
-    workspace.getBuildLog().assertTargetFailed(failingStepTarget);
-    assertThat(result.getStderr(), containsString(FailingRule.FAILING_STEP_MESSAGE));
+    workspace.getBuildLog().assertTargetFailed(FAILING_STEP_TARGET);
+    String stderr = result.getStderr();
+    assertThat(stderr, containsString(FailingRule.FAILING_STEP_MESSAGE));
+    assertThat(stderr, containsString(FailingRule.STEP_CONSOLE_EVENT_MESSAGE));
+    assertThat(stderr, containsString(FailingRule.RULE_CONSOLE_EVENT_INFO_MESSAGE));
   }
 
   @Test
   public void testBuildThenFetchFromCache() throws Exception {
     workspace.enableDirCache();
-    ProcessResult result = workspace.runBuckBuild(simpleTarget);
+    ProcessResult result = workspace.runBuckBuild(SIMPLE_TARGET);
     result.assertSuccess();
-    workspace.getBuildLog().assertTargetBuiltLocally(simpleTarget);
+    workspace.getBuildLog().assertTargetBuiltLocally(SIMPLE_TARGET);
     workspace.runBuckCommand("clean", "--keep-cache");
-    result = workspace.runBuckBuild(simpleTarget);
+    result = workspace.runBuckBuild(SIMPLE_TARGET);
     result.assertSuccess();
-    workspace.getBuildLog().assertTargetWasFetchedFromCache(simpleTarget);
+    workspace.getBuildLog().assertTargetWasFetchedFromCache(SIMPLE_TARGET);
     assertEquals(
         "",
         workspace.getFileContents(
-            new DefaultOutputPathResolver(filesystem, BuildTargetFactory.newInstance(simpleTarget))
+            new DefaultOutputPathResolver(filesystem, BuildTargetFactory.newInstance(SIMPLE_TARGET))
                 .resolvePath(new OutputPath("some.path"))));
   }
 
   @Test
   public void testRuleReferencingLargeDynamics() throws Exception {
-    ProcessResult result = workspace.runBuckBuild(largeDynamicTarget);
+    ProcessResult result = workspace.runBuckBuild(LARGE_DYNAMIC_TARGET);
     result.assertSuccess();
-    workspace.getBuildLog().assertTargetBuiltLocally(largeDynamicTarget);
+    workspace.getBuildLog().assertTargetBuiltLocally(LARGE_DYNAMIC_TARGET);
     assertEquals(
         "a2\n",
         workspace.getFileContents(
             new DefaultOutputPathResolver(
-                    filesystem, BuildTargetFactory.newInstance(largeDynamicTarget))
+                    filesystem, BuildTargetFactory.newInstance(LARGE_DYNAMIC_TARGET))
                 .resolvePath(new OutputPath("some.path"))));
   }
 
   @Test
   public void testRuleReferencingHugeDynamics() throws Exception {
-    ProcessResult result = workspace.runBuckBuild(hugeDynamicTarget);
+    ProcessResult result = workspace.runBuckBuild(HUGE_DYNAMIC_TARGET);
     result.assertSuccess();
-    workspace.getBuildLog().assertTargetBuiltLocally(hugeDynamicTarget);
+    workspace.getBuildLog().assertTargetBuiltLocally(HUGE_DYNAMIC_TARGET);
     assertEquals(
         "a28b2a26b2c2a28b2a26b2c2d2a26b2a26b2c2a28b2a26b2c2a28b2a26b2c2d2a26b2a26b2c2e2\n",
         workspace.getFileContents(
             new DefaultOutputPathResolver(
-                    filesystem, BuildTargetFactory.newInstance(hugeDynamicTarget))
+                    filesystem, BuildTargetFactory.newInstance(HUGE_DYNAMIC_TARGET))
                 .resolvePath(new OutputPath("some.path"))));
   }
 

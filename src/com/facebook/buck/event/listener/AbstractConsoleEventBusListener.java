@@ -42,6 +42,7 @@ import com.facebook.buck.event.listener.util.ProgressEstimator;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.console.ConsoleUtils;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.i18n.NumberFormatter;
 import com.facebook.buck.util.timing.Clock;
@@ -49,7 +50,6 @@ import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -610,24 +610,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   /** Formats a {@link ConsoleEvent} and adds it to {@code lines}. */
   protected ImmutableList<String> formatConsoleEvent(ConsoleEvent logEvent) {
-    if (logEvent.getMessage() == null) {
-      LOG.error("Got logEvent with null message");
-      return ImmutableList.of();
-    }
-    String formattedLine = "";
-    if (logEvent.containsAnsiEscapeCodes() || logEvent.getLevel().equals(Level.INFO)) {
-      formattedLine = logEvent.getMessage();
-    } else if (logEvent.getLevel().equals(Level.WARNING)) {
-      formattedLine = ansi.asWarningText(logEvent.getMessage());
-    } else if (logEvent.getLevel().equals(Level.SEVERE)) {
-      formattedLine = ansi.asHighlightedFailureText(logEvent.getMessage());
-    }
-    if (!formattedLine.isEmpty()) {
-      // Split log messages at newlines and add each line individually to keep the line count
-      // consistent.
-      return ImmutableList.copyOf(Splitter.on(System.lineSeparator()).split(formattedLine));
-    }
-    return ImmutableList.of();
+    return ConsoleUtils.formatConsoleEvent(logEvent, console.getAnsi());
   }
 
   @Subscribe

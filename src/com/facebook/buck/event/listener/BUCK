@@ -73,6 +73,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/config:config",
+        "//src/com/facebook/buck/util/console:console",
         "//src/com/facebook/buck/util/env:env",
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",

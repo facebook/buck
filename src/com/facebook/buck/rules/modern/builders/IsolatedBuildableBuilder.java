@@ -59,6 +59,7 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -311,7 +312,8 @@ public abstract class IsolatedBuildableBuilder {
           deserializer.deserialize(getProvider(dataRoot, hash), BuildableAndTarget.class);
     }
 
-    try (Scope ignored = LeafEvents.scope(eventBus, "steps")) {
+    try (Scope ignored = LeafEvents.scope(eventBus, "steps");
+        CloseableWrapper<BuckEventBus> eventBusWrapper = getWaitEventsWrapper(eventBus)) {
       ProjectFilesystem filesystem = filesystemFunction.apply(reconstructed.target.getCell());
       ModernBuildRule.injectFieldsIfNecessary(
           filesystem,
@@ -343,6 +345,19 @@ public abstract class IsolatedBuildableBuilder {
               new java.util.Date(),
               Instant.now().minusMillis(deserializationComplete.toEpochMilli()).toEpochMilli()));
     }
+  }
+
+  private CloseableWrapper<BuckEventBus> getWaitEventsWrapper(BuckEventBus buildEventBus) {
+    return CloseableWrapper.of(
+        buildEventBus,
+        eventBus -> {
+          // wait for event bus to process all pending events
+          if (!eventBus.waitEvents(100)) {
+            LOG.warn(
+                "Event bus did not complete all events within timeout; event listener's data"
+                    + " may be incorrect");
+          }
+        });
   }
 
   // TODO(cjhopman): The layout of this directory is just determined by what

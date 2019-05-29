@@ -24,6 +24,7 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.console.ConsoleBuckEventListener;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -31,6 +32,7 @@ import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 
@@ -49,7 +51,7 @@ public class OutOfProcessIsolatedBuilder {
       throws IOException, StepFailedException, InterruptedException {
     LogManager.getLogManager().getLogger("").setLevel(Level.WARNING);
 
-    LOG.info(String.format("Started buck at time [%s].", new java.util.Date()));
+    LOG.info(String.format("Started buck at time [%s].", new Date()));
     Thread.setDefaultUncaughtExceptionHandler(
         (thread, error) -> {
           error.printStackTrace(System.err);
@@ -64,6 +66,7 @@ public class OutOfProcessIsolatedBuilder {
     Path projectRoot = Paths.get(args[1]);
     HashCode hash = HashCode.fromString(args[2]);
     new IsolatedBuildableBuilder(buildDir, projectRoot) {
+
       @Override
       protected Console createConsole() {
         return new Console(
@@ -72,7 +75,10 @@ public class OutOfProcessIsolatedBuilder {
 
       @Override
       protected BuckEventBus createEventBus(Console console) {
-        return new DefaultBuckEventBus(new DefaultClock(), new BuildId("whatever"));
+        DefaultBuckEventBus buckEventBus =
+            new DefaultBuckEventBus(new DefaultClock(), new BuildId("whatever"));
+        buckEventBus.register(new ConsoleBuckEventListener(console));
+        return buckEventBus;
       }
     }.build(hash);
     System.exit(0);
