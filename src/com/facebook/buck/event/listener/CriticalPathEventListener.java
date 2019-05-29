@@ -129,9 +129,20 @@ public class CriticalPathEventListener implements BuckEventListener {
   }
 
   @Subscribe
-  public void commandFinished(CommandEvent.Finished event) throws IOException {
+  public void commandFinished(CommandEvent.Finished event) {
     LOG.info("Received command finished event for command : %s", event.getCommandName());
-    dumpCriticalPath();
+    try {
+      dumpCriticalPath();
+    } catch (IOException e) {
+      Path parentDir = outputPath.getParent();
+      LOG.warn(
+          e,
+          "Exception during dumping a critical path result into the path: [%s]."
+              + " Extra info: parent directory: [%s], exists: [%s]",
+          outputPath,
+          parentDir,
+          Files.exists(parentDir));
+    }
   }
 
   /** Dumps critical path into the given {@code outputPath} */
