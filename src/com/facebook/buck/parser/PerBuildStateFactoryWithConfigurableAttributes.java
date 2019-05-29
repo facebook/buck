@@ -98,7 +98,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
   }
 
   @Override
-  protected PerBuildStateWithConfigurableAttributes create(
+  protected PerBuildState create(
       ParsingContext parsingContext,
       DaemonicParserState daemonicParserState,
       ImmutableList<String> targetPlatforms,
@@ -248,7 +248,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
 
     cellManager.register(rootCell);
 
-    return new PerBuildStateWithConfigurableAttributes(
+    return new PerBuildState(
         cellManager,
         buildFileRawNodeParsePipeline,
         targetNodeParsePipeline,

@@ -191,15 +191,12 @@ class ParserWithConfigurableAttributes extends AbstractParser {
 
   private SortedMap<String, Object> copyWithResolvingConfigurableAttributes(
       PerBuildState state, Cell cell, BuildTarget buildTarget, Map<String, Object> attributes) {
-    PerBuildStateWithConfigurableAttributes stateWithConfigurableAttributes =
-        (PerBuildStateWithConfigurableAttributes) state;
-
     SelectableConfigurationContext configurationContext =
         DefaultSelectableConfigurationContext.of(
             cell.getBuckConfig(),
-            stateWithConfigurableAttributes.getConstraintResolver(),
+            state.getConstraintResolver(),
             buildTarget.getTargetConfiguration(),
-            stateWithConfigurableAttributes.getTargetPlatformResolver());
+            state.getTargetPlatformResolver());
 
     SortedMap<String, Object> convertedAttributes = new TreeMap<>();
 
@@ -209,12 +206,12 @@ class ParserWithConfigurableAttributes extends AbstractParser {
         convertedAttributes.put(
             attributeName,
             resolveConfigurableAttributes(
-                stateWithConfigurableAttributes.getSelectorListResolver(),
+                state.getSelectorListResolver(),
                 configurationContext,
                 cell.getCellPathResolver(),
                 cell.getFilesystem(),
                 buildTarget,
-                stateWithConfigurableAttributes.getSelectorListFactory(),
+                state.getSelectorListFactory(),
                 attributeName,
                 attribute.getValue()));
       } catch (CoerceFailedException e) {
@@ -262,29 +259,24 @@ class ParserWithConfigurableAttributes extends AbstractParser {
     ImmutableList<TargetNode<?>> allTargetNodes =
         getAllTargetNodes(state, cell, buildFile, targetConfiguration);
 
-    PerBuildStateWithConfigurableAttributes stateWithConfigurableAttributes =
-        (PerBuildStateWithConfigurableAttributes) state;
-
-    if (!stateWithConfigurableAttributes.getParsingContext().excludeUnsupportedTargets()) {
+    if (!state.getParsingContext().excludeUnsupportedTargets()) {
       return allTargetNodes;
     }
 
     return filterIncompatibleTargetNodes(
-            stateWithConfigurableAttributes,
-            getAllTargetNodes(state, cell, buildFile, targetConfiguration).stream())
+            state, getAllTargetNodes(state, cell, buildFile, targetConfiguration).stream())
         .collect(ImmutableList.toImmutableList());
   }
 
   private Stream<TargetNode<?>> filterIncompatibleTargetNodes(
-      PerBuildStateWithConfigurableAttributes stateWithConfigurableAttributes,
-      Stream<TargetNode<?>> targetNodes) {
+      PerBuildState state, Stream<TargetNode<?>> targetNodes) {
     return targetNodes.filter(
         targetNode ->
             TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-                stateWithConfigurableAttributes.getConstraintResolver(),
-                stateWithConfigurableAttributes.getPlatformResolver(),
+                state.getConstraintResolver(),
+                state.getPlatformResolver(),
                 targetNode.getConstructorArg(),
-                stateWithConfigurableAttributes
+                state
                     .getTargetPlatformResolver()
                     .getTargetPlatform(targetNode.getBuildTarget().getTargetConfiguration())));
   }
@@ -296,9 +288,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       TargetConfiguration targetConfiguration)
       throws BuildFileParseException, InterruptedException {
 
-    try (PerBuildStateWithConfigurableAttributes state =
-        (PerBuildStateWithConfigurableAttributes)
-            perBuildStateFactory.create(parsingContext, permState, targetPlatforms.get())) {
+    try (PerBuildState state =
+        perBuildStateFactory.create(parsingContext, permState, targetPlatforms.get())) {
       TargetNodeFilterForSpecResolver<TargetNode<?>> targetNodeFilter =
           (spec, nodes) -> spec.filter(nodes);
 
@@ -340,9 +331,6 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       TargetConfiguration targetConfiguration,
       boolean excludeConfigurationTargets)
       throws InterruptedException {
-    PerBuildStateWithConfigurableAttributes stateWithConfigurableAttributes =
-        (PerBuildStateWithConfigurableAttributes) state;
-
     TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
         createTargetNodeProviderForSpecResolver(state);
 
@@ -369,12 +357,11 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             targetNodeProvider,
             targetNodeFilter);
 
-    if (!stateWithConfigurableAttributes.getParsingContext().excludeUnsupportedTargets()) {
+    if (!state.getParsingContext().excludeUnsupportedTargets()) {
       return ImmutableSet.copyOf(Iterables.concat(buildTargets));
     }
     return filterIncompatibleTargetNodes(
-            stateWithConfigurableAttributes,
-            buildTargets.stream().flatMap(ImmutableSet::stream).map(state::getTargetNode))
+            state, buildTargets.stream().flatMap(ImmutableSet::stream).map(state::getTargetNode))
         .map(TargetNode::getBuildTarget)
         .collect(ImmutableSet.toImmutableSet());
   }
@@ -388,16 +375,14 @@ class ParserWithConfigurableAttributes extends AbstractParser {
     if (!state.getParsingContext().enableTargetCompatibilityChecks()) {
       return;
     }
-    PerBuildStateWithConfigurableAttributes stateWithConfigurableAttributes =
-        (PerBuildStateWithConfigurableAttributes) state;
 
     Platform targetPlatform =
-        stateWithConfigurableAttributes
+        state
             .getTargetPlatformResolver()
             .getTargetPlatform(targetNode.getBuildTarget().getTargetConfiguration());
     if (!TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-        stateWithConfigurableAttributes.getConstraintResolver(),
-        stateWithConfigurableAttributes.getPlatformResolver(),
+        state.getConstraintResolver(),
+        state.getPlatformResolver(),
         targetNode.getConstructorArg(),
         targetPlatform)) {
       HasTargetCompatibleWith argWithTargetCompatible =
