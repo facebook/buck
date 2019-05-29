@@ -63,9 +63,9 @@ public class AndroidBuildToolsResolver {
   }
 
   private Optional<Path> findBuildTools(Path sdkPath) {
-    Path toolsDir = sdkPath.resolve("build-tools");
+    Path buildToolsDir = sdkPath.resolve("build-tools");
 
-    if (toolsDir.toFile().isDirectory()) {
+    if (buildToolsDir.toFile().isDirectory()) {
       // In older versions of the ADT that have been upgraded via the SDK manager, the build-tools
       // directory appears to contain subfolders of the form "17.0.0". However, newer versions of
       // the ADT that are downloaded directly from http://developer.android.com/ appear to have
@@ -74,7 +74,7 @@ public class AndroidBuildToolsResolver {
       File[] directories;
       try {
         directories =
-            toolsDir
+            buildToolsDir
                 .toFile()
                 .listFiles(
                     pathname -> {
@@ -125,11 +125,11 @@ public class AndroidBuildToolsResolver {
       if (newestBuildDir == null) {
         buildToolsErrorMessage =
             Optional.of(
-                buildTools
+                buildToolsDir
                     + " was empty, but should have "
                     + "contained a subdirectory with build tools. Install them using the Android "
                     + "SDK Manager ("
-                    + toolsDir.getParent().resolve("tools").resolve("android")
+                    + buildToolsDir.getParent().resolve("tools").resolve("android")
                     + ").");
         return Optional.empty();
       }
