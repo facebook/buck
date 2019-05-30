@@ -56,7 +56,9 @@ public final class StepRunner {
       throw StepFailedException.createForFailingStepWithException(step, context, e);
     } finally {
       StepEvent.Finished finished = StepEvent.finished(started, executionResult.getExitCode());
-      LOG.verbose(finished.toString());
+      if (LOG.isVerboseEnabled()) {
+        LOG.verbose(finished.toString());
+      }
       context.getBuckEventBus().post(finished);
     }
     if (!executionResult.isSuccess()) {
