@@ -26,7 +26,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -59,9 +58,6 @@ public class GenruleIntegrationTest {
 
   @Test
   public void testIfCommandExitsZeroThenGenruleFails() throws IOException {
-    assumeTrue(
-        "This genrule uses the 'bash' argument, which is not supported on Windows. ",
-        Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "genrule_failing_command", temporaryFolder);
@@ -80,10 +76,20 @@ public class GenruleIntegrationTest {
      */
 
     // "(?s)" enables multiline matching for ".*". Parens have to be escaped.
-    String outputPattern =
-        "(?s).*Command failed with exit code 1\\.(?s).*"
-            + "When running <\\(cd buck-out/gen/fail__srcs && "
-            + "/bin/bash -e .*/buck-out/tmp/genrule-[0-9]*\\.sh\\)>(?s).*";
+    String outputPattern;
+
+    if (Platform.detect() == Platform.WINDOWS) {
+      outputPattern =
+          "(?s).*Command failed with exit code 1\\..*"
+              + "When running <\\(cd buck-out\\\\gen\\\\fail__srcs && "
+              + ".*\\\\buck-out\\\\tmp\\\\genrule-[0-9]*\\.cmd\\)>.*";
+
+    } else {
+      outputPattern =
+          "(?s).*Command failed with exit code 1\\.(?s).*"
+              + "When running <\\(cd buck-out/gen/fail__srcs && "
+              + "/bin/bash -e .*/buck-out/tmp/genrule-[0-9]*\\.sh\\)>(?s).*";
+    }
 
     assertTrue(
         "Unexpected output:\n" + quoteOutput(buildResult.getStderr()),

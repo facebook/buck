@@ -3,4 +3,5 @@ genrule(
     srcs = {"foo.txt": "bar.txt"},
     out = "out.txt",
     cmd = "cp $SRCDIR/foo.txt $OUT",
+    cmd_exe = "copy $SRCDIR\\foo.txt $OUT",
 )
