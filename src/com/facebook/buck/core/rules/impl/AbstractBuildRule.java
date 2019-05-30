@@ -21,7 +21,6 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -106,9 +105,6 @@ public abstract class AbstractBuildRule implements BuildRule {
   public boolean hasBuildSteps() {
     return true;
   }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {}
 
   @Override
   public void updateBuildRuleResolver(BuildRuleResolver ruleResolver) {}

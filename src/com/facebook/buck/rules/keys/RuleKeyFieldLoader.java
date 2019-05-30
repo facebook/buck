@@ -55,9 +55,6 @@ public class RuleKeyFieldLoader {
     Path buckOutPath = buildRule.getProjectFilesystem().getBuckPaths().getConfiguredBuckOut();
     builder.setReflectively(".out", buckOutPath.toString());
 
-    // Add in any extra details to the rule key via the rule's `appendToRuleKey` method.
-    buildRule.appendToRuleKey(builder);
-
     // We used to require build rules to piggyback on the `RuleKeyAppendable` type to add in
     // additional details, but have since switched to using a method in the build rule class, so
     // error out if we see the `RuleKeyAppendable` being used improperly.

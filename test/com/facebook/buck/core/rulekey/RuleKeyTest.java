@@ -521,9 +521,9 @@ public class RuleKeyTest {
                     new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT)));
 
     BuildRule buildRule1 =
-        new TestRuleKeyAppendableBuildRule(target, projectFilesystem, params, "foo", "bar");
+        new TestRuleKeyAppendableBuildRule(target, projectFilesystem, params, "bar");
     BuildRule buildRule2 =
-        new TestRuleKeyAppendableBuildRule(target, projectFilesystem, params, "foo", "xyzzy");
+        new TestRuleKeyAppendableBuildRule(target, projectFilesystem, params, "xyzzy");
 
     RuleKey ruleKey1 = new TestDefaultRuleKeyFactory(hashCache, ruleFinder).build(buildRule1);
     RuleKey ruleKey2 = new TestDefaultRuleKeyFactory(hashCache, ruleFinder).build(buildRule2);
@@ -594,9 +594,9 @@ public class RuleKeyTest {
                     new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT)));
 
     BuildRule buildRule1 =
-        new TestRuleKeyAppendableBuildRule(target, projectFilesystem, params, "foo", "bar");
+        new TestRuleKeyAppendableBuildRule(target, projectFilesystem, params, "bar");
     BuildRule buildRule2 =
-        new TestRuleKeyAppendableBuildRule(target, projectFilesystem, params, "foo", "xyzzy");
+        new TestRuleKeyAppendableBuildRule(target, projectFilesystem, params, "xyzzy");
 
     BuildTarget parentTarget = BuildTargetFactory.newInstance("//cheese:milk");
 
@@ -895,8 +895,6 @@ public class RuleKeyTest {
 
   private static class TestRuleKeyAppendableBuildRule
       extends NoopBuildRuleWithDeclaredAndExtraDeps {
-    private final String foo;
-
     @SuppressWarnings("PMD.UnusedPrivateField")
     @AddToRuleKey
     private final String bar;
@@ -905,16 +903,9 @@ public class RuleKeyTest {
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams buildRuleParams,
-        String foo,
         String bar) {
       super(buildTarget, projectFilesystem, buildRuleParams);
-      this.foo = foo;
       this.bar = bar;
-    }
-
-    @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
-      sink.setReflectively("foo", foo);
     }
   }
 

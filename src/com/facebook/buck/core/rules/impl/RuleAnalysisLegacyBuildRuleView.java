@@ -18,7 +18,6 @@ package com.facebook.buck.core.rules.impl;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.actions.Action;
@@ -42,6 +41,7 @@ import javax.annotation.Nullable;
  * <p>TODO(bobyf): figure out how to propagate provider info from here
  */
 public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule {
+  // TODO(bobyf) figure out rulekeys and caching for new Actions
 
   private final String type;
   private final Action action;
@@ -109,11 +109,6 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule {
   public boolean isCacheable() {
     // TODO(bobyf): figure out rulekeys and caching for new Actions
     return false;
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    // TODO(bobyf) figure out rulekeys and caching for new Actions
   }
 
   @Override

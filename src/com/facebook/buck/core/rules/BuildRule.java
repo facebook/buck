@@ -21,8 +21,6 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AllowsNonAnnotatedFields;
-import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.views.JsonViews;
@@ -106,12 +104,6 @@ public interface BuildRule
 
   /** Whether this {@link BuildRule} may have any steps to build. */
   boolean hasBuildSteps();
-
-  /**
-   * Add additional details when calculating this rule's {@link RuleKey} which isn't available via
-   * reflection.
-   */
-  void appendToRuleKey(RuleKeyObjectSink sink);
 
   @Override
   default int compareTo(BuildRule that) {

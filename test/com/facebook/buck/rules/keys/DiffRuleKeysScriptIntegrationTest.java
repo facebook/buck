@@ -84,15 +84,14 @@ public class DiffRuleKeysScriptIntegrationTest {
     String newHash = getFileSha1Hash(workspace, "JavaLib1.java");
     invokeBuckCommand(workspace, "buck-1.log");
 
-    String expectedResult =
-        Joiner.on(System.lineSeparator())
-            .join(
-                "Change details for [//:java_lib_1->jarBuildStepsFactory]",
-                "  (srcs):",
-                String.format("    -[path(JavaLib1.java:%s)]", oldHash),
-                String.format("    +[path(JavaLib1.java:%s)]", newHash),
-                "");
-    assertThat(runRuleKeyDiffer(workspace), Matchers.equalTo(expectedResult));
+    assertThat(
+        runRuleKeyDiffer(workspace),
+        Matchers.stringContainsInOrder(
+            "Change details for [//:java_lib_1",
+            "->jarBuildStepsFactory]",
+            "  (srcs):",
+            String.format("    -[path(JavaLib1.java:%s)]", oldHash),
+            String.format("    +[path(JavaLib1.java:%s)]", newHash)));
   }
 
   @Test
@@ -106,17 +105,16 @@ public class DiffRuleKeysScriptIntegrationTest {
     String newHash = getFileSha1Hash(workspace, "JavaLib3.java");
     invokeBuckCommand(workspace, "buck-1.log");
 
-    String expectedResult =
-        Joiner.on(System.lineSeparator())
-            .join(
-                "Change details for [//:java_lib_2->jarBuildStepsFactory]",
-                "  (srcs):",
-                "    -[<missing>]",
-                "    -[container(LIST,len=1)]",
-                "    +[container(LIST,len=2)]",
-                String.format("    +[path(JavaLib3.java:%s)]", newHash),
-                "");
-    assertThat(runRuleKeyDiffer(workspace), Matchers.equalTo(expectedResult));
+    assertThat(
+        runRuleKeyDiffer(workspace),
+        Matchers.stringContainsInOrder(
+            "Change details for [//:java_lib_2",
+            "->jarBuildStepsFactory]",
+            "  (srcs):",
+            "    -[<missing>]",
+            "    -[container(LIST,len=1)]",
+            "    +[container(LIST,len=2)]",
+            String.format("    +[path(JavaLib3.java:%s)]", newHash)));
   }
 
   @Test
@@ -130,20 +128,17 @@ public class DiffRuleKeysScriptIntegrationTest {
     writeBuckConfig(workspace, "7");
     invokeBuckCommand(workspace, "buck-1.log");
 
-    String expectedResult =
-        Joiner.on(System.lineSeparator())
-            .join(
-                "Change details for "
-                    + "[//:java_lib_2->jarBuildStepsFactory->configuredCompiler->javacOptions"
-                    + "->languageLevelOptions]",
-                "  (sourceLevel):",
-                "    -[string(\"6\")]",
-                "    +[string(\"7\")]",
-                "  (targetLevel):",
-                "    -[string(\"6\")]",
-                "    +[string(\"7\")]",
-                "");
-    assertThat(runRuleKeyDiffer(workspace), Matchers.equalTo(expectedResult));
+    assertThat(
+        runRuleKeyDiffer(workspace),
+        Matchers.stringContainsInOrder(
+            "Change details for " + "[//:java_lib_2->",
+            "->languageLevelOptions]",
+            "  (sourceLevel):",
+            "    -[string(\"6\")]",
+            "    +[string(\"7\")]",
+            "  (targetLevel):",
+            "    -[string(\"6\")]",
+            "    +[string(\"7\")]"));
   }
 
   @Test
@@ -162,7 +157,10 @@ public class DiffRuleKeysScriptIntegrationTest {
         runRuleKeyDiffer(workspace, "//cxx:cxx_bin"),
         Matchers.stringContainsInOrder(
             "Change details for [//cxx:cxx_bin#compile-a.cpp.", /* hash */
-            ",default->preprocessDelegate->preprocessorFlags->includes]",
+            ",default",
+            // We don't want this test to be sensitive to the specific paths through objects, but we
+            // do want to ensure that field names are appearing.
+            "->includes]",
             "(cxx/a.h):",
             "-[path(cxx/a.h:", /*hash*/
             ")]",
@@ -208,7 +206,8 @@ public class DiffRuleKeysScriptIntegrationTest {
             "    +[\"//:java_lib_3\"@ruleKey(sha1=", /* some rulekey */
             ")]",
             "    +[\"//:java_lib_3#class-abi\"@ruleKey(sha1=", /* some rulekey */
-            "Change details for [//:java_lib_2->jarBuildStepsFactory->abiClasspath]",
+            "Change details for [//:java_lib_2",
+            "->abiClasspath]",
             "  (zipFiles):",
             "    -[<missing>]",
             "    +[\"//:java_lib_3#class-abi\"@ruleKey(sha1=", /* some rulekey */
@@ -234,25 +233,27 @@ public class DiffRuleKeysScriptIntegrationTest {
     assertThat(
         output,
         Matchers.stringContainsInOrder(
-            "Change details for [//:java_lib_2->jarBuildStepsFactory]",
+            "Change details for [//:java_lib_2->buildableForRuleKey->jarBuildStepsFactory]",
             "  (srcs):",
             "    -[<missing>]",
             "    -[container(LIST,len=1)]",
             "    +[container(LIST,len=2)]",
             String.format("    +[path(JavaLib3.java:%s)]", newHash3)));
+
     assertThat(
         output,
         Matchers.stringContainsInOrder(
-            "Change details for [//:java_lib_1->jarBuildStepsFactory]",
+            "Change details for [//:java_lib_1->buildableForRuleKey->jarBuildStepsFactory]",
             "  (srcs):",
             String.format("    -[path(JavaLib1.java:%s)]", oldHash1),
             String.format("    +[path(JavaLib1.java:%s)]", newHash1)));
+
     assertThat(
         output,
-        // TODO: The fact that it shows only the rule key difference for jarBuildStepsFactory
-        // rather than the change in the srcs property of that class is a bug in the differ.
         Matchers.stringContainsInOrder(
-            "Change details for [//:java_lib_all]",
+            // TODO: The fact that it shows only the rule key difference for jarBuildStepsFactory
+            // rather than the change in the srcs property of that class is a bug in the differ.
+            "Change details for [//:java_lib_all->buildableForRuleKey]",
             "  (jarBuildStepsFactory):",
             "    -[ruleKey(sha1=" /* some rulekey */,
             "    +[ruleKey(sha1=" /* some other rulekey */));

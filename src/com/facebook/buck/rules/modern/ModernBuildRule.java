@@ -19,8 +19,8 @@ package com.facebook.buck.rules.modern;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -31,7 +31,6 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.DefaultInputRuleResolver;
 import com.facebook.buck.rules.modern.impl.DepsComputingVisitor;
@@ -114,6 +113,11 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
   private OutputPathResolver outputPathResolver;
   private Supplier<ImmutableSortedSet<BuildRule>> deps;
   private T buildable;
+
+  // For cases where the ModernBuildRule is itself the Buildable, we don't want to add it to keys
+  // here.
+  @AddToRuleKey private T buildableForRuleKey;
+
   private ClassInfo<T> classInfo;
   private InputRuleResolver inputRuleResolver;
 
@@ -158,6 +162,7 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
     rule.outputPathResolver = new DefaultOutputPathResolver(filesystem, buildTarget);
     T buildable = buildableSource.transform(b -> b, clz -> clz.cast(rule));
     rule.buildable = buildable;
+    rule.buildableForRuleKey = rule == buildable ? null : buildable;
     rule.classInfo = DefaultClassInfoFactory.forInstance(buildable);
   }
 
@@ -404,11 +409,6 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
       parent = parent.getParent();
     }
     return true;
-  }
-
-  @Override
-  public final void appendToRuleKey(RuleKeyObjectSink sink) {
-    AlterRuleKeys.amendKey(sink, buildable);
   }
 
   @Override

@@ -208,50 +208,6 @@ public class DefaultRuleKeyFactoryTest {
   }
 
   @Test
-  public void annotatedAppendableBuildRulesIncludeTheirRuleKey() {
-    BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
-    BuildTarget depTarget = BuildTargetFactory.newInstance("//cheese:more-peas");
-    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    BuildRule rule = new EmptyFakeBuildRule(target);
-
-    FileHashCache fileHashCache = new DummyFileHashCache();
-    DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashCache, ruleFinder);
-
-    class AppendableRule extends EmptyFakeBuildRule {
-      public AppendableRule(BuildTarget target) {
-        super(target);
-      }
-
-      @Override
-      public void appendToRuleKey(RuleKeyObjectSink sink) {
-        sink.setReflectively("cheese", "brie");
-      }
-    }
-
-    AppendableRule appendableRule = new AppendableRule(depTarget);
-
-    class RuleContainingAppendableRule extends EmptyFakeBuildRule {
-      @AddToRuleKey private final AppendableRule field;
-
-      public RuleContainingAppendableRule(BuildTarget target, AppendableRule appendableRule) {
-        super(target);
-        this.field = appendableRule;
-      }
-    }
-
-    RuleContainingAppendableRule buildRule =
-        new RuleContainingAppendableRule(target, appendableRule);
-    Result<RuleKey, String> fieldResult =
-        factory.buildForDiagnostics(buildRule.field, new StringRuleKeyHasher());
-    Result<RuleKey, String> result =
-        factory.buildForDiagnostics(buildRule, new StringRuleKeyHasher());
-    assertThat(
-        result.diagKey,
-        Matchers.containsString(
-            String.format("(sha1=%s):wrapper(BUILD_RULE):key(field)", fieldResult.ruleKey)));
-  }
-
-  @Test
   public void stringifiedAddsToRuleKeysGetAddedToRuleKeyAsStrings() {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
