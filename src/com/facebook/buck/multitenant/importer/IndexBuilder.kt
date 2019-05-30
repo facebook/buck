@@ -160,14 +160,6 @@ private fun normalizeJsonValue(value: JsonNode): Any {
     }
 }
 
-private fun toRemovedPackages(node: JsonNode?): List<FsAgnosticPath> {
-    if (node == null) {
-        return listOf()
-    }
-
-    return node.asSequence().map { FsAgnosticPath.of(it.asText()) }.toList()
-}
-
 private fun createRawRule(
         target: UnconfiguredBuildTarget,
         ruleType: String,
