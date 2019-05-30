@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyAppendable;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
@@ -477,19 +476,8 @@ public class DefaultRuleKeyFactoryTest {
     PathSourcePath input = FakeSourcePath.of(filesystem, "input");
     filesystem.touch(input.getRelativePath());
 
-    // Create a sample dep rule.
-    BuildRule dep = new EmptyFakeBuildRule(BuildTargetFactory.newInstance("//:dep"));
-
-    // Create a sample dep appendable.
-    RuleKeyAppendable depAppendable = sink -> {};
-
     // Create a sample rule key appendable.
-    RuleKeyAppendable appendable =
-        sink -> {
-          sink.setReflectively("input", input);
-          sink.setReflectively("dep", dep);
-          sink.setReflectively("depAppendable", depAppendable);
-        };
+    RuleKeyAppendable appendable = sink -> sink.addValue(Paths.get("cheese"), input);
 
     // Create a dummy build rule that uses the input.
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:target");
@@ -510,7 +498,7 @@ public class DefaultRuleKeyFactoryTest {
         result.inputs,
         Matchers.containsInAnyOrder(
             new ImmutableRuleKeyInput(filesystem, input.getRelativePath())));
-    assertThat(result.deps, Matchers.containsInAnyOrder(dep, depAppendable));
+    assertThat(result.deps, Matchers.emptyIterable());
   }
 
   private void assertBothKeysAndValuesGetHashed(@Nullable Object val1, @Nullable Object val2) {
@@ -570,7 +558,7 @@ public class DefaultRuleKeyFactoryTest {
 
     @Override
     public void appendToRuleKey(RuleKeyAppendableSink sink) {
-      sink.setReflectively("cheese", "brie");
+      sink.addValue(Paths.get("cheese"), null);
     }
 
     @Override

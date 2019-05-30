@@ -14,7 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.core.rulekey;
+package com.facebook.buck.rules.keys;
+
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import java.nio.file.Path;
 
 /**
  * Deprecated. Implement {@link AddsToRuleKey} instead, and use {@link AddToRuleKey} annotations on
@@ -30,7 +35,14 @@ public interface RuleKeyAppendable extends AddsToRuleKey {
    */
   @Deprecated
   interface RuleKeyAppendableSink {
-    void setReflectively(String key, Object value);
+
+    /**
+     * Add stringified paths as keys. The paths in represent include directives rather than actual
+     * on-disk locations. One possibly non-obvious thing here is that the key will only be added to
+     * the rulekey if the path is. If the rulekeybuilder ignores the path, the key won't be added.
+     */
+    @Deprecated
+    void addValue(Path key, SourcePath path);
   }
 
   /** Deprecated. Add additional custom things to the rulekey builder. */

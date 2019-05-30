@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.module.BuckModuleHashStrategy;
-import com.facebook.buck.core.rulekey.RuleKeyAppendable;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.google.common.base.Preconditions;
