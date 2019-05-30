@@ -21,7 +21,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
-import java.util.OptionalInt;
 import org.immutables.value.Value;
 
 /**
@@ -33,15 +32,15 @@ import org.immutables.value.Value;
 abstract class AbstractManifestEntries implements AddsToRuleKey {
   @Value.Parameter
   @AddToRuleKey
-  protected abstract OptionalInt getMinSdkVersion();
+  protected abstract Optional<Integer> getMinSdkVersion();
 
   @Value.Parameter
   @AddToRuleKey
-  protected abstract OptionalInt getTargetSdkVersion();
+  protected abstract Optional<Integer> getTargetSdkVersion();
 
   @Value.Parameter
   @AddToRuleKey
-  protected abstract OptionalInt getVersionCode();
+  protected abstract Optional<Integer> getVersionCode();
 
   @Value.Parameter
   @AddToRuleKey

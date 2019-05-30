@@ -59,7 +59,6 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -95,7 +94,7 @@ public class SmartDexingStep implements Step {
   private final Path successDir;
   private final EnumSet<DxStep.Option> dxOptions;
   private final ListeningExecutorService executorService;
-  private final OptionalInt xzCompressionLevel;
+  private final int xzCompressionLevel;
   private final Optional<String> dxMaxHeapSize;
   private final String dexTool;
   private final boolean useDexBuckedId;
@@ -125,7 +124,7 @@ public class SmartDexingStep implements Step {
       Path successDir,
       EnumSet<Option> dxOptions,
       ListeningExecutorService executorService,
-      OptionalInt xzCompressionLevel,
+      int xzCompressionLevel,
       Optional<String> dxMaxHeapSize,
       String dexTool,
       boolean desugarInterfaceMethods,
@@ -215,7 +214,7 @@ public class SmartDexingStep implements Step {
                     filesystem,
                     secondaryBlobOutput,
                     secondaryCompressedBlobOutput,
-                    xzCompressionLevel.orElse(XzStep.DEFAULT_COMPRESSION_LEVEL));
+                    xzCompressionLevel);
             StepRunner.runStep(context, concatStep);
             StepRunner.runStep(context, xzStep);
           }
@@ -362,7 +361,7 @@ public class SmartDexingStep implements Step {
     private final Path outputHashPath;
     private final EnumSet<Option> dxOptions;
     @Nullable private String newInputsHash;
-    private final OptionalInt xzCompressionLevel;
+    private final int xzCompressionLevel;
     private final Optional<String> dxMaxHeapSize;
     private final String dexTool;
     @Nullable private final Collection<Path> classpathFiles;
@@ -377,7 +376,7 @@ public class SmartDexingStep implements Step {
         Path outputPath,
         Path outputHashPath,
         EnumSet<Option> dxOptions,
-        OptionalInt xzCompressionLevel,
+        int xzCompressionLevel,
         Optional<String> dxMaxHeapSize,
         String dexTool,
         @Nullable Collection<Path> classpathFiles,
@@ -468,7 +467,7 @@ public class SmartDexingStep implements Step {
       Collection<Path> filesToDex,
       Path outputPath,
       EnumSet<Option> dxOptions,
-      OptionalInt xzCompressionLevel,
+      int xzCompressionLevel,
       Optional<String> dxMaxHeapSize,
       String dexTool,
       @Nullable Collection<Path> classpathFiles,
@@ -520,11 +519,8 @@ public class SmartDexingStep implements Step {
               filesystem,
               repackedJar,
               repackedJar.resolveSibling(repackedJar.getFileName() + ".meta")));
-      if (xzCompressionLevel.isPresent()) {
-        steps.add(new XzStep(filesystem, repackedJar, xzCompressionLevel.getAsInt()));
-      } else {
-        steps.add(new XzStep(filesystem, repackedJar));
-      }
+
+      steps.add(new XzStep(filesystem, repackedJar, xzCompressionLevel));
     } else if (DexStore.XZS.matchesPath(outputPath)) {
       // Essentially the same logic as the XZ case above, except we compress later.
       // The differences in output file names make it worth separating into a different case.

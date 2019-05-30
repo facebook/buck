@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
@@ -54,7 +53,10 @@ public interface AndroidGraphEnhancerArgs extends HasDuplicateAndroidResourceTyp
 
   Optional<ProGuardObfuscateStep.SdkProguardType> getAndroidSdkProguardConfig();
 
-  OptionalInt getOptimizationPasses();
+  @Value.Default
+  default int getOptimizationPasses() {
+    return ProGuardObfuscateStep.DEFAULT_OPTIMIZATION_PASSES;
+  }
 
   List<String> getProguardJvmArgs();
 

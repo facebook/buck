@@ -45,11 +45,11 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 
 public final class ProGuardObfuscateStep extends ShellStep {
+  public static final int DEFAULT_OPTIMIZATION_PASSES = 1;
 
   enum SdkProguardType {
     DEFAULT,
@@ -84,7 +84,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       Optional<String> proguardAgentPath,
       Set<Path> customProguardConfigs,
       SdkProguardType sdkProguardConfig,
-      OptionalInt optimizationPasses,
+      int optimizationPasses,
       Optional<List<String>> proguardJvmArgs,
       Map<Path, Path> inputAndOutputEntries,
       Set<Path> additionalLibraryJarsForProguard,
@@ -280,7 +280,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     private final Map<Path, Path> inputAndOutputEntries;
     private final ImmutableSet<Path> additionalLibraryJarsForProguard;
     private final SdkProguardType sdkProguardConfig;
-    private final OptionalInt optimizationPasses;
+    private final int optimizationPasses;
     private final Path proguardDirectory;
     private final Path pathToProGuardCommandLineArgsFile;
 
@@ -299,7 +299,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
         AndroidPlatformTarget androidPlatformTarget,
         Set<Path> customProguardConfigs,
         SdkProguardType sdkProguardConfig,
-        OptionalInt optimizationPasses,
+        int optimizationPasses,
         Map<Path, Path> inputAndOutputEntries,
         Set<Path> additionalLibraryJarsForProguard,
         Path proguardDirectory,
@@ -338,9 +338,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       switch (sdkProguardConfig) {
         case OPTIMIZED:
           args.add("-include").add(androidPlatformTarget.getOptimizedProguardConfig().toString());
-          if (optimizationPasses.isPresent()) {
-            args.add("-optimizationpasses").add(String.valueOf(optimizationPasses.getAsInt()));
-          }
+          args.add("-optimizationpasses").add(String.valueOf(optimizationPasses));
           break;
         case DEFAULT:
           args.add("-include").add(androidPlatformTarget.getProguardConfig().toString());

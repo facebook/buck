@@ -26,11 +26,11 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.stream.Stream;
 
 /**
@@ -86,7 +86,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         EnumSet.noneOf(ExopackageMode.class),
         rulesToExcludeFromDex,
         enhancementResult,
-        OptionalInt.empty(),
+        XzStep.DEFAULT_COMPRESSION_LEVEL,
         false,
         false,
         Optional.empty(),

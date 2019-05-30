@@ -40,7 +40,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.function.Supplier;
 import org.immutables.value.Value;
 
@@ -193,10 +192,10 @@ public class GwtBinaryDescription
     Optional<Boolean> getDraftCompile();
 
     /** This will be passed to the GWT Compiler's {@code -optimize} flag. */
-    OptionalInt getOptimize();
+    Optional<Integer> getOptimize();
 
     /** This will be passed to the GWT Compiler's {@code -localWorkers} flag. */
-    OptionalInt getLocalWorkers();
+    Optional<Integer> getLocalWorkers();
 
     /** If {@code true}, the GWT Compiler's {@code -strict} flag will be set. */
     Optional<Boolean> getStrict();

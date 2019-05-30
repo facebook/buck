@@ -36,13 +36,13 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.step.fs.XzStep;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.EnumSet;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -175,7 +175,7 @@ public class AndroidBinaryGraphEnhancerFactory {
         exopackageModes,
         args.getBuildConfigValues(),
         args.getBuildConfigValuesFile(),
-        OptionalInt.empty(),
+        XzStep.DEFAULT_COMPRESSION_LEVEL,
         args.isTrimResourceIds(),
         args.getKeepResourcePattern(),
         args.isIgnoreAaptProguardConfig(),

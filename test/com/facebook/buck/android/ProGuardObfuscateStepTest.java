@@ -41,7 +41,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import org.junit.Before;
@@ -122,7 +121,7 @@ public class ProGuardObfuscateStepTest {
         Optional.empty(),
         /* customProguardConfigs */ ImmutableSet.of(),
         ProGuardObfuscateStep.SdkProguardType.DEFAULT,
-        /* optimizationPasses */ OptionalInt.empty(),
+        /* optimizationPasses */ ProGuardObfuscateStep.DEFAULT_OPTIMIZATION_PASSES,
         /* proguardJvmArgs */ Optional.empty(),
         /* inputAndOutputEntries */ ImmutableMap.of(),
         /* additionalLibraryJarsForProguard */ ImmutableSet.of(
@@ -156,7 +155,7 @@ public class ProGuardObfuscateStepTest {
         Optional.empty(),
         /* customProguardConfigs */ ImmutableSet.of(),
         ProGuardObfuscateStep.SdkProguardType.DEFAULT,
-        /* optimizationPasses */ OptionalInt.empty(),
+        /* optimizationPasses */ ProGuardObfuscateStep.DEFAULT_OPTIMIZATION_PASSES,
         Optional.of(proguardJvmArgs),
         /* inputAndOutputEntries */ ImmutableMap.of(),
         /* additionalLibraryJarsForProguard */ ImmutableSet.of(
@@ -188,7 +187,7 @@ public class ProGuardObfuscateStepTest {
         proguardAgentPath,
         /* customProguardConfigs */ ImmutableSet.of(),
         sdkProguardConfig,
-        /* optimizationPasses */ OptionalInt.empty(),
+        /* optimizationPasses */ ProGuardObfuscateStep.DEFAULT_OPTIMIZATION_PASSES,
         /* proguardJvmArgs */ Optional.empty(),
         /* inputAndOutputEntries */ ImmutableMap.of(),
         /* additionalLibraryJarsForProguard */ ImmutableSet.of(),

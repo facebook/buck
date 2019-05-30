@@ -68,6 +68,7 @@ import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
+import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -81,7 +82,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Optional;
-import java.util.OptionalInt;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -176,7 +176,7 @@ public class AndroidBinaryGraphEnhancerTest {
             EnumSet.noneOf(ExopackageMode.class),
             /* buildConfigValues */ BuildConfigFields.of(),
             /* buildConfigValuesFile */ Optional.empty(),
-            /* xzCompressionLevel */ OptionalInt.empty(),
+            XzStep.DEFAULT_COMPRESSION_LEVEL,
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
             false,
@@ -362,7 +362,7 @@ public class AndroidBinaryGraphEnhancerTest {
             EnumSet.noneOf(ExopackageMode.class),
             /* buildConfigValues */ BuildConfigFields.of(),
             /* buildConfigValuesFile */ Optional.empty(),
-            /* xzCompressionLevel */ OptionalInt.empty(),
+            XzStep.DEFAULT_COMPRESSION_LEVEL,
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
             false,
@@ -570,7 +570,7 @@ public class AndroidBinaryGraphEnhancerTest {
             EnumSet.noneOf(ExopackageMode.class),
             /* buildConfigValues */ BuildConfigFields.of(),
             /* buildConfigValuesFile */ Optional.empty(),
-            /* xzCompressionLevel */ OptionalInt.empty(),
+            XzStep.DEFAULT_COMPRESSION_LEVEL,
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
             false,
@@ -721,7 +721,7 @@ public class AndroidBinaryGraphEnhancerTest {
             EnumSet.of(ExopackageMode.SECONDARY_DEX),
             /* buildConfigValues */ BuildConfigFields.of(),
             /* buildConfigValuesFiles */ Optional.empty(),
-            /* xzCompressionLevel */ OptionalInt.empty(),
+            XzStep.DEFAULT_COMPRESSION_LEVEL,
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
             false,
@@ -856,7 +856,7 @@ public class AndroidBinaryGraphEnhancerTest {
             EnumSet.of(ExopackageMode.SECONDARY_DEX),
             /* buildConfigValues */ BuildConfigFields.of(),
             /* buildConfigValuesFiles */ Optional.empty(),
-            /* xzCompressionLevel */ OptionalInt.empty(),
+            XzStep.DEFAULT_COMPRESSION_LEVEL,
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
             false,
@@ -938,7 +938,7 @@ public class AndroidBinaryGraphEnhancerTest {
             EnumSet.of(ExopackageMode.SECONDARY_DEX),
             /* buildConfigValues */ BuildConfigFields.of(),
             /* buildConfigValuesFiles */ Optional.empty(),
-            /* xzCompressionLevel */ OptionalInt.empty(),
+            XzStep.DEFAULT_COMPRESSION_LEVEL,
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
             false,
@@ -1048,7 +1048,7 @@ public class AndroidBinaryGraphEnhancerTest {
             EnumSet.of(ExopackageMode.SECONDARY_DEX),
             /* buildConfigValues */ BuildConfigFields.of(),
             /* buildConfigValuesFiles */ Optional.empty(),
-            /* xzCompressionLevel */ OptionalInt.empty(),
+            XzStep.DEFAULT_COMPRESSION_LEVEL,
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
             false,

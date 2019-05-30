@@ -62,7 +62,6 @@ import com.google.common.collect.Ordering;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.stream.Stream;
@@ -94,7 +93,7 @@ public class AndroidBinary extends AbstractBuildRule
 
   private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
   private final ProGuardObfuscateStep.SdkProguardType sdkProguardConfig;
-  private final OptionalInt optimizationPasses;
+  private final int optimizationPasses;
   private final Optional<SourcePath> proguardConfig;
   private final SourcePathRuleFinder ruleFinder;
 
@@ -132,7 +131,7 @@ public class AndroidBinary extends AbstractBuildRule
       DexSplitMode dexSplitMode,
       Set<BuildTarget> buildTargetsToExcludeFromDex,
       ProGuardObfuscateStep.SdkProguardType sdkProguardConfig,
-      OptionalInt proguardOptimizationPasses,
+      int proguardOptimizationPasses,
       Optional<SourcePath> proguardConfig,
       boolean skipProguard,
       Optional<RedexOptions> redexOptions,
@@ -142,7 +141,7 @@ public class AndroidBinary extends AbstractBuildRule
       EnumSet<ExopackageMode> exopackageModes,
       ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidGraphEnhancementResult enhancementResult,
-      OptionalInt xzCompressionLevel,
+      int xzCompressionLevel,
       boolean packageAssetLibraries,
       boolean compressAssetLibraries,
       Optional<CompressionAlgorithm> assetCompressionAlgorithm,
@@ -290,7 +289,7 @@ public class AndroidBinary extends AbstractBuildRule
     return sdkProguardConfig;
   }
 
-  public OptionalInt getOptimizationPasses() {
+  public int getOptimizationPasses() {
     return optimizationPasses;
   }
 

@@ -41,7 +41,6 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.unarchive.UnzipStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.RichStream;
@@ -63,7 +62,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.function.Supplier;
 
 class AndroidBinaryBuildable implements AddsToRuleKey {
@@ -94,7 +92,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   // TODO(cjhopman): Redex shouldn't do that, or this list should be constructed more carefully.
   private final ImmutableList<SourcePath> additionalRedexInputs;
 
-  @AddToRuleKey private final OptionalInt xzCompressionLevel;
+  @AddToRuleKey private final int xzCompressionLevel;
 
   @AddToRuleKey private final SourcePath keystorePath;
   @AddToRuleKey private final SourcePath keystorePropertiesPath;
@@ -129,7 +127,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       Optional<RedexOptions> redexOptions,
       ImmutableList<SourcePath> additionalRedexInputs,
       EnumSet<ExopackageMode> exopackageModes,
-      OptionalInt xzCompressionLevel,
+      int xzCompressionLevel,
       boolean packageAssetLibraries,
       boolean compressAssetLibraries,
       Optional<CompressionAlgorithm> assetCompressionAlgorithm,
@@ -630,14 +628,13 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       // Concat and xz compress.
       Path libOutputBlob = libSubdirectory.resolve("libraries.blob");
       steps.add(new ConcatStep(getProjectFilesystem(), outputAssetLibrariesBuilder, libOutputBlob));
-      int compressionLevel = xzCompressionLevel.orElse(XzStep.DEFAULT_COMPRESSION_LEVEL);
       steps.add(
           CompressionAlgorithmCreator.createCompressionStep(
               assetCompressionAlgorithm.orElse(CompressionAlgorithm.XZ),
               getProjectFilesystem(),
               libOutputBlob,
               libSubdirectory,
-              compressionLevel));
+              xzCompressionLevel));
     }
   }
 

@@ -48,6 +48,7 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.step.fs.XzStep;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
@@ -58,7 +59,6 @@ import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.EnumSet;
 import java.util.Optional;
-import java.util.OptionalInt;
 import org.immutables.value.Value;
 
 public class AndroidInstrumentationApkDescription
@@ -225,7 +225,7 @@ public class AndroidInstrumentationApkDescription
             EnumSet.noneOf(ExopackageMode.class),
             /* buildConfigValues */ BuildConfigFields.of(),
             /* buildConfigValuesFile */ Optional.empty(),
-            /* xzCompressionLevel */ OptionalInt.empty(),
+            /* xzCompressionLevel */ XzStep.DEFAULT_COMPRESSION_LEVEL,
             /* trimResourceIds */ false,
             /* keepResourcePattern */ Optional.empty(),
             false,

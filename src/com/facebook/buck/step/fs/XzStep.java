@@ -83,20 +83,6 @@ public class XzStep implements Step {
   }
 
   /**
-   * Creates an XzStep to compress a file with XZ compression level {@value
-   * #DEFAULT_COMPRESSION_LEVEL}.
-   *
-   * <p>The destination file will be {@code sourceFile} with the added {@code .xz} extension.
-   *
-   * <p>Decompression will require 5MiB of RAM.
-   *
-   * @param sourceFile file to compress
-   */
-  public XzStep(ProjectFilesystem filesystem, Path sourceFile) {
-    this(filesystem, sourceFile, DEFAULT_COMPRESSION_LEVEL);
-  }
-
-  /**
    * Creates an XzStep to compress a file with the given XZ compression level and output path.
    *
    * <p>Decompression will require up to 64MiB of RAM.

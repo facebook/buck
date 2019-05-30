@@ -49,7 +49,9 @@ public class XzStepTest {
     Path sourceFile = Paths.get("/path/to/source.file");
     XzStep step =
         new XzStep(
-            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath()), sourceFile);
+            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath()),
+            sourceFile,
+            XzStep.DEFAULT_COMPRESSION_LEVEL);
     assertEquals(Paths.get(sourceFile + ".xz"), step.getDestinationFile());
   }
 

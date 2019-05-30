@@ -61,7 +61,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -102,7 +101,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final APKModuleGraph apkModuleGraph;
   private final ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexDeps;
   private final ListeningExecutorService dxExecutorService;
-  private final OptionalInt xzCompressionLevel;
+  private final int xzCompressionLevel;
   private final Optional<String> dxMaxHeapSize;
 
   public PreDexMerge(
@@ -114,7 +113,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       APKModuleGraph apkModuleGraph,
       ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexDeps,
       ListeningExecutorService dxExecutorService,
-      OptionalInt xzCompressionLevel,
+      int xzCompressionLevel,
       Optional<String> dxMaxHeapSize,
       String dexTool) {
     super(buildTarget, projectFilesystem, params);

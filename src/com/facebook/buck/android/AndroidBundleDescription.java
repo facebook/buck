@@ -47,6 +47,7 @@ import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.util.Optionals;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -55,7 +56,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.function.Supplier;
 import org.immutables.value.Value;
 
@@ -309,7 +309,10 @@ public class AndroidBundleDescription
     @Value.NaturalOrder
     abstract ImmutableSortedSet<BuildTarget> getPreprocessJavaClassesDeps();
 
-    abstract OptionalInt getXzCompressionLevel();
+    @Value.Default
+    int getXzCompressionLevel() {
+      return XzStep.DEFAULT_COMPRESSION_LEVEL;
+    }
 
     @Value.Default
     boolean isPackageAssetLibraries() {
