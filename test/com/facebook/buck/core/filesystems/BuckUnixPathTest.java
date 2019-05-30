@@ -21,8 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.net.URI;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,18 +32,10 @@ import org.junit.runner.RunWith;
 @RunWith(JUnitParamsRunner.class)
 public class BuckUnixPathTest {
 
-  private BuckUnixPath createPath(String pathString) {
-    BuckFileSystemProvider provider =
-        new BuckFileSystemProvider(FileSystems.getDefault().provider());
-    Path path = provider.getFileSystem(URI.create("file:///")).getPath(pathString);
-    assertTrue(path instanceof BuckUnixPath);
-    return (BuckUnixPath) path;
-  }
-
   @Test
   @Parameters({"", "/", "some/relative/path", "/some/absolute/path", "filename.txt"})
   public void toStringMethod(String data) {
-    Path path = createPath(data);
+    Path path = BuckUnixPathUtils.createPath(data);
     assertEquals(data, path.toString());
   }
 
@@ -61,8 +51,8 @@ public class BuckUnixPathTest {
     "/some,/some/a,<"
   })
   public void compareToMethod(String data1, String data2, String expected) {
-    Path path1 = createPath(data1);
-    Path path2 = createPath(data2);
+    Path path1 = BuckUnixPathUtils.createPath(data1);
+    Path path2 = BuckUnixPathUtils.createPath(data2);
     int actual = path1.compareTo(path2);
     switch (expected) {
       case "=":
@@ -93,8 +83,8 @@ public class BuckUnixPathTest {
     "path1/1,path1,false"
   })
   public void endsWithMethod(String data1, String data2, boolean expected) {
-    Path path1 = createPath(data1);
-    Path path2 = createPath(data2);
+    Path path1 = BuckUnixPathUtils.createPath(data1);
+    Path path2 = BuckUnixPathUtils.createPath(data2);
     assertEquals(expected, path1.endsWith(path2));
   }
 
@@ -110,8 +100,8 @@ public class BuckUnixPathTest {
     "/a,/a/a,false"
   })
   public void equalsMethod(String data1, String data2, boolean expected) {
-    Path path1 = createPath(data1);
-    Path path2 = createPath(data2);
+    Path path1 = BuckUnixPathUtils.createPath(data1);
+    Path path2 = BuckUnixPathUtils.createPath(data2);
     assertEquals(expected, path1.equals(path2));
   }
 
@@ -124,7 +114,7 @@ public class BuckUnixPathTest {
     "filename.txt,filename.txt"
   })
   public void getFileNameMethod(String data, String expected) {
-    Path path = createPath(data);
+    Path path = BuckUnixPathUtils.createPath(data);
     Path fileName = path.getFileName();
     if (expected.equals("null")) {
       assertNull(fileName);
@@ -136,35 +126,35 @@ public class BuckUnixPathTest {
   @Test
   @Parameters({"", "/", "file", "dir/file", "/dir/file"})
   public void getFileSystemMethod(String data) {
-    Path path = createPath(data);
+    Path path = BuckUnixPathUtils.createPath(data);
     assertTrue(path.getFileSystem() instanceof BuckFileSystem);
   }
 
   @Test
   @Parameters({"a,0,a", "/a,0,a", "a/b,0,a", "a/b,1,b", "a/b/c,1,b", "a/b/c,2,c"})
   public void getNameMethod(String data, int index, String expected) {
-    Path path = createPath(data);
+    Path path = BuckUnixPathUtils.createPath(data);
     assertEquals(expected, path.getName(index).toString());
   }
 
   @Test(expected = IllegalArgumentException.class)
   @Parameters({"a,-1", "/a,-1", ",0", "/,0", "a/b,2", "/a/b,2", "/a/b/c/d,1000"})
   public void getNameMethodException(String data, int index) {
-    Path path = createPath(data);
+    Path path = BuckUnixPathUtils.createPath(data);
     path.getName(index);
   }
 
   @Test
   @Parameters({",0", "/,0", "a,1", "/a,1", "/a/b/c,3"})
   public void getNameCountMethod(String data, int expected) {
-    Path path = createPath(data);
+    Path path = BuckUnixPathUtils.createPath(data);
     assertEquals(expected, path.getNameCount());
   }
 
   @Test
   @Parameters({",null", "/,null", "a,null", "/a/b,/a", "a/b,a", "a/b/c,a/b"})
   public void getParentMethod(String data, String expected) {
-    Path path = createPath(data);
+    Path path = BuckUnixPathUtils.createPath(data);
     Path parent = path.getParent();
     if (expected.equals("null")) {
       assertNull(parent);
@@ -176,7 +166,7 @@ public class BuckUnixPathTest {
   @Test
   @Parameters({",null", "/,/", "a,null", "/a,/", "a/b/c,null", "/a/b/c,/"})
   public void getRootMethod(String data, String expected) {
-    Path path = createPath(data);
+    Path path = BuckUnixPathUtils.createPath(data);
     Path root = path.getRoot();
     if (expected.equals("null")) {
       assertNull(root);
@@ -190,15 +180,15 @@ public class BuckUnixPathTest {
   public void hashcodeMethodEquals(String data) {
     String data1 = new String(data);
     String data2 = new String(data);
-    Path path1 = createPath(data1);
-    Path path2 = createPath(data2);
+    Path path1 = BuckUnixPathUtils.createPath(data1);
+    Path path2 = BuckUnixPathUtils.createPath(data2);
     assertEquals(path1.hashCode(), path2.hashCode());
   }
 
   @Test
   @Parameters({",false", "/,true", "a,false", "/a,true", "a/b/c,false", "/a/b/c,true"})
   public void isAbsoluteMethod(String data, boolean expected) {
-    Path path = createPath(data);
+    Path path = BuckUnixPathUtils.createPath(data);
     assertEquals(expected, path.isAbsolute());
   }
 
@@ -216,7 +206,7 @@ public class BuckUnixPathTest {
   @Test
   @Parameters(method = "iteratorMethodData")
   public void iteratorMethod(String data, String[] expected) {
-    Path path = createPath(data);
+    Path path = BuckUnixPathUtils.createPath(data);
     List<Path> list = new ArrayList<>();
     path.iterator().forEachRemaining(list::add);
 
@@ -249,23 +239,23 @@ public class BuckUnixPathTest {
     "/a/../../../b,/../../b"
   })
   public void normalizeMethod(String data, String expected) {
-    Path path = createPath(data);
+    Path path = BuckUnixPathUtils.createPath(data);
     assertEquals(expected, path.normalize().toString());
   }
 
   @Test
   @Parameters({"/a/b,/a,..", "/a/b,/a/b/c/d,c/d", "a/b,a/b/c/d,c/d", "/a,/a,"})
   public void relativizeMethod(String data1, String data2, String expected) {
-    Path path1 = createPath(data1);
-    Path path2 = createPath(data2);
+    Path path1 = BuckUnixPathUtils.createPath(data1);
+    Path path2 = BuckUnixPathUtils.createPath(data2);
     assertEquals(expected, path1.relativize(path2).toString());
   }
 
   @Test
   @Parameters({"/a/b,c,/a/b/c", "/a,/b,/b", "/a/b,c/d,/a/b/c/d", "a/b,c/d,a/b/c/d"})
   public void resolveMethod(String data1, String data2, String expected) {
-    Path path1 = createPath(data1);
-    Path path2 = createPath(data2);
+    Path path1 = BuckUnixPathUtils.createPath(data1);
+    Path path2 = BuckUnixPathUtils.createPath(data2);
     assertEquals(expected, path1.resolve(path2).toString());
   }
 
@@ -283,8 +273,8 @@ public class BuckUnixPathTest {
     "path1/1,1,false"
   })
   public void startsWithMethod(String data1, String data2, boolean expected) {
-    Path path1 = createPath(data1);
-    Path path2 = createPath(data2);
+    Path path1 = BuckUnixPathUtils.createPath(data1);
+    Path path2 = BuckUnixPathUtils.createPath(data2);
     assertEquals(expected, path1.startsWith(path2));
   }
 
@@ -298,14 +288,14 @@ public class BuckUnixPathTest {
     "a/b,1,2,b"
   })
   public void subpathMethod(String data, int beginIndex, int endIndex, String expected) {
-    Path path = createPath(data);
+    Path path = BuckUnixPathUtils.createPath(data);
     assertEquals(expected, path.subpath(beginIndex, endIndex).toString());
   }
 
   @Test(expected = IllegalArgumentException.class)
   @Parameters({",0,1", "a,-1,1", "/a,-1,1", "a,0,2", "/a,0,2", "a/b,1,0", "/a/b/c/d,0,5"})
   public void subpathMethodException(String data, int beginIndex, int endIndex) {
-    Path path = createPath(data);
+    Path path = BuckUnixPathUtils.createPath(data);
     path.subpath(beginIndex, endIndex);
   }
 }

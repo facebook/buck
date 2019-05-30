@@ -190,6 +190,10 @@ public class BuckUnixPath implements Path {
 
   @Override
   public Path getName(int index) {
+    return new BuckUnixPath(fs, new String[] {getSegment(index)});
+  }
+
+  private String getSegment(int index) {
     if (index < 0) {
       throw new IllegalArgumentException();
     }
@@ -200,7 +204,7 @@ public class BuckUnixPath implements Path {
       throw new IllegalArgumentException();
     }
 
-    return new BuckUnixPath(fs, new String[] {segments[index]});
+    return segments[index];
   }
 
   @Override
@@ -584,5 +588,12 @@ public class BuckUnixPath implements Path {
         throw new UnsupportedOperationException();
       }
     };
+  }
+
+  /** Top-secret internal accessors for use in {@link com.facebook.buck.io.file.FastPaths}. */
+  public static class InternalsForFastPaths {
+    public static String getNameString(BuckUnixPath path, int index) {
+      return path.getSegment(index);
+    }
   }
 }

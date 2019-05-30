@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.hashing;
 
+import com.facebook.buck.io.file.FastPaths;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -81,7 +82,7 @@ public class FilePathHashLoader implements FileHashLoader {
       // For each file add its path to the hasher suffixed by whether we assume the file to be
       // modified or not. This way files with different paths always result in different hashes and
       // files that are assumed to be modified get different hashes than all unmodified files.
-      StringHashing.hashStringAndLength(hasher, relativePath.toString());
+      FastPaths.hashPathFast(hasher, relativePath);
       hasher.putBoolean(assumeModified);
     }
     return hasher.hash();
