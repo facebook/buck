@@ -55,7 +55,7 @@ public class CriticalPathEventListener implements BuckEventListener {
 
   private final Path outputPath;
   @Nullable private BuildTarget longestPathSoFar;
-  private long longestTimeSoFar;
+  public long longestTimeSoFar;
   /**
    * Keeping track of longest seen path allows us to find the longest path without iterating over
    * all nodes at the end of the build. In addition, it naturally handles the case of zero-cost
@@ -100,9 +100,9 @@ public class CriticalPathEventListener implements BuckEventListener {
     BuildTarget buildTarget = buildRule.getBuildTarget();
     buildTargetToCriticalPathNodeMap.put(buildTarget, criticalPathNode);
     // update longestPathSoFar and longestTimeSoFar if needed
-    if (longestPathSoFar == null || longestTimeSoFar < criticalPathNode.getTotalElapsedTime()) {
+    if (longestPathSoFar == null || longestTimeSoFar < criticalPathNode.getTotalElapsedTimeMs()) {
       longestPathSoFar = buildTarget;
-      longestTimeSoFar = criticalPathNode.getTotalElapsedTime();
+      longestTimeSoFar = criticalPathNode.getTotalElapsedTimeMs();
     }
   }
 
@@ -119,7 +119,7 @@ public class CriticalPathEventListener implements BuckEventListener {
       CriticalPathNode criticalPathNode =
           buildTargetToCriticalPathNodeMap.computeIfAbsent(
               buildTarget, ignore -> new ImmutableCriticalPathNode(0, 0, null, null));
-      long totalElapsedTime = criticalPathNode.getTotalElapsedTime();
+      long totalElapsedTime = criticalPathNode.getTotalElapsedTimeMs();
       if (totalElapsedTime > longestSoFar) {
         longestSoFar = totalElapsedTime;
         resultBuildTarget = buildTarget;
@@ -132,7 +132,9 @@ public class CriticalPathEventListener implements BuckEventListener {
   public void commandFinished(CommandEvent.Finished event) {
     LOG.info("Received command finished event for command : %s", event.getCommandName());
     try {
-      dumpCriticalPath();
+      if (longestPathSoFar != null) {
+        dumpCriticalPath();
+      }
     } catch (IOException e) {
       Path parentDir = outputPath.getParent();
       LOG.warn(
@@ -182,11 +184,11 @@ public class CriticalPathEventListener implements BuckEventListener {
   private String convertToLine(Pair<BuildTarget, CriticalPathNode> pair) {
     CriticalPathNode criticalPathNode = pair.getSecond();
     BuildTarget buildTarget = pair.getFirst();
-    long elapsedTime = criticalPathNode.getElapsedTime();
+    long elapsedTime = criticalPathNode.getElapsedTimeMs();
     return String.format(
         FORMAT,
         elapsedTime,
-        criticalPathNode.getTotalElapsedTime(),
+        criticalPathNode.getTotalElapsedTimeMs(),
         decimalFormat.format(100. * elapsedTime / longestTimeSoFar),
         criticalPathNode.getType(),
         buildTarget.getFullyQualifiedName());
@@ -199,9 +201,9 @@ public class CriticalPathEventListener implements BuckEventListener {
   @BuckStyleValue
   interface CriticalPathNode {
 
-    long getTotalElapsedTime();
+    long getTotalElapsedTimeMs();
 
-    long getElapsedTime();
+    long getElapsedTimeMs();
 
     @Nullable
     String getType();

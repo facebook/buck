@@ -79,6 +79,7 @@ import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
 import com.facebook.buck.event.listener.CacheRateStatsListener;
 import com.facebook.buck.event.listener.ChromeTraceBuildListener;
+import com.facebook.buck.event.listener.CriticalPathEventListener;
 import com.facebook.buck.event.listener.FileSerializationEventBusListener;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.event.listener.LoadBalancerEventsListener;
@@ -280,6 +281,8 @@ public final class MainRunner {
   private static final int EXECUTOR_SERVICES_TIMEOUT_SECONDS = 60;
   private static final int EVENT_BUS_TIMEOUT_SECONDS = 15;
   private static final int COUNTER_AGGREGATOR_SERVICE_TIMEOUT_SECONDS = 20;
+
+  private static final String CRITICAL_PATH_FILE_NAME = "critical_path.log";
 
   private final InputStream stdIn;
 
@@ -1897,7 +1900,8 @@ public final class MainRunner {
       CounterRegistry counterRegistry,
       Iterable<BuckEventListener> commandSpecificEventListeners,
       Optional<RemoteExecutionStatsProvider> reStatsProvider,
-      TaskManagerCommandScope managerScope) {
+      TaskManagerCommandScope managerScope)
+      throws IOException {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder().add(new LoggingBuildListener());
 
@@ -1927,6 +1931,13 @@ public final class MainRunner {
     webServer.map(WebServer::createListener).ifPresent(eventListenersBuilder::add);
 
     ArtifactCacheBuckConfig artifactCacheConfig = new ArtifactCacheBuckConfig(buckConfig);
+
+    Path logDirectoryPath = invocationInfo.getLogDirectoryPath();
+    Path criticalPathDir = projectFilesystem.resolve(logDirectoryPath);
+    projectFilesystem.mkdirs(criticalPathDir);
+    CriticalPathEventListener criticalPathEventListener =
+        new CriticalPathEventListener(criticalPathDir.resolve(CRITICAL_PATH_FILE_NAME));
+    buckEventBus.register(criticalPathEventListener);
 
 
     CommonThreadFactoryState commonThreadFactoryState =

@@ -154,8 +154,8 @@ public class CriticalPathEventListenerTest {
     assertBuildTarget(criticalPathPair.getFirst(), nodeName);
 
     CriticalPathNode criticalPathNode = criticalPathPair.getSecond();
-    assertThat(criticalPathNode.getElapsedTime(), equalTo(expectedElapsedTime));
-    assertThat(criticalPathNode.getTotalElapsedTime(), equalTo(expectedTotalTime));
+    assertThat(criticalPathNode.getElapsedTimeMs(), equalTo(expectedElapsedTime));
+    assertThat(criticalPathNode.getTotalElapsedTimeMs(), equalTo(expectedTotalTime));
     if (prevNodeName == null) {
       assertThat(criticalPathNode.getPreviousNode(), nullValue());
     } else {
