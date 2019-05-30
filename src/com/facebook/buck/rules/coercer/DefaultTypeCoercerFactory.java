@@ -168,7 +168,6 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
           neededCoverageSpecTypeCoercer,
           new ConstraintTypeCoercer(),
           new VersionTypeCoercer(),
-          new OptionalIntTypeCoercer(),
           queryTypeCoercer,
           StringWithMacrosTypeCoercer.from(
               ImmutableMap.<String, Class<? extends Macro>>builder()

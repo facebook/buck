@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Primitives;
 import java.lang.reflect.Type;
 import java.util.Optional;
-import java.util.OptionalInt;
 
 /** Some utilities and simple implementations for ValueTypeInfo. */
 public class ValueTypeInfos {
@@ -50,8 +49,6 @@ public class ValueTypeInfos {
       return FloatValueTypeInfo.INSTANCE;
     } else if (rawClass == Double.class) {
       return DoubleValueTypeInfo.INSTANCE;
-    } else if (rawClass == OptionalInt.class) {
-      return OptionalIntValueTypeInfo.INSTANCE;
     }
     throw new RuntimeException();
   }

@@ -31,7 +31,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 import org.immutables.value.Value;
 import org.junit.Before;
@@ -114,8 +113,6 @@ public class BuckPyFunctionTest {
       return ImmutableList.of("123");
     }
 
-    abstract OptionalInt getVersion();
-
     abstract Optional<Boolean> isDoStuff();
 
     @Value.Default
@@ -133,8 +130,7 @@ public class BuckPyFunctionTest {
     assertTrue(
         definition,
         definition.contains(
-            "do_something=None, do_stuff=None, strings=None, targets=None, "
-                + "thing=None, version=None"));
+            "do_something=None, do_stuff=None, strings=None, targets=None, " + "thing=None"));
   }
 
   @BuckStyleImmutable

@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -52,7 +51,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -761,11 +759,6 @@ public class TypeCoercerTest {
     TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(SomeImmutable.class);
     ImmutableMap<String, Object> map = ImmutableMap.of("wrong_key", ImmutableMap.of());
     coercer.coerce(cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, map);
-  }
-
-  @Test
-  public void optionalIntCoercerIsRegistered() {
-    assertThat(typeCoercerFactory.typeCoercerForType(OptionalInt.class), notNullValue());
   }
 
   @BuckStyleImmutable

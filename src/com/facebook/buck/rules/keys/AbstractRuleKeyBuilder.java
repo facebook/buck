@@ -32,7 +32,6 @@ import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.SortedMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -82,14 +81,6 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> {
     if (val instanceof Optional) {
       Object o = ((Optional<?>) val).orElse(null);
       try (Scope ignored = scopedHasher.wrapperScope(RuleKeyHasher.Wrapper.OPTIONAL)) {
-        return setReflectively(o);
-      }
-    }
-
-    if (val instanceof OptionalInt) {
-      OptionalInt optionalInt = (OptionalInt) val;
-      @Nullable Object o = optionalInt.isPresent() ? optionalInt.getAsInt() : null;
-      try (Scope ignored = scopedHasher.wrapperScope(RuleKeyHasher.Wrapper.OPTIONAL_INT)) {
         return setReflectively(o);
       }
     }

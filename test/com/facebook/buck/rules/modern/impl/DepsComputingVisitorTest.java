@@ -210,12 +210,6 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
     apply(new WithOptional());
   }
 
-  @Test
-  @Override
-  public void optionalInt() {
-    apply(new WithOptionalInt());
-  }
-
   @Override
   @Test
   public void simple() {

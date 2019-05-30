@@ -58,7 +58,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.SortedSet;
 import org.immutables.value.Value;
@@ -432,19 +431,6 @@ public class ConstructorArgMarshallerImmutableTest {
   }
 
   @Test
-  public void specifyingZeroIsNotConsideredOptional() throws Exception {
-    DtoWithOptionalInteger built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            DtoWithOptionalInteger.class,
-            ImmutableSet.builder(),
-            ImmutableMap.<String, Object>of("number", 0));
-    assertEquals(OptionalInt.of(0), built.getNumber());
-  }
-
-  @Test
   public void canPopulateSimpleConstructorArgFromBuildFactoryParams() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:path");
 
@@ -794,12 +780,6 @@ public class ConstructorArgMarshallerImmutableTest {
   @Value.Immutable
   abstract static class AbstractDtoWithPath {
     abstract Path getPath();
-  }
-
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithOptionalInteger {
-    abstract OptionalInt getNumber();
   }
 
   @BuckStyleImmutable
