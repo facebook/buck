@@ -19,6 +19,7 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.rules.keys.hasher.CountingRuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.Scope;
+import java.nio.file.Path;
 
 /**
  * A wrapper of {@link RuleKeyHasher} that provides scoped hashing facilities.
@@ -45,6 +46,17 @@ public class DefaultRuleKeyScopedHasher<HASH> implements RuleKeyScopedHasher {
     return () -> {
       if (hasher.getCount() > hasherCount) {
         hasher.putKey(key);
+      }
+    };
+  }
+
+  /** Hashes the key iff non-empty (i.e. if anything gets hashed during its scope). */
+  @Override
+  public Scope pathKeyScope(Path key) {
+    long hasherCount = hasher.getCount();
+    return () -> {
+      if (hasher.getCount() > hasherCount) {
+        hasher.putKeyPath(key);
       }
     };
   }

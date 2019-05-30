@@ -49,6 +49,13 @@ public abstract class ForwardingRuleKeyHasher<HASH, HASH2> implements RuleKeyHas
   }
 
   @Override
+  public RuleKeyHasher<HASH> putKeyPath(Path key) {
+    secondHasher.putKeyPath(key);
+    delegate.putKeyPath(key);
+    return this;
+  }
+
+  @Override
   public ForwardingRuleKeyHasher<HASH, HASH2> putNull() {
     secondHasher.putNull();
     delegate.putNull();

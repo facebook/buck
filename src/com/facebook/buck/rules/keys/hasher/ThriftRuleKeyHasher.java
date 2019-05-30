@@ -83,6 +83,11 @@ public class ThriftRuleKeyHasher implements RuleKeyHasher<FullRuleKey> {
   }
 
   @Override
+  public RuleKeyHasher<FullRuleKey> putKeyPath(Path key) {
+    return push(Value.key(new Key(key.toString())));
+  }
+
+  @Override
   public RuleKeyHasher<FullRuleKey> putNull() {
     return push(Value.nullValue(new NullValue()));
   }

@@ -72,6 +72,9 @@ public interface RuleKeyHasher<HASH> {
   /** Puts the field's key (i.e. the name of the field) */
   RuleKeyHasher<HASH> putKey(String key);
 
+  /** Puts the stringified path as a key. */
+  RuleKeyHasher<HASH> putKeyPath(Path key);
+
   /** Puts the field's value, Java types */
   RuleKeyHasher<HASH> putNull();
 

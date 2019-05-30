@@ -41,6 +41,12 @@ public class StringRuleKeyHasher implements RuleKeyHasher<String> {
   }
 
   @Override
+  public RuleKeyHasher<String> putKeyPath(Path key) {
+    parts.add(String.format("key(%s)", key));
+    return this;
+  }
+
+  @Override
   public StringRuleKeyHasher putNull() {
     parts.add("null()");
     return this;

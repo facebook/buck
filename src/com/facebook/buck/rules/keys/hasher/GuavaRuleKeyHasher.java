@@ -66,6 +66,11 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
   }
 
   @Override
+  public RuleKeyHasher<HashCode> putKeyPath(Path key) {
+    return this.putPathFast(RuleKeyHasherTypes.KEY, key);
+  }
+
+  @Override
   public GuavaRuleKeyHasher putNull() {
     hasher.putByte(RuleKeyHasherTypes.NULL);
     return this;

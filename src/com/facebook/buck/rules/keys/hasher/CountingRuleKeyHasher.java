@@ -47,6 +47,13 @@ public class CountingRuleKeyHasher<HASH> implements RuleKeyHasher<HASH> {
   }
 
   @Override
+  public CountingRuleKeyHasher<HASH> putKeyPath(Path key) {
+    count++;
+    delegate.putKeyPath(key);
+    return this;
+  }
+
+  @Override
   public CountingRuleKeyHasher<HASH> putNull() {
     count++;
     delegate.putNull();

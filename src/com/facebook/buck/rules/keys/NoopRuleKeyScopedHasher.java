@@ -19,6 +19,7 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Container;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Wrapper;
 import com.facebook.buck.util.Scope;
+import java.nio.file.Path;
 
 /** Does nothing. */
 public class NoopRuleKeyScopedHasher implements RuleKeyScopedHasher {
@@ -29,6 +30,11 @@ public class NoopRuleKeyScopedHasher implements RuleKeyScopedHasher {
 
   @Override
   public Scope keyScope(String key) {
+    return Scope.NOOP;
+  }
+
+  @Override
+  public Scope pathKeyScope(Path key) {
     return Scope.NOOP;
   }
 

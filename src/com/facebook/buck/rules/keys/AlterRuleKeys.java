@@ -37,8 +37,7 @@ public final class AlterRuleKeys {
 
   public static void amendKey(AbstractRuleKeyBuilder<?> sink, AddsToRuleKey appendable) {
     if (appendable instanceof RuleKeyAppendable) {
-      ((RuleKeyAppendable) appendable)
-          .appendToRuleKey((key, path) -> sink.setReflectively(key.toString(), path));
+      ((RuleKeyAppendable) appendable).appendToRuleKey(sink::setReflectivelyPathKey);
     }
 
     // Honor @AddToRuleKey on RuleKeyAppendable's in addition to their custom code. Having this be a

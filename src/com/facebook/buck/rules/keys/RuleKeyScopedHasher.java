@@ -18,9 +18,17 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.Scope;
+import java.nio.file.Path;
 
+/**
+ * Used to construct rulekey "scopes". The major use of these is to avoid adding meta-information
+ * about the scope if the scope doesn't add anything (i.e. a key scope will add a key only if
+ * something else is added to the rulekey within that scope).
+ */
 public interface RuleKeyScopedHasher {
   Scope keyScope(String key);
+
+  Scope pathKeyScope(Path key);
 
   Scope wrapperScope(RuleKeyHasher.Wrapper wrapper);
 

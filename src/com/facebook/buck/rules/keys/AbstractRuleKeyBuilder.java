@@ -49,8 +49,27 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> {
     this.scopedHasher = scopedHasher;
   }
 
+  /**
+   * Adds the key-value pair to the rulekey. If the builder skips adding the value, the key will
+   * also be skipped.
+   */
   public final AbstractRuleKeyBuilder<RULE_KEY> setReflectively(String key, @Nullable Object val) {
     try (Scope ignored = scopedHasher.keyScope(key)) {
+      try {
+        return setReflectively(val);
+      } catch (IOException e) {
+        throw new BuckUncheckedExecutionException(
+            e, String.format("When adding %s with value %s", key, val));
+      }
+    }
+  }
+
+  /**
+   * Adds the key-value pair to the rulekey. If the builder skips adding the value, the key will
+   * also be skipped.
+   */
+  public AbstractRuleKeyBuilder<RULE_KEY> setReflectivelyPathKey(Path key, @Nullable Object val) {
+    try (Scope ignored = scopedHasher.pathKeyScope(key)) {
       try {
         return setReflectively(val);
       } catch (IOException e) {
