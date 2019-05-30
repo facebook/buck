@@ -400,6 +400,27 @@ public class BuckUnixPath implements Path {
   }
 
   @Override
+  public int compareTo(Path other) {
+    if (other instanceof BuckUnixPath) {
+      return compareTo((BuckUnixPath) other);
+    }
+    return toString().compareTo(other.toString());
+  }
+
+  /** Lexicographically compares another path to this one */
+  private int compareTo(BuckUnixPath other) {
+    // lexicographic ordering just like {@link String#compareTo}
+    int lim = Math.min(this.segments.length, other.segments.length);
+    for (int i = 0; i < lim; i++) {
+      int res = segments[i].compareTo(other.segments[i]);
+      if (res != 0) {
+        return res;
+      }
+    }
+    return segments.length - other.segments.length;
+  }
+
+  @Override
   public boolean startsWith(Path other) {
     return compareSegmentsFrom(other, true);
   }
@@ -407,6 +428,16 @@ public class BuckUnixPath implements Path {
   @Override
   public boolean endsWith(Path other) {
     return compareSegmentsFrom(other, false);
+  }
+
+  @Override
+  public boolean startsWith(String other) {
+    return startsWith(fs.getPath(other));
+  }
+
+  @Override
+  public boolean endsWith(String other) {
+    return endsWith(fs.getPath(other));
   }
 
   private boolean compareSegmentsFrom(Path other, boolean startOrEnd) {
@@ -426,45 +457,19 @@ public class BuckUnixPath implements Path {
 
     int start = startOrEnd ? 0 : (segments.length - that.segments.length);
 
-    for (int i = 0; i < that.segments.length; i++) {
-      // intentional reference compare
-      if (segments[i + start] != that.segments[i]) {
+    return checkSegmentsEqual(that, start);
+  }
+
+  /** Checks that this path contains the other path's segments starting at start. */
+  private boolean checkSegmentsEqual(BuckUnixPath other, int start) {
+    // Paths are more likely to be different in later segments.
+    for (int i = other.segments.length - 1; i >= 0; i--) {
+      // Intentional reference comparison, these are interned.
+      if (segments[i + start] != other.segments[i]) {
         return false;
       }
     }
-
     return true;
-  }
-
-  @Override
-  public boolean startsWith(String other) {
-    return startsWith(fs.getPath(other));
-  }
-
-  @Override
-  public boolean endsWith(String other) {
-    return endsWith(fs.getPath(other));
-  }
-
-  @Override
-  public int compareTo(Path other) {
-    if (other instanceof BuckUnixPath) {
-      return compareTo((BuckUnixPath) other);
-    }
-    return toString().compareTo(other.toString());
-  }
-
-  /** Lexicographically compares another path to this one */
-  public int compareTo(BuckUnixPath other) {
-    // lexicographic ordering just like {@link String#compareTo}
-    int lim = Math.min(this.segments.length, other.segments.length);
-    for (int i = 0; i < lim; i++) {
-      int res = segments[i].compareTo(other.segments[i]);
-      if (res != 0) {
-        return res;
-      }
-    }
-    return segments.length - other.segments.length;
   }
 
   @Override
@@ -477,19 +482,12 @@ public class BuckUnixPath implements Path {
       return false;
     }
 
-    String[] otherSegments = ((BuckUnixPath) ob).segments;
-    if (segments.length != otherSegments.length) {
+    BuckUnixPath other = (BuckUnixPath) ob;
+    if (segments.length != other.segments.length) {
       return false;
     }
 
-    for (int i = 0; i < segments.length; i++) {
-      // intentional reference compare
-      if (segments[i] != otherSegments[i]) {
-        return false;
-      }
-    }
-
-    return true;
+    return checkSegmentsEqual(other, 0);
   }
 
   @Override
