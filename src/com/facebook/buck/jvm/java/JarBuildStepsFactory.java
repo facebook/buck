@@ -52,7 +52,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -61,7 +60,7 @@ import javax.annotation.Nullable;
 
 public class JarBuildStepsFactory
     implements AddsToRuleKey, RulePipelineStateFactory<JavacPipelineState> {
-  private static final Path METADATA_DIR = Paths.get("META-INF");
+  private static final String[] METADATA_DIRS = new String[] {"META-INF", "_STRIPPED_RESOURCES"};
 
   @CustomFieldBehavior(DefaultFieldSerialization.class)
   private final BuildTarget libraryTarget;
@@ -272,9 +271,18 @@ public class JarBuildStepsFactory
     // currently have the instrumentation to detect such enumeration perfectly, but annotation
     // processors are most commonly looking for files under META-INF, so as a stopgap we add
     // the listing of META-INF to the rule key.
-    return (SourcePath path) ->
-        (path instanceof ArchiveMemberSourcePath)
-            && ((ArchiveMemberSourcePath) path).getMemberPath().startsWith(METADATA_DIR);
+    return (SourcePath path) -> {
+      if (!(path instanceof ArchiveMemberSourcePath)) {
+        return false;
+      }
+      Path memberPath = ((ArchiveMemberSourcePath) path).getMemberPath();
+      for (String metadataPath : METADATA_DIRS) {
+        if (memberPath.startsWith(metadataPath)) {
+          return true;
+        }
+      }
+      return false;
+    };
   }
 
   public boolean useRulePipelining() {
