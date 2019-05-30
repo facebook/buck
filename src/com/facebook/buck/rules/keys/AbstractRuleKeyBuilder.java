@@ -82,6 +82,10 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> {
   /** Recursively serializes the value. Serialization of the key is handled outside. */
   protected AbstractRuleKeyBuilder<RULE_KEY> setReflectively(@Nullable Object val)
       throws IOException {
+    if (val instanceof SourcePath) {
+      return setSourcePath((SourcePath) val);
+    }
+
     if (val instanceof AddsToRuleKey) {
       return setAddsToRuleKey((AddsToRuleKey) val);
     }
@@ -168,10 +172,6 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> {
     if (val instanceof Path) {
       throw new HumanReadableException(
           "It's not possible to reliably disambiguate Paths. They are disallowed from rule keys");
-    }
-
-    if (val instanceof SourcePath) {
-      return setSourcePath((SourcePath) val);
     }
 
     if (val instanceof NonHashableSourcePathContainer) {
