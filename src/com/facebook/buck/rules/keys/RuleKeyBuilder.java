@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
@@ -63,8 +62,8 @@ import javax.annotation.Nullable;
  * rule keys. Concrete implementations may tweak behavior of the builder, and at the very minimum
  * should implement {@link #setAddsToRuleKey(AddsToRuleKey)}, and {@link #setBuildRule(BuildRule)}.
  *
- * <p>This class implements {@link RuleKeyObjectSink} interface which is the primary mechanism of
- * how {@link RuleKeyFactory} and {@link AddsToRuleKey} classes feed the builder.
+ * <p>This class implements {@link AbstractRuleKeyBuilder} interface which is the primary mechanism
+ * of how {@link RuleKeyFactory} and {@link AddsToRuleKey} classes feed the builder.
  *
  * <p>Each element fed to the builder is a (key, value) pair. Keys are always simple strings,
  * typically the name of a field annotated with {@link AddToRuleKey}. Values on the other hand may

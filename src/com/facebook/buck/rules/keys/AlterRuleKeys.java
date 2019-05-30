@@ -18,7 +18,6 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyAppendable;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.log.Logger;
 import com.google.common.cache.CacheBuilder;
@@ -33,13 +32,13 @@ public final class AlterRuleKeys {
   private static final ConcurrentHashMap<Class<?>, String> pseudoNameCache =
       new ConcurrentHashMap<>();
 
-  public static void amendKey(RuleKeyObjectSink sink, BuildRule rule) {
+  public static void amendKey(AbstractRuleKeyBuilder<?> sink, BuildRule rule) {
     amendKey(sink, (Object) rule);
   }
 
-  public static void amendKey(RuleKeyObjectSink sink, AddsToRuleKey appendable) {
+  public static void amendKey(AbstractRuleKeyBuilder<?> sink, AddsToRuleKey appendable) {
     if (appendable instanceof RuleKeyAppendable) {
-      ((RuleKeyAppendable) appendable).appendToRuleKey(sink);
+      ((RuleKeyAppendable) appendable).appendToRuleKey(sink::setReflectively);
     }
 
     // Honor @AddToRuleKey on RuleKeyAppendable's in addition to their custom code. Having this be a
@@ -49,7 +48,7 @@ public final class AlterRuleKeys {
     amendKey(sink, (Object) appendable);
   }
 
-  private static void amendKey(RuleKeyObjectSink sink, Object appendable) {
+  private static void amendKey(AbstractRuleKeyBuilder<?> sink, Object appendable) {
     Class<?> clazz = appendable.getClass();
     String className = clazz.getName();
     if (clazz.isAnonymousClass() || clazz.isSynthetic()) {

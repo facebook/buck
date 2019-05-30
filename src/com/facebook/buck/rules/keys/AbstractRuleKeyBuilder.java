@@ -19,7 +19,6 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -39,7 +38,11 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
-public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
+/**
+ * Base class for rulekey builders. Implements much of the logic of computing keys from {@link
+ * com.facebook.buck.core.rulekey.AddToRuleKey}-annotated fields.
+ */
+public abstract class AbstractRuleKeyBuilder<RULE_KEY> {
   private static final Logger LOG = Logger.get(AbstractRuleKeyBuilder.class);
   final RuleKeyScopedHasher scopedHasher;
 
@@ -47,7 +50,6 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectS
     this.scopedHasher = scopedHasher;
   }
 
-  @Override
   public final AbstractRuleKeyBuilder<RULE_KEY> setReflectively(String key, @Nullable Object val) {
     try (Scope ignored = scopedHasher.keyScope(key)) {
       try {

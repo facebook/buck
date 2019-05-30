@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.DependencyAggregation;
@@ -785,7 +784,7 @@ abstract class AbstractCxxSourceRuleFactory {
       this.commandHashCache = commandHashCache;
     }
 
-    public RuleKeyObjectSink setPath(Path ideallyRelative) {
+    public HashBuilder setPath(Path ideallyRelative) {
       // This matches default rulekey computation (skipping the hash, though).
       if (ideallyRelative.isAbsolute()) {
         hasher.putString(ideallyRelative.getFileName().toString());
@@ -796,7 +795,7 @@ abstract class AbstractCxxSourceRuleFactory {
     }
 
     @Override
-    protected AbstractRuleKeyBuilder<String> setSingleValue(@Nullable Object val) {
+    protected HashBuilder setSingleValue(@Nullable Object val) {
       if (val == null) { // Null value first
         hasher.putNull();
       } else if (val instanceof Boolean) { // JRE types
@@ -818,24 +817,24 @@ abstract class AbstractCxxSourceRuleFactory {
     }
 
     @Override
-    protected AbstractRuleKeyBuilder<String> setBuildRule(BuildRule rule) {
+    protected HashBuilder setBuildRule(BuildRule rule) {
       throw new IllegalStateException();
     }
 
     @Override
-    protected AbstractRuleKeyBuilder<String> setAddsToRuleKey(AddsToRuleKey appendable) {
+    protected HashBuilder setAddsToRuleKey(AddsToRuleKey appendable) {
       hasher.putString(commandHashCache.apply(appendable));
       return this;
     }
 
     @Override
-    protected AbstractRuleKeyBuilder<String> setSourcePath(SourcePath sourcePath) {
+    protected HashBuilder setSourcePath(SourcePath sourcePath) {
       setPath(getPathResolver().getIdeallyRelativePath(sourcePath));
       return this;
     }
 
     @Override
-    protected AbstractRuleKeyBuilder<String> setNonHashingSourcePath(SourcePath sourcePath) {
+    protected HashBuilder setNonHashingSourcePath(SourcePath sourcePath) {
       return setSourcePath(sourcePath);
     }
 

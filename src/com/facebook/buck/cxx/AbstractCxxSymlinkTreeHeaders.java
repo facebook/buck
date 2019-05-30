@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.RuleKeyAppendable;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
@@ -136,7 +135,7 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
   }
 
   @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
+  public void appendToRuleKey(RuleKeyAppendableSink sink) {
     // Add stringified paths as keys. The paths in this map represent include directives rather
     // than actual on-disk locations. Also, manually wrap the beginning and end of the structure to
     // delimit the contents of this map from other fields that may have the same key.

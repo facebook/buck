@@ -170,9 +170,9 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
       // its structure information: `myPaths;Optional;List`. This adds additional overhead of
       // bookkeeping that information and counters any benefits caching would provide here.
       try (Scope ignored = getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.APPENDABLE)) {
-        try (RuleKeyScopedHasher.ContainerScope tupleScope =
+        try (RuleKeyScopedHasher.ContainerScope ignored2 =
             getScopedHasher().containerScope(RuleKeyHasher.Container.TUPLE)) {
-          AlterRuleKeys.amendKey(new ScopedRuleKeyObjectSink(tupleScope, this), appendable);
+          AlterRuleKeys.amendKey(this, appendable);
         }
       }
       return this;

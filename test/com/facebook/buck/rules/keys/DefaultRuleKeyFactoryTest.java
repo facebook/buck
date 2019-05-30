@@ -27,7 +27,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyAppendable;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
@@ -570,7 +569,7 @@ public class DefaultRuleKeyFactoryTest {
     @AddToRuleKey private String wine = "cabernet";
 
     @Override
-    public void appendToRuleKey(RuleKeyObjectSink sink) {
+    public void appendToRuleKey(RuleKeyAppendableSink sink) {
       sink.setReflectively("cheese", "brie");
     }
 

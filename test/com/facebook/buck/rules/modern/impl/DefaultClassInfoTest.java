@@ -28,7 +28,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -40,7 +39,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ClassInfo;
@@ -69,8 +67,6 @@ public class DefaultClassInfoTest {
 
   @SuppressWarnings("unchecked")
   private Consumer<OutputPath> outputConsumer = createStrictMock(Consumer.class);
-
-  private RuleKeyObjectSink ruleKeyObjectSink = createStrictMock(RuleKeyObjectSink.class);
 
   private ProjectFilesystem filesystem = new FakeProjectFilesystem(Paths.get("/project/root"));
 
@@ -134,27 +130,6 @@ public class DefaultClassInfoTest {
             ImmutableList.of(targetSourcePath2, targetSourcePath3, pathSourcePath));
     ClassInfo<DerivedClass> classInfo = DefaultClassInfoFactory.forInstance(buildable);
     assertEquals("derived_class", classInfo.getType());
-
-    expect(
-            ruleKeyObjectSink.setReflectively(
-                ".class", "com.facebook.buck.rules.modern.impl.DefaultClassInfoTest$DerivedClass"))
-        .andReturn(ruleKeyObjectSink);
-    expect(ruleKeyObjectSink.setReflectively("enabled", true)).andReturn(ruleKeyObjectSink);
-    expect(
-            ruleKeyObjectSink.setReflectively(
-                "inputs", ImmutableList.of(targetSourcePath2, targetSourcePath3, pathSourcePath)))
-        .andReturn(ruleKeyObjectSink);
-    expect(ruleKeyObjectSink.setReflectively("something", 2l)).andReturn(ruleKeyObjectSink);
-    expect(ruleKeyObjectSink.setReflectively("value", 1)).andReturn(ruleKeyObjectSink);
-
-    expect(ruleKeyObjectSink.setReflectively("baseInputPath", targetSourcePath1))
-        .andReturn(ruleKeyObjectSink);
-    expect(ruleKeyObjectSink.setReflectively("baseOutputPath", buildable.baseOutputPath))
-        .andReturn(ruleKeyObjectSink);
-
-    replay(ruleKeyObjectSink);
-    AlterRuleKeys.amendKey(ruleKeyObjectSink, buildable);
-    verify(ruleKeyObjectSink);
 
     expect(inputRuleResolver.resolve(targetSourcePath1)).andReturn(Optional.of(rule1));
     expect(inputRuleResolver.resolve(targetSourcePath2)).andReturn(Optional.of(rule2));

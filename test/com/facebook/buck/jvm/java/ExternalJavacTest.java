@@ -16,21 +16,16 @@
 
 package com.facebook.buck.jvm.java;
 
-import static org.easymock.EasyMock.anyObject;
-import static org.easymock.EasyMock.capture;
-import static org.easymock.EasyMock.eq;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -41,11 +36,13 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.rules.keys.AlterRuleKeys;
+import com.facebook.buck.rules.keys.RuleKeyDiagnostics.Result;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -59,10 +56,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.SortedSet;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
-import org.easymock.Capture;
 import org.easymock.EasyMockSupport;
 import org.junit.Before;
 import org.junit.Rule;
@@ -119,26 +116,14 @@ public class ExternalJavacTest extends EasyMockSupport {
     // TODO(cjhopman): This test name implies we should be hashing the external file not just
     // adding its path.
     Path javac = root.newExecutableFile();
-    ProcessExecutorParams javacExe =
-        ProcessExecutorParams.builder()
-            .addCommand(javac.toAbsolutePath().toString(), "-version")
-            .build();
-    FakeProcess javacProc = new FakeProcess(0, "", "");
-    FakeProcessExecutor executor = new FakeProcessExecutor(ImmutableMap.of(javacExe, javacProc));
-    Javac compiler =
-        new ExternalJavacProvider(executor, FakeSourcePath.of(javac))
-            .resolve(new TestActionGraphBuilder());
-    RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
-    Capture<Supplier<Tool>> identifier = Capture.newInstance();
-    expect(sink.setReflectively(eq(".class"), anyObject())).andReturn(sink);
-    expect(sink.setReflectively(eq("javac"), capture(identifier))).andReturn(sink);
-    replay(sink);
-    AlterRuleKeys.amendKey(sink, compiler);
-    verify(sink);
-    Tool tool = identifier.getValue().get();
 
-    assertTrue(tool instanceof VersionedTool);
-    assertEquals(javac.toString(), ((VersionedTool) tool).getVersion());
+    Javac compiler = createExternalJavac(javac, "");
+    Javac otherCompiler = createExternalJavac(javac, "");
+    Path otherJavac = root.newExecutableFile();
+    Javac otherPathCompiler = createExternalJavac(otherJavac, "");
+
+    assertEquals(computeRuleKey(compiler), computeRuleKey(otherCompiler));
+    assertNotEquals(computeRuleKey(compiler), computeRuleKey(otherPathCompiler));
   }
 
   @Test
@@ -155,7 +140,10 @@ public class ExternalJavacTest extends EasyMockSupport {
 
     TestActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget javacTarget = BuildTargetFactory.newInstance("//:javac");
-    ImmutableList<String> commandPrefix = ImmutableList.of("command", "prefix");
+    List<String> commandPrefix = new ArrayList<>();
+    commandPrefix.add("command");
+    commandPrefix.add("prefix");
+
     class SimpleBinaryRule extends AbstractBuildRule implements BinaryBuildRule {
       protected SimpleBinaryRule(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
         super(buildTarget, projectFilesystem);
@@ -164,9 +152,12 @@ public class ExternalJavacTest extends EasyMockSupport {
       @Override
       public Tool getExecutableCommand() {
         return new Tool() {
+          @AddToRuleKey
+          private final ImmutableList<String> flags = ImmutableList.copyOf(commandPrefix);
+
           @Override
           public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-            return commandPrefix;
+            return flags;
           }
 
           @Override
@@ -201,25 +192,49 @@ public class ExternalJavacTest extends EasyMockSupport {
     Javac compiler =
         new ExternalJavacProvider(executor, DefaultBuildTargetSourcePath.of(javacTarget))
             .resolve(graphBuilder);
-    RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
-    Capture<Supplier<Tool>> identifier = Capture.newInstance();
-    expect(sink.setReflectively(eq(".class"), anyObject())).andReturn(sink);
-    expect(sink.setReflectively(eq("javac"), capture(identifier))).andReturn(sink);
-    replay(sink);
-    AlterRuleKeys.amendKey(sink, compiler);
-    verify(sink);
-    Tool tool = identifier.getValue().get();
 
-    assertEquals(commandPrefix, tool.getCommandPrefix(graphBuilder.getSourcePathResolver()));
+    String key = computeRuleKey(compiler);
+
+    commandPrefix.add("someflag");
+
+    compiler =
+        new ExternalJavacProvider(executor, DefaultBuildTargetSourcePath.of(javacTarget))
+            .resolve(graphBuilder);
+    String otherKey = computeRuleKey(compiler);
+
+    assertNotEquals(key, otherKey);
+
+    // Just confirm that keys are stable so that we the not equals above is actually due to the
+    // command change.
+
+    compiler =
+        new ExternalJavacProvider(executor, DefaultBuildTargetSourcePath.of(javacTarget))
+            .resolve(graphBuilder);
+
+    assertEquals(otherKey, computeRuleKey(compiler));
   }
 
   @Test
   public void externalJavacWillHashTheJavacVersionIfPresent() throws IOException {
     Path javac = root.newExecutableFile();
 
-    String reportedJavacVersion = "mozzarella";
+    Javac compiler = createExternalJavac(javac, "mozzarella");
+    Javac otherCompiler = createExternalJavac(javac, "brie");
+    Path otherJavac = root.newExecutableFile();
+    Javac otherPathCompiler = createExternalJavac(otherJavac, "mozzarella");
 
-    JavacVersion javacVersion = JavacVersion.of(reportedJavacVersion);
+    assertEquals(computeRuleKey(compiler), computeRuleKey(otherPathCompiler));
+    assertNotEquals(computeRuleKey(compiler), computeRuleKey(otherCompiler));
+  }
+
+  public String computeRuleKey(Javac compiler) {
+    Result<RuleKey, String> result =
+        new TestDefaultRuleKeyFactory(new DummyFileHashCache(), new TestActionGraphBuilder())
+            .buildForDiagnostics(compiler, new StringRuleKeyHasher());
+    return result.diagKey;
+  }
+
+  public Javac createExternalJavac(Path javac, String reportedJavacVersion) {
     ProcessExecutorParams javacExe =
         ProcessExecutorParams.builder()
             .addCommand(javac.toAbsolutePath().toString(), "-version")
@@ -227,21 +242,8 @@ public class ExternalJavacTest extends EasyMockSupport {
     FakeProcess javacProc = new FakeProcess(0, "", reportedJavacVersion);
     FakeProcessExecutor executor = new FakeProcessExecutor(ImmutableMap.of(javacExe, javacProc));
 
-    Javac compiler =
-        new ExternalJavacProvider(executor, FakeSourcePath.of(javac))
-            .resolve(new TestActionGraphBuilder());
-
-    RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
-    Capture<Supplier<Tool>> identifier = Capture.newInstance();
-    expect(sink.setReflectively(eq(".class"), anyObject())).andReturn(sink);
-    expect(sink.setReflectively(eq("javac"), capture(identifier))).andReturn(sink);
-    replay(sink);
-    AlterRuleKeys.amendKey(sink, compiler);
-    verify(sink);
-    Tool tool = identifier.getValue().get();
-
-    assertTrue(tool instanceof VersionedTool);
-    assertEquals(javacVersion.toString(), ((VersionedTool) tool).getVersion());
+    return new ExternalJavacProvider(executor, FakeSourcePath.of(javac))
+        .resolve(new TestActionGraphBuilder());
   }
 
   private ImmutableList.Builder<String> getArgs() {

@@ -24,5 +24,16 @@ package com.facebook.buck.core.rulekey;
  */
 @Deprecated
 public interface RuleKeyAppendable extends AddsToRuleKey {
-  void appendToRuleKey(RuleKeyObjectSink sink);
+  /**
+   * Deprecated. Implementations of {@link RuleKeyAppendable} use this to add things to rulekey
+   * builders.
+   */
+  @Deprecated
+  interface RuleKeyAppendableSink {
+    void setReflectively(String key, Object value);
+  }
+
+  /** Deprecated. Add additional custom things to the rulekey builder. */
+  @Deprecated
+  void appendToRuleKey(RuleKeyAppendableSink sink);
 }

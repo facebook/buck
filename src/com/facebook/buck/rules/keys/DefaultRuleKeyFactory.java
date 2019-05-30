@@ -18,7 +18,6 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasDeclaredAndExtraDeps;
@@ -143,7 +142,7 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
         newPopulatedBuilder(appendable, hasher).buildResult(Function.identity()));
   }
 
-  private void addDepsToRuleKey(BuildRule buildRule, RuleKeyObjectSink sink) {
+  private void addDepsToRuleKey(BuildRule buildRule, AbstractRuleKeyBuilder<?> sink) {
     if (buildRule instanceof HasDeclaredAndExtraDeps) {
       // TODO(mkosiba): We really need to get rid of declared/extra deps in rules. Instead
       // rules should explicitly take the needed sub-sets of deps as constructor args.
