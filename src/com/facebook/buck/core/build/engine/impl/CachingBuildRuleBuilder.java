@@ -49,7 +49,6 @@ import com.facebook.buck.core.build.engine.manifest.ManifestFetchResult;
 import com.facebook.buck.core.build.engine.manifest.ManifestStoreResult;
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.engine.type.DepFiles;
-import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.event.BuildRuleExecutionEvent;
@@ -204,7 +203,6 @@ class CachingBuildRuleBuilder {
       DepFiles depFiles,
       FileHashCache fileHashCache,
       long maxDepFileCacheEntries,
-      MetadataStorage metadataStorage,
       SourcePathResolver pathResolver,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
@@ -276,7 +274,6 @@ class CachingBuildRuleBuilder {
             this::onOutputsWillChange,
             eventBus,
             buildInfoStoreManager,
-            metadataStorage,
             onDiskBuildInfo);
     inputBasedRuleKeyManager =
         new InputBasedRuleKeyManager(

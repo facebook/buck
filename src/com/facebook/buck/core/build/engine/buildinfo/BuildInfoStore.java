@@ -17,20 +17,14 @@
 package com.facebook.buck.core.build.engine.buildinfo;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 
 /** Repository of build metadata. */
 public interface BuildInfoStore extends Closeable {
-  static Path getMetadataTypePath(ProjectFilesystem filesystem) {
-    return filesystem.getBuckPaths().getScratchDir().resolve("metadata.type");
-  }
-
   Optional<String> readMetadata(BuildTarget buildTarget, String key);
 
   @Override

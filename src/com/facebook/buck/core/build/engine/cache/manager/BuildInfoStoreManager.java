@@ -17,13 +17,10 @@
 package com.facebook.buck.core.build.engine.cache.manager;
 
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfoStore;
-import com.facebook.buck.core.build.engine.buildinfo.FilesystemBuildInfoStore;
 import com.facebook.buck.core.build.engine.buildinfo.SQLiteBuildInfoStore;
-import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** Manages the lifetimes of all {@link BuildInfoStore}s used in the build. */
@@ -37,31 +34,15 @@ public class BuildInfoStoreManager implements AutoCloseable {
     }
   }
 
-  public BuildInfoStore get(ProjectFilesystem filesystem, MetadataStorage metadataStorage) {
+  public BuildInfoStore get(ProjectFilesystem filesystem) {
     return buildInfoStores.computeIfAbsent(
         filesystem.getRootPath(),
         path -> {
           try {
-            switch (getMetadataStorage(filesystem, metadataStorage)) {
-              case SQLITE:
-                return new SQLiteBuildInfoStore(filesystem);
-              case FILESYSTEM:
-                return new FilesystemBuildInfoStore(filesystem);
-              default:
-                throw new IllegalStateException();
-            }
+            return new SQLiteBuildInfoStore(filesystem);
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
         });
-  }
-
-  private static MetadataStorage getMetadataStorage(
-      ProjectFilesystem filesystem, MetadataStorage metadataStorage) {
-    Path metadataPath = BuildInfoStore.getMetadataTypePath(filesystem);
-    Optional<String> metadataString = filesystem.readFileIfItExists(metadataPath);
-    // If we haven't written metadata.type at this point, we must be in a fresh directory.  Use the
-    // default for this build engine.
-    return metadataString.map(MetadataStorage::valueOf).orElse(metadataStorage);
   }
 }

@@ -20,9 +20,7 @@ import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.engine.buildinfo.DefaultOnDiskBuildInfo;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
-import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
-import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
@@ -139,7 +137,7 @@ public class PerfRuleKeyCommand extends AbstractPerfCommand<PreparedState> {
       if (keyType == KeyType.DEPFILE) {
         if (unsafeReadOnDiskDepfiles) {
           printWarning(params, "Unsafely reading on-disk depfiles.");
-          usedInputs = readDepFiles(params, rulesInGraph);
+          usedInputs = readDepFiles(rulesInGraph);
         } else {
           printWarning(
               params,
@@ -275,15 +273,9 @@ public class PerfRuleKeyCommand extends AbstractPerfCommand<PreparedState> {
   }
 
   private Map<BuildRule, ImmutableList<DependencyFileEntry>> readDepFiles(
-      CommandRunnerParams params, ImmutableList<BuildRule> rulesInGraph) {
+      ImmutableList<BuildRule> rulesInGraph) {
     Map<BuildRule, ImmutableList<DependencyFileEntry>> usedInputs = new ConcurrentHashMap<>();
     try (BuildInfoStoreManager buildInfoStoreManager = new BuildInfoStoreManager()) {
-      MetadataStorage metadataStorage =
-          params
-              .getBuckConfig()
-              .getView(CachingBuildEngineBuckConfig.class)
-              .getBuildMetadataStorage();
-
       rulesInGraph.forEach(
           rule -> {
             if (rule instanceof SupportsDependencyFileRuleKey
@@ -293,7 +285,7 @@ public class PerfRuleKeyCommand extends AbstractPerfCommand<PreparedState> {
                     new DefaultOnDiskBuildInfo(
                             rule.getBuildTarget(),
                             rule.getProjectFilesystem(),
-                            buildInfoStoreManager.get(rule.getProjectFilesystem(), metadataStorage))
+                            buildInfoStoreManager.get(rule.getProjectFilesystem()))
                         .getValues(BuildInfo.MetadataKey.DEP_FILE)
                         .orElseThrow(
                             () ->

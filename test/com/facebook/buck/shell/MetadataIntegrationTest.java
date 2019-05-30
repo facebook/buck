@@ -62,12 +62,12 @@ public class MetadataIntegrationTest {
 
     // Check permissions on metadata.type
     ProjectFilesystem fs = workspace.asCell().getFilesystem();
-    Path metadataType = fs.getBuckPaths().getScratchDir().resolve("metadata.type");
+    Path metadataType = fs.getBuckPaths().getScratchDir().resolve("metadata.db");
     Set<PosixFilePermission> perms = fs.getPosixFilePermissions(metadataType);
     assertEquals(perms, EnumSet.of(OWNER_READ, OWNER_WRITE, GROUP_READ, OTHERS_READ));
 
     // As a proxy for being able to read from a build performed by another user, check that we can
-    // still build if we remove write permissions from metadata.type.
+    // still build if we remove write permissions from metadata.db.
     Files.setPosixFilePermissions(
         fs.getPathForRelativeExistingPath(metadataType),
         EnumSet.of(OWNER_READ, GROUP_READ, OTHERS_READ));

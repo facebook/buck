@@ -36,7 +36,6 @@ import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.build.engine.impl.CachingBuildEngineTest.CommonFixture;
 import com.facebook.buck.core.build.engine.type.DepFiles;
-import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -60,10 +59,8 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.concurrent.Executors;
@@ -73,8 +70,10 @@ import org.junit.Assume;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+@RunWith(Parameterized.class)
 public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
   public static final boolean DEBUG = false;
 
@@ -102,17 +101,14 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
 
   @Parameterized.Parameters(name = "{0}-{1}")
   public static Collection<Object[]> data() {
-    return Streams.concat(
-            Arrays.stream(MetadataStorage.values()).map(v -> new Object[] {v, PipelineType.NONE}),
-            Stream.of(
-                new Object[] {MetadataStorage.SQLITE, PipelineType.BEGINNING},
-                new Object[] {MetadataStorage.SQLITE, PipelineType.MIDDLE}))
+    return Stream.of(
+            new Object[] {PipelineType.NONE},
+            new Object[] {PipelineType.BEGINNING},
+            new Object[] {PipelineType.MIDDLE})
         .collect(ImmutableList.toImmutableList());
   }
 
-  public CachingBuildEngineInitializableFromDiskTest(
-      MetadataStorage metadataStorage, PipelineType pipelineType) {
-    super(metadataStorage);
+  public CachingBuildEngineInitializableFromDiskTest(PipelineType pipelineType) {
     this.pipelineType = pipelineType;
   }
 
@@ -646,7 +642,7 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
     buildInfoStoreManager = new BuildInfoStoreManager();
     filesystem.deleteRecursivelyIfExists(filesystem.getBuckPaths().getBuckOut());
     Files.createDirectories(filesystem.resolve(filesystem.getBuckPaths().getScratchDir()));
-    buildInfoStore = buildInfoStoreManager.get(filesystem, metadataStorage);
+    buildInfoStore = buildInfoStoreManager.get(filesystem);
     System.out.println(
         buildInfoStore.readMetadata(dependency.getBuildTarget(), BuildInfo.MetadataKey.RULE_KEY));
   }

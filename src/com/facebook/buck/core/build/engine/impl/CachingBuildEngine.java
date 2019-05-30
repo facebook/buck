@@ -36,7 +36,6 @@ import com.facebook.buck.core.build.engine.config.ResourceAwareSchedulingInfo;
 import com.facebook.buck.core.build.engine.delegate.CachingBuildEngineDelegate;
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.engine.type.DepFiles;
-import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
@@ -124,7 +123,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   private final WeightedListeningExecutorService service;
   private final BuildType buildMode;
-  private final MetadataStorage metadataStorage;
   private final DepFiles depFiles;
   private final long maxDepFileCacheEntries;
   private final BuildRuleResolver resolver;
@@ -156,7 +154,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       Optional<BuildRuleStrategy> customBuildRuleStrategy,
       WeightedListeningExecutorService service,
       BuildType buildMode,
-      MetadataStorage metadataStorage,
       DepFiles depFiles,
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
@@ -174,7 +171,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         customBuildRuleStrategy,
         service,
         buildMode,
-        metadataStorage,
         depFiles,
         maxDepFileCacheEntries,
         artifactCacheSizeLimit,
@@ -205,7 +201,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       Optional<BuildRuleStrategy> customBuildRuleStrategy,
       WeightedListeningExecutorService service,
       BuildType buildMode,
-      MetadataStorage metadataStorage,
       DepFiles depFiles,
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
@@ -225,7 +220,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.manifestService = manifestService;
     this.service = service;
     this.buildMode = buildMode;
-    this.metadataStorage = metadataStorage;
     this.depFiles = depFiles;
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
@@ -478,8 +472,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private ListenableFuture<BuildResult> processBuildRule(
       BuildRule rule, BuildEngineBuildContext buildContext, ExecutionContext executionContext) {
 
-    BuildInfoStore buildInfoStore =
-        buildInfoStoreManager.get(rule.getProjectFilesystem(), metadataStorage);
+    BuildInfoStore buildInfoStore = buildInfoStoreManager.get(rule.getProjectFilesystem());
     OnDiskBuildInfo onDiskBuildInfo =
         buildContext.createOnDiskBuildInfoFor(
             rule.getBuildTarget(), rule.getProjectFilesystem(), buildInfoStore);
@@ -504,7 +497,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             depFiles,
             fileHashCache,
             maxDepFileCacheEntries,
-            metadataStorage,
             resolver.getSourcePathResolver(),
             targetConfigurationSerializer,
             resourceAwareSchedulingInfo,

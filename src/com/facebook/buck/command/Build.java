@@ -186,10 +186,10 @@ public class Build implements Closeable {
                     configuredPaths.getSymlinkPathForDir(unconfiguredPaths.getScratchDir()));
         for (Map.Entry<Path, Path> entry : paths.entrySet()) {
           filesystem.deleteRecursivelyIfExists(entry.getKey());
+          Path parent = entry.getKey().getParent();
+          filesystem.mkdirs(parent);
           filesystem.createSymLink(
-              entry.getKey(),
-              entry.getKey().getParent().relativize(entry.getValue()),
-              /* force */ false);
+              entry.getKey(), parent.relativize(entry.getValue()), /* force */ false);
         }
       }
     }
@@ -200,10 +200,10 @@ public class Build implements Closeable {
       ProjectFilesystem filesystem = cell.getFilesystem();
       BuckPaths buckPaths = filesystem.getBuckPaths();
 
-      filesystem.deleteFileAtPathIfExists(buckPaths.getProjectRootDir());
-
-      filesystem.writeContentsToPath(
-          filesystem.getRootPath().toString(), buckPaths.getProjectRootDir());
+      Path projectRootDir = buckPaths.getProjectRootDir();
+      filesystem.deleteFileAtPathIfExists(projectRootDir);
+      filesystem.createParentDirs(projectRootDir);
+      filesystem.writeContentsToPath(filesystem.getRootPath().toString(), projectRootDir);
     }
   }
 
@@ -294,7 +294,6 @@ public class Build implements Closeable {
    */
   public List<BuildEngineResult> initializeBuild(ImmutableList<BuildRule> rulesToBuild)
       throws IOException {
-
     setupBuildSymlinks();
 
     return rulesToBuild.stream()

@@ -19,7 +19,6 @@ package com.facebook.buck.core.build.engine.buildinfo;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo.MetadataKey;
-import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -35,29 +34,13 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collection;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-@RunWith(Parameterized.class)
 public class DefaultOnDiskBuildInfoIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  @Parameterized.Parameters(name = "{0}")
-  public static Collection<Object[]> data() {
-    return Arrays.stream(MetadataStorage.values())
-        .map(v -> new Object[] {v})
-        .collect(ImmutableList.toImmutableList());
-  }
-
-  private final MetadataStorage metadataStorage;
-
-  public DefaultOnDiskBuildInfoIntegrationTest(MetadataStorage metadataStorage) {
-    this.metadataStorage = metadataStorage;
-  }
+  public DefaultOnDiskBuildInfoIntegrationTest() {}
 
   @Test
   public void testPathsAndMetadataForArtifactAreCorrect() throws IOException {
@@ -68,10 +51,8 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
 
     Clock clock = FakeClock.doNotCare();
     BuildId buildId = new BuildId("cat");
-    BuildInfoStore buildInfoStore =
-        metadataStorage == MetadataStorage.FILESYSTEM
-            ? new FilesystemBuildInfoStore(projectFilesystem)
-            : new SQLiteBuildInfoStore(projectFilesystem);
+    BuildInfoStore buildInfoStore = new SQLiteBuildInfoStore(projectFilesystem);
+
     BuildInfoRecorder recorder =
         new BuildInfoRecorder(
             buildTarget, projectFilesystem, buildInfoStore, clock, buildId, ImmutableMap.of());

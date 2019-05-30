@@ -69,7 +69,6 @@ import com.facebook.buck.core.build.engine.manifest.Manifest;
 import com.facebook.buck.core.build.engine.manifest.ManifestUtil;
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.engine.type.DepFiles;
-import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
@@ -190,8 +189,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -230,7 +227,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Ensuring that build rule caching works correctly in Buck is imperative for both its performance
@@ -255,7 +251,6 @@ public class CachingBuildEngineTest {
       new DefaultDependencyFileRuleKeyFactory(
           FIELD_LOADER, new DummyFileHashCache(), DEFAULT_RULE_FINDER);
 
-  @RunWith(Parameterized.class)
   public abstract static class CommonFixture extends EasyMockSupport {
     @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
@@ -273,25 +268,13 @@ public class CachingBuildEngineTest {
     protected DefaultRuleKeyFactory defaultRuleKeyFactory;
     protected InputBasedRuleKeyFactory inputBasedRuleKeyFactory;
     protected BuildRuleDurationTracker durationTracker;
-    protected MetadataStorage metadataStorage;
-
-    @Parameterized.Parameters(name = "{0}")
-    public static Collection<Object[]> data() {
-      return Arrays.stream(MetadataStorage.values())
-          .map(v -> new Object[] {v})
-          .collect(ImmutableList.toImmutableList());
-    }
-
-    public CommonFixture(MetadataStorage metadataStorage) {
-      this.metadataStorage = metadataStorage;
-    }
 
     @Before
     public void setUp() throws Exception {
       filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
       buildInfoStoreManager = new BuildInfoStoreManager();
       Files.createDirectories(filesystem.resolve(filesystem.getBuckPaths().getScratchDir()));
-      buildInfoStore = buildInfoStoreManager.get(filesystem, metadataStorage);
+      buildInfoStore = buildInfoStoreManager.get(filesystem);
       defaultRemoteBuildRuleCompletionWaiter = new NoOpRemoteBuildRuleCompletionWaiter();
       fileHashCache =
           StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
@@ -339,9 +322,6 @@ public class CachingBuildEngineTest {
   }
 
   public static class OtherTests extends CommonFixture {
-    public OtherTests(MetadataStorage metadataStorage) {
-      super(metadataStorage);
-    }
 
     /**
      * Tests what should happen when a rule is built for the first time: it should have no cached
@@ -1711,9 +1691,6 @@ public class CachingBuildEngineTest {
   }
 
   public static class InputBasedRuleKeyTests extends CommonFixture {
-    public InputBasedRuleKeyTests(MetadataStorage metadataStorage) {
-      super(metadataStorage);
-    }
 
     @Test
     public void inputBasedRuleKeyAndArtifactAreWrittenForSupportedRules() throws Exception {
@@ -2077,10 +2054,6 @@ public class CachingBuildEngineTest {
       private BuildRule rule;
       private FakeStrategy strategy;
 
-      public CustomStrategyTests(MetadataStorage metadataStorage) {
-        super(metadataStorage);
-      }
-
       interface Builder {
         ListenableFuture<Optional<BuildResult>> build(
             ListeningExecutorService service, BuildRule rule, BuildStrategyContext executorRunner);
@@ -2398,10 +2371,6 @@ public class CachingBuildEngineTest {
   public static class DepFileTests extends CommonFixture {
 
     private DefaultDependencyFileRuleKeyFactory depFileFactory;
-
-    public DepFileTests(MetadataStorage metadataStorage) {
-      super(metadataStorage);
-    }
 
     @Before
     public void setUpDepFileFixture() {
@@ -2944,10 +2913,6 @@ public class CachingBuildEngineTest {
   }
 
   public static class ManifestTests extends CommonFixture {
-    public ManifestTests(MetadataStorage metadataStorage) {
-      super(metadataStorage);
-    }
-
     private static Optional<RuleKey> getManifestRuleKeyForTest(
         CachingBuildEngine engine, SupportsDependencyFileRuleKey rule, BuckEventBus eventBus)
         throws IOException {
@@ -3561,10 +3526,6 @@ public class CachingBuildEngineTest {
   }
 
   public static class UncachableRuleTests extends CommonFixture {
-    public UncachableRuleTests(MetadataStorage metadataStorage) {
-      super(metadataStorage);
-    }
-
     @Test
     public void uncachableRulesDoNotTouchTheCache() throws Exception {
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -3633,10 +3594,6 @@ public class CachingBuildEngineTest {
   }
 
   public static class ScheduleOverrideTests extends CommonFixture {
-    public ScheduleOverrideTests(MetadataStorage metadataStorage) {
-      super(metadataStorage);
-    }
-
     @Test
     public void customWeights() throws Exception {
       BuildTarget target1 = BuildTargetFactory.newInstance("//:rule1");
@@ -3748,10 +3705,6 @@ public class CachingBuildEngineTest {
     // Use a executor service which uses a new thread for every task to help expose case where
     // the build engine issues begin and end rule events on different threads.
     private static final ListeningExecutorService SERVICE = new NewThreadExecutorService();
-
-    public BuildRuleEventTests(MetadataStorage metadataStorage) {
-      super(metadataStorage);
-    }
 
     @Ignore
     @Test

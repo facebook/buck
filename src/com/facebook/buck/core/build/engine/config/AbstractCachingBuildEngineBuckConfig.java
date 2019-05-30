@@ -17,7 +17,6 @@ package com.facebook.buck.core.build.engine.config;
 
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.engine.type.DepFiles;
-import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.resources.ResourcesConfig;
@@ -34,12 +33,6 @@ abstract class AbstractCachingBuildEngineBuckConfig implements ConfigView<BuckCo
   /** @return the mode with which to run the build engine. */
   public BuildType getBuildEngineMode() {
     return getDelegate().getEnum("build", "engine", BuildType.class).orElse(BuildType.SHALLOW);
-  }
-
-  public MetadataStorage getBuildMetadataStorage() {
-    return getDelegate()
-        .getEnum("build", "metadata_storage", MetadataStorage.class)
-        .orElse(MetadataStorage.FILESYSTEM);
   }
 
   /** @return the mode with which to run the build engine. */

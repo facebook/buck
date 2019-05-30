@@ -23,7 +23,6 @@ import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
 import com.facebook.buck.core.build.engine.delegate.CachingBuildEngineDelegate;
 import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
-import com.facebook.buck.core.build.engine.impl.MetadataChecker;
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.Cell;
@@ -217,12 +216,6 @@ public class LocalBuildExecutor implements BuildExecutor {
   }
 
   private CachingBuildEngine createCachingBuildEngine(boolean whitelistedForRemoteExecution) {
-    try {
-      MetadataChecker.checkAndCleanIfNeeded(args.getRootCell());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-
     CachingBuildEngineBuckConfig engineConfig =
         args.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
 
@@ -240,7 +233,6 @@ public class LocalBuildExecutor implements BuildExecutor {
             whitelistedForRemoteExecution),
         executorService,
         buildEngineMode.orElse(engineConfig.getBuildEngineMode()),
-        engineConfig.getBuildMetadataStorage(),
         engineConfig.getBuildDepFiles(),
         engineConfig.getBuildMaxDepFileCacheEntries(),
         engineConfig.getBuildArtifactCacheSizeLimit(),

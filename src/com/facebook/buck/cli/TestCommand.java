@@ -27,7 +27,6 @@ import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
 import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
-import com.facebook.buck.core.build.engine.impl.MetadataChecker;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
@@ -562,7 +561,6 @@ public class TestCommand extends BuildCommand {
                 params.getBuckConfig(), targetGraphAndBuildTargets.getBuildTargets(), testRules);
       }
 
-      MetadataChecker.checkAndCleanIfNeeded(params.getCell());
       CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
           params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
       try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
@@ -588,7 +586,6 @@ public class TestCommand extends BuildCommand {
                         false),
                     pool.getWeightedListeningExecutorService(),
                     getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
-                    cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
                     cachingBuildEngineBuckConfig.getBuildDepFiles(),
                     cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
                     cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),

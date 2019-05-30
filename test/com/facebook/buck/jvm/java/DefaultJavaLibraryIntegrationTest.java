@@ -333,22 +333,6 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         workspace.runBuckCommand("build", bizTarget.getFullyQualifiedName());
     buildResult.assertSuccess("Successful build should exit with 0.");
 
-    Path utilRuleKeyPath =
-        BuildTargetPaths.getScratchPath(filesystem, utilTarget, ".%s/metadata/build/RULE_KEY");
-    String utilRuleKey = getContents(utilRuleKeyPath);
-    Path utilAbiRuleKeyPath =
-        BuildTargetPaths.getScratchPath(
-            filesystem, utilTarget, ".%s/metadata/build/INPUT_BASED_RULE_KEY");
-    String utilAbiRuleKey = getContents(utilAbiRuleKeyPath);
-
-    Path bizRuleKeyPath =
-        BuildTargetPaths.getScratchPath(filesystem, bizTarget, ".%s/metadata/build/RULE_KEY");
-    String bizRuleKey = getContents(bizRuleKeyPath);
-    Path bizAbiRuleKeyPath =
-        BuildTargetPaths.getScratchPath(
-            filesystem, bizTarget, ".%s/metadata/build/INPUT_BASED_RULE_KEY");
-    String bizAbiRuleKey = getContents(bizAbiRuleKeyPath);
-
     Path utilOutputPath =
         BuildTargetPaths.getGenPath(
             filesystem, utilTarget, "lib__%s__output/" + utilTarget.getShortName() + ".jar");
@@ -367,12 +351,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     ProcessResult buildResult2 = workspace.runBuckCommand("build", "//:biz");
     buildResult2.assertSuccess("Successful build should exit with 0.");
 
-    assertThat(utilRuleKey, not(equalTo(getContents(utilRuleKeyPath))));
-    assertThat(utilAbiRuleKey, not(equalTo(getContents(utilAbiRuleKeyPath))));
     workspace.getBuildLog().assertTargetBuiltLocally(utilTarget);
-
-    assertThat(bizRuleKey, not(equalTo(getContents(bizRuleKeyPath))));
-    assertEquals(bizAbiRuleKey, getContents(bizAbiRuleKeyPath));
     workspace.getBuildLog().assertTargetHadMatchingInputRuleKey(bizTarget);
 
     assertThat(

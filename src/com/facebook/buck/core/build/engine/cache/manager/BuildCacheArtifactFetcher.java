@@ -22,7 +22,6 @@ import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfoStore;
 import com.facebook.buck.core.build.engine.buildinfo.OnDiskBuildInfo;
-import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.log.Logger;
@@ -56,7 +55,6 @@ public class BuildCacheArtifactFetcher {
   private final OnOutputsWillChange onOutputsWillChange;
   private final BuckEventBus eventBus;
   private final BuildInfoStoreManager buildInfoStoreManager;
-  private final MetadataStorage metadataStorage;
   private final OnDiskBuildInfo onDiskBuildInfo;
 
   public BuildCacheArtifactFetcher(
@@ -66,7 +64,6 @@ public class BuildCacheArtifactFetcher {
       OnOutputsWillChange onOutputsWillChange,
       BuckEventBus eventBus,
       BuildInfoStoreManager buildInfoStoreManager,
-      MetadataStorage metadataStorage,
       OnDiskBuildInfo onDiskBuildInfo) {
     this.rule = rule;
     this.buildRuleScopeManager = buildRuleScopeManager;
@@ -74,7 +71,6 @@ public class BuildCacheArtifactFetcher {
     this.onOutputsWillChange = onOutputsWillChange;
     this.eventBus = eventBus;
     this.buildInfoStoreManager = buildInfoStoreManager;
-    this.metadataStorage = metadataStorage;
     this.onDiskBuildInfo = onDiskBuildInfo;
   }
 
@@ -207,8 +203,7 @@ public class BuildCacheArtifactFetcher {
       // First, clear out the pre-existing metadata directory.  We have to do this *before*
       // unpacking the zipped artifact, as it includes files that will be stored in the metadata
       // directory.
-      BuildInfoStore buildInfoStore =
-          buildInfoStoreManager.get(rule.getProjectFilesystem(), metadataStorage);
+      BuildInfoStore buildInfoStore = buildInfoStoreManager.get(rule.getProjectFilesystem());
 
       Preconditions.checkState(
           cacheResult.getMetadata().containsKey(BuildInfo.MetadataKey.ORIGIN_BUILD_ID),

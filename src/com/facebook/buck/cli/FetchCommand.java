@@ -22,7 +22,6 @@ import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteB
 import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
 import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
-import com.facebook.buck.core.build.engine.impl.MetadataChecker;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellName;
@@ -121,7 +120,6 @@ public class FetchCommand extends BuildCommand {
         return ExitCode.PARSE_ERROR;
       }
 
-      MetadataChecker.checkAndCleanIfNeeded(params.getCell());
       CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
           params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
       LocalCachingBuildEngineDelegate localCachingBuildEngineDelegate =
@@ -138,7 +136,6 @@ public class FetchCommand extends BuildCommand {
                   Optional.empty(),
                   pool.getWeightedListeningExecutorService(),
                   getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
-                  cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
                   cachingBuildEngineBuckConfig.getBuildDepFiles(),
                   cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
                   cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),

@@ -24,7 +24,6 @@ import com.facebook.buck.core.build.engine.delegate.CachingBuildEngineDelegate;
 import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.engine.type.DepFiles;
-import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
@@ -48,7 +47,6 @@ import java.util.Optional;
 public class CachingBuildEngineFactory {
 
   private BuildType buildMode = BuildType.SHALLOW;
-  private MetadataStorage metadataStorage = MetadataStorage.FILESYSTEM;
   private DepFiles depFiles = DepFiles.ENABLED;
   private long maxDepFileCacheEntries = 256L;
   private Optional<Long> artifactCacheSizeLimit = Optional.empty();
@@ -148,7 +146,6 @@ public class CachingBuildEngineFactory {
           customBuildRuleStrategy,
           executorService,
           buildMode,
-          metadataStorage,
           depFiles,
           maxDepFileCacheEntries,
           artifactCacheSizeLimit,
@@ -169,7 +166,6 @@ public class CachingBuildEngineFactory {
         customBuildRuleStrategy,
         executorService,
         buildMode,
-        metadataStorage,
         depFiles,
         maxDepFileCacheEntries,
         artifactCacheSizeLimit,
