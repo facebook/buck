@@ -44,6 +44,7 @@ import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
+import com.facebook.buck.support.state.BuckGlobalState;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
@@ -190,6 +191,13 @@ public abstract class AbstractCommandRunnerParams {
   @Value.Parameter
   public abstract ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
       getManifestServiceSupplier();
+
+  /**
+   * @return {@link BuckGlobalState} object which is a set of objects bearing the data reflecting
+   *     filesystem state and thus shared between commands
+   */
+  @Value.Parameter
+  public abstract BuckGlobalState getGlobalState();
 
   /**
    * Create {@link BuildExecutorArgs} using this {@link CommandRunnerParams}.

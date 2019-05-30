@@ -50,6 +50,8 @@ import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.support.state.BuckGlobalState;
+import com.facebook.buck.support.state.BuckGlobalStateFactory;
 import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
@@ -64,6 +66,7 @@ import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.DefaultClock;
+import com.facebook.buck.util.timing.FakeClock;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
@@ -130,6 +133,16 @@ public class CommandRunnerParamsForTesting {
     CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
         depsAwareExecutorSupplier = MainRunner.getDepsAwareExecutorSupplier(config);
 
+    BuckGlobalState buckGlobalState =
+        BuckGlobalStateFactory.create(
+            cell,
+            knownRuleTypesProvider,
+            WatchmanFactory.NULL_WATCHMAN,
+            Optional.empty(),
+            new ParsingUnconfiguredBuildTargetViewFactory(),
+            new TargetConfigurationSerializerForTests(cell.getCellPathResolver()),
+            FakeClock.doNotCare());
+
     return CommandRunnerParams.of(
         console,
         new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
@@ -174,7 +187,8 @@ public class CommandRunnerParamsForTesting {
         TestBuckModuleManagerFactory.create(pluginManager),
         depsAwareExecutorSupplier,
         MetadataProviderFactory.emptyMetadataProvider(),
-        getManifestSupplier());
+        getManifestSupplier(),
+        buckGlobalState);
   }
 
   public static Builder builder() {

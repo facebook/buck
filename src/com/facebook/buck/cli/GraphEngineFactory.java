@@ -218,8 +218,12 @@ public class GraphEngineFactory {
         new DefaultGraphTransformationEngine(
             ImmutableList.of(
                 new GraphComputationStage<>(patternToPackagePathComputation),
-                new GraphComputationStage<>(directoryListComputation),
-                new GraphComputationStage<>(fileTreeComputation),
+                new GraphComputationStage<>(
+                    directoryListComputation,
+                    params.getGlobalState().getDirectoryListCaches().getUnchecked(cell.getRoot())),
+                new GraphComputationStage<>(
+                    fileTreeComputation,
+                    params.getGlobalState().getFileTreeCaches().getUnchecked(cell.getRoot())),
                 patternToPathComputation.asStage(),
                 new GraphComputationStage<>(packagePathToManifestComputation),
                 new GraphComputationStage<>(buildTargetToRawTargetNodeComputation),

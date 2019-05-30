@@ -1371,7 +1371,8 @@ public final class MainRunner {
                         moduleManager,
                         depsAwareExecutorSupplier,
                         metadataProvider,
-                        manifestServiceSupplier));
+                        manifestServiceSupplier,
+                        buckGlobalState));
           } catch (InterruptedException | ClosedByInterruptException e) {
             buildEventBus.post(CommandEvent.interrupted(startedEvent, ExitCode.SIGNAL_INTERRUPT));
             throw e;
