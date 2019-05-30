@@ -18,6 +18,7 @@ package com.facebook.buck.core.parser.buildtargetpattern;
 
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.ImmutableInternedUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -50,6 +51,26 @@ public class UnconfiguredBuildTargetParser {
    *     error
    */
   public static UnconfiguredBuildTarget parse(String target) throws BuildTargetParseException {
+    return parse(target, false);
+  }
+
+  /**
+   * Parse a string representing fully qualified build target, validating build target format
+   *
+   * <p>Fully qualified build target format is `cell//path/to:target#flavor1,flavor2` where cell may
+   * be an empty string, and flavors may be omitted along with `#` sign
+   *
+   * @param target String representing fully-qualified build target, for example "//foo/bar:bar"
+   * @param intern Whether to intern parsed instance; once interned the instance stays in memory
+   *     forever but subsequent hash map/set operations are faster because {@link
+   *     Object#equals(Object)} is cheap
+   * @throws BuildTargetParseException If build target format is invalid; at this moment {@link
+   *     BuildTargetParseException} is unchecked exception but we still want to declare it with the
+   *     hope to make it checked one day; this type of exception would be properly handled as user
+   *     error
+   */
+  public static UnconfiguredBuildTarget parse(String target, boolean intern)
+      throws BuildTargetParseException {
     int rootPos = target.indexOf(BuildTargetLanguageConstants.ROOT_SYMBOL);
     check(
         rootPos >= 0,
@@ -107,6 +128,9 @@ public class UnconfiguredBuildTargetParser {
         "should have target name after '%s' sign",
         BuildTargetLanguageConstants.TARGET_SYMBOL);
 
+    if (intern) {
+      return ImmutableInternedUnconfiguredBuildTarget.of(cellName, baseName, targetName, flavors);
+    }
     return ImmutableUnconfiguredBuildTarget.of(cellName, baseName, targetName, flavors);
   }
 

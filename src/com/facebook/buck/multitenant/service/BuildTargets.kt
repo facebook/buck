@@ -17,19 +17,18 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.exceptions.BuildTargetParseException
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget
+import com.facebook.buck.core.model.ImmutableInternedUnconfiguredBuildTarget
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
-import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern
-import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 
 /**
- * Collection of convenience methods for parsing build targets
+ * Collection of convenience methods for parsing build targets. Returned build targets are strongly
+ * interned to make `equals` calls faster in order to speed up maps/set data structure operations.
  */
 object BuildTargets {
     fun createBuildTargetFromParts(cell: String, basePath: FsAgnosticPath, name: String): UnconfiguredBuildTarget =
-            ImmutableUnconfiguredBuildTarget.of(
+            ImmutableInternedUnconfiguredBuildTarget.of(
                     cell,
                     "//$basePath",
                     name,
@@ -43,6 +42,6 @@ object BuildTargets {
      * @throws BuildTargetParseException
      */
     fun parseOrThrow(target: String): UnconfiguredBuildTarget {
-        return UnconfiguredBuildTargetParser.parse(target)
+        return UnconfiguredBuildTargetParser.parse(target, true)
     }
 }

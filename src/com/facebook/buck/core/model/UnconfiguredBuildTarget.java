@@ -42,7 +42,6 @@ import org.immutables.value.Value;
  * used anymore, instead you want to use a {@link BuildTarget} along with passed {@link
  * TargetConfiguration}.
  */
-@Value.Immutable(builder = false, copy = false, prehash = true)
 @JsonDeserialize
 public abstract class UnconfiguredBuildTarget
     implements Comparable<UnconfiguredBuildTarget>, QueryTarget {
