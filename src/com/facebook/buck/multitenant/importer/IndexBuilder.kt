@@ -121,7 +121,7 @@ private fun toBuildPackage(nodes: JsonNode): BuildPackage {
             when (field.key) {
                 "attributes" -> {
                     for (attr in field.value.fields()) {
-                        attrs.put(attr.key, normalizeJsonValue(attr.value))
+                        attrs.put(attr.key.intern(), normalizeJsonValue(attr.value))
                         if (attr.key == "buck.type") {
                             ruleType = attr.value.asText()
                         }
@@ -141,9 +141,14 @@ private fun toBuildPackage(nodes: JsonNode): BuildPackage {
 private fun normalizeJsonValue(value: JsonNode): Any {
     // Note that if we need to support other values, such as null or Object, we will add support for
     // them as needed.
+
+    // We intern all the strings here. It is not very well measured the impact of interning here
+    // as those strings are attribute values and cardinality of those is not well known. We still
+    // intern because it is only used during loading the data for multitenant service and thus
+    // cheap to do. This could be reconsidered later.
     return when {
         value.isBoolean -> value.asBoolean()
-        value.isTextual -> value.asText()
+        value.isTextual -> value.asText().intern()
         value.isInt -> value.asInt()
         value.isLong -> value.asLong()
         value.isDouble -> value.asDouble()
@@ -151,7 +156,7 @@ private fun normalizeJsonValue(value: JsonNode): Any {
         value.isObject -> (value as ObjectNode).fields().asSequence().map {
             it.key to normalizeJsonValue(it.value)
         }.toMap()
-        else -> value.asText()
+        else -> value.asText().intern()
     }
 }
 
