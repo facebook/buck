@@ -25,14 +25,7 @@ import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetP
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 
 /**
- * Collection of convenience methods for parsing build targets. Currently relies on
- * [BuildTargetPatternParser] and [BuildTargetPattern] because they have fewer dependencies
- * than other abstractions in Buck (they are filesystem-agnostic, which is a desirable property for
- * the multitenant service), but they are not quite right because they parse build target
- * <em>patterns</em>, not just build targets.
- *
- * TODO(mbolin): Use a parser that is specific to fully-qualified build targets rather than patterns.
- * Make sure to update `BuildTargetsTest` upon addressing this issue.
+ * Collection of convenience methods for parsing build targets
  */
 object BuildTargets {
     fun createBuildTargetFromParts(cell: String, basePath: FsAgnosticPath, name: String): UnconfiguredBuildTarget =
