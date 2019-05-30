@@ -85,8 +85,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
                     createParsingContext(params.getCell(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                         .withExcludeUnsupportedTargets(false),
-                    params.getParser().getPermState(),
-                    getTargetPlatforms())) {
+                    params.getParser().getPermState())) {
 
       for (BuildTarget target : targets) {
         TargetNode<?> targetNode = params.getParser().getTargetNode(parserState, target);

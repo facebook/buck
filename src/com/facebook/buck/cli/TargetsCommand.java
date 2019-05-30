@@ -348,8 +348,7 @@ public class TargetsCommand extends AbstractCommand {
                     createParsingContext(params.getCell(), pool.getListeningExecutorService())
                         .withExcludeUnsupportedTargets(false)
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),
-                    params.getParser().getPermState(),
-                    getTargetPlatforms())) {
+                    params.getParser().getPermState())) {
           ResolveAliasHelper.resolveAlias(params, parserState, arguments);
         }
         return ExitCode.SUCCESS;
@@ -956,8 +955,7 @@ public class TargetsCommand extends AbstractCommand {
             .create(
                 createParsingContext(params.getCell(), executor)
                     .withExcludeUnsupportedTargets(false),
-                params.getParser().getPermState(),
-                getTargetPlatforms())) {
+                params.getParser().getPermState())) {
 
       JsonAttributeFormat jsonAttributeFormat =
           params.getBuckConfig().getView(CliConfig.class).getJsonAttributeFormat();
@@ -1341,8 +1339,7 @@ public class TargetsCommand extends AbstractCommand {
             .create(
                 createParsingContext(params.getCell(), executor)
                     .withExcludeUnsupportedTargets(false),
-                params.getParser().getPermState(),
-                getTargetPlatforms())) {
+                params.getParser().getPermState())) {
       buildTargetHashes =
           new TargetGraphHashing(
                   params.getBuckEventBus(),

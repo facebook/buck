@@ -236,8 +236,7 @@ public class QueryCommand extends AbstractCommand {
                 .create(
                     createParsingContext(params.getCell(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),
-                    params.getParser().getPermState(),
-                    getTargetPlatforms())) {
+                    params.getParser().getPermState())) {
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(
               params,

@@ -55,7 +55,6 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -101,7 +100,6 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
   protected PerBuildState create(
       ParsingContext parsingContext,
       DaemonicParserState daemonicParserState,
-      ImmutableList<String> targetPlatforms,
       Optional<AtomicLong> parseProcessedBytes) {
 
     Cell rootCell = parsingContext.getCell();

@@ -49,7 +49,6 @@ import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -64,17 +63,14 @@ abstract class AbstractParser implements Parser {
   protected final PerBuildStateFactory perBuildStateFactory;
   protected final DaemonicParserState permState;
   protected final BuckEventBus eventBus;
-  protected final Supplier<ImmutableList<String>> targetPlatforms;
 
   AbstractParser(
       DaemonicParserState daemonicParserState,
       PerBuildStateFactory perBuildStateFactory,
-      BuckEventBus eventBus,
-      Supplier<ImmutableList<String>> targetPlatforms) {
+      BuckEventBus eventBus) {
     this.perBuildStateFactory = perBuildStateFactory;
     this.permState = daemonicParserState;
     this.eventBus = eventBus;
-    this.targetPlatforms = targetPlatforms;
   }
 
   @Override
@@ -107,8 +103,7 @@ abstract class AbstractParser implements Parser {
   @Override
   public TargetNode<?> getTargetNode(ParsingContext parsingContext, BuildTarget target)
       throws BuildFileParseException {
-    try (PerBuildState state =
-        perBuildStateFactory.create(parsingContext, permState, targetPlatforms.get())) {
+    try (PerBuildState state = perBuildStateFactory.create(parsingContext, permState)) {
       return state.getTargetNode(target);
     }
   }
@@ -185,8 +180,7 @@ abstract class AbstractParser implements Parser {
   public SortedMap<String, Object> getTargetNodeRawAttributes(
       ParsingContext parsingContext, TargetNode<?> targetNode) throws BuildFileParseException {
 
-    try (PerBuildState state =
-        perBuildStateFactory.create(parsingContext, permState, targetPlatforms.get())) {
+    try (PerBuildState state = perBuildStateFactory.create(parsingContext, permState)) {
       return getTargetNodeRawAttributes(state, parsingContext.getCell(), targetNode);
     }
   }
@@ -215,8 +209,7 @@ abstract class AbstractParser implements Parser {
 
     AtomicLong processedBytes = new AtomicLong();
     try (PerBuildState state =
-        perBuildStateFactory.create(
-            parsingContext, permState, targetPlatforms.get(), processedBytes)) {
+        perBuildStateFactory.create(parsingContext, permState, processedBytes)) {
       return buildTargetGraph(state, toExplore, processedBytes);
     }
   }
@@ -324,8 +317,7 @@ abstract class AbstractParser implements Parser {
 
     AtomicLong processedBytes = new AtomicLong();
     try (PerBuildState state =
-        perBuildStateFactory.create(
-            parsingContext, permState, targetPlatforms.get(), processedBytes)) {
+        perBuildStateFactory.create(parsingContext, permState, processedBytes)) {
 
       ImmutableSet<BuildTarget> buildTargets =
           collectBuildTargetsFromTargetNodeSpecs(

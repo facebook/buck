@@ -137,8 +137,7 @@ public class QueryCommandTest {
                 ParsingContext.builder(cell, executorService)
                     .setSpeculativeParsing(SpeculativeParsing.ENABLED)
                     .build(),
-                params.getParser().getPermState(),
-                ImmutableList.of());
+                params.getParser().getPermState());
     env =
         new FakeBuckQueryEnvironment(
             cell,

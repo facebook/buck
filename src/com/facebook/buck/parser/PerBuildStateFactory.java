@@ -25,7 +25,6 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -71,24 +70,19 @@ public abstract class PerBuildStateFactory {
   }
 
   public PerBuildState create(
-      ParsingContext parsingContext,
-      DaemonicParserState daemonicParserState,
-      ImmutableList<String> targetPlatforms) {
-    return create(parsingContext, daemonicParserState, targetPlatforms, Optional.empty());
+      ParsingContext parsingContext, DaemonicParserState daemonicParserState) {
+    return create(parsingContext, daemonicParserState, Optional.empty());
   }
 
   public PerBuildState create(
       ParsingContext parsingContext,
       DaemonicParserState daemonicParserState,
-      ImmutableList<String> targetPlatforms,
       AtomicLong processedBytes) {
-    return create(
-        parsingContext, daemonicParserState, targetPlatforms, Optional.of(processedBytes));
+    return create(parsingContext, daemonicParserState, Optional.of(processedBytes));
   }
 
   protected abstract PerBuildState create(
       ParsingContext parsingContext,
       DaemonicParserState daemonicParserState,
-      ImmutableList<String> targetPlatforms,
       Optional<AtomicLong> parseProcessedBytes);
 }

@@ -24,9 +24,7 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
-import java.util.function.Supplier;
 
 /** Responsible for creating an instance of {@link Parser}. */
 public class ParserFactory {
@@ -41,7 +39,6 @@ public class ParserFactory {
       TargetSpecResolver targetSpecResolver,
       Watchman watchman,
       BuckEventBus eventBus,
-      Supplier<ImmutableList<String>> targetPlatforms,
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
       FileHashCache fileHashCache,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
@@ -58,7 +55,6 @@ public class ParserFactory {
             fileHashCache,
             unconfiguredBuildTargetFactory),
         targetSpecResolver,
-        eventBus,
-        targetPlatforms);
+        eventBus);
   }
 }

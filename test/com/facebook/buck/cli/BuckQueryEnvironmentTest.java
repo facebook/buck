@@ -142,8 +142,7 @@ public class BuckQueryEnvironmentTest {
             ParsingContext.builder(cell, executor)
                 .setSpeculativeParsing(SpeculativeParsing.ENABLED)
                 .build(),
-            parser.getPermState(),
-            ImmutableList.of());
+            parser.getPermState());
 
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(

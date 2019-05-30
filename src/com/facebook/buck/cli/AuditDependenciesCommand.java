@@ -115,8 +115,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
                     createParsingContext(params.getCell(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                         .withExcludeUnsupportedTargets(false),
-                    params.getParser().getPermState(),
-                    getTargetPlatforms())) {
+                    params.getParser().getPermState())) {
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(
               params,

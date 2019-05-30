@@ -234,9 +234,7 @@ public class TargetSpecResolverTest {
       throws InterruptedException {
     PerBuildState state =
         perBuildStateFactory.create(
-            ParsingContext.builder(cell, executorService).build(),
-            parser.getPermState(),
-            ImmutableList.of());
+            ParsingContext.builder(cell, executorService).build(), parser.getPermState());
     return targetNodeTargetSpecResolver.resolveTargetSpecs(
         cell,
         specs,

@@ -226,8 +226,7 @@ public class ParserWithConfigurableAttributesTest {
                 new ParsingUnconfiguredBuildTargetViewFactory())
             .create(
                 ParsingContext.builder(cell, executor).setProfilingEnabled(enableProfiling).build(),
-                parser.getPermState(),
-                ImmutableList.of())) {
+                parser.getPermState())) {
       AbstractParser.getTargetNodeRawAttributes(state, cell, buildFile).getTargets();
     }
   }
@@ -2674,10 +2673,7 @@ public class ParserWithConfigurableAttributesTest {
                 getManifestSupplier(),
                 new FakeFileHashCache(hashes),
                 new ParsingUnconfiguredBuildTargetViewFactory())
-            .create(
-                ParsingContext.builder(cell, executor).build(),
-                parser.getPermState(),
-                ImmutableList.of())) {
+            .create(ParsingContext.builder(cell, executor).build(), parser.getPermState())) {
       for (BuildTarget buildTarget : buildTargets) {
         attributesByTarget.put(
             buildTarget,

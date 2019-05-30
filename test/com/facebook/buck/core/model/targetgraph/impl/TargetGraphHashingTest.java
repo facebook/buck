@@ -123,8 +123,7 @@ public class TargetGraphHashingTest {
                 new ParsingUnconfiguredBuildTargetViewFactory())
             .create(
                 ParsingContext.builder(cell, MoreExecutors.newDirectExecutorService()).build(),
-                parser.getPermState(),
-                ImmutableList.of());
+                parser.getPermState());
     targetNodeRawAttributesProvider =
         node -> parser.getTargetNodeRawAttributesJob(parserState, cell, node);
   }

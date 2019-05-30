@@ -54,7 +54,6 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -75,9 +74,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       DaemonicParserState daemonicParserState,
       PerBuildStateFactory perBuildStateFactory,
       TargetSpecResolver targetSpecResolver,
-      BuckEventBus eventBus,
-      Supplier<ImmutableList<String>> targetPlatforms) {
-    super(daemonicParserState, perBuildStateFactory, eventBus, targetPlatforms);
+      BuckEventBus eventBus) {
+    super(daemonicParserState, perBuildStateFactory, eventBus);
     this.targetSpecResolver = targetSpecResolver;
   }
 
@@ -288,8 +286,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       TargetConfiguration targetConfiguration)
       throws BuildFileParseException, InterruptedException {
 
-    try (PerBuildState state =
-        perBuildStateFactory.create(parsingContext, permState, targetPlatforms.get())) {
+    try (PerBuildState state = perBuildStateFactory.create(parsingContext, permState)) {
       TargetNodeFilterForSpecResolver<TargetNode<?>> targetNodeFilter =
           (spec, nodes) -> spec.filter(nodes);
 
