@@ -50,7 +50,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
   private static final int DEFAULT_THREADS = 3;
 
   private final Queue<ManagedBackgroundTask<?>> scheduledTasks = new LinkedList<>();
-  private final Map<Class<?>, ManagedBackgroundTask<?>> cancellableTasks =
+  private final ConcurrentHashMap<Class<?>, ManagedBackgroundTask<?>> cancellableTasks =
       new ConcurrentHashMap<>();
 
   private final AtomicBoolean schedulerRunning;
@@ -137,13 +137,10 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
       return Futures.immediateCancelledFuture();
     }
     Class<?> actionClass = task.getActionClass();
-    synchronized (cancellableTasks) {
-      if (cancellableTasks.containsKey(actionClass)) {
-        cancellableTasks.get(actionClass).markToCancel();
-      }
-      if (task.getShouldCancelOnRepeat()) {
-        cancellableTasks.put(actionClass, task);
-      }
+    Optional.ofNullable(cancellableTasks.get(actionClass))
+        .ifPresent(ManagedBackgroundTask::markToCancel);
+    if (task.getShouldCancelOnRepeat()) {
+      cancellableTasks.put(actionClass, task);
     }
     synchronized (scheduledTasks) {
       scheduledTasks.add(task);

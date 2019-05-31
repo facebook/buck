@@ -35,7 +35,7 @@ class ManagedBackgroundTask<T> {
 
   private final BackgroundTask<T> task;
   private final TaskId id;
-  private boolean toCancel;
+  private volatile boolean toCancel;
   private final SettableFuture<Void> future;
 
   protected ManagedBackgroundTask(BackgroundTask<T> task, BuildId buildId) {
