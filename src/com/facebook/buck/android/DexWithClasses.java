@@ -86,5 +86,5 @@ public interface DexWithClasses {
       };
 
   Comparator<DexWithClasses> DEX_WITH_CLASSES_COMPARATOR =
-      (o1, o2) -> o1.getSourcePathToDexFile().compareTo(o2.getSourcePathToDexFile());
+      Comparator.comparing(DexWithClasses::getSourcePathToDexFile);
 }

@@ -114,9 +114,7 @@ public class TrimUberRDotJavaTest {
         .getBuildOutputInitializer()
         .setBuildOutputForTests(
             new DexProducedFromJavaLibrary.BuildOutput(
-                1,
-                ImmutableSortedMap.of(),
-                Optional.of(ImmutableList.of("com.test.my_first_resource"))));
+                1, ImmutableSortedMap.of(), ImmutableList.of("com.test.my_first_resource")));
 
     graphBuilder.addToIndex(dexProducedFromJavaLibrary);
 

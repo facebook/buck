@@ -300,7 +300,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
             readMetadataValue(getProjectFilesystem(), getBuildTarget(), CLASSNAMES_TO_HASHES).get(),
             new TypeReference<Map<String, String>>() {});
     Map<String, HashCode> classnamesToHashes = Maps.transformValues(map, HashCode::fromString);
-    Optional<ImmutableList<String>> referencedResources = readMetadataValues(REFERENCED_RESOURCES);
+    ImmutableList<String> referencedResources = readMetadataValues(REFERENCED_RESOURCES);
     return new BuildOutput(
         weightEstimate, ImmutableSortedMap.copyOf(classnamesToHashes), referencedResources);
   }
@@ -331,13 +331,12 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
     return projectFilesystem.readFileIfItExists(path);
   }
 
-  private Optional<ImmutableList<String>> readMetadataValues(String key) throws IOException {
+  private ImmutableList<String> readMetadataValues(String key) throws IOException {
     Optional<String> value = readMetadataValue(getProjectFilesystem(), getBuildTarget(), key);
     if (value.isPresent()) {
-      return Optional.of(
-          ObjectMappers.readValue(value.get(), new TypeReference<ImmutableList<String>>() {}));
+      return ObjectMappers.readValue(value.get(), new TypeReference<ImmutableList<String>>() {});
     }
-    return Optional.empty();
+    return ImmutableList.of();
   }
 
   @Override
@@ -348,12 +347,12 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
   static class BuildOutput {
     @VisibleForTesting final int weightEstimate;
     private final ImmutableSortedMap<String, HashCode> classnamesToHashes;
-    private final Optional<ImmutableList<String>> referencedResources;
+    private final ImmutableList<String> referencedResources;
 
     BuildOutput(
         int weightEstimate,
         ImmutableSortedMap<String, HashCode> classnamesToHashes,
-        Optional<ImmutableList<String>> referencedResources) {
+        ImmutableList<String> referencedResources) {
       this.weightEstimate = weightEstimate;
       this.classnamesToHashes = classnamesToHashes;
       this.referencedResources = referencedResources;
@@ -393,7 +392,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
     return buildOutputInitializer.getBuildOutput().weightEstimate;
   }
 
-  Optional<ImmutableList<String>> getReferencedResources() {
+  ImmutableList<String> getReferencedResources() {
     return buildOutputInitializer.getBuildOutput().referencedResources;
   }
 

@@ -315,9 +315,9 @@ public class AndroidBinaryGraphEnhancer {
         nativeLibsEnhancer.enhance(packageableCollection);
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibraries =
         nativeLibsEnhancementResult.getCopyNativeLibraries();
-    if (copyNativeLibraries.isPresent()) {
-      copyNativeLibraries.get().values().forEach(graphBuilder::addToIndex);
-    }
+    copyNativeLibraries.ifPresent(
+        apkModuleCopyNativeLibrariesImmutableMap ->
+            apkModuleCopyNativeLibrariesImmutableMap.values().forEach(graphBuilder::addToIndex));
 
     if (nativeLibraryProguardConfigGenerator.isPresent()) {
       NativeLibraryProguardGenerator nativeLibraryProguardGenerator =
