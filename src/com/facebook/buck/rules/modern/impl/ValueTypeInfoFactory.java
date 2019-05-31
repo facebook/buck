@@ -37,6 +37,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.HashCode;
 import com.google.common.primitives.Primitives;
 import com.google.common.reflect.TypeToken;
 import java.lang.reflect.ParameterizedType;
@@ -153,6 +154,8 @@ public class ValueTypeInfoFactory {
         return new ToolchainTypeInfo<>(asToolchain);
       } else if (AddsToRuleKey.class.isAssignableFrom(rawClass)) {
         return DynamicTypeInfo.INSTANCE;
+      } else if (HashCode.class.isAssignableFrom(rawClass)) {
+        return HashCodeValueTypeInfo.INSTANCE;
       }
     } else if (type instanceof ParameterizedType) {
       // This is a parameterized type where one of the parameters requires special handling (i.e.

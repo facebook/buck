@@ -34,7 +34,6 @@ import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.modern.HashCodeSerialization;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.SortedSet;
@@ -146,7 +145,7 @@ public class DefaultWorkerToolRule extends WriteFile
      * Important : Do not add this field into RuleKey. Rule key should not change in case of
      * instance key modification (that is calculated during creation as random UUID).
      */
-    @CustomFieldBehavior(HashCodeSerialization.class)
+    @CustomFieldBehavior(DefaultFieldSerialization.class)
     private HashCode instanceKey;
 
     DefaultWorkerTool(
