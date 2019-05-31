@@ -154,6 +154,7 @@ public class SkylarkProjectBuildFileParserTest {
             .setRuleFunctionFactory(new RuleFunctionFactory(new DefaultTypeCoercerFactory()))
             .setDescriptions(options.getDescriptions())
             .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
+            .setEnableUserDefinedRules(options.getEnableUserDefinedRules())
             .build(),
         eventHandler,
         NativeGlobber::create);
@@ -1068,6 +1069,7 @@ public class SkylarkProjectBuildFileParserTest {
                 .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
                 .setDescriptions(options.getDescriptions())
                 .setRuleFunctionFactory(new RuleFunctionFactory(new DefaultTypeCoercerFactory()))
+                .setEnableUserDefinedRules(options.getEnableUserDefinedRules())
                 .build(),
             new PrintingEventHandler(EnumSet.allOf(EventKind.class)),
             NativeGlobber::create);

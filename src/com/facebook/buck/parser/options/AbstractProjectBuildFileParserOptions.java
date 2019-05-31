@@ -94,6 +94,11 @@ abstract class AbstractProjectBuildFileParserOptions {
   }
 
   @Value.Default
+  public boolean getEnableUserDefinedRules() {
+    return false;
+  }
+
+  @Value.Default
   public boolean isWarnAboutDeprecatedSyntax() {
     return true;
   }

@@ -357,4 +357,14 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
     }
     return true;
   }
+
+  /**
+   * @return whether to enable user-defined rule in .bzl files and export various symbols (such as
+   *     rule()) into the evaluation context. This is in progress work, and experimental at this
+   *     time.
+   */
+  @Value.Lazy
+  public boolean getEnableUserDefinedRules() {
+    return getDelegate().getBooleanValue("parser", "enable_user_defined_rules", false);
+  }
 }

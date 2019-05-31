@@ -256,6 +256,7 @@ public class HostInfoTest {
             .setBuildFileName("BUCK")
             .setBuildFileImportWhitelist(ImmutableList.of())
             .setPythonInterpreter("skylark")
+            .setEnableUserDefinedRules(false)
             .build();
     RuleFunctionFactory ruleFunctionFactory =
         new RuleFunctionFactory(new DefaultTypeCoercerFactory());
@@ -267,6 +268,7 @@ public class HostInfoTest {
             .setDescriptions(options.getDescriptions())
             .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
             .setRuleFunctionFactory(ruleFunctionFactory)
+            .setEnableUserDefinedRules(options.getEnableUserDefinedRules())
             .build(),
         eventHandler,
         NativeGlobber::create);

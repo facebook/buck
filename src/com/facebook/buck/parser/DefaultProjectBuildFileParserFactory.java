@@ -173,6 +173,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
                 cell.getBuckConfig().getView(ConfigIgnoredByDaemon.class).getRawConfigForParser())
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
             .setDisableImplicitNativeRules(parserConfig.getDisableImplicitNativeRules())
+            .setEnableUserDefinedRules(parserConfig.getEnableUserDefinedRules())
             .setWarnAboutDeprecatedSyntax(parserConfig.isWarnAboutDeprecatedSyntax())
             .setPackageImplicitIncludes(parserConfig.getPackageImplicitIncludes())
             .build();
@@ -321,6 +322,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
     BuckGlobals buckGlobals =
         BuckGlobals.builder()
             .setDisableImplicitNativeRules(buildFileParserOptions.getDisableImplicitNativeRules())
+            .setEnableUserDefinedRules(buildFileParserOptions.getEnableUserDefinedRules())
             .setDescriptions(buildFileParserOptions.getDescriptions())
             .setRuleFunctionFactory(new RuleFunctionFactory(typeCoercerFactory))
             .build();

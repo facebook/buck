@@ -19,6 +19,7 @@ package com.facebook.buck.skylark.parser;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
+import com.facebook.buck.skylark.function.SkylarkProviderFunction;
 import com.facebook.buck.skylark.function.SkylarkRuleFunctions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -63,9 +64,18 @@ abstract class AbstractBuckGlobals {
     addBuckGlobals(builder);
     builder.put("native", getNativeModule());
     builder.put("struct", StructProvider.STRUCT);
-    Runtime.setupSkylarkLibrary(builder, new SkylarkRuleFunctions());
+    if (getEnableUserDefinedRules()) {
+      Runtime.setupSkylarkLibrary(builder, new SkylarkRuleFunctions());
+    }
+    Runtime.setupSkylarkLibrary(builder, new SkylarkProviderFunction());
     return GlobalFrame.createForBuiltins(builder.build());
   }
+
+  /**
+   * @return Whether or not modules, providers, and other functions for user defined rules should be
+   *     exported into .bzl files' execution environment
+   */
+  abstract boolean getEnableUserDefinedRules();
 
   /** Disable implicit native rules depending on configuration */
   @Lazy
