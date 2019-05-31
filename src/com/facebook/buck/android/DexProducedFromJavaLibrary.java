@@ -45,7 +45,6 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.json.ObjectMappers;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
@@ -56,8 +55,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -394,17 +391,5 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
 
   ImmutableList<String> getReferencedResources() {
     return buildOutputInitializer.getBuildOutput().referencedResources;
-  }
-
-  @VisibleForTesting
-  static Sha1HashCode computeAbiKey(ImmutableSortedMap<String, HashCode> classNames) {
-    Hasher hasher = Hashing.sha1().newHasher();
-    for (Map.Entry<String, HashCode> entry : classNames.entrySet()) {
-      hasher.putUnencodedChars(entry.getKey());
-      hasher.putByte((byte) 0);
-      hasher.putUnencodedChars(entry.getValue().toString());
-      hasher.putByte((byte) 0);
-    }
-    return Sha1HashCode.fromHashCode(hasher.hash());
   }
 }
