@@ -81,7 +81,6 @@ import javax.annotation.Nullable;
  */
 public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private static final Logger LOG = Logger.get(RemoteExecutionStrategy.class);
-  private static final int WORKER_REQUIREMENTS_PROVIDER_MAX_CACHE_SIZE = 1000;
 
   private final BuckEventBus eventBus;
   private final RemoteExecutionClients executionClients;
@@ -104,6 +103,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       RemoteExecutionClients executionClients,
       MetadataProvider metadataProvider,
       RemoteExecutionHelper mbrHelper,
+      WorkerRequirementsProvider requirementsProvider,
       ListeningExecutorService service) {
     this.executionClients = executionClients;
     this.service = service;
@@ -115,11 +115,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     this.eventBus = eventBus;
     this.metadataProvider = metadataProvider;
     this.mbrHelper = mbrHelper;
-    this.requirementsProvider =
-        new WorkerRequirementsProvider(
-            strategyConfig.getWorkerRequirementsFilename(),
-            strategyConfig.tryLargerWorkerOnOom(),
-            WORKER_REQUIREMENTS_PROVIDER_MAX_CACHE_SIZE);
+    this.requirementsProvider = requirementsProvider;
     this.remoteExecutionSessionStartedEvent = RemoteExecutionSessionEvent.started();
     this.eventBus.post(remoteExecutionSessionStartedEvent);
   }
@@ -132,7 +128,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       SourcePathRuleFinder ruleFinder,
       Cell rootCell,
       ThrowingFunction<Path, HashCode, IOException> fileHasher,
-      MetadataProvider metadataProvider) {
+      MetadataProvider metadataProvider,
+      WorkerRequirementsProvider workerRequirementsProvider) {
     BuildRuleStrategy strategy =
         new RemoteExecutionStrategy(
             eventBus,
@@ -141,6 +138,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
             metadataProvider,
             new ModernBuildRuleRemoteExecutionHelper(
                 eventBus, clients.getProtocol(), ruleFinder, rootCell, fileHasher),
+            workerRequirementsProvider,
             MoreExecutors.listeningDecorator(
                 MostExecutors.newMultiThreadExecutor("remote-exec", strategyConfig.getThreads())));
     if (strategyConfig.isLocalFallbackEnabled()) {

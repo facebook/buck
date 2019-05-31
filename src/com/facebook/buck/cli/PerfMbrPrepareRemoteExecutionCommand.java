@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.remoteexecution.WorkerRequirementsProvider;
+import com.facebook.buck.remoteexecution.FileBasedWorkerRequirementsProvider;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
@@ -148,7 +148,7 @@ public class PerfMbrPrepareRemoteExecutionCommand
                             return helper.prepareRemoteExecution(
                                 (ModernBuildRule<?>) buildRule,
                                 digest -> !containedHashes.contains(digest),
-                                WorkerRequirementsProvider.DONT_RETRY_ON_OOM_DEFAULT);
+                                FileBasedWorkerRequirementsProvider.DONT_RETRY_ON_OOM_DEFAULT);
                           } catch (Exception e) {
                             // Ignore. Hopefully this is just a serialization failure. In normal
                             // builds, those rules just fall back to non-RE.

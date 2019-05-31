@@ -24,6 +24,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
+import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -97,6 +98,12 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final String FORMAT_SESSION_ID_VARIABLE_STRING = "{id}";
 
   /**
+   * Actions which require a worker of this size (or higher) will not be stolen locally when running
+   * in hybrid mode
+   */
+  public static final String MAX_WORKER_SIZE_TO_STEAL_FROM = "max_worker_size_to_steal_from";
+
+  /**
    * Free form string label that can be passed along any Remote Execution session. Useful for
    * logging.
    */
@@ -153,6 +160,23 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   private String getDebugURLFormatString() {
     return getValue(DEBUG_FORMAT_STRING_URL_KEY).orElse(FORMAT_SESSION_ID_VARIABLE_STRING);
+  }
+
+  public Optional<WorkerRequirements.WorkerSize> getMaxWorkerSizeToStealFrom() {
+    Optional<String> workerSizeOptional = getValue(MAX_WORKER_SIZE_TO_STEAL_FROM);
+
+    if (!workerSizeOptional.isPresent()) {
+      return Optional.empty();
+    }
+
+    WorkerRequirements.WorkerSize workerSize =
+        WorkerRequirements.WorkerSize.valueOf(workerSizeOptional.get());
+    if (workerSize == WorkerRequirements.WorkerSize.UNRECOGNIZED) {
+      throw new IllegalArgumentException(
+          "Invalid value given for key " + MAX_WORKER_SIZE_TO_STEAL_FROM);
+    }
+
+    return Optional.of(workerSize);
   }
 
   public String getTenantId() {

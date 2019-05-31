@@ -23,6 +23,8 @@ import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.remoteexecution.WorkerRequirementsProvider;
+import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.util.Scope;
 import com.google.common.base.Verify;
 import com.google.common.util.concurrent.Futures;
@@ -57,7 +59,9 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
   // Queue for Jobs that cannot be run on the delegate
   private final ConcurrentLinkedQueue<Job> pendingLocalQueue;
   // Queue for Jobs that can be run on the delegate or locally
-  private final ConcurrentLinkedQueue<Job> pendingDelegateQueue;
+  private final ConcurrentLinkedQueue<Job> pendingDelegateOrLocalQueue;
+  // Queue for Jobs that can only be run on delegate
+  private final ConcurrentLinkedQueue<Job> pendingDelegateOnlyQueue;
 
   private final Semaphore localSemaphore;
   private final Semaphore delegateSemaphore;
@@ -66,6 +70,10 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
 
   private final ListeningExecutorService scheduler =
       MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
+
+  private final Optional<WorkerRequirements.WorkerSize> maxWorkerSizeToStealFrom;
+
+  private final WorkerRequirementsProvider workerRequirementsProvider;
 
   // If this is non-null, we've hit some unexpected unrecoverable condition.
   @Nullable private volatile Throwable hardFailure;
@@ -104,12 +112,33 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
     }
   }
 
-  public HybridLocalStrategy(int numLocalJobs, int numDelegateJobs, BuildRuleStrategy delegate) {
+  public HybridLocalStrategy(
+      int numLocalJobs,
+      int numDelegateJobs,
+      BuildRuleStrategy delegate,
+      WorkerRequirementsProvider workerRequirementsProvider,
+      Optional<WorkerRequirements.WorkerSize> maxWorkerSizeToStealFrom) {
     this.delegate = delegate;
+    this.workerRequirementsProvider = workerRequirementsProvider;
+    this.maxWorkerSizeToStealFrom = maxWorkerSizeToStealFrom;
     this.localSemaphore = new Semaphore(numLocalJobs);
     this.delegateSemaphore = new Semaphore(numDelegateJobs);
-    this.pendingDelegateQueue = new ConcurrentLinkedQueue<>();
     this.pendingLocalQueue = new ConcurrentLinkedQueue<>();
+    this.pendingDelegateOrLocalQueue = new ConcurrentLinkedQueue<>();
+    this.pendingDelegateOnlyQueue = new ConcurrentLinkedQueue<>();
+  }
+
+  boolean isStealingSupportedForJob(Job job) {
+    // Ensure that we do not steal actions for which require a worker greater than the max
+    // configured limit, as this could lead to OOMs on the local machine.
+    if (!maxWorkerSizeToStealFrom.isPresent()) {
+      return true;
+    }
+
+    WorkerRequirements.WorkerSize workerSizeRequirement =
+        workerRequirementsProvider.resolveRequirements(job.rule.getBuildTarget()).getWorkerSize();
+
+    return workerSizeRequirement.getNumber() <= maxWorkerSizeToStealFrom.get().getNumber();
   }
 
   private class Job {
@@ -167,7 +196,11 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
         StrategyBuildResult capturedDelegateResult =
             delegate.build(rule, new DelegatingContextWithNoOpRuleScope(strategyContext));
         delegateResult = capturedDelegateResult;
-        tracker.register(this);
+
+        // Only register delegate job if there is a possibility for it to be stolen
+        if (isStealingSupportedForJob(this)) {
+          tracker.register(this);
+        }
 
         ListenableFuture<Optional<BuildResult>> buildResult =
             capturedDelegateResult.getBuildResult();
@@ -266,8 +299,14 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
   public StrategyBuildResult build(BuildRule rule, BuildStrategyContext strategyContext) {
     boolean canBuildOnDelegate = delegate.canBuild(rule);
     Job job = new Job(strategyContext, rule, canBuildOnDelegate);
+
     if (canBuildOnDelegate) {
-      pendingDelegateQueue.add(job);
+      if (isStealingSupportedForJob(job)) {
+        pendingDelegateOrLocalQueue.add(job);
+      } else {
+        pendingDelegateOnlyQueue.add(job);
+      }
+
     } else {
       pendingLocalQueue.add(job);
     }
@@ -305,7 +344,7 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
           () -> {
             Job job = pendingLocalQueue.poll();
             if (job == null) {
-              job = pendingDelegateQueue.poll();
+              job = pendingDelegateOrLocalQueue.poll();
             }
             return job == null ? tracker.stealFromDelegate() : job.scheduleLocally();
           });
@@ -314,7 +353,12 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
       semaphoreScopedSchedule(
           delegateSemaphore,
           () -> {
-            Job job = pendingDelegateQueue.poll();
+            // Actions that can only run by delegate should be scheduled with priority
+            Job job = pendingDelegateOnlyQueue.poll();
+
+            if (job == null) {
+              job = pendingDelegateOrLocalQueue.poll();
+            }
             return job == null ? null : job.scheduleWithDelegate();
           });
     } catch (Throwable t) {
@@ -325,15 +369,17 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
     }
   }
 
+  private void cancelAllJobsInQueue(ConcurrentLinkedQueue<Job> jobQueue) {
+    while (!jobQueue.isEmpty()) {
+      Objects.requireNonNull(jobQueue.poll()).cancel(Objects.requireNonNull(hardFailure));
+    }
+  }
+
   private void cancelAllPendingJobs() {
     // Only the scheduling thread pulls from the queue, so polling from queues is safe.
-    while (!pendingDelegateQueue.isEmpty()) {
-      Objects.requireNonNull(pendingDelegateQueue.poll())
-          .cancel(Objects.requireNonNull(hardFailure));
-    }
-    while (!pendingLocalQueue.isEmpty()) {
-      Objects.requireNonNull(pendingLocalQueue.poll()).cancel(Objects.requireNonNull(hardFailure));
-    }
+    cancelAllJobsInQueue(pendingDelegateOrLocalQueue);
+    cancelAllJobsInQueue(pendingDelegateOnlyQueue);
+    cancelAllJobsInQueue(pendingLocalQueue);
   }
 
   // Attempts to acquire a permit from the semaphore and then tries to schedule the task provided.

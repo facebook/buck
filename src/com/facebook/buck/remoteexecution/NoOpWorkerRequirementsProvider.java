@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright 2019-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,13 +13,26 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.remoteexecution;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 
-/** Provides rule's RE worker requirements for given target */
-public interface WorkerRequirementsProvider {
-  WorkerRequirements resolveRequirements(BuildTarget target);
+/** WorkerRequirementsProvider that always returns default WorkerRequirements */
+public class NoOpWorkerRequirementsProvider implements WorkerRequirementsProvider {
+
+  /**
+   * Returns default WorkerRequirements always.
+   *
+   * @param target
+   * @return
+   */
+  @Override
+  public WorkerRequirements resolveRequirements(BuildTarget target) {
+    return WorkerRequirements.newBuilder()
+        .setWorkerSize(WorkerRequirements.WorkerSize.SMALL)
+        .setPlatformType(WorkerRequirements.WorkerPlatformType.LINUX)
+        .setShouldTryLargerWorkerOnOom(false)
+        .build();
+  }
 }

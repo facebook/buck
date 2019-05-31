@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.engine.BuildStrategyContext;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.remoteexecution.NoOpWorkerRequirementsProvider;
 import com.facebook.buck.util.concurrent.ListeningMultiSemaphore;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
@@ -46,7 +47,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class HybridLocalStrategyTest {
-
   @Test
   public void testLocalJobsLimited() throws Exception {
     int maxJobs = 1;
@@ -58,7 +58,9 @@ public class HybridLocalStrategyTest {
       JobLimitingStrategyContextFactory contextFactory =
           new JobLimitingStrategyContextFactory(maxJobs, service);
 
-      try (HybridLocalStrategy strategy = new HybridLocalStrategy(1, 0, delegate)) {
+      try (HybridLocalStrategy strategy =
+          new HybridLocalStrategy(
+              1, 0, delegate, new NoOpWorkerRequirementsProvider(), Optional.empty())) {
         List<ListenableFuture<Optional<BuildResult>>> results = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
           FakeBuildRule rule = new FakeBuildRule("//:target-" + i);
@@ -103,7 +105,9 @@ public class HybridLocalStrategyTest {
       JobLimitingStrategyContextFactory contextFactory =
           new JobLimitingStrategyContextFactory(maxJobs, service);
 
-      try (HybridLocalStrategy strategy = new HybridLocalStrategy(1, 0, delegate)) {
+      try (HybridLocalStrategy strategy =
+          new HybridLocalStrategy(
+              1, 0, delegate, new NoOpWorkerRequirementsProvider(), Optional.empty())) {
         List<ListenableFuture<Optional<BuildResult>>> delegateResults = new ArrayList<>();
         List<ListenableFuture<Optional<BuildResult>>> localResults = new ArrayList<>();
 
@@ -151,7 +155,9 @@ public class HybridLocalStrategyTest {
     try {
       JobLimitingBuildRuleStrategy delegate = new JobLimitingBuildRuleStrategy(maxJobs, service);
 
-      try (HybridLocalStrategy strategy = new HybridLocalStrategy(0, 1, delegate)) {
+      try (HybridLocalStrategy strategy =
+          new HybridLocalStrategy(
+              0, 1, delegate, new NoOpWorkerRequirementsProvider(), Optional.empty())) {
         List<ListenableFuture<Optional<BuildResult>>> results = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
           FakeBuildRule rule = new FakeBuildRule("//:target-" + i);
@@ -220,7 +226,9 @@ public class HybridLocalStrategyTest {
       JobLimitingStrategyContextFactory contextFactory =
           new JobLimitingStrategyContextFactory(maxJobs, service);
 
-      try (HybridLocalStrategy strategy = new HybridLocalStrategy(1, 10, delegate)) {
+      try (HybridLocalStrategy strategy =
+          new HybridLocalStrategy(
+              1, 10, delegate, new NoOpWorkerRequirementsProvider(), Optional.empty())) {
         List<ListenableFuture<Optional<BuildResult>>> results = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
           FakeBuildRule rule = new FakeBuildRule("//:target-" + i);
@@ -291,7 +299,9 @@ public class HybridLocalStrategyTest {
             }
           };
 
-      try (HybridLocalStrategy strategy = new HybridLocalStrategy(1, 100, delegate)) {
+      try (HybridLocalStrategy strategy =
+          new HybridLocalStrategy(
+              1, 100, delegate, new NoOpWorkerRequirementsProvider(), Optional.empty())) {
         List<ListenableFuture<?>> futures = new ArrayList<>();
         // We don't want any local jobs to finish before we've scheduled everything (if they did,
         // it's possible that some hybrid implementation could just chew through them without really
@@ -385,7 +395,9 @@ public class HybridLocalStrategyTest {
       JobLimitingStrategyContextFactory contextFactory =
           new JobLimitingStrategyContextFactory(maxJobs, service);
 
-      try (HybridLocalStrategy strategy = new HybridLocalStrategy(1, 10, delegate)) {
+      try (HybridLocalStrategy strategy =
+          new HybridLocalStrategy(
+              1, 10, delegate, new NoOpWorkerRequirementsProvider(), Optional.empty())) {
         List<ListenableFuture<Optional<BuildResult>>> results = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
           FakeBuildRule rule = new FakeBuildRule("//:target-" + i);

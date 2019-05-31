@@ -31,6 +31,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
+import com.facebook.buck.remoteexecution.NoOpWorkerRequirementsProvider;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient;
 import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionHandle;
@@ -133,6 +134,7 @@ public class RemoteExecutionStrategyTest {
             clients,
             MetadataProviderFactory.emptyMetadataProvider(),
             mbrHelper,
+            new NoOpWorkerRequirementsProvider(),
             service);
 
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
