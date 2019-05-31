@@ -754,7 +754,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       Environment.Builder envBuilder =
           Environment.builder(mutability)
               .setEventHandler(eventHandler)
-              .setGlobals(buckGlobals.getBuckLoadContextGlobals());
+              .setGlobals(buckGlobals.getBuckLoadContextGlobals().withLabel(load.getLabel()));
       envBuilder.setImportedExtensions(toImportMap(dependencies, null));
 
       // Create this extension.

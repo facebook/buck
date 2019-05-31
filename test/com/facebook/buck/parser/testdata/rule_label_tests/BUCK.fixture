@@ -1,0 +1,3 @@
+load("//:defs.bzl", "test_from_root_cell")
+
+test_from_root_cell()

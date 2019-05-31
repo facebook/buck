@@ -46,6 +46,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -1682,6 +1683,32 @@ public class SkylarkProjectBuildFileParserTest {
             "prebuilt_jar(name=implicit_package_symbol('missing_method') + '_cant_concat_with_none', binary_jar=\"foo.jar\")"));
 
     getSingleRule(buildFile);
+  }
+
+  @Test
+  public void enablesLabelObjectIfConfigured() throws IOException, InterruptedException {
+    Path extensionFile = projectFilesystem.resolve("foo.bzl");
+    Path buildFile = projectFilesystem.resolve("BUCK");
+
+    String extensionContents =
+        "def foo():\n"
+            + "    lbl = Label(\"@repo//package/sub:target\")\n"
+            + "    native.genrule(\n"
+            + "        name = \"foo\",\n"
+            + "        cmd = \"echo \" + lbl.name  + \" > $OUT\",\n"
+            + "        out = \"foo.out\"\n"
+            + "    )\n";
+    String buildContents = "load(\"//:foo.bzl\", \"foo\")\nfoo()\n";
+
+    Files.write(buildFile, buildContents.getBytes(Charsets.UTF_8));
+    Files.write(extensionFile, extensionContents.getBytes(Charsets.UTF_8));
+
+    parser =
+        createParserWithOptions(
+            new PrintingEventHandler(EventKind.ALL_EVENTS),
+            getDefaultParserOptions().setEnableUserDefinedRules(true).build());
+
+    assertEquals("echo target > $OUT", getSingleRule(buildFile).get("cmd"));
   }
 
   private Map<String, Object> getSingleRule(Path buildFile)

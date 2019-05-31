@@ -16,5 +16,53 @@
 
 package com.facebook.buck.skylark.function;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.cmdline.Label;
+import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
+import com.google.devtools.build.lib.cmdline.LabelValidator;
+import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.skylarkinterface.StarlarkContext;
+import com.google.devtools.build.lib.syntax.Environment;
+import com.google.devtools.build.lib.syntax.EvalException;
+import java.util.concurrent.ExecutionException;
+
 /** Provides APIs for creating build rules. */
-public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {}
+public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
+
+  LoadingCache<String, Label> labelCache =
+      CacheBuilder.newBuilder()
+          .build(
+              CacheLoader.from(
+                  (labelString) -> {
+                    try {
+                      return Label.parseAbsolute(labelString, false, ImmutableMap.of());
+                    } catch (LabelSyntaxException e) {
+                      throw new RuntimeException(e);
+                    }
+                  }));
+
+  @Override
+  public Label label(String labelString, Location loc, Environment env, StarlarkContext context)
+      throws EvalException {
+    // There is some extra implementation work in the Bazel version. At the moment we do not do
+    // cell remapping, so we take a simpler approach of making sure that root-relative labels map
+    // to whatever cell we're currently executing within. This has the side effect of making any
+    // non-root cell labels become absolute.
+    try {
+      Label parentLabel = env.getGlobals().getLabel();
+      if (parentLabel != null) {
+        LabelValidator.parseAbsoluteLabel(labelString);
+        labelString =
+            parentLabel
+                .getRelativeWithRemapping(labelString, ImmutableMap.of())
+                .getUnambiguousCanonicalForm();
+      }
+      return labelCache.get(labelString);
+    } catch (LabelValidator.BadLabelException | LabelSyntaxException | ExecutionException e) {
+      throw new EvalException(loc, "Illegal absolute label syntax: " + labelString);
+    }
+  }
+}
