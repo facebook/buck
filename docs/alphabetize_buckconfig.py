@@ -175,7 +175,8 @@ def parse_args() -> argparse.Namespace:
     args = parser.parse_args()
     if args.commit and not args.commit_template_file:
         parser.error(
-            textwrap(
+            "\n"
+            + textwrap.fill(
                 "commit requested, but --commit-template-file was not specified. "
                 "Either specify the file, or run with --no-commit",
                 80,
