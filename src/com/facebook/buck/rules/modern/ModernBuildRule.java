@@ -34,7 +34,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.DefaultInputRuleResolver;
 import com.facebook.buck.rules.modern.impl.DepsComputingVisitor;
-import com.facebook.buck.rules.modern.impl.InputsMapBuilder;
 import com.facebook.buck.rules.modern.impl.OutputPathVisitor;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -193,15 +192,6 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
   private ImmutableSortedSet<BuildRule> computeDeps() {
     ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
     classInfo.visit(buildable, new DepsComputingVisitor(inputRuleResolver, depsBuilder::add));
-    return depsBuilder.build();
-  }
-
-  /** Computes the inputs of the build rule. */
-  public ImmutableSortedSet<SourcePath> computeInputs() {
-    ImmutableSortedSet.Builder<SourcePath> depsBuilder = ImmutableSortedSet.naturalOrder();
-    new InputsMapBuilder()
-        .getInputs(getBuildable())
-        .forAllData(data -> depsBuilder.addAll(data.getPaths()));
     return depsBuilder.build();
   }
 
@@ -365,17 +355,17 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
     classInfo.visit(
         buildable,
         new OutputPathVisitor(
-            path1 -> {
+            path -> {
               // Check that any PublicOutputPath is not specified inside the rule's temporary
               // directory,
               // as the temp directory may be deleted after the rule is run.
-              if (path1 instanceof PublicOutputPath
-                  && path1.getPath().startsWith(outputPathResolver.getTempPath())) {
+              if (path instanceof PublicOutputPath
+                  && path.getPath().startsWith(outputPathResolver.getTempPath())) {
                 throw new IllegalStateException(
                     "PublicOutputPath should not be inside rule temporary directory. Path: "
-                        + path1);
+                        + path);
               }
-              collector.add(outputPathResolver.resolvePath(path1));
+              collector.add(outputPathResolver.resolvePath(path));
             }));
     // ImmutableSet guarantees that iteration order is unchanged.
     Set<Path> outputs = collector.build().collect(ImmutableSet.toImmutableSet());
