@@ -36,6 +36,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -160,7 +161,9 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public ImmutableSortedSet<Path> getOutputPaths() {
+    // Recorded paths always use unix file separators, convert this to the appropriate separators
     return RichStream.from(getValues(BuildInfo.MetadataKey.RECORDED_PATHS).get())
+        .map(path -> path.replace("/", File.separator))
         .map(Paths::get)
         .concat(RichStream.of(metadataDirectory))
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));

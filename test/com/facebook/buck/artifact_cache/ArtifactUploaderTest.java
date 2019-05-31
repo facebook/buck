@@ -160,9 +160,9 @@ public class ArtifactUploaderTest {
       }
 
       assertThat(entries, Matchers.hasSize(1));
-      assertThat(
-          MorePosixFilePermissions.fromMode(entries.get(0).getMode()),
-          Matchers.contains(PosixFilePermission.OWNER_EXECUTE));
+      assertTrue(
+          MorePosixFilePermissions.fromMode(entries.get(0).getMode())
+              .contains(PosixFilePermission.OWNER_EXECUTE));
     }
   }
 }

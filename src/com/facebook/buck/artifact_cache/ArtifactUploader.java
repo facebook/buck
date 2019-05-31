@@ -196,7 +196,9 @@ public class ArtifactUploader {
 
         // Add a file entry.
         TarArchiveEntry e = new TarArchiveEntry(path.toString() + (isRegularFile ? "" : "/"));
-        e.setMode((int) projectFilesystem.getPosixFileMode(path));
+        int mode = (int) projectFilesystem.getPosixFileMode(path);
+        // If permissions don't allow for owner to r or w, update to u+=rw and g+=r
+        e.setMode((mode & 384) == 0 ? (mode | 416) : mode);
         e.setModTime(ZipConstants.getFakeTime());
 
         if (isRegularFile) {

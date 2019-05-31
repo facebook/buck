@@ -112,6 +112,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -750,11 +751,14 @@ class CachingBuildRuleBuilder {
             BuildInfo.MetadataKey.CONFIGURATION,
             targetConfigurationSerializer.serialize(
                 rule.getBuildTarget().getTargetConfiguration()));
+
+    // Convert all recorded paths to use unix file separators
     getBuildInfoRecorder()
         .addMetadata(
             BuildInfo.MetadataKey.RECORDED_PATHS,
             getBuildInfoRecorder().getRecordedPaths().stream()
                 .map(Object::toString)
+                .map(path -> path.replace(File.separator, "/"))
                 .collect(ImmutableList.toImmutableList()));
     if (success.shouldWriteRecordedMetadataToDiskAfterBuilding()) {
       try {
