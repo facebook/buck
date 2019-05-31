@@ -39,7 +39,6 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
-import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.rules.modern.impl.ModernBuildableSupport;
@@ -64,7 +63,6 @@ import java.util.function.Supplier;
 public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements AndroidPackageable,
         ExportDependencies,
-        HasClasspathEntries,
         InitializableFromDisk<JavaLibrary.Data>,
         JavaLibrary,
         MaybeRequiredForSourceOnlyAbi,
@@ -86,7 +84,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Supplier<ImmutableSet<SourcePath>> transitiveClasspathsSupplier;
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
-  private final BuildOutputInitializer<Data> buildOutputInitializer;
+  private final BuildOutputInitializer<JavaLibrary.Data> buildOutputInitializer;
 
   public PrebuiltJar(
       BuildTarget buildTarget,
@@ -182,7 +180,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public BuildOutputInitializer<Data> getBuildOutputInitializer() {
+  public BuildOutputInitializer<JavaLibrary.Data> getBuildOutputInitializer() {
     return buildOutputInitializer;
   }
 

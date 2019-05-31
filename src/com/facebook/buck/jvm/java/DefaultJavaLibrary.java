@@ -39,8 +39,6 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.EmptyJavaAbiInfo;
-import com.facebook.buck.jvm.core.HasClasspathDeps;
-import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
@@ -84,8 +82,6 @@ import javax.annotation.Nullable;
 public class DefaultJavaLibrary
     extends PipelinedModernBuildRule<JavacPipelineState, DefaultJavaLibraryBuildable>
     implements JavaLibrary,
-        HasClasspathEntries,
-        HasClasspathDeps,
         ExportDependencies,
         InitializableFromDisk<JavaLibrary.Data>,
         AndroidPackageable,
@@ -111,7 +107,7 @@ public class DefaultJavaLibrary
   private final Supplier<ImmutableSet<SourcePath>> transitiveClasspathsSupplier;
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
-  private final BuildOutputInitializer<Data> buildOutputInitializer;
+  private final BuildOutputInitializer<JavaLibrary.Data> buildOutputInitializer;
   private final ImmutableSortedSet<BuildTarget> tests;
   private final JavaAbiInfo javaAbiInfo;
 
@@ -376,7 +372,7 @@ public class DefaultJavaLibrary
   }
 
   @Override
-  public BuildOutputInitializer<Data> getBuildOutputInitializer() {
+  public BuildOutputInitializer<JavaLibrary.Data> getBuildOutputInitializer() {
     return buildOutputInitializer;
   }
 
