@@ -105,7 +105,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.AsyncFunction;
-import com.google.common.util.concurrent.Atomics;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -363,8 +362,6 @@ class CachingBuildRuleBuilder {
   }
 
   ListenableFuture<BuildResult> build() {
-    AtomicReference<Long> outputSize = Atomics.newReference();
-
     ListenableFuture<List<BuildResult>> depResults =
         Futures.immediateFuture(Collections.emptyList());
 
@@ -407,7 +404,7 @@ class CachingBuildRuleBuilder {
     buildResult =
         Futures.transformAsync(
             buildResult,
-            ruleAsyncFunction(result -> finalizeBuildRule(result, outputSize)),
+            ruleAsyncFunction(result -> finalizeBuildRule(result)),
             serviceByAdjustingDefaultWeightsTo(
                 CachingBuildEngine.RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS));
 
@@ -500,8 +497,7 @@ class CachingBuildRuleBuilder {
     }
   }
 
-  private ListenableFuture<BuildResult> finalizeBuildRule(
-      BuildResult input, AtomicReference<Long> outputSize) throws IOException {
+  private ListenableFuture<BuildResult> finalizeBuildRule(BuildResult input) throws IOException {
     try {
       // If we weren't successful, exit now.
       if (input.getStatus() != BuildRuleStatus.SUCCESS) {
@@ -523,7 +519,7 @@ class CachingBuildRuleBuilder {
 
         switch (success) {
           case BUILT_LOCALLY:
-            finalizeBuiltLocally(outputSize);
+            finalizeBuiltLocally();
             break;
           case FETCHED_FROM_CACHE:
           case FETCHED_FROM_CACHE_INPUT_BASED:
@@ -647,14 +643,9 @@ class CachingBuildRuleBuilder {
     }
   }
 
-  private void finalizeBuiltLocally(AtomicReference<Long> outputSize)
+  private void finalizeBuiltLocally()
       throws IOException, StepFailedException, InterruptedException {
     BuildRuleSuccessType success = BuildRuleSuccessType.BUILT_LOCALLY;
-    // Try get the output size now that all outputs have been recorded.
-    outputSize.set(getBuildInfoRecorder().getOutputSize());
-    getBuildInfoRecorder()
-        .addMetadata(BuildInfo.MetadataKey.OUTPUT_SIZE, outputSize.get().toString());
-
     if (rule instanceof HasPostBuildSteps) {
       executePostBuildSteps(((HasPostBuildSteps) rule).getPostBuildSteps(buildRuleBuildContext));
     }
@@ -769,10 +760,9 @@ class CachingBuildRuleBuilder {
       }
     }
 
-    if (shouldWriteOutputHashes(outputSize.get())) {
-      try (Scope ignored = LeafEvents.scope(eventBus, "computing_output_hashes")) {
-        onDiskBuildInfo.writeOutputHashes(fileHashCache);
-      }
+    try (Scope ignored = LeafEvents.scope(eventBus, "computing_output_hashes")) {
+      onDiskBuildInfo.calculateOutputSizeAndWriteOutputHashes(
+          fileHashCache, this::shouldWriteOutputHashes);
     }
   }
 

@@ -191,15 +191,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     // Run `buck build` again.
     ProcessResult buildResult2 = workspace.runBuckCommand("build", target.getFullyQualifiedName());
-    buildResult2.assertSuccess("Successful build should exit with 0.");
-    assertTrue(Files.isRegularFile(outputFile));
-
-    ZipFile outputZipFile = new ZipFile(outputFile.toFile());
-    assertEquals(
-        "The output file will be an empty zip if it is read from the build cache.",
-        0,
-        outputZipFile.stream().count());
-    outputZipFile.close();
+    buildResult2.assertExitCode(
+        "The build should fail when the cache is corrupted.", ExitCode.FATAL_GENERIC);
 
     // Run `buck clean` followed by `buck build` yet again, but this time, specify `--no-cache`.
     ProcessResult cleanResult2 = workspace.runBuckCommand("clean", "--keep-cache");
@@ -207,7 +200,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     ProcessResult buildResult3 =
         workspace.runBuckCommand("build", "--no-cache", target.getFullyQualifiedName());
     buildResult3.assertSuccess();
-    outputZipFile = new ZipFile(outputFile.toFile());
+    ZipFile outputZipFile = new ZipFile(outputFile.toFile());
     assertNotEquals(
         "The contents of the file should no longer be pulled from the corrupted build cache.",
         0,
