@@ -16,11 +16,11 @@
 
 package com.facebook.buck.jvm.core;
 
-import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableSortedSet;
 
-public interface HasSources extends BuildRule {
+/** Provides information about sources that build rule have. */
+public interface HasSources {
 
   ImmutableSortedSet<SourcePath> getSources();
 }

@@ -24,11 +24,9 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.util.Optional;
-import java.util.Set;
 
 public interface JavaLibrary
-    extends BuildRule,
-        HasClasspathEntries,
+    extends HasClasspathEntries,
         HasClasspathDeps,
         HasDesugarSupport,
         HasJavaAbi,
@@ -66,15 +64,7 @@ public interface JavaLibrary
    */
   Flavor MAVEN_JAR = InternalFlavor.of("maven");
 
-  // TODO(natthu): This can probably be avoided by using a JavaPackageable interface similar to
-  // AndroidPackageable.
-  @Override
-  Set<BuildRule> getDepsForTransitiveClasspathEntries();
-
   ImmutableSortedSet<SourcePath> getJavaSrcs();
-
-  @Override
-  ImmutableSortedSet<SourcePath> getSources();
 
   ImmutableSortedSet<SourcePath> getResources();
 
