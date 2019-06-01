@@ -305,7 +305,7 @@ abstract class AbstractCxxSourceRuleFactory {
   // need a stable object each time.
   @Value.Lazy
   protected Function<String, String> getSanitizeFunction() {
-    return getCxxPlatform().getCompilerDebugPathSanitizer().sanitize(Optional.empty());
+    return getCxxPlatform().getCompilerDebugPathSanitizer().sanitizer(Optional.empty());
   }
 
   private ImmutableList<Arg> sanitizedArgs(Iterable<String> flags) {

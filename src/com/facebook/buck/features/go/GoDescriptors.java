@@ -282,7 +282,7 @@ abstract class GoDescriptors {
     // pass any platform specific or extra linker flags.
     argsBuilder.addAll(
         SanitizedArg.from(
-            cxxPlatform.getCompilerDebugPathSanitizer().sanitize(Optional.empty()),
+            cxxPlatform.getCompilerDebugPathSanitizer().sanitizer(Optional.empty()),
             cxxPlatform.getLdflags()));
 
     // add all arguments needed to link in the C/C++ platform runtime.

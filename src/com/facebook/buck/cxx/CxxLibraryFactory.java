@@ -867,7 +867,7 @@ public class CxxLibraryFactory {
     // Pass any platform specific or extra linker flags.
     argsBuilder.addAll(
         SanitizedArg.from(
-            cxxPlatform.getCompilerDebugPathSanitizer().sanitize(Optional.empty()),
+            cxxPlatform.getCompilerDebugPathSanitizer().sanitizer(Optional.empty()),
             cxxPlatform.getLdflags()));
 
     // Add flag to link a shared library.

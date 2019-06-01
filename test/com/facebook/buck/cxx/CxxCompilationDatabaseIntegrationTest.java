@@ -128,7 +128,10 @@ public class CxxCompilationDatabaseIntegrationTest {
     BuildTarget compilationTarget =
         target.withFlavors(
             InternalFlavor.of("default"), InternalFlavor.of("compile-" + sanitize("foo.cpp.o")));
-    Map<String, String> prefixMap = new TreeMap<>(Comparator.comparingInt(String::length));
+    Map<String, String> prefixMap =
+        new TreeMap<>(
+            Comparator.<String>comparingInt(str -> Paths.get(str).getNameCount())
+                .thenComparing(Comparator.naturalOrder()));
     prefixMap.put(rootPath.toString(), ".");
     if (Platform.detect() == Platform.MACOS) {
       prefixMap.put(libraryExportedHeaderSymlinkTreeFolder + "/", "");
@@ -204,7 +207,8 @@ public class CxxCompilationDatabaseIntegrationTest {
             InternalFlavor.of("compile-pic-" + sanitize("bar.cpp.o")));
     Map<String, String> prefixMap =
         new TreeMap<>(
-            Comparator.comparingInt(String::length).thenComparing(Comparator.naturalOrder()));
+            Comparator.<String>comparingInt(str -> Paths.get(str).getNameCount())
+                .thenComparing(Comparator.naturalOrder()));
     prefixMap.put(rootPath.toString(), ".");
     if (Platform.detect() == Platform.MACOS) {
       // the compilation flags generated compares path length without the ending "/"

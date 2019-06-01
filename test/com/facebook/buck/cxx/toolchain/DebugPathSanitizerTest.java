@@ -46,35 +46,37 @@ public class DebugPathSanitizerTest {
   @Test
   public void sanitizeWithoutAnyMatches() {
     assertThat(
-        debugPathSanitizer.sanitize(
-            Optional.of(Paths.get("/project/root")), "an arbitrary string with no match"),
+        debugPathSanitizer
+            .sanitizer(Optional.of(Paths.get("/project/root")))
+            .apply("an arbitrary string with no match"),
         equalTo("an arbitrary string with no match"));
   }
 
   @Test
   public void sanitizeProjectRoot() {
     assertThat(
-        debugPathSanitizer.sanitize(
-            Optional.of(Paths.get("/project/root")),
-            "a string that mentions the " + Paths.get("/project/root somewhere")),
+        debugPathSanitizer
+            .sanitizer(Optional.of(Paths.get("/project/root")))
+            .apply("a string that mentions the " + Paths.get("/project/root somewhere")),
         equalTo("a string that mentions the . somewhere"));
   }
 
   @Test
   public void sanitizeOtherDirectories() {
     assertThat(
-        debugPathSanitizer.sanitize(
-            Optional.of(Paths.get("/project/root")),
-            "-I" + Paths.get("/some/absolute/path/dir") + " -I" + Paths.get("/another/path")),
+        debugPathSanitizer
+            .sanitizer(Optional.of(Paths.get("/project/root")))
+            .apply(
+                "-I" + Paths.get("/some/absolute/path/dir") + " -I" + Paths.get("/another/path")),
         equalTo("-I" + Paths.get("SYMBOLIC_NAME/dir") + " -IOTHER_NAME"));
   }
 
   @Test
   public void sanitizeDirectoriesThatArePrefixOfOtherDirectories() {
     assertThat(
-        debugPathSanitizer.sanitize(
-            Optional.of(Paths.get("/project/root")),
-            "-I" + Paths.get("/another/path/with/subdirectories/something")),
+        debugPathSanitizer
+            .sanitizer(Optional.of(Paths.get("/project/root")))
+            .apply("-I" + Paths.get("/another/path/with/subdirectories/something")),
         equalTo("-I" + Paths.get("OTHER_NAME_WITH_SUFFIX/something")));
   }
 }

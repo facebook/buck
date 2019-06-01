@@ -165,7 +165,7 @@ public class CxxFlags {
       this.santizedMap =
           ImmutableSortedMap.copyOf(
               Maps.transformValues(
-                  flagMacros, compilerDebugPathSanitizer.sanitize(Optional.empty())::apply));
+                  flagMacros, compilerDebugPathSanitizer.sanitizer(Optional.empty())::apply));
     }
 
     @Override

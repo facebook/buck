@@ -108,8 +108,8 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
                                     : e.getValue().toString())))
         .concat(RichStream.from(getAllPaths(Optional.of(workingDir))))
         .sorted(
-            Comparator.<Entry<Path, String>>comparingInt(e -> e.getKey().toString().length())
-                .thenComparing(Entry::getKey))
+            Comparator.<Map.Entry<Path, String>>comparingInt(entry -> entry.getKey().getNameCount())
+                .thenComparing(entry -> entry.getKey()))
         .map(p -> getDebugPrefixMapFlag(p.getKey(), p.getValue()))
         .forEach(flags::add);
 

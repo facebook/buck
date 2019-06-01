@@ -137,11 +137,11 @@ public class PreprocessorFlagsTest {
               CxxToolFlags.explicitBuilder()
                   .addAllPlatformFlags(
                       SanitizedArg.from(
-                          sanitizer.sanitize(Optional.empty()),
+                          sanitizer.sanitizer(Optional.empty()),
                           ImmutableList.of("-I" + prefix + "/foo")))
                   .addAllRuleFlags(
                       SanitizedArg.from(
-                          sanitizer.sanitize(Optional.empty()),
+                          sanitizer.sanitizer(Optional.empty()),
                           ImmutableList.of("-I" + prefix + "/bar")))
                   .build();
 

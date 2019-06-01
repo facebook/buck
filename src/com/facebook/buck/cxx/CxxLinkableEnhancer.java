@@ -107,7 +107,7 @@ public class CxxLinkableEnhancer {
     // Pass any platform specific or extra linker flags.
     argsBuilder.addAll(
         SanitizedArg.from(
-            cxxPlatform.getCompilerDebugPathSanitizer().sanitize(Optional.empty()),
+            cxxPlatform.getCompilerDebugPathSanitizer().sanitizer(Optional.empty()),
             cxxPlatform.getLdflags()));
 
     ImmutableList<Arg> allArgs =
@@ -185,7 +185,7 @@ public class CxxLinkableEnhancer {
     // Pass any platform specific or extra linker flags.
     argsBuilder.addAll(
         SanitizedArg.from(
-            cxxPlatform.getCompilerDebugPathSanitizer().sanitize(Optional.empty()),
+            cxxPlatform.getCompilerDebugPathSanitizer().sanitizer(Optional.empty()),
             cxxPlatform.getLdflags()));
 
     argsBuilder.addAll(args);

@@ -1536,7 +1536,7 @@ public class CxxDescriptionEnhancer {
   }
 
   private static Function<String, String> getStringWithMacrosArgSanitizer(CxxPlatform platform) {
-    return platform.getCompilerDebugPathSanitizer().sanitize(Optional.empty());
+    return platform.getCompilerDebugPathSanitizer().sanitizer(Optional.empty());
   }
 
   public static String normalizeModuleName(String moduleName) {

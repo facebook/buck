@@ -21,6 +21,7 @@ import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueVisitor;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
@@ -35,7 +36,6 @@ import java.util.stream.StreamSupport;
 
 /** Encapsulates all the logic to sanitize debug paths in native code. */
 public abstract class DebugPathSanitizer implements AddsToRuleKey {
-
   @AddToRuleKey final boolean useUnixPathSeparator;
 
   /** @param useUnixPathSeparator use unix path separator in paths. */
@@ -104,28 +104,42 @@ public abstract class DebugPathSanitizer implements AddsToRuleKey {
 
   public abstract String getCompilationDirectory();
 
-  public Function<String, String> sanitize(Optional<Path> workingDir) {
-    return input -> DebugPathSanitizer.this.sanitize(workingDir, input);
+  /**
+   * Return a Function to perform sanitization of string. Applying this function to a string will
+   * return a version of it with paths replaced by their sanitized version.
+   *
+   * <p>When sanitizing multiple values, it is much more efficient to get the sanitizer once and
+   * sanitize multiple values with it.
+   */
+  public Function<String, String> sanitizer(Optional<Path> workingDir) {
+    ImmutableMap<String, String> sanitizationMap = getSanitizationMap(workingDir);
+    return input -> performSanitization(input, sanitizationMap);
   }
 
+  /** Sanitizes a list of flags. */
   public ImmutableList<String> sanitizeFlags(Iterable<String> flags) {
+    Function<String, String> sanitizer = sanitizer(Optional.empty());
     return StreamSupport.stream(flags.spliterator(), false)
-        .map(sanitize(Optional.empty()))
+        .map(sanitizer::apply)
         .collect(ImmutableList.toImmutableList());
   }
 
-  /**
-   * @param workingDir the current working directory, if applicable.
-   * @param contents the string to sanitize.
-   * @return a string with all matching paths replaced with their sanitized versions.
-   */
-  public String sanitize(Optional<Path> workingDir, String contents) {
-    for (Map.Entry<Path, String> entry : getAllPaths(workingDir)) {
+  private ImmutableMap<String, String> getSanitizationMap(Optional<Path> workingDir) {
+    return RichStream.from(getAllPaths(workingDir))
+        .collect(
+            ImmutableMap.toImmutableMap(
+                e ->
+                    useUnixPathSeparator
+                        ? PathFormatter.pathWithUnixSeparators(e.getKey())
+                        : e.getKey().toString(),
+                e -> e.getValue()));
+  }
+
+  private String performSanitization(
+      String contents, ImmutableMap<String, String> sanitizationMap) {
+    for (Map.Entry<String, String> entry : sanitizationMap.entrySet()) {
       String replacement = entry.getValue();
-      String pathToReplace =
-          useUnixPathSeparator
-              ? PathFormatter.pathWithUnixSeparators(entry.getKey())
-              : entry.getKey().toString();
+      String pathToReplace = entry.getKey();
       if (contents.contains(pathToReplace)) {
         // String.replace creates a number of objects, and creates a fair
         // amount of object churn at this level, so we avoid doing it if
