@@ -394,7 +394,7 @@ public class DefaultIjModuleFactoryTest {
     IjFolder folder = module.getFolders().iterator().next();
     assertEquals(Paths.get("kotlin/com/example/base"), folder.getPath());
     assertFalse(folder instanceof TestFolder);
-    assertFalse(folder.getWantsPackagePrefix());
+    assertTrue(folder.getWantsPackagePrefix());
   }
 
   @Test

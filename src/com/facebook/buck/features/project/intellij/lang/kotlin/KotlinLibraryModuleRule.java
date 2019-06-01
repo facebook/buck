@@ -42,7 +42,7 @@ public class KotlinLibraryModuleRule extends BaseIjModuleRule<KotlinLibraryDescr
 
   @Override
   public void apply(TargetNode<KotlinLibraryDescriptionArg> target, ModuleBuildContext context) {
-    addDepsAndSources(target, false /* wantsPackagePrefix */, context);
+    addDepsAndSources(target, true /* wantsPackagePrefix */, context);
     context.setCompilerOutputPath(moduleFactoryResolver.getCompilerOutputPath(target));
   }
 
