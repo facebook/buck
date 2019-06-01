@@ -25,6 +25,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -33,6 +34,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -65,7 +67,11 @@ public class MetadataIntegrationTest {
     ProjectFilesystem fs = workspace.asCell().getFilesystem();
     Path metadataType = fs.getBuckPaths().getScratchDir().resolve("metadata.db");
     Set<PosixFilePermission> perms = fs.getPosixFilePermissions(metadataType);
-    assertThat(perms, containsInAnyOrder(OWNER_READ, OWNER_WRITE, GROUP_READ, OTHERS_READ));
+    Set<PosixFilePermission> expectedPermissions =
+        ImmutableSet.of(OWNER_READ, OWNER_WRITE, GROUP_READ, OTHERS_READ);
+    assertTrue(
+        "Unexpected permissions: " + perms + "; expected: " + expectedPermissions,
+        perms.containsAll(expectedPermissions));
 
     // As a proxy for being able to read from a build performed by another user, check that we can
     // still build if we remove write permissions from metadata.db.
