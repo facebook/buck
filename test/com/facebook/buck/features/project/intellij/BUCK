@@ -232,6 +232,7 @@ java_test(
         "//test/com/facebook/buck/jvm/java:javac-env",
         "//test/com/facebook/buck/jvm/java:testutil",
         "//test/com/facebook/buck/jvm/kotlin:testutil",
+        "//test/com/facebook/buck/jvm/scala:testutil",
         "//test/com/facebook/buck/shell:testutil",
         "//test/com/facebook/buck/step:testutil",
         "//test/com/facebook/buck/testutil:testutil",

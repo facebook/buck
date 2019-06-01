@@ -63,6 +63,7 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.jvm.kotlin.FauxKotlinLibraryBuilder;
+import com.facebook.buck.jvm.scala.FauxScalaLibraryBuilder;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -401,7 +402,7 @@ public class DefaultIjModuleFactoryTest {
     IjModuleFactory factory = createIjModuleFactory();
 
     TargetNode<?> scalaLib =
-        FauxKotlinLibraryBuilder.createBuilder(
+        FauxScalaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//scala/com/example/base:base"))
             .addSrc(Paths.get("scala/com/example/base/File.scala"))
             .build();

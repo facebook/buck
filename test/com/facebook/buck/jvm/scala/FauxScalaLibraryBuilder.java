@@ -18,6 +18,8 @@ package com.facebook.buck.jvm.scala;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -26,7 +28,10 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.java.JavacSpec;
+import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 
 public class FauxScalaLibraryBuilder
@@ -38,15 +43,21 @@ public class FauxScalaLibraryBuilder
 
   private final ProjectFilesystem projectFilesystem;
 
-  private FauxScalaLibraryBuilder(BuildTarget target, ProjectFilesystem projectFilesystem) {
+  private FauxScalaLibraryBuilder(
+      BuildTarget target, ProjectFilesystem projectFilesystem, ScalaBuckConfig scalaBuckConfig) {
     super(
         new ScalaLibraryDescription(
             new ToolchainProviderBuilder()
                 .withToolchain(
                     JavacOptionsProvider.DEFAULT_NAME,
                     JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
+                .withToolchain(
+                    JavaToolchain.DEFAULT_NAME,
+                    JavaToolchain.builder()
+                        .setJavacProvider(JavacSpec.builder().build().getJavacProvider())
+                        .build())
                 .build(),
-            null,
+            scalaBuckConfig,
             null),
         target,
         projectFilesystem);
@@ -54,7 +65,17 @@ public class FauxScalaLibraryBuilder
   }
 
   public static FauxScalaLibraryBuilder createBuilder(BuildTarget target) {
-    return new FauxScalaLibraryBuilder(target, new FakeProjectFilesystem());
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "scala",
+                    ImmutableMap.of(
+                        "compiler", "scala-compiler.jar",
+                        "library", "//:scala-library")))
+            .build();
+    ScalaBuckConfig scalaBuckConfig = new ScalaBuckConfig(buckConfig);
+    return new FauxScalaLibraryBuilder(target, new FakeProjectFilesystem(), scalaBuckConfig);
   }
 
   public FauxScalaLibraryBuilder addSrc(SourcePath path) {

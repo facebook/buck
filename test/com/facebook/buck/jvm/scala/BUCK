@@ -1,5 +1,30 @@
 load("//tools/build_rules:java_rules.bzl", "java_test")
 
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = [
+            "*Test.java",
+        ],
+    ),
+    visibility = ["//test/..."],
+    deps = [
+        "//src-gen:thrift",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/sourcepath:sourcepath",
+        "//src/com/facebook/buck/jvm/java:config",
+        "//src/com/facebook/buck/jvm/java/toolchain:toolchain",
+        "//src/com/facebook/buck/jvm/scala:scala",
+        "//test/com/facebook/buck/core/config:FakeBuckConfig",
+        "//test/com/facebook/buck/core/model/targetgraph:testutil",
+        "//test/com/facebook/buck/core/toolchain/impl:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
+        "//test/com/facebook/buck/jvm/java:javac-env",
+        "//third-party/java/jackson:jackson-annotations",
+    ],
+)
+
 java_test(
     name = "scala",
     srcs = glob(["*Test.java"]),
@@ -12,7 +37,7 @@ java_test(
     test_rule_timeout_ms = 180000,
     vm_args = ["-Xmx512m"],
     deps = [
-        "//src-gen:thrift",
+        ":testutil",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
@@ -53,7 +78,6 @@ java_test(
         "//src/com/facebook/buck/jvm/java:support",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/jvm/java/classes:classes",
-        "//src/com/facebook/buck/jvm/kotlin:kotlin",
         "//src/com/facebook/buck/jvm/scala:scala",
         "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/parser:parser",
