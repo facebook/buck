@@ -25,9 +25,9 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
+import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.util.Optional;
 import org.junit.Rule;
@@ -40,7 +40,7 @@ public class DefaultTargetPlatformResolverTest {
 
   @Test
   public void returnCorrectPlatformForEmptyTargetConfiguration() {
-    Platform emptyTargetConfigurationPlatform = new ConstraintBasedPlatform("", ImmutableSet.of());
+    Platform emptyTargetConfigurationPlatform = EmptyPlatform.INSTANCE;
     DefaultTargetPlatformResolver targetPlatformResolver =
         new DefaultTargetPlatformResolver(
             new RuleBasedTargetPlatformResolver(
@@ -54,7 +54,7 @@ public class DefaultTargetPlatformResolverTest {
 
   @Test
   public void returnCorrectPlatformForDefaultTargetConfiguration() {
-    Platform emptyTargetConfigurationPlatform = new ConstraintBasedPlatform("", ImmutableSet.of());
+    Platform emptyTargetConfigurationPlatform = EmptyPlatform.INSTANCE;
 
     UnconfiguredBuildTargetView platformTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//platform:platform");
@@ -101,7 +101,7 @@ public class DefaultTargetPlatformResolverTest {
 
   @Test
   public void requestingPlatformForWrongTypeThrowsException() {
-    Platform emptyTargetConfigurationPlatform = new ConstraintBasedPlatform("", ImmutableSet.of());
+    Platform emptyTargetConfigurationPlatform = EmptyPlatform.INSTANCE;
     DefaultTargetPlatformResolver targetPlatformResolver =
         new DefaultTargetPlatformResolver(
             new RuleBasedTargetPlatformResolver(

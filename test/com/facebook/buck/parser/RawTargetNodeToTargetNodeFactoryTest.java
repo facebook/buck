@@ -23,7 +23,7 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
+import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -88,7 +88,7 @@ public class RawTargetNodeToTargetNodeFactoryTest {
             (file, targetNode) -> {},
             new DefaultSelectorListResolver(new TestSelectableResolver()),
             new ThrowingConstraintResolver(),
-            configuration -> new ConstraintBasedPlatform("", ImmutableSet.of()));
+            configuration -> EmptyPlatform.INSTANCE);
 
     TargetNode<?> targetNode =
         factory.createTargetNode(

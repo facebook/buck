@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
-import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
+import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
@@ -55,7 +55,6 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -195,7 +194,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
     ConstraintResolver constraintResolver =
         new RuleBasedConstraintResolver(configurationRuleResolver);
 
-    Platform defaultPlatform = new ConstraintBasedPlatform("", ImmutableSet.of());
+    Platform defaultPlatform = EmptyPlatform.INSTANCE;
     PlatformResolver platformResolver =
         new CachingPlatformResolver(
             new RuleBasedPlatformResolver(configurationRuleResolver, constraintResolver));

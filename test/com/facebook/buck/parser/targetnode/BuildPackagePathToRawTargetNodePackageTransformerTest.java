@@ -24,7 +24,7 @@ import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironme
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
+import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
@@ -62,7 +62,7 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
             (file, targetNode) -> {},
             new DefaultSelectorListResolver(new TestSelectableResolver()),
             new ThrowingConstraintResolver(),
-            configuration -> new ConstraintBasedPlatform("", ImmutableSet.of()));
+            configuration -> EmptyPlatform.INSTANCE);
 
     ImmutableMap<String, Object> rawAttributes1 =
         ImmutableMap.of(
