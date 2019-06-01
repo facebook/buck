@@ -21,9 +21,10 @@ import static java.nio.file.attribute.PosixFilePermission.GROUP_READ;
 import static java.nio.file.attribute.PosixFilePermission.OTHERS_READ;
 import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
 import static java.nio.file.attribute.PosixFilePermission.OWNER_WRITE;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -64,7 +65,7 @@ public class MetadataIntegrationTest {
     ProjectFilesystem fs = workspace.asCell().getFilesystem();
     Path metadataType = fs.getBuckPaths().getScratchDir().resolve("metadata.db");
     Set<PosixFilePermission> perms = fs.getPosixFilePermissions(metadataType);
-    assertEquals(perms, EnumSet.of(OWNER_READ, OWNER_WRITE, GROUP_READ, OTHERS_READ));
+    assertThat(perms, containsInAnyOrder(OWNER_READ, OWNER_WRITE, GROUP_READ, OTHERS_READ));
 
     // As a proxy for being able to read from a build performed by another user, check that we can
     // still build if we remove write permissions from metadata.db.
