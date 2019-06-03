@@ -109,7 +109,6 @@ public class HaskellDescriptionUtils {
     CxxPlatform cxxPlatform = platform.getCxxPlatform();
 
     Map<BuildTarget, ImmutableList<String>> depFlags = new TreeMap<>();
-    Map<BuildTarget, ImmutableList<SourcePath>> depIncludes = new TreeMap<>();
     ImmutableSortedMap.Builder<String, HaskellPackage> exposedPackagesBuilder =
         ImmutableSortedMap.naturalOrder();
     ImmutableSortedMap.Builder<String, HaskellPackage> packagesBuilder =
@@ -126,7 +125,6 @@ public class HaskellDescriptionUtils {
           HaskellCompileInput compileInput =
               haskellCompileDep.getCompileInput(platform, depType, hsProfile);
           depFlags.put(rule.getBuildTarget(), compileInput.getFlags());
-          depIncludes.put(rule.getBuildTarget(), compileInput.getIncludes());
 
           // We add packages from first-order deps as expose modules, and transitively included
           // packages as hidden ones.
@@ -164,9 +162,6 @@ public class HaskellDescriptionUtils {
             .addAll(Iterables.concat(depFlags.values()))
             .build();
 
-    ImmutableList<SourcePath> includes =
-        ImmutableList.copyOf(Iterables.concat(depIncludes.values()));
-
     ImmutableSortedMap<String, HaskellPackage> exposedPackages = exposedPackagesBuilder.build();
     ImmutableSortedMap<String, HaskellPackage> packages = packagesBuilder.build();
 
@@ -185,7 +180,6 @@ public class HaskellDescriptionUtils {
         hsProfile,
         main,
         packageInfo,
-        includes,
         exposedPackages,
         packages,
         sources,

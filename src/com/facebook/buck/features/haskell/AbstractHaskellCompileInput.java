@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.haskell;
 
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
@@ -31,9 +30,6 @@ interface AbstractHaskellCompileInput {
 
   /** @return any haskell compilation flags to include in the top-level compile job. */
   ImmutableList<String> getFlags();
-
-  /** @return any haskell includes used by the top-level compile job. */
-  ImmutableList<SourcePath> getIncludes();
 
   /** @return any haskell packages used by the top-level compile job. */
   ImmutableList<HaskellPackage> getPackages();

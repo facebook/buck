@@ -98,8 +98,6 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
    */
   @AddToRuleKey private final Optional<HaskellPackageInfo> packageInfo;
 
-  @AddToRuleKey private final ImmutableList<SourcePath> includes;
-
   /** Packages providing modules that modules from this compilation can directly import. */
   @AddToRuleKey private final ImmutableSortedMap<String, HaskellPackage> exposedPackages;
 
@@ -127,7 +125,6 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       boolean hsProfile,
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
-      ImmutableList<SourcePath> includes,
       ImmutableSortedMap<String, HaskellPackage> exposedPackages,
       ImmutableSortedMap<String, HaskellPackage> packages,
       HaskellSources sources,
@@ -143,7 +140,6 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     this.hsProfile = hsProfile;
     this.main = main;
     this.packageInfo = packageInfo;
-    this.includes = includes;
     this.exposedPackages = exposedPackages;
     this.packages = packages;
     this.sources = sources;
@@ -165,7 +161,6 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       boolean hsProfile,
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
-      ImmutableList<SourcePath> includes,
       ImmutableSortedMap<String, HaskellPackage> exposedPackages,
       ImmutableSortedMap<String, HaskellPackage> packages,
       HaskellSources sources,
@@ -176,7 +171,6 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(BuildableSupport.getDepsCollection(compiler, ruleFinder))
                     .addAll(ppFlags.getDeps(ruleFinder))
-                    .addAll(ruleFinder.filterBuildRuleInputs(includes))
                     .addAll(sources.getDeps(ruleFinder))
                     .addAll(
                         Stream.of(exposedPackages, packages)
@@ -198,7 +192,6 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         hsProfile,
         main,
         packageInfo,
-        includes,
         exposedPackages,
         packages,
         sources,
@@ -321,12 +314,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         .add("-odir", getProjectFilesystem().resolve(getObjectDir()).toString())
         .add("-hidir", getProjectFilesystem().resolve(getInterfaceDir()).toString())
         .add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString())
-        .add(
-            "-i"
-                + includes.stream()
-                    .map(resolver::getAbsolutePath)
-                    .map(Object::toString)
-                    .collect(Collectors.joining(":")))
+        .add("-i")
         .addAll(getPackageArgs(resolver));
 
     if (useArgsfile) {
