@@ -54,12 +54,16 @@ public class LogConfig {
 
   /** Default constructor, called by LogManager. */
   public LogConfig() throws IOException {
-    setupLogging(
-        LogConfigSetup.builder()
-            .from(LogConfigSetup.DEFAULT_SETUP)
-            .setLogFilePrefix("launch-")
-            .setCount(1)
-            .build());
+    LogConfigSetup.Builder logConfig = LogConfigSetup.builder().from(LogConfigSetup.DEFAULT_SETUP);
+    if (isBuckd()) {
+      logConfig.setLogFilePrefix("launchd-");
+      logConfig.setCount(10);
+
+    } else {
+      logConfig.setLogFilePrefix("launch-");
+      logConfig.setCount(1);
+    }
+    setupLogging(logConfig.build());
   }
 
   public static void setUseAsyncFileLogging(boolean useAsyncFileLogging) {
@@ -171,5 +175,9 @@ public class LogConfig {
             Optional.of(logConfigSetup.getMaxLogSizeBytes()))) {
       Files.deleteIfExists(path);
     }
+  }
+
+  private static boolean isBuckd() {
+    return Boolean.valueOf(System.getProperty("buck.is_buckd"));
   }
 }

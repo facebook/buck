@@ -401,6 +401,7 @@ class BuckTool(object):
         """
         command = ["buck"]
         extra_default_options = [
+            "-Dbuck.is_buckd=false",
             "-Djava.io.tmpdir={0}".format(self._tmp_dir),
             "-Dfile.encoding=UTF-8",
             "-XX:SoftRefLRUPolicyMSPerMB=0",
@@ -587,6 +588,7 @@ class BuckTool(object):
             """
             command = ["buckd"]
             extra_default_options = [
+                "-Dbuck.is_buckd=true",
                 "-Dbuck.buckd_launch_time_nanos={0}".format(monotonic_time_nanos()),
                 "-Dfile.encoding=UTF-8",
                 "-XX:MaxGCPauseMillis={0}".format(GC_MAX_PAUSE_TARGET),
