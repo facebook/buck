@@ -18,7 +18,6 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -41,18 +40,15 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -155,7 +151,20 @@ public class CGoGenSource extends AbstractBuildRule {
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), genDir)));
-    steps.add(new WriteArgsfileStep(context));
+    steps.add(
+        new WriteFileStep(
+            getProjectFilesystem(),
+            new ImmutableList.Builder<String>()
+                .addAll(getPreprocessorFlags(context.getSourcePathResolver()))
+                    .addAll(
+                        includeDirs.stream()
+                            .map(dir -> "-I" + dir.toString())
+                            .collect(Collectors.toSet()))
+                    .build().stream()
+                    .map(Escaper.ARGFILE_ESCAPER::apply)
+                    .collect(Collectors.joining(System.lineSeparator())),
+            argsFile,
+            false));
     steps.add(
         new CGoCompileStep(
             getProjectFilesystem().getRootPath(),
@@ -209,43 +218,5 @@ public class CGoGenSource extends AbstractBuildRule {
 
   public SourcePath getExportHeader() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), genDir.resolve("_cgo_export.h"));
-  }
-
-  private class WriteArgsfileStep implements Step {
-
-    private BuildContext buildContext;
-
-    public WriteArgsfileStep(BuildContext buildContext) {
-      this.buildContext = buildContext;
-    }
-
-    @Override
-    public StepExecutionResult execute(ExecutionContext context) throws IOException {
-      getProjectFilesystem().createParentDirs(argsFile);
-      getProjectFilesystem()
-          .writeLinesToPath(
-              Iterables.transform(
-                  new ImmutableList.Builder<String>()
-                      .addAll(getPreprocessorFlags(buildContext.getSourcePathResolver()))
-                      .addAll(
-                          includeDirs.stream()
-                              .map(dir -> "-I" + dir.toString())
-                              .collect(Collectors.toSet()))
-                      .build(),
-                  Escaper.ARGFILE_ESCAPER::apply),
-              argsFile);
-
-      return StepExecutionResults.SUCCESS;
-    }
-
-    @Override
-    public String getShortName() {
-      return "write-cgo-argsfile";
-    }
-
-    @Override
-    public String getDescription(ExecutionContext context) {
-      return "Write argsfile for cgo";
-    }
   }
 }
