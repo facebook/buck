@@ -1,8 +1,7 @@
-From fd8283ec010e50eafa67d450cb5f66a9da19ce32 Mon Sep 17 00:00:00 2001
+From 175fa06ed161d72be41c94e24cb9898e3fe0939d Mon Sep 17 00:00:00 2001
 From: Gautam Korlam <gkorlam@uber.com>
-Date: Thu, 18 Apr 2019 01:57:55 -0700
-Subject: [PATCH] Changes to D8 to make it work with facebook's buck build
- system
+Date: Thu, 18 Apr 2019 15:12:16 -0700
+Subject: [PATCH] D8 changes for buck
 
 ---
  src/main/java/com/android/tools/r8/D8.java    |  2 +-
@@ -17,10 +16,10 @@ Subject: [PATCH] Changes to D8 to make it work with facebook's buck build
  9 files changed, 78 insertions(+), 14 deletions(-)
 
 diff --git a/src/main/java/com/android/tools/r8/D8.java b/src/main/java/com/android/tools/r8/D8.java
-index 1fb8f0e84..2455425ab 100644
+index 8757da5dc..05b20aab5 100644
 --- a/src/main/java/com/android/tools/r8/D8.java
 +++ b/src/main/java/com/android/tools/r8/D8.java
-@@ -166,7 +166,7 @@ public final class D8 {
+@@ -167,7 +167,7 @@ public final class D8 {
        options.disableGlobalOptimizations();
  
        DexApplication app = new ApplicationReader(inputApp, options, timing).read(executor);
@@ -30,7 +29,7 @@ index 1fb8f0e84..2455425ab 100644
  
        // Close any internal archive providers now the application is fully processed.
 diff --git a/src/main/java/com/android/tools/r8/D8Command.java b/src/main/java/com/android/tools/r8/D8Command.java
-index f0591ee17..140ade5c9 100644
+index 9438632bb..34e166e30 100644
 --- a/src/main/java/com/android/tools/r8/D8Command.java
 +++ b/src/main/java/com/android/tools/r8/D8Command.java
 @@ -101,6 +101,12 @@ public final class D8Command extends BaseCompilerCommand {
@@ -69,10 +68,10 @@ index f0591ee17..140ade5c9 100644
      internal.debug = getMode() == CompilationMode.DEBUG;
      internal.programConsumer = getProgramConsumer();
 diff --git a/src/main/java/com/android/tools/r8/graph/AppInfo.java b/src/main/java/com/android/tools/r8/graph/AppInfo.java
-index 543326a9a..292c2a9d0 100644
+index 543326a9a..c48577ce4 100644
 --- a/src/main/java/com/android/tools/r8/graph/AppInfo.java
 +++ b/src/main/java/com/android/tools/r8/graph/AppInfo.java
-@@ -26,20 +26,27 @@ public class AppInfo implements DexDefinitionSupplier {
+@@ -26,14 +26,20 @@ public class AppInfo implements DexDefinitionSupplier {
    // class being optimized.
    private final ConcurrentHashMap<DexType, DexProgramClass> synthesizedClasses =
        new ConcurrentHashMap<>();
@@ -94,13 +93,14 @@ index 543326a9a..292c2a9d0 100644
    }
  
    protected AppInfo(AppInfo previous) {
-     assert !previous.isObsolete();
+@@ -41,6 +47,7 @@ public class AppInfo implements DexDefinitionSupplier {
      this.app = previous.app;
      this.dexItemFactory = app.dexItemFactory;
-+    this.bucketId = previous.bucketId;
      this.definitions.putAll(previous.definitions);
++    this.bucketId = previous.bucketId;
      copyMetadataFromPrevious(previous);
    }
+ 
 @@ -167,6 +174,13 @@ public class AppInfo implements DexDefinitionSupplier {
      return existing != null ? existing : typeDefinitions;
    }
@@ -116,7 +116,7 @@ index 543326a9a..292c2a9d0 100644
     * Lookup static method following the super chain from the holder of {@code method}.
     * <p>
 diff --git a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-index dfda73719..7d6370a72 100644
+index c1c8cc6d5..3eb334208 100644
 --- a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
 +++ b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
 @@ -40,6 +40,7 @@ import java.util.Arrays;
@@ -127,7 +127,7 @@ index dfda73719..7d6370a72 100644
  import java.util.IdentityHashMap;
  import java.util.List;
  import java.util.Map;
-@@ -1303,4 +1304,17 @@ public class DexItemFactory {
+@@ -1332,4 +1333,17 @@ public class DexItemFactory {
    synchronized public void forAllTypes(Consumer<DexType> f) {
      new ArrayList<>(types.values()).forEach(f);
    }
@@ -146,10 +146,10 @@ index dfda73719..7d6370a72 100644
 +  }
  }
 diff --git a/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java b/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java
-index bfdbd887f..22ccbc993 100644
+index 8b3a6c133..63b3007fe 100644
 --- a/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java
 +++ b/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java
-@@ -258,7 +258,7 @@ public class IRConverter {
+@@ -270,7 +270,7 @@ public class IRConverter {
    }
  
    private boolean enableTwrCloseResourceDesugaring() {
@@ -159,10 +159,10 @@ index bfdbd887f..22ccbc993 100644
  
    private boolean enableTryWithResourcesDesugaring() {
 diff --git a/src/main/java/com/android/tools/r8/ir/desugar/Java8MethodRewriter.java b/src/main/java/com/android/tools/r8/ir/desugar/Java8MethodRewriter.java
-index 646f24e87..9eb08f6dc 100644
+index 69d0b48f0..554470c80 100644
 --- a/src/main/java/com/android/tools/r8/ir/desugar/Java8MethodRewriter.java
 +++ b/src/main/java/com/android/tools/r8/ir/desugar/Java8MethodRewriter.java
-@@ -75,10 +75,11 @@ public final class Java8MethodRewriter {
+@@ -79,10 +79,11 @@ public final class Java8MethodRewriter {
        if (generator == null) {
          continue;
        }
@@ -176,7 +176,7 @@ index 646f24e87..9eb08f6dc 100644
        holders.add(code.method.method.holder);
      }
    }
-@@ -120,7 +121,7 @@ public final class Java8MethodRewriter {
+@@ -124,7 +125,7 @@ public final class Java8MethodRewriter {
          ClassAccessFlags.fromSharedAccessFlags(Constants.ACC_PUBLIC | Constants.ACC_SYNTHETIC);
  
      for (MethodGenerator generator : methodGenerators.values()) {
@@ -185,7 +185,7 @@ index 646f24e87..9eb08f6dc 100644
        TemplateMethodCode code = generator.generateTemplateMethod(options, method);
        DexEncodedMethod dexEncodedMethod= new DexEncodedMethod(method,
            flags, DexAnnotationSet.empty(), ParameterAnnotationsList.empty(), code);
-@@ -627,14 +628,14 @@ public final class Java8MethodRewriter {
+@@ -805,14 +806,14 @@ public final class Java8MethodRewriter {
          this.proto = proto;
        }
  
@@ -230,7 +230,7 @@ index 135e961d1..05f6ec64c 100644
  
    public DexVersion getDexVersion() {
 diff --git a/src/main/java/com/android/tools/r8/utils/AndroidApp.java b/src/main/java/com/android/tools/r8/utils/AndroidApp.java
-index 4c1552447..f871ae6a8 100644
+index ad09465bc..98afedf09 100644
 --- a/src/main/java/com/android/tools/r8/utils/AndroidApp.java
 +++ b/src/main/java/com/android/tools/r8/utils/AndroidApp.java
 @@ -72,6 +72,8 @@ public class AndroidApp {
@@ -285,7 +285,7 @@ index 4c1552447..f871ae6a8 100644
  
      // Proguard map data is output only data. This should never be used as input to a compilation.
      private StringResource proguardMapOutputData;
-@@ -652,6 +665,14 @@ public class AndroidApp {
+@@ -667,6 +680,14 @@ public class AndroidApp {
        return this;
      }
  
@@ -300,7 +300,7 @@ index 4c1552447..f871ae6a8 100644
      /**
       * Build final AndroidApp.
       */
-@@ -698,7 +719,8 @@ public class AndroidApp {
+@@ -713,7 +734,8 @@ public class AndroidApp {
            ImmutableList.copyOf(archiveProvidersToClose),
            proguardMapOutputData,
            mainDexListResources,
@@ -311,5 +311,5 @@ index 4c1552447..f871ae6a8 100644
  
      public Builder addProgramFile(Path file) {
 -- 
-2.20.1
+2.21.0
 
