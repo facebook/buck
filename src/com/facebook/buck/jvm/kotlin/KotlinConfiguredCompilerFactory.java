@@ -77,4 +77,10 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {
     return javacFactory.create(resolver, arg);
   }
+
+  @Override
+  public boolean shouldDesugarInterfaceMethods() {
+    // Enable desugaring for kotlin libraries by default
+    return true;
+  }
 }
