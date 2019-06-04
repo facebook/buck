@@ -203,10 +203,6 @@ abstract class AbstractParser implements Parser {
   public TargetGraph buildTargetGraph(
       ParsingContext parsingContext, Iterable<BuildTarget> toExplore)
       throws IOException, InterruptedException, BuildFileParseException {
-    if (Iterables.isEmpty(toExplore)) {
-      return TargetGraph.EMPTY;
-    }
-
     AtomicLong processedBytes = new AtomicLong();
     try (PerBuildState state =
         perBuildStateFactory.create(parsingContext, permState, processedBytes)) {
