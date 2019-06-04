@@ -162,9 +162,7 @@ public class RustCompileUtils {
         .map(StringArg::of)
         .forEach(args::add);
 
-    if (edition.isPresent()) {
-      args.add(StringArg.of(String.format("--edition=%s", edition.get())));
-    }
+    args.add(StringArg.of(String.format("--edition=%s", edition.orElse(rustConfig.getEdition()))));
 
     if (incremental.isPresent()) {
       Path path =

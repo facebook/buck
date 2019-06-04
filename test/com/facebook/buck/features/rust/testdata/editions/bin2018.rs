@@ -1,3 +1,5 @@
+use rust2015::do_thing;
+
 fn main() {
-  rust2015::do_thing();
+  do_thing();
 }

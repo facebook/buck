@@ -38,6 +38,7 @@ public class RustBuckConfig {
   private static final String FORCE_RLIB = "force_rlib";
   private static final String PREFER_STATIC_LIBS = "prefer_static_libs";
   private static final String RUSTC_INCREMENTAL = "incremental";
+  private static final String DEFAULT_EDITION = "default_edition";
 
   enum RemapSrcPaths {
     NO, // no path remapping
@@ -222,5 +223,10 @@ public class RustBuckConfig {
     return firstOf(
         () -> delegate.getValue(SECTION + "#" + platform, RUSTC_INCREMENTAL),
         () -> delegate.getValue(SECTION, RUSTC_INCREMENTAL));
+  }
+
+  /** Default edition when not specified in a rule. Use "2015" if not specified. */
+  String getEdition() {
+    return delegate.getValue(SECTION, DEFAULT_EDITION).orElse("2015");
   }
 }

@@ -1,5 +1,6 @@
 extern crate rust2018;
+use rust2018::do_thing;
 
 fn main() {
-  rust2018::do_thing();
+  do_thing();
 }

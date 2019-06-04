@@ -4781,6 +4781,18 @@ buck = .
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'rust' /}
+  {param name: 'default_edition' /}
+  {param example_value: '2018' /}
+  {param description}
+    <p>
+    Set the default edition for Rust rules. The edition can be specified on a per-rule basis, but
+    this sets the default if nothing is specified. The default is "2015".
+    </p>
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'sandbox' /}
   {param description}

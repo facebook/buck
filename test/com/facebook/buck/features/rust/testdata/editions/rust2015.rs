@@ -5,7 +5,9 @@ pub fn do_thing() {
 }
 
 mod inner {
+  use common::common_func;
+
   pub fn innerdo() {
-    common::common();
+    common_func();
   }
 }

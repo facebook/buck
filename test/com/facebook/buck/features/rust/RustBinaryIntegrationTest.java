@@ -308,6 +308,56 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void simpleBinaryEdition2015Default() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "editions", tmp);
+    workspace.setUp();
+
+    RustAssumptions.assumeVersion(workspace, "1.31");
+
+    workspace
+        .runBuckCommand("build", "-c", "rust.default_edition=2015", "//:bin2015-default")
+        .assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:bin2015-default");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            workspace
+                .resolve("buck-out/gen/bin2015-default#binary,default/bin2015_default")
+                .toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("Common called"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void simpleBinaryEdition2018Default() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "editions", tmp);
+    workspace.setUp();
+
+    RustAssumptions.assumeVersion(workspace, "1.31");
+
+    workspace
+        .runBuckCommand("build", "-c", "rust.default_edition=2018", "//:bin2018-default")
+        .assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:bin2018-default");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            workspace
+                .resolve("buck-out/gen/bin2018-default#binary,default/bin2018_default")
+                .toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("Common called"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
   public void binaryWithGeneratedSource() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_generated", tmp);

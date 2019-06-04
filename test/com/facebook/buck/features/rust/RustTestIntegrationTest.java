@@ -147,4 +147,30 @@ public class RustTestIntegrationTest {
 
     workspace.runBuckCommand("test", "//:test2018").assertSuccess();
   }
+
+  @Test
+  public void simpleTestEdition2015Default() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "editions", tmp);
+    workspace.setUp();
+
+    RustAssumptions.assumeVersion(workspace, "1.31");
+
+    workspace
+        .runBuckCommand("test", "-c", "rust.default_edition=2015", "//:test2015-default")
+        .assertSuccess();
+  }
+
+  @Test
+  public void simpleTestEdition2018Default() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "editions", tmp);
+    workspace.setUp();
+
+    RustAssumptions.assumeVersion(workspace, "1.31");
+
+    workspace
+        .runBuckCommand("test", "-c", "rust.default_edition=2018", "//:test2018-default")
+        .assertSuccess();
+  }
 }
