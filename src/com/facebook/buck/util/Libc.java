@@ -42,6 +42,8 @@ public interface Libc extends Library {
 
   int fcntl(int fd, int cmd, Object... args);
 
+  int getpid();
+
   final class Constants {
     public static final int LINUX_TIOCSCTTY = 0x540E;
     public static final int DARWIN_TIOCSCTTY = 0x20007461;

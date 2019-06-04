@@ -77,6 +77,9 @@ public final class BuckDaemon {
   /** The command ran when starting a new long living buckd session. */
   public static void main(String[] args) {
     try {
+      SystemInfoLogger.logFileLimits();
+      SystemInfoLogger.logParentProcessChain();
+
       if (daemonizeIfPossible()) {
         BgProcessKiller.init();
         LOG.info("initialized bg session killer");
