@@ -114,17 +114,23 @@ public class HttpdForTests implements AutoCloseable {
 
     ImmutableList<X509Certificate> caCerts =
         ClientCertificateHandler.parseCertificates(Optional.of(caPath), true);
-    X509Certificate serverCert =
-        ClientCertificateHandler.parseCertificate(Optional.of(certificatePath), true).get();
+    ClientCertificateHandler.CertificateInfo certInfo =
+        ClientCertificateHandler.parseCertificateChain(Optional.of(certificatePath), true).get();
     PrivateKey privateKey =
-        ClientCertificateHandler.parsePrivateKey(Optional.of(keyPath), serverCert, true).get();
+        ClientCertificateHandler.parsePrivateKey(
+                Optional.of(keyPath), certInfo.getPrimaryCert(), true)
+            .get();
 
     KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
     ks.load(null, password.toCharArray());
     for (int i = 0; i < caCerts.size(); i++) {
       ks.setCertificateEntry(String.format("ca%d", i), caCerts.get(i));
     }
-    ks.setKeyEntry("private", privateKey, password.toCharArray(), new Certificate[] {serverCert});
+    ks.setKeyEntry(
+        "private",
+        privateKey,
+        password.toCharArray(),
+        new Certificate[] {certInfo.getPrimaryCert()});
 
     SslContextFactory sslFactory = new SslContextFactory();
     sslFactory.setKeyStore(ks);

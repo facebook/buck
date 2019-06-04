@@ -48,6 +48,26 @@ import okhttp3.tls.HeldCertificate;
 /** Holder and certificate parser for HTTPS client certificates. */
 public class ClientCertificateHandler {
 
+  /** Holds response of parseCertificateChain */
+  public static class CertificateInfo {
+    /** Create a new CertificateInfo instance */
+    public CertificateInfo(X509Certificate primaryCert, ImmutableList<X509Certificate> chain) {
+      this.primaryCert = primaryCert;
+      this.chain = chain;
+    }
+
+    private final X509Certificate primaryCert;
+    private final ImmutableList<X509Certificate> chain;
+
+    public X509Certificate getPrimaryCert() {
+      return primaryCert;
+    }
+
+    public ImmutableList<X509Certificate> getChain() {
+      return chain;
+    }
+  };
+
   private static final Pattern privateKeyExtractor =
       Pattern.compile(
           "-----\\w*BEGIN PRIVATE KEY\\w*-----(.*)-----\\w*END PRIVATE KEY\\w*-----",
@@ -174,35 +194,61 @@ public class ClientCertificateHandler {
   }
 
   /**
-   * Parses a PEM encoded X509 certificate (which may contain other types of PEM sections)
+   * Parses a PEM encoded X509 certificate chain from a file which may contain non-certificate
+   * sections after the certificate chain. The actual certificate must be placed at the beginning of
+   * the file with the rest of the certificate chain following in order up to but not including the
+   * trusted root.
    *
-   * @param certPathOptional The location of the certificate
+   * @param certPathOptional The location of the certificate chain file
    * @param required whether to throw or ignore on unset / missing / expired certificates
    * @throws {@link HumanReadableException} on issues with certificate
    */
-  public static Optional<X509Certificate> parseCertificate(
+  public static Optional<CertificateInfo> parseCertificateChain(
       Optional<Path> certPathOptional, boolean required) {
     if (!isFileAvailable(certPathOptional, "certificate", required)) {
       return Optional.empty();
     }
     Path certPath = certPathOptional.get();
+    X509Certificate primaryCert = null;
+    ImmutableList.Builder<X509Certificate> chainBuilder = new ImmutableList.Builder<>();
+    int numCertsInChain = 0;
     try (InputStream certificateIn = Files.newInputStream(certPath)) {
-      X509Certificate certificate =
-          (X509Certificate)
-              CertificateFactory.getInstance("X.509").generateCertificate(certificateIn);
-      certificate.checkValidity();
-      return Optional.of(certificate);
+      while (true) {
+        X509Certificate cert =
+            (X509Certificate)
+                CertificateFactory.getInstance("X.509").generateCertificate(certificateIn);
+        cert.checkValidity();
+        if (numCertsInChain == 0) {
+          primaryCert = cert;
+        } else {
+          chainBuilder.add(cert);
+        }
+        numCertsInChain++;
+      }
     } catch (CertificateExpiredException e) {
-      throwIfRequired(required, e, "The client certificate at %s has expired", certPath);
+      throwIfRequired(
+          required, e, "Certificate #%d from the top in %s has expired", numCertsInChain, certPath);
     } catch (CertificateNotYetValidException e) {
-      throwIfRequired(required, e, "The client certificate at %s is not yet valid", certPath);
-    } catch (CertificateException e) {
-      throw new HumanReadableException(
+      throwIfRequired(
+          required,
           e,
-          "The client certificate at %s does not appear to contain a valid X509 certificate",
+          "Certificate #%d from the top on %s is not yet valid",
+          numCertsInChain,
           certPath);
+    } catch (CertificateException e) {
+      if (numCertsInChain == 0 || primaryCert == null) {
+        throw new HumanReadableException(
+            e,
+            "No parsable X509 certificates found in %s while looking for certificate #%d from the top: "
+                + e.toString(),
+            certPath,
+            numCertsInChain);
+      } else {
+        /* EOF or first non-certificate (e.g. private key) section reached */
+        return Optional.of(new CertificateInfo(primaryCert, chainBuilder.build()));
+      }
     } catch (IOException e) {
-      throw new HumanReadableException(e, "Could not read the client certificate at %s", certPath);
+      throw new HumanReadableException(e, "Could not read certificate(s) file at %s", certPath);
     }
     return Optional.empty();
   }
@@ -260,15 +306,17 @@ public class ClientCertificateHandler {
       extraCaCertificates.stream().forEachOrdered(hsBuilder::addTrustedCertificate);
       shouldReturnHandshakeCerts = true;
     }
-    // Load the client certificate
-    Optional<X509Certificate> certificate = parseCertificate(certPath, required);
-    if (certificate.isPresent()) {
-      Optional<PrivateKey> privateKey = parsePrivateKey(keyPath, certificate.get(), required);
+    // Load the client certificate chain
+    Optional<CertificateInfo> certInfo = parseCertificateChain(certPath, required);
+    if (certInfo.isPresent()) {
+      X509Certificate clientCert = certInfo.get().getPrimaryCert();
+      Optional<PrivateKey> privateKey = parsePrivateKey(keyPath, clientCert, required);
       if (privateKey.isPresent()) {
-        HeldCertificate cert =
+        HeldCertificate heldCert =
             new HeldCertificate(
-                new KeyPair(certificate.get().getPublicKey(), privateKey.get()), certificate.get());
-        hsBuilder.heldCertificate(cert);
+                new KeyPair(clientCert.getPublicKey(), privateKey.get()), clientCert);
+        hsBuilder.heldCertificate(
+            heldCert, certInfo.get().getChain().stream().toArray(X509Certificate[]::new));
         shouldReturnHandshakeCerts = true;
       }
     }
