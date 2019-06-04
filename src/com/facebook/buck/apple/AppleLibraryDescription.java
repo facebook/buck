@@ -25,6 +25,7 @@ import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.MetadataProvidingDescription;
+import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.core.description.impl.DescriptionCache;
@@ -1010,7 +1011,8 @@ public class AppleLibraryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractAppleLibraryDescriptionArg extends AppleNativeTargetDescriptionArg {
+  interface AbstractAppleLibraryDescriptionArg
+      extends AppleNativeTargetDescriptionArg, HasContacts {
     Optional<SourcePath> getInfoPlist();
 
     ImmutableMap<String, String> getInfoPlistSubstitutions();
