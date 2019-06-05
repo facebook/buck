@@ -120,7 +120,7 @@ public class WatchmanClientIntegrationTest {
                 watchmanSockFile, new TestConsole(), new DefaultClock());
         try {
           if (optClient.isPresent()) {
-            optClient.get().queryWithTimeout(timeoutMillis, "get-pid");
+            optClient.get().queryWithTimeout(timeoutNanos, "get-pid");
             break;
           }
         } finally {
