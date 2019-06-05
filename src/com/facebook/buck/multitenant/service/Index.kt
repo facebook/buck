@@ -17,9 +17,10 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
-import com.facebook.buck.multitenant.collect.GenerationMap
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.google.common.collect.ImmutableSet
+import java.util.ArrayDeque
+import kotlin.collections.HashSet
 
 /**
  * View of build graph data across a range of generations. Because this is a "view," it is not
@@ -27,8 +28,9 @@ import com.google.common.collect.ImmutableSet
  * made via its complementary [IndexAppender].
  */
 class Index internal constructor(
-        private val indexGenerationData: IndexGenerationData,
-        private val buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>) {
+    private val indexGenerationData: IndexGenerationData,
+    private val buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>
+) {
 
     /**
      * Uses the repo state represented by this [Index] at the specified [Generation] and applies
@@ -123,25 +125,40 @@ class Index internal constructor(
      * @return the transitive deps of the specified targets (includes targets)
      */
     fun getTransitiveDeps(generation: Generation, targets: Sequence<UnconfiguredBuildTarget>): Set<UnconfiguredBuildTarget> {
-        val toVisit = LinkedHashSet<BuildTargetId>()
-        targets.mapTo(toVisit) { buildTargetCache.get(it) }
-        val visited = mutableSetOf<BuildTargetId>()
+        val queue = ArrayDeque<BuildTargetId>()
+
+        val visited: HashSet<BuildTargetId> = if (targets is Collection<*>) {
+            HashSet(targets.size)
+        } else {
+            hashSetOf()
+        }
 
         indexGenerationData.withRuleMap { ruleMap ->
-            while (toVisit.isNotEmpty()) {
-                val targetId = getFirst(toVisit)
+
+            val visitDeps: (BuildTargetId) -> Unit = { targetId ->
                 val node = ruleMap.getVersion(targetId, generation)
-                visited.add(targetId)
 
-                if (node == null) {
-                    continue
-                }
-
-                for (dep in node.deps) {
-                    if (!toVisit.contains(dep) && !visited.contains(dep)) {
-                        toVisit.add(dep)
+                node?.deps?.forEach { dep ->
+                    if (visited.add(dep)) {
+                        // only traverse node if it was not seen before
+                        queue.add(dep)
                     }
                 }
+            }
+
+            // first traverse all passed targets
+            // we could just add them all to the queue but this is more optimal for performance
+            // in case targets list is large
+            targets.forEach { target ->
+                val targetId = buildTargetCache.get(target)
+                visited.add(targetId)
+                visitDeps(targetId)
+            }
+
+            // now traverse all deps recursively
+            while (queue.isNotEmpty()) {
+                val targetId = queue.pop()
+                visitDeps(targetId)
             }
         }
 
@@ -150,7 +167,11 @@ class Index internal constructor(
         return visited.mapTo(out) { buildTargetCache.getByIndex(it) }
     }
 
-    fun getFwdDeps(generation: Generation, targets: Iterable<UnconfiguredBuildTarget>, out: ImmutableSet.Builder<UnconfiguredBuildTarget>) {
+    fun getFwdDeps(
+        generation: Generation,
+        targets: Iterable<UnconfiguredBuildTarget>,
+        out: ImmutableSet.Builder<UnconfiguredBuildTarget>
+    ) {
         val targetIds = targets.map { buildTargetCache.get(it) }
         val rules: List<InternalRawBuildRule> = indexGenerationData.withRuleMap { ruleMap ->
             targetIds.mapNotNull { targetId ->
@@ -230,18 +251,17 @@ class Index internal constructor(
      */
     fun getTargetsInOwningBuildPackage(generation: Generation, basePath: FsAgnosticPath): Pair<FsAgnosticPath, List<UnconfiguredBuildTarget>>? {
         var candidateBasePath = basePath
-        val targetNames = indexGenerationData.withBuildPackageMap(
-                fun(buildPackageMap: GenerationMap<FsAgnosticPath, BuildRuleNames, FsAgnosticPath>): BuildRuleNames? {
-                    do {
-                        val targetNames = buildPackageMap.getVersion(candidateBasePath, generation)
-                        if (targetNames != null) {
-                            return targetNames
-                        } else {
-                            candidateBasePath = candidateBasePath.dirname()
-                        }
-                    } while (!candidateBasePath.isEmpty())
-                    return null
-                }) ?: return null
+        val targetNames = indexGenerationData.withBuildPackageMap { buildPackageMap ->
+            do {
+                val targetNames = buildPackageMap.getVersion(candidateBasePath, generation)
+                if (targetNames != null) {
+                    return@withBuildPackageMap targetNames
+                } else {
+                    candidateBasePath = candidateBasePath.dirname()
+                }
+            } while (!candidateBasePath.isEmpty())
+            null
+        } ?: return null
 
         val buildTargets = targetNames.asSequence().map {
             BuildTargets.createBuildTargetFromParts(candidateBasePath, it)
@@ -272,16 +292,4 @@ class Index internal constructor(
             }
         }.toList()
     }
-}
-
-/**
- * @param set a non-empty set
- */
-private fun <T> getFirst(set: LinkedHashSet<T>): T {
-    // There are other ways to do this that seem like they might be cheaper:
-    // https://stackoverflow.com/questions/5792596/removing-the-first-object-from-a-set.
-    val iterator = set.iterator()
-    val value = iterator.next()
-    iterator.remove()
-    return value
 }
