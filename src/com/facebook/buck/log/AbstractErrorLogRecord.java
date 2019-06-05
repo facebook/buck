@@ -59,6 +59,9 @@ abstract class AbstractErrorLogRecord {
     } catch (IOException e) {
       LOG.debug(e, "Unable to fetch hostname");
     }
+    Optional<String> initialError =
+        Optional.ofNullable(getRecord().getThrown())
+            .map(t -> getInitialCause(t).getClass().getName());
     return ImmutableMap.<String, String>builder()
         .put("severity", getRecord().getLevel().toString())
         .put("logger", logger != null ? logger : "unknown")
@@ -73,6 +76,7 @@ abstract class AbstractErrorLogRecord {
         .put("isDaemon", getIsDaemon().map(Object::toString).orElse("null"))
         .put("commandId", getBuildUuid().orElse("null"))
         .put("isRemoteExecution", getIsRemoteExecution().map(Object::toString).orElse("null"))
+        .put("initialError", initialError.orElse("null"))
         .build();
   }
 
