@@ -807,7 +807,7 @@ class CachingBuildRuleBuilder {
 
         // All rules should have output_size/output_hash in their artifact metadata.
         Optional<String> hashString = onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_HASH);
-        if (!hashString.isPresent() && !shouldWriteOutputHashes(outputSize.get())) {
+        if (!hashString.isPresent() && shouldWriteOutputHashes(outputSize.get())) {
           // OUTPUT_HASH should only be missing if we exceed the hash size limit.
           LOG.warn("OUTPUT_HASH is unexpectedly missing for %s.", rule.getFullyQualifiedName());
         }
