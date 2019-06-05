@@ -16,16 +16,13 @@
 
 package com.facebook.buck.multitenant.importer
 
-import com.facebook.buck.core.model.RuleType
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.BuildPackage
 import com.facebook.buck.multitenant.service.BuildPackageChanges
 import com.facebook.buck.multitenant.service.BuildTargets
 import com.facebook.buck.multitenant.service.IndexAppender
 import com.facebook.buck.multitenant.service.RawBuildRule
-import com.facebook.buck.rules.visibility.VisibilityPattern
 import com.facebook.buck.util.json.ObjectMappers
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonToken
@@ -34,7 +31,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.google.common.collect.ImmutableMap
-import com.google.common.collect.ImmutableSet
 import java.io.InputStream
 
 /**
@@ -169,29 +165,4 @@ private fun createRawRule(
 ): RawBuildRule {
     val node = ServiceRawTargetNode(target, RuleTypeFactory.createBuildRule(ruleType), attrs)
     return RawBuildRule(node, deps)
-}
-
-/**
- * Simplified implementation of [RawTargetNode] that is sufficient for the multitenant service's
- * needs.
- */
-data class ServiceRawTargetNode(
-    private val buildTarget: UnconfiguredBuildTarget,
-    private val ruleType: RuleType,
-    private val attributes: ImmutableMap<String, Any>
-) : RawTargetNode {
-
-    override fun getBuildTarget(): UnconfiguredBuildTarget = buildTarget
-
-    override fun getRuleType(): RuleType = ruleType
-
-    override fun getAttributes(): ImmutableMap<String, Any>? = attributes
-
-    override fun getVisibilityPatterns(): ImmutableSet<VisibilityPattern> {
-        return ImmutableSet.of()
-    }
-
-    override fun getWithinViewPatterns(): ImmutableSet<VisibilityPattern> {
-        return ImmutableSet.of()
-    }
 }

@@ -27,8 +27,8 @@ typealias Generation = Int
 internal typealias BuildTargetId = Int
 
 /**
- * The values in the array must be sorted in ascending order or else [equals_BuildTargetSet] and
- * [hashCode_BuildTargetSet] will not work properly.
+ * The values in the array must be sorted in ascending order or else [equalsBuildTargetSet] and
+ * [hashCodeBuildTargetSet] will not work properly.
  */
 internal typealias BuildTargetSet = IntArray
 
@@ -52,19 +52,19 @@ internal data class InternalRawBuildRule(val targetNode: RawTargetNode, val deps
         if (other !is InternalRawBuildRule) {
             return false
         }
-        return targetNode == other.targetNode && equals_BuildTargetSet(deps, other.deps)
+        return targetNode == other.targetNode && equalsBuildTargetSet(deps, other.deps)
     }
 
     override fun hashCode(): Int {
-        return 31 * Objects.hash(targetNode) + hashCode_BuildTargetSet(deps)
+        return 31 * Objects.hash(targetNode) + hashCodeBuildTargetSet(deps)
     }
 }
 
-private fun equals_BuildTargetSet(set1: BuildTargetSet, set2: BuildTargetSet): Boolean {
+private fun equalsBuildTargetSet(set1: BuildTargetSet, set2: BuildTargetSet): Boolean {
     return set1.contentEquals(set2)
 }
 
-private fun hashCode_BuildTargetSet(set: BuildTargetSet): Int {
+private fun hashCodeBuildTargetSet(set: BuildTargetSet): Int {
     return set.contentHashCode()
 }
 

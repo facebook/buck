@@ -258,8 +258,8 @@ private fun extractTests(targetNode: RawTargetNode): ImmutableSet<UnconfiguredBu
     val testsAttr = targetNode.attributes["tests"] as? List<*> ?: return ImmutableSet.of()
     val out = ImmutableSet.Builder<UnconfiguredBuildTarget>()
     val basePath = toBasePath(targetNode.buildTarget)
-    testsAttr.forEach(fun (value: Any?) {
-        val test = value as? String ?: return
+    testsAttr.forEach { value ->
+        val test = value as? String ?: return@forEach
         // TODO(sergeyb): Replace the heuristics below with proper target parser logic.
         when {
             (test.startsWith(":")) -> {
@@ -271,6 +271,6 @@ private fun extractTests(targetNode: RawTargetNode): ImmutableSet<UnconfiguredBu
                 out.add(BuildTargets.parseOrThrow(test))
             }
         }
-    })
+    }
     return out.build()
 }
