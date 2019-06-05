@@ -16,8 +16,11 @@
 
 package com.facebook.buck.multitenant.service
 
+import java.util.ArrayList
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
 
 /**
  * Cache where every unique instance of K added to the cache is assigned a unique int.
@@ -27,7 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * This class is threadsafe.
  */
 internal class AppendOnlyBidirectionalCache<K> {
-    private val nextId = AtomicInteger()
+    private val lock: ReentrantReadWriteLock = ReentrantReadWriteLock()
     // Note that we rely on the specific implementation of ConcurrentHashMap.computeIfAbsent()
     // because it provides stronger guarantees than ConcurrentMap.computeIfAbsent(). Specifically,
     // ConcurrentMap.computeIfAbsent() says that it can potentially call the mapping function
@@ -35,7 +38,7 @@ internal class AppendOnlyBidirectionalCache<K> {
     // function is applied at most once per key. We need the "at most once" guarantee to ensure
     // inserts into the forward and reverse maps are one-to-one.
     private val forward = ConcurrentHashMap<K, Int>()
-    private val reverse = ConcurrentHashMap<Int, K>()
+    private val reverse = ArrayList<K>()
 
     /**
      * Inserts the key and creates a corresponding Int for it if it is not already present in the
@@ -43,13 +46,16 @@ internal class AppendOnlyBidirectionalCache<K> {
      */
     fun get(key: K): Int {
         return forward.computeIfAbsent(key) {
-            val index = nextId.getAndIncrement()
-            reverse.putIfAbsent(index, key)
-            index
+            lock.write {
+                reverse.add(key)
+                reverse.size - 1
+            }
         }
     }
 
     fun getByIndex(index: Int): K {
-        return reverse[index]!!
+        return lock.read {
+            reverse[index]
+        }
     }
 }
