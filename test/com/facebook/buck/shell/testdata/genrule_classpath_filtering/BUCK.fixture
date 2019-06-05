@@ -57,7 +57,7 @@ genrule(
     name = "echo_with_deps_to_file",
     out = "out",
     bash = "echo $(@query_targets \"deps(:app)\") | cut -c 2- | xargs -I % cp % $OUT",
-    cmd_exe = "echo $(@query_targets \"deps(:app)\") | %{cp $_.substring(1) $OUT}",
+    cmd_exe = "cmd /V:ON /c \"set LOC=$(@query_targets deps(:app)) & copy !LOC:~1! $OUT\"",
     enable_sandbox = True,
 )
 
