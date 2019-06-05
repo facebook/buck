@@ -379,12 +379,14 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   @Override
   public BuildFileManifest getBuildFileManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException {
+    LOG.verbose("Started parsing build file %s", buildFile);
     try {
       return getAllRulesInternal(buildFile);
     } catch (IOException e) {
-      LOG.warn(e, "Error getting all rules for %s", buildFile);
       MoreThrowables.propagateIfInterrupt(e);
       throw BuildFileParseException.createForBuildFileParseError(buildFile, e);
+    } finally {
+      LOG.verbose("Finished parsing build file %s", buildFile);
     }
   }
 

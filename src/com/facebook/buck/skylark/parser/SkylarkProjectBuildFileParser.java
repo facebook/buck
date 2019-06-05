@@ -162,22 +162,36 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   @Override
   public BuildFileManifest getBuildFileManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
-    ParseResult parseResult = parseBuildFile(buildFile);
+    LOG.verbose("Started parsing build file %s", buildFile);
+    ParseBuckFileEvent.Started startEvent = ParseBuckFileEvent.started(buildFile, this.getClass());
+    buckEventBus.post(startEvent);
+    int rulesParsed = 0;
+    try {
+      ParseResult parseResult = parseBuildRules(buildFile);
 
-    // By contract, BuildFileManifestPojoizer converts any Map to ImmutableMap.
-    // ParseResult.getRawRules() returns ImmutableMap<String, Map<String, Object>>, so it is
-    // a safe downcast here
-    @SuppressWarnings("unchecked")
-    ImmutableMap<String, Map<String, Object>> targets =
-        (ImmutableMap<String, Map<String, Object>>)
-            getBuildFileManifestPojoizer().convertToPojo(parseResult.getRawRules());
+      ImmutableMap<String, Map<String, Object>> rawRules = parseResult.getRawRules();
+      rulesParsed = rawRules.size();
 
-    return ImmutableBuildFileManifest.of(
-        targets,
-        ImmutableSortedSet.copyOf(parseResult.getLoadedPaths()),
-        parseResult.getReadConfigurationOptions(),
-        Optional.empty(),
-        parseResult.getGlobManifestWithResult());
+      // By contract, BuildFileManifestPojoizer converts any Map to ImmutableMap.
+      // ParseResult.getRawRules() returns ImmutableMap<String, Map<String, Object>>, so it is
+      // a safe downcast here
+      @SuppressWarnings("unchecked")
+      ImmutableMap<String, Map<String, Object>> targets =
+          (ImmutableMap<String, Map<String, Object>>)
+              getBuildFileManifestPojoizer().convertToPojo(rawRules);
+
+      rulesParsed = targets.size();
+
+      return ImmutableBuildFileManifest.of(
+          targets,
+          ImmutableSortedSet.copyOf(parseResult.getLoadedPaths()),
+          parseResult.getReadConfigurationOptions(),
+          Optional.empty(),
+          parseResult.getGlobManifestWithResult());
+    } finally {
+      LOG.verbose("Finished parsing build file %s", buildFile);
+      buckEventBus.post(ParseBuckFileEvent.finished(startEvent, rulesParsed, 0L, Optional.empty()));
+    }
   }
 
   private static BuildFileManifestPojoizer getBuildFileManifestPojoizer() {
@@ -219,28 +233,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
               return pojoizer.convertToPojo(skylarkNestedSet.toCollection());
             }));
     return pojoizer;
-  }
-
-  /**
-   * Retrieves build files requested in {@code buildFile}.
-   *
-   * @param buildFile The build file to parse.
-   * @return The {@link ParseResult} with build rules defined in {@code buildFile}.
-   */
-  private ParseResult parseBuildFile(Path buildFile)
-      throws BuildFileParseException, InterruptedException, IOException {
-    ImmutableMap<String, Map<String, Object>> rules = ImmutableMap.of();
-    ParseBuckFileEvent.Started startEvent = ParseBuckFileEvent.started(buildFile, this.getClass());
-    buckEventBus.post(startEvent);
-    ParseResult parseResult;
-    try {
-      parseResult = parseBuildRules(buildFile);
-      rules = parseResult.getRawRules();
-    } finally {
-      buckEventBus.post(
-          ParseBuckFileEvent.finished(startEvent, rules.size(), 0L, Optional.empty()));
-    }
-    return parseResult;
   }
 
   private ImplicitlyLoadedExtension loadImplicitExtension(Path basePath, Label containingLabel)
