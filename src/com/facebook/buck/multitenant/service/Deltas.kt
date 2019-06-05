@@ -23,9 +23,11 @@ import com.facebook.buck.multitenant.fs.FsAgnosticPath
  * Represents a collection of changes to apply to an [Index] to reflect [BuildPackageChanges] on top
  * of a [Generation].
  */
-internal data class Deltas(val buildPackageDeltas: List<BuildPackageDelta>,
-                           val ruleDeltas: List<RuleDelta>,
-                           val rdepsDeltas: Map<BuildTargetId, RdepsSet?>) {
+internal data class Deltas(
+    val buildPackageDeltas: List<BuildPackageDelta>,
+    val ruleDeltas: List<RuleDelta>,
+    val rdepsDeltas: Map<BuildTargetId, RdepsSet?>
+) {
     fun isEmpty(): Boolean = buildPackageDeltas.isEmpty() && ruleDeltas.isEmpty() && rdepsDeltas.isEmpty()
 }
 
@@ -38,10 +40,10 @@ internal data class Deltas(val buildPackageDeltas: List<BuildPackageDelta>,
  * @see IndexAppender.addCommitData
  */
 internal fun determineDeltas(
-        generation: Generation,
-        changes: BuildPackageChanges,
-        indexGenerationData: IndexGenerationData,
-        buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>
+    generation: Generation,
+    changes: BuildPackageChanges,
+    indexGenerationData: IndexGenerationData,
+    buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>
 ): Deltas {
     val internalChanges = toInternalChanges(changes, buildTargetCache)
     // Perform lookupBuildPackages() before processing addedBuildPackages below because
@@ -139,10 +141,10 @@ internal fun determineDeltas(
  * [determineDeltas] and nothing more so the lock is held as briefly as possible.
  */
 private fun lookupBuildPackages(
-        generation: Generation,
-        internalChanges: InternalChanges,
-        indexGenerationData: IndexGenerationData,
-        buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>
+    generation: Generation,
+    internalChanges: InternalChanges,
+    indexGenerationData: IndexGenerationData,
+    buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>
 ): BuildPackagesLookup {
     // We allocate the arrays before taking the lock to reduce the number of allocations made while
     // holding the lock.
@@ -188,11 +190,11 @@ private fun lookupBuildPackages(
 }
 
 private fun lookupBuildRules(
-        generation: Generation,
-        indexGenerationData: IndexGenerationData,
-        modified: List<ModifiedPackageByIds>,
-        buildTargetIdsOfRemovedRules: List<BuildTargetId>,
-        buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>
+    generation: Generation,
+    indexGenerationData: IndexGenerationData,
+    modified: List<ModifiedPackageByIds>,
+    buildTargetIdsOfRemovedRules: List<BuildTargetId>,
+    buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>
 ): BuildRuleLookup {
     // Pre-allocate arrays before taking the lock.
     val modifiedRulesToProcess = ArrayList<ModifiedPackageByRules>(modified.size)
@@ -223,10 +225,11 @@ private fun lookupBuildRules(
 
 /** Diff the deps between old and new and add the updates directly to the specified list. */
 private fun diffDeps(
-        old: BuildTargetSet,
-        new: BuildTargetSet,
-        rdepsUpdates: MutableList<Pair<BuildTargetId, BuildTargetSetDelta>>,
-        buildTargetId: BuildTargetId) {
+    old: BuildTargetSet,
+    new: BuildTargetSet,
+    rdepsUpdates: MutableList<Pair<BuildTargetId, BuildTargetSetDelta>>,
+    buildTargetId: BuildTargetId
+) {
     // We exploit the fact that the ids in a BuildTargetSet are sorted.
     var oldIndex = 0
     var newIndex = 0
@@ -263,22 +266,34 @@ private fun diffDeps(
     }
 }
 
-private fun toInternalChanges(changes: BuildPackageChanges, buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>): InternalChanges {
+private fun toInternalChanges(
+    changes: BuildPackageChanges,
+    buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>
+): InternalChanges {
     return InternalChanges(changes.addedBuildPackages.map { toInternalBuildPackage(it, buildTargetCache) }.toList(),
             changes.modifiedBuildPackages.map { toInternalBuildPackage(it, buildTargetCache) }.toList(),
             changes.removedBuildPackages
     )
 }
 
-private fun toInternalBuildPackage(buildPackage: BuildPackage, buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>): InternalBuildPackage {
+private fun toInternalBuildPackage(
+    buildPackage: BuildPackage,
+    buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>
+): InternalBuildPackage {
     return InternalBuildPackage(buildPackage.buildFileDirectory, buildPackage.rules.map { toInternalRawBuildRule(it, buildTargetCache) }.toSet())
 }
 
-private fun toInternalRawBuildRule(rawBuildRule: RawBuildRule, buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>): InternalRawBuildRule {
+private fun toInternalRawBuildRule(
+    rawBuildRule: RawBuildRule,
+    buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>
+): InternalRawBuildRule {
     return InternalRawBuildRule(rawBuildRule.targetNode, toBuildTargetSet(rawBuildRule.deps, buildTargetCache))
 }
 
-private fun toBuildTargetSet(targets: Set<UnconfiguredBuildTarget>, buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>): BuildTargetSet {
+private fun toBuildTargetSet(
+    targets: Set<UnconfiguredBuildTarget>,
+    buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>
+): BuildTargetSet {
     val ids = targets.map { buildTargetCache.get(it) }.toIntArray()
     ids.sort()
     return ids
@@ -293,16 +308,16 @@ private fun toBuildTargetSet(targets: Set<UnconfiguredBuildTarget>, buildTargetC
  * Data extracted from using [IndexGenerationData.withBuildPackageMap].
  */
 private data class BuildPackagesLookup(
-        val modifiedPackageInfo: List<ModifiedPackageByIds>,
-        val removedPackageInfo: List<Pair<FsAgnosticPath, BuildRuleNames>>
+    val modifiedPackageInfo: List<ModifiedPackageByIds>,
+    val removedPackageInfo: List<Pair<FsAgnosticPath, BuildRuleNames>>
 )
 
 /**
  * Data extracted from using [IndexGenerationData.withRuleMap].
  */
 private data class BuildRuleLookup(
-        val modifiedPackages: List<ModifiedPackageByRules>,
-        val removedPackages: List<Pair<BuildTargetId, InternalRawBuildRule>>
+    val modifiedPackages: List<ModifiedPackageByRules>,
+    val removedPackages: List<Pair<BuildTargetId, InternalRawBuildRule>>
 )
 
 /**
@@ -311,9 +326,9 @@ private data class BuildRuleLookup(
  * @property oldBuildTargetIds build target ids corresponding to [oldRuleNames]
  */
 private data class ModifiedPackageByIds(
-        val internalBuildPackage: InternalBuildPackage,
-        val oldRuleNames: BuildRuleNames,
-        val oldBuildTargetIds: List<BuildTargetId>
+    val internalBuildPackage: InternalBuildPackage,
+    val oldRuleNames: BuildRuleNames,
+    val oldBuildTargetIds: List<BuildTargetId>
 )
 
 /**
@@ -322,7 +337,7 @@ private data class ModifiedPackageByIds(
  * @property oldRules rules corresponding to [oldRuleNames]
  */
 private data class ModifiedPackageByRules(
-        val internalBuildPackage: InternalBuildPackage,
-        val oldRuleNames: BuildRuleNames,
-        val oldRules: List<InternalRawBuildRule>
+    val internalBuildPackage: InternalBuildPackage,
+    val oldRuleNames: BuildRuleNames,
+    val oldRules: List<InternalRawBuildRule>
 )

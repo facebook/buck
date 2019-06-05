@@ -61,9 +61,10 @@ val QUERY_FUNCTIONS: List<QueryEnvironment.QueryFunction<out QueryTarget, Unconf
  * of that state.
  */
 class MultitenantQueryEnvironment(
-        private val index: Index,
-        private val generation: Generation,
-        private val cellToBuildFileName: Map<String, String>) : QueryEnvironment<UnconfiguredBuildTarget> {
+    private val index: Index,
+    private val generation: Generation,
+    private val cellToBuildFileName: Map<String, String>
+) : QueryEnvironment<UnconfiguredBuildTarget> {
     private val targetEvaluator: Supplier<TargetEvaluator> = Suppliers.memoize {
         TargetEvaluator(index, generation)
     }
@@ -93,7 +94,7 @@ class MultitenantQueryEnvironment(
     }
 
     override fun getReverseDeps(
-            targets: Iterable<UnconfiguredBuildTarget>
+        targets: Iterable<UnconfiguredBuildTarget>
     ): Set<UnconfiguredBuildTarget> = index.getReverseDeps(generation, targets)
 
     override fun getInputs(target: UnconfiguredBuildTarget): Set<QueryFileTarget> {
@@ -172,7 +173,11 @@ class MultitenantQueryEnvironment(
         TODO("getTargetsInAttribute() not implemented")
     }
 
-    override fun filterAttributeContents(target: UnconfiguredBuildTarget?, attribute: String?, predicate: Predicate<Any>?): ImmutableSet<Any> {
+    override fun filterAttributeContents(
+        target: UnconfiguredBuildTarget?,
+        attribute: String?,
+        predicate: Predicate<Any>?
+    ): ImmutableSet<Any> {
         TODO("filterAttributeContents() not implemented")
     }
 }

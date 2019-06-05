@@ -42,8 +42,9 @@ import java.io.InputStream
  * @return List of hashes of all commits processed
  */
 fun populateIndexFromStream(
-        indexAppender: IndexAppender,
-        stream: InputStream): List<String> {
+    indexAppender: IndexAppender,
+    stream: InputStream
+): List<String> {
     val parser = ObjectMappers.createParser(stream)
             .enable(JsonParser.Feature.ALLOW_COMMENTS)
             .enable(JsonParser.Feature.ALLOW_TRAILING_COMMA)
@@ -71,7 +72,7 @@ fun populateIndexFromStream(
             // 'added' and 'modified' contain a list of packages
             // 'removed' contain a list of paths denoting removed packages
             check(parser.currentToken == JsonToken.FIELD_NAME)
-            val fieldName = parser.currentName();
+            val fieldName = parser.currentName()
             when (fieldName) {
                 "commit" -> {
                     check(parser.nextToken() == JsonToken.VALUE_STRING)
@@ -161,10 +162,11 @@ private fun normalizeJsonValue(value: JsonNode): Any {
 }
 
 private fun createRawRule(
-        target: UnconfiguredBuildTarget,
-        ruleType: String,
-        deps: Set<UnconfiguredBuildTarget>,
-        attrs: ImmutableMap<String, Any>): RawBuildRule {
+    target: UnconfiguredBuildTarget,
+    ruleType: String,
+    deps: Set<UnconfiguredBuildTarget>,
+    attrs: ImmutableMap<String, Any>
+): RawBuildRule {
     val node = ServiceRawTargetNode(target, RuleTypeFactory.createBuildRule(ruleType), attrs)
     return RawBuildRule(node, deps)
 }
@@ -174,9 +176,10 @@ private fun createRawRule(
  * needs.
  */
 data class ServiceRawTargetNode(
-        private val buildTarget: UnconfiguredBuildTarget,
-        private val ruleType: RuleType,
-        private val attributes: ImmutableMap<String, Any>) : RawTargetNode {
+    private val buildTarget: UnconfiguredBuildTarget,
+    private val ruleType: RuleType,
+    private val attributes: ImmutableMap<String, Any>
+) : RawTargetNode {
 
     override fun getBuildTarget(): UnconfiguredBuildTarget = buildTarget
 

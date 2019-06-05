@@ -21,7 +21,6 @@ import com.facebook.buck.core.model.Flavor
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.google.common.collect.ImmutableSortedSet
 import org.junit.Assert.assertEquals
-import org.junit.Ignore
 import org.junit.Test
 
 class BuildTargetsTest {

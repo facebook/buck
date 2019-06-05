@@ -1,6 +1,6 @@
 package com.example.child
 
-import com.example.good.*;
+import com.example.good.*
 
 class Foo {
     fun main(args: Array<String>) {
@@ -8,4 +8,3 @@ class Foo {
         println(out(86))
     }
 }
-

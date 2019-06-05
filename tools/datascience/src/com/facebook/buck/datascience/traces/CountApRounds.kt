@@ -22,8 +22,9 @@ class CountApRounds : TraceAnalysisVisitor<CountApRounds.Summary> {
     private val maxByRule = mutableMapOf<String, Int>()
 
     class Summary(
-            val distribution: Map<Int, Int>,
-            val maxByRule: Map<String, Int>)
+        val distribution: Map<Int, Int>,
+        val maxByRule: Map<String, Int>
+    )
 
     override fun traceComplete() = Summary(distribution, maxByRule)
 

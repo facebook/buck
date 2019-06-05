@@ -50,8 +50,8 @@ internal sealed class RdepsSet : Iterable<BuildTargetId> {
 internal sealed class BuildTargetSetDelta : Comparable<BuildTargetSetDelta> {
     abstract val buildTargetId: BuildTargetId
     override fun compareTo(other: BuildTargetSetDelta): Int = buildTargetId.compareTo(other.buildTargetId)
-    data class Add(override val buildTargetId: BuildTargetId): BuildTargetSetDelta()
-    data class Remove(override val buildTargetId: BuildTargetId): BuildTargetSetDelta()
+    data class Add(override val buildTargetId: BuildTargetId) : BuildTargetSetDelta()
+    data class Remove(override val buildTargetId: BuildTargetId) : BuildTargetSetDelta()
 }
 
 /**
@@ -59,9 +59,10 @@ internal sealed class BuildTargetSetDelta : Comparable<BuildTargetSetDelta> {
  * aggregate changes that need to be made to an rdepsMap.
  */
 internal fun deriveRdepsDeltas(
-        rdepsUpdates: List<Pair<BuildTargetId, BuildTargetSetDelta>>,
-        generation: Generation,
-        indexGenerationData: IndexGenerationData): Map<BuildTargetId, RdepsSet?> {
+    rdepsUpdates: List<Pair<BuildTargetId, BuildTargetSetDelta>>,
+    generation: Generation,
+    indexGenerationData: IndexGenerationData
+): Map<BuildTargetId, RdepsSet?> {
     val deltasByTarget = collectDeltasByTarget(rdepsUpdates)
     val deltaDeriveInfos = indexGenerationData.withRdepsMap { rdepsMap ->
         deltasByTarget.map { (buildTargetId, buildTargetSetDeltas) ->
@@ -78,7 +79,7 @@ internal fun deriveRdepsDeltas(
  * own [List]. In the returned [List], every [Pair] will have a distinct [BuildTargetId].
  */
 private fun collectDeltasByTarget(
-        deltas: List<Pair<BuildTargetId, BuildTargetSetDelta>>
+    deltas: List<Pair<BuildTargetId, BuildTargetSetDelta>>
 ): List<Pair<BuildTargetId, MutableList<BuildTargetSetDelta>>> {
     // targetToRdepsUpdates is effectively a multimap, but none of the Guava ListMultimap
     // implementations work for us here because we want to be able to sort the List for each
@@ -103,9 +104,10 @@ private fun collectDeltasByTarget(
  *     MutableList so a client is free to sort it.
  */
 internal data class DeltaDeriveInfo(
-        val buildTargetId: BuildTargetId,
-        val oldRdeps: RdepsSet?,
-        val deltas: MutableList<BuildTargetSetDelta>)
+    val buildTargetId: BuildTargetId,
+    val oldRdeps: RdepsSet?,
+    val deltas: MutableList<BuildTargetSetDelta>
+)
 
 /**
  * Takes a list of build targets whose rdeps have changed and produces the new version of the rdeps
@@ -114,7 +116,7 @@ internal data class DeltaDeriveInfo(
  * versions of a set of rdeps.
  */
 internal fun aggregateDeltaDeriveInfos(
-        deltaDeriveInfos: List<DeltaDeriveInfo>
+    deltaDeriveInfos: List<DeltaDeriveInfo>
 ): Map<BuildTargetId, RdepsSet?> {
     // We use java.util.HashMap so we can specify the initialCapacity. We use the fully qualified
     // name here to clarify that this is NOT a io.vavr.collection.HashMap.

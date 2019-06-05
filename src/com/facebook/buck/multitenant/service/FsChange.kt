@@ -36,7 +36,7 @@ sealed class FsChange {
  * the commit to be on trunk / be indexed by the multitenant service.
  */
 data class FsChanges(
-        val commit: Commit,
-        val added: List<FsChange.Added> = emptyList(),
-        val modified: List<FsChange.Modified> = emptyList(),
-        val removed: List<FsChange.Removed> = emptyList())
+    val commit: Commit,
+    val added: List<FsChange.Added> = emptyList(),
+    val modified: List<FsChange.Modified> = emptyList(),
+    val removed: List<FsChange.Removed> = emptyList())

@@ -48,25 +48,25 @@ enum class EventPhase {
  * A single trace event.
  */
 data class TraceEvent(
-        val name: String,
-        val cat: List<String>,
-        val ph: EventPhase,
-        val ts: Long,
-        val tts: Long,
-        val pid: Int,
-        val tid: Int,
-        val args: ObjectNode
+    val name: String,
+    val cat: List<String>,
+    val ph: EventPhase,
+    val ts: Long,
+    val tts: Long,
+    val pid: Int,
+    val tid: Int,
+    val args: ObjectNode
 )
 
 /**
  * Current state of the trace.
  */
 data class TraceState(
-        /**
-         * Current stack of active events for each thread.
-         * Events in each thread will appear in the same order that they began.
-         */
-        val threadStacks: Map<Int, List<TraceEvent>>
+    /**
+     * Current stack of active events for each thread.
+     * Events in each thread will appear in the same order that they began.
+     */
+    val threadStacks: Map<Int, List<TraceEvent>>
 )
 
 /**
@@ -84,16 +84,16 @@ interface TraceAnalysisVisitor<SummaryT> {
     /**
      * Process a begin ("B") event.
      *
-     * @param event  The event.
-     * @param state  The state after incorporating the event.
+     * @param event The event.
+     * @param state The state after incorporating the event.
      */
     fun eventBegin(event: TraceEvent, state: TraceState) {}
 
     /**
      * Process an end ("E") event.
      *
-     * @param event  The event.
-     * @param state  The state before removing the corresponding begin event.
+     * @param event The event.
+     * @param state The state before removing the corresponding begin event.
      */
     fun eventEnd(event: TraceEvent, state: TraceState) {}
 
@@ -110,7 +110,6 @@ interface TraceAnalysisVisitor<SummaryT> {
      */
     fun finishAnalysis(args: List<String>, intermediates: List<SummaryT>)
 }
-
 
 /**
  * Main entry point.  To use this tool to analyze traces:
@@ -131,8 +130,8 @@ fun main(args: Array<String>) {
 
     val logicClass = Class.forName("com.facebook.buck.datascience.traces." + visitorName)
 
-    val processThreadCount = Runtime.getRuntime().availableProcessors();
-    val fetchThreadCount = processThreadCount / 2;
+    val processThreadCount = Runtime.getRuntime().availableProcessors()
+    val fetchThreadCount = processThreadCount / 2
 
     val fetchThreadPool = MoreExecutors.listeningDecorator(
             MostExecutors.newMultiThreadExecutor("fetch", fetchThreadCount))
@@ -151,16 +150,18 @@ fun main(args: Array<String>) {
 }
 
 private data class QueuedTrace(
-        val name: String,
-        val stream: () -> InputStream)
+    val name: String,
+    val stream: () -> InputStream
+)
 
 private fun <SummaryT : Any> processTraces(
-        args: List<String>,
-        traceListFile: File,
-        visitorClass: Class<TraceAnalysisVisitor<SummaryT>>,
-        eventBufferDepth: Int,
-        fetchThreadPool: ListeningExecutorService,
-        processThreadPool: ListeningExecutorService) {
+    args: List<String>,
+    traceListFile: File,
+    visitorClass: Class<TraceAnalysisVisitor<SummaryT>>,
+    eventBufferDepth: Int,
+    fetchThreadPool: ListeningExecutorService,
+    processThreadPool: ListeningExecutorService
+) {
     val blobQueue = ArrayBlockingQueue<QueuedTrace>(1)
 
     val processFutures = traceListFile.readLines().map {
@@ -198,7 +199,6 @@ private fun <SummaryT : Any> processTraces(
         fetchThreadPool.shutdownNow()
         processThreadPool.shutdownNow()
     }
-
 }
 
 /**
@@ -230,17 +230,18 @@ private fun openTrace(pathOrUrl: String): () -> InputStream {
  * Wrapper for TraceEvent that ensures stable sorting.
  */
 private data class BufferedTraceEvent(
-        val ts: Long,
-        val order: Long,
-        val event: TraceEvent
+    val ts: Long,
+    val order: Long,
+    val event: TraceEvent
 )
 
 private fun <SummaryT> processOneTrace(
-        args: List<String>,
-        name: String,
-        lazyStream: () -> InputStream,
-        visitor: TraceAnalysisVisitor<SummaryT>,
-        eventBufferDepth: Int): SummaryT {
+    args: List<String>,
+    name: String,
+    lazyStream: () -> InputStream,
+    visitor: TraceAnalysisVisitor<SummaryT>,
+    eventBufferDepth: Int
+): SummaryT {
     try {
         lazyStream().use { stream ->
             return processOneTraceStream(args, stream, visitor, eventBufferDepth)
@@ -251,10 +252,11 @@ private fun <SummaryT> processOneTrace(
 }
 
 private fun <SummaryT> processOneTraceStream(
-        args: List<String>,
-        stream: InputStream,
-        visitor: TraceAnalysisVisitor<SummaryT>,
-        eventBufferDepth: Int): SummaryT {
+    args: List<String>,
+    stream: InputStream,
+    visitor: TraceAnalysisVisitor<SummaryT>,
+    eventBufferDepth: Int
+): SummaryT {
     visitor.init(args)
 
     val parser = ObjectMappers.createParser(stream)
@@ -268,7 +270,7 @@ private fun <SummaryT> processOneTraceStream(
     // In theory, we could load the entire trace into memory and sort by timestamp.
     // Instead, let's prematurely optimize and use a priority queue.
     val pq = PriorityQueue<BufferedTraceEvent>(
-            eventBufferDepth + 4,  // +4 so I don't need to think about math.
+            eventBufferDepth + 4, // +4 so I don't need to think about math.
             compareBy({it.ts}, {it.order}))
     var lastTimestamp = 0L
     var order = 1L
@@ -318,9 +320,10 @@ private fun <SummaryT> processOneTraceStream(
 }
 
 private fun processOneEvent(
-        visitor: TraceAnalysisVisitor<*>,
-        event: TraceEvent,
-        threadStacks: MutableMap<Int, MutableList<TraceEvent>>) {
+    visitor: TraceAnalysisVisitor<*>,
+    event: TraceEvent,
+    threadStacks: MutableMap<Int, MutableList<TraceEvent>>
+) {
     when (event.ph) {
         EventPhase.B -> {
             threadStacks
@@ -348,7 +351,6 @@ private fun processOneEvent(
             visitor.eventMisc(event, TraceState(threadStacks))
         }
     }
-
 }
 
 private fun prepareStackForEndEvent(stack: MutableList<TraceEvent>, event: TraceEvent) {

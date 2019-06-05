@@ -41,9 +41,10 @@ private val SENTINEL: Object = Object()
  *     access to this ForwardingGenerationMap.
  */
 class ForwardingGenerationMap<KEY : Any, VALUE : Any>(
-        private val supportedGeneration: Int,
-        private val localChanges: Map<KEY, VALUE?>,
-        private val delegate: GenerationMap<KEY, VALUE, KEY>) : GenerationMap<KEY, VALUE, KEY> {
+    private val supportedGeneration: Int,
+    private val localChanges: Map<KEY, VALUE?>,
+    private val delegate: GenerationMap<KEY, VALUE, KEY>
+) : GenerationMap<KEY, VALUE, KEY> {
     override fun getVersion(key: KEY, generation: Int): VALUE? {
         assertGeneration(generation)
         // Incidentally, this cast is a complete lie, but we do not appear to encounter a

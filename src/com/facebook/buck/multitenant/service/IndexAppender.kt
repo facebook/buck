@@ -28,8 +28,9 @@ import java.util.concurrent.atomic.AtomicReference
  * performed via the [MutableIndexGenerationData].
  */
 class IndexAppender internal constructor(
-        private val indexGenerationData: MutableIndexGenerationData,
-        private val buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>) {
+    private val indexGenerationData: MutableIndexGenerationData,
+    private val buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>
+) {
 
     /**
      * id of the current generation. should only be read and set by [addCommitData] as clients

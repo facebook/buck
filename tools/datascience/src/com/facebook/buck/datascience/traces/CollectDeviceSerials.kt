@@ -57,7 +57,6 @@ class CollectDeviceSerials : TraceAnalysisVisitor<Map<String, Long>> {
         kinds.toSortedMap().forEach { kind, count ->
             System.out.println("%12s %d".format(kind, count))
         }
-
     }
 
     override fun eventBegin(event: TraceEvent, state: TraceState) {

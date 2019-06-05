@@ -67,6 +67,6 @@ internal fun diffRules(oldRules: List<InternalRawBuildRule>, newRules: Set<Inter
     return deltas
 }
 
-private fun toPair(rule: InternalRawBuildRule) : Pair<String, InternalRawBuildRule> {
+private fun toPair(rule: InternalRawBuildRule): Pair<String, InternalRawBuildRule> {
     return Pair(rule.targetNode.buildTarget.name, rule)
 }

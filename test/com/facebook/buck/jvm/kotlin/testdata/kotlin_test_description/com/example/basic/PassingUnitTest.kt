@@ -15,8 +15,8 @@ class PassingUnitTests {
 
     @Test
     fun testMultiplication() {
-        val num1 = 4;
-        val num2 = 6;
-        assert(num1 * num2 == 24);
+        val num1 = 4
+        val num2 = 6
+        assert(num1 * num2 == 24)
     }
 }
