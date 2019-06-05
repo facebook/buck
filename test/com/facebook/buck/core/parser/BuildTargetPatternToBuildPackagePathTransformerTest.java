@@ -17,28 +17,41 @@ package com.facebook.buck.core.parser;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.files.DirectoryList;
-import com.facebook.buck.core.files.DirectoryListKey;
-import com.facebook.buck.core.files.FileTree;
-import com.facebook.buck.core.files.FileTreeKey;
-import com.facebook.buck.core.files.ImmutableDirectoryList;
-import com.facebook.buck.core.files.ImmutableDirectoryListKey;
-import com.facebook.buck.core.files.ImmutableFileTree;
-import com.facebook.buck.core.files.ImmutableFileTreeKey;
-import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
+import com.facebook.buck.core.files.DirectoryListComputation;
+import com.facebook.buck.core.files.FileTreeComputation;
+import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.impl.DefaultGraphTransformationEngine;
+import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern.Kind;
 import com.facebook.buck.core.parser.buildtargetpattern.ImmutableBuildTargetPattern;
-import com.google.common.collect.ImmutableMap;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.testutil.TemporaryPaths;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.concurrent.ExecutionException;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import junitparams.naming.TestCaseName;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class BuildTargetPatternToBuildPackagePathTransformerTest {
+
+  @Rule public final TemporaryPaths tmp = new TemporaryPaths();
+
+  private ProjectFilesystem filesystem;
+
+  @Before
+  public void setUp() {
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+  }
 
   @SuppressWarnings("unused")
   private Object getSinglePathParams() {
@@ -46,76 +59,61 @@ public class BuildTargetPatternToBuildPackagePathTransformerTest {
       new Object[] {Kind.SINGLE, "target"},
       new Object[] {Kind.PACKAGE, ""}
     };
-  };
+  }
 
   @Test
   @Parameters(method = "getSinglePathParams")
   @TestCaseName("canDiscoverSinglePath({0},{1})")
-  public void canDiscoverSinglePath(Kind kind, String targetName) {
-    BuildTargetPatternToBuildPackagePathTransformer transformer =
-        BuildTargetPatternToBuildPackagePathTransformer.of("BUCK");
-
-    DirectoryList dlist =
-        ImmutableDirectoryList.of(
-            ImmutableSortedSet.of(Paths.get("dir1/dir2/file"), Paths.get("dir1/dir2/BUCK")),
-            ImmutableSortedSet.of(Paths.get("dir1/dir2/dir3")),
-            ImmutableSortedSet.of());
-    DirectoryListKey dkey = ImmutableDirectoryListKey.of(Paths.get("dir1/dir2"));
-
-    FakeComputationEnvironment env = new FakeComputationEnvironment(ImmutableMap.of(dkey, dlist));
+  public void canDiscoverSinglePath(Kind kind, String targetName)
+      throws ExecutionException, IOException, InterruptedException {
+    filesystem.mkdirs(Paths.get("dir1/dir2"));
+    filesystem.createNewFile(Paths.get("dir1/dir2/BUCK"));
+    filesystem.createNewFile(Paths.get("dir1/dir2/file"));
+    filesystem.mkdirs(Paths.get("dir1/dir2/dir3"));
 
     BuildTargetPatternToBuildPackagePathKey key =
         ImmutableBuildTargetPatternToBuildPackagePathKey.of(
             ImmutableBuildTargetPattern.of("", kind, Paths.get("dir1/dir2"), targetName));
 
-    BuildPackagePaths paths = transformer.transform(key, env);
+    BuildPackagePaths paths = transform("BUCK", key);
 
     assertEquals(ImmutableSortedSet.of(Paths.get("dir1/dir2")), paths.getPackageRoots());
   }
 
   @Test
-  public void canDiscoverRecursivePaths() {
-    BuildTargetPatternToBuildPackagePathTransformer transformer =
-        BuildTargetPatternToBuildPackagePathTransformer.of("BUCK");
-
-    DirectoryList dlist1 =
-        ImmutableDirectoryList.of(
-            ImmutableSortedSet.of(Paths.get("dir1/file"), Paths.get("dir1/BUCK")),
-            ImmutableSortedSet.of(Paths.get("dir1/dir2")),
-            ImmutableSortedSet.of());
-
-    DirectoryList dlist2 =
-        ImmutableDirectoryList.of(
-            ImmutableSortedSet.of(Paths.get("dir1/file")),
-            ImmutableSortedSet.of(Paths.get("dir1/dir2/dir3")),
-            ImmutableSortedSet.of());
-
-    DirectoryList dlist3 =
-        ImmutableDirectoryList.of(
-            ImmutableSortedSet.of(Paths.get("dir1/dir2/dir3/BUCK")),
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of());
-
-    FileTree ftree3 = ImmutableFileTree.of(Paths.get("dir1/dir2/dir3"), dlist3, ImmutableMap.of());
-    FileTree ftree2 =
-        ImmutableFileTree.of(
-            Paths.get("dir1/dir2"), dlist2, ImmutableMap.of(Paths.get("dir1/dir2/dir3"), ftree3));
-    FileTree ftree1 =
-        ImmutableFileTree.of(
-            Paths.get("dir1"), dlist1, ImmutableMap.of(Paths.get("dir1/dir2"), ftree2));
-
-    FileTreeKey fkey1 = ImmutableFileTreeKey.of(Paths.get("dir1"));
-
-    FakeComputationEnvironment env = new FakeComputationEnvironment(ImmutableMap.of(fkey1, ftree1));
+  public void canDiscoverRecursivePaths()
+      throws ExecutionException, IOException, InterruptedException {
+    filesystem.mkdirs(Paths.get("dir1"));
+    filesystem.createNewFile(Paths.get("dir1/file"));
+    filesystem.createNewFile(Paths.get("dir1/BUCK"));
+    filesystem.mkdirs(Paths.get("dir1/dir2"));
+    filesystem.mkdirs(Paths.get("dir1/dir2/dir3"));
+    filesystem.createNewFile(Paths.get("dir1/dir2/dir3/BUCK"));
 
     BuildTargetPatternToBuildPackagePathKey key =
         ImmutableBuildTargetPatternToBuildPackagePathKey.of(
             ImmutableBuildTargetPattern.of("", Kind.RECURSIVE, Paths.get("dir1"), ""));
 
-    BuildPackagePaths paths = transformer.transform(key, env);
+    BuildPackagePaths paths = transform("BUCK", key);
 
     assertEquals(
         ImmutableSortedSet.of(Paths.get("dir1"), Paths.get("dir1/dir2/dir3")),
         paths.getPackageRoots());
+  }
+
+  private BuildPackagePaths transform(
+      String buildFileName, BuildTargetPatternToBuildPackagePathKey key)
+      throws ExecutionException, InterruptedException {
+    int estimatedNumOps = 0;
+    GraphTransformationEngine engine =
+        new DefaultGraphTransformationEngine(
+            ImmutableList.of(
+                new GraphComputationStage<>(
+                    BuildTargetPatternToBuildPackagePathTransformer.of(buildFileName)),
+                new GraphComputationStage<>(DirectoryListComputation.of(filesystem.asView())),
+                new GraphComputationStage<>(FileTreeComputation.of())),
+            estimatedNumOps,
+            DefaultDepsAwareExecutor.of(1));
+    return engine.compute(key).get();
   }
 }
