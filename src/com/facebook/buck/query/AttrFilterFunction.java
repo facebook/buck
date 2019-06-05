@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -74,7 +75,7 @@ public class AttrFilterFunction implements QueryFunction<QueryBuildTarget, Query
                 && attrValue.equals(input.toString());
 
     ImmutableSet.Builder<QueryBuildTarget> result = new ImmutableSet.Builder<>();
-    ImmutableSet<QueryBuildTarget> targets = evaluator.eval(argument, env);
+    Set<QueryBuildTarget> targets = evaluator.eval(argument, env);
     for (QueryBuildTarget target : targets) {
       ImmutableSet<Object> matchingObjects = env.filterAttributeContents(target, attr, predicate);
       if (!matchingObjects.isEmpty()) {

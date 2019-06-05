@@ -187,8 +187,11 @@ public interface QueryEnvironment<NODE_TYPE> {
      * @param env the query environment this function is evaluated in.
      * @param args the input arguments. These are type-checked against the specification returned by
      *     {@link #getArgumentTypes} and {@link #getMandatoryArguments}
+     * @return results of evaluating the query expression. The result type is mutable {@link Set} to
+     *     enable actual implementation to avoid making unnecessary copies, but resulting set is not
+     *     supposed to be mutated afterwards so implementation is ok to return {@link ImmutableSet}.
      */
-    ImmutableSet<OUTPUT_TYPE> eval(
+    Set<OUTPUT_TYPE> eval(
         QueryEvaluator<ENV_NODE_TYPE> evaluator,
         QueryEnvironment<ENV_NODE_TYPE> env,
         ImmutableList<Argument<ENV_NODE_TYPE>> args)

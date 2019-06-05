@@ -20,12 +20,12 @@ import com.facebook.buck.core.model.QueryTarget;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 public class CachingQueryEvaluator<ENV_NODE_TYPE> implements QueryEvaluator<ENV_NODE_TYPE> {
-  private final Cache<QueryExpression<?>, ImmutableSet<?>> cache;
+  private final Cache<QueryExpression<?>, Set<?>> cache;
 
   public CachingQueryEvaluator() {
     this.cache = CacheBuilder.newBuilder().build();
@@ -33,11 +33,11 @@ public class CachingQueryEvaluator<ENV_NODE_TYPE> implements QueryEvaluator<ENV_
 
   @Override
   @SuppressWarnings("unchecked")
-  public <OUTPUT_TYPE extends QueryTarget> ImmutableSet<OUTPUT_TYPE> eval(
+  public <OUTPUT_TYPE extends QueryTarget> Set<OUTPUT_TYPE> eval(
       QueryExpression<ENV_NODE_TYPE> exp, QueryEnvironment<ENV_NODE_TYPE> env)
       throws QueryException {
     try {
-      return (ImmutableSet<OUTPUT_TYPE>) cache.get(exp, () -> exp.eval(this, env));
+      return (Set<OUTPUT_TYPE>) cache.get(exp, () -> exp.eval(this, env));
     } catch (ExecutionException e) {
       throw new QueryException(e, "Failed executing query [%s]", exp);
     }

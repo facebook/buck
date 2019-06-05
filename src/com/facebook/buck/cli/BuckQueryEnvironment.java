@@ -228,7 +228,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
    * @return the resulting set of targets.
    * @throws QueryException if the evaluation failed.
    */
-  public ImmutableSet<QueryTarget> evaluateQuery(QueryExpression<QueryBuildTarget> expr)
+  public Set<QueryTarget> evaluateQuery(QueryExpression<QueryBuildTarget> expr)
       throws QueryException, InterruptedException {
     Set<String> targetLiterals = new HashSet<>();
     expr.collectTargetPatterns(targetLiterals);
@@ -236,8 +236,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
     return new NoopQueryEvaluator<QueryBuildTarget>().eval(expr, this);
   }
 
-  public ImmutableSet<QueryTarget> evaluateQuery(String query)
-      throws QueryException, InterruptedException {
+  public Set<QueryTarget> evaluateQuery(String query) throws QueryException, InterruptedException {
     return evaluateQuery(QueryExpression.parse(query, this));
   }
 

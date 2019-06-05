@@ -30,6 +30,7 @@ import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.util.Set;
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
@@ -54,7 +55,7 @@ public class DepsFunctionTest {
             .build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(a, b);
     QueryEnvironment queryEnvironment = makeFakeQueryEnvironment(targetGraph);
-    ImmutableSet<?> result =
+    Set<?> result =
         DEPS_FUNCTION.eval(
             new NoopQueryEvaluator(),
             queryEnvironment,

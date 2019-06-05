@@ -17,7 +17,7 @@
 package com.facebook.buck.query;
 
 import com.facebook.buck.core.model.QueryTarget;
-import com.google.common.collect.ImmutableSet;
+import java.util.Set;
 
 public interface QueryEvaluator<ENV_NODE_TYPE> {
   /**
@@ -28,7 +28,7 @@ public interface QueryEvaluator<ENV_NODE_TYPE> {
    * @return the evaluated target set.
    * @throws QueryException if evaluation fails.
    */
-  <OUTPUT_TYPE extends QueryTarget> ImmutableSet<OUTPUT_TYPE> eval(
+  <OUTPUT_TYPE extends QueryTarget> Set<OUTPUT_TYPE> eval(
       QueryExpression<ENV_NODE_TYPE> exp, QueryEnvironment<ENV_NODE_TYPE> env)
       throws QueryException;
 }

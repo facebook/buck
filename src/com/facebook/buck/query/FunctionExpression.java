@@ -37,8 +37,8 @@ import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import java.util.Set;
 import org.immutables.value.Value;
 
 /** A query expression for user-defined query functions. */
@@ -58,7 +58,7 @@ public abstract class FunctionExpression<NODE_TYPE> extends QueryExpression<NODE
 
   @Override
   @SuppressWarnings("unchecked")
-  <OUTPUT_TYPE extends QueryTarget> ImmutableSet<OUTPUT_TYPE> eval(
+  <OUTPUT_TYPE extends QueryTarget> Set<OUTPUT_TYPE> eval(
       QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env) throws QueryException {
     return ((QueryFunction<OUTPUT_TYPE, NODE_TYPE>) getFunction()).eval(evaluator, env, getArgs());
   }

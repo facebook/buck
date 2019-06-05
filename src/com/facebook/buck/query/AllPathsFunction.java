@@ -35,7 +35,6 @@ import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -72,7 +71,7 @@ public class AllPathsFunction<T extends QueryTarget> implements QueryFunction<T,
   }
 
   @Override
-  public ImmutableSet<T> eval(
+  public Set<T> eval(
       QueryEvaluator<T> evaluator, QueryEnvironment<T> env, ImmutableList<Argument<T>> args)
       throws QueryException {
     QueryExpression<T> from = args.get(0).getExpression();
@@ -101,7 +100,7 @@ public class AllPathsFunction<T extends QueryTarget> implements QueryFunction<T,
         }
       }
     }
-    return ImmutableSet.copyOf(result);
+    return result;
   }
 
   /**

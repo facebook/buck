@@ -36,7 +36,6 @@ import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -78,7 +77,7 @@ public class RdepsFunction<T extends QueryTarget> implements QueryFunction<T, T>
    * reverse transitive closure or the maximum depth (if supplied) is reached.
    */
   @Override
-  public ImmutableSet<T> eval(
+  public Set<T> eval(
       QueryEvaluator<T> evaluator, QueryEnvironment<T> env, ImmutableList<Argument<T>> args)
       throws QueryException {
     Set<T> universeSet = evaluator.eval(args.get(0).getExpression(), env);
@@ -107,6 +106,6 @@ public class RdepsFunction<T extends QueryTarget> implements QueryFunction<T, T>
       }
       current = next;
     }
-    return ImmutableSet.copyOf(visited);
+    return visited;
   }
 }

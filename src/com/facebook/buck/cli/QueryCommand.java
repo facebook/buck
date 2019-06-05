@@ -360,7 +360,7 @@ public class QueryCommand extends AbstractCommand {
         TreeMultimap.create(String::compareTo, QueryTarget::compare);
     for (String input : inputsFormattedAsBuildTargets) {
       String query = queryFormat.replace("%s", input);
-      ImmutableSet<QueryTarget> queryResult = env.evaluateQuery(query);
+      Set<QueryTarget> queryResult = env.evaluateQuery(query);
       queryResultMap.putAll(input, queryResult);
     }
 
@@ -384,7 +384,7 @@ public class QueryCommand extends AbstractCommand {
 
   private void runSingleQuery(CommandRunnerParams params, BuckQueryEnvironment env, String query)
       throws IOException, InterruptedException, QueryException {
-    ImmutableSet<QueryTarget> queryResult = env.evaluateQuery(query);
+    Set<QueryTarget> queryResult = env.evaluateQuery(query);
     LOG.debug("Printing out the following targets: %s", queryResult);
 
     try (CloseableWrapper<PrintStream> printStreamWrapper = getPrintStreamWrapper(params)) {
@@ -421,21 +421,20 @@ public class QueryCommand extends AbstractCommand {
 
   /** @return set as {@link QueryBuildTarget}s or throw {@link IllegalArgumentException} */
   @SuppressWarnings("unchecked")
-  public static ImmutableSet<QueryBuildTarget> asQueryBuildTargets(
-      ImmutableSet<? extends QueryTarget> set) {
+  public static Set<QueryBuildTarget> asQueryBuildTargets(Set<? extends QueryTarget> set) {
     // It is probably rare that there is a QueryTarget that is not a QueryBuildTarget.
     boolean hasInvalidItem = set.stream().anyMatch(item -> !(item instanceof QueryBuildTarget));
     if (hasInvalidItem) {
       throw new IllegalArgumentException(
           String.format("%s has elements that are not QueryBuildTarget", set));
     }
-    return (ImmutableSet<QueryBuildTarget>) set;
+    return (Set<QueryBuildTarget>) set;
   }
 
   private void printJsonOutput(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
-      ImmutableSet<QueryTarget> queryResult,
+      Set<QueryTarget> queryResult,
       PrintStream printStream)
       throws IOException, QueryException {
     if (shouldOutputAttributes()) {
@@ -448,7 +447,7 @@ public class QueryCommand extends AbstractCommand {
   private void printListOutput(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
-      ImmutableSet<QueryTarget> queryResult,
+      Set<QueryTarget> queryResult,
       PrintStream printStream)
       throws QueryException {
     if (shouldOutputAttributes()) {
@@ -461,7 +460,7 @@ public class QueryCommand extends AbstractCommand {
   private void printDotOutput(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
-      ImmutableSet<QueryBuildTarget> queryResult,
+      Set<QueryBuildTarget> queryResult,
       boolean bfsSorted,
       PrintStream printStream)
       throws IOException, QueryException {
@@ -499,7 +498,7 @@ public class QueryCommand extends AbstractCommand {
   private void printRankOutput(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
-      ImmutableSet<QueryBuildTarget> queryResult,
+      Set<QueryBuildTarget> queryResult,
       PrintStream printStream)
       throws QueryException {
     Map<TargetNode<?>, Integer> ranks =
@@ -532,7 +531,7 @@ public class QueryCommand extends AbstractCommand {
   private void printThriftOutput(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
-      ImmutableSet<QueryBuildTarget> queryResult,
+      Set<QueryBuildTarget> queryResult,
       PrintStream printStream)
       throws IOException, QueryException {
 
