@@ -92,11 +92,6 @@ abstract class AbstractBuckPaths {
   }
 
   @Value.Derived
-  public Path getSimulatorDir() {
-    return getLogDir().resolve("simulator");
-  }
-
-  @Value.Derived
   public Path getXcodeDir() {
     return getBuckOut().resolve("xcode");
   }

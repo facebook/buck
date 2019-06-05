@@ -47,6 +47,7 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.listener.FileSerializationOutputRuleDepsListener;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.SpeculativeParsing;
@@ -346,7 +347,7 @@ public class BuildCommand extends AbstractCommand {
     if (outputRuleDeps) {
       FileSerializationOutputRuleDepsListener fileSerializationOutputRuleDepsListener =
           new FileSerializationOutputRuleDepsListener(
-              getSimulatorDir(params).resolve(RULE_EXEC_TIME_FILE_NAME));
+              getLogDirectoryPath(params).resolve(RULE_EXEC_TIME_FILE_NAME));
       buckEventBus.register(fileSerializationOutputRuleDepsListener);
     }
 
@@ -358,11 +359,11 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  private Path getSimulatorDir(CommandRunnerParams params) throws IOException {
+  private Path getLogDirectoryPath(CommandRunnerParams params) {
+    InvocationInfo invocationInfo = params.getInvocationInfo().get();
+    Path logDirectoryPath = invocationInfo.getLogDirectoryPath();
     ProjectFilesystem filesystem = params.getCell().getFilesystem();
-    Path simulatorDir = filesystem.resolve(filesystem.getBuckPaths().getSimulatorDir());
-    filesystem.mkdirs(simulatorDir);
-    return simulatorDir;
+    return filesystem.resolve(logDirectoryPath);
   }
 
   BuildPrehook getPrehook(ListeningProcessExecutor processExecutor, CommandRunnerParams params) {
@@ -505,7 +506,7 @@ public class BuildCommand extends AbstractCommand {
           ActionGraphBuilder actionGraphBuilder =
               graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
           ImmutableSet<BuildTarget> buildTargets = graphsAndBuildTargets.getBuildTargets();
-          Path outputPath = getSimulatorDir(params).resolve(ACTION_GRAPH_FILE_NAME);
+          Path outputPath = getLogDirectoryPath(params).resolve(ACTION_GRAPH_FILE_NAME);
           new ActionGraphSerializer(actionGraphBuilder, buildTargets, outputPath).serialize();
         }
 

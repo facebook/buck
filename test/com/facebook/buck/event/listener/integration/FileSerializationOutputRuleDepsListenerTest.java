@@ -55,17 +55,18 @@ public class FileSerializationOutputRuleDepsListenerTest {
         workspace.runBuckBuild("--no-cache", "--output-rule-deps-to-file", "//:foo");
     result.assertSuccess();
 
-    Path simulatorDir = workspace.resolve(workspace.getBuckPaths().getSimulatorDir());
+    Path lastBuildCommandLogDir =
+        EventBusListenerIntegrationTestsUtils.getLastBuildCommandLogDir(workspace);
 
     String actionGraphFileContent =
-        workspace.getFileContents(simulatorDir.resolve("action_graph.json"));
+        workspace.getFileContents(lastBuildCommandLogDir.resolve("action_graph.json"));
     Map<String, List<ActionGraphData>> actionGraphData =
         Stream.of(actionGraphFileContent.split(System.lineSeparator()))
             .map(line -> convertToObject(line, ImmutableActionGraphData.class))
             .collect(Collectors.groupingBy(ActionGraphData::getTargetId));
 
     String ruleExecutionTimeFileContent =
-        workspace.getFileContents(simulatorDir.resolve("rule_exec_time.json"));
+        workspace.getFileContents(lastBuildCommandLogDir.resolve("rule_exec_time.json"));
     Map<String, List<RuleExecutionTimeData>> executionTime =
         Stream.of(ruleExecutionTimeFileContent.split(System.lineSeparator()))
             .map(line -> convertToObject(line, ImmutableRuleExecutionTimeData.class))

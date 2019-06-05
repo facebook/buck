@@ -58,7 +58,7 @@ abstract class AbstractFileSerializationBuckEventListener implements BuckEventLi
       writer.newLine();
       writer.flush();
     } catch (IOException e) {
-      LOG.error(e, "I/O exception during writing the line: '%s' to the file: %s", line, outputPath);
+      LOG.warn(e, "I/O exception during writing the line: '%s' to the file: %s", line, outputPath);
     }
   }
 
@@ -86,7 +86,7 @@ abstract class AbstractFileSerializationBuckEventListener implements BuckEventLi
     try {
       writer.close();
     } catch (IOException e) {
-      LOG.error(e, "I/O exception during closing the file: %s", outputPath);
+      LOG.warn(e, "I/O exception during closing the file: %s", outputPath);
     }
   }
 }

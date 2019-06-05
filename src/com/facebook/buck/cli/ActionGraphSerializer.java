@@ -140,7 +140,7 @@ public class ActionGraphSerializer {
       writer.write(line);
       writer.newLine();
     } catch (IOException e) {
-      LOG.error(e, "I/O exception during writing the line: '%s' to the file: %s", line, outputPath);
+      LOG.warn(e, "I/O exception during writing the line: '%s' to the file: %s", line, outputPath);
     }
   }
 

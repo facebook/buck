@@ -22,9 +22,7 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.collect.Iterables;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Scanner;
@@ -47,11 +45,10 @@ public class CriticalPathEventBusListenerIntegrationTest {
     ProcessResult result = workspace.runBuckBuild("--no-cache", "//:foo");
     result.assertSuccess();
 
-    Path logDir = workspace.getBuckPaths().getLogDir();
-    Path criticalPathDestinationDir = getDestinationPath(workspace.resolve(logDir));
-
+    Path lastBuildCommandLogDir =
+        EventBusListenerIntegrationTestsUtils.getLastBuildCommandLogDir(workspace);
     String fileContents =
-        workspace.getFileContents(criticalPathDestinationDir.resolve("critical_path.log"));
+        workspace.getFileContents(lastBuildCommandLogDir.resolve("critical_path.log"));
     List<CriticalPathItem> criticalPaths =
         Stream.of(fileContents.split(System.lineSeparator()))
             // skip header
@@ -65,15 +62,6 @@ public class CriticalPathEventBusListenerIntegrationTest {
     assertCriticalPathItem(criticalPathItem1, "//:bar", "genrule");
     assertCriticalPathItem(
         criticalPathItem2, "//:foo", "genrule", criticalPathItem1.totalElapsedTime);
-  }
-
-  private Path getDestinationPath(Path logDir) throws IOException {
-    List<Path> pathList =
-        Files.list(logDir)
-            .filter(Files::isDirectory)
-            .filter(dir -> dir.getFileName().toString().contains("buildcommand"))
-            .collect(Collectors.toList());
-    return Iterables.getOnlyElement(pathList);
   }
 
   private void assertCriticalPathItem(

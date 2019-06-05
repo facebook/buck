@@ -1,9 +1,27 @@
 load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = [
+            "*Benchmark.java",
+            "*Test.java",
+        ],
+    ),
+    visibility = ["//test/..."],
+    deps = [
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/guava:guava",
+    ],
+)
+
 standard_java_test(
     name = "integration",
     with_test_data = True,
     deps = [
+        ":testutil",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",
