@@ -43,6 +43,7 @@ public final class BuckWSServerPortUtils {
     commandLine.withEnvironment(EnvironmentUtil.getEnvironmentMap());
     commandLine.addParameter("server");
     commandLine.addParameter("status");
+    commandLine.addParameter("--reuse-current-config");
     commandLine.addParameter("--http-port");
     commandLine.setRedirectErrorStream(true);
 
