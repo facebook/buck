@@ -73,12 +73,6 @@ public class PregeneratedCodeWriter {
       return;
     }
 
-    writeGeneratedByIdeaClassToFile(
-        androidFacet.get(),
-        packageName.get(),
-        "BuildConfig",
-        "  public final static boolean DEBUG = Boolean.parseBoolean(null);");
-
     writeGeneratedByIdeaClassToFile(androidFacet.get(), packageName.get(), "R", null);
 
     writeGeneratedByIdeaClassToFile(androidFacet.get(), packageName.get(), "Manifest", null);
