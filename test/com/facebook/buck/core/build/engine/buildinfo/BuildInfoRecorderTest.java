@@ -122,6 +122,25 @@ public class BuildInfoRecorderTest {
   }
 
   @Test
+  public void testGetOutputSize() throws IOException {
+    BuildInfoRecorder buildInfoRecorder = createBuildInfoRecorder();
+
+    byte[] contents = "contents".getBytes();
+
+    Path file = Paths.get("file");
+    filesystem.writeBytesToPath(contents, file);
+    buildInfoRecorder.recordArtifact(file);
+
+    Path dir = Paths.get("dir");
+    filesystem.mkdirs(dir);
+    filesystem.writeBytesToPath(contents, dir.resolve("file1"));
+    filesystem.writeBytesToPath(contents, dir.resolve("file2"));
+    buildInfoRecorder.recordArtifact(dir);
+
+    assertEquals(3 * contents.length, buildInfoRecorder.getOutputSize());
+  }
+
+  @Test
   public void testGetOutputHash() throws IOException {
     FileHashCache fileHashCache =
         new StackedFileHashCache(

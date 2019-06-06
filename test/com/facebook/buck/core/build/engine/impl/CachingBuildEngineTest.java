@@ -543,7 +543,7 @@ public class CachingBuildEngineTest {
               Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar"),
               "Imagine this is the contents of a valid JAR file.",
               metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
-              "0",
+              "123",
               metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH),
               HashCode.fromInt(123).toString());
       expect(
@@ -632,7 +632,7 @@ public class CachingBuildEngineTest {
               metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATH_HASHES),
               ObjectMappers.WRITER.writeValueAsString(ImmutableMap.of()),
               metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
-              "0",
+              "123",
               metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH),
               HashCode.fromInt(123).toString(),
               Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar"),
@@ -1849,7 +1849,7 @@ public class CachingBuildEngineTest {
               metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
               ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(outputPath.toString())),
               metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
-              "5", // Size of "stuff"
+              "123",
               outputPath,
               "stuff"),
           ImmutableList.of(metadataDirectory));
@@ -1978,7 +1978,7 @@ public class CachingBuildEngineTest {
               ObjectMappers.WRITER.writeValueAsString(
                   ImmutableMap.of(outputPath.toString(), HashCode.fromInt(123).toString())),
               metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
-              "5", // Size of "stuff"
+              "123",
               metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH),
               HashCode.fromInt(123).toString(),
               outputPath,
@@ -3367,7 +3367,7 @@ public class CachingBuildEngineTest {
               ObjectMappers.WRITER.writeValueAsString(
                   ImmutableMap.of(output.toString(), HashCode.fromInt(123).toString())),
               metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
-              "5", // Size of "stuff"
+              "123",
               metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH),
               HashCode.fromInt(123).toString()),
           ImmutableList.of());

@@ -28,7 +28,6 @@ import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -48,7 +47,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 import java.util.Set;
-import java.util.SortedSet;
 
 /**
  * Utility for reading the metadata associated with a build rule's output. This is metadata that
@@ -228,16 +226,8 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public void calculateOutputSizeAndWriteOutputHashes(
-      FileHashCache fileHashCache, Predicate<Long> shouldWriteOutputHashes) throws IOException {
+  public void writeOutputHashes(FileHashCache fileHashCache) throws IOException {
     ImmutableSortedSet<Path> pathsForArtifact = getPathsForArtifact();
-    long outputSize = getOutputSize(pathsForArtifact);
-    projectFilesystem.writeContentsToPath(
-        String.valueOf(outputSize), metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE));
-
-    if (!shouldWriteOutputHashes.apply(outputSize)) {
-      return;
-    }
 
     // Grab and record the output hashes in the build metadata so that cache hits avoid re-hashing
     // file contents.  Since we use output hashes for input-based rule keys and for detecting
@@ -263,20 +253,11 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public void validateArtifact(Set<Path> extractedFiles) throws IOException {
+  public void validateArtifact(Set<Path> extractedFiles) {
     // TODO(bertrand): It would be good to validate OUTPUT_HASH and RECORDED_PATH_HASHES, but we
     // don't compute them if the artifact size exceeds the input rule key threshold.
     validateArtifactHasKey(extractedFiles, BuildInfo.MetadataKey.RECORDED_PATHS);
     validateArtifactHasKey(extractedFiles, BuildInfo.MetadataKey.OUTPUT_SIZE);
-
-    // Check that the output_size of all RECORDED_PATHS matches OUTPUT_SIZE
-    long outputSize = Long.parseLong(getValue(BuildInfo.MetadataKey.OUTPUT_SIZE).get());
-    long realSize = getOutputSize(getPathsForArtifact());
-    Preconditions.checkState(
-        realSize == outputSize,
-        "Artifact output size (%d) doesn't match artifactMetadata OUTPUT_SIZE (%d).",
-        realSize,
-        outputSize);
   }
 
   private void validateArtifactHasKey(Set<Path> extractedFiles, String key) {
@@ -294,19 +275,5 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
         key,
         expectedFile,
         extractedFiles);
-  }
-
-  private long getOutputSize(SortedSet<Path> paths) throws IOException {
-    long size = 0;
-    for (Path path : paths) {
-      if (projectFilesystem.isFile(path)
-          && !path.endsWith(BuildInfo.MetadataKey.RECORDED_PATHS)
-          && !path.endsWith(BuildInfo.MetadataKey.OUTPUT_SIZE)
-          && !path.endsWith(BuildInfo.MetadataKey.OUTPUT_HASH)
-          && !path.endsWith(BuildInfo.MetadataKey.RECORDED_PATH_HASHES)) {
-        size += projectFilesystem.getFileSize(path);
-      }
-    }
-    return size;
   }
 }
