@@ -115,7 +115,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
   @AddToRuleKey private final int xzCompressionLevel;
   @AddToRuleKey private final boolean shouldSplitDex;
   @AddToRuleKey private final String dexTool;
-  private final boolean desugarInterfaceMethods;
+  @AddToRuleKey private final boolean desugarInterfaceMethods;
 
   private final AndroidPlatformTarget androidPlatformTarget;
   private final ListeningExecutorService dxExecutorService;
