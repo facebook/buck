@@ -37,6 +37,7 @@ public class CsharpLibraryCompile extends ShellStep {
   private final ImmutableList<Either<Path, String>> references;
   private final FrameworkVersion version;
   private final ImmutableListMultimap<Path, String> resources;
+  private final ImmutableList<String> compilerFlags;
 
   public CsharpLibraryCompile(
       SourcePathResolver pathResolver,
@@ -45,13 +46,15 @@ public class CsharpLibraryCompile extends ShellStep {
       ImmutableSortedSet<Path> srcs,
       ImmutableList<Either<Path, String>> references,
       ImmutableListMultimap<Path, String> resources,
-      FrameworkVersion version) {
+      FrameworkVersion version,
+      ImmutableList<String> compilerFlags) {
     super(output.getParent());
     this.pathResolver = pathResolver;
     this.csharpCompiler = csharpCompiler;
     this.references = references;
     this.resources = resources;
     this.version = version;
+    this.compilerFlags = compilerFlags;
     Preconditions.checkState(output.isAbsolute());
 
     this.output = output;
@@ -84,6 +87,8 @@ public class CsharpLibraryCompile extends ShellStep {
         srcs.stream()
             .map(input -> Escaper.escapeAsShellString(input.toAbsolutePath().toString()))
             .collect(ImmutableSet.toImmutableSet()));
+
+    args.addAll(compilerFlags);
 
     return args.build();
   }

@@ -52,6 +52,7 @@ public class CsharpLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final ImmutableList<Either<BuildRule, String>> refs;
   @AddToRuleKey private final ImmutableMap<String, SourcePath> resources;
   @AddToRuleKey private final FrameworkVersion version;
+  @AddToRuleKey private final ImmutableList<String> compilerFlags;
 
   protected CsharpLibrary(
       BuildTarget buildTarget,
@@ -62,7 +63,8 @@ public class CsharpLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableList<Either<BuildRule, String>> refs,
       ImmutableMap<String, SourcePath> resources,
-      FrameworkVersion version) {
+      FrameworkVersion version,
+      ImmutableList<String> compilerFlags) {
     super(buildTarget, projectFilesystem, params);
 
     Preconditions.checkArgument(dllName.endsWith(".dll"));
@@ -74,6 +76,7 @@ public class CsharpLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.version = version;
 
     this.output = BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s/" + dllName);
+    this.compilerFlags = compilerFlags;
   }
 
   @Override
@@ -107,7 +110,8 @@ public class CsharpLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             sourceFiles,
             references,
             resolvedResources.build(),
-            version));
+            version,
+            compilerFlags));
 
     buildableContext.recordArtifact(output);
 

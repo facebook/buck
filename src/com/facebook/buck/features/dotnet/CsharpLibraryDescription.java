@@ -71,7 +71,8 @@ public class CsharpLibraryDescription
         args.getSrcs(),
         refsAsRules.build(),
         args.getResources(),
-        args.getFrameworkVer());
+        args.getFrameworkVer(),
+        args.getCompilerFlags());
   }
 
   @BuckStyleImmutable
@@ -88,5 +89,7 @@ public class CsharpLibraryDescription
 
     // We may have system-provided references ("System.Core.dll") or other build targets
     ImmutableList<Either<BuildTarget, String>> getDeps();
+
+    ImmutableList<String> getCompilerFlags();
   }
 }
