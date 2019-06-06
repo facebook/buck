@@ -33,9 +33,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
+import javax.annotation.Nonnull;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import junitparams.naming.TestCaseName;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -63,7 +63,6 @@ public class BuildTargetPatternToBuildPackagePathTransformerTest {
 
   @Test
   @Parameters(method = "getSinglePathParams")
-  @TestCaseName("canDiscoverSinglePath({0},{1})")
   public void canDiscoverSinglePath(Kind kind, String targetName)
       throws ExecutionException, IOException, InterruptedException {
     filesystem.mkdirs(Paths.get("dir1/dir2"));
@@ -71,11 +70,7 @@ public class BuildTargetPatternToBuildPackagePathTransformerTest {
     filesystem.createNewFile(Paths.get("dir1/dir2/file"));
     filesystem.mkdirs(Paths.get("dir1/dir2/dir3"));
 
-    BuildTargetPatternToBuildPackagePathKey key =
-        ImmutableBuildTargetPatternToBuildPackagePathKey.of(
-            ImmutableBuildTargetPattern.of("", kind, Paths.get("dir1/dir2"), targetName));
-
-    BuildPackagePaths paths = transform("BUCK", key);
+    BuildPackagePaths paths = transform("BUCK", key("", kind, "dir1/dir2", targetName));
 
     assertEquals(ImmutableSortedSet.of(Paths.get("dir1/dir2")), paths.getPackageRoots());
   }
@@ -90,15 +85,18 @@ public class BuildTargetPatternToBuildPackagePathTransformerTest {
     filesystem.mkdirs(Paths.get("dir1/dir2/dir3"));
     filesystem.createNewFile(Paths.get("dir1/dir2/dir3/BUCK"));
 
-    BuildTargetPatternToBuildPackagePathKey key =
-        ImmutableBuildTargetPatternToBuildPackagePathKey.of(
-            ImmutableBuildTargetPattern.of("", Kind.RECURSIVE, Paths.get("dir1"), ""));
-
-    BuildPackagePaths paths = transform("BUCK", key);
+    BuildPackagePaths paths = transform("BUCK", key("", Kind.RECURSIVE, "dir1", ""));
 
     assertEquals(
         ImmutableSortedSet.of(Paths.get("dir1"), Paths.get("dir1/dir2/dir3")),
         paths.getPackageRoots());
+  }
+
+  @Nonnull
+  private static BuildTargetPatternToBuildPackagePathKey key(
+      String cell, Kind kind, String basePath, String targetName) {
+    return ImmutableBuildTargetPatternToBuildPackagePathKey.of(
+        ImmutableBuildTargetPattern.of(cell, kind, Paths.get(basePath), targetName));
   }
 
   private BuildPackagePaths transform(
