@@ -72,6 +72,7 @@ import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.collect.MoreSets;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.versions.VersionException;
@@ -525,8 +526,8 @@ public class TestCommand extends BuildCommand {
           ImmutableSet<BuildTarget> testTargets = testTargetsBuilder.build();
           if (!testTargets.isEmpty()) {
             LOG.debug("Got related test targets %s, building new target graph...", testTargets);
-            Iterable<BuildTarget> allTargets =
-                Iterables.concat(targetGraphAndBuildTargets.getBuildTargets(), testTargets);
+            ImmutableSet<BuildTarget> allTargets =
+                MoreSets.union(targetGraphAndBuildTargets.getBuildTargets(), testTargets);
             TargetGraph targetGraph =
                 params.getParser().buildTargetGraph(parsingContext, allTargets);
             LOG.debug("Finished building new target graph with tests.");

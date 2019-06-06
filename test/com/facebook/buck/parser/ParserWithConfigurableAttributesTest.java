@@ -127,7 +127,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -355,7 +354,7 @@ public class ParserWithConfigurableAttributesTest {
     // build file.
     BuildTarget fooTarget = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo");
     BuildTarget barTarget = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "bar");
-    Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, barTarget);
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fooTarget, barTarget);
 
     // The EventBus should be updated with events indicating how parsing ran.
     FakeBuckEventListener listener = new FakeBuckEventListener();
@@ -372,9 +371,9 @@ public class ParserWithConfigurableAttributesTest {
     assertThat(
         events,
         Matchers.contains(
-            Matchers.hasProperty("buildTargets", equalTo(buildTargets)),
+            Matchers.hasProperty("buildTargets", equalTo(ImmutableList.copyOf(buildTargets))),
             Matchers.allOf(
-                Matchers.hasProperty("buildTargets", equalTo(buildTargets)),
+                Matchers.hasProperty("buildTargets", equalTo(ImmutableList.copyOf(buildTargets))),
                 Matchers.hasProperty("graph", equalTo(Optional.of(targetGraph))))));
   }
 
@@ -384,7 +383,7 @@ public class ParserWithConfigurableAttributesTest {
     // Execute buildTargetGraphForBuildTargets() with a target in a valid file but a bad rule name.
     BuildTarget fooTarget = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo");
     BuildTarget razTarget = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "raz");
-    Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget, razTarget);
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fooTarget, razTarget);
 
     thrown.expectMessage(
         "The rule //java/com/facebook:raz could not be found.\nPlease check the spelling and whether it exists in "
@@ -397,7 +396,7 @@ public class ParserWithConfigurableAttributesTest {
   public void testMissingBuildFile()
       throws InterruptedException, BuildFileParseException, IOException {
     BuildTarget target = BuildTargetFactory.newInstance(cellRoot, "//path/to/nowhere", "nowhere");
-    Iterable<BuildTarget> buildTargets = ImmutableList.of(target);
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(target);
 
     thrown.expect(MissingBuildFileException.class);
     thrown.expectMessage(
@@ -440,7 +439,7 @@ public class ParserWithConfigurableAttributesTest {
 
     parser.buildTargetGraph(
         parsingContext,
-        Collections.singleton(
+        ImmutableSet.of(
             BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:cake")));
   }
 
@@ -553,7 +552,7 @@ public class ParserWithConfigurableAttributesTest {
 
     BuildTarget fooTarget =
         BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook/invalid", "foo");
-    Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget);
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fooTarget);
 
     parser.buildTargetGraph(parsingContext, buildTargets);
   }
@@ -1656,7 +1655,7 @@ public class ParserWithConfigurableAttributesTest {
       throws BuildFileParseException, IOException, InterruptedException {
     filterAllTargetsInProject(parser, parsingContext);
     BuildTarget foo = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo");
-    parser.buildTargetGraph(parsingContext, ImmutableList.of(foo));
+    parser.buildTargetGraph(parsingContext, ImmutableSet.of(foo));
 
     assertEquals("Should have cached build rules.", 1, counter.calls);
   }
@@ -1665,7 +1664,7 @@ public class ParserWithConfigurableAttributesTest {
   public void whenSingleTargetThenAllRulesRequestedThenRulesAreParsedOnce()
       throws BuildFileParseException, IOException, InterruptedException {
     BuildTarget foo = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo");
-    parser.buildTargetGraph(parsingContext, ImmutableList.of(foo));
+    parser.buildTargetGraph(parsingContext, ImmutableSet.of(foo));
     filterAllTargetsInProject(parser, parsingContext);
 
     assertEquals("Should have replaced build rules", 1, counter.calls);
@@ -1688,7 +1687,7 @@ public class ParserWithConfigurableAttributesTest {
     // Fetch //bar:bar#src to put it in cache.
     BuildTarget barTarget =
         BuildTargetFactory.newInstance(cellRoot, "//bar", "bar", InternalFlavor.of("src"));
-    Iterable<BuildTarget> buildTargets = ImmutableList.of(barTarget);
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(barTarget);
 
     parser.buildTargetGraph(parsingContext, buildTargets);
 
@@ -1726,7 +1725,7 @@ public class ParserWithConfigurableAttributesTest {
     // Fetch //bar:bar#src to put it in cache.
     BuildTarget barTarget =
         BuildTargetFactory.newInstance(cellRoot, "//bar", "bar", InternalFlavor.of("src"));
-    Iterable<BuildTarget> buildTargets = ImmutableList.of(barTarget);
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(barTarget);
 
     parser.buildTargetGraph(parsingContext, buildTargets);
   }
@@ -1903,7 +1902,7 @@ public class ParserWithConfigurableAttributesTest {
 
     // Fetch //:lib to put it in cache.
     BuildTarget libTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
-    Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(libTarget);
 
     {
       TargetGraph targetGraph = parser.buildTargetGraph(parsingContext, buildTargets);
@@ -1953,7 +1952,7 @@ public class ParserWithConfigurableAttributesTest {
 
     // Fetch //:lib to put it in cache.
     BuildTarget libTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
-    Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(libTarget);
 
     {
       TargetGraph targetGraph = parser.buildTargetGraph(parsingContext, buildTargets);
@@ -2014,7 +2013,7 @@ public class ParserWithConfigurableAttributesTest {
         testBuckFile, "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
 
     BuildTarget libTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
-    Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(libTarget);
 
     parser.buildTargetGraph(parsingContext.withCell(cell), buildTargets);
   }
@@ -2043,7 +2042,7 @@ public class ParserWithConfigurableAttributesTest {
         testBuckFile, "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
 
     BuildTarget libTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
-    Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(libTarget);
 
     parser.buildTargetGraph(parsingContext.withCell(cell), buildTargets);
 
@@ -2616,7 +2615,7 @@ public class ParserWithConfigurableAttributesTest {
       Parser parser, BuildTarget... buildTargets) throws Exception {
     // Build the target graph so we can access the hash code cache.
 
-    ImmutableList<BuildTarget> buildTargetsList = ImmutableList.copyOf(buildTargets);
+    ImmutableSet<BuildTarget> buildTargetsList = ImmutableSet.copyOf(buildTargets);
     TargetGraph targetGraph = parser.buildTargetGraph(parsingContext, buildTargetsList);
 
     ImmutableMap<BuildTarget, Map<String, Object>> attributes =

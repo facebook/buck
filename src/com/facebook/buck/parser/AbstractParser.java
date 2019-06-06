@@ -37,7 +37,6 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -201,7 +200,7 @@ abstract class AbstractParser implements Parser {
 
   @Override
   public TargetGraph buildTargetGraph(
-      ParsingContext parsingContext, Iterable<BuildTarget> toExplore)
+      ParsingContext parsingContext, ImmutableSet<BuildTarget> toExplore)
       throws IOException, InterruptedException, BuildFileParseException {
     AtomicLong processedBytes = new AtomicLong();
     try (PerBuildState state =
@@ -211,10 +210,10 @@ abstract class AbstractParser implements Parser {
   }
 
   private TargetGraph buildTargetGraph(
-      PerBuildState state, Iterable<BuildTarget> toExplore, AtomicLong processedBytes)
+      PerBuildState state, ImmutableSet<BuildTarget> toExplore, AtomicLong processedBytes)
       throws IOException, InterruptedException, BuildFileParseException {
 
-    if (Iterables.isEmpty(toExplore)) {
+    if (toExplore.isEmpty()) {
       return TargetGraph.EMPTY;
     }
 

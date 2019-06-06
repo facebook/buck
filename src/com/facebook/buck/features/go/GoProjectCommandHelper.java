@@ -50,12 +50,12 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.collect.MoreSets;
 import com.facebook.buck.versions.VersionException;
 import com.facebook.buck.versions.VersionedTargetGraphAndTargets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -387,7 +387,7 @@ public class GoProjectCommandHelper {
     if (isWithTests) {
       explicitTestTargets = getExplicitTestTargets(graphRoots, projectGraph);
       projectGraph =
-          parser.buildTargetGraph(parsingContext, Sets.union(graphRoots, explicitTestTargets));
+          parser.buildTargetGraph(parsingContext, MoreSets.union(graphRoots, explicitTestTargets));
     }
 
     TargetGraphAndTargets targetGraphAndTargets =

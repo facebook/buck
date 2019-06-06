@@ -69,6 +69,7 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.collect.MoreSets;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionException;
@@ -82,7 +83,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.BufferedReader;
@@ -724,12 +724,13 @@ public class XCodeProjectCommandHelper {
               graphRootsOrSourceTargets, projectGraph, isWithDependenciesTests, focusedModules);
       if (!needsFullRecursiveParse) {
         projectGraph =
-            parser.buildTargetGraph(parsingContext, Sets.union(graphRoots, explicitTestTargets));
+            parser.buildTargetGraph(
+                parsingContext, MoreSets.union(graphRoots, explicitTestTargets));
       } else {
         projectGraph =
             parser.buildTargetGraph(
                 parsingContext,
-                Sets.union(
+                MoreSets.union(
                     projectGraph.getNodes().stream()
                         .map(TargetNode::getBuildTarget)
                         .collect(ImmutableSet.toImmutableSet()),

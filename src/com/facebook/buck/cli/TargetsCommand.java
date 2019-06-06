@@ -1242,7 +1242,7 @@ public class TargetsCommand extends AbstractCommand {
                   .iterator());
       LOG.debug("Got explicit test targets: %s", explicitTestTargets);
 
-      Iterable<BuildTarget> matchingBuildTargetsWithTests =
+      ImmutableSet<BuildTarget> matchingBuildTargetsWithTests =
           mergeBuildTargets(targetGraphAndTargetNodes.getSecond(), explicitTestTargets);
 
       // Parse the BUCK files for the tests of the targets passed in from the command line.
@@ -1262,7 +1262,7 @@ public class TargetsCommand extends AbstractCommand {
     }
   }
 
-  private Iterable<BuildTarget> mergeBuildTargets(
+  private ImmutableSet<BuildTarget> mergeBuildTargets(
       Iterable<TargetNode<?>> targetNodes, Iterable<BuildTarget> buildTargets) {
     ImmutableSet.Builder<BuildTarget> targetsBuilder = ImmutableSet.builder();
 
