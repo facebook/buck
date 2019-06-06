@@ -24,20 +24,20 @@ import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
 /** Base class for events about parsing build files.. */
 public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent, WorkAdvanceEvent {
 
-  private final ImmutableList<BuildTarget> buildTargets;
+  private final ImmutableSet<BuildTarget> buildTargets;
 
-  protected ParseEvent(EventKey eventKey, Iterable<BuildTarget> buildTargets) {
+  protected ParseEvent(EventKey eventKey, ImmutableSet<BuildTarget> buildTargets) {
     super(eventKey);
-    this.buildTargets = ImmutableList.copyOf(buildTargets);
+    this.buildTargets = buildTargets;
   }
 
-  public ImmutableList<BuildTarget> getBuildTargets() {
+  public ImmutableSet<BuildTarget> getBuildTargets() {
     return buildTargets;
   }
 
@@ -52,7 +52,7 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent,
     return Joiner.on(", ").join(buildTargets);
   }
 
-  public static Started started(Iterable<BuildTarget> buildTargets) {
+  public static Started started(ImmutableSet<BuildTarget> buildTargets) {
     return new Started(buildTargets);
   }
 
@@ -62,7 +62,7 @@ public abstract class ParseEvent extends AbstractBuckEvent implements LeafEvent,
   }
 
   public static class Started extends ParseEvent {
-    protected Started(Iterable<BuildTarget> buildTargets) {
+    protected Started(ImmutableSet<BuildTarget> buildTargets) {
       super(EventKey.unique(), buildTargets);
     }
 

@@ -45,6 +45,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.eventbus.Subscribe;
 import java.time.Instant;
@@ -111,7 +112,7 @@ public class PertTimesEventListenerTest {
     eventBus.post(buckInit);
 
     fakeClock.setCurrentTimeMillis(1000);
-    ParseEvent.Started parseStarted = ParseEvent.started(ImmutableList.of(buildTarget));
+    ParseEvent.Started parseStarted = ParseEvent.started(ImmutableSet.of(buildTarget));
     eventBus.post(parseStarted);
 
     fakeClock.setCurrentTimeMillis(2000);

@@ -43,6 +43,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
@@ -100,7 +101,7 @@ public class CacheCommand extends AbstractCommand {
   Optional<Path> outputPath = Optional.empty();
 
   public void fakeOutParseEvents(BuckEventBus eventBus) {
-    ParseEvent.Started parseStart = ParseEvent.started(ImmutableList.of());
+    ParseEvent.Started parseStart = ParseEvent.started(ImmutableSet.of());
     eventBus.post(parseStart);
     eventBus.post(ParseEvent.finished(parseStart, 0, Optional.empty()));
     ActionGraphEvent.Started actionGraphStart = ActionGraphEvent.started();

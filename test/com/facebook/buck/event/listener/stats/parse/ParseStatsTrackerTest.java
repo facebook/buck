@@ -27,7 +27,7 @@ import com.facebook.buck.event.listener.util.EventInterval;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.parser.ParseEvent.Finished;
 import com.facebook.buck.parser.ParseEvent.Started;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import org.junit.Test;
 
@@ -44,7 +44,7 @@ public class ParseStatsTrackerTest {
 
     BuildId buildId = new BuildId();
     Started started =
-        ParseEvent.started(ImmutableList.of(BuildTargetFactory.newInstance("//:target")));
+        ParseEvent.started(ImmutableSet.of(BuildTargetFactory.newInstance("//:target")));
     started.configure(100, 0, 0, 0, buildId);
     eventBus.postWithoutConfiguring(started);
 
@@ -76,7 +76,7 @@ public class ParseStatsTrackerTest {
 
     BuildId buildId = new BuildId();
     Started startedRoot =
-        ParseEvent.started(ImmutableList.of(BuildTargetFactory.newInstance("//:target")));
+        ParseEvent.started(ImmutableSet.of(BuildTargetFactory.newInstance("//:target")));
     startedRoot.configure(100, 0, 0, 0, buildId);
     eventBus.postWithoutConfiguring(startedRoot);
 
@@ -85,7 +85,7 @@ public class ParseStatsTrackerTest {
     assertTrue(interval.isStarted());
     assertTrue(interval.isOngoing());
 
-    Started startedSecondary = ParseEvent.started(ImmutableList.of());
+    Started startedSecondary = ParseEvent.started(ImmutableSet.of());
     startedSecondary.configure(300, 0, 0, 1, buildId);
     eventBus.postWithoutConfiguring(startedSecondary);
 

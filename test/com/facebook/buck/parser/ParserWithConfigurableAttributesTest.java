@@ -371,9 +371,9 @@ public class ParserWithConfigurableAttributesTest {
     assertThat(
         events,
         Matchers.contains(
-            Matchers.hasProperty("buildTargets", equalTo(ImmutableList.copyOf(buildTargets))),
+            Matchers.hasProperty("buildTargets", equalTo(buildTargets)),
             Matchers.allOf(
-                Matchers.hasProperty("buildTargets", equalTo(ImmutableList.copyOf(buildTargets))),
+                Matchers.hasProperty("buildTargets", equalTo(buildTargets)),
                 Matchers.hasProperty("graph", equalTo(Optional.of(targetGraph))))));
   }
 

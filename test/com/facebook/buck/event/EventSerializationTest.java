@@ -112,7 +112,7 @@ public class EventSerializationTest {
 
   @Test
   public void testParseEventStarted() throws IOException {
-    ParseEvent.Started event = ParseEvent.started(ImmutableList.of());
+    ParseEvent.Started event = ParseEvent.started(ImmutableSet.of());
     event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
@@ -123,7 +123,7 @@ public class EventSerializationTest {
   @Test
   public void testParseEventFinished() throws IOException {
     ParseEvent.Started started =
-        ParseEvent.started(ImmutableList.of(BuildTargetFactory.newInstance("//base:short#flv")));
+        ParseEvent.started(ImmutableSet.of(BuildTargetFactory.newInstance("//base:short#flv")));
     ParseEvent.Finished event = ParseEvent.finished(started, 10, Optional.empty());
     event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
