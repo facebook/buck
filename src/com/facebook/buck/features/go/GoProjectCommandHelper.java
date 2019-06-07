@@ -24,6 +24,8 @@ import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
@@ -150,7 +152,11 @@ public class GoProjectCommandHelper {
     TargetGraphAndTargets targetGraphAndTargets;
     try {
       targetGraphAndTargets =
-          createTargetGraph(projectGraph, graphRoots, passedInTargetsSet.isEmpty());
+          createTargetGraph(
+              params.getDepsAwareExecutorSupplier().get(),
+              projectGraph,
+              passedInTargetsSet.isEmpty(),
+              graphRoots);
     } catch (BuildFileParseException | NoSuchTargetException | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -371,9 +377,10 @@ public class GoProjectCommandHelper {
   }
 
   private TargetGraphAndTargets createTargetGraph(
+      DepsAwareExecutor<? super ComputeResult, ?> depsAwareExecutor,
       TargetGraph projectGraph,
-      ImmutableSet<BuildTarget> graphRoots,
-      boolean needsFullRecursiveParse)
+      boolean needsFullRecursiveParse,
+      ImmutableSet<BuildTarget> graphRoots)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
 
     boolean isWithTests = isWithTests();
@@ -395,14 +402,15 @@ public class GoProjectCommandHelper {
     if (buckConfig.getView(BuildBuckConfig.class).getBuildVersions()) {
       targetGraphAndTargets =
           VersionedTargetGraphAndTargets.toVersionedTargetGraphAndTargets(
-              targetGraphAndTargets,
+              depsAwareExecutor,
               params.getVersionedTargetGraphCache(),
               buckEventBus,
               buckConfig,
               params.getTypeCoercerFactory(),
               params.getUnconfiguredBuildTargetFactory(),
               explicitTestTargets,
-              targetConfiguration);
+              targetConfiguration,
+              targetGraphAndTargets);
     }
     return targetGraphAndTargets;
   }

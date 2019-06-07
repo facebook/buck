@@ -128,12 +128,13 @@ public class DelegateAndGraphsInitializer {
           targetGraph =
               args.getVersionedTargetGraphCache()
                   .toVersionedTargetGraph(
-                      args.getBuckEventBus(),
+                      args.getDepsAwareExecutorSupplier().get(),
                       args.getState().getRemoteRootCellConfig(),
                       new DefaultTypeCoercerFactory(),
                       new ParsingUnconfiguredBuildTargetViewFactory(),
                       targetGraphAndBuildTargets,
-                      HostTargetConfiguration.INSTANCE)
+                      HostTargetConfiguration.INSTANCE,
+                      args.getBuckEventBus())
                   .getTargetGraph();
         } else {
           targetGraph = targetGraphAndBuildTargets.getTargetGraph();

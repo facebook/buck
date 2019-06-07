@@ -192,7 +192,7 @@ public class IjProjectSubCommand extends ProjectSubCommand {
         new IjProjectCommandHelper(
             params.getBuckEventBus(),
             executor,
-            params.getBuckConfig(),
+            params.getDepsAwareExecutorSupplier(),
             params.getActionGraphProvider(),
             params.getVersionedTargetGraphCache(),
             params.getTypeCoercerFactory(),
@@ -206,7 +206,8 @@ public class IjProjectSubCommand extends ProjectSubCommand {
             outputDir,
             (buildTargets, disableCaching) -> runBuild(params, buildTargets, disableCaching),
             projectGeneratorParameters.getArgsParser(),
-            projectGeneratorParameters);
+            projectGeneratorParameters,
+            params.getBuckConfig());
     return projectCommandHelper.parseTargetsAndRunProjectGenerator(projectCommandArguments);
   }
 

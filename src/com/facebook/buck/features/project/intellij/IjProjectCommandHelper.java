@@ -23,6 +23,8 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
@@ -58,6 +60,7 @@ import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.test.selectors.Nullable;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
@@ -80,6 +83,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class IjProjectCommandHelper {
 
@@ -101,11 +105,12 @@ public class IjProjectCommandHelper {
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
   private final ProjectGeneratorParameters projectGeneratorParameters;
   private final ParsingContext parsingContext;
+  private final Supplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutorSupplier;
 
   public IjProjectCommandHelper(
       BuckEventBus buckEventBus,
       ListeningExecutorService executor,
-      BuckConfig buckConfig,
+      CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutor,
       ActionGraphProvider actionGraphProvider,
       InstrumentedVersionedTargetGraphCache versionedTargetGraphCache,
       TypeCoercerFactory typeCoercerFactory,
@@ -119,8 +124,10 @@ public class IjProjectCommandHelper {
       String outputDir,
       BuckBuildRunner buckBuildRunner,
       Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser,
-      ProjectGeneratorParameters projectGeneratorParameters) {
+      ProjectGeneratorParameters projectGeneratorParameters,
+      BuckConfig buckConfig) {
     this.buckEventBus = buckEventBus;
+    this.depsAwareExecutorSupplier = depsAwareExecutor;
     this.targetConfiguration = targetConfiguration;
     this.console = projectGeneratorParameters.getConsole();
     this.parser = projectGeneratorParameters.getParser();
@@ -190,7 +197,8 @@ public class IjProjectCommandHelper {
     TargetGraphAndTargets targetGraphAndTargets;
     try {
       targetGraphAndTargets =
-          createTargetGraph(projectGraph, graphRoots, passedInTargetsSet.isEmpty());
+          createTargetGraph(
+              depsAwareExecutorSupplier, graphRoots, passedInTargetsSet.isEmpty(), projectGraph);
     } catch (BuildFileParseException | NoSuchTargetException | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -380,9 +388,10 @@ public class IjProjectCommandHelper {
   }
 
   private TargetGraphAndTargets createTargetGraph(
-      TargetGraph projectGraph,
+      Supplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutorSupplier,
       ImmutableSet<BuildTarget> graphRoots,
-      boolean needsFullRecursiveParse)
+      boolean needsFullRecursiveParse,
+      TargetGraph projectGraph)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
 
     boolean isWithTests = isWithTests();
@@ -404,14 +413,15 @@ public class IjProjectCommandHelper {
     if (buckConfig.getView(BuildBuckConfig.class).getBuildVersions()) {
       targetGraphAndTargets =
           VersionedTargetGraphAndTargets.toVersionedTargetGraphAndTargets(
-              targetGraphAndTargets,
+              depsAwareExecutorSupplier.get(),
               versionedTargetGraphCache,
               buckEventBus,
               buckConfig,
               typeCoercerFactory,
               unconfiguredBuildTargetFactory,
               explicitTestTargets,
-              targetConfiguration);
+              targetConfiguration,
+              targetGraphAndTargets);
     }
     return targetGraphAndTargets;
   }

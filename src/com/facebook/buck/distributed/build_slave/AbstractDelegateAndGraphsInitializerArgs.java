@@ -16,6 +16,8 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -31,6 +33,7 @@ import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Map;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 /** Constructor arguments for DelegateAndGraphsInitializer. */
@@ -54,6 +57,9 @@ abstract class AbstractDelegateAndGraphsInitializerArgs {
   public abstract ProjectFilesystemFactory getProjectFilesystemFactory();
 
   public abstract WeightedListeningExecutorService getExecutorService();
+
+  public abstract Supplier<DepsAwareExecutor<? super ComputeResult, ?>>
+      getDepsAwareExecutorSupplier();
 
   public abstract Map<ExecutorPool, ListeningExecutorService> getExecutors();
 

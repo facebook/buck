@@ -218,6 +218,7 @@ public abstract class DistBuildFactory {
             .setLogDirectoryPath(params.getInvocationInfo().get().getLogDirectoryPath())
             .setProvider(fileContentsProvider)
             .setExecutors(params.getExecutors())
+            .setDepsAwareExecutorSupplier(params.getDepsAwareExecutorSupplier())
             .setDistBuildMode(mode)
             .setRemoteCoordinatorPort(coordinatorPort)
             .setRemoteCoordinatorAddress(coordinatorAddress)

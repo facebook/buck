@@ -29,6 +29,8 @@ import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -64,6 +66,7 @@ import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.swift.SwiftBuckConfig;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
@@ -104,6 +107,7 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import javax.annotation.concurrent.ThreadSafe;
 import org.pf4j.PluginManager;
 
@@ -144,6 +148,7 @@ public class XCodeProjectCommandHelper {
 
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
   private final Function<ImmutableList<String>, ExitCode> buildRunner;
+  private final Supplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutorSupplier;
 
   public XCodeProjectCommandHelper(
       BuckEventBus buckEventBus,
@@ -161,7 +166,7 @@ public class XCodeProjectCommandHelper {
       ImmutableMap<String, String> environment,
       ListeningExecutorService executorService,
       ListeningExecutorService parsingExecutorService,
-      List<String> arguments,
+      CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutor,
       ImmutableSet<Flavor> appleCxxFlavors,
       boolean absoluteHeaderMapPaths,
       boolean sharedLibrariesInBundles,
@@ -176,7 +181,8 @@ public class XCodeProjectCommandHelper {
       boolean readOnly,
       PathOutputPresenter outputPresenter,
       Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser,
-      Function<ImmutableList<String>, ExitCode> buildRunner) {
+      Function<ImmutableList<String>, ExitCode> buildRunner,
+      List<String> arguments) {
     this.buckEventBus = buckEventBus;
     this.pluginManager = pluginManager;
     this.parser = parser;
@@ -186,6 +192,7 @@ public class XCodeProjectCommandHelper {
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
     this.cell = cell;
     this.targetConfiguration = targetConfiguration;
+    this.depsAwareExecutorSupplier = depsAwareExecutor;
     this.appleCxxFlavors = appleCxxFlavors;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.console = console;
@@ -258,11 +265,12 @@ public class XCodeProjectCommandHelper {
     try {
       targetGraphAndTargets =
           createTargetGraph(
-              projectGraph,
+              depsAwareExecutorSupplier,
               graphRoots,
               isWithTests(buckConfig),
               isWithDependenciesTests(buckConfig),
-              passedInTargetsSet.isEmpty());
+              passedInTargetsSet.isEmpty(),
+              projectGraph);
     } catch (BuildFileParseException | NoSuchTargetException | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -705,11 +713,12 @@ public class XCodeProjectCommandHelper {
   }
 
   private TargetGraphAndTargets createTargetGraph(
-      TargetGraph projectGraph,
+      Supplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutorSupplier,
       ImmutableSet<BuildTarget> graphRoots,
       boolean isWithTests,
       boolean isWithDependenciesTests,
-      boolean needsFullRecursiveParse)
+      boolean needsFullRecursiveParse,
+      TargetGraph projectGraph)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
 
     ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();
@@ -743,14 +752,15 @@ public class XCodeProjectCommandHelper {
     if (buckConfig.getView(BuildBuckConfig.class).getBuildVersions()) {
       targetGraphAndTargets =
           VersionedTargetGraphAndTargets.toVersionedTargetGraphAndTargets(
-              targetGraphAndTargets,
+              depsAwareExecutorSupplier.get(),
               versionedTargetGraphCache,
               buckEventBus,
               buckConfig,
               typeCoercerFactory,
               unconfiguredBuildTargetFactory,
               explicitTestTargets,
-              targetConfiguration);
+              targetConfiguration,
+              targetGraphAndTargets);
     }
     return targetGraphAndTargets;
   }

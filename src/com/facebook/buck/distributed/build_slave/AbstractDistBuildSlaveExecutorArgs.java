@@ -20,6 +20,8 @@ import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -50,6 +52,7 @@ import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -82,6 +85,9 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
   public abstract Clock getClock();
 
   public abstract Map<ExecutorPool, ListeningExecutorService> getExecutors();
+
+  public abstract Supplier<DepsAwareExecutor<? super ComputeResult, ?>>
+      getDepsAwareExecutorSupplier();
 
   public abstract FileContentsProvider getProvider();
 
@@ -167,6 +173,7 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
         .setRuleKeyConfiguration(this.getRuleKeyConfiguration())
         .setProjectFilesystemFactory(this.getProjectFilesystemFactory())
         .setExecutorService(this.getExecutorService())
+        .setDepsAwareExecutorSupplier(this.getDepsAwareExecutorSupplier())
         .setExecutors(this.getExecutors())
         .setProvider(this.getProvider())
         .setKnownRuleTypesProvider(getKnownRuleTypesProvider())

@@ -369,12 +369,13 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     return params
         .getVersionedTargetGraphCache()
         .toVersionedTargetGraph(
-            params.getBuckEventBus(),
+            params.getDepsAwareExecutorSupplier().get(),
             params.getBuckConfig(),
             params.getTypeCoercerFactory(),
             params.getUnconfiguredBuildTargetFactory(),
             targetGraphAndBuildTargets,
-            params.getTargetConfiguration());
+            params.getTargetConfiguration(),
+            params.getBuckEventBus());
   }
 
   @Override
