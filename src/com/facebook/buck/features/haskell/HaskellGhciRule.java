@@ -545,7 +545,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       templateArgs.put("squashed_so", dir.relativize(dir.resolve(so.getFileName())).toString());
       templateArgs.put("binutils_path", ghciBinutils.toRealPath().toString());
       // ghc_path points to the ghc tool for this binary
-      templateArgs.put("ghc_path", ghc);
+      templateArgs.put("ghc_path", ghciGhc.toRealPath().toString());
       // user_ghci_path points to user-defined ghci binary, which can be eithe
       // the same as ghc_path, or a haskell_binary itself compiled during this
       // buck run.
