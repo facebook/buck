@@ -19,6 +19,7 @@ package com.facebook.buck.core.build.engine.buildinfo;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -76,9 +77,10 @@ public interface OnDiskBuildInfo {
   /** Deletes both "artifact" and "build" metadata. */
   void deleteExistingMetadata() throws IOException;
 
-  void writeOutputHashes(FileHashCache fileHashCache) throws IOException;
+  void calculateOutputSizeAndWriteOutputHashes(
+      FileHashCache fileHashCache, Predicate<Long> shouldWriteOutputHashes) throws IOException;
 
-  void validateArtifact(Set<Path> extractedFiles);
+  void validateArtifact(Set<Path> extractedFiles) throws IOException;
 
   ImmutableSortedSet<Path> getOutputPaths();
 }
