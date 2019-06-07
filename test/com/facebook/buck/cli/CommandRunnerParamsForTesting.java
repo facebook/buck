@@ -131,7 +131,7 @@ public class CommandRunnerParamsForTesting {
             ExecutorPool.GRAPH_CPU,
             MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()));
     CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
-        depsAwareExecutorSupplier = MainRunner.getDepsAwareExecutorSupplier(config);
+        depsAwareExecutorSupplier = MainRunner.getDepsAwareExecutorSupplier(config, eventBus);
 
     BuckGlobalState buckGlobalState =
         BuckGlobalStateFactory.create(

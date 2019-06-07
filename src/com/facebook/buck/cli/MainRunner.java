@@ -39,7 +39,9 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.exceptions.config.ErrorHandlingBuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
-import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutorWithLocalStack;
+import com.facebook.buck.core.graph.transformation.executor.config.DepsAwareExecutorConfig;
+import com.facebook.buck.core.graph.transformation.executor.factory.DepsAwareExecutorFactory;
+import com.facebook.buck.core.graph.transformation.executor.factory.DepsAwareExecutorType;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -75,6 +77,7 @@ import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.DefaultBuckEventBus;
+import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
 import com.facebook.buck.event.listener.CacheRateStatsListener;
@@ -194,6 +197,7 @@ import com.facebook.buck.util.network.MacIpv6BugWorkaround;
 import com.facebook.buck.util.network.RemoteLogBuckConfig;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.perf.ProcessTracker;
+import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
 import com.facebook.buck.util.shutdown.NonReentrantSystemExit;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
@@ -1110,7 +1114,7 @@ public final class MainRunner {
                     });
             CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
                 depsAwareExecutorSupplier =
-                    getDepsAwareExecutorSupplier(buckConfig.getView(ResourcesConfig.class));
+                    getDepsAwareExecutorSupplier(buckConfig, buildEventBus);
 
             // This will get executed first once it gets out of try block and just wait for
             // event bus to dispatch all pending events before we proceed to termination
@@ -2074,15 +2078,32 @@ public final class MainRunner {
   }
 
   static CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
-      getDepsAwareExecutorSupplier(BuckConfig config) {
-    return getDepsAwareExecutorSupplier(config.getView(ResourcesConfig.class));
+      getDepsAwareExecutorSupplier(BuckConfig config, BuckEventBus eventBus) {
+    Map<DepsAwareExecutorType, Double> executorType =
+        config.getView(DepsAwareExecutorConfig.class).getExecutorType();
+    DepsAwareExecutorType resolvedExecutorType;
+
+    if (executorType.isEmpty()) {
+      resolvedExecutorType =
+          RandomizedTrial.getGroup(
+              "depsaware_executor", eventBus.getBuildId().toString(), DepsAwareExecutorType.class);
+    } else {
+      resolvedExecutorType =
+          RandomizedTrial.getGroup(
+              "depsaware_executor", eventBus.getBuildId().toString(), executorType);
+    }
+    eventBus.post(
+        new ExperimentEvent("depsaware_executor", resolvedExecutorType.toString(), "", null, null));
+    return getDepsAwareExecutorSupplier(
+        resolvedExecutorType,
+        config.getView(ResourcesConfig.class).getMaximumResourceAmounts().getCpu());
   }
 
-  private static CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
-      getDepsAwareExecutorSupplier(ResourcesConfig config) {
+  static CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
+      getDepsAwareExecutorSupplier(DepsAwareExecutorType executorType, int parallelism) {
     return CloseableMemoizedSupplier.of(
-        () ->
-            DefaultDepsAwareExecutorWithLocalStack.of(config.getMaximumResourceAmounts().getCpu()),
+        (com.google.common.base.Supplier<DepsAwareExecutor<? super ComputeResult, ?>>)
+            () -> DepsAwareExecutorFactory.create(executorType, parallelism),
         DepsAwareExecutor::close);
   }
 

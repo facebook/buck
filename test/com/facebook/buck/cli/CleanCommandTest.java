@@ -265,7 +265,8 @@ public class CleanCommandTest {
 
   private CommandRunnerParams createCommandRunnerParams(BuckConfig buckConfig, Cell cell) {
     CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
-        depsAwareExecutorSupplier = MainRunner.getDepsAwareExecutorSupplier(buckConfig);
+        depsAwareExecutorSupplier =
+            MainRunner.getDepsAwareExecutorSupplier(buckConfig, BuckEventBusForTests.newInstance());
 
     return CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
         depsAwareExecutorSupplier.get(),
