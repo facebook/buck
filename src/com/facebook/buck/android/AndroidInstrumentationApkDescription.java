@@ -112,7 +112,7 @@ public class AndroidInstrumentationApkDescription
     ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
         new ImmutableSortedSet.Builder<>(Ordering.<JavaLibrary>natural())
             .addAll(apkUnderTest.getRulesToExcludeFromDex())
-            .addAll(getClasspathDeps(apkUnderTest.getClasspathDeps()))
+            .addAll(getClasspathDeps(apkUnderTest.getClasspathDeps(graphBuilder)))
             .build();
 
     APKModule rootAPKModule = APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true);
