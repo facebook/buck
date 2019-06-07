@@ -77,6 +77,6 @@ public class ExportFileIntegrationTest {
     Files.write(sibling, ImmutableList.of("some data"));
 
     workspace.runBuckBuild("//:file").assertSuccess();
-    assertEquals("some data\n", workspace.getFileContents(sibling));
+    assertEquals("some data", workspace.getFileContents(sibling).trim());
   }
 }
