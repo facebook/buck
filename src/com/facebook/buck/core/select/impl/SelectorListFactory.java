@@ -88,7 +88,7 @@ public class SelectorListFactory {
 
   private static <T> void assertElementTypeSupportsConcatenation(
       List<Object> elements, TypeCoercer<T> elementTypeCoercer) {
-    if (elements.size() > 1 && elementTypeCoercer.concat(ImmutableList.of()) == null) {
+    if (elements.size() > 1 && !elementTypeCoercer.supportsConcatenation()) {
       throw new HumanReadableException(
           String.format(
               "type '%s' doesn't support select concatenation",

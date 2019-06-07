@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.concat.Concatable;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
 
@@ -66,6 +67,11 @@ public interface TypeCoercer<T> extends Concatable<T> {
   @Override
   default T concat(Iterable<T> elements) {
     return null;
+  }
+
+  /** @return {@code true} is this coercer supports concatenation. */
+  default boolean supportsConcatenation() {
+    return concat(ImmutableList.of()) != null;
   }
 
   interface Traversal {
