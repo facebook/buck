@@ -87,6 +87,7 @@ public abstract class AbstractConfigIgnoredByDaemon implements ConfigView<BuckCo
     ignoreFieldsForDaemonRestartBuilder.put("color", ImmutableSet.of("ui"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "version_control", ImmutableSet.of("generate_statistics"));
+    ignoreFieldsForDaemonRestartBuilder.put("depsawareexecutor", ImmutableSet.of("type"));
     return ignoreFieldsForDaemonRestartBuilder.build();
   }
 
