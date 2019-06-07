@@ -17,9 +17,8 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.util.function.ThrowingConsumer;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 /**
  * Base class for {@link CloseableMemoizedSupplier} and {@link ThrowingCloseableMemoizedSupplier}
@@ -32,7 +31,7 @@ public class AbstractCloseableMemoizedSupplier<T, E extends Exception>
   private final Supplier<T> supplier;
 
   protected AbstractCloseableMemoizedSupplier(Supplier<T> supplier, ThrowingConsumer<T, E> closer) {
-    this.supplier = Suppliers.memoize(supplier);
+    this.supplier = MoreSuppliers.memoize(supplier);
     this.closer = closer;
   }
 

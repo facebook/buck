@@ -17,7 +17,7 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.util.function.ThrowingConsumer;
-import com.google.common.base.Supplier;
+import java.util.function.Supplier;
 
 /**
  * Convenience wrapper class to attach closeable functionality to suppliers of resources to be

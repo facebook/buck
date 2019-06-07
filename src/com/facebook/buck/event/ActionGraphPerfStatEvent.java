@@ -17,7 +17,7 @@ package com.facebook.buck.event;
 
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.timing.Clock;
-import com.google.common.base.Supplier;
+import java.util.function.Supplier;
 
 /** Event Class containing the perf data regarding action graph building */
 public class ActionGraphPerfStatEvent extends AbstractBuckEvent {

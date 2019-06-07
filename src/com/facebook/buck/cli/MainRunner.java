@@ -2102,7 +2102,7 @@ public final class MainRunner {
   static CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
       getDepsAwareExecutorSupplier(DepsAwareExecutorType executorType, int parallelism) {
     return CloseableMemoizedSupplier.of(
-        (com.google.common.base.Supplier<DepsAwareExecutor<? super ComputeResult, ?>>)
+        (Supplier<DepsAwareExecutor<? super ComputeResult, ?>>)
             () -> DepsAwareExecutorFactory.create(executorType, parallelism),
         DepsAwareExecutor::close);
   }

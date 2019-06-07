@@ -16,7 +16,7 @@
 package com.facebook.buck.testutil;
 
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
-import com.google.common.base.Supplier;
+import java.util.function.Supplier;
 import org.junit.rules.ExternalResource;
 
 /** A closeable resource for the lifetime of the junit test, but is cleaned up after the test. */
