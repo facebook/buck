@@ -192,7 +192,7 @@ public class DefaultProjectFilesystemView implements ProjectFilesystemView {
   public ImmutableCollection<Path> getDirectoryContents(Path pathToUse) throws IOException {
     try (DirectoryStream<Path> stream =
         filesystemParent.getDirectoryContentsStream(
-            filesystemParent.getPathForRelativePath(pathToUse))) {
+            filesystemParent.getPathForRelativePath(projectRoot.resolve(pathToUse)))) {
       return FluentIterable.from(stream)
           .filter(this::shouldExplorePaths)
           .transform(absolutePath -> MorePaths.relativize(resolvedProjectRoot, absolutePath))

@@ -84,6 +84,24 @@ public class DefaultProjectFilesystemViewTest {
   }
 
   @Test
+  public void getDirectoryContentsObeysViewRoot() throws IOException {
+    tmp.newFile("file1");
+    tmp.newFolder("dir");
+    tmp.newFile("dir/file2");
+    tmp.newFolder("dir/subdir");
+    tmp.newFile("dir/subdir/file3");
+
+    DefaultProjectFilesystemView dirView =
+        filesystemView.withView(Paths.get("dir"), ImmutableSet.of());
+    assertThat(
+        dirView.getDirectoryContents(Paths.get("")),
+        containsInAnyOrder(Paths.get("file2"), Paths.get("subdir")));
+    assertThat(
+        dirView.getDirectoryContents(Paths.get("subdir")),
+        containsInAnyOrder(Paths.get("subdir/file3")));
+  }
+
+  @Test
   public void isDirectoryDelegatesToFilesystem() throws IOException {
     filesystem = new FakeProjectFilesystem();
     filesystem.mkdirs(Paths.get("foo"));
