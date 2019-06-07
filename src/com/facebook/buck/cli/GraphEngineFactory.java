@@ -30,8 +30,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
-import com.facebook.buck.core.model.platform.Platform;
-import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
+import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDepsPackage;
 import com.facebook.buck.core.parser.BuildPackagePaths;
@@ -147,8 +146,6 @@ public class GraphEngineFactory {
 
     // COMPUTATION: raw target node to raw target node with deps
 
-    Platform defaultPlatform = new ConstraintBasedPlatform("", ImmutableSet.of());
-
     RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
         new RawTargetNodeToTargetNodeFactory(
             params.getKnownRuleTypesProvider(),
@@ -185,7 +182,7 @@ public class GraphEngineFactory {
               }
             },
             // TODO: replace with TargetPlatformResolver
-            targetConfiguration -> defaultPlatform);
+            targetConfiguration -> EmptyPlatform.INSTANCE);
 
     RawTargetNodeToRawTargetNodeWithDepsComputation
         rawTargetNodeToRawTargetNodeWithDepsComputation =
