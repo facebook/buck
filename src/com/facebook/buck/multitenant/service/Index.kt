@@ -97,6 +97,15 @@ class Index internal constructor(
     }
 
     /**
+     * Same as [getTargetNode] but throws an exception if build rule does not exist
+     */
+    fun getTargetNodeUnsafe(generation: Generation, target: UnconfiguredBuildTarget): RawBuildRule {
+        return requireNotNull(getTargetNode(generation, target)) {
+            "No build rule found in index for $target"
+        }
+    }
+
+    /**
      * @return a list whose entries correspond to the input list of `targets` where each element in
      *     the output is the corresponding target node for the build target at the commit or `null`
      *     if no rule existed for that target at that commit.

@@ -98,7 +98,7 @@ class MultitenantQueryEnvironment(
     ): Set<UnconfiguredBuildTarget> = index.getReverseDeps(generation, targets)
 
     override fun getInputs(target: UnconfiguredBuildTarget): Set<QueryFileTarget> {
-        val targetNode = requireNotNull(index.getTargetNode(generation, target)).targetNode
+        val targetNode = index.getTargetNodeUnsafe(generation, target).targetNode
         return extractInputs(targetNode)
     }
 
@@ -115,12 +115,14 @@ class MultitenantQueryEnvironment(
     }
 
     override fun getTargetKind(target: UnconfiguredBuildTarget): String {
-        val rawBuildRule = requireNotNull(index.getTargetNode(generation, target))
+        val rawBuildRule = index.getTargetNodeUnsafe(generation, target)
         return rawBuildRule.targetNode.ruleType.toString()
     }
 
-    override fun getTestsForTarget(target: UnconfiguredBuildTarget): ImmutableSet<UnconfiguredBuildTarget> {
-        val targetNode = requireNotNull(index.getTargetNode(generation, target)).targetNode
+    override fun getTestsForTarget(
+        target: UnconfiguredBuildTarget
+    ): ImmutableSet<UnconfiguredBuildTarget> {
+        val targetNode = index.getTargetNodeUnsafe(generation, target).targetNode
         return extractTests(targetNode)
     }
 
