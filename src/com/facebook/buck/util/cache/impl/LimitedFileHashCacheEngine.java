@@ -214,7 +214,8 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
   public HashCode getForArchiveMember(Path archiveRelativePath, Path memberPath)
       throws IOException {
     Path relativeFilePath = archiveRelativePath.normalize();
-    Preconditions.checkState(isArchive(relativeFilePath), relativeFilePath + " is not an archive.");
+    Preconditions.checkState(
+        isArchive(relativeFilePath), "%s is not an archive.", relativeFilePath);
     Data data = fileSystemMap.get(relativeFilePath);
     HashCode hashCode = data.getJarContentsHashes().get(memberPath);
     if (hashCode == null) {
