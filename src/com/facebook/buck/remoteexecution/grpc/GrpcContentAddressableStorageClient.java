@@ -51,7 +51,8 @@ public class GrpcContentAddressableStorageClient implements ContentAddressedStor
             1000,
             10 * 1024 * 1024,
             MostExecutors.newMultiThreadExecutor("blob-uploader", 4),
-            new GrpcCasBlobUploader(storageStub, buckEventBus, metadata));
+            new GrpcCasBlobUploader(
+                instanceName, storageStub, byteStreamStub, buckEventBus, metadata));
 
     this.outputsMaterializer =
         new OutputsMaterializer(

@@ -93,6 +93,13 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
               }
 
               @Override
+              public UploadResult uploadFromStream(UploadDataSupplier build) {
+                return LocalContentAddressedStorage.this
+                    .batchUpdateBlobs(ImmutableList.of(build))
+                    .get(0);
+              }
+
+              @Override
               public ImmutableSet<String> getMissingHashes(List<Protocol.Digest> requiredDigests) {
                 return findMissing(requiredDigests)
                     .map(Protocol.Digest::getHash)

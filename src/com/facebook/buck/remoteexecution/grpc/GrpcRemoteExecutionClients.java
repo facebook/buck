@@ -84,7 +84,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
             executionStub, byteStreamStub, instanceName, getProtocol());
   }
 
-  private static String getReadResourceName(String instanceName, Protocol.Digest digest) {
+  public static String getResourceName(String instanceName, Protocol.Digest digest) {
     return String.format("%s/blobs/%s/%d", instanceName, digest.getHash(), digest.getSize());
   }
 
@@ -94,7 +94,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
       Protocol.Digest digest,
       ByteStreamStub byteStreamStub,
       ThrowingConsumer<ByteString, IOException> dataConsumer) {
-    String name = getReadResourceName(instanceName, digest);
+    String name = getResourceName(instanceName, digest);
     SettableFuture<Void> future = SettableFuture.create();
     byteStreamStub.read(
         ReadRequest.newBuilder().setResourceName(name).setReadLimit(0).setReadOffset(0).build(),

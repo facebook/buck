@@ -30,6 +30,8 @@ public interface CasBlobUploader {
   ImmutableList<UploadResult> batchUpdateBlobs(ImmutableList<UploadDataSupplier> build)
       throws IOException;
 
+  UploadResult uploadFromStream(UploadDataSupplier build) throws IOException;
+
   /** Result (status/error message) of an upload. */
   class UploadResult {
     public final Digest digest;

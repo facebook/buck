@@ -35,9 +35,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -61,7 +63,8 @@ public class MultiThreadedBlobUploader {
       new ConcurrentHashMap<>();
 
   private final Set<String> containedHashes = Sets.newConcurrentHashSet();
-  private final BlockingQueue<PendingUpload> waitingUploads = new LinkedBlockingQueue<>();
+  private final BlockingDeque<PendingUpload> waitingUploads = new LinkedBlockingDeque<>();
+
   private final BlockingQueue<PendingUpload> waitingMissingCheck = new LinkedBlockingQueue<>();
 
   private final ExecutorService uploadService;
@@ -78,6 +81,10 @@ public class MultiThreadedBlobUploader {
 
     String getHash() {
       return uploadData.getDigest().getHash();
+    }
+
+    int getSize() {
+      return uploadData.getDigest().getSize();
     }
   }
 
@@ -190,49 +197,67 @@ public class MultiThreadedBlobUploader {
     processMissing();
     ImmutableMap.Builder<String, PendingUpload> dataBuilder = ImmutableMap.builder();
     int size = 0;
-    while (size < uploadSizeLimit && !waitingUploads.isEmpty()) {
+    while (!waitingUploads.isEmpty()) {
       PendingUpload data = waitingUploads.poll();
       if (data == null) {
         break;
       }
-      dataBuilder.put(data.getHash(), data);
-      size += data.uploadData.getDigest().getSize();
+
+      if (size == 0 || data.getSize() + size < uploadSizeLimit) {
+        dataBuilder.put(data.getHash(), data);
+      } else {
+        // This object is too large to fit in this batch.
+        // Add it back to the beginning of the upload queue for the next batch.
+        waitingUploads.addFirst(data);
+        break;
+      }
     }
     ImmutableMap<String, PendingUpload> data = dataBuilder.build();
 
     if (!data.isEmpty()) {
       try {
-        ImmutableList.Builder<UploadDataSupplier> blobsBuilder = ImmutableList.builder();
-        for (PendingUpload entry : data.values()) {
-          blobsBuilder.add(entry.uploadData);
+        if (size > uploadSizeLimit) {
+          // This should only happen when we're trying to upload a single large object
+          Preconditions.checkState(data.size() == 1);
+          PendingUpload largeDataUpload = data.entrySet().iterator().next().getValue();
+          UploadResult uploadResult =
+              asyncBlobUploader.uploadFromStream(largeDataUpload.uploadData);
+          setPendingUploadResult(largeDataUpload, uploadResult);
+        } else {
+          ImmutableList<UploadDataSupplier> blobs =
+              data.values().stream()
+                  .map(e -> e.uploadData)
+                  .collect(ImmutableList.toImmutableList());
+
+          ImmutableList<UploadResult> results = asyncBlobUploader.batchUpdateBlobs(blobs);
+          Preconditions.checkState(results.size() == blobs.size());
+          results.forEach(
+              result -> {
+                PendingUpload pendingUpload =
+                    Objects.requireNonNull(data.get(result.digest.getHash()));
+                setPendingUploadResult(pendingUpload, result);
+              });
+          data.forEach((k, pending) -> pending.future.setException(new RuntimeException("idk")));
         }
-
-        ImmutableList<UploadDataSupplier> blobs =
-            data.values().stream().map(e -> e.uploadData).collect(ImmutableList.toImmutableList());
-
-        ImmutableList<UploadResult> results = asyncBlobUploader.batchUpdateBlobs(blobs);
-        Preconditions.checkState(results.size() == blobs.size());
-        results.forEach(
-            result -> {
-              PendingUpload pendingUpload =
-                  Objects.requireNonNull(data.get(result.digest.getHash()));
-              if (result.status == 0) {
-                pendingUpload.future.set(null);
-              } else {
-                pendingUpload.future.setException(
-                    new IOException(
-                        String.format(
-                            "Failed uploading with message: %s. When uploading blob: %s.",
-                            result.message, pendingUpload.uploadData.describe())));
-              }
-            });
-        data.forEach((k, pending) -> pending.future.setException(new RuntimeException("idk")));
       } catch (Exception e) {
         data.forEach((k, pending) -> pending.future.setException(e));
       }
     }
+
     if (!waitingMissingCheck.isEmpty() || !waitingUploads.isEmpty()) {
       uploadService.submit(this::processUploads);
+    }
+  }
+
+  private void setPendingUploadResult(PendingUpload upload, UploadResult result) {
+    if (result.status == 0) {
+      upload.future.set(null);
+    } else {
+      upload.future.setException(
+          new IOException(
+              String.format(
+                  "Failed uploading with message: %s. When uploading blob: %s.",
+                  result.message, upload.uploadData.describe())));
     }
   }
 }
