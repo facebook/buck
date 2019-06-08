@@ -64,7 +64,10 @@ public class TargetCompatibilityCheckerTest {
 
   @Before
   public void setUp() {
-    platform = new ConstraintBasedPlatform("", ImmutableSet.of(cs1v1));
+    platform =
+        new ConstraintBasedPlatform(
+            UnconfiguredBuildTargetFactoryForTests.newInstance("//platform:platform"),
+            ImmutableSet.of(cs1v1));
     constraintResolver =
         new RuleBasedConstraintResolver(
             buildTarget -> {
@@ -76,8 +79,14 @@ public class TargetCompatibilityCheckerTest {
                     buildTarget, buildTarget.getShortName(), cs1.getBuildTarget());
               }
             });
-    compatiblePlatform = new ConstraintBasedPlatform("//platforms:p1", ImmutableSet.of(cs1v1));
-    nonCompatiblePlatform = new ConstraintBasedPlatform("//platforms:p2", ImmutableSet.of(cs1v2));
+    compatiblePlatform =
+        new ConstraintBasedPlatform(
+            UnconfiguredBuildTargetFactoryForTests.newInstance("//platforms:p1"),
+            ImmutableSet.of(cs1v1));
+    nonCompatiblePlatform =
+        new ConstraintBasedPlatform(
+            UnconfiguredBuildTargetFactoryForTests.newInstance("//platforms:p2"),
+            ImmutableSet.of(cs1v2));
     platformResolver =
         buildTarget -> {
           if (buildTarget.toString().equals(compatiblePlatform.toString())) {
