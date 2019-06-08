@@ -34,7 +34,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.ElfSharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
-import com.facebook.buck.cxx.toolchain.LazyDelegatingSymbolNameTool;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
@@ -180,15 +179,7 @@ public class CxxPlatforms {
         .setFilepathLengthLimited(config.getFilepathLengthLimited());
 
     builder.setSymbolNameTool(
-        new LazyDelegatingSymbolNameTool(
-            () -> {
-              Optional<Tool> configNm = config.getNm();
-              if (configNm.isPresent()) {
-                return new PosixNmSymbolNameTool(configNm.get());
-              } else {
-                return nm;
-              }
-            }));
+        config.getNm().<SymbolNameTool>map(PosixNmSymbolNameTool::new).orElse(nm));
 
     builder.setArchiveContents(config.getArchiveContents().orElse(archiveContents));
 
@@ -349,6 +340,7 @@ public class CxxPlatforms {
     cxxPlatform
         .getSharedLibraryInterfaceParams()
         .ifPresent(f -> deps.addAll(f.getParseTimeDeps(targetConfiguration)));
+    deps.addAll(cxxPlatform.getSymbolNameTool().getParseTimeDeps(targetConfiguration));
     return deps.build();
   }
 

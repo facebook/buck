@@ -592,7 +592,9 @@ public class NdkCxxPlatforms {
         .addAllLdflags(getLdFlags(targetConfiguration, androidConfig))
         .setStrip(getGccTool(toolchainPaths, "strip", version, executableFinder))
         .setSymbolNameTool(
-            new PosixNmSymbolNameTool(getGccTool(toolchainPaths, "nm", version, executableFinder)))
+            new PosixNmSymbolNameTool(
+                new ConstantToolProvider(
+                    getGccTool(toolchainPaths, "nm", version, executableFinder))))
         .setAr(
             ArchiverProvider.from(
                 new GnuArchiver(getGccTool(toolchainPaths, "ar", version, executableFinder))))

@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -40,6 +41,10 @@ public interface SymbolNameTool {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
+      TargetConfiguration targetConfiguration,
       BuildTarget target,
       Iterable<? extends SourcePath> linkerInputs);
+
+  /** @return any dependencies required at parse time to support the provided tool. */
+  Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration);
 }

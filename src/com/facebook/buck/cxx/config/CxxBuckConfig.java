@@ -499,8 +499,8 @@ public class CxxBuckConfig {
     return getPath(name).map(this::getSourcePath).map(HashedFileTool::new);
   }
 
-  public Optional<Tool> getNm() {
-    return getTool(NM);
+  public Optional<ToolProvider> getNm() {
+    return getToolProvider(NM);
   }
 
   public Optional<Tool> getStrip() {

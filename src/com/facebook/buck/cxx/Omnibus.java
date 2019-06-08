@@ -490,6 +490,7 @@ public class Omnibus {
                 projectFilesystem,
                 params,
                 graphBuilder,
+                buildTarget.getTargetConfiguration(),
                 buildTarget.withAppendedFlavors(
                     InternalFlavor.of("omnibus-undefined-symbols-file")),
                 linkerInputs);

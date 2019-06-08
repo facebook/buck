@@ -83,7 +83,7 @@ public class CxxPlatformUtils {
           .setAr(ArchiverProvider.from(new GnuArchiver(DEFAULT_TOOL)))
           .setArchiveContents(ArchiveContents.NORMAL)
           .setRanlib(new ConstantToolProvider(DEFAULT_TOOL))
-          .setSymbolNameTool(new PosixNmSymbolNameTool(DEFAULT_TOOL))
+          .setSymbolNameTool(new PosixNmSymbolNameTool(new ConstantToolProvider(DEFAULT_TOOL)))
           .setSharedLibraryExtension("so")
           .setSharedLibraryVersionedExtensionFormat("so.%s")
           .setStaticLibraryExtension("a")

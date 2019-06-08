@@ -23,6 +23,8 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ToolProviders;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -192,9 +194,7 @@ public class CxxToolchainDescription
     cxxPlatform.setRuntimeLdflags(runtimeLdFlags);
 
     cxxPlatform.setSymbolNameTool(
-        new PosixNmSymbolNameTool(
-            ToolProviders.getToolProvider(args.getNm())
-                .resolve(ruleResolver, buildTarget.getTargetConfiguration())));
+        new PosixNmSymbolNameTool(new ConstantToolProvider(new HashedFileTool(args.getNm()))));
 
     // User-configured cxx platforms are required to handle path sanitization themselves.
     cxxPlatform.setCompilerDebugPathSanitizer(NoopDebugPathSanitizer.INSTANCE);

@@ -440,7 +440,7 @@ public class AppleCxxPlatforms {
             ArchiverProvider.from(new BsdArchiver(ar)),
             ArchiveContents.NORMAL,
             Optional.of(new ConstantToolProvider(ranlib)),
-            new PosixNmSymbolNameTool(nm),
+            new PosixNmSymbolNameTool(new ConstantToolProvider(nm)),
             cflagsBuilder.build(),
             ImmutableList.of(),
             cflags,
