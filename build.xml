@@ -542,7 +542,10 @@
       <record name="${compiler.outputpath}" action="stop"/>
       <fail message="Compiler encountered warnings, please, fix them and try again">
         <condition>
-          <resourcecontains resource="${compiler.outputpath}" substring="WARNING"/>
+          <or>
+            <resourcecontains resource="${compiler.outputpath}" substring="WARNING"/>
+            <resourcecontains resource="${compiler.outputpath}" substring="INFO"/>
+          </or>
         </condition>
       </fail>
     </sequential>

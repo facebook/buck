@@ -47,7 +47,6 @@ public final class BuckDaemon {
    *
    * <p>See: https://github.com/java-native-access/jna/issues/652
    */
-  @SuppressWarnings("unused")
   public static final int JNA_POINTER_SIZE = Pointer.SIZE;
 
   private static final int AFTER_COMMAND_AUTO_GC_DELAY_MS = 5000;

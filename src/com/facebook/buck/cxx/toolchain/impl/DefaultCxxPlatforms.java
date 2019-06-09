@@ -301,7 +301,6 @@ public class DefaultCxxPlatforms {
   }
 
   private static class RemoteExecutionDisabledTool extends DelegatingTool {
-    @SuppressWarnings("unused")
     @CustomFieldBehavior(RemoteExecutionEnabled.class)
     private final boolean enabled = false;
 

@@ -134,10 +134,8 @@ public final class FileBasedWorkerRequirementsProvider implements WorkerRequirem
   }
 
   private static class Requirements {
-    @SuppressWarnings("unused")
     public WorkerSize workerSize = WorkerSize.SMALL;
 
-    @SuppressWarnings("unused")
     public WorkerPlatformType platformType = WorkerPlatformType.LINUX;
   }
 }

@@ -616,9 +616,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
     // builds it may upload the same thing multiple times. To support this, we reserialize the
     // instance if its requested when we no longer hold any reference to the original serialized
     // value.
-    @SuppressWarnings("unused")
-    @Nullable
-    private volatile byte[] data;
+    @Nullable private volatile byte[] data;
 
     private WeakReference<byte[]> dataRef;
 

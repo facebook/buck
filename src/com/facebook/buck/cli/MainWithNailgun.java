@@ -66,7 +66,6 @@ public class MainWithNailgun extends AbstractMain {
    * of {@link MainRunner} so that the given context can be used to listen for client disconnections
    * and interrupt command processing when they occur.
    */
-  @SuppressWarnings("unused")
   public static void nailMain(NGContext context) {
     obtainResourceFileLock();
     try (DaemonCommandExecutionScope ignored =
