@@ -55,6 +55,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -64,6 +65,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -115,6 +117,8 @@ public class AndroidBinary extends AbstractBuildRule
   private final SourcePath manifestPath;
 
   private final BuildRuleParams buildRuleParams;
+
+  private final Supplier<ImmutableSet<BuildRule>> classpathDepsSupplier;
 
   @AddToRuleKey private final AndroidBinaryBuildable buildable;
 
@@ -228,6 +232,10 @@ public class AndroidBinary extends AbstractBuildRule
             Optional.empty(),
             true);
     this.exopackageInfo = exopackageInfo;
+
+    this.classpathDepsSupplier =
+        Suppliers.memoize(
+            () -> ruleFinder.filterBuildRuleInputs(enhancementResult.getClasspathEntriesToDex()));
 
     params =
         new BuildRuleParams(
@@ -357,8 +365,8 @@ public class AndroidBinary extends AbstractBuildRule
     return keystore;
   }
 
-  public ImmutableSet<BuildRule> getClasspathDeps(SourcePathRuleFinder sourcePathRuleFinder) {
-    return sourcePathRuleFinder.filterBuildRuleInputs(enhancementResult.getClasspathEntriesToDex());
+  public ImmutableSet<BuildRule> getClasspathDeps() {
+    return classpathDepsSupplier.get();
   }
 
   @Override
