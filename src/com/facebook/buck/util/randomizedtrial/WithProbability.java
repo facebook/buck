@@ -16,6 +16,16 @@
 
 package com.facebook.buck.util.randomizedtrial;
 
+/**
+ * Marks an enum for toggling buck experiments as having probability. This means that each
+ * itemization of the enum can be attached with a specific probability of it being selected by a
+ * random trial.
+ */
 public interface WithProbability {
+
+  /**
+   * @return the probability of an item of the enum being selected. This should sum up to 1.0 for
+   *     all items of an enum.
+   */
   double getProbability();
 }
