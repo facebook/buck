@@ -27,10 +27,12 @@ import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
+import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventCollector;
 import com.google.devtools.build.lib.events.EventHandler;
@@ -87,6 +89,9 @@ public class SkylarkUserDefinedRulesParserTest {
       Path buildFile,
       String substring)
       throws IOException, InterruptedException {
+
+    thrown.expect(BuildFileParseException.class);
+
     try {
       parser.getBuildFileManifest(buildFile);
 
@@ -129,7 +134,6 @@ public class SkylarkUserDefinedRulesParserTest {
 
   @Test
   public void attrsIntThrowsExceptionOnInvalidTypes() throws IOException, InterruptedException {
-    thrown.expect(BuildFileParseException.class);
 
     setupWorkspace("attr_int_throws_on_invalid");
 
@@ -154,7 +158,6 @@ public class SkylarkUserDefinedRulesParserTest {
 
   @Test
   public void attrsStringThrowsExceptionOnInvalidTypes() throws IOException, InterruptedException {
-    thrown.expect(BuildFileParseException.class);
 
     setupWorkspace("attr_string_throws_on_invalid");
 
@@ -165,5 +168,200 @@ public class SkylarkUserDefinedRulesParserTest {
 
     assertParserFails(
         eventCollector, parser, buildFile, "expected type 'string' but got type 'int' instead");
+  }
+
+  @Test
+  public void ruleFailsIfWrongImplTypeProvided() throws IOException, InterruptedException {
+    setupWorkspace("rule_with_wrong_impl_type");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(
+        eventCollector,
+        parser,
+        buildFile,
+        "expected value of type 'function' for parameter 'implementation'");
+  }
+
+  @Test
+  public void ruleFailsIfWrongAttrTypeProvided() throws IOException, InterruptedException {
+    setupWorkspace("rule_with_wrong_attr_type");
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(
+        eventCollector, parser, buildFile, "expected value of type 'dict' for parameter 'attrs'");
+  }
+
+  @Test
+  public void ruleFailsIfImplementationTakesZeroArgs() throws IOException, InterruptedException {
+    setupWorkspace("rule_with_zero_arg_impl");
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+
+    Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(
+        eventCollector,
+        parser,
+        buildFile,
+        "Implementation function '_impl' must accept a single 'ctx' argument. Accepts 0 arguments");
+  }
+
+  @Test
+  public void ruleFailsIfImplementationTakesMoreThanOneArg()
+      throws IOException, InterruptedException {
+    setupWorkspace("rule_with_multi_arg_impl");
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+
+    Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(
+        eventCollector,
+        parser,
+        buildFile,
+        "Implementation function '_impl' must accept a single 'ctx' argument. Accepts 2 arguments");
+  }
+
+  @Test
+  public void failsIfAttributeDictValueIsNotAnAttrObject()
+      throws IOException, InterruptedException {
+    setupWorkspace("rule_with_wrong_attr_value_type");
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+
+    Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(
+        eventCollector,
+        parser,
+        buildFile,
+        "expected type 'AttributeHolder' for 'attrs keyword of rule()' value but got type 'int' instead");
+  }
+
+  @Test
+  public void failsIfAttributeIsNotAValidPythonParameterName()
+      throws IOException, InterruptedException {
+    setupWorkspace("rule_with_invalid_attr_name");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(
+        eventCollector, parser, buildFile, "Attribute name 'foo-bar' is not a valid identifier");
+  }
+
+  @Test
+  public void failsIfAttributeNameIsEmpty() throws IOException, InterruptedException {
+    setupWorkspace("rule_with_empty_attr_name");
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+
+    Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(
+        eventCollector, parser, buildFile, "Attribute name '' is not a valid identifier");
+  }
+
+  @Test
+  public void failsIfAttributeDuplicatesBuiltInName() throws IOException, InterruptedException {
+
+    setupWorkspace("rule_with_shadowing_attr_name");
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+
+    Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(
+        eventCollector,
+        parser,
+        buildFile,
+        "Provided attr 'name' shadows implicit attribute. Please remove it.");
+  }
+
+  @Test
+  public void acceptsAutomaticallyAddedAttributes() throws IOException, InterruptedException {
+    setupWorkspace("rule_with_builtin_arguments");
+
+    // TODO: Change this to visibility when that is added to SkylarkUserDefinedRule
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+
+    Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
+
+    ImmutableMap<String, ImmutableMap<String, Object>> expected =
+        ImmutableMap.of(
+            "target1",
+            ImmutableMap.of(
+                "name",
+                "target1",
+                "buck.base_path",
+                "subdir",
+                "buck.type",
+                "@//subdir:foo.bzl:some_rule",
+                "attr1",
+                3,
+                "attr2",
+                2));
+
+    parser = createParser(eventCollector);
+
+    BuildFileManifest rules = parser.getBuildFileManifest(buildFile);
+
+    assertEquals(expected, rules.getTargets());
+  }
+
+  @Test
+  public void addsRuleToParserContextWhenUserDefinedRuleCallableIsCalled()
+      throws IOException, InterruptedException {
+    setupWorkspace("rule_with_builtin_arguments_and_macro");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
+
+    ImmutableMap<String, ImmutableMap<String, Object>> expected =
+        ImmutableMap.of(
+            "target1",
+            ImmutableMap.of(
+                "name",
+                "target1",
+                "buck.base_path",
+                "subdir",
+                "buck.type",
+                "@//subdir:foo.bzl:some_rule",
+                "attr1",
+                3,
+                "attr2",
+                2),
+            "target2",
+            ImmutableMap.of(
+                "name",
+                "target2",
+                "buck.base_path",
+                "subdir",
+                "buck.type",
+                "@//subdir:foo.bzl:some_rule",
+                "attr1",
+                4,
+                "attr2",
+                5));
+
+    parser = createParser(eventCollector);
+
+    BuildFileManifest rules = parser.getBuildFileManifest(buildFile);
+
+    assertEquals(expected, rules.getTargets());
   }
 }

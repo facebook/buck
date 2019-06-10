@@ -16,6 +16,7 @@
 
 package com.facebook.buck.skylark.function;
 
+import com.facebook.buck.skylark.function.attr.AttributeHolder;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.Param;
@@ -23,8 +24,11 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkConstructor;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkGlobalLibrary;
 import com.google.devtools.build.lib.skylarkinterface.StarlarkContext;
+import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.FuncallExpression;
+import com.google.devtools.build.lib.syntax.SkylarkDict;
 
 /**
  * Interface for a global Skylark library containing rule-related helper and registration functions.
@@ -46,5 +50,34 @@ public interface SkylarkRuleFunctionsApi {
       useContext = true)
   @SkylarkConstructor(objectType = Label.class)
   Label label(String labelString, Location loc, Environment env, StarlarkContext context)
+      throws EvalException;
+
+  @SkylarkCallable(
+      name = "rule",
+      doc = "Creates a user-defined rule",
+      parameters = {
+        @Param(
+            name = "implementation",
+            type = BaseFunction.class,
+            noneable = false,
+            positional = true,
+            named = true,
+            doc = "The implementation function that takes a ctx"),
+        @Param(
+            name = "attrs",
+            type = SkylarkDict.class,
+            positional = false,
+            named = true,
+            doc = "A mapping of parameter names to the type of value that is expected")
+      },
+      useEnvironment = true,
+      useAst = true,
+      useLocation = true)
+  SkylarkUserDefinedRule rule(
+      BaseFunction implementation,
+      SkylarkDict<String, AttributeHolder> attrs,
+      Location loc,
+      FuncallExpression ast,
+      Environment env)
       throws EvalException;
 }

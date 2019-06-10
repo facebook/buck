@@ -16,6 +16,7 @@
 
 package com.facebook.buck.skylark.function;
 
+import com.facebook.buck.skylark.function.attr.AttributeHolder;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
@@ -23,8 +24,13 @@ import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.cmdline.LabelValidator;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.StarlarkContext;
+import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.FuncallExpression;
+import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.SkylarkUtils;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 /** Provides APIs for creating build rules. */
@@ -56,5 +62,21 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
     } catch (LabelValidator.BadLabelException | LabelSyntaxException | ExecutionException e) {
       throw new EvalException(loc, "Illegal absolute label syntax: " + labelString);
     }
+  }
+
+  @Override
+  public SkylarkUserDefinedRule rule(
+      BaseFunction implementation,
+      SkylarkDict<String, AttributeHolder> attrs,
+      Location loc,
+      FuncallExpression ast,
+      Environment env)
+      throws EvalException {
+    SkylarkUtils.checkLoadingOrWorkspacePhase(env, "rule", ast.getLocation());
+
+    Map<String, AttributeHolder> checkedAttributes =
+        attrs.getContents(String.class, AttributeHolder.class, "attrs keyword of rule()");
+
+    return SkylarkUserDefinedRule.of(loc, implementation, checkedAttributes);
   }
 }

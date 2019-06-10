@@ -32,6 +32,7 @@ import com.facebook.buck.parser.implicit.PackageImplicitIncludesFinder;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
 import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
+import com.facebook.buck.skylark.function.SkylarkUserDefinedRule;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.skylark.io.Globber;
@@ -51,20 +52,24 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.EventHandler;
+import com.google.devtools.build.lib.syntax.AssignmentStatement;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.Environment.Extension;
+import com.google.devtools.build.lib.syntax.Identifier;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInputSource;
 import com.google.devtools.build.lib.syntax.SkylarkImport;
 import com.google.devtools.build.lib.syntax.SkylarkUtils;
 import com.google.devtools.build.lib.syntax.SkylarkUtils.Phase;
 import com.google.devtools.build.lib.syntax.StarlarkSemantics;
+import com.google.devtools.build.lib.syntax.Statement;
 import com.google.devtools.build.lib.vfs.FileSystem;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.PathFragment;
@@ -752,11 +757,18 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       // Create this extension.
       Environment extensionEnv =
           envBuilder.setSemantics(StarlarkSemantics.DEFAULT_SEMANTICS).build();
-      boolean success = load.getAST().exec(extensionEnv, eventHandler);
-      if (!success) {
-        throw BuildFileParseException.createForUnknownParseError(
-            "Cannot evaluate extension %s referenced from %s",
-            load.getLabel(), load.getParentLabel());
+      SkylarkUtils.setPhase(extensionEnv, Phase.LOADING);
+
+      BuildFileAST ast = load.getAST();
+      for (Statement stmt : ast.getStatements()) {
+        if (!ast.execTopLevelStatement(stmt, extensionEnv, eventHandler)) {
+          throw BuildFileParseException.createForUnknownParseError(
+              "Cannot evaluate extension %s referenced from %s",
+              load.getLabel(), load.getParentLabel());
+        }
+        if (stmt.kind() == Statement.Kind.ASSIGNMENT) {
+          ensureExportedIfExportable(extensionEnv, (AssignmentStatement) stmt);
+        }
       }
       loadedExtension = new Extension(extensionEnv);
     }
@@ -767,6 +779,36 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         dependencies,
         load.getSkylarkImport().getImportString(),
         toLoadedPaths(load.getPath(), dependencies, null));
+  }
+
+  /**
+   * Call {@link com.google.devtools.build.lib.packages.SkylarkExportable#export(Label, String)} on
+   * any objects that are assigned to
+   *
+   * <p>This is primarily used to make sure that {@link SkylarkUserDefinedRule} instances set their
+   * name properly upon assignment
+   *
+   * @param extensionEnv The environment where an exportable variable with the name in {@code stmt}
+   *     is bound
+   * @param stmt The assignment statement used to lookup the variable in the environment
+   */
+  private void ensureExportedIfExportable(Environment extensionEnv, AssignmentStatement stmt)
+      throws BuildFileParseException {
+    ImmutableSet<Identifier> identifiers = stmt.getLValue().boundIdentifiers();
+    if (identifiers.size() != 1) {
+      return;
+    }
+    String identifier = Iterables.getOnlyElement(identifiers).getName();
+    Object lookedUp = extensionEnv.moduleLookup(identifier);
+    if (lookedUp instanceof SkylarkUserDefinedRule) {
+      SkylarkUserDefinedRule exportable = (SkylarkUserDefinedRule) lookedUp;
+      if (!exportable.isExported()) {
+        Label extensionLabel = extensionEnv.getGlobals().getLabel();
+        if (extensionLabel != null) {
+          exportable.export(extensionLabel, identifier);
+        }
+      }
+    }
   }
 
   /**

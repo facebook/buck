@@ -265,7 +265,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   }
 
   @Override
-  public void export(Label extensionLabel, String exportedName) throws EvalException {
+  public void export(Label extensionLabel, String exportedName) {
     this.name =
         String.format(
             "%s//%s:%s:%s",
