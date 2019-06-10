@@ -18,9 +18,10 @@ package com.facebook.buck.rules.coercer;
 
 import com.google.common.base.Joiner;
 
-class StringTypeCoercer extends IdentityTypeCoercer<String> {
+/** Coercer that turns objects into Strings, or throws an exception */
+public class StringTypeCoercer extends IdentityTypeCoercer<String> {
 
-  StringTypeCoercer() {
+  public StringTypeCoercer() {
     super(String.class);
   }
 
