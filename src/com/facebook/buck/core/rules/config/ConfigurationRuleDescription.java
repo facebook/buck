@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.rules.config;
 
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 
@@ -28,7 +27,6 @@ public interface ConfigurationRuleDescription<T> extends BaseDescription<T> {
   /** Creates a {@link ConfigurationRule} */
   ConfigurationRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
-      Cell cell,
       UnconfiguredBuildTargetView buildTarget,
       T arg);
 }

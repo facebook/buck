@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.rules.platform;
 
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
@@ -49,7 +48,6 @@ public class ConstraintValueDescription
   @Override
   public ConfigurationRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
-      Cell cell,
       UnconfiguredBuildTargetView buildTarget,
       ConstraintValueArg arg) {
     return new ConstraintValueRule(buildTarget, arg.getName(), arg.getConstraintSetting());

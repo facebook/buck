@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.core.rules.platform;
 
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.impl.CpuConstraintDetector;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
@@ -31,7 +30,6 @@ public class CpuConstraintDetectorDescription
   @Override
   public ConfigurationRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
-      Cell cell,
       UnconfiguredBuildTargetView buildTarget,
       CpuConstraintDetectorArg arg) {
     return new CpuConstraintDetectorRule(buildTarget, new CpuConstraintDetector());

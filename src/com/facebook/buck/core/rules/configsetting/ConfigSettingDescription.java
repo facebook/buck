@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.rules.configsetting;
 
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
@@ -55,7 +54,6 @@ public class ConfigSettingDescription implements ConfigurationRuleDescription<Co
   @Override
   public ConfigurationRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
-      Cell cell,
       UnconfiguredBuildTargetView buildTarget,
       ConfigSettingArg arg) {
     return new ConfigSettingRule(buildTarget, arg.getValues(), arg.getConstraintValues());

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.rules.platform;
 
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
@@ -53,7 +52,6 @@ public class PlatformDescription implements ConfigurationRuleDescription<Platfor
   @Override
   public ConfigurationRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
-      Cell cell,
       UnconfiguredBuildTargetView buildTarget,
       PlatformArg arg) {
     return PlatformRule.of(buildTarget, arg.getName(), arg.getConstraintValues(), arg.getDeps());
