@@ -27,13 +27,29 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(Parameterized.class)
 public class DotTest {
+
+  @Parameterized.Parameters(name = "sorted={0}")
+  public static Collection<Object[]> data() {
+    ImmutableList.Builder<Object[]> data = ImmutableList.builder();
+    for (Dot.OutputOrder sorted : Dot.OutputOrder.values()) {
+      data.add(new Object[] {sorted});
+    }
+    return data.build();
+  }
+
+  @Parameterized.Parameter public Dot.OutputOrder outputOrder;
 
   @Test
   public void testGenerateDotOutput() throws IOException {
@@ -44,28 +60,19 @@ public class DotTest {
     mutableGraph.addEdge("C", "E");
     mutableGraph.addEdge("D", "E");
     mutableGraph.addEdge("A", "E");
+    mutableGraph.addEdge("F", "E");
     DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
 
     StringBuilder output = new StringBuilder();
     Dot.builder(graph, "the_graph")
         .setNodeToName(Functions.identity())
         .setNodeToTypeName(Functions.identity())
+        .setOutputOrder(outputOrder)
         .build()
         .writeOutput(output);
 
-    String dotGraph = output.toString();
-    List<String> lines =
-        ImmutableList.copyOf(
-            Splitter.on(System.lineSeparator()).omitEmptyStrings().split(dotGraph));
-
-    assertEquals("digraph the_graph {", lines.get(0));
-
-    // remove attributes because we are not interested what styles and colors are default
-    lines = lines.stream().map(p -> p.replaceAll(" \\[.*\\]", "")).collect(Collectors.toList());
-
-    Set<String> edges = ImmutableSet.copyOf(lines.subList(1, lines.size() - 1));
-    assertEquals(
-        edges,
+    assertOutput(
+        output.toString(),
         ImmutableSet.of(
             "  A -> B;",
             "  B -> C;",
@@ -73,13 +80,14 @@ public class DotTest {
             "  C -> E;",
             "  D -> E;",
             "  A -> E;",
+            "  F -> E;",
             "  A;",
             "  B;",
             "  C;",
             "  D;",
-            "  E;"));
-
-    assertEquals("}", lines.get(lines.size() - 1));
+            "  E;",
+            "  F;"),
+        false);
   }
 
   @Test
@@ -101,25 +109,14 @@ public class DotTest {
         .setNodeToName(Functions.identity())
         .setNodeToTypeName(Functions.identity())
         .setNodesToFilter(filter::contains)
+        .setOutputOrder(outputOrder)
         .build()
         .writeOutput(output);
 
-    String dotGraph = output.toString();
-    List<String> lines =
-        ImmutableList.copyOf(
-            Splitter.on(System.lineSeparator()).omitEmptyStrings().split(dotGraph));
-
-    assertEquals("digraph the_graph {", lines.get(0));
-
-    // remove attributes because we are not interested what styles and colors are default
-    lines = lines.stream().map(p -> p.replaceAll(" \\[.*\\]", "")).collect(Collectors.toList());
-
-    Set<String> edges = ImmutableSet.copyOf(lines.subList(1, lines.size() - 1));
-    assertEquals(
-        edges,
-        ImmutableSet.of("  A -> B;", "  B -> C;", "  B -> D;", "  A;", "  B;", "  C;", "  D;"));
-
-    assertEquals("}", lines.get(lines.size() - 1));
+    assertOutput(
+        output.toString(),
+        ImmutableSet.of("  A -> B;", "  B -> C;", "  B -> D;", "  A;", "  B;", "  C;", "  D;"),
+        false);
   }
 
   @Test
@@ -132,25 +129,17 @@ public class DotTest {
     Dot.builder(graph, "the_graph")
         .setNodeToName(Functions.identity())
         .setNodeToTypeName(name -> name.equals("A") ? "android_library" : "java_library")
+        .setOutputOrder(outputOrder)
         .build()
         .writeOutput(output);
 
-    String dotGraph = output.toString();
-    List<String> lines =
-        ImmutableList.copyOf(
-            Splitter.on(System.lineSeparator()).omitEmptyStrings().split(dotGraph));
-
-    assertEquals("digraph the_graph {", lines.get(0));
-
-    Set<String> edges = ImmutableSet.copyOf(lines.subList(1, lines.size() - 1));
-    assertEquals(
-        edges,
+    assertOutput(
+        output.toString(),
         ImmutableSet.of(
             "  A -> B;",
             "  A [style=filled,color=springgreen3];",
-            "  B [style=filled,color=indianred1];"));
-
-    assertEquals("}", lines.get(lines.size() - 1));
+            "  B [style=filled,color=indianred1];"),
+        true);
   }
 
   @Test
@@ -167,25 +156,17 @@ public class DotTest {
         .setNodeToTypeName(name -> name.equals("A") ? "android_library" : "java_library")
         .setNodeToAttributes(
             node -> nodeToAttributeProvider.getOrDefault(node, ImmutableSortedMap.of()))
+        .setOutputOrder(outputOrder)
         .build()
         .writeOutput(output);
 
-    String dotGraph = output.toString();
-    List<String> lines =
-        ImmutableList.copyOf(
-            Splitter.on(System.lineSeparator()).omitEmptyStrings().split(dotGraph));
-
-    assertEquals("digraph the_graph {", lines.get(0));
-
-    Set<String> edges = ImmutableSet.copyOf(lines.subList(1, lines.size() - 1));
-    assertEquals(
-        edges,
+    assertOutput(
+        output.toString(),
         ImmutableSet.of(
             "  A -> B;",
             "  A [style=filled,color=springgreen3,buck_x=foo,buck_y=\"b.r\"];",
-            "  B [style=filled,color=indianred1];"));
-
-    assertEquals("}", lines.get(lines.size() - 1));
+            "  B [style=filled,color=indianred1];"),
+        true);
   }
 
   @Test
@@ -205,20 +186,13 @@ public class DotTest {
     Dot.builder(new DirectedAcyclicGraph<>(mutableGraph), "the_graph")
         .setNodeToName(Functions.identity())
         .setNodeToTypeName(name -> name.equals("A") ? "android_library" : "java_library")
+        .setOutputOrder(outputOrder)
         .build()
         .writeOutput(output);
 
-    String dotGraph = output.toString();
-    List<String> lines =
-        ImmutableList.copyOf(
-            Splitter.on(System.lineSeparator()).omitEmptyStrings().split(dotGraph));
-
-    // remove attributes because we are not interested what styles and colors are default
-    lines = lines.stream().map(p -> p.replaceAll(" \\[.*\\]", "")).collect(Collectors.toList());
-
-    ImmutableSet<String> edges = ImmutableSortedSet.copyOf(lines.subList(1, lines.size() - 1));
-    assertEquals(
-        ImmutableSortedSet.of(
+    assertOutput(
+        output.toString(),
+        ImmutableSet.of(
             "  \"\";",
             "  \"//B\" -> \"C1 C2\";",
             "  \"//B\" -> \"D\\\"\";",
@@ -237,6 +211,25 @@ public class DotTest {
             "  A -> \"A.B\";",
             "  A -> \"[A]\";",
             "  A;"),
-        edges);
+        false);
+  }
+
+  private static void assertOutput(
+      String dotGraph, ImmutableSet<String> expectedEdges, boolean colors) {
+    List<String> lines =
+        Lists.newArrayList(Splitter.on(System.lineSeparator()).omitEmptyStrings().split(dotGraph));
+
+    assertEquals("digraph the_graph {", lines.get(0));
+
+    // remove attributes because we are not interested what styles and colors are default
+    if (!colors) {
+      lines = lines.stream().map(p -> p.replaceAll(" \\[.*]", "")).collect(Collectors.toList());
+    }
+
+    List<String> edges = lines.subList(1, lines.size() - 1);
+    edges.sort(Ordering.natural());
+    assertEquals(edges, ImmutableList.copyOf(ImmutableSortedSet.copyOf(expectedEdges)));
+
+    assertEquals("}", lines.get(lines.size() - 1));
   }
 }

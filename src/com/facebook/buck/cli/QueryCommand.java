@@ -397,11 +397,13 @@ public class QueryCommand extends AbstractCommand {
 
       switch (outputFormat) {
         case DOT:
-          printDotOutput(params, env, asQueryBuildTargets(queryResult), false, printStream);
+          printDotOutput(
+              params, env, asQueryBuildTargets(queryResult), Dot.OutputOrder.SORTED, printStream);
           break;
 
         case DOT_BFS:
-          printDotOutput(params, env, asQueryBuildTargets(queryResult), true, printStream);
+          printDotOutput(
+              params, env, asQueryBuildTargets(queryResult), Dot.OutputOrder.BFS, printStream);
           break;
 
         case JSON:
@@ -461,7 +463,7 @@ public class QueryCommand extends AbstractCommand {
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       Set<QueryBuildTarget> queryResult,
-      boolean bfsSorted,
+      Dot.OutputOrder outputOrder,
       PrintStream printStream)
       throws IOException, QueryException {
     Dot.Builder<TargetNode<?>> dotBuilder =
@@ -469,7 +471,7 @@ public class QueryCommand extends AbstractCommand {
             .setNodesToFilter(env.getNodesFromQueryTargets(queryResult)::contains)
             .setNodeToName(targetNode -> targetNode.getBuildTarget().getFullyQualifiedName())
             .setNodeToTypeName(targetNode -> targetNode.getRuleType().getName())
-            .setBfsSorted(bfsSorted);
+            .setOutputOrder(outputOrder);
     if (shouldOutputAttributes()) {
       Function<TargetNode<?>, ImmutableSortedMap<String, String>> nodeToAttributes =
           getNodeToAttributeFunction(params, env);

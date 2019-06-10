@@ -16,12 +16,10 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
-import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.core.util.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.util.Escaper;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
@@ -41,7 +39,7 @@ public class Dot<T> {
   private final Function<T, String> nodeToName;
   private final Function<T, String> nodeToTypeName;
   private final Function<T, ImmutableSortedMap<String, String>> nodeToAttributes;
-  private final boolean bfsSorted;
+  private final OutputOrder outputOrder;
   private final Predicate<T> shouldContainNode;
   private static final Map<String, String> typeColors;
 
@@ -75,7 +73,7 @@ public class Dot<T> {
     private Function<T, String> nodeToName;
     private Function<T, String> nodeToTypeName;
     private Function<T, ImmutableSortedMap<String, String>> nodeToAttributes;
-    private boolean bfsSorted;
+    private OutputOrder outputOrder;
     private Predicate<T> shouldContainNode;
 
     private Builder(DirectedAcyclicGraph<T> graph, String graphName) {
@@ -83,7 +81,7 @@ public class Dot<T> {
       this.graphName = graphName;
       nodeToName = Object::toString;
       nodeToTypeName = Object::toString;
-      bfsSorted = false;
+      outputOrder = OutputOrder.SORTED;
       shouldContainNode = node -> true;
       nodeToAttributes = node -> ImmutableSortedMap.of();
     }
@@ -98,8 +96,8 @@ public class Dot<T> {
       return this;
     }
 
-    public Builder<T> setBfsSorted(boolean sorted) {
-      bfsSorted = sorted;
+    public Builder<T> setOutputOrder(OutputOrder outputOrder) {
+      this.outputOrder = outputOrder;
       return this;
     }
 
@@ -131,7 +129,7 @@ public class Dot<T> {
     this.graphName = builder.graphName;
     this.nodeToName = builder.nodeToName;
     this.nodeToTypeName = builder.nodeToTypeName;
-    this.bfsSorted = builder.bfsSorted;
+    this.outputOrder = builder.outputOrder;
     this.shouldContainNode = builder.shouldContainNode;
     this.nodeToAttributes = builder.nodeToAttributes;
   }
@@ -139,52 +137,47 @@ public class Dot<T> {
   /** Writes out the graph in dot format to the given output */
   public void writeOutput(Appendable output) throws IOException {
     // Sorting the edges to have deterministic output and be able to test this.
-    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
     output.append("digraph ").append(graphName).append(" {");
     output.append(System.lineSeparator());
 
-    if (bfsSorted) {
-      for (T root : ImmutableSortedSet.copyOf(graph.getNodesWithNoIncomingEdges())) {
-        new AbstractBreadthFirstTraversal<T>(root) {
+    switch (outputOrder) {
+      case BFS:
+        {
+          new AbstractBreadthFirstThrowingTraversal<T, IOException>(
+              graph.getNodesWithNoIncomingEdges()) {
 
-          @Override
-          public Iterable<T> visit(T node) {
-            if (!shouldContainNode.test(node)) {
-              return ImmutableSet.of();
+            @Override
+            public Iterable<T> visit(T node) throws IOException {
+              ImmutableSortedSet<T> deps =
+                  ImmutableSortedSet.copyOf(graph.getOutgoingNodesFor(node));
+              if (shouldContainNode.test(node)) {
+                output.append(printNode(node, nodeToName, nodeToTypeName, nodeToAttributes));
+                for (T dep : Sets.filter(deps, shouldContainNode::test)) {
+                  output.append(printEdge(node, dep, nodeToName));
+                }
+              }
+              return deps;
             }
-            builder.add(printNode(node, nodeToName, nodeToTypeName, nodeToAttributes));
-            ImmutableSortedSet<T> nodes =
-                ImmutableSortedSet.copyOf(
-                    Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode::test));
-            for (T sink : nodes) {
-              builder.add(printEdge(node, sink, nodeToName));
-            }
-            return nodes;
-          }
-        }.start();
-      }
-    } else {
-      ImmutableSortedSet.Builder<String> sortedSetBuilder = ImmutableSortedSet.naturalOrder();
-      new AbstractBottomUpTraversal<T, RuntimeException>(graph) {
-
-        @Override
-        public void visit(T node) {
-          if (!shouldContainNode.test(node)) {
-            return;
-          }
-          sortedSetBuilder.add(printNode(node, nodeToName, nodeToTypeName, nodeToAttributes));
-          for (T sink : Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode::test)) {
-            sortedSetBuilder.add(printEdge(node, sink, nodeToName));
-          }
+          }.start();
+          break;
         }
-      }.traverse();
-
-      builder.addAll(sortedSetBuilder.build());
+      case SORTED:
+        {
+          for (T node : ImmutableSortedSet.copyOf(graph.getNodes())) {
+            if (shouldContainNode.test(node)) {
+              output.append(printNode(node, nodeToName, nodeToTypeName, nodeToAttributes));
+              for (T dep :
+                  Sets.filter(
+                      ImmutableSortedSet.copyOf(graph.getOutgoingNodesFor(node)),
+                      shouldContainNode::test)) {
+                output.append(printEdge(node, dep, nodeToName));
+              }
+            }
+          }
+          break;
+        }
     }
 
-    for (String line : builder.build()) {
-      output.append(line);
-    }
     output.append("}");
     output.append(System.lineSeparator());
   }
@@ -237,5 +230,14 @@ public class Dot<T> {
     String sourceName = nodeToName.apply(sourceN);
     String sinkName = nodeToName.apply(sinkN);
     return String.format("  %s -> %s;%n", escape(sourceName), escape(sinkName));
+  }
+
+  /** How to print the dot graph. */
+  public enum OutputOrder {
+    /** Generate the dot output in the order of a breadth-first traversal of the graph. */
+    BFS,
+
+    /** Generate the dot output in the sorted natural order of the nodes. */
+    SORTED,
   }
 }
