@@ -181,10 +181,10 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
 
     ConfigurationRuleResolver configurationRuleResolver =
         new SameThreadConfigurationRuleResolver(
-            cellManager::getCell,
-            (cell, target) ->
+            target ->
                 nonResolvingTargetNodeParsePipeline.getNode(
-                    cell, target.configure(EmptyTargetConfiguration.INSTANCE)));
+                    cellManager.getCell(target),
+                    target.configure(EmptyTargetConfiguration.INSTANCE)));
 
     SelectableResolver selectableResolver =
         new ConfigurationRuleSelectableResolver(configurationRuleResolver);

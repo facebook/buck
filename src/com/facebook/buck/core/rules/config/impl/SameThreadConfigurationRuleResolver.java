@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.rules.config.impl;
 
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -25,7 +24,6 @@ import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.base.Preconditions;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -37,15 +35,12 @@ import javax.annotation.Nullable;
  */
 public class SameThreadConfigurationRuleResolver implements ConfigurationRuleResolver {
 
-  private final Function<UnconfiguredBuildTargetView, Cell> cellProvider;
-  private final BiFunction<Cell, UnconfiguredBuildTargetView, TargetNode<?>> targetNodeSupplier;
+  private final Function<UnconfiguredBuildTargetView, TargetNode<?>> targetNodeSupplier;
   private final ConcurrentHashMap<UnconfiguredBuildTargetView, ConfigurationRule>
       configurationRuleIndex;
 
   public SameThreadConfigurationRuleResolver(
-      Function<UnconfiguredBuildTargetView, Cell> cellProvider,
-      BiFunction<Cell, UnconfiguredBuildTargetView, TargetNode<?>> targetNodeSupplier) {
-    this.cellProvider = cellProvider;
+      Function<UnconfiguredBuildTargetView, TargetNode<?>> targetNodeSupplier) {
     this.targetNodeSupplier = targetNodeSupplier;
     this.configurationRuleIndex = new ConcurrentHashMap<>();
   }
@@ -68,9 +63,8 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
   }
 
   private <T> ConfigurationRule createConfigurationRule(UnconfiguredBuildTargetView buildTarget) {
-    Cell cell = cellProvider.apply(buildTarget);
     @SuppressWarnings("unchecked")
-    TargetNode<T> targetNode = (TargetNode<T>) targetNodeSupplier.apply(cell, buildTarget);
+    TargetNode<T> targetNode = (TargetNode<T>) targetNodeSupplier.apply(buildTarget);
     if (!(targetNode.getDescription() instanceof ConfigurationRuleDescription)) {
       throw new HumanReadableException(
           "%s was used to resolve configurable attribute but it is not a configuration rule",
