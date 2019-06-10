@@ -14,19 +14,17 @@
  * under the License.
  */
 
-package com.facebook.buck.core.model.targetgraph;
+package com.facebook.buck.core.rules;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleCreationContext;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import org.immutables.value.Value;
 
 /**
  * Contains common objects used during {@link BuildRule} creation in {@link
- * com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph#createBuildRule}.
+ * DescriptionWithTargetGraph#createBuildRule}.
  */
 @Value.Immutable(builder = false, copy = false)
 public interface BuildRuleCreationContextWithTargetGraph extends BuildRuleCreationContext {

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.js;
 
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 
 /**
  * Empty interface to mark {@link DescriptionWithTargetGraph} subclasses that return {@link

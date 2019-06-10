@@ -18,6 +18,8 @@ package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.rules.ImmutableBuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;

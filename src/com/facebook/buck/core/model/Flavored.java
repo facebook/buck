@@ -19,13 +19,13 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
 /**
- * When applied to a {@link com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph}
- * this indicates that it supports flavours.
+ * When applied to a {@link com.facebook.buck.core.rules.DescriptionWithTargetGraph} this indicates
+ * that it supports flavours.
  *
  * <p>This is only required to be implemented by Descriptions where the flavored BuildTarget should
  * be buildable in a top-level {@link com.facebook.buck.command.Build}. i.e. this should be
- * implemented by {@link com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph}s where
- * the {@com.facebook.buck.rules.TargetNode} may have a flavored {@link BuildTarget} - it is not
+ * implemented by {@link com.facebook.buck.core.rules.DescriptionWithTargetGraph}s where the
+ * {@com.facebook.buck.rules.TargetNode} may have a flavored {@link BuildTarget} - it is not
  * required where only the {@link com.facebook.buck.core.rules.BuildRule}s are flavored.
  */
 public interface Flavored {

@@ -20,7 +20,7 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.impl.RuleTypeFactory;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;

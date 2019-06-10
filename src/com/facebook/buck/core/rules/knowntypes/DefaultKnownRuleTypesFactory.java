@@ -18,7 +18,6 @@ package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.Description;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.util.ProcessExecutor;
@@ -27,8 +26,8 @@ import org.pf4j.PluginManager;
 
 /**
  * An implementation of {@link KnownRuleTypesFactory} that creates a list of {@link
- * DescriptionWithTargetGraph} for a given cell and merges it with a list of configuration rule
- * descriptions.
+ * com.facebook.buck.core.rules.DescriptionWithTargetGraph} for a given cell and merges it with a
+ * list of configuration rule descriptions.
  */
 public class DefaultKnownRuleTypesFactory implements KnownRuleTypesFactory {
 
