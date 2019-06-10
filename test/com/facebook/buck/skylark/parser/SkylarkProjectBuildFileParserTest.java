@@ -47,7 +47,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
-import com.google.common.base.Charsets;
+import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParserTestUtils.RecordingParser;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -58,7 +58,6 @@ import com.google.devtools.build.lib.events.EventCollector;
 import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
-import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.Type;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -67,7 +66,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -79,42 +77,6 @@ import org.junit.rules.ExpectedException;
 import org.pf4j.PluginManager;
 
 public class SkylarkProjectBuildFileParserTest {
-  // A simple wrapper around skylark parser that records interesting events.
-  class RecordingParser extends SkylarkProjectBuildFileParser {
-    private Map<com.google.devtools.build.lib.vfs.Path, Integer> readCounts;
-    private Map<com.google.devtools.build.lib.vfs.Path, Integer> buildCounts;
-
-    public RecordingParser(SkylarkProjectBuildFileParser delegate) {
-      super(delegate);
-      readCounts = new HashMap<com.google.devtools.build.lib.vfs.Path, Integer>();
-      buildCounts = new HashMap<com.google.devtools.build.lib.vfs.Path, Integer>();
-    }
-
-    @Override
-    public BuildFileAST readSkylarkAST(com.google.devtools.build.lib.vfs.Path path)
-        throws IOException {
-      readCounts.compute(path, (k, v) -> v == null ? 1 : v + 1);
-      return super.readSkylarkAST(path);
-    }
-
-    @Override
-    public ExtensionData buildExtensionData(ExtensionLoadState load) throws InterruptedException {
-      ExtensionData result = super.buildExtensionData(load);
-      buildCounts.compute(result.getPath(), (k, v) -> v == null ? 1 : v + 1);
-      return result;
-    }
-
-    public ImmutableMap<com.google.devtools.build.lib.vfs.Path, Integer> expectedCounts(
-        Object... args) {
-      assert args.length % 2 == 0;
-      ImmutableMap.Builder<com.google.devtools.build.lib.vfs.Path, Integer> builder =
-          ImmutableMap.builder();
-      for (int i = 0; i < args.length; i += 2) {
-        builder.put((com.google.devtools.build.lib.vfs.Path) args[i], (Integer) args[i + 1]);
-      }
-      return builder.build();
-    }
-  }
 
   private SkylarkProjectBuildFileParser parser;
   private ProjectFilesystem projectFilesystem;
@@ -135,32 +97,14 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   private ProjectBuildFileParserOptions.Builder getDefaultParserOptions() {
-    return ProjectBuildFileParserOptions.builder()
-        .setProjectRoot(cell.getRoot())
-        .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
-        .setIgnorePaths(ImmutableSet.of())
-        .setBuildFileName("BUCK")
-        .setRawConfig(ImmutableMap.of("dummy_section", ImmutableMap.of("dummy_key", "dummy_value")))
-        .setDescriptions(knownRuleTypesProvider.get(cell).getDescriptions())
-        .setBuildFileImportWhitelist(ImmutableList.of())
-        .setPythonInterpreter("skylark");
+    return SkylarkProjectBuildFileParserTestUtils.getDefaultParserOptions(
+        cell, knownRuleTypesProvider);
   }
 
   private SkylarkProjectBuildFileParser createParserWithOptions(
       EventHandler eventHandler, ProjectBuildFileParserOptions options) {
-    return SkylarkProjectBuildFileParser.using(
-        options,
-        BuckEventBusForTests.newInstance(),
-        skylarkFilesystem,
-        BuckGlobals.builder()
-            .setRuleFunctionFactory(new RuleFunctionFactory(new DefaultTypeCoercerFactory()))
-            .setDescriptions(options.getDescriptions())
-            .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
-            .setEnableUserDefinedRules(options.getEnableUserDefinedRules())
-            .setLabelCache(LabelCache.newLabelCache())
-            .build(),
-        eventHandler,
-        NativeGlobber::create);
+    return SkylarkProjectBuildFileParserTestUtils.createParserWithOptions(
+        skylarkFilesystem, eventHandler, options);
   }
 
   private SkylarkProjectBuildFileParser createParser(EventHandler eventHandler) {
@@ -1688,57 +1632,8 @@ public class SkylarkProjectBuildFileParserTest {
     getSingleRule(buildFile);
   }
 
-  @Test
-  public void enablesLabelObjectIfConfigured() throws IOException, InterruptedException {
-    Path extensionFile = projectFilesystem.resolve("foo.bzl");
-    Path buildFile = projectFilesystem.resolve("BUCK");
-
-    String extensionContents =
-        "def foo():\n"
-            + "    lbl = Label(\"@repo//package/sub:target\")\n"
-            + "    native.genrule(\n"
-            + "        name = \"foo\",\n"
-            + "        cmd = \"echo \" + lbl.name  + \" > $OUT\",\n"
-            + "        out = \"foo.out\"\n"
-            + "    )\n";
-    String buildContents = "load(\"//:foo.bzl\", \"foo\")\nfoo()\n";
-
-    Files.write(buildFile, buildContents.getBytes(Charsets.UTF_8));
-    Files.write(extensionFile, extensionContents.getBytes(Charsets.UTF_8));
-
-    parser =
-        createParserWithOptions(
-            new PrintingEventHandler(EventKind.ALL_EVENTS),
-            getDefaultParserOptions().setEnableUserDefinedRules(true).build());
-
-    assertEquals("echo target > $OUT", getSingleRule(buildFile).get("cmd"));
-  }
-
-  @Test
-  public void enablesAttrsModuleIfConfigured() throws IOException, InterruptedException {
-    Path extensionFile = projectFilesystem.resolve("foo.bzl");
-    Path buildFile = projectFilesystem.resolve("BUCK");
-
-    String extensionContents =
-        "def foo():\n"
-            + "    if repr(attr) != \"<attr>\":\n        fail(\"Expected attr module to exist\")";
-    String buildContents = "load(\"//:foo.bzl\", \"foo\")\nfoo()\n";
-
-    Files.write(buildFile, buildContents.getBytes(Charsets.UTF_8));
-    Files.write(extensionFile, extensionContents.getBytes(Charsets.UTF_8));
-
-    parser =
-        createParserWithOptions(
-            new PrintingEventHandler(EventKind.ALL_EVENTS),
-            getDefaultParserOptions().setEnableUserDefinedRules(true).build());
-
-    parser.getBuildFileManifest(buildFile);
-  }
-
   private Map<String, Object> getSingleRule(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
-    BuildFileManifest buildFileManifest = parser.getBuildFileManifest(buildFile);
-    assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(1));
-    return Iterables.getOnlyElement(buildFileManifest.getTargets().values());
+    return SkylarkProjectBuildFileParserTestUtils.getSingleRule(parser, buildFile);
   }
 }
