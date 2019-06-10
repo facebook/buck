@@ -52,6 +52,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -60,7 +61,8 @@ import javax.annotation.Nullable;
 
 public class JarBuildStepsFactory
     implements AddsToRuleKey, RulePipelineStateFactory<JavacPipelineState> {
-  private static final String[] METADATA_DIRS = new String[] {"META-INF", "_STRIPPED_RESOURCES"};
+  private static final Path[] METADATA_DIRS =
+      new Path[] {Paths.get("META-INF"), Paths.get("_STRIPPED_RESOURCES")};
 
   @CustomFieldBehavior(DefaultFieldSerialization.class)
   private final BuildTarget libraryTarget;
@@ -276,7 +278,7 @@ public class JarBuildStepsFactory
         return false;
       }
       Path memberPath = ((ArchiveMemberSourcePath) path).getMemberPath();
-      for (String metadataPath : METADATA_DIRS) {
+      for (Path metadataPath : METADATA_DIRS) {
         if (memberPath.startsWith(metadataPath)) {
           return true;
         }
