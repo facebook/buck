@@ -1,0 +1,14 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "attr",
+    srcs = glob(
+        ["*Test.java"],
+    ),
+    deps = [
+        "//src/com/facebook/buck/rules/coercer:interface",
+        "//src/com/facebook/buck/skylark/function/attr:attr",
+        "//test/com/facebook/buck/core/cell:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

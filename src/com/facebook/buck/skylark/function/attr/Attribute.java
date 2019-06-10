@@ -20,7 +20,9 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
+import com.google.common.base.Joiner;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 
 /** Representation of a parameter of a user defined rule */
@@ -99,5 +101,19 @@ abstract class Attribute<CoercedType> implements AttributeHolder {
       validateCoercedValue(coercedValue.get());
     }
     return coercedValue;
+  }
+
+  /** Helper method to validate that a value is in a list and throw a reasonable error if not */
+  protected void validateValueInList(List<CoercedType> values, CoercedType value)
+      throws CoerceFailedException {
+    if (values.isEmpty()) {
+      return;
+    }
+    if (values.contains(value)) {
+      return;
+    }
+    throw new CoerceFailedException(
+        String.format(
+            "must be one of '%s' instead of '%s'", Joiner.on("', '").join(values), value));
   }
 }

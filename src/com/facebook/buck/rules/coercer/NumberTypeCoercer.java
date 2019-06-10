@@ -25,7 +25,7 @@ import java.nio.file.Path;
 public class NumberTypeCoercer<T extends Number> extends LeafTypeCoercer<T> {
   private final Class<T> type;
 
-  NumberTypeCoercer(Class<T> type) {
+  public NumberTypeCoercer(Class<T> type) {
     this.type = type;
   }
 
