@@ -87,7 +87,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       int optimizationPasses,
       Optional<List<String>> proguardJvmArgs,
       Map<Path, Path> inputAndOutputEntries,
-      Set<Path> additionalLibraryJarsForProguard,
+      ImmutableSet<Path> additionalLibraryJarsForProguard,
       Path proguardDirectory,
       BuildableContext buildableContext,
       BuildContext buildContext,
@@ -301,7 +301,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
         SdkProguardType sdkProguardConfig,
         int optimizationPasses,
         Map<Path, Path> inputAndOutputEntries,
-        Set<Path> additionalLibraryJarsForProguard,
+        ImmutableSet<Path> additionalLibraryJarsForProguard,
         Path proguardDirectory,
         Path pathToProGuardCommandLineArgsFile) {
       super("write_proguard_command_line_parameters");
@@ -312,7 +312,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       this.sdkProguardConfig = sdkProguardConfig;
       this.optimizationPasses = optimizationPasses;
       this.inputAndOutputEntries = ImmutableMap.copyOf(inputAndOutputEntries);
-      this.additionalLibraryJarsForProguard = ImmutableSet.copyOf(additionalLibraryJarsForProguard);
+      this.additionalLibraryJarsForProguard = additionalLibraryJarsForProguard;
       this.proguardDirectory = proguardDirectory;
       this.pathToProGuardCommandLineArgsFile = pathToProGuardCommandLineArgsFile;
     }
