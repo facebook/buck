@@ -49,7 +49,7 @@ public interface ActionGraphBuilder extends BuildRuleResolver {
 
   /**
    * Retrieve a piece of metadata for a target. This metadata is computed via {@link
-   * com.facebook.buck.core.description.MetadataProvidingDescription#createMetadata}.
+   * com.facebook.buck.core.description.metadata.MetadataProvidingDescription#createMetadata}.
    */
   <T> Optional<T> requireMetadata(BuildTarget target, Class<T> metadataClass);
 

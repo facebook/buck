@@ -16,7 +16,7 @@
 package com.facebook.buck.core.rules.resolver.impl;
 
 import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.description.MetadataProvidingDescription;
+import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;

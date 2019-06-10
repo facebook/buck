@@ -17,9 +17,9 @@
 package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.MetadataProvidingDescription;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;

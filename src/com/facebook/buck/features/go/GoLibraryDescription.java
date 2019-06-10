@@ -17,12 +17,12 @@
 package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.MetadataProvidingDescription;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;

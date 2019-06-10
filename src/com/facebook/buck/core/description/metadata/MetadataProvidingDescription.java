@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.core.description;
+package com.facebook.buck.core.description.metadata;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
