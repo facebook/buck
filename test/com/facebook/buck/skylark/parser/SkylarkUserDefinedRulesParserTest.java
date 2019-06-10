@@ -28,17 +28,18 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.google.common.base.Charsets;
+import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventCollector;
 import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.EnumSet;
 import java.util.Map;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -46,16 +47,19 @@ import org.pf4j.PluginManager;
 
 public class SkylarkUserDefinedRulesParserTest {
   private SkylarkProjectBuildFileParser parser;
+  private ProjectWorkspace workspace;
   private ProjectFilesystem projectFilesystem;
   private SkylarkFilesystem skylarkFilesystem;
   private KnownRuleTypesProvider knownRuleTypesProvider;
 
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
   @Rule public ExpectedException thrown = ExpectedException.none();
   private Cell cell;
 
-  @Before
-  public void setUp() {
-    projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
+  private void setupWorkspace(String scenario) throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp.getRoot());
+    workspace.setUp();
+    projectFilesystem = new FakeProjectFilesystem(tmp.getRoot());
     skylarkFilesystem = SkylarkFilesystem.using(projectFilesystem);
     cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
@@ -96,21 +100,8 @@ public class SkylarkUserDefinedRulesParserTest {
 
   @Test
   public void enablesLabelObjectIfConfigured() throws IOException, InterruptedException {
-    Path extensionFile = projectFilesystem.resolve("foo.bzl");
+    setupWorkspace("label_exported");
     Path buildFile = projectFilesystem.resolve("BUCK");
-
-    String extensionContents =
-        "def foo():\n"
-            + "    lbl = Label(\"@repo//package/sub:target\")\n"
-            + "    native.genrule(\n"
-            + "        name = \"foo\",\n"
-            + "        cmd = \"echo \" + lbl.name  + \" > $OUT\",\n"
-            + "        out = \"foo.out\"\n"
-            + "    )\n";
-    String buildContents = "load(\"//:foo.bzl\", \"foo\")\nfoo()\n";
-
-    Files.write(buildFile, buildContents.getBytes(Charsets.UTF_8));
-    Files.write(extensionFile, extensionContents.getBytes(Charsets.UTF_8));
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
 
@@ -119,19 +110,35 @@ public class SkylarkUserDefinedRulesParserTest {
 
   @Test
   public void enablesAttrsModuleIfConfigured() throws IOException, InterruptedException {
-    Path extensionFile = projectFilesystem.resolve("foo.bzl");
+    setupWorkspace("attr_exported");
     Path buildFile = projectFilesystem.resolve("BUCK");
-
-    String extensionContents =
-        "def foo():\n"
-            + "    if repr(attr) != \"<attr>\":\n        fail(\"Expected attr module to exist\")";
-    String buildContents = "load(\"//:foo.bzl\", \"foo\")\nfoo()\n";
-
-    Files.write(buildFile, buildContents.getBytes(Charsets.UTF_8));
-    Files.write(extensionFile, extensionContents.getBytes(Charsets.UTF_8));
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
 
     parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void enablesAttrsIntIfConfigured() throws IOException, InterruptedException {
+    setupWorkspace("attr_int_exported");
+    Path buildFile = projectFilesystem.resolve("BUCK");
+
+    parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void attrsIntThrowsExceptionOnInvalidTypes() throws IOException, InterruptedException {
+    thrown.expect(BuildFileParseException.class);
+
+    setupWorkspace("attr_int_throws_on_invalid");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile = projectFilesystem.resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(
+        eventCollector, parser, buildFile, "expected type 'int' but got type 'string' instead");
   }
 }

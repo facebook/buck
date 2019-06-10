@@ -16,6 +16,9 @@
 package com.facebook.buck.skylark.function.attr;
 
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.SkylarkList;
+import java.util.List;
 
 /** Class that actually instantiates Attribute objects for user defined rules */
 public class AttrModule implements AttrModuleApi {
@@ -23,5 +26,13 @@ public class AttrModule implements AttrModuleApi {
   @Override
   public void repr(SkylarkPrinter printer) {
     printer.append("<attr>");
+  }
+
+  @Override
+  public AttributeHolder intAttribute(
+      Integer defaultValue, String doc, Boolean mandatory, SkylarkList<Integer> values)
+      throws EvalException {
+    List<Integer> validatedValues = SkylarkList.castList(values, Integer.class, null);
+    return new ImmutableIntAttribute(defaultValue, doc, mandatory, validatedValues);
   }
 }
