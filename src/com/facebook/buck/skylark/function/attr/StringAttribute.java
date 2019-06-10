@@ -33,13 +33,13 @@ public abstract class StringAttribute extends Attribute<String> {
       new OptionalTypeCoercer<>(coercer);
 
   @Override
-  abstract String getDefaultValue();
+  public abstract String getDefaultValue();
 
   @Override
   abstract String getDoc();
 
   @Override
-  abstract boolean getMandatory();
+  public abstract boolean getMandatory();
 
   /** The list of values that are acceptable. If empty, allow any values */
   abstract List<String> getValues();

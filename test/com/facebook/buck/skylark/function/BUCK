@@ -10,6 +10,7 @@ standard_java_test(
         "//src/com/facebook/buck/parser/options:options",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/skylark/function:function",
+        "//src/com/facebook/buck/skylark/function/attr:attr",
         "//src/com/facebook/buck/skylark/io:io",
         "//src/com/facebook/buck/skylark/io/impl:impl",
         "//src/com/facebook/buck/skylark/packages:packages",

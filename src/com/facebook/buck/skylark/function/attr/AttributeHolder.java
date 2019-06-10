@@ -26,7 +26,7 @@ import com.google.devtools.build.lib.syntax.SkylarkDict;
  * String)} to succeed in order to validate the types of the objects in that ditcionary, so add an
  * intermediate class. This is terrible.
  */
-interface AttributeHolder extends SkylarkValue {
+public interface AttributeHolder extends SkylarkValue {
   /** Get the actual attribute object */
   Attribute<?> getAttribute();
 }

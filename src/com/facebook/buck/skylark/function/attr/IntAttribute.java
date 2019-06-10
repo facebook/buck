@@ -33,13 +33,13 @@ public abstract class IntAttribute extends Attribute<Integer> {
       new OptionalTypeCoercer<>(coercer);
 
   @Override
-  abstract Integer getDefaultValue();
+  public abstract Integer getDefaultValue();
 
   @Override
   abstract String getDoc();
 
   @Override
-  abstract boolean getMandatory();
+  public abstract boolean getMandatory();
 
   /** The list of values that are acceptable. If empty, allow any values */
   abstract List<Integer> getValues();

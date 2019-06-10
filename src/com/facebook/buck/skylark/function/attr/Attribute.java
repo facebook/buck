@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 /** Representation of a parameter of a user defined rule */
-abstract class Attribute<CoercedType> implements AttributeHolder {
+public abstract class Attribute<CoercedType> implements AttributeHolder {
 
   @Override
   public Attribute<?> getAttribute() {
@@ -34,13 +34,13 @@ abstract class Attribute<CoercedType> implements AttributeHolder {
   }
 
   /** The default value to use if no value is provided */
-  abstract CoercedType getDefaultValue();
+  public abstract CoercedType getDefaultValue();
 
   /** The docstring to use for this attribute */
   abstract String getDoc();
 
   /** Whether this attribute is mandatory or not */
-  abstract boolean getMandatory();
+  public abstract boolean getMandatory();
 
   /**
    * The type coercer to use to convert raw values from the parser into something usable internally.
