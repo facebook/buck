@@ -35,4 +35,13 @@ public class AttrModule implements AttrModuleApi {
     List<Integer> validatedValues = SkylarkList.castList(values, Integer.class, null);
     return new ImmutableIntAttribute(defaultValue, doc, mandatory, validatedValues);
   }
+
+  @Override
+  public AttributeHolder stringAttribute(
+      String defaultValue, String doc, Boolean mandatory, SkylarkList<String> values)
+      throws EvalException {
+    List<String> validatedValues = SkylarkList.castList(values, String.class, null);
+
+    return new ImmutableStringAttribute(defaultValue, doc, mandatory, validatedValues);
+  }
 }

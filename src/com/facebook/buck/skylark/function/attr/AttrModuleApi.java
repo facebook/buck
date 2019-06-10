@@ -36,34 +36,33 @@ public interface AttrModuleApi extends SkylarkValue {
       doc = "Create a parameter for user defined rules that is an integer",
       parameters = {
         @Param(
-            name = "default",
-            doc = "The default value",
+            name = AttributeConstants.DEFAULT_PARAM_NAME,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC,
             defaultValue = "0",
             noneable = false,
             positional = false,
             named = true,
             type = Integer.class),
         @Param(
-            name = "doc",
-            doc = "The docstring for this parameter",
-            defaultValue = "''",
+            name = AttributeConstants.DOC_PARAM_NAME,
+            doc = AttributeConstants.DOC_PARAM_DOC,
+            defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
             noneable = false,
             positional = false,
             named = true,
             type = String.class),
         @Param(
-            name = "mandatory",
-            doc = "Whether this parameter is mandatory",
-            defaultValue = "False",
+            name = AttributeConstants.MANDATORY_PARAM_NAME,
+            doc = AttributeConstants.MANDATORY_PARAM_DOC,
+            defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
             noneable = false,
             positional = false,
             named = true,
             type = Boolean.class),
         @Param(
-            name = "values",
-            doc =
-                "A list of valid values for this parameter. If empty" + ", all values are allowed",
-            defaultValue = "[]",
+            name = AttributeConstants.VALUES_PARAM_NAME,
+            doc = AttributeConstants.VALUES_PARAM_DOC,
+            defaultValue = AttributeConstants.VALUES_PARAM_DEFAULT_VALUE,
             noneable = false,
             positional = false,
             named = true,
@@ -72,5 +71,47 @@ public interface AttrModuleApi extends SkylarkValue {
       })
   AttributeHolder intAttribute(
       Integer defaultValue, String doc, Boolean mandatory, SkylarkList<Integer> values)
+      throws EvalException;
+
+  @SkylarkCallable(
+      name = "string",
+      doc = "Create a parameter for user defined rules that is a string",
+      parameters = {
+        @Param(
+            name = AttributeConstants.DEFAULT_PARAM_NAME,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC,
+            defaultValue = "''",
+            noneable = false,
+            positional = false,
+            named = true,
+            type = String.class),
+        @Param(
+            name = AttributeConstants.DOC_PARAM_NAME,
+            doc = AttributeConstants.DOC_PARAM_DOC,
+            defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = String.class),
+        @Param(
+            name = AttributeConstants.MANDATORY_PARAM_NAME,
+            doc = AttributeConstants.MANDATORY_PARAM_DOC,
+            defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = Boolean.class),
+        @Param(
+            name = AttributeConstants.VALUES_PARAM_NAME,
+            doc = AttributeConstants.VALUES_PARAM_DOC,
+            defaultValue = AttributeConstants.VALUES_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            generic1 = String.class,
+            type = SkylarkList.class)
+      })
+  AttributeHolder stringAttribute(
+      String defaultValue, String doc, Boolean mandatory, SkylarkList<String> values)
       throws EvalException;
 }

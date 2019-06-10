@@ -141,4 +141,29 @@ public class SkylarkUserDefinedRulesParserTest {
     assertParserFails(
         eventCollector, parser, buildFile, "expected type 'int' but got type 'string' instead");
   }
+
+  @Test
+  public void enablesAttrsStringIfConfigured() throws IOException, InterruptedException {
+    setupWorkspace("attr_int_exported");
+    Path buildFile = projectFilesystem.resolve("BUCK");
+
+    parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
+
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void attrsStringThrowsExceptionOnInvalidTypes() throws IOException, InterruptedException {
+    thrown.expect(BuildFileParseException.class);
+
+    setupWorkspace("attr_string_throws_on_invalid");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile = projectFilesystem.resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(
+        eventCollector, parser, buildFile, "expected type 'string' but got type 'int' instead");
+  }
 }
