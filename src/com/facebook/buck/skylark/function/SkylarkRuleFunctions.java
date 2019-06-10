@@ -16,8 +16,6 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
@@ -32,17 +30,11 @@ import java.util.concurrent.ExecutionException;
 /** Provides APIs for creating build rules. */
 public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
 
-  LoadingCache<String, Label> labelCache =
-      CacheBuilder.newBuilder()
-          .build(
-              CacheLoader.from(
-                  (labelString) -> {
-                    try {
-                      return Label.parseAbsolute(labelString, false, ImmutableMap.of());
-                    } catch (LabelSyntaxException e) {
-                      throw new RuntimeException(e);
-                    }
-                  }));
+  private final LoadingCache<String, Label> labelCache;
+
+  public SkylarkRuleFunctions(LoadingCache<String, Label> labelCache) {
+    this.labelCache = labelCache;
+  }
 
   @Override
   public Label label(String labelString, Location loc, Environment env, StarlarkContext context)

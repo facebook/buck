@@ -325,6 +325,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             .setEnableUserDefinedRules(buildFileParserOptions.getEnableUserDefinedRules())
             .setDescriptions(buildFileParserOptions.getDescriptions())
             .setRuleFunctionFactory(new RuleFunctionFactory(typeCoercerFactory))
+            .setLabelCache(LabelCache.newLabelCache())
             .build();
 
     HumanReadableExceptionAugmentor augmentor;

@@ -21,8 +21,11 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
 import com.facebook.buck.skylark.function.SkylarkProviderFunction;
 import com.facebook.buck.skylark.function.SkylarkRuleFunctions;
+import com.facebook.buck.skylark.function.attr.AttrModule;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.packages.StructProvider;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
@@ -57,6 +60,8 @@ abstract class AbstractBuckGlobals {
     GlobalFrame globals = Environment.DEFAULT_GLOBALS;
   }
 
+  abstract LoadingCache<String, Label> getLabelCache();
+
   /** Always disable implicit native imports in skylark rules, they should utilize native.foo */
   @Lazy
   Environment.GlobalFrame getBuckLoadContextGlobals() {
@@ -65,7 +70,8 @@ abstract class AbstractBuckGlobals {
     builder.put("native", getNativeModule());
     builder.put("struct", StructProvider.STRUCT);
     if (getEnableUserDefinedRules()) {
-      Runtime.setupSkylarkLibrary(builder, new SkylarkRuleFunctions());
+      Runtime.setupSkylarkLibrary(builder, new SkylarkRuleFunctions(getLabelCache()));
+      Runtime.setupSkylarkLibrary(builder, new AttrModule());
     }
     Runtime.setupSkylarkLibrary(builder, new SkylarkProviderFunction());
     return GlobalFrame.createForBuiltins(builder.build());

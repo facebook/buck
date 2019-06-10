@@ -37,6 +37,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
+import com.facebook.buck.parser.LabelCache;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -156,6 +157,7 @@ public class SkylarkProjectBuildFileParserTest {
             .setDescriptions(options.getDescriptions())
             .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
             .setEnableUserDefinedRules(options.getEnableUserDefinedRules())
+            .setLabelCache(LabelCache.newLabelCache())
             .build(),
         eventHandler,
         NativeGlobber::create);
@@ -1071,6 +1073,7 @@ public class SkylarkProjectBuildFileParserTest {
                 .setDescriptions(options.getDescriptions())
                 .setRuleFunctionFactory(new RuleFunctionFactory(new DefaultTypeCoercerFactory()))
                 .setEnableUserDefinedRules(options.getEnableUserDefinedRules())
+                .setLabelCache(LabelCache.newLabelCache())
                 .build(),
             new PrintingEventHandler(EnumSet.allOf(EventKind.class)),
             NativeGlobber::create);
@@ -1709,6 +1712,27 @@ public class SkylarkProjectBuildFileParserTest {
             getDefaultParserOptions().setEnableUserDefinedRules(true).build());
 
     assertEquals("echo target > $OUT", getSingleRule(buildFile).get("cmd"));
+  }
+
+  @Test
+  public void enablesAttrsModuleIfConfigured() throws IOException, InterruptedException {
+    Path extensionFile = projectFilesystem.resolve("foo.bzl");
+    Path buildFile = projectFilesystem.resolve("BUCK");
+
+    String extensionContents =
+        "def foo():\n"
+            + "    if repr(attr) != \"<attr>\":\n        fail(\"Expected attr module to exist\")";
+    String buildContents = "load(\"//:foo.bzl\", \"foo\")\nfoo()\n";
+
+    Files.write(buildFile, buildContents.getBytes(Charsets.UTF_8));
+    Files.write(extensionFile, extensionContents.getBytes(Charsets.UTF_8));
+
+    parser =
+        createParserWithOptions(
+            new PrintingEventHandler(EventKind.ALL_EVENTS),
+            getDefaultParserOptions().setEnableUserDefinedRules(true).build());
+
+    parser.getBuildFileManifest(buildFile);
   }
 
   private Map<String, Object> getSingleRule(Path buildFile)

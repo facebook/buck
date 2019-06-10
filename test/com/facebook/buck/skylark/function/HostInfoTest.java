@@ -22,6 +22,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
+import com.facebook.buck.parser.LabelCache;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -269,6 +270,7 @@ public class HostInfoTest {
             .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
             .setRuleFunctionFactory(ruleFunctionFactory)
             .setEnableUserDefinedRules(options.getEnableUserDefinedRules())
+            .setLabelCache(LabelCache.newLabelCache())
             .build(),
         eventHandler,
         NativeGlobber::create);
