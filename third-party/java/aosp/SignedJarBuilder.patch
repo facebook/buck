@@ -1,0 +1,12 @@
+diff --git a/third-party/java/aosp/src/com/android/common/sdklib/internal/build/SignedJarBuilder.java b/third-party/java/aosp/src/com/android/common/sdklib/internal/build/SignedJarBuilder.java
+index b3883fa532..8209c4d9c7 100644
+--- a/third-party/java/aosp/src/com/android/common/sdklib/internal/build/SignedJarBuilder.java
++++ b/third-party/java/aosp/src/com/android/common/sdklib/internal/build/SignedJarBuilder.java
+@@ -124,7 +124,7 @@ public class SignedJarBuilder {
+   public SignedJarBuilder(OutputStream out, PrivateKey key, X509Certificate certificate)
+       throws IOException, NoSuchAlgorithmException {
+     mOutputJar = new JarOutputStream(new BufferedOutputStream(out));
+-    mOutputJar.setLevel(9);
++    mOutputJar.setLevel(4);
+     mKey = key;
+     mCertificate = certificate;

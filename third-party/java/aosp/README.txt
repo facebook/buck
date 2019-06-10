@@ -15,6 +15,9 @@ copied into a single module which alters certain package paths. For example,
 com.android.SDKConstants becomes com.android.common.SDKConstants. This is done to avoid conflicts
 with different version of those libraries in //third-party/java/android
 4) Applied patch from tools-targetApi.patch to fix https://github.com/facebook/buck/issues/2149
+5) Fine-tuned the compression ratio so that the compression step does not take too long just to achieve
+   a tiny bit of reduction in the size of the compressed file.
+   Applied patch from SignedJarBuilder.patch.
 
 == How to build apksig.jar
 1) Download source code from Google Open Source https://android.googlesource.com/platform/tools/apksig/+/master/src/main/java/com/android/apksig
