@@ -73,10 +73,10 @@ import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -193,7 +193,7 @@ public class DistBuildCommandDelegate {
       GraphsAndBuildTargets graphsAndBuildTargets,
       WeightedListeningExecutorService executorService,
       ProjectFilesystem filesystem,
-      FileHashCache fileHashCache,
+      FileHashLoader fileHashLoader,
       ClientStatsTracker distBuildClientStats,
       RuleKeyCacheScope<RuleKey> ruleKeyCacheScope)
       throws IOException, InterruptedException {
@@ -343,7 +343,7 @@ public class DistBuildCommandDelegate {
           DistBuildControllerInvocationArgs.builder()
               .setExecutorService(stampedeControllerExecutor)
               .setProjectFilesystem(filesystem)
-              .setFileHashCache(fileHashCache)
+              .setFileHashCache(fileHashLoader)
               .setInvocationInfo(params.getInvocationInfo().get())
               .setBuildMode(distBuildConfig.getBuildMode())
               .setDistLocalBuildMode(distBuildConfig.getLocalBuildMode())

@@ -24,7 +24,7 @@ import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -33,13 +33,13 @@ public abstract class PerBuildStateFactory {
 
   protected final ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
       manifestServiceSupplier;
-  protected final FileHashCache fileHashCache;
+  protected final FileHashLoader fileHashLoader;
 
   protected PerBuildStateFactory(
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
-      FileHashCache fileHashCache) {
+      FileHashLoader fileHashLoader) {
     this.manifestServiceSupplier = manifestServiceSupplier;
-    this.fileHashCache = fileHashCache;
+    this.fileHashLoader = fileHashLoader;
   }
 
   /**
@@ -55,7 +55,7 @@ public abstract class PerBuildStateFactory {
       Watchman watchman,
       BuckEventBus eventBus,
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
-      FileHashCache fileHashCache,
+      FileHashLoader fileHashLoader,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
     return new PerBuildStateFactoryWithConfigurableAttributes(
         typeCoercerFactory,
@@ -65,7 +65,7 @@ public abstract class PerBuildStateFactory {
         watchman,
         eventBus,
         manifestServiceSupplier,
-        fileHashCache,
+        fileHashLoader,
         unconfiguredBuildTargetFactory);
   }
 

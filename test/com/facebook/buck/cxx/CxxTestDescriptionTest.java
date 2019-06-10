@@ -52,10 +52,10 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.selectors.TestSelectorList;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -395,12 +395,12 @@ public class CxxTestDescriptionTest {
   }
 
   private RuleKey getRuleKey(BuildRuleResolver resolver, BuildRule rule) {
-    FileHashCache fileHashCache =
+    FileHashLoader fileHashLoader =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
                     rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT)));
-    DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashCache, resolver);
+    DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashLoader, resolver);
     return factory.build(rule);
   }
 }

@@ -31,6 +31,7 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
@@ -64,7 +65,7 @@ public class VerifyCachesCommand extends AbstractCommand {
       CellProvider cellProvider,
       PrintStream stdOut,
       RuleKeyConfiguration ruleKeyConfiguration,
-      FileHashCache fileHashCache,
+      FileHashLoader fileHashLoader,
       RuleKeyCacheRecycler<RuleKey> recycler) {
     ImmutableList<Map.Entry<BuildRule, RuleKey>> contents = recycler.getCachedBuildRules();
     RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(ruleKeyConfiguration);
@@ -76,7 +77,7 @@ public class VerifyCachesCommand extends AbstractCommand {
             cellProvider);
     contents.forEach(e -> graphBuilder.addToIndex(e.getKey()));
     DefaultRuleKeyFactory defaultRuleKeyFactory =
-        new DefaultRuleKeyFactory(fieldLoader, fileHashCache, graphBuilder);
+        new DefaultRuleKeyFactory(fieldLoader, fileHashLoader, graphBuilder);
     stdOut.println(String.format("Examining %d build rule keys.", contents.size()));
     ImmutableList<BuildRule> mismatches =
         RichStream.from(contents)

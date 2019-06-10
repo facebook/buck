@@ -34,7 +34,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -104,7 +104,7 @@ public class DistBuildController {
   public StampedeExecutionResult executeAndPrintFailuresToEventBus(
       ListeningExecutorService executorService,
       ProjectFilesystem projectFilesystem,
-      FileHashCache fileHashCache,
+      FileHashLoader fileHashLoader,
       InvocationInfo invocationInfo,
       BuildMode buildMode,
       DistLocalBuildMode distLocalBuildMode,
@@ -120,7 +120,7 @@ public class DistBuildController {
               preBuildPhase.runPreDistBuildLocalStepsAsync(
                   executorService,
                   projectFilesystem,
-                  fileHashCache,
+                  fileHashLoader,
                   eventBus,
                   invocationInfo.getBuildId(),
                   buildMode,

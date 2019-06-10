@@ -36,10 +36,10 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 
@@ -73,7 +73,7 @@ public class PrebuiltCxxLibraryTest {
     lib.getNativeLinkableInput(
         platform, Linker.LinkableDepType.STATIC, graphBuilder, EmptyTargetConfiguration.INSTANCE);
 
-    FileHashCache originalHashCache =
+    FileHashLoader originalHashCache =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(

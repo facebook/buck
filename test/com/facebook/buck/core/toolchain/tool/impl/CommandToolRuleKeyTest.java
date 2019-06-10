@@ -32,7 +32,7 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import java.util.function.Function;
@@ -118,13 +118,13 @@ public class CommandToolRuleKeyTest {
     return ruleKey(tool, fakeHashCache(ImmutableMap.of()));
   }
 
-  private RuleKey ruleKey(CommandTool tool, FileHashCache hashCache) {
+  private RuleKey ruleKey(CommandTool tool, FileHashLoader hashCache) {
     return new UncachedRuleKeyBuilder(resolver, hashCache, ruleKeyFactory(hashCache))
         .setReflectively("key", tool)
         .build(RuleKey::new);
   }
 
-  private DefaultRuleKeyFactory ruleKeyFactory(FileHashCache hashCache) {
+  private DefaultRuleKeyFactory ruleKeyFactory(FileHashLoader hashCache) {
     return new TestDefaultRuleKeyFactory(hashCache, resolver);
   }
 

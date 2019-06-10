@@ -33,6 +33,7 @@ import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.base.Functions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -124,7 +125,7 @@ public class DistBuildFileHashes {
 
   public static LoadingCache<ProjectFilesystem, DefaultRuleKeyFactory> createRuleKeyFactories(
       SourcePathRuleFinder ruleFinder,
-      FileHashCache fileHashCache,
+      FileHashLoader fileHashLoader,
       RuleKeyConfiguration ruleKeyConfiguration) {
 
     return CacheBuilder.newBuilder()
@@ -135,7 +136,7 @@ public class DistBuildFileHashes {
                 // Create a new RuleKeyCache to make computation visit the
                 // RecordingProjectFileHashCache
                 return new DefaultRuleKeyFactory(
-                    new RuleKeyFieldLoader(ruleKeyConfiguration), fileHashCache, ruleFinder);
+                    new RuleKeyFieldLoader(ruleKeyConfiguration), fileHashLoader, ruleFinder);
               }
             });
   }

@@ -24,7 +24,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.keys.hasher.GuavaRuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
@@ -37,14 +37,14 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<HashCode> {
 
   public UncachedRuleKeyBuilder(
       SourcePathRuleFinder ruleFinder,
-      FileHashCache hashCache,
+      FileHashLoader hashCache,
       RuleKeyFactory<RuleKey> ruleKeyFactory) {
     this(ruleFinder, hashCache, createHasher(), ruleKeyFactory);
   }
 
   public UncachedRuleKeyBuilder(
       SourcePathRuleFinder ruleFinder,
-      FileHashCache hashCache,
+      FileHashLoader hashCache,
       RuleKeyHasher<HashCode> hasher,
       RuleKeyFactory<RuleKey> ruleKeyFactory) {
     super(ruleFinder, hashCache, hasher);
@@ -58,7 +58,7 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<HashCode> {
 
   private static Supplier<UncachedRuleKeyBuilder> createSubKeySupplier(
       SourcePathRuleFinder ruleFinder,
-      FileHashCache hashCache,
+      FileHashLoader hashCache,
       RuleKeyFactory<RuleKey> ruleKeyFactory) {
     return () -> new UncachedRuleKeyBuilder(ruleFinder, hashCache, ruleKeyFactory);
   }

@@ -22,8 +22,8 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ForwardingProjectBuildFileParserDecorator;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
@@ -42,19 +42,19 @@ public class CachingProjectBuildFileParserDecorator
   private final ParserCache parserCache;
   private final Config config;
   private final ProjectFilesystem filesystem;
-  private final FileHashCache fileHashCache;
+  private final FileHashLoader fileHashLoader;
 
   private CachingProjectBuildFileParserDecorator(
       ParserCache parserCache,
       ProjectBuildFileParser delegate,
       Config config,
       ProjectFilesystem filesystem,
-      FileHashCache fileHashCache) {
+      FileHashLoader fileHashLoader) {
     super(delegate);
     this.parserCache = parserCache;
     this.config = config;
     this.filesystem = filesystem;
-    this.fileHashCache = fileHashCache;
+    this.fileHashLoader = fileHashLoader;
   }
 
   /**
@@ -70,9 +70,9 @@ public class CachingProjectBuildFileParserDecorator
       ProjectBuildFileParser delegate,
       Config config,
       ProjectFilesystem filesystem,
-      FileHashCache fileHashCache) {
+      FileHashLoader fileHashLoader) {
     return new CachingProjectBuildFileParserDecorator(
-        parserCache, delegate, config, filesystem, fileHashCache);
+        parserCache, delegate, config, filesystem, fileHashLoader);
   }
 
   // calculate the globs state is proper for using the returned manifest from storage.
@@ -89,7 +89,7 @@ public class CachingProjectBuildFileParserDecorator
       ImmutableSortedSet<String> includeBuildFiles = delegate.getIncludedFiles(buildFile);
       weakFingerprint = Fingerprinter.getWeakFingerprint(buildFile, config);
       strongFingerprint =
-          Fingerprinter.getStrongFingerprint(filesystem, includeBuildFiles, fileHashCache);
+          Fingerprinter.getStrongFingerprint(filesystem, includeBuildFiles, fileHashLoader);
 
       buildFileManifestFromCache =
           parserCache.getBuildFileManifest(buildFile, delegate, weakFingerprint, strongFingerprint);

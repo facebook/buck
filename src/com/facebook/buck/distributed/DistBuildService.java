@@ -80,7 +80,7 @@ import com.facebook.buck.distributed.thrift.UpdateBuildSlaveStatusRequest;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
@@ -511,7 +511,7 @@ public class DistBuildService implements Closeable {
   public ListenableFuture<Void> uploadBuckDotFilesAsync(
       StampedeId id,
       ProjectFilesystem filesystem,
-      FileHashCache fileHashCache,
+      FileHashLoader fileHashLoader,
       ClientStatsTracker distBuildClientStats,
       ListeningExecutorService executorService) {
     distBuildClientStats.startTimer(UPLOAD_BUCK_DOT_FILES);
@@ -541,7 +541,7 @@ public class DistBuildService implements Closeable {
               for (Path path : paths) {
                 PathInfo pathInfoObject = new PathInfo();
                 pathInfoObject.setPath(path.toString());
-                pathInfoObject.setContentHash(fileHashCache.get(path.toAbsolutePath()).toString());
+                pathInfoObject.setContentHash(fileHashLoader.get(path.toAbsolutePath()).toString());
                 relativePathEntries.add(pathInfoObject);
               }
 
@@ -558,7 +558,7 @@ public class DistBuildService implements Closeable {
               for (Path path : paths) {
                 PathInfo pathInfoObject = new PathInfo();
                 pathInfoObject.setPath(path.toAbsolutePath().toString());
-                pathInfoObject.setContentHash(fileHashCache.get(path.toAbsolutePath()).toString());
+                pathInfoObject.setContentHash(fileHashLoader.get(path.toAbsolutePath()).toString());
                 absolutePathEntries.add(pathInfoObject);
               }
 

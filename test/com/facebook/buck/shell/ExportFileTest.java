@@ -48,10 +48,10 @@ import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -222,7 +222,7 @@ public class ExportFileTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem(root);
     Path temp = Paths.get("example_file");
 
-    FileHashCache hashCache =
+    FileHashLoader hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(

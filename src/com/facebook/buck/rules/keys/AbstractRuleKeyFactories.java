@@ -25,7 +25,7 @@ import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.Scope;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import java.io.IOException;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -48,13 +48,13 @@ abstract class AbstractRuleKeyFactories {
 
   public static RuleKeyFactories of(
       RuleKeyConfiguration ruleKeyConfiguration,
-      FileHashCache fileHashCache,
+      FileHashLoader fileHashLoader,
       BuildRuleResolver resolver,
       long inputRuleKeyFileSizeLimit,
       TrackedRuleKeyCache<RuleKey> defaultRuleKeyFactoryCache) {
     return of(
         ruleKeyConfiguration,
-        fileHashCache,
+        fileHashLoader,
         resolver,
         inputRuleKeyFileSizeLimit,
         defaultRuleKeyFactoryCache,
@@ -63,7 +63,7 @@ abstract class AbstractRuleKeyFactories {
 
   public static RuleKeyFactories of(
       RuleKeyConfiguration ruleKeyConfiguration,
-      FileHashCache fileHashCache,
+      FileHashLoader fileHashLoader,
       BuildRuleResolver resolver,
       long inputRuleKeyFileSizeLimit,
       TrackedRuleKeyCache<RuleKey> defaultRuleKeyFactoryCache,
@@ -71,11 +71,11 @@ abstract class AbstractRuleKeyFactories {
     RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(ruleKeyConfiguration);
     return RuleKeyFactories.of(
         new DefaultRuleKeyFactory(
-            fieldLoader, fileHashCache, resolver, defaultRuleKeyFactoryCache, ruleKeyLogger),
+            fieldLoader, fileHashLoader, resolver, defaultRuleKeyFactoryCache, ruleKeyLogger),
         new InputBasedRuleKeyFactory(
-            fieldLoader, fileHashCache, resolver, inputRuleKeyFileSizeLimit, ruleKeyLogger),
+            fieldLoader, fileHashLoader, resolver, inputRuleKeyFileSizeLimit, ruleKeyLogger),
         new DefaultDependencyFileRuleKeyFactory(
-            fieldLoader, fileHashCache, resolver, ruleKeyLogger));
+            fieldLoader, fileHashLoader, resolver, ruleKeyLogger));
   }
 
   public Optional<RuleKeyAndInputs> calculateManifestKey(

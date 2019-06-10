@@ -35,9 +35,9 @@ import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
@@ -91,7 +91,7 @@ public class CalculateClassAbiTest {
             builder.createBuildRuleParams(graphBuilder),
             DefaultBuildTargetSourcePath.of(javaLibraryTarget));
 
-    FileHashCache initialHashCache =
+    FileHashLoader initialHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     DefaultRuleKeyFactory initialRuleKeyFactory =
         new TestDefaultRuleKeyFactory(initialHashCache, graphBuilder);
@@ -108,7 +108,7 @@ public class CalculateClassAbiTest {
     graphBuilder = new TestActionGraphBuilder();
     builder.build(graphBuilder, filesystem);
 
-    FileHashCache alteredHashCache =
+    FileHashLoader alteredHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     DefaultRuleKeyFactory alteredRuleKeyFactory =
         new TestDefaultRuleKeyFactory(alteredHashCache, graphBuilder);
@@ -149,7 +149,7 @@ public class CalculateClassAbiTest {
             builder.createBuildRuleParams(graphBuilder),
             DefaultBuildTargetSourcePath.of(javaLibraryTarget));
 
-    FileHashCache initialHashCache =
+    FileHashLoader initialHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     DefaultRuleKeyFactory initialRuleKeyFactory =
         new TestDefaultRuleKeyFactory(initialHashCache, ruleFinder);
@@ -165,7 +165,7 @@ public class CalculateClassAbiTest {
     ruleFinder = graphBuilder;
     builder.build(graphBuilder, filesystem);
 
-    FileHashCache alteredHashCache =
+    FileHashLoader alteredHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     DefaultRuleKeyFactory alteredRuleKeyFactory =
         new TestDefaultRuleKeyFactory(alteredHashCache, ruleFinder);

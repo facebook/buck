@@ -27,10 +27,10 @@ import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.keys.RuleKeyBuilder;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
@@ -41,14 +41,14 @@ public class SanitizedArgTest {
 
   private RuleKeyBuilder<HashCode> createRuleKeyBuilder() {
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    FileHashCache fileHashCache =
+    FileHashLoader fileHashLoader =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
                     projectFilesystem, FileHashCacheMode.DEFAULT)));
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     return new UncachedRuleKeyBuilder(
-        ruleFinder, fileHashCache, new TestDefaultRuleKeyFactory(fileHashCache, ruleFinder));
+        ruleFinder, fileHashLoader, new TestDefaultRuleKeyFactory(fileHashLoader, ruleFinder));
   }
 
   private void amendKeyList(

@@ -19,7 +19,7 @@ package com.facebook.buck.core.build.engine.buildinfo;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
@@ -190,10 +190,10 @@ public class BuildInfoRecorder {
         .build();
   }
 
-  public HashCode getOutputHash(FileHashCache fileHashCache) throws IOException {
+  public HashCode getOutputHash(FileHashLoader fileHashLoader) throws IOException {
     Hasher hasher = Hashing.md5().newHasher();
     for (Path path : getRecordedPaths()) {
-      hasher.putBytes(fileHashCache.get(projectFilesystem.resolve(path)).asBytes());
+      hasher.putBytes(fileHashLoader.get(projectFilesystem.resolve(path)).asBytes());
     }
     return hasher.hash();
   }

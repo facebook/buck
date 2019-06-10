@@ -40,10 +40,10 @@ import com.facebook.buck.rules.keys.RuleKeyDiagnostics.Result;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
 import com.facebook.buck.testutil.DummyFileHashCache;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Objects;
@@ -156,8 +156,8 @@ public class DefaultRuleKeyFactoryTest {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     BuildRule rule = new EmptyFakeBuildRule(target);
 
-    FileHashCache fileHashCache = new DummyFileHashCache();
-    DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashCache, ruleFinder);
+    FileHashLoader fileHashLoader = new DummyFileHashCache();
+    DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashLoader, ruleFinder);
 
     class AppendingField extends EmptyFakeBuildRule {
       @AddToRuleKey private Adder field = new Adder();
@@ -184,8 +184,8 @@ public class DefaultRuleKeyFactoryTest {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     BuildRule rule = new EmptyFakeBuildRule(target);
 
-    FileHashCache fileHashCache = new DummyFileHashCache();
-    DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashCache, ruleFinder);
+    FileHashLoader fileHashLoader = new DummyFileHashCache();
+    DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashLoader, ruleFinder);
 
     class AppendingField extends EmptyFakeBuildRule {
       @AddToRuleKey private Appender field = new Appender();

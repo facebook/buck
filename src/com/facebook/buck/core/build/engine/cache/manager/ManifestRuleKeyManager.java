@@ -34,8 +34,8 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.rules.keys.RuleKeyAndInputs;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.MoreFutures;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -62,7 +62,7 @@ public class ManifestRuleKeyManager {
 
   private final DepFiles depFiles;
   private final BuildRule rule;
-  private final FileHashCache fileHashCache;
+  private final FileHashLoader fileHashLoader;
   private final long maxDepFileCacheEntries;
   private final SourcePathResolver pathResolver;
   private final RuleKeyFactories ruleKeyFactories;
@@ -74,7 +74,7 @@ public class ManifestRuleKeyManager {
   public ManifestRuleKeyManager(
       DepFiles depFiles,
       BuildRule rule,
-      FileHashCache fileHashCache,
+      FileHashLoader fileHashLoader,
       long maxDepFileCacheEntries,
       SourcePathResolver pathResolver,
       RuleKeyFactories ruleKeyFactories,
@@ -84,7 +84,7 @@ public class ManifestRuleKeyManager {
       ManifestRuleKeyService manifestRuleKeyService) {
     this.depFiles = depFiles;
     this.rule = rule;
-    this.fileHashCache = fileHashCache;
+    this.fileHashLoader = fileHashLoader;
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.pathResolver = pathResolver;
     this.ruleKeyFactories = ruleKeyFactories;
@@ -147,7 +147,7 @@ public class ManifestRuleKeyManager {
     }
 
     // Update the manifest with the new output rule key.
-    manifest.addEntry(fileHashCache, key, pathResolver, manifestKey.getInputs(), inputs);
+    manifest.addEntry(fileHashLoader, key, pathResolver, manifestKey.getInputs(), inputs);
 
     // Record the current manifest stats settings now that we've finalized the manifest we're going
     // to store.
@@ -312,7 +312,7 @@ public class ManifestRuleKeyManager {
 
           // Lookup the dep file rule key matching the current state of our inputs.
           Optional<RuleKey> depFileRuleKey =
-              manifest.lookup(fileHashCache, pathResolver, keyAndInputs.getInputs());
+              manifest.lookup(fileHashLoader, pathResolver, keyAndInputs.getInputs());
           if (!depFileRuleKey.isPresent()) {
             return Futures.immediateFuture(manifestFetchResult.build());
           }

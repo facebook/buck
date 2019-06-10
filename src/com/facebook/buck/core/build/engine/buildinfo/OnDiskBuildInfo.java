@@ -17,7 +17,7 @@
 package com.facebook.buck.core.build.engine.buildinfo;
 
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -78,7 +78,7 @@ public interface OnDiskBuildInfo {
   void deleteExistingMetadata() throws IOException;
 
   void calculateOutputSizeAndWriteOutputHashes(
-      FileHashCache fileHashCache, Predicate<Long> shouldWriteOutputHashes) throws IOException;
+      FileHashLoader fileHashLoader, Predicate<Long> shouldWriteOutputHashes) throws IOException;
 
   void validateArtifact(Set<Path> extractedFiles) throws IOException;
 

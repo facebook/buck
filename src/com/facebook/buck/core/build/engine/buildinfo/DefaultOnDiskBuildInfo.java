@@ -22,7 +22,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -229,7 +229,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public void calculateOutputSizeAndWriteOutputHashes(
-      FileHashCache fileHashCache, Predicate<Long> shouldWriteOutputHashes) throws IOException {
+      FileHashLoader fileHashLoader, Predicate<Long> shouldWriteOutputHashes) throws IOException {
     ImmutableSortedSet<Path> pathsForArtifact = getPathsForArtifact();
     long outputSize = getOutputSize(pathsForArtifact);
     projectFilesystem.writeContentsToPath(
@@ -248,7 +248,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     Hasher hasher = Hashing.sha1().newHasher();
     for (Path path : pathsForArtifact) {
       String pathString = path.toString();
-      HashCode fileHash = fileHashCache.get(projectFilesystem, path);
+      HashCode fileHash = fileHashLoader.get(projectFilesystem, path);
       hasher.putBytes(pathString.getBytes(Charsets.UTF_8));
       hasher.putBytes(fileHash.asBytes());
       outputHashes.put(pathString, fileHash.toString());

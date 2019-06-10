@@ -174,7 +174,6 @@ import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.ThrowingCloseableWrapper;
 import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
@@ -193,6 +192,7 @@ import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.NetworkInfo;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.network.MacIpv6BugWorkaround;
 import com.facebook.buck.util.network.RemoteLogBuckConfig;
 import com.facebook.buck.util.perf.PerfStatsTracking;
@@ -1564,7 +1564,7 @@ public final class MainRunner {
           depsAwareExecutorSupplier,
       ExecutableFinder executableFinder,
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
-      FileHashCache fileHashCache,
+      FileHashLoader fileHashLoader,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetSpecResolver targetSpecResolver)
       throws IOException, InterruptedException {
@@ -1621,7 +1621,7 @@ public final class MainRunner {
             watchman,
             buildEventBus,
             manifestServiceSupplier,
-            fileHashCache,
+            fileHashLoader,
             unconfiguredBuildTargetFactory),
         buckGlobalState.getTypeCoercerFactory(),
         new InstrumentedVersionedTargetGraphCache(

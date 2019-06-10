@@ -28,10 +28,10 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyBuilder;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
@@ -41,14 +41,14 @@ public class HeaderVerificationTest {
 
   private RuleKey getRuleKey(HeaderVerification headerVerification) {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    FileHashCache fileHashCache =
+    FileHashLoader fileHashLoader =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
                     new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT)));
-    DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashCache, ruleFinder);
+    DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashLoader, ruleFinder);
     RuleKeyBuilder<HashCode> builder =
-        new UncachedRuleKeyBuilder(ruleFinder, fileHashCache, factory);
+        new UncachedRuleKeyBuilder(ruleFinder, fileHashLoader, factory);
     builder.setReflectively("headerVerification", headerVerification);
     return builder.build(RuleKey::new);
   }

@@ -69,6 +69,7 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -102,7 +103,7 @@ public class RuleKeyTest {
   @Test
   public void testRuleKeyDependsOnDeps() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FileHashCache hashCache =
+    FileHashLoader hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
@@ -515,7 +516,7 @@ public class RuleKeyTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    FileHashCache hashCache =
+    FileHashLoader hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
@@ -566,7 +567,7 @@ public class RuleKeyTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    FileHashCache hashCache =
+    FileHashLoader hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
@@ -588,7 +589,7 @@ public class RuleKeyTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create();
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    FileHashCache hashCache =
+    FileHashLoader hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
@@ -622,7 +623,7 @@ public class RuleKeyTest {
 
       public NoopSetterRuleKeyBuilder(
           SourcePathRuleFinder ruleFinder,
-          FileHashCache hashCache,
+          FileHashLoader hashCache,
           RuleKeyFactory<RuleKey> defaultRuleKeyFactory) {
         super(ruleFinder, hashCache, defaultRuleKeyFactory);
       }
@@ -634,7 +635,7 @@ public class RuleKeyTest {
     }
 
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.of());
+    FileHashLoader hashCache = new FakeFileHashCache(ImmutableMap.of());
     RuleKeyFactory<RuleKey> ruleKeyFactory = new TestDefaultRuleKeyFactory(hashCache, ruleFinder);
 
     RuleKey nullRuleKey =
@@ -650,7 +651,7 @@ public class RuleKeyTest {
   @Test
   public void declaredDepsAndExtraDepsGenerateDifferentRuleKeys() {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.of());
+    FileHashLoader hashCache = new FakeFileHashCache(ImmutableMap.of());
     DefaultRuleKeyFactory ruleKeyFactory = new TestDefaultRuleKeyFactory(hashCache, ruleFinder);
 
     BuildTarget target = BuildTargetFactory.newInstance("//a:target");
@@ -918,7 +919,7 @@ public class RuleKeyTest {
   }
 
   private TestDefaultRuleKeyFactory createFactory(SourcePathRuleFinder ruleFinder) {
-    FileHashCache fileHashCache =
+    FileHashLoader fileHashLoader =
         new FileHashCache() {
 
           @Override
@@ -945,7 +946,7 @@ public class RuleKeyTest {
           @Override
           public void set(Path path, HashCode hashCode) {}
         };
-    return new TestDefaultRuleKeyFactory(fileHashCache, ruleFinder);
+    return new TestDefaultRuleKeyFactory(fileHashLoader, ruleFinder);
   }
 
   private RuleKeyResult<RuleKey> buildResult(AbstractRuleKeyBuilder<HashCode> builder) {

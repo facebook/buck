@@ -45,10 +45,10 @@ import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -299,7 +299,7 @@ public class InputBasedRuleKeyFactoryTest {
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FileHashCache hashCache =
+    FileHashLoader hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
@@ -328,7 +328,7 @@ public class InputBasedRuleKeyFactoryTest {
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FileHashCache hashCache =
+    FileHashLoader hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
@@ -356,7 +356,7 @@ public class InputBasedRuleKeyFactoryTest {
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FileHashCache hashCache =
+    FileHashLoader hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
@@ -388,7 +388,7 @@ public class InputBasedRuleKeyFactoryTest {
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FileHashCache hashCache =
+    FileHashLoader hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
@@ -418,7 +418,7 @@ public class InputBasedRuleKeyFactoryTest {
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FileHashCache hashCache =
+    FileHashLoader hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
@@ -447,7 +447,7 @@ public class InputBasedRuleKeyFactoryTest {
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    FileHashCache hashCache =
+    FileHashLoader hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
@@ -487,7 +487,7 @@ public class InputBasedRuleKeyFactoryTest {
   }
 
   RuleKey computeRuleKey(
-      FileHashCache hashCache, SourcePathRuleFinder ruleFinder, Object... objects) {
+      FileHashLoader hashCache, SourcePathRuleFinder ruleFinder, Object... objects) {
     return new TestInputBasedRuleKeyFactory(hashCache, ruleFinder)
         .build(
             new FakeBuildRule("//fake:target") {

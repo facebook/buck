@@ -23,7 +23,7 @@ import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import java.io.IOException;
 
 /** Responsible for creating an instance of {@link Parser}. */
@@ -40,7 +40,7 @@ public class ParserFactory {
       Watchman watchman,
       BuckEventBus eventBus,
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
-      FileHashCache fileHashCache,
+      FileHashLoader fileHashLoader,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
     return new ParserWithConfigurableAttributes(
         daemonicParserState,
@@ -52,7 +52,7 @@ public class ParserFactory {
             watchman,
             eventBus,
             manifestServiceSupplier,
-            fileHashCache,
+            fileHashLoader,
             unconfiguredBuildTargetFactory),
         targetSpecResolver,
         eventBus);

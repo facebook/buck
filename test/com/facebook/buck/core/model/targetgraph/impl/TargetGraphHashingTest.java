@@ -63,7 +63,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -155,12 +155,12 @@ public class TargetGraphHashingTest {
             ImmutableSet.of(Paths.get("foo/FooLib.java")));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
 
-    FileHashCache baseCache =
+    FileHashLoader baseCache =
         new FakeFileHashCache(
             ImmutableMap.of(
                 projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef")));
 
-    FileHashCache modifiedCache =
+    FileHashLoader modifiedCache =
         new FakeFileHashCache(
             ImmutableMap.of(
                 projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abc1ef")));
@@ -212,7 +212,7 @@ public class TargetGraphHashingTest {
     TargetGraph targetGraphB = TargetGraphFactory.newInstance(nodeB);
     TargetGraph commonTargetGraph = TargetGraphFactory.newInstance(nodeA, nodeB);
 
-    FileHashCache fileHashCache =
+    FileHashLoader fileHashLoader =
         new FakeFileHashCache(
             ImmutableMap.of(
                 projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef"),
@@ -222,7 +222,7 @@ public class TargetGraphHashingTest {
         new TargetGraphHashing(
                 eventBus,
                 targetGraphA,
-                fileHashCache,
+                fileHashLoader,
                 ImmutableList.of(nodeA),
                 MoreExecutors.newDirectExecutorService(),
                 ruleKeyConfiguration,
@@ -234,7 +234,7 @@ public class TargetGraphHashingTest {
         new TargetGraphHashing(
                 eventBus,
                 targetGraphB,
-                fileHashCache,
+                fileHashLoader,
                 ImmutableList.of(nodeB),
                 MoreExecutors.newDirectExecutorService(),
                 ruleKeyConfiguration,
@@ -246,7 +246,7 @@ public class TargetGraphHashingTest {
         new TargetGraphHashing(
                 eventBus,
                 commonTargetGraph,
-                fileHashCache,
+                fileHashLoader,
                 ImmutableList.of(nodeA, nodeB),
                 MoreExecutors.newDirectExecutorService(),
                 ruleKeyConfiguration,
@@ -287,7 +287,7 @@ public class TargetGraphHashingTest {
     TargetGraph targetGraphB =
         createGraphWithANodeAndADep(nodeTarget, depTarget, Paths.get("dep/DepLib2.java"));
 
-    FileHashCache fileHashCache =
+    FileHashLoader fileHashLoader =
         new FakeFileHashCache(
             ImmutableMap.of(
                 projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef"),
@@ -298,7 +298,7 @@ public class TargetGraphHashingTest {
         new TargetGraphHashing(
                 eventBus,
                 targetGraphA,
-                fileHashCache,
+                fileHashLoader,
                 ImmutableList.of(targetGraphA.get(nodeTarget)),
                 MoreExecutors.newDirectExecutorService(),
                 ruleKeyConfiguration,
@@ -310,7 +310,7 @@ public class TargetGraphHashingTest {
         new TargetGraphHashing(
                 eventBus,
                 targetGraphB,
-                fileHashCache,
+                fileHashLoader,
                 ImmutableList.of(targetGraphB.get(nodeTarget)),
                 MoreExecutors.newDirectExecutorService(),
                 ruleKeyConfiguration,
@@ -336,7 +336,7 @@ public class TargetGraphHashingTest {
             ImmutableSet.of(Paths.get("foo/FooLib.java")));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
 
-    FileHashCache cache = new FakeFileHashCache(ImmutableMap.of());
+    FileHashLoader cache = new FakeFileHashCache(ImmutableMap.of());
 
     thrown.expectMessage(
         "Error reading path "

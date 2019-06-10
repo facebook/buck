@@ -51,10 +51,10 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -83,9 +83,9 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
       Watchman watchman,
       BuckEventBus eventBus,
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
-      FileHashCache fileHashCache,
+      FileHashLoader fileHashLoader,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
-    super(manifestServiceSupplier, fileHashCache);
+    super(manifestServiceSupplier, fileHashLoader);
     this.typeCoercerFactory = typeCoercerFactory;
     this.marshaller = marshaller;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
@@ -117,7 +117,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             parseProcessedBytes,
             knownRuleTypesProvider,
             manifestServiceSupplier,
-            fileHashCache);
+            fileHashLoader);
     ProjectBuildFileParserPool projectBuildFileParserPool =
         new ProjectBuildFileParserPool(
             numParsingThreads, // Max parsers to create per cell.
