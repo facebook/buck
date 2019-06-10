@@ -4,6 +4,7 @@ java_test(
     deps = [
         "//src/com/facebook/buck/android/toolchain/impl:impl",
         "//src/com/facebook/buck/apple/toolchain:toolchain",
+        "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/plugin/impl:impl",
         "//src/com/facebook/buck/support/state:state",
         "//test/com/facebook/buck/apple:testutil",

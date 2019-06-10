@@ -3,6 +3,7 @@ load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 standard_java_test(
     name = "targetnode",
     deps = [
+        "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/model/platform/impl:impl",
         "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
         "//src/com/facebook/buck/core/rules/config/impl:impl",
