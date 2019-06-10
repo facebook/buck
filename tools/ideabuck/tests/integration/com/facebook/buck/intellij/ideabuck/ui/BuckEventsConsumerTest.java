@@ -72,7 +72,8 @@ public class BuckEventsConsumerTest {
     application.registerService(
         FileDocumentManager.class, new MockFileDocumentManagerImpl(null, null));
     application.registerService(
-        VirtualFileManager.class, EasyMock.createMock(VirtualFileManager.class));
+        VirtualFileManager.class,
+        (VirtualFileManager) EasyMock.createMock(VirtualFileManager.class));
     project.registerService(BuckUIManager.class, new MockBuckUIManager(project));
     project.registerService(ToolWindowManager.class, new Mock.MyToolWindowManager());
     return new BuckEventsConsumer(project);
