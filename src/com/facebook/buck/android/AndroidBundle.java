@@ -21,7 +21,6 @@ import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageMode;
-import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
@@ -52,7 +51,6 @@ import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.RichStream;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -85,22 +83,16 @@ public class AndroidBundle extends AbstractBuildRule
         HasRuntimeDeps,
         HasInstallableApk,
         HasInstallHelpers {
-  static final String SECONDARY_DEX_SUBDIR = "assets/secondary-program-dex-jars";
-
   private final Keystore keystore;
 
-  private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
-  private final ProGuardObfuscateStep.SdkProguardType sdkProguardConfig;
   private final int optimizationPasses;
   private final Optional<SourcePath> proguardConfig;
   private final SourcePathRuleFinder ruleFinder;
 
   private final Optional<List<String>> proguardJvmArgs;
-  private final ResourceCompressionMode resourceCompressionMode;
   private final ImmutableSet<TargetCpuType> cpuFilters;
   private final ResourceFilter resourceFilter;
   private final EnumSet<ExopackageMode> exopackageModes;
-  private final ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
 
   private final AndroidGraphEnhancementResult enhancementResult;
   private final ManifestEntries manifestEntries;
@@ -127,8 +119,6 @@ public class AndroidBundle extends AbstractBuildRule
       Optional<List<String>> proguardJvmArgs,
       Keystore keystore,
       DexSplitMode dexSplitMode,
-      Set<BuildTarget> buildTargetsToExcludeFromDex,
-      ProGuardObfuscateStep.SdkProguardType sdkProguardConfig,
       int proguardOptimizationPasses,
       Optional<SourcePath> proguardConfig,
       boolean skipProguard,
@@ -137,7 +127,6 @@ public class AndroidBundle extends AbstractBuildRule
       Set<TargetCpuType> cpuFilters,
       ResourceFilter resourceFilter,
       EnumSet<ExopackageMode> exopackageModes,
-      ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidGraphEnhancementResult enhancementResult,
       int xzCompressionLevel,
       boolean packageAssetLibraries,
@@ -159,15 +148,11 @@ public class AndroidBundle extends AbstractBuildRule
     this.proguardJvmArgs = proguardJvmArgs;
     this.keystore = keystore;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
-    this.buildTargetsToExcludeFromDex = ImmutableSet.copyOf(buildTargetsToExcludeFromDex);
-    this.sdkProguardConfig = sdkProguardConfig;
     this.optimizationPasses = proguardOptimizationPasses;
     this.proguardConfig = proguardConfig;
-    this.resourceCompressionMode = resourceCompressionMode;
     this.cpuFilters = ImmutableSet.copyOf(cpuFilters);
     this.resourceFilter = resourceFilter;
     this.exopackageModes = exopackageModes;
-    this.rulesToExcludeFromDex = rulesToExcludeFromDex;
     this.enhancementResult = enhancementResult;
     this.skipProguard = skipProguard;
     this.manifestEntries = manifestEntries;
@@ -256,14 +241,6 @@ public class AndroidBundle extends AbstractBuildRule
     return buildRuleParams.getTargetGraphOnlyDeps();
   }
 
-  public ImmutableSortedSet<JavaLibrary> getRulesToExcludeFromDex() {
-    return rulesToExcludeFromDex;
-  }
-
-  public ImmutableSet<BuildTarget> getBuildTargetsToExcludeFromDex() {
-    return buildTargetsToExcludeFromDex;
-  }
-
   public Optional<SourcePath> getProguardConfig() {
     return proguardConfig;
   }
@@ -272,20 +249,12 @@ public class AndroidBundle extends AbstractBuildRule
     return skipProguard;
   }
 
-  public ResourceCompressionMode getResourceCompressionMode() {
-    return resourceCompressionMode;
-  }
-
   public ImmutableSet<TargetCpuType> getCpuFilters() {
     return this.cpuFilters;
   }
 
   public ResourceFilter getResourceFilter() {
     return resourceFilter;
-  }
-
-  ProGuardObfuscateStep.SdkProguardType getSdkProguardConfig() {
-    return sdkProguardConfig;
   }
 
   public int getOptimizationPasses() {
@@ -302,11 +271,6 @@ public class AndroidBundle extends AbstractBuildRule
 
   Tool getJavaRuntimeLauncher() {
     return javaRuntimeLauncher;
-  }
-
-  @VisibleForTesting
-  AndroidGraphEnhancementResult getEnhancementResult() {
-    return enhancementResult;
   }
 
   /** The APK at this path is the final one that points to an APK that a user should install. */
@@ -346,16 +310,8 @@ public class AndroidBundle extends AbstractBuildRule
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), buildable.getFinalApkPath());
   }
 
-  public AndroidPackageableCollection getAndroidPackageableCollection() {
-    return enhancementResult.getPackageableCollection();
-  }
-
   public Keystore getKeystore() {
     return keystore;
-  }
-
-  public SortedSet<BuildRule> getClasspathDeps() {
-    return getDeclaredDeps();
   }
 
   @Override

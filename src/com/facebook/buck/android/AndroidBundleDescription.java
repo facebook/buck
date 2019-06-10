@@ -191,7 +191,6 @@ public class AndroidBundleDescription
             dexSplitMode,
             exopackageModes,
             resourceFilter,
-            rulesToExcludeFromDex,
             args,
             javaOptions.get());
     // The exo installer is always added to the index so that the action graph is the same
