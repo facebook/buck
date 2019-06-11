@@ -26,6 +26,7 @@ import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -156,6 +157,12 @@ public class CriticalPathEventListener implements BuckEventListener {
         writer.newLine();
       }
     }
+  }
+
+  /** Return all the build targets in the critical path */
+  public ImmutableList<BuildTarget> getCriticalPathBuildTargets() {
+    Collection<Pair<BuildTarget, CriticalPathNode>> criticalPath = getCriticalPath();
+    return criticalPath.stream().map(Pair::getFirst).collect(ImmutableList.toImmutableList());
   }
 
   @VisibleForTesting
