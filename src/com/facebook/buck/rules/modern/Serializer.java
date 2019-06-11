@@ -34,6 +34,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.io.file.FastPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.UnconfiguredBuildTargetTypeInfo;
@@ -215,7 +216,7 @@ public class Serializer {
     @Override
     public void visitOutputPath(OutputPath value) throws IOException {
       stream.writeBoolean(value instanceof PublicOutputPath);
-      writeString(value.getPath().toString());
+      writeRelativePath(value.getPath());
     }
 
     private void writeString(String value) throws IOException {
@@ -235,7 +236,7 @@ public class Serializer {
         stream.writeBoolean(true);
         ExplicitBuildTargetSourcePath buildTargetSourcePath = (ExplicitBuildTargetSourcePath) value;
         writeValue(buildTargetSourcePath.getTarget(), new TypeToken<BuildTarget>() {});
-        writeString(buildTargetSourcePath.getResolvedPath().toString());
+        writeRelativePath(buildTargetSourcePath.getResolvedPath());
       } else if (value instanceof ForwardingBuildTargetSourcePath) {
         visitSourcePath(((ForwardingBuildTargetSourcePath) value).getDelegate());
       } else if (value instanceof PathSourcePath) {
@@ -243,7 +244,7 @@ public class Serializer {
         stream.writeBoolean(false);
         writeValue(
             getCellName(pathSourcePath.getFilesystem()), new TypeToken<Optional<String>>() {});
-        writeString(pathSourcePath.getRelativePath().toString());
+        writeRelativePath(pathSourcePath.getRelativePath());
       } else {
         throw new IllegalStateException(
             String.format("Cannot serialize SourcePath of type %s.", value.getClass().getName()));
@@ -327,10 +328,22 @@ public class Serializer {
         }
         ValueTypeInfoFactory.forTypeToken(new TypeToken<Optional<String>>() {})
             .visit(cellName, this);
-        writeString(cellPath.relativize(path).toString());
+        writeRelativePath(cellPath.relativize(path));
       } else {
         stream.writeBoolean(false);
-        stream.writeUTF(path.toString());
+        writeRelativePath(path);
+      }
+    }
+
+    private void writeRelativePath(Path path) throws IOException {
+      Verify.verify(!path.isAbsolute());
+      int nameCount = path.getNameCount();
+      stream.writeInt(nameCount);
+      if (nameCount == 0) {
+        writeString(path.toString());
+      }
+      for (int i = 0; i < nameCount; i++) {
+        writeString(FastPaths.getNameString(path, i));
       }
     }
 

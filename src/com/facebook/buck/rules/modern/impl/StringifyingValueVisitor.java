@@ -25,9 +25,11 @@ import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.modern.ClassInfo;
+import com.facebook.buck.rules.modern.CustomBehaviorUtils;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
+import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ExcludedValueTypeInfo;
 import com.facebook.buck.util.Scope;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -45,6 +47,8 @@ import javax.annotation.Nullable;
 public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> {
   private StringBuilder builder = new StringBuilder();
   private int indent = 0;
+
+  public static final class ExcludeFromStringification implements CustomFieldBehaviorTag {}
 
   @Override
   public void visitOutputPath(OutputPath value) {
@@ -67,6 +71,13 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
     newline();
     append("%s:", field.getName());
     valueTypeInfo.visit(value, this);
+
+    boolean excludeFromStringification =
+        CustomBehaviorUtils.get(ExcludeFromStringification.class, customBehavior).isPresent();
+
+    if (valueTypeInfo instanceof ExcludedValueTypeInfo && !excludeFromStringification) {
+      append("excluded");
+    }
   }
 
   private <T> void visitIterableValues(Iterable<T> value, ValueTypeInfo<T> innerType) {

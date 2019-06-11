@@ -48,14 +48,17 @@ import com.facebook.buck.cxx.RelativeLinkArg;
 import com.facebook.buck.rules.modern.CustomClassSerialization;
 import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.EmptyMemoizerDeserialization;
+import com.facebook.buck.rules.modern.PathSerialization;
 import com.facebook.buck.rules.modern.RemoteExecutionEnabled;
 import com.facebook.buck.rules.modern.SerializationTestHelper;
 import com.facebook.buck.rules.modern.SourcePathResolverSerialization;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueVisitor;
+import com.facebook.buck.rules.modern.impl.StringifyingValueVisitor.ExcludeFromStringification;
 import com.facebook.buck.util.Memoizer;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -356,6 +359,21 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     test(new WithWildcards());
   }
 
+  @Test
+  public void absolutePath() throws Exception {
+    test(new WithAbsolutePath(rootFilesystem.resolve(rootFilesystem.getPath("a", "b"))));
+  }
+
+  private static class WithAbsolutePath implements FakeBuildable {
+    @CustomFieldBehavior(PathSerialization.class)
+    private final Path path;
+
+    private WithAbsolutePath(Path path) {
+      Verify.verify(path.isAbsolute());
+      this.path = path;
+    }
+  }
+
   private static class WithCustomFieldBehavior implements FakeBuildable {
     // By default, fields without @AddToRuleKey can't be serialized. DefaultFieldSerialization
     // serializes them as though they were added to the key.
@@ -366,7 +384,7 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     @CustomFieldBehavior(SpecialFieldSerialization.class)
     private final ImmutableList<String> paths = ImmutableList.of("Hello", " ", "world", "!");
 
-    @CustomFieldBehavior(EmptyMemoizerDeserialization.class)
+    @CustomFieldBehavior({EmptyMemoizerDeserialization.class, ExcludeFromStringification.class})
     private final Memoizer memoizer = new Memoizer();
   }
 
@@ -422,7 +440,7 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   }
 
   private static class WithSourcePathResolver implements FakeBuildable {
-    @CustomFieldBehavior(SourcePathResolverSerialization.class)
+    @CustomFieldBehavior({SourcePathResolverSerialization.class, ExcludeFromStringification.class})
     private final SourcePathResolver resolver = null;
   }
 

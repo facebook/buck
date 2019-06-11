@@ -299,7 +299,7 @@ public class DefaultClassInfoTest {
     ClassInfo<ExcludedLazyImmutable> classInfo = DefaultClassInfoFactory.forInstance(excludedLazy);
     StringifyingValueVisitor visitor = new StringifyingValueVisitor();
     classInfo.visit(excludedLazy, visitor);
-    assertEquals("path:\n" + "lazyPath:", visitor.getValue());
+    assertEquals("path:excluded\n" + "lazyPath:excluded", visitor.getValue());
   }
 
   @Value.Immutable
@@ -320,7 +320,8 @@ public class DefaultClassInfoTest {
     ClassInfo<DerivedImmutable> classInfo = DefaultClassInfoFactory.forInstance(derived);
     StringifyingValueVisitor visitor = new StringifyingValueVisitor();
     classInfo.visit(derived, visitor);
-    assertEquals("path:\n" + "lazyPath:SourcePath(/project/root/some.path)", visitor.getValue());
+    assertEquals(
+        "path:excluded\n" + "lazyPath:SourcePath(/project/root/some.path)", visitor.getValue());
   }
 
   @Value.Immutable

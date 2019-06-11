@@ -56,6 +56,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -67,11 +68,13 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public abstract class AbstractValueVisitorTest {
+  private static final Path absoluteRoot = Paths.get(".").toAbsolutePath();
+
   protected static final ProjectFilesystem rootFilesystem =
-      new FakeProjectFilesystem(Paths.get("/project/root"));
+      new FakeProjectFilesystem(absoluteRoot.resolve(Paths.get("project/root")));
 
   protected static final ProjectFilesystem otherFilesystem =
-      new FakeProjectFilesystem(Paths.get("/project/other"));
+      new FakeProjectFilesystem(absoluteRoot.resolve(Paths.get("project/other")));
   private static final TargetConfiguration TARGET_CONFIGURATION =
       ImmutableDefaultTargetConfiguration.of(
           UnconfiguredBuildTargetFactoryForTests.newInstance(
