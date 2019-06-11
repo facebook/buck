@@ -51,6 +51,8 @@ public interface BuckEventExternalInterface {
   String PROJECT_GENERATION_STARTED = "ProjectGenerationStarted";
   // Sent when project generation has finished
   String PROJECT_GENERATION_FINISHED = "ProjectGenerationFinished";
+  // Updates about cache rate stats
+  String CACHE_RATE_STATS_UPDATE_EVENT = "CacheRateStatsUpdateEvent";
   /** @return the time at which the event has been created, in milliseconds. */
   long getTimestampMillis();
   /** @return the type of the event. */

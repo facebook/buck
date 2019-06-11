@@ -22,6 +22,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 
 public interface BuckEventHandler {
+  /** A handler which intentionally ignores an event. */
+  BuckEventHandler IGNORE =
+      new BuckEventHandler() {
+        @Override
+        public void handleEvent(
+            String rawMessage,
+            BuckEventExternalInterface event,
+            BuckEventsConsumerFactory buckEventsConsumerFactory,
+            ObjectMapper objectMapper) {
+          // Do nothing
+        }
+      };
+
   void handleEvent(
       String rawMessage,
       BuckEventExternalInterface event,

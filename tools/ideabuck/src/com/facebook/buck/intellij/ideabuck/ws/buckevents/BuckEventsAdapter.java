@@ -78,5 +78,8 @@ public class BuckEventsAdapter extends HashMap<String, BuckEventHandler> {
     put(StepEventExternalInterface.STEP_FINISHED, new BuckStepFinishedHandler());
     put(StepEventExternalInterface.STEP_STARTED, new BuckStepStartedHandler());
     put(BuckEventExternalInterface.TEST_RUN_STARTED, new BuckTestRunStartedHandler());
+
+    // For events that we don't handle, but don't want to log about
+    put(BuckEventExternalInterface.CACHE_RATE_STATS_UPDATE_EVENT, BuckEventHandler.IGNORE);
   }
 }
