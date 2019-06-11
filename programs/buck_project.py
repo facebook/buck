@@ -57,7 +57,20 @@ def makedirs(path):
 class BuckProject:
     def __init__(self, root):
         self.root = root
-        self._buck_out = os.path.join(root, "buck-out")
+        try:
+            isolated_pos = sys.argv.index("--isolation_prefix")
+            if isolated_pos < len(sys.argv):
+                self.prefix = sys.argv[isolated_pos + 1]
+            else:
+                self.prefix = ""
+        except ValueError:
+            self.prefix = ""
+
+        self._buck_out_dirname = "buck-out"
+        if len(self.prefix) > 0:
+            self._buck_out_dirname = self.prefix + "-" + self._buck_out_dirname
+
+        self._buck_out = os.path.join(self.root, self._buck_out_dirname)
         buck_out_tmp = os.path.join(self._buck_out, "tmp")
         makedirs(buck_out_tmp)
         self._buck_out_log = os.path.join(self._buck_out, "log")
@@ -67,7 +80,7 @@ class BuckProject:
         # Only created if buckd is used.
         self.buckd_tmp_dir = None
 
-        self.buckd_dir = os.path.join(root, ".buckd")
+        self.buckd_dir = os.path.join(root, self.prefix + ".buckd")
         self.buckd_version_file = os.path.join(self.buckd_dir, "buckd.version")
         self.buckd_pid_file = os.path.join(self.buckd_dir, "pid")
         self.buckd_stdout = os.path.join(self.buckd_dir, "stdout")
@@ -93,7 +106,7 @@ class BuckProject:
         if os.name == "nt":
             return "local:buckd_{0}".format(self.get_root_hash())
         else:
-            return "local:.buckd/sock"
+            return "local:{0}.buckd/sock".format(self.prefix)
 
     def get_running_buckd_version(self):
         return get_file_contents_if_exists(self.buckd_version_file)
@@ -118,6 +131,9 @@ class BuckProject:
 
     def get_buck_out_log_dir(self):
         return self._buck_out_log
+
+    def get_buck_out_relative_dir(self):
+        return self._buck_out_dirname
 
     def clean_up_buckd(self):
         with Tracing("BuckProject.clean_up_buckd"):

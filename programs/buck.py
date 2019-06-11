@@ -225,9 +225,20 @@ def main(argv, reporter):
                         java_version_status_queue, java_path, required_java_version
                     )
 
-                    # If 'kill' is the second argument, shut down the buckd
-                    # process
-                    if argv[1:] == ["kill"]:
+                    def has_kill_argument():
+                        if argv[1:] == ["kill"]:
+                            return True
+                        if (
+                            len(argv) > 3
+                            and argv[3:] == ["kill"]
+                            and argv[1] == "--isolation_prefix"
+                        ):
+                            return True
+                        return False
+
+                    # If 'kill' is the second argument, or immediately follows the
+                    # isolation prefix argument, shut down the buckd process
+                    if has_kill_argument():
                         buck_repo.kill_buckd()
                         return ExitCode.SUCCESS
                     return buck_repo.launch_buck(build_id, java_path, argv)

@@ -24,6 +24,7 @@ import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.io.windowsfs.WindowsFS;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -139,20 +140,46 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
     }
   }
 
+  private static Optional<String> getConfiguredBuckOut(BuckPaths defaultBuckPaths, Config config) {
+    // You currently cannot truly configure the BuckOut directory today.
+    // The use of ConfiguredBuckOut and project.buck_out here is IMHO
+    // confusingly "partial" support for this feature.
+    //
+    // Language Services chose to hack around this limitation so we could run
+    // Buck in an isolated, separate BuckOut. But that requires
+    // us to ensure any ConfiguredBuckOut is a relative path underneath our
+    // top-level BuckOut (which happily enough, FBCode already does for their current
+    // use: "buck-out/dev"). We enforce that relativity here in a disgusting way.
+    Optional<String> configuredBuckOut = config.get("project", "buck_out");
+    if (configuredBuckOut.isPresent()) {
+      String value = configuredBuckOut.get();
+      String buckOut = defaultBuckPaths.getBuckOut().toString();
+      if (value.startsWith(BuckConstant.DEFAULT_BUCK_OUT_DIR_NAME)
+          && buckOut != BuckConstant.DEFAULT_BUCK_OUT_DIR_NAME) {
+        configuredBuckOut =
+            Optional.of(value.replace(BuckConstant.DEFAULT_BUCK_OUT_DIR_NAME, buckOut));
+      }
+    }
+
+    return configuredBuckOut;
+  }
+
   private static BuckPaths getConfiguredBuckPaths(
       Path rootPath, Config config, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
     BuckPaths buckPaths = BuckPaths.createDefaultBuckPaths(rootPath);
-    Optional<String> configuredBuckOut = config.getValue("project", "buck_out");
     if (embeddedCellBuckOutInfo.isPresent()) {
       Path cellBuckOut = embeddedCellBuckOutInfo.get().getCellBuckOut();
       buckPaths =
           buckPaths
               .withConfiguredBuckOut(rootPath.relativize(cellBuckOut))
               .withBuckOut(rootPath.relativize(cellBuckOut));
-    } else if (configuredBuckOut.isPresent()) {
-      buckPaths =
-          buckPaths.withConfiguredBuckOut(
-              rootPath.getFileSystem().getPath(configuredBuckOut.get()));
+    } else {
+      Optional<String> configuredBuckOut = getConfiguredBuckOut(buckPaths, config);
+      if (configuredBuckOut.isPresent()) {
+        buckPaths =
+            buckPaths.withConfiguredBuckOut(
+                rootPath.getFileSystem().getPath(configuredBuckOut.get()));
+      }
     }
     return buckPaths;
   }

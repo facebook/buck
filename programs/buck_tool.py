@@ -135,6 +135,7 @@ class ExecuteTarget(Exception):
 
 
 class BuckStatusReporter(object):
+
     """ Add custom logic to log Buck completion statuses or errors including
     critical ones like JVM crashes and OOMs. This object is fully mutable with
     all fields optional which get populated on the go. Only safe operations
@@ -305,18 +306,39 @@ class BuckTool(object):
                 pass
         return env
 
+    def _handle_isolation_args(self, args):
+        try:
+            pos = args.index("--isolation_prefix")
+            # Allow for the argument to --isolation_prefix
+            if (pos + 1) < len(args):
+                new_args = args[:pos] + args[pos + 2 :]
+                new_args.append("--config")
+                new_args.append(
+                    "buck.base_buck_out_dir={0}".format(
+                        self._buck_project.get_buck_out_relative_dir()
+                    )
+                )
+                return new_args
+            else:
+                return args  # buck will error out on unrecognized option
+        except ValueError:
+            return args
+
     def _add_args(self, argv, args):
         """
         Add new arguments to the end of arguments string
         But before optional arguments to test runner ("--")
         """
+        if len(args) == 0:
+            return self._handle_isolation_args(argv)
+
         try:
             pos = argv.index("--")
         except ValueError:
             # "--" not found, just add to the end of the list
             pos = len(argv)
 
-        return argv[:pos] + args + argv[pos:]
+        return self._handle_isolation_args(argv[:pos] + args + argv[pos:])
 
     def _add_args_from_env(self, argv):
         """
@@ -330,8 +352,6 @@ class BuckTool(object):
         if os.environ.get("BUCK_CACHE_READONLY") == "1":
             args.append("-c")
             args.append("cache.http_mode=readonly")
-        if len(args) == 0:
-            return argv
         return self._add_args(argv, args)
 
     def _run_with_nailgun(self, java_path, argv, env):
@@ -797,6 +817,9 @@ class BuckTool(object):
                     self._get_buck_version_timestamp()
                 ),
                 "-Dbuck.binary_hash={0}".format(self._get_buck_binary_hash()),
+                "-Dbuck.base_buck_out_dir={0}".format(
+                    self._buck_project.get_buck_out_relative_dir()
+                ),
             ]
 
             if "BUCK_DEFAULT_FILESYSTEM" not in os.environ and (
