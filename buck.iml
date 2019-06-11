@@ -39,6 +39,7 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/cli/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/core/model/actiongraph/computation/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/core/model/targetgraph/impl/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/core/rules/analysis/impl/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/core/rules/configsetting/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/core/select/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/crosscell/testdata" />

@@ -117,7 +117,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
     TargetNode targetNode =
         targetNodeFactory.createFromObject(
             ruleDescription,
-            FakeRuleDescriptionArg.builder().build(),
+            FakeRuleDescriptionArg.builder().setName("foo").build(),
             projectFilesystem,
             target,
             ImmutableSet.of(),

@@ -50,7 +50,7 @@ public interface Artifact {
 
     /** @return the output path relative to the {@link #getPackagePath()} */
     @Value.Parameter
-    abstract Path getOutputPath();
+    public abstract Path getOutputPath();
 
     /** @return the path to the artifact */
     @Value.Derived

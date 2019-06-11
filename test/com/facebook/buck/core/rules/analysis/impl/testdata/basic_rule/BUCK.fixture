@@ -1,0 +1,3 @@
+fake_rule(
+    name = "bar",
+)

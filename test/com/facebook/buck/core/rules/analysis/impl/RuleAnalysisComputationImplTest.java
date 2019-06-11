@@ -92,7 +92,7 @@ public class RuleAnalysisComputationImplTest {
     TargetNode<?> targetNode =
         targetNodeFactory.createFromObject(
             ruleDescription,
-            FakeRuleDescriptionArg.builder().build(),
+            FakeRuleDescriptionArg.builder().setName("target").build(),
             projectFilesystem,
             buildTarget,
             ImmutableSet.of(),
@@ -159,7 +159,7 @@ public class RuleAnalysisComputationImplTest {
     TargetNode<?> targetNode =
         targetNodeFactory.createFromObject(
             ruleDescription,
-            FakeRuleDescriptionArg.builder().build(),
+            FakeRuleDescriptionArg.builder().setName("target").build(),
             projectFilesystem,
             buildTarget,
             ImmutableSet.of(buildTarget2),
@@ -169,7 +169,7 @@ public class RuleAnalysisComputationImplTest {
     TargetNode<?> targetNode2 =
         targetNodeFactory.createFromObject(
             ruleDescription2,
-            FakeRuleDescriptionArg.builder().build(),
+            FakeRuleDescriptionArg.builder().setName("target2").build(),
             projectFilesystem,
             buildTarget2,
             ImmutableSet.of(),
