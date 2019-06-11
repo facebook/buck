@@ -950,7 +950,63 @@ that <code>buck query</code> should return only direct dependencies.
 If the <code><em>depth</em></code> parameter is omitted, the search is unbounded.
 </p>
 
+<b>Example</b>
+
 {call buckquery.example_rdeps /}
+
+<b>Example</b>
+
+<p>
+The <em>universe:expr</em> parameter includes the <em>entire</em> transitive
+closure of the target pattern specified. So some of these targets might be
+outside the directory structure indicated by that target pattern.  For example,
+the result set of 
+</p>
+
+<p>
+<pre>
+{literal}
+buck query "rdeps('//foo/bar/...', '//fuga:baz', 1)"
+{/literal}
+</pre>
+</p>
+
+<p>
+might contain targets outside the directory structure beneath
+</p>
+
+<p>
+<pre>
+{literal}
+foo/bar/
+{/literal}
+</pre>
+</p>
+
+<p>
+To say it another way, if a target in <code>//foo/bar/...</code> depends
+on, say, <code>//hoge,</code> which in turn depends on
+{sp}<code>//fuga:baz,</code> <em>then <code>//hoge</code> would show 
+up in the result set</em>.
+</p>
+
+<p>
+If you wanted to constrain the result set to only those targets beneath
+{sp}<code>foo/bar</code>, you could use 
+the <a href="#set-operations"><code>intersect</code></a> operator:
+</p>
+
+<p>
+<pre>
+{literal}
+buck query "rdeps('//foo/bar/...', '//fuga:baz', 1) ^ '//foo/bar/...'"
+{/literal}
+</pre>
+</p>
+
+<p>
+The caret (<code>^</code>) is a succinct synonym for <code>intersect</code>.
+</p>
 
 
 {call .section}
