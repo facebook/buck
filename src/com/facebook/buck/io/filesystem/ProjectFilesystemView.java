@@ -25,6 +25,7 @@ import java.nio.file.FileVisitor;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileAttribute;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -131,4 +132,13 @@ public interface ProjectFilesystemView {
    * relative to the root of this view.
    */
   ImmutableCollection<Path> getDirectoryContents(Path pathToUse) throws IOException;
+
+  /**
+   * @param lines the lines to write to the file. Each item is written as one line
+   * @param path the path relative to the view of this root to write the file. The parent of the
+   *     path must exist
+   * @param attrs the {@link FileAttribute}s for the file created
+   */
+  void writeLinesToPath(Iterable<String> lines, Path path, FileAttribute<?>... attrs)
+      throws IOException;
 }

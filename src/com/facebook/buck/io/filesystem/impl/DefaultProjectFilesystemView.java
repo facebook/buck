@@ -34,6 +34,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileAttribute;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Set;
@@ -198,6 +199,12 @@ public class DefaultProjectFilesystemView implements ProjectFilesystemView {
           .transform(absolutePath -> MorePaths.relativize(resolvedProjectRoot, absolutePath))
           .toSortedList(Comparator.naturalOrder());
     }
+  }
+
+  @Override
+  public void writeLinesToPath(Iterable<String> lines, Path path, FileAttribute<?>... attrs)
+      throws IOException {
+    filesystemParent.writeLinesToPath(lines, resolvedProjectRoot.resolve(path), attrs);
   }
 
   private boolean shouldExplorePaths(Path p) {

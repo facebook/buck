@@ -379,4 +379,16 @@ public class DefaultProjectFilesystemViewTest {
     assertFalse(attributes.isRegularFile());
     assertTrue(attributes.isDirectory());
   }
+
+  @Test
+  public void writeLinesToFileWritesFileAtCorrectPath() throws IOException {
+    filesystemView.writeLinesToPath(ImmutableList.of("1"), Paths.get("test1"));
+    assertEquals(ImmutableList.of("1"), filesystem.readLines(Paths.get("test1")));
+
+    filesystemView = filesystemView.withView(Paths.get("rel"), ImmutableSet.of());
+
+    filesystem.mkdirs(Paths.get("rel"));
+    filesystemView.writeLinesToPath(ImmutableList.of("2"), Paths.get("test2"));
+    assertEquals(ImmutableList.of("2"), filesystem.readLines(Paths.get("rel", "test2")));
+  }
 }
