@@ -18,19 +18,15 @@ package com.facebook.buck.skylark.function.attr;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.NumberTypeCoercer;
-import com.facebook.buck.rules.coercer.OptionalTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.util.List;
-import java.util.Optional;
 
 /** Class that represents an Integer attribute to a user defined rule */
 @BuckStyleValue
 public abstract class IntAttribute extends Attribute<Integer> {
 
   private static final NumberTypeCoercer<Integer> coercer = new NumberTypeCoercer<>(Integer.class);
-  private static final OptionalTypeCoercer<Integer> optionalCoercer =
-      new OptionalTypeCoercer<>(coercer);
 
   @Override
   public abstract Integer getDefaultValue();
@@ -50,13 +46,8 @@ public abstract class IntAttribute extends Attribute<Integer> {
   }
 
   @Override
-  protected TypeCoercer<Integer> getMandatoryTypeCoercer() {
+  protected TypeCoercer<Integer> getTypeCoercer() {
     return coercer;
-  }
-
-  @Override
-  protected TypeCoercer<Optional<Integer>> getOptionalTypeCoercer() {
-    return optionalCoercer;
   }
 
   @Override

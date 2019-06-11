@@ -23,7 +23,6 @@ import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.base.Joiner;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 
 /** Representation of a parameter of a user defined rule */
 public abstract class Attribute<CoercedType> implements AttributeHolder {
@@ -46,13 +45,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
    * The type coercer to use to convert raw values from the parser into something usable internally.
    * This coercer also performs validation
    */
-  protected abstract TypeCoercer<CoercedType> getMandatoryTypeCoercer();
-
-  /**
-   * The type coercer to use to convert raw values from the parser into something usable internally
-   * if the value is not mandatory. This coercer also performs validation
-   */
-  protected abstract TypeCoercer<Optional<CoercedType>> getOptionalTypeCoercer();
+  abstract TypeCoercer<CoercedType> getTypeCoercer();
 
   /**
    * Validates values post-coercion to ensure other properties besides 'type' are valid
@@ -71,7 +64,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
       Object value)
       throws CoerceFailedException {
     CoercedType coercedValue =
-        getMandatoryTypeCoercer()
+        getTypeCoercer()
             .coerce(
                 cellRoots,
                 projectFilesystem,
@@ -79,27 +72,6 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
                 targetConfiguration,
                 value);
     validateCoercedValue(coercedValue);
-    return coercedValue;
-  }
-
-  Optional<CoercedType> getOptionalValue(
-      CellPathResolver cellRoots,
-      ProjectFilesystem projectFilesystem,
-      Path pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      Object value)
-      throws CoerceFailedException {
-    Optional<CoercedType> coercedValue =
-        getOptionalTypeCoercer()
-            .coerce(
-                cellRoots,
-                projectFilesystem,
-                pathRelativeToProjectRoot,
-                targetConfiguration,
-                value);
-    if (coercedValue.isPresent()) {
-      validateCoercedValue(coercedValue.get());
-    }
     return coercedValue;
   }
 

@@ -24,7 +24,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
-import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -42,16 +41,8 @@ public class StringAttributeTest {
     String coerced =
         attr.getValue(
             cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "bar");
-    Optional<String> coercedPresent =
-        attr.getOptionalValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "bar");
-    Optional<String> coercedMissing =
-        attr.getOptionalValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, null);
 
     assertEquals("bar", coerced);
-    assertEquals(Optional.of("bar"), coercedPresent);
-    assertEquals(Optional.empty(), coercedMissing);
   }
 
   @Test
@@ -64,16 +55,6 @@ public class StringAttributeTest {
   }
 
   @Test
-  public void failsOptionalCoercionProperly() throws CoerceFailedException {
-    expected.expect(CoerceFailedException.class);
-
-    StringAttribute attr = new ImmutableStringAttribute("foobaz", "", true, ImmutableList.of());
-
-    attr.getOptionalValue(
-        cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, 1);
-  }
-
-  @Test
   public void succeedsIfValueInArray() throws CoerceFailedException {
 
     StringAttribute attr =
@@ -81,16 +62,7 @@ public class StringAttributeTest {
     String value =
         attr.getValue(
             cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "bar");
-    Optional<String> optionalValue =
-        attr.getOptionalValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "bar");
-    Optional<String> optionalValueMissing =
-        attr.getOptionalValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, null);
-
     assertEquals("bar", value);
-    assertEquals(Optional.of("bar"), optionalValue);
-    assertEquals(Optional.empty(), optionalValueMissing);
   }
 
   @Test
@@ -99,16 +71,8 @@ public class StringAttributeTest {
     String value =
         attr.getValue(
             cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "bar");
-    Optional<String> optionalValue =
-        attr.getOptionalValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "bar");
-    Optional<String> optionalValueMissing =
-        attr.getOptionalValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, null);
 
     assertEquals("bar", value);
-    assertEquals(Optional.of("bar"), optionalValue);
-    assertEquals(Optional.empty(), optionalValueMissing);
   }
 
   @Test
@@ -120,22 +84,5 @@ public class StringAttributeTest {
         new ImmutableStringAttribute("foobaz", "", true, ImmutableList.of("foo", "baz"));
 
     attr.getValue(cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "bar");
-  }
-
-  @Test
-  public void optionalFailsIfValueNotInArray() throws CoerceFailedException {
-
-    StringAttribute attr =
-        new ImmutableStringAttribute("foobaz", "", true, ImmutableList.of("foo", "baz"));
-
-    Optional<String> optionalValueMissing =
-        attr.getOptionalValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, null);
-    assertEquals(Optional.empty(), optionalValueMissing);
-
-    expected.expect(CoerceFailedException.class);
-    expected.expectMessage("must be one of 'foo', 'baz' instead of 'bar'");
-    attr.getOptionalValue(
-        cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "bar");
   }
 }

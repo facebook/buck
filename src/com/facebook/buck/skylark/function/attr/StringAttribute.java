@@ -17,20 +17,16 @@ package com.facebook.buck.skylark.function.attr;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.rules.coercer.OptionalTypeCoercer;
 import com.facebook.buck.rules.coercer.StringTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.util.List;
-import java.util.Optional;
 
 /** Class that represents a String attribute to a user defined rule */
 @BuckStyleValue
 public abstract class StringAttribute extends Attribute<String> {
 
   private static final TypeCoercer<String> coercer = new StringTypeCoercer();
-  private static final OptionalTypeCoercer<String> optionalCoercer =
-      new OptionalTypeCoercer<>(coercer);
 
   @Override
   public abstract String getDefaultValue();
@@ -50,13 +46,8 @@ public abstract class StringAttribute extends Attribute<String> {
   }
 
   @Override
-  protected TypeCoercer<String> getMandatoryTypeCoercer() {
+  protected TypeCoercer<String> getTypeCoercer() {
     return coercer;
-  }
-
-  @Override
-  protected TypeCoercer<Optional<String>> getOptionalTypeCoercer() {
-    return optionalCoercer;
   }
 
   @Override

@@ -24,7 +24,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
-import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -42,16 +41,8 @@ public class IntAttributeTest {
     IntAttribute attr = new ImmutableIntAttribute(4, "", true, ImmutableList.of());
     Integer coerced =
         attr.getValue(cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, 5);
-    Optional<Integer> coercedPresent =
-        attr.getOptionalValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, 5);
-    Optional<Integer> coercedMissing =
-        attr.getOptionalValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, null);
 
     assertEquals(5, coerced.intValue());
-    assertEquals(Optional.of(5), coercedPresent);
-    assertEquals(Optional.empty(), coercedMissing);
   }
 
   @Test
@@ -64,31 +55,13 @@ public class IntAttributeTest {
   }
 
   @Test
-  public void failsOptionalCoercionProperly() throws CoerceFailedException {
-    expected.expect(CoerceFailedException.class);
-
-    IntAttribute attr = new ImmutableIntAttribute(4, "", true, ImmutableList.of());
-
-    attr.getOptionalValue(
-        cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "foo");
-  }
-
-  @Test
   public void succeedsIfValueInArray() throws CoerceFailedException {
 
     IntAttribute attr = new ImmutableIntAttribute(4, "", true, ImmutableList.of(1, 2, 3, 4));
     int value =
         attr.getValue(cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, 3);
-    Optional<Integer> optionalValue =
-        attr.getOptionalValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, 3);
-    Optional<Integer> optionalValueMissing =
-        attr.getOptionalValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, null);
 
     assertEquals(3, value);
-    assertEquals(Optional.of(3), optionalValue);
-    assertEquals(Optional.empty(), optionalValueMissing);
   }
 
   @Test
@@ -96,16 +69,8 @@ public class IntAttributeTest {
     IntAttribute attr = new ImmutableIntAttribute(4, "", true, ImmutableList.of());
     int value =
         attr.getValue(cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, 3);
-    Optional<Integer> optionalValue =
-        attr.getOptionalValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, 3);
-    Optional<Integer> optionalValueMissing =
-        attr.getOptionalValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, null);
 
     assertEquals(3, value);
-    assertEquals(Optional.of(3), optionalValue);
-    assertEquals(Optional.empty(), optionalValueMissing);
   }
 
   @Test
@@ -116,21 +81,5 @@ public class IntAttributeTest {
     IntAttribute attr = new ImmutableIntAttribute(4, "", true, ImmutableList.of(1, 2, 4));
 
     attr.getValue(cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, 3);
-  }
-
-  @Test
-  public void optionalFailsIfValueNotInArray() throws CoerceFailedException {
-
-    IntAttribute attr = new ImmutableIntAttribute(4, "", true, ImmutableList.of(1, 2, 4));
-
-    Optional<Integer> optionalValueMissing =
-        attr.getOptionalValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, null);
-    assertEquals(Optional.empty(), optionalValueMissing);
-
-    expected.expect(CoerceFailedException.class);
-    expected.expectMessage("must be one of '1', '2', '4' instead of '3'");
-    attr.getOptionalValue(
-        cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, 3);
   }
 }
