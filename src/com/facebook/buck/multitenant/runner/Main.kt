@@ -25,21 +25,25 @@ import kotlin.system.measureTimeMillis
  * Entry point for multitenant executable
  */
 fun main(args: Array<String>) {
+
+    val corpusToIndex = mutableMapOf<String, IndexComponents>()
+
     // TODO: proper command line options
-    val from = args[0]
+    args.forEach { from ->
+        val (corpus, source) = from.split('@', limit = 2)
+        val sourceUri = URI.create(source)
 
-    val (corpus, source) = from.split('@', limit = 2)
-    val sourceUri = URI.create(source)
-
-    var corpusToIndex = mapOf<String, IndexComponents>()
-    val timeIndexLoadMs = measureTimeMillis {
-        InputSource.from(sourceUri).use { inputSource ->
-            msg("Loading index '$corpus' from $source (${inputSource.getSize()} bytes)")
-            corpusToIndex = createIndexes(corpus, inputSource.getInputStream())
+        val timeIndexLoadMs = measureTimeMillis {
+            InputSource.from(sourceUri).use { inputSource ->
+                msg("Loading index '$corpus' from $source (${inputSource.getSize()} bytes)")
+                corpusToIndex.putAll(createIndexes(corpus, inputSource.getInputStream()))
+            }
         }
+
+        msg("Index '$corpus' loaded in ${timeIndexLoadMs / 1000} sec.")
     }
 
-    msg("Index loaded in ${timeIndexLoadMs / 1000} sec. Collecting garbage...")
+    msg("Collecting garbage...")
 
     @Suppress("ExplicitGarbageCollectionCall")
     System.gc()
