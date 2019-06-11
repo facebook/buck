@@ -1592,7 +1592,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
               target,
               graphBuilder,
               new FakeProjectFilesystem(),
-              TestBuildRuleParams.create(),
               FakeSourcePath.of("java/src/com/facebook/somejava/library/library-abi.jar"));
         }
       };

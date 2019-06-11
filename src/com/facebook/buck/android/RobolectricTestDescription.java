@@ -130,7 +130,6 @@ public class RobolectricTestDescription
           buildTarget,
           graphBuilder,
           projectFilesystem,
-          params,
           Objects.requireNonNull(testRule.getSourcePathToOutput()));
     }
 

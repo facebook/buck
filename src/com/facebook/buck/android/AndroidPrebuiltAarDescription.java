@@ -126,7 +126,6 @@ public class AndroidPrebuiltAarDescription
           buildTarget,
           graphBuilder,
           projectFilesystem,
-          params,
           ExplicitBuildTargetSourcePath.of(
               unzipAar.getBuildTarget(), unzipAar.getPathToClassesJar()));
     }

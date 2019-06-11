@@ -67,7 +67,7 @@ public class PrebuiltJarDescription
 
     if (JavaAbis.isClassAbiTarget(buildTarget)) {
       return CalculateClassAbi.of(
-          buildTarget, graphBuilder, projectFilesystem, params, args.getBinaryJar());
+          buildTarget, graphBuilder, projectFilesystem, args.getBinaryJar());
     }
 
     BuildRule prebuilt =

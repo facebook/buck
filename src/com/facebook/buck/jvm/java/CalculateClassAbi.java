@@ -16,70 +16,49 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
-import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
-import com.facebook.buck.core.rules.impl.AbstractBuildRule;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
+import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
+import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.ModernBuildRule;
+import com.facebook.buck.rules.modern.OutputPath;
+import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.RmStep;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.SortedSet;
 
 /** Calculates Class ABI. */
-public class CalculateClassAbi extends AbstractBuildRule
-    implements CalculateAbi, InitializableFromDisk<Object>, SupportsInputBasedRuleKey {
+public class CalculateClassAbi extends ModernBuildRule<CalculateClassAbi.Impl>
+    implements CalculateAbi, InitializableFromDisk<Object> {
 
-  @AddToRuleKey private final SourcePath binaryJar;
-  /**
-   * Controls whether we strip out things that are intentionally not included in other forms of ABI
-   * generation, so that we can still detect bugs by binary comparison.
-   */
-  @AddToRuleKey private final AbiGenerationMode compatibilityMode;
-
-  private final Path outputPath;
-  private BuildOutputInitializer<Object> buildOutputInitializer;
+  private final BuildOutputInitializer<Object> buildOutputInitializer;
   private final JavaAbiInfo javaAbiInfo;
-  private final SortedSet<BuildRule> buildDeps;
 
   public CalculateClassAbi(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
-      BuildRuleParams buildRuleParams,
       SourcePath binaryJar,
       AbiGenerationMode compatibilityMode) {
-    super(buildTarget, projectFilesystem);
-    this.binaryJar = binaryJar;
-    this.compatibilityMode = compatibilityMode;
-    this.buildDeps =
-        buildRuleParams
-            .withDeclaredDeps(
-                ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(binaryJar)))
-            .withoutExtraDeps()
-            .getBuildDeps();
-    String outputFileName = String.format("%s-abi.jar", buildTarget.getShortName());
-    this.outputPath =
-        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").resolve(outputFileName);
+    super(
+        buildTarget,
+        projectFilesystem,
+        ruleFinder,
+        new Impl(
+            binaryJar,
+            compatibilityMode,
+            projectFilesystem,
+            String.format("%s-abi.jar", buildTarget.getShortName())));
     this.javaAbiInfo = new DefaultJavaAbiInfo(getSourcePathToOutput());
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
@@ -88,50 +67,59 @@ public class CalculateClassAbi extends AbstractBuildRule
       BuildTarget target,
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams libraryParams,
       SourcePath library) {
-    return of(
-        target, ruleFinder, projectFilesystem, libraryParams, library, AbiGenerationMode.CLASS);
+    return of(target, ruleFinder, projectFilesystem, library, AbiGenerationMode.CLASS);
   }
 
   public static CalculateClassAbi of(
       BuildTarget target,
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams libraryParams,
       SourcePath library,
       AbiGenerationMode compatibilityMode) {
-    return new CalculateClassAbi(
-        target, projectFilesystem, ruleFinder, libraryParams, library, compatibilityMode);
+    return new CalculateClassAbi(target, projectFilesystem, ruleFinder, library, compatibilityMode);
   }
 
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
-    ImmutableList<Step> result =
-        ImmutableList.of(
-            MkdirStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(),
-                    getProjectFilesystem(),
-                    outputPath.getParent())),
-            RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), outputPath)),
-            new CalculateClassAbiStep(
-                getProjectFilesystem(),
-                context.getSourcePathResolver().getAbsolutePath(binaryJar),
-                outputPath,
-                compatibilityMode));
+  /** CalculateClassAbi's buildable implementation required by MBR */
+  static class Impl implements Buildable {
 
-    buildableContext.recordArtifact(outputPath);
+    @AddToRuleKey private final SourcePath binaryJar;
+    /**
+     * Controls whether we strip out things that are intentionally not included in other forms of
+     * ABI generation, so that we can still detect bugs by binary comparison.
+     */
+    @AddToRuleKey private final AbiGenerationMode compatibilityMode;
 
-    return result;
+    @AddToRuleKey private final OutputPath output;
+
+    Impl(
+        SourcePath binaryJar,
+        AbiGenerationMode compatibilityMode,
+        ProjectFilesystem projectFilesystem,
+        String outputFileName) {
+      this.binaryJar = binaryJar;
+      this.compatibilityMode = compatibilityMode;
+      this.output = new OutputPath(projectFilesystem.getPath(outputFileName));
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext buildContext,
+        ProjectFilesystem filesystem,
+        OutputPathResolver outputPathResolver,
+        BuildCellRelativePathFactory buildCellPathFactory) {
+      return ImmutableList.of(
+          new CalculateClassAbiStep(
+              filesystem,
+              buildContext.getSourcePathResolver().getAbsolutePath(binaryJar),
+              outputPathResolver.resolvePath(output),
+              compatibilityMode));
+    }
   }
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputPath);
+    return getSourcePath(getBuildable().output);
   }
 
   @Override
@@ -154,10 +142,5 @@ public class CalculateClassAbi extends AbstractBuildRule
   @Override
   public BuildOutputInitializer<Object> getBuildOutputInitializer() {
     return buildOutputInitializer;
-  }
-
-  @Override
-  public SortedSet<BuildRule> getBuildDeps() {
-    return buildDeps;
   }
 }

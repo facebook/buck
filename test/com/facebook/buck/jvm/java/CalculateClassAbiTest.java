@@ -85,11 +85,7 @@ public class CalculateClassAbiTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:library-abi");
     CalculateClassAbi calculateAbi =
         CalculateClassAbi.of(
-            target,
-            graphBuilder,
-            filesystem,
-            builder.createBuildRuleParams(graphBuilder),
-            DefaultBuildTargetSourcePath.of(javaLibraryTarget));
+            target, graphBuilder, filesystem, DefaultBuildTargetSourcePath.of(javaLibraryTarget));
 
     FileHashLoader initialHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
@@ -143,11 +139,7 @@ public class CalculateClassAbiTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:library-abi");
     CalculateClassAbi calculateAbi =
         CalculateClassAbi.of(
-            target,
-            ruleFinder,
-            filesystem,
-            builder.createBuildRuleParams(graphBuilder),
-            DefaultBuildTargetSourcePath.of(javaLibraryTarget));
+            target, ruleFinder, filesystem, DefaultBuildTargetSourcePath.of(javaLibraryTarget));
 
     FileHashLoader initialHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);

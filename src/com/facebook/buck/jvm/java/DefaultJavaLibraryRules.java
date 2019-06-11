@@ -484,7 +484,6 @@ public abstract class DefaultJavaLibraryRules {
                 classAbiTarget,
                 getActionGraphBuilder(),
                 getProjectFilesystem(),
-                getInitialParams(),
                 libraryRule.getSourcePathToOutput(),
                 getAbiCompatibilityMode()));
   }

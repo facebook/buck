@@ -75,7 +75,6 @@ public class AndroidBuildConfigDescription
           buildTarget,
           graphBuilder,
           context.getProjectFilesystem(),
-          params,
           Objects.requireNonNull(configRule.getSourcePathToOutput()));
     }
 
