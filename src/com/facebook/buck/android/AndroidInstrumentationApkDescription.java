@@ -53,9 +53,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.EnumSet;
 import java.util.Optional;
@@ -109,8 +107,8 @@ public class AndroidInstrumentationApkDescription
     AndroidBinary apkUnderTest =
         ApkGenruleDescription.getUnderlyingApk((HasInstallableApk) installableApk);
 
-    ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
-        new ImmutableSortedSet.Builder<>(Ordering.<JavaLibrary>natural())
+    ImmutableSet<JavaLibrary> rulesToExcludeFromDex =
+        ImmutableSet.<JavaLibrary>builder()
             .addAll(apkUnderTest.getRulesToExcludeFromDex())
             .addAll(getClasspathDeps(apkUnderTest.getClasspathDeps()))
             .build();

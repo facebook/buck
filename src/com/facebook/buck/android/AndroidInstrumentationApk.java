@@ -28,6 +28,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.util.RichStream;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
 import java.util.Optional;
@@ -57,7 +58,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       AndroidBinary apkUnderTest,
-      ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
+      ImmutableSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidGraphEnhancementResult enhancementResult,
       DexFilesInfo dexFilesInfo,
       NativeFilesInfo nativeFilesInfo,
