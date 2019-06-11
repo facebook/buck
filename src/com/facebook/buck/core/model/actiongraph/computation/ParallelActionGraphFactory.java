@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory.ActionGraphCreationLifecycleListener;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
@@ -57,12 +58,11 @@ public class ParallelActionGraphFactory implements ActionGraphFactoryDelegate {
       ActionGraphBuilderDecorator actionGraphBuilderDecorator) {
     ListeningExecutorService executorService = executorSupplier.get();
 
-    MultiThreadedActionGraphBuilder graphBuilder =
-        (MultiThreadedActionGraphBuilder)
-            actionGraphBuilderDecorator.create(
-                nodeTransformer ->
-                    new MultiThreadedActionGraphBuilder(
-                        executorService, targetGraph, nodeTransformer, cellProvider));
+    ActionGraphBuilder graphBuilder =
+        actionGraphBuilderDecorator.create(
+            nodeTransformer ->
+                new MultiThreadedActionGraphBuilder(
+                    executorService, targetGraph, nodeTransformer, cellProvider));
 
     HashMap<BuildTarget, ListenableFuture<BuildRule>> futures = new HashMap<>();
 

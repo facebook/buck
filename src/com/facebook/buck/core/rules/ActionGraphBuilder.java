@@ -20,6 +20,7 @@ import com.facebook.buck.util.concurrent.Parallelizer;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -77,4 +78,6 @@ public interface ActionGraphBuilder extends BuildRuleResolver {
 
   ImmutableSortedMap<BuildTarget, BuildRule> computeAllIfAbsent(
       ImmutableMap<BuildTarget, Function<BuildTarget, BuildRule>> mappings);
+
+  ListenableFuture<BuildRule> requireRuleFuture(BuildTarget target);
 }

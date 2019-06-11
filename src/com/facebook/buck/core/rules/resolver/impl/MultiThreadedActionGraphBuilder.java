@@ -208,6 +208,7 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
    * Requires the rule asynchronously. This isn't part of the ActionGraphBuilder interface and so is
    * only used in places where we know we have a multithreaded one.
    */
+  @Override
   public ListenableFuture<BuildRule> requireRuleFuture(BuildTarget target) {
     Preconditions.checkState(isValid);
     return addRequireTask(target).schedule(executor).future;

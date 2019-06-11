@@ -26,6 +26,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.util.function.Function;
 
 /** An abstract implementation of BuildRuleResolver that simplifies concrete implementations. */
@@ -47,6 +49,11 @@ public abstract class AbstractActionGraphBuilder extends AbstractBuildRuleResolv
                 Ordering.natural(),
                 entry -> entry.getKey(),
                 entry -> computeIfAbsent(entry.getKey(), entry.getValue())));
+  }
+
+  @Override
+  public ListenableFuture<BuildRule> requireRuleFuture(BuildTarget target) {
+    return Futures.immediateFuture(requireRule(target));
   }
 
   protected void checkRuleIsBuiltForCorrectTarget(BuildTarget arg, BuildRule rule) {

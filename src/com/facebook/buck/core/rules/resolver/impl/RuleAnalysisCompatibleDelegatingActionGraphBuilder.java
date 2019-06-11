@@ -25,6 +25,7 @@ import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer
 import com.facebook.buck.core.rules.transformer.impl.LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.util.concurrent.Parallelizer;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -70,6 +71,11 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilder extends Abstract
   @Override
   public BuildRule requireRule(BuildTarget target) {
     return delegateActionGraphBuilder.requireRule(target);
+  }
+
+  @Override
+  public ListenableFuture<BuildRule> requireRuleFuture(BuildTarget target) {
+    return delegateActionGraphBuilder.requireRuleFuture(target);
   }
 
   @Override
