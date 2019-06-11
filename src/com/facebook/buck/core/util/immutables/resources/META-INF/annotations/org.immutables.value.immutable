@@ -1,1 +1,2 @@
 com.facebook.buck.core.util.immutables.BuckStyleValue
+com.facebook.buck.core.rules.providers.annotations.ImmutableInfo
