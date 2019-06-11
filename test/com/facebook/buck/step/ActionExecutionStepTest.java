@@ -17,7 +17,6 @@ package com.facebook.buck.step;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
@@ -72,7 +71,9 @@ public class ActionExecutionStepTest {
                   buildTarget,
                   BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve(output)),
               Iterables.getOnlyElement(outputs).getPath());
-          assertSame(baseCell, ctx.getBuildCellRootPath());
+          assertEquals(
+              projectFilesystem.resolve(BuildPaths.getGenDir(projectFilesystem, buildTarget)),
+              ctx.getGenOutputFilesystem().getRootPath());
           assertFalse(ctx.getShouldDeleteTemporaries());
           ctx.logError(new RuntimeException("message"), "my error %s", 1);
           ctx.postEvent(ConsoleEvent.info("my test info"));
@@ -85,7 +86,8 @@ public class ActionExecutionStepTest {
         fakeActionFactory.createFakeAction(
             ImmutableSet.of(), ImmutableSet.of(declaredArtifact), actionFunction);
 
-    ActionExecutionStep step = new ActionExecutionStep(action, false, baseCell);
+    ActionExecutionStep step =
+        new ActionExecutionStep(action, false, projectFilesystem, buildTarget);
     BuckEventBus testEventBus = BuckEventBusForTests.newInstance();
     BuckEventBusForTests.CapturingConsoleEventListener consoleEventListener =
         new CapturingConsoleEventListener();

@@ -18,7 +18,7 @@ package com.facebook.buck.core.rules.actions;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
-import java.nio.file.Path;
+import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import org.immutables.value.Value;
 
 /**
@@ -37,9 +37,13 @@ public abstract class ActionExecutionContext {
   @Value.Parameter
   public abstract boolean getShouldDeleteTemporaries();
 
-  /** @return the absolute path of the cell in which the build was invoked. */
+  /**
+   * @return the view of the filesystem that the {@link Action} can access for it's execution. This
+   *     is a view situated at the gen output location based on the build target of the current
+   *     action
+   */
   @Value.Parameter
-  public abstract Path getBuildCellRootPath();
+  public abstract ProjectFilesystemView getGenOutputFilesystem();
 
   /** Logs an error */
   public void logError(Throwable e, String msg, Object... formatArgs) {

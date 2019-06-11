@@ -96,7 +96,10 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule {
     }
     return ImmutableList.of(
         new ActionExecutionStep(
-            action, context.getShouldDeleteTemporaries(), context.getBuildCellRootPath()));
+            action,
+            context.getShouldDeleteTemporaries(),
+            getProjectFilesystem(),
+            getBuildTarget()));
   }
 
   @Nullable

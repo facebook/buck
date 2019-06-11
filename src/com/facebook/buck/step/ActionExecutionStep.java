@@ -16,10 +16,15 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionContext;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
 import java.nio.file.Path;
 
 /**
@@ -30,20 +35,32 @@ import java.nio.file.Path;
 public class ActionExecutionStep implements Step {
   private final Action action;
   private final boolean shouldDeleteTemporaries;
-  private final Path buildFileRootPath;
+  private final ProjectFilesystem projectFilesystem;
+  private final BuildTarget buildTarget;
 
   public ActionExecutionStep(
-      Action action, boolean shouldDeleteTemporaries, Path buildFileRootPath) {
+      Action action,
+      boolean shouldDeleteTemporaries,
+      ProjectFilesystem projectFilesystem,
+      BuildTarget buildTarget) {
     this.action = action;
     this.shouldDeleteTemporaries = shouldDeleteTemporaries;
-    this.buildFileRootPath = buildFileRootPath;
+    this.projectFilesystem = projectFilesystem;
+    this.buildTarget = buildTarget;
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+
+    Path basePath = BuildPaths.getGenDir(projectFilesystem, buildTarget);
+    projectFilesystem.mkdirs(basePath);
+
     ActionExecutionContext executionContext =
         ImmutableActionExecutionContext.of(
-            context.getBuckEventBus(), shouldDeleteTemporaries, buildFileRootPath);
+            context.getBuckEventBus(),
+            shouldDeleteTemporaries,
+            projectFilesystem.asView().withView(basePath, ImmutableSet.of()));
+
     ActionExecutionResult result = action.execute(executionContext);
     if (result instanceof ActionExecutionResult.ActionExecutionSuccess) {
       return StepExecutionResult.of(0, result.getStdErr());
