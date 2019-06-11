@@ -19,9 +19,11 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
+import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import java.lang.ref.WeakReference;
 import java.util.function.Function;
 import javax.annotation.Nonnull;
 
@@ -40,11 +42,16 @@ public class BuildRuleResolverCacheByTargetConfiguration<T> {
                 @Override
                 public T load(@Nonnull TargetConfiguration targetConfiguration) {
                   return delegateBuilder.apply(
-                      toolProvider.resolve(buildRuleResolver, targetConfiguration));
+                      toolProvider.resolve(
+                          Preconditions.checkNotNull(buildRuleResolver.get()),
+                          targetConfiguration));
                 }
               });
 
-  private final BuildRuleResolver buildRuleResolver;
+  // BuildRuleResolverCacheByTargetConfiguration instances are values in a cache keyed by a
+  // weak reference to a BuildRuleResolver. We must also make this a WeakReference, otherwise
+  // the GC will never free entries in the cache.
+  private final WeakReference<BuildRuleResolver> buildRuleResolver;
   private final ToolProvider toolProvider;
   private final Function<Tool, T> delegateBuilder;
 
@@ -52,7 +59,7 @@ public class BuildRuleResolverCacheByTargetConfiguration<T> {
       BuildRuleResolver buildRuleResolver,
       ToolProvider toolProvider,
       Function<Tool, T> delegateBuilder) {
-    this.buildRuleResolver = buildRuleResolver;
+    this.buildRuleResolver = new WeakReference<>(buildRuleResolver);
     this.toolProvider = toolProvider;
     this.delegateBuilder = delegateBuilder;
   }
