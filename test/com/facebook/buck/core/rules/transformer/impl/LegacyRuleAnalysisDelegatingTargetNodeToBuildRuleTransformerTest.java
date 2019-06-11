@@ -142,14 +142,14 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
     TargetGraph targetGraph = TargetGraph.EMPTY;
 
     FakeActionAnalysisRegistry fakeActionAnalysisRegistry = new FakeActionAnalysisRegistry();
-    ActionWrapperDataFactory actionWrapperDataFactory =
-        new ActionWrapperDataFactory(fakeActionAnalysisRegistry);
 
     Path output = Paths.get("foo.output");
+
+    ActionWrapperDataFactory actionWrapperDataFactory =
+        new ActionWrapperDataFactory(target, fakeActionAnalysisRegistry);
     DeclaredArtifact declaredArtifact = actionWrapperDataFactory.declareArtifact(output);
     actionWrapperDataFactory.createActionAnalysisData(
         FakeAction.class,
-        target,
         ImmutableSet.of(),
         ImmutableSet.of(declaredArtifact),
         (ins, outs, ctx) -> ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty()));

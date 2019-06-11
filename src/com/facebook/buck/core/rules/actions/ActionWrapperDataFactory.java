@@ -31,13 +31,23 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
  * The factory for creating {@link ActionWrapperData}.
  *
  * <p>This helps to hide and enforce the relationship between {@link ActionAnalysisDataKey}, {@link
- * ActionAnalysisData}, {@link Action}, and {@link BuildArtifact}
+ * ActionAnalysisData}, {@link Action}, and {@link BuildArtifact}.
+ *
+ * <p>There is one factory per {@link BuildTarget}, such that all {@link Action}s created by this
+ * factory are considered to be associated with the build target.
  */
 public class ActionWrapperDataFactory {
 
+  private final BuildTarget buildTarget;
   private final ActionAnalysisDataRegistry actionRegistry;
 
-  public ActionWrapperDataFactory(ActionAnalysisDataRegistry actionRegistry) {
+  /**
+   * @param buildTarget the {@link BuildTarget} for which all of the {@link Action}s created are for
+   * @param actionRegistry
+   */
+  public ActionWrapperDataFactory(
+      BuildTarget buildTarget, ActionAnalysisDataRegistry actionRegistry) {
+    this.buildTarget = buildTarget;
     this.actionRegistry = actionRegistry;
   }
 
@@ -77,7 +87,6 @@ public class ActionWrapperDataFactory {
    * that can be passed via {@link com.google.devtools.build.lib.packages.Provider}s to be consumed.
    *
    * @param actionClazz
-   * @param target the built target
    * @param inputs the inputs to the {@link Action}
    * @param outputs the declared outputs of the {@link Action}
    * @param args the arguments for construction the {@link Action}
@@ -89,12 +98,11 @@ public class ActionWrapperDataFactory {
   public <T extends AbstractAction<U>, U extends ActionConstructorParams>
       ImmutableMap<DeclaredArtifact, BuildArtifact> createActionAnalysisData(
           Class<T> actionClazz,
-          BuildTarget target,
           ImmutableSet<Artifact> inputs,
           ImmutableSet<DeclaredArtifact> outputs,
           U args)
           throws ActionCreationException {
-    ActionAnalysisDataKey key = ImmutableActionAnalysisDataKey.of(target, new ID() {});
+    ActionAnalysisDataKey key = ImmutableActionAnalysisDataKey.of(buildTarget, new ID() {});
     ImmutableMap<DeclaredArtifact, BuildArtifact> materializedOutputsMap =
         ImmutableMap.copyOf(Maps.toMap(outputs, declared -> declared.materialize(key)));
     try {
@@ -103,13 +111,13 @@ public class ActionWrapperDataFactory {
       T action =
           (T)
               actionClazz.getConstructors()[0].newInstance(
-                  target, inputs, materializedOutputsMap.values(), args);
+                  buildTarget, inputs, materializedOutputsMap.values(), args);
       ActionWrapperData actionAnalysisData = ImmutableActionWrapperData.of(key, action);
       actionRegistry.registerAction(actionAnalysisData);
 
       return materializedOutputsMap;
     } catch (Exception e) {
-      throw new ActionCreationException(e, actionClazz, target, inputs, outputs, args);
+      throw new ActionCreationException(e, actionClazz, buildTarget, inputs, outputs, args);
     }
   }
 }

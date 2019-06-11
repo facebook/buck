@@ -56,23 +56,26 @@ public class RuleAnalysisContextImplTest {
   @Test
   public void getDepsReturnCorrectDeps() {
     ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> deps = ImmutableMap.of();
-    assertSame(deps, new RuleAnalysisContextImpl(deps).deps());
+    assertSame(
+        deps, new RuleAnalysisContextImpl(BuildTargetFactory.newInstance("//my:bar"), deps).deps());
 
     deps =
         ImmutableMap.of(
             ImmutableRuleAnalysisKey.of(BuildTargetFactory.newInstance("//my:foo")),
             ProviderInfoCollectionImpl.builder().build());
-    assertSame(deps, new RuleAnalysisContextImpl(deps).deps());
+    assertSame(
+        deps, new RuleAnalysisContextImpl(BuildTargetFactory.newInstance("//my:bar"), deps).deps());
   }
 
   @Test
   public void registerActionRegistersToGivenActionRegistry() {
-    RuleAnalysisContextImpl context = new RuleAnalysisContextImpl(ImmutableMap.of());
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:foo");
+
+    RuleAnalysisContextImpl context = new RuleAnalysisContextImpl(buildTarget, ImmutableMap.of());
 
     ActionAnalysisData actionAnalysisData1 =
         new ActionAnalysisData() {
-          private final ActionAnalysisDataKey key =
-              getNewKey(BuildTargetFactory.newInstance("//my:foo"), new ID() {});
+          private final ActionAnalysisDataKey key = getNewKey(buildTarget, new ID() {});
 
           @Override
           public ActionAnalysisDataKey getKey() {
@@ -88,8 +91,7 @@ public class RuleAnalysisContextImplTest {
 
     ActionAnalysisData actionAnalysisData2 =
         new ActionAnalysisData() {
-          private final ActionAnalysisDataKey key =
-              getNewKey(BuildTargetFactory.newInstance("//my:foo"), new ID() {});
+          private final ActionAnalysisDataKey key = getNewKey(buildTarget, new ID() {});
 
           @Override
           public ActionAnalysisDataKey getKey() {
@@ -111,7 +113,9 @@ public class RuleAnalysisContextImplTest {
   public void registerConflictingActionsThrows() {
     expectedException.expect(VerifyException.class);
 
-    RuleAnalysisContextImpl context = new RuleAnalysisContextImpl(ImmutableMap.of());
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:target");
+
+    RuleAnalysisContextImpl context = new RuleAnalysisContextImpl(buildTarget, ImmutableMap.of());
 
     ActionAnalysisDataKey key =
         new ActionAnalysisDataKey() {
@@ -119,7 +123,7 @@ public class RuleAnalysisContextImplTest {
 
           @Override
           public BuildTarget getBuildTarget() {
-            return BuildTargetFactory.newInstance("//my:target");
+            return buildTarget;
           }
 
           @Override
@@ -139,9 +143,10 @@ public class RuleAnalysisContextImplTest {
 
   @Test
   public void createActionViaFactoryInContext() throws ActionCreationException {
-    RuleAnalysisContextImpl context = new RuleAnalysisContextImpl(ImmutableMap.of());
-
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+
+    RuleAnalysisContextImpl context = new RuleAnalysisContextImpl(target, ImmutableMap.of());
+
     ImmutableSet<Artifact> inputs = ImmutableSet.of();
     ImmutableSet<DeclaredArtifact> outputs =
         ImmutableSet.of(context.actionFactory().declareArtifact(Paths.get("output")));
@@ -151,7 +156,7 @@ public class RuleAnalysisContextImplTest {
     ImmutableMap<DeclaredArtifact, BuildArtifact> materializedArtifacts =
         context
             .actionFactory()
-            .createActionAnalysisData(FakeAction.class, target, inputs, outputs, actionFunction);
+            .createActionAnalysisData(FakeAction.class, inputs, outputs, actionFunction);
 
     assertThat(materializedArtifacts.entrySet(), Matchers.hasSize(1));
     @Nullable BuildArtifact artifact = materializedArtifacts.get(Iterables.getOnlyElement(outputs));

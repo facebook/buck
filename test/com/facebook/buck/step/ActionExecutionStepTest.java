@@ -76,11 +76,11 @@ public class ActionExecutionStepTest {
           return ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.of("my std err"));
         };
 
-    FakeActionFactory fakeActionFactory = new FakeActionFactory();
+    FakeActionFactory fakeActionFactory = new FakeActionFactory(buildTarget);
     DeclaredArtifact declaredArtifact = fakeActionFactory.declareArtifact(output);
     FakeAction action =
         fakeActionFactory.createFakeAction(
-            buildTarget, ImmutableSet.of(), ImmutableSet.of(declaredArtifact), actionFunction);
+            ImmutableSet.of(), ImmutableSet.of(declaredArtifact), actionFunction);
 
     ActionExecutionStep step = new ActionExecutionStep(action, false, baseCell);
     BuckEventBus testEventBus = BuckEventBusForTests.newInstance();

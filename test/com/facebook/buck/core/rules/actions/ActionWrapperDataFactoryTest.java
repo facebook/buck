@@ -45,12 +45,10 @@ public class ActionWrapperDataFactoryTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private FakeActionAnalysisRegistry actionAnalysisDataRegistry;
-  private ActionWrapperDataFactory actionWrapperDataFactory;
 
   @Before
   public void setUp() {
     actionAnalysisDataRegistry = new FakeActionAnalysisRegistry();
-    actionWrapperDataFactory = new ActionWrapperDataFactory(actionAnalysisDataRegistry);
   }
 
   @Test
@@ -58,6 +56,8 @@ public class ActionWrapperDataFactoryTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    ActionWrapperDataFactory actionWrapperDataFactory =
+        new ActionWrapperDataFactory(target, actionAnalysisDataRegistry);
     ImmutableSet<Artifact> inputs =
         ImmutableSet.of(
             ImmutableSourceArtifact.of(PathSourcePath.of(filesystem, Paths.get("myinput"))));
@@ -70,7 +70,7 @@ public class ActionWrapperDataFactoryTest {
 
     ImmutableMap<DeclaredArtifact, BuildArtifact> materializedArtifactMap =
         actionWrapperDataFactory.createActionAnalysisData(
-            FakeAction.class, target, inputs, outputs, executeFunc);
+            FakeAction.class, inputs, outputs, executeFunc);
 
     assertThat(materializedArtifactMap.entrySet(), Matchers.hasSize(1));
 
@@ -103,11 +103,15 @@ public class ActionWrapperDataFactoryTest {
     expectedException.expect(ActionCreationException.class);
 
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+
+    ActionWrapperDataFactory actionWrapperDataFactory =
+        new ActionWrapperDataFactory(target, actionAnalysisDataRegistry);
+
     ImmutableSet<Artifact> inputs = ImmutableSet.of();
     ImmutableSet<DeclaredArtifact> outputs =
         ImmutableSet.of(actionWrapperDataFactory.declareArtifact(Paths.get("myoutput")));
 
     actionWrapperDataFactory.createActionAnalysisData(
-        AbstractAction.class, target, inputs, outputs, new ActionConstructorParams() {});
+        AbstractAction.class, inputs, outputs, new ActionConstructorParams() {});
   }
 }

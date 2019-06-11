@@ -101,20 +101,17 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
     actionGraphBuilder.requireRule(depTarget);
 
     FakeActionAnalysisRegistry actionAnalysisRegistry = new FakeActionAnalysisRegistry();
-    ActionWrapperDataFactory actionWrapperDataFactory =
-        new ActionWrapperDataFactory(actionAnalysisRegistry);
+
     FakeActionConstructorArgs depActionFunction =
         (ins, outs, ctx) -> ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
 
+    ActionWrapperDataFactory actionWrapperDataFactory =
+        new ActionWrapperDataFactory(depTarget, actionAnalysisRegistry);
     DeclaredArtifact depArtifact =
         actionWrapperDataFactory.declareArtifact(Paths.get("bar.output"));
     ImmutableMap<DeclaredArtifact, BuildArtifact> materializedDepArtifacts =
         actionWrapperDataFactory.createActionAnalysisData(
-            FakeAction.class,
-            depTarget,
-            ImmutableSet.of(),
-            ImmutableSet.of(depArtifact),
-            depActionFunction);
+            FakeAction.class, ImmutableSet.of(), ImmutableSet.of(depArtifact), depActionFunction);
 
     Path outpath = Paths.get("foo.output");
     AtomicBoolean functionCalled = new AtomicBoolean();
@@ -129,11 +126,11 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
           return ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
         };
 
+    actionWrapperDataFactory = new ActionWrapperDataFactory(buildTarget, actionAnalysisRegistry);
     DeclaredArtifact artifact = actionWrapperDataFactory.declareArtifact(outpath);
     ImmutableMap<DeclaredArtifact, BuildArtifact> materializedArtifacts =
         actionWrapperDataFactory.createActionAnalysisData(
             FakeAction.class,
-            buildTarget,
             ImmutableSet.of(materializedDepArtifacts.get(depArtifact)),
             ImmutableSet.of(artifact),
             actionFunction);

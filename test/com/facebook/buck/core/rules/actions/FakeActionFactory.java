@@ -32,9 +32,10 @@ public class FakeActionFactory {
   private final FakeActionAnalysisRegistry actionAnalysisRegistry;
   private final ActionWrapperDataFactory actionWrapperDataFactory;
 
-  public FakeActionFactory() {
+  public FakeActionFactory(BuildTarget buildTarget) {
     this.actionAnalysisRegistry = new FakeActionAnalysisRegistry();
-    this.actionWrapperDataFactory = new ActionWrapperDataFactory(actionAnalysisRegistry);
+    this.actionWrapperDataFactory =
+        new ActionWrapperDataFactory(buildTarget, actionAnalysisRegistry);
   }
 
   public DeclaredArtifact declareArtifact(Path path) {
@@ -46,7 +47,6 @@ public class FakeActionFactory {
   }
 
   public FakeAction createFakeAction(
-      BuildTarget target,
       ImmutableSet<Artifact> inputs,
       ImmutableSet<DeclaredArtifact> outputs,
       FakeActionConstructorArgs actionFunction)
@@ -54,7 +54,7 @@ public class FakeActionFactory {
     try {
       ImmutableMap<DeclaredArtifact, BuildArtifact> materializedArtifactMap =
           actionWrapperDataFactory.createActionAnalysisData(
-              FakeAction.class, target, inputs, outputs, actionFunction);
+              FakeAction.class, inputs, outputs, actionFunction);
       BuildArtifact artifact =
           Objects.requireNonNull(
               Iterables.getFirst(materializedArtifactMap.entrySet(), null).getValue());
@@ -70,12 +70,11 @@ public class FakeActionFactory {
   }
 
   public FakeAction createFakeAction(
-      BuildTarget target,
       ImmutableSet<Artifact> inputs,
       ImmutableSet<DeclaredArtifact> outputs,
       Supplier<ActionExecutionResult> actionFunction)
       throws ActionCreationException {
     return createFakeAction(
-        target, inputs, outputs, (ignored1, ignored2, ignored3) -> actionFunction.get());
+        inputs, outputs, (ignored1, ignored2, ignored3) -> actionFunction.get());
   }
 }

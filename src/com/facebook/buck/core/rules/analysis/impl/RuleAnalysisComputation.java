@@ -85,6 +85,7 @@ public class RuleAnalysisComputation
 
     RuleAnalysisContextImpl ruleAnalysisContext =
         new RuleAnalysisContextImpl(
+            targetNode.getBuildTarget(),
             ImmutableMap.copyOf(
                 Maps.transformValues(
                     env.getDeps(RuleAnalysisKey.IDENTIFIER),

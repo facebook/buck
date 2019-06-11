@@ -15,12 +15,14 @@
  */
 package com.facebook.buck.core.rules.analysis.impl;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionAnalysisData;
 import com.facebook.buck.core.rules.actions.ActionAnalysisDataRegistry;
 import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
@@ -32,13 +34,16 @@ import java.util.Map;
  */
 class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisDataRegistry {
 
+  private final BuildTarget buildTarget;
   private final ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> depProviders;
   private final Map<ActionAnalysisData.ID, ActionAnalysisData> actionRegistry = new HashMap<>();
   private final ActionWrapperDataFactory actionWrapperDataFactory;
 
-  RuleAnalysisContextImpl(ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> depProviders) {
+  RuleAnalysisContextImpl(
+      BuildTarget buildTarget, ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> depProviders) {
+    this.buildTarget = buildTarget;
     this.depProviders = depProviders;
-    this.actionWrapperDataFactory = new ActionWrapperDataFactory(this);
+    this.actionWrapperDataFactory = new ActionWrapperDataFactory(buildTarget, this);
   }
 
   @Override
@@ -51,9 +56,10 @@ class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisData
     return actionWrapperDataFactory;
   }
 
-  // TODO(bobyf): should we get rid of this and enforce all actions go through the factory
   @Override
   public void registerAction(ActionAnalysisData actionAnalysisData) {
+    Preconditions.checkState(actionAnalysisData.getKey().getBuildTarget().equals(buildTarget));
+
     ActionAnalysisData prev =
         actionRegistry.putIfAbsent(actionAnalysisData.getKey().getID(), actionAnalysisData);
     Verify.verify(
