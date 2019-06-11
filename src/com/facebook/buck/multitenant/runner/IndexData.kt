@@ -21,22 +21,19 @@ import com.facebook.buck.multitenant.service.BuildPackageChanges
 import com.facebook.buck.multitenant.service.FsChanges
 import com.facebook.buck.multitenant.service.FsToBuildPackageChangeTranslator
 import com.facebook.buck.multitenant.service.IndexFactory
-import java.io.File
+import java.io.InputStream
 
 /**
  * Creates a map with a single Index based on the data from the specified file.
  */
-fun createIndexes(pathToDummyIndexData: String): Map<String, IndexComponents> {
-    val jsonFile = File(pathToDummyIndexData)
-    val indexName = jsonFile.nameWithoutExtension
+fun createIndexes(corpus: String, stream: InputStream): Map<String, IndexComponents> {
+
     val (index, appender) = IndexFactory.createIndex()
-    jsonFile.inputStream().use {
-        populateIndexFromStream(appender, it)
-    }
+    populateIndexFromStream(appender, stream)
 
     val cellToBuildFileName = mapOf("" to "BUCK")
     val changeTranslator = FakeFsToBuildPackageChangeTranslator()
-    return mapOf(indexName to IndexComponents(index, appender, changeTranslator, cellToBuildFileName))
+    return mapOf(corpus to IndexComponents(index, appender, changeTranslator, cellToBuildFileName))
 }
 
 private class FakeFsToBuildPackageChangeTranslator : FsToBuildPackageChangeTranslator {

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.multitenant.runner
 
+import com.facebook.buck.multitenant.importer.InputSource
 import com.facebook.buck.multitenant.service.FsChanges
-import java.io.File
-import java.io.PrintStream
+import java.net.URI
 import kotlin.system.measureTimeMillis
 
 /**
@@ -26,17 +26,22 @@ import kotlin.system.measureTimeMillis
  */
 fun main(args: Array<String>) {
     // TODO: proper command line options
-    val jsonFile = args[0]
+    val from = args[0]
 
-    msg("Loading index from $jsonFile (${File(jsonFile).length()} bytes)")
+    val (corpus, source) = from.split('@', limit = 2)
+    val sourceUri = URI.create(source)
 
     var corpusToIndex = mapOf<String, IndexComponents>()
     val timeIndexLoadMs = measureTimeMillis {
-        corpusToIndex = createIndexes(jsonFile)
+        InputSource.from(sourceUri).use { inputSource ->
+            msg("Loading index '$corpus' from $source (${inputSource.getSize()} bytes)")
+            corpusToIndex = createIndexes(corpus, inputSource.getInputStream())
+        }
     }
 
     msg("Index loaded in ${timeIndexLoadMs / 1000} sec. Collecting garbage...")
 
+    @Suppress("ExplicitGarbageCollectionCall")
     System.gc()
 
     msg("Service started. Available commands are: basecommit, corpus, query, out, quit.")
@@ -48,6 +53,12 @@ fun main(args: Array<String>) {
     mainloop@ while (true) {
         System.err.print("> ")
         val line = readLine()
+
+        if (line == null) {
+            // this happens if stdin sends eof
+            break@mainloop
+        }
+
         try {
             val parts = (line ?: "").split(" ", limit = 2)
             val cmd = parts.getOrElse(0) { "" }
@@ -99,29 +110,6 @@ private fun execute(
 }
 
 private fun msg(message: String) = System.err.println(message)
-
-internal sealed class Output {
-    abstract fun print(data: List<String>)
-    class Stdout : Output() {
-        override fun print(data: List<String>) {
-            writeToStream(data, System.out)
-        }
-    }
-
-    class Stderr : Output() {
-        override fun print(data: List<String>) {
-            writeToStream(data, System.err)
-        }
-    }
-
-    class File(val path: String) : Output() {
-        override fun print(data: List<String>) {
-            PrintStream(path).use { writeToStream(data, it) }
-        }
-    }
-}
-
-private fun writeToStream(data: List<String>, stream: PrintStream) = data.map { stream.println(it) }
 
 private fun createOutputFromDescriptor(out: String): Output {
     return when (out) {

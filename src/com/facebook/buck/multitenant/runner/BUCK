@@ -6,7 +6,10 @@ java_binary(
     ],
 )
 
-MAIN = ["Main.kt"]
+MAIN = [
+    "Main.kt",
+    "Output.kt",
+]
 
 kotlin_library(
     name = "runner_main",
@@ -17,6 +20,7 @@ kotlin_library(
     ],
     deps = [
         ":runner_lib",
+        "//src/com/facebook/buck/multitenant/importer:importer",
         "//src/com/facebook/buck/multitenant/service:service",
     ],
 )

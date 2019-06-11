@@ -15,14 +15,14 @@
 
 # Start multitenant service locally and load provided parse state file
 
-# Usage: ./scripts/multitenant/run.sh parse_state.json
+# Usage 1 (from file): ./scripts/multitenant/run.sh corpus@parse_state.json
+# Usage 2 (from HTTP): ./scripts/multitenant/run.sh corpus@http://www.some.site/parse_state.json
 
 # some useful Java command line options:
 
 # memory: -J-Xmx16G
 # debugging: -J-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8888
 
-buck build //src/com/facebook/buck/multitenant/runner:runner --show-output |
-awk '{print $2}' |
-xargs -I {} kotlin -cp {} -J-Xmx16G -J-XX:+UseG1GC com.facebook.buck.multitenant.runner.MainKt "$@"
+TARGET=$(buck build //src/com/facebook/buck/multitenant/runner:runner --show-output | awk '{print $2}')
+kotlin -cp $TARGET -J-Xmx16G -J-XX:+UseG1GC com.facebook.buck.multitenant.runner.MainKt "$@"
 
