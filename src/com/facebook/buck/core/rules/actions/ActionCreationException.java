@@ -15,10 +15,25 @@
  */
 package com.facebook.buck.core.rules.actions;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.actions.AbstractAction.ActionConstructorParams;
+import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory.DeclaredArtifact;
+import com.google.common.collect.ImmutableSet;
+
 /** Represents an error during action creation */
 public class ActionCreationException extends Exception {
 
-  public ActionCreationException(Throwable e, Class<? extends Action> clazz, Object... args) {
-    super(String.format("Got exception creating action %s with args %s, ", clazz, args), e);
+  public ActionCreationException(
+      Throwable e,
+      Class<? extends Action> clazz,
+      BuildTarget target,
+      ImmutableSet<Artifact> inputs,
+      ImmutableSet<DeclaredArtifact> outputs,
+      ActionConstructorParams args) {
+    super(
+        String.format(
+            "Got exception creating action %s of target: %s, inputs: %s, output: %s, args: %s, ",
+            clazz, target, inputs, outputs, args),
+        e);
   }
 }

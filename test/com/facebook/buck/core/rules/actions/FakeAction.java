@@ -17,30 +17,18 @@ package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.Artifact.BuildArtifact;
+import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
 import com.facebook.buck.util.function.TriFunction;
 import com.google.common.collect.ImmutableSet;
 
-public class FakeAction extends AbstractAction {
-
-  private final TriFunction<
-          ImmutableSet<Artifact>,
-          ImmutableSet<BuildArtifact>,
-          ActionExecutionContext,
-          ActionExecutionResult>
-      executeFunction;
+public class FakeAction extends AbstractAction<FakeActionConstructorArgs> {
 
   public FakeAction(
       BuildTarget owner,
       ImmutableSet<Artifact> inputs,
       ImmutableSet<BuildArtifact> outputs,
-      TriFunction<
-              ImmutableSet<Artifact>,
-              ImmutableSet<BuildArtifact>,
-              ActionExecutionContext,
-              ActionExecutionResult>
-          executeFunction) {
-    super(owner, inputs, outputs);
-    this.executeFunction = executeFunction;
+      FakeActionConstructorArgs executeFunction) {
+    super(owner, inputs, outputs, executeFunction);
   }
 
   @Override
@@ -50,7 +38,7 @@ public class FakeAction extends AbstractAction {
 
   @Override
   public ActionExecutionResult execute(ActionExecutionContext executionContext) {
-    return executeFunction.apply(inputs, outputs, executionContext);
+    return params.apply(inputs, outputs, executionContext);
   }
 
   @Override
@@ -64,6 +52,15 @@ public class FakeAction extends AbstractAction {
           ActionExecutionContext,
           ActionExecutionResult>
       getExecuteFunction() {
-    return executeFunction;
+    return params;
   }
+
+  @FunctionalInterface
+  public interface FakeActionConstructorArgs
+      extends AbstractAction.ActionConstructorParams,
+          TriFunction<
+              ImmutableSet<Artifact>,
+              ImmutableSet<BuildArtifact>,
+              ActionExecutionContext,
+              ActionExecutionResult> {}
 }

@@ -16,6 +16,7 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.actions.AbstractAction.ActionConstructorParams;
 import com.facebook.buck.core.rules.actions.ActionAnalysisData.ID;
 import com.facebook.buck.core.rules.actions.Artifact.BuildArtifact;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -52,9 +53,8 @@ public class ActionWrapperDataFactory {
    * <p>This is not an {@link Artifact} in itself, and cannot be used as such for any {@link Action}
    * lookup, since it is not fully materialized with a corresponding {@link Action}.
    *
-   * <p>This {@link DeclaredArtifact} becomes materialized once {@link
-   * #createActionAnalysisData(Class, BuildTarget, ImmutableSet, ImmutableSet, Object...)} has been
-   * called with this as an output of an {@link Action}.
+   * <p>This {@link DeclaredArtifact} becomes materialized once a corresponding {@link Action} has
+   * been created.
    */
   @Value.Immutable(builder = false, copy = false)
   @Value.Style(visibility = ImplementationVisibility.PACKAGE)
@@ -86,32 +86,30 @@ public class ActionWrapperDataFactory {
    *     to propagate to other rules
    */
   @SuppressWarnings("unchecked")
-  public <T extends AbstractAction>
+  public <T extends AbstractAction<U>, U extends ActionConstructorParams>
       ImmutableMap<DeclaredArtifact, BuildArtifact> createActionAnalysisData(
           Class<T> actionClazz,
           BuildTarget target,
           ImmutableSet<Artifact> inputs,
           ImmutableSet<DeclaredArtifact> outputs,
-          Object... args)
+          U args)
           throws ActionCreationException {
     ActionAnalysisDataKey key = ImmutableActionAnalysisDataKey.of(target, new ID() {});
     ImmutableMap<DeclaredArtifact, BuildArtifact> materializedOutputsMap =
         ImmutableMap.copyOf(Maps.toMap(outputs, declared -> declared.materialize(key)));
-    Object[] fullArgs = new Object[args.length + 3];
-    fullArgs[0] = target;
-    fullArgs[1] = inputs;
-    fullArgs[2] = materializedOutputsMap.values();
-    System.arraycopy(args, 0, fullArgs, 3, args.length);
     try {
       // TODO(bobyf): we can probably do some stuff here with annotation processing to generate
-      // typed creation
-      T action = (T) actionClazz.getConstructors()[0].newInstance(fullArgs);
+      // typed creation instead of reflection
+      T action =
+          (T)
+              actionClazz.getConstructors()[0].newInstance(
+                  target, inputs, materializedOutputsMap.values(), args);
       ActionWrapperData actionAnalysisData = ImmutableActionWrapperData.of(key, action);
       actionRegistry.registerAction(actionAnalysisData);
 
       return materializedOutputsMap;
     } catch (Exception e) {
-      throw new ActionCreationException(e, actionClazz, fullArgs);
+      throw new ActionCreationException(e, actionClazz, target, inputs, outputs, args);
     }
   }
 }

@@ -16,20 +16,39 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.actions.AbstractAction.ActionConstructorParams;
 import com.facebook.buck.core.rules.actions.Artifact.BuildArtifact;
 import com.google.common.collect.ImmutableSet;
 
-public abstract class AbstractAction implements Action {
+/**
+ * Base implementation of an {@link Action}
+ *
+ * @param <T> the constructor parameters provided for creating the {@link Action}
+ */
+public abstract class AbstractAction<T extends ActionConstructorParams> implements Action {
 
   protected final BuildTarget owner;
   protected final ImmutableSet<Artifact> inputs;
   protected final ImmutableSet<BuildArtifact> outputs;
+  protected final T params;
 
+  /**
+   * @param owner the {@link BuildTarget} that resulted in the creation of this {@link Action}
+   * @param inputs the input {@link Artifact} for this {@link Action}. They can be either outputs of
+   *     other {@link Action}s or be source files
+   * @param outputs the outputs for this {@link Action}
+   * @param params the {@link ActionConstructorParams} for this action. This is here mainly to
+   *     enforce the type signature of the implementations.
+   */
   protected AbstractAction(
-      BuildTarget owner, ImmutableSet<Artifact> inputs, ImmutableSet<BuildArtifact> outputs) {
+      BuildTarget owner,
+      ImmutableSet<Artifact> inputs,
+      ImmutableSet<BuildArtifact> outputs,
+      T params) {
     this.owner = owner;
     this.inputs = inputs;
     this.outputs = outputs;
+    this.params = params;
   }
 
   @Override
@@ -46,4 +65,10 @@ public abstract class AbstractAction implements Action {
   public final ImmutableSet<BuildArtifact> getOutputs() {
     return outputs;
   }
+
+  /**
+   * The additional constructor parameters that are passed to the constructor of the {@link Action}
+   * being created
+   */
+  interface ActionConstructorParams {}
 }

@@ -25,12 +25,9 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
-import com.facebook.buck.core.rules.actions.ActionExecutionContext;
-import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory.DeclaredArtifact;
-import com.facebook.buck.core.rules.actions.Artifact;
-import com.facebook.buck.core.rules.actions.Artifact.BuildArtifact;
 import com.facebook.buck.core.rules.actions.FakeAction;
+import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
 import com.facebook.buck.core.rules.actions.FakeActionFactory;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -45,7 +42,6 @@ import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.function.TriFunction;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -66,25 +62,19 @@ public class ActionExecutionStepTest {
 
     Path output = Paths.get("somepath");
 
-    TriFunction<
-            ImmutableSet<Artifact>,
-            ImmutableSet<BuildArtifact>,
-            ActionExecutionContext,
-            ActionExecutionResult>
-        actionFunction =
-            (inputs, outputs, ctx) -> {
-              assertEquals(ImmutableSet.of(), inputs);
-              assertThat(outputs, Matchers.hasSize(1));
-              assertEquals(
-                  ExplicitBuildTargetSourcePath.of(buildTarget, output),
-                  Iterables.getOnlyElement(outputs).getPath());
-              assertSame(baseCell, ctx.getBuildCellRootPath());
-              assertFalse(ctx.getShouldDeleteTemporaries());
-              ctx.logError(new RuntimeException("message"), "my error %s", 1);
-              ctx.postEvent(ConsoleEvent.info("my test info"));
-              return ImmutableActionExecutionSuccess.of(
-                  Optional.empty(), Optional.of("my std err"));
-            };
+    FakeActionConstructorArgs actionFunction =
+        (inputs, outputs, ctx) -> {
+          assertEquals(ImmutableSet.of(), inputs);
+          assertThat(outputs, Matchers.hasSize(1));
+          assertEquals(
+              ExplicitBuildTargetSourcePath.of(buildTarget, output),
+              Iterables.getOnlyElement(outputs).getPath());
+          assertSame(baseCell, ctx.getBuildCellRootPath());
+          assertFalse(ctx.getShouldDeleteTemporaries());
+          ctx.logError(new RuntimeException("message"), "my error %s", 1);
+          ctx.postEvent(ConsoleEvent.info("my test info"));
+          return ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.of("my std err"));
+        };
 
     FakeActionFactory fakeActionFactory = new FakeActionFactory();
     DeclaredArtifact declaredArtifact = fakeActionFactory.declareArtifact(output);

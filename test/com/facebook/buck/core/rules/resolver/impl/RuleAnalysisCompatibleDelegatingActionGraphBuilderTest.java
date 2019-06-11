@@ -31,13 +31,10 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.ActionAnalysisData;
-import com.facebook.buck.core.rules.actions.ActionExecutionContext;
-import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory;
 import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory.DeclaredArtifact;
-import com.facebook.buck.core.rules.actions.Artifact;
-import com.facebook.buck.core.rules.actions.Artifact.BuildArtifact;
 import com.facebook.buck.core.rules.actions.FakeAction;
+import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
 import com.facebook.buck.core.rules.actions.FakeActionAnalysisRegistry;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
@@ -55,7 +52,6 @@ import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.util.function.TriFunction;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -165,15 +161,9 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
                   DeclaredArtifact artifact =
                       actionWrapperDataFactory.declareArtifact(Paths.get("foo"));
 
-                  TriFunction<
-                          ImmutableSet<Artifact>,
-                          ImmutableSet<BuildArtifact>,
-                          ActionExecutionContext,
-                          ActionExecutionResult>
-                      actionFunction =
-                          (ignored, ignored2, ignored3) ->
-                              ImmutableActionExecutionSuccess.of(
-                                  Optional.empty(), Optional.empty());
+                  FakeActionConstructorArgs actionFunction =
+                      (ignored, ignored2, ignored3) ->
+                          ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
 
                   actionWrapperDataFactory.createActionAnalysisData(
                       FakeAction.class,

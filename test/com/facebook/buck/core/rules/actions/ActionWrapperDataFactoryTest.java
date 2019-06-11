@@ -22,18 +22,18 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.actions.AbstractAction.ActionConstructorParams;
 import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory.DeclaredArtifact;
 import com.facebook.buck.core.rules.actions.Artifact.BuildArtifact;
+import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.util.function.TriFunction;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.function.Function;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -64,14 +64,10 @@ public class ActionWrapperDataFactoryTest {
     ImmutableSet<DeclaredArtifact> outputs =
         ImmutableSet.of(actionWrapperDataFactory.declareArtifact(Paths.get("myoutput")));
 
-    TriFunction<
-            ImmutableSet<Artifact>,
-            ImmutableSet<BuildArtifact>,
-            ActionExecutionContext,
-            ActionExecutionResult>
-        executeFunc =
-            (inputs1, outputs1, executionContext) ->
-                ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
+    FakeActionConstructorArgs executeFunc =
+        (inputs1, outputs1, executionContext) ->
+            ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
+
     ImmutableMap<DeclaredArtifact, BuildArtifact> materializedArtifactMap =
         actionWrapperDataFactory.createActionAnalysisData(
             FakeAction.class, target, inputs, outputs, executeFunc);
@@ -103,42 +99,6 @@ public class ActionWrapperDataFactoryTest {
   }
 
   @Test
-  public void createThrowsWhenWrongConstructorArgType() throws ActionCreationException {
-    expectedException.expect(ActionCreationException.class);
-
-    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
-    ImmutableSet<Artifact> inputs = ImmutableSet.of();
-    ImmutableSet<DeclaredArtifact> outputs =
-        ImmutableSet.of(actionWrapperDataFactory.declareArtifact(Paths.get("myoutput")));
-
-    Function<ActionExecutionContext, ActionExecutionResult> executeFunc =
-        executionContext -> ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
-    actionWrapperDataFactory.createActionAnalysisData(
-        FakeAction.class, target, inputs, outputs, executeFunc);
-  }
-
-  @Test
-  public void createThrowsWhenWrongConstructorArgNumber() throws ActionCreationException {
-    expectedException.expect(ActionCreationException.class);
-
-    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
-    ImmutableSet<Artifact> inputs = ImmutableSet.of();
-    ImmutableSet<DeclaredArtifact> outputs =
-        ImmutableSet.of(ImmutableDeclaredArtifact.of(Paths.get("myoutput")));
-
-    TriFunction<
-            ImmutableSet<Artifact>,
-            ImmutableSet<BuildArtifact>,
-            ActionExecutionContext,
-            ActionExecutionResult>
-        executeFunc =
-            (inputs1, outputs1, executionContext) ->
-                ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
-    actionWrapperDataFactory.createActionAnalysisData(
-        FakeAction.class, target, inputs, outputs, executeFunc, new Object());
-  }
-
-  @Test
   public void createThrowsWhenAbstractClass() throws ActionCreationException {
     expectedException.expect(ActionCreationException.class);
 
@@ -148,6 +108,6 @@ public class ActionWrapperDataFactoryTest {
         ImmutableSet.of(actionWrapperDataFactory.declareArtifact(Paths.get("myoutput")));
 
     actionWrapperDataFactory.createActionAnalysisData(
-        AbstractAction.class, target, inputs, outputs);
+        AbstractAction.class, target, inputs, outputs, new ActionConstructorParams() {});
   }
 }

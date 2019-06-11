@@ -33,12 +33,8 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
-import com.facebook.buck.core.rules.actions.ActionExecutionContext;
-import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory;
 import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory.DeclaredArtifact;
-import com.facebook.buck.core.rules.actions.Artifact;
-import com.facebook.buck.core.rules.actions.Artifact.BuildArtifact;
 import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.rules.actions.FakeActionAnalysisRegistry;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
@@ -58,7 +54,6 @@ import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.util.function.TriFunction;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -157,13 +152,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
         target,
         ImmutableSet.of(),
         ImmutableSet.of(declaredArtifact),
-        (TriFunction<
-                ImmutableSet<Artifact>,
-                ImmutableSet<BuildArtifact>,
-                ActionExecutionContext,
-                ActionExecutionResult>)
-            (ins, outs, ctx) ->
-                ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty()));
+        (ins, outs, ctx) -> ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty()));
 
     AtomicBoolean ruleAnalysisCalled = new AtomicBoolean();
     RuleAnalysisComputation ruleAnalysisComputation =

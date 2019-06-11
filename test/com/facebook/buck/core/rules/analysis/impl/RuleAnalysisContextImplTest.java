@@ -26,19 +26,17 @@ import com.facebook.buck.core.rules.actions.ActionAnalysisData;
 import com.facebook.buck.core.rules.actions.ActionAnalysisData.ID;
 import com.facebook.buck.core.rules.actions.ActionAnalysisDataKey;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
-import com.facebook.buck.core.rules.actions.ActionExecutionContext;
-import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionWrapperData;
 import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory.DeclaredArtifact;
 import com.facebook.buck.core.rules.actions.Artifact;
 import com.facebook.buck.core.rules.actions.Artifact.BuildArtifact;
 import com.facebook.buck.core.rules.actions.FakeAction;
+import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
-import com.facebook.buck.util.function.TriFunction;
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -147,14 +145,9 @@ public class RuleAnalysisContextImplTest {
     ImmutableSet<Artifact> inputs = ImmutableSet.of();
     ImmutableSet<DeclaredArtifact> outputs =
         ImmutableSet.of(context.actionFactory().declareArtifact(Paths.get("output")));
-    TriFunction<
-            ImmutableSet<Artifact>,
-            ImmutableSet<BuildArtifact>,
-            ActionExecutionContext,
-            ActionExecutionResult>
-        actionFunction =
-            (inputs1, outputs1, ctx) ->
-                ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
+    FakeActionConstructorArgs actionFunction =
+        (inputs1, outputs1, ctx) ->
+            ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
     ImmutableMap<DeclaredArtifact, BuildArtifact> materializedArtifacts =
         context
             .actionFactory()

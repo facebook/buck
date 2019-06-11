@@ -32,14 +32,12 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.ActionAnalysisData;
 import com.facebook.buck.core.rules.actions.ActionAnalysisData.ID;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
-import com.facebook.buck.core.rules.actions.ActionExecutionContext;
-import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionWrapperData;
 import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory;
 import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory.DeclaredArtifact;
-import com.facebook.buck.core.rules.actions.Artifact;
 import com.facebook.buck.core.rules.actions.Artifact.BuildArtifact;
 import com.facebook.buck.core.rules.actions.FakeAction;
+import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
 import com.facebook.buck.core.rules.actions.FakeActionAnalysisRegistry;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
@@ -57,7 +55,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.util.function.TriFunction;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -106,14 +103,8 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
     FakeActionAnalysisRegistry actionAnalysisRegistry = new FakeActionAnalysisRegistry();
     ActionWrapperDataFactory actionWrapperDataFactory =
         new ActionWrapperDataFactory(actionAnalysisRegistry);
-    TriFunction<
-            ImmutableSet<Artifact>,
-            ImmutableSet<BuildArtifact>,
-            ActionExecutionContext,
-            ActionExecutionResult>
-        depActionFunction =
-            (ins, outs, ctx) ->
-                ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
+    FakeActionConstructorArgs depActionFunction =
+        (ins, outs, ctx) -> ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
 
     DeclaredArtifact depArtifact =
         actionWrapperDataFactory.declareArtifact(Paths.get("bar.output"));
@@ -127,21 +118,16 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
 
     Path outpath = Paths.get("foo.output");
     AtomicBoolean functionCalled = new AtomicBoolean();
-    TriFunction<
-            ImmutableSet<Artifact>,
-            ImmutableSet<BuildArtifact>,
-            ActionExecutionContext,
-            ActionExecutionResult>
-        actionFunction =
-            (ins, outs, ctx) -> {
-              assertEquals(ImmutableSet.of(materializedDepArtifacts.get(depArtifact)), ins);
-              assertEquals(
-                  buildTarget, Iterables.getOnlyElement(outs).getActionDataKey().getBuildTarget());
-              assertEquals(buildTarget, Iterables.getOnlyElement(outs).getPath().getTarget());
-              assertEquals(outpath, Iterables.getOnlyElement(outs).getPath().getResolvedPath());
-              functionCalled.set(true);
-              return ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
-            };
+    FakeActionConstructorArgs actionFunction =
+        (ins, outs, ctx) -> {
+          assertEquals(ImmutableSet.of(materializedDepArtifacts.get(depArtifact)), ins);
+          assertEquals(
+              buildTarget, Iterables.getOnlyElement(outs).getActionDataKey().getBuildTarget());
+          assertEquals(buildTarget, Iterables.getOnlyElement(outs).getPath().getTarget());
+          assertEquals(outpath, Iterables.getOnlyElement(outs).getPath().getResolvedPath());
+          functionCalled.set(true);
+          return ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
+        };
 
     DeclaredArtifact artifact = actionWrapperDataFactory.declareArtifact(outpath);
     ImmutableMap<DeclaredArtifact, BuildArtifact> materializedArtifacts =
