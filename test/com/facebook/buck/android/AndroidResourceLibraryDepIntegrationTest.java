@@ -69,7 +69,7 @@ public class AndroidResourceLibraryDepIntegrationTest {
     // Now verify that just the library and top-level binary got rebuilt.
     BuckBuildLog secondBuildLog = workspace.getBuildLog();
     secondBuildLog.assertTargetBuiltLocally(appTarget);
-    secondBuildLog.assertTargetIsAbsent(resTarget);
+    secondBuildLog.assertTargetHadMatchingRuleKey(resTarget);
     secondBuildLog.assertTargetBuiltLocally(libTarget);
   }
 }
