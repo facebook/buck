@@ -25,6 +25,7 @@ import com.google.common.collect.Lists;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.List;
 import org.immutables.value.Value;
 
@@ -74,13 +75,49 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> implements Provid
                     .getReturnType());
 
     try {
-      return new BuiltInProvider<>(
-          infoApiClass, infoClass.getConstructor(types.toArray(new Class[] {})));
+      return new BuiltInProvider<>(infoApiClass, findConstructor(infoClass, types));
     } catch (NoSuchMethodException e) {
       throw new IllegalArgumentException(
           String.format(
               "Infos must have a public constructor that initializes all struct values but %s doesn't. Expected constructor parameters %s",
               infoClass, types));
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <U extends BuiltInProviderInfo<U>> Constructor<U> findConstructor(
+      Class<? extends U> infoClass, List<Class<?>> values) throws NoSuchMethodException {
+    try {
+      return (Constructor<U>) infoClass.getConstructor(values.toArray(new Class[] {}));
+    } catch (NoSuchMethodException e) {
+      // no direct matching constructor. Now we check if there is a compatible constructor since
+      // Immutables can generate constructors that take the Iterable type instead of the specific
+      // Set/List types
+
+      Constructor<?> found = null;
+      Constructor<?>[] constructors = infoClass.getConstructors();
+      outer:
+      for (int i = 0; i < constructors.length; i++) {
+        Parameter[] parameters = constructors[i].getParameters();
+        for (int j = 0; j < parameters.length; j++) {
+          if (!parameters[j].getType().isAssignableFrom(values.get(j))) {
+            // not the right constructor. Go to the next constructor in outer loop
+            continue outer;
+          }
+        }
+        if (found != null) {
+          throw new IllegalArgumentException(
+              String.format(
+                  "Multiple constructors on class %s matches signature with type of %s",
+                  infoClass, values));
+        }
+
+        found = constructors[i];
+      }
+      if (found == null) {
+        throw new NoSuchMethodException();
+      }
+      return (Constructor<U>) found;
     }
   }
 

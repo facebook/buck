@@ -19,7 +19,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
+import com.google.common.collect.ImmutableSet;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Set;
 import org.junit.Test;
 
 public class BuiltInProviderInfoTest {
@@ -42,6 +44,14 @@ public class BuiltInProviderInfoTest {
     public abstract String str();
   }
 
+  @ImmutableInfo(args = {"set"})
+  public abstract static class InfoWithSet extends BuiltInProviderInfo<InfoWithSet> {
+    public static final BuiltInProvider<InfoWithSet> PROVIDER =
+        BuiltInProvider.of(ImmutableInfoWithSet.class);
+
+    public abstract Set<String> set();
+  }
+
   @Test
   public void someInfoProviderCreatesCorrectInfo()
       throws IllegalAccessException, InstantiationException, InvocationTargetException {
@@ -56,6 +66,19 @@ public class BuiltInProviderInfoTest {
     SomeInfo someInfo3 = SomeInfo.PROVIDER.createInfo("c", 3);
     assertEquals("c", someInfo3.str());
     assertEquals(3, someInfo3.myInfo());
+  }
+
+  @Test
+  public void infoWithSetCanBeCreatedProperly()
+      throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    InfoWithSet someInfo1 = new ImmutableInfoWithSet(ImmutableSet.of("a"));
+    assertEquals(ImmutableSet.of("a"), someInfo1.set());
+
+    InfoWithSet someInfo2 = someInfo1.getProvider().createInfo(ImmutableSet.of("b"));
+    assertEquals(ImmutableSet.of("b"), someInfo2.set());
+
+    InfoWithSet someInfo3 = InfoWithSet.PROVIDER.createInfo(ImmutableSet.of());
+    assertEquals(ImmutableSet.of(), someInfo3.set());
   }
 
   @Test
