@@ -57,7 +57,7 @@ public abstract class BuckStarlarkStructObject implements ClassObject, SkylarkVa
     }
   }
 
-  ImmutableMap<String, Method> getMethods() {
+  protected ImmutableMap<String, Method> getMethods() {
     if (values == null) {
       values = MethodLookup.getMethods(getDeclaredClass());
     }
