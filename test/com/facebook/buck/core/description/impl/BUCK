@@ -6,6 +6,7 @@ standard_java_test(
         "//src/com/facebook/buck/core/description/impl:impl",
         "//src/com/facebook/buck/core/rules/configsetting:configsetting",
         "//src/com/facebook/buck/jvm/java:rules",
+        "//test/com/facebook/buck/core/rules/analysis/impl:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
     ],

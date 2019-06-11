@@ -33,7 +33,7 @@ abstract class AbstractRuleType {
     /** Build rule types can be used during the build to produce build artifacts. */
     BUILD,
     /** Configuration rule types can be used during configuration phase. */
-    CONFIGURATION
+    CONFIGURATION,
   }
 
   /** @return the name as displayed in a build file, such as "java_library" */

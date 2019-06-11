@@ -18,6 +18,7 @@ package com.facebook.buck.core.description.impl;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.rules.analysis.impl.FakeRuleDescription;
 import com.facebook.buck.core.rules.configsetting.ConfigSettingDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import org.junit.Test;
@@ -34,5 +35,10 @@ public class DescriptionCacheTest {
   public void testConfigRuleHasRuleType() {
     assertEquals(
         "config_setting", DescriptionCache.getRuleType(ConfigSettingDescription.class).getName());
+  }
+
+  @Test
+  public void ruleAnalysisRuleHasRuleType() {
+    assertEquals("fake_rule", DescriptionCache.getRuleType(FakeRuleDescription.class).getName());
   }
 }
