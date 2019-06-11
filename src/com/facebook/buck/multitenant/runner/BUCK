@@ -22,6 +22,7 @@ kotlin_library(
         ":runner_lib",
         "//src/com/facebook/buck/multitenant/importer:importer",
         "//src/com/facebook/buck/multitenant/service:service",
+        "//third-party/java/kotlinx-coroutines:kotlinx-coroutines",
     ],
 )
 

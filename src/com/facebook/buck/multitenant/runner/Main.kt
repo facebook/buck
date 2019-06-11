@@ -18,6 +18,9 @@ package com.facebook.buck.multitenant.runner
 
 import com.facebook.buck.multitenant.importer.InputSource
 import com.facebook.buck.multitenant.service.FsChanges
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import java.net.URI
 import kotlin.system.measureTimeMillis
 
@@ -26,22 +29,39 @@ import kotlin.system.measureTimeMillis
  */
 fun main(args: Array<String>) {
 
-    val corpusToIndex = mutableMapOf<String, IndexComponents>()
-
     // TODO: proper command line options
-    args.forEach { from ->
-        val (corpus, source) = from.split('@', limit = 2)
-        val sourceUri = URI.create(source)
 
-        val timeIndexLoadMs = measureTimeMillis {
-            InputSource.from(sourceUri).use { inputSource ->
-                msg("Loading index '$corpus' from $source (${inputSource.getSize()} bytes)")
-                corpusToIndex.putAll(createIndexes(corpus, inputSource.getInputStream()))
-            }
-        }
-
-        msg("Index '$corpus' loaded in ${timeIndexLoadMs / 1000} sec.")
+    if (args.isEmpty()) {
+        msg("Missing parameters, example index1@/tmp/index.json index2@http://www.some.site/index2.json")
+        return
     }
+
+    msg("Loading ${args.size} index(es) asynchronously")
+    val start = System.nanoTime()
+    val corpusToIndex = runBlocking {
+            args.asList().map { arg ->
+                // Have to explicitly call [Dispatchers.Default] to execute on shared pool because
+                // [runBlocking] executes on main thread
+                async(Dispatchers.Default) {
+                    val (corpus, source) = arg.split('@', limit = 2)
+                    val sourceUri = URI.create(source)
+
+                    val start = System.nanoTime()
+                    val indexComponents = InputSource.from(sourceUri).use { inputSource ->
+                        msg("Loading index '$corpus' from $source (${inputSource.getSize()} bytes)")
+                        createIndex(inputSource.getInputStream())
+                    }
+
+                    msg("Index '$corpus' loaded in ${nanosToNowInSec(start)} sec.")
+
+                    Pair(corpus, indexComponents)
+                }
+                // Explicitly call toList() to avoid potential lazy evaluation of a map for
+                // coroutine creation
+            }.toList().map { loader -> loader.await() }.toMap()
+    }
+
+    msg("Loading all indexes completed in ${nanosToNowInSec(start)} sec.")
 
     msg("Collecting garbage...")
 
@@ -111,6 +131,12 @@ private fun execute(
     val service = FakeMultitenantService(indexComponents.index, indexComponents.appender,
             indexComponents.changeTranslator)
     return service.handleBuckQueryRequest(query, changes)
+}
+
+const val NANOS_IN_SEC = 1_000_000_000
+
+private fun nanosToNowInSec(start: Long): Long {
+    return (System.nanoTime() - start) / NANOS_IN_SEC
 }
 
 private fun msg(message: String) = System.err.println(message)

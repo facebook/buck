@@ -26,14 +26,13 @@ import java.io.InputStream
 /**
  * Creates a map with a single Index based on the data from the specified file.
  */
-fun createIndexes(corpus: String, stream: InputStream): Map<String, IndexComponents> {
-
+fun createIndex(stream: InputStream): IndexComponents {
     val (index, appender) = IndexFactory.createIndex()
     populateIndexFromStream(appender, stream)
 
     val cellToBuildFileName = mapOf("" to "BUCK")
     val changeTranslator = FakeFsToBuildPackageChangeTranslator()
-    return mapOf(corpus to IndexComponents(index, appender, changeTranslator, cellToBuildFileName))
+    return IndexComponents(index, appender, changeTranslator, cellToBuildFileName)
 }
 
 private class FakeFsToBuildPackageChangeTranslator : FsToBuildPackageChangeTranslator {
