@@ -15,11 +15,25 @@
  */
 package com.facebook.buck.core.rules.analysis.impl;
 
-import com.google.devtools.build.lib.packages.BuiltinProvider;
+import com.facebook.buck.core.rules.providers.Provider;
 
-public class FakeBuiltInProvider extends BuiltinProvider<FakeInfo> {
+public class FakeBuiltInProvider implements Provider<FakeInfo> {
 
-  public FakeBuiltInProvider(String name, Class<FakeInfo> valueClass) {
-    super(name, valueClass);
+  private final Key<FakeInfo> key;
+  private final String name;
+
+  public FakeBuiltInProvider(String name) {
+    this.name = name;
+    this.key = new Key<FakeInfo>() {};
+  }
+
+  @Override
+  public Key<FakeInfo> getKey() {
+    return key;
+  }
+
+  @Override
+  public String toString() {
+    return name;
   }
 }

@@ -15,25 +15,19 @@
  */
 package com.facebook.buck.core.rules.analysis.impl;
 
-import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.packages.InfoInterface;
-import com.google.devtools.build.lib.packages.Provider;
+import com.facebook.buck.core.rules.providers.Provider;
+import com.facebook.buck.core.rules.providers.ProviderInfo;
 
-public class FakeInfo implements InfoInterface {
+public class FakeInfo implements ProviderInfo<FakeInfo> {
 
-  private final Provider provider;
+  private final Provider<FakeInfo> provider;
 
-  public FakeInfo(Provider provider) {
+  public FakeInfo(Provider<FakeInfo> provider) {
     this.provider = provider;
   }
 
   @Override
-  public Location getCreationLoc() {
-    return Location.BUILTIN;
-  }
-
-  @Override
-  public Provider getProvider() {
+  public Provider<FakeInfo> getProvider() {
     return provider;
   }
 }

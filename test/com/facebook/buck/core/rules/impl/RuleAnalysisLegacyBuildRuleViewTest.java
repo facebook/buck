@@ -145,7 +145,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
 
     ProviderInfoCollection providerInfoCollection =
         ProviderInfoCollectionImpl.builder()
-            .put(new FakeInfo(new FakeBuiltInProvider("foo", FakeInfo.class)))
+            .put(new FakeInfo(new FakeBuiltInProvider("foo")))
             .build();
 
     Map<ID, ActionAnalysisData> actionAnalysisDataMap =

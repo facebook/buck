@@ -15,45 +15,31 @@
  */
 package com.facebook.buck.core.rules.providers.impl;
 
+import com.facebook.buck.core.rules.providers.Provider;
+import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.packages.BuiltinProvider;
-import com.google.devtools.build.lib.packages.InfoInterface;
-import com.google.devtools.build.lib.packages.Provider;
-import com.google.devtools.build.lib.packages.Provider.Key;
-import com.google.devtools.build.lib.packages.SkylarkInfo;
-import com.google.devtools.build.lib.packages.SkylarkProvider;
 import com.google.devtools.build.lib.skylarkinterface.StarlarkContext;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import java.util.Optional;
-import javax.annotation.Nullable;
 
 /** Implementation of {@link ProviderInfoCollection}. */
 public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
 
-  private final ImmutableMap<Key, InfoInterface> infoMap;
+  private final ImmutableMap<Provider.Key<?>, ? extends ProviderInfo<?>> infoMap;
 
-  private ProviderInfoCollectionImpl(ImmutableMap<Key, InfoInterface> infoMap) {
+  private ProviderInfoCollectionImpl(
+      ImmutableMap<Provider.Key<?>, ? extends ProviderInfo<?>> infoMap) {
     this.infoMap = infoMap;
-  }
-
-  @Override
-  public Optional<SkylarkInfo> get(SkylarkProvider provider) {
-    return Optional.ofNullable((SkylarkInfo) get(provider.getKey()));
-  }
-
-  @Override
-  public <T extends InfoInterface> Optional<T> get(BuiltinProvider<T> provider) {
-    return Optional.ofNullable(provider.getValueClass().cast(get(provider.getKey())));
   }
 
   @Override
   public Object getIndex(Object key, Location loc, StarlarkContext context) throws EvalException {
     verifyKeyIsProvider(
         key, loc, "Type Target only supports indexing by object constructors, got %s instead");
-    return get(((Provider) key).getKey());
+    return getNullable(((Provider<?>) key));
   }
 
   @Override
@@ -61,7 +47,7 @@ public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
       throws EvalException {
     verifyKeyIsProvider(
         key, loc, "Type Target only supports querying by object constructors, got %s instead");
-    return get(((Provider) key).getKey()) != null;
+    return getNullable(((Provider<?>) key)) != null;
   }
 
   public static Builder builder() {
@@ -72,9 +58,14 @@ public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
     return new Builder(expectedSize);
   }
 
-  @Nullable
-  private InfoInterface get(Provider.Key providerKey) {
-    return infoMap.get(providerKey);
+  @Override
+  public <T extends ProviderInfo<T>> Optional<T> get(Provider<T> provider) {
+    return Optional.ofNullable(getNullable(provider));
+  }
+
+  @SuppressWarnings("unchecked")
+  private <T extends ProviderInfo<T>> T getNullable(Provider<T> provider) {
+    return (T) infoMap.get(provider.getKey());
   }
 
   private void verifyKeyIsProvider(Object key, Location loc, String s) throws EvalException {
@@ -85,7 +76,7 @@ public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
 
   public static class Builder implements ProviderInfoCollection.Builder {
 
-    private final ImmutableMap.Builder<Provider.Key, InfoInterface> mapBuilder;
+    private final ImmutableMap.Builder<Provider.Key<?>, ProviderInfo<?>> mapBuilder;
 
     private Builder() {
       mapBuilder = ImmutableMap.builder();
@@ -96,7 +87,7 @@ public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
     }
 
     @Override
-    public ProviderInfoCollection.Builder put(InfoInterface info) {
+    public ProviderInfoCollection.Builder put(ProviderInfo<?> info) {
       mapBuilder.put(info.getProvider().getKey(), info);
       return this;
     }

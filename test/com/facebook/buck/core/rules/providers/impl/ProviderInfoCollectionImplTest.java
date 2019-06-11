@@ -20,16 +20,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
+import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
+import com.facebook.buck.core.rules.providers.Provider;
+import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
-import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.packages.BuiltinProvider;
-import com.google.devtools.build.lib.packages.NativeInfo;
-import com.google.devtools.build.lib.packages.Provider;
-import com.google.devtools.build.lib.packages.SkylarkInfo;
-import com.google.devtools.build.lib.packages.SkylarkProvider;
-import com.google.devtools.build.lib.packages.SkylarkProvider.SkylarkKey;
 import com.google.devtools.build.lib.skylarkinterface.StarlarkContext;
 import com.google.devtools.build.lib.syntax.EvalException;
 import java.util.Optional;
@@ -58,24 +54,9 @@ public class ProviderInfoCollectionImplTest {
   }
 
   @Test
-  public void getSkylarkProviderWhenPresentReturnsInfo() throws EvalException {
-    SkylarkProvider provider = createSkylarkProvider("//my:provider");
-    SkylarkInfo info = SkylarkInfo.createSchemaless(provider, ImmutableMap.of(), null);
-    ProviderInfoCollection providerInfoCollection =
-        ProviderInfoCollectionImpl.builder().put(info).build();
-
-    assertTrue(providerInfoCollection.containsKey(provider, Location.BUILTIN, ctx));
-    assertEquals(Optional.of(info), providerInfoCollection.get(provider));
-    assertSame(info, providerInfoCollection.getIndex(provider, Location.BUILTIN, ctx));
-  }
-
-  @Test
-  public void getBuildInProviderWhenPresentReturnsInfo() throws EvalException {
-    BuiltinProvider<MyTestInfo> provider =
-        new BuiltinProvider<MyTestInfo>("//my:provider", MyTestInfo.class) {};
-
-    MyTestInfo info = new MyTestInfo(provider);
-
+  public void getProviderWhenPresentReturnsInfo() throws EvalException {
+    Provider<FakeInfo> provider = new FakeBuiltInProvider("fake");
+    ProviderInfo<?> info = new FakeInfo(provider);
     ProviderInfoCollection providerInfoCollection =
         ProviderInfoCollectionImpl.builder().put(info).build();
 
@@ -86,68 +67,31 @@ public class ProviderInfoCollectionImplTest {
 
   @Test
   public void getProviderWhenNotPresentReturnsEmpty() throws EvalException {
-    SkylarkProvider skylarkProvider = createSkylarkProvider("//my:provider");
-    BuiltinProvider<MyTestInfo> builtinProvider =
-        new BuiltinProvider<MyTestInfo>("myprovider", MyTestInfo.class) {};
+    Provider<?> provider = new FakeBuiltInProvider("fake");
     ProviderInfoCollection providerInfoCollection = ProviderInfoCollectionImpl.builder().build();
 
-    assertFalse(providerInfoCollection.containsKey(skylarkProvider, Location.BUILTIN, ctx));
-    assertFalse(providerInfoCollection.containsKey(builtinProvider, Location.BUILTIN, ctx));
-    assertEquals(Optional.empty(), providerInfoCollection.get(skylarkProvider));
-    assertEquals(Optional.empty(), providerInfoCollection.get(builtinProvider));
-    assertEquals(null, providerInfoCollection.getIndex(skylarkProvider, Location.BUILTIN, ctx));
-    assertEquals(null, providerInfoCollection.getIndex(builtinProvider, Location.BUILTIN, ctx));
+    assertFalse(providerInfoCollection.containsKey(provider, Location.BUILTIN, ctx));
+    assertEquals(Optional.empty(), providerInfoCollection.get(provider));
   }
 
   @Test
   public void getCorrectInfoWhenMultipleProvidersPresent() throws EvalException {
-    SkylarkProvider skylarkProvider1 = createSkylarkProvider("//myskylarkprovider:1");
-    SkylarkInfo skylarkInfo1 =
-        SkylarkInfo.createSchemaless(skylarkProvider1, ImmutableMap.of(), null);
+    FakeBuiltInProvider builtinProvider1 = new FakeBuiltInProvider("fake1");
+    FakeInfo fakeInfo1 = new FakeInfo(builtinProvider1);
 
-    SkylarkProvider skylarkProvider2 = createSkylarkProvider("//myskylarkprovider:2");
-    SkylarkInfo skylarkInfo2 =
-        SkylarkInfo.createSchemaless(skylarkProvider2, ImmutableMap.of(), null);
-
-    BuiltinProvider<MyTestInfo> builtinProvider1 =
-        new BuiltinProvider<MyTestInfo>("myprovider", MyTestInfo.class) {};
-    MyTestInfo builtinInfo1 = new MyTestInfo(builtinProvider1);
-
-    BuiltinProvider<MyTestInfo> builtinProvider2 =
-        new BuiltinProvider<MyTestInfo>("myprovider", MyTestInfo.class) {};
-    MyTestInfo builtinInfo2 = new MyTestInfo(builtinProvider2);
+    // the fake provider has a new key for every instance for testing purposes
+    FakeBuiltInProvider builtInProvider2 = new FakeBuiltInProvider("fake2");
+    FakeInfo fakeInfo2 = new FakeInfo(builtInProvider2);
 
     ProviderInfoCollection providerInfoCollection =
-        ProviderInfoCollectionImpl.builder()
-            .put(skylarkInfo1)
-            .put(skylarkInfo2)
-            .put(builtinInfo1)
-            .put(builtinInfo2)
-            .build();
+        ProviderInfoCollectionImpl.builder().put(fakeInfo1).put(fakeInfo2).build();
 
-    assertEquals(Optional.of(skylarkInfo1), providerInfoCollection.get(skylarkProvider1));
-    assertEquals(Optional.of(skylarkInfo2), providerInfoCollection.get(skylarkProvider2));
-    assertEquals(Optional.of(builtinInfo1), providerInfoCollection.get(builtinProvider1));
-    assertEquals(Optional.of(builtinInfo2), providerInfoCollection.get(builtinProvider2));
+    assertEquals(Optional.of(fakeInfo1), providerInfoCollection.get(builtinProvider1));
+    assertEquals(Optional.of(fakeInfo2), providerInfoCollection.get(builtInProvider2));
 
-    assertSame(
-        skylarkInfo1, providerInfoCollection.getIndex(skylarkProvider1, Location.BUILTIN, ctx));
-    assertSame(
-        skylarkInfo2, providerInfoCollection.getIndex(skylarkProvider2, Location.BUILTIN, ctx));
-    assertSame(
-        builtinInfo1, providerInfoCollection.getIndex(builtinProvider1, Location.BUILTIN, ctx));
-    assertSame(
-        builtinInfo2, providerInfoCollection.getIndex(builtinProvider2, Location.BUILTIN, ctx));
-  }
-
-  private SkylarkProvider createSkylarkProvider(String keyname) {
-    return SkylarkProvider.createExportedSchemaless(
-        new SkylarkKey(Label.parseAbsoluteUnchecked(keyname + "label"), keyname), Location.BUILTIN);
-  }
-
-  public static class MyTestInfo extends NativeInfo {
-    public MyTestInfo(Provider provider) {
-      super(provider);
-    }
+    assertEquals(
+        fakeInfo1, providerInfoCollection.getIndex(builtinProvider1, Location.BUILTIN, ctx));
+    assertEquals(
+        fakeInfo2, providerInfoCollection.getIndex(builtInProvider2, Location.BUILTIN, ctx));
   }
 }

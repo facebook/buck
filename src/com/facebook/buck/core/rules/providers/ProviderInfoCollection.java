@@ -15,37 +15,25 @@
  */
 package com.facebook.buck.core.rules.providers;
 
-import com.google.devtools.build.lib.packages.BuiltinProvider;
-import com.google.devtools.build.lib.packages.InfoInterface;
-import com.google.devtools.build.lib.packages.Provider;
-import com.google.devtools.build.lib.packages.SkylarkInfo;
-import com.google.devtools.build.lib.packages.SkylarkProvider;
 import com.google.devtools.build.lib.syntax.SkylarkIndexable;
 import java.util.Optional;
 
 /**
- * Represents a collection of {@link Provider}s and their corresponding {@link InfoInterface}.
+ * Represents a collection of {@link Provider}s and their corresponding {@link ProviderInfo}.
  *
  * <p>This is a mapping of the {@link Provider} via the {@link Provider.Key} to the corresponding
- * {@link InfoInterface} information that the {@link Provider} propagates. Both {@link
- * BuiltinProvider} and {@link SkylarkProvider} are supported.
+ * {@link ProviderInfo} information that the {@link Provider} propagates.
  *
  * <p>This is {@link SkylarkIndexable}, so that this can be used to access individual provider
  * information from within skylark extension rule implementations.
  */
 public interface ProviderInfoCollection extends SkylarkIndexable {
 
-  /**
-   * @return the {@link SkylarkInfo} that was created via the given {@link SkylarkProvider} if
-   *     exists
-   */
-  Optional<SkylarkInfo> get(SkylarkProvider provider);
-
-  /** @return the {@link InfoInterface} of the specific type given the {@link BuiltinProvider} */
-  <T extends InfoInterface> Optional<T> get(BuiltinProvider<T> provider);
+  /** @return the {@link ProviderInfo} of the specific type given the {@link Provider} */
+  <T extends ProviderInfo<T>> Optional<T> get(Provider<T> provider);
 
   interface Builder {
-    Builder put(InfoInterface info);
+    Builder put(ProviderInfo<?> info);
 
     ProviderInfoCollection build();
   }

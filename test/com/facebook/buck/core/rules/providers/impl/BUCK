@@ -8,6 +8,7 @@ java_test(
     has_immutable_types = True,
     deps = [
         "//src/com/facebook/buck/core/rules/providers/impl:impl",
+        "//test/com/facebook/buck/core/rules/analysis/impl:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
     ],

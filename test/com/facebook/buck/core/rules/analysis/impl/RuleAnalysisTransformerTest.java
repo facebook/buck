@@ -158,7 +158,7 @@ public class RuleAnalysisTransformerTest {
 
     ProviderInfoCollection expectedProviders =
         ProviderInfoCollectionImpl.builder()
-            .put(new FakeInfo(new FakeBuiltInProvider("myprovider", FakeInfo.class)))
+            .put(new FakeInfo(new FakeBuiltInProvider("myprovider")))
             .build();
 
     RuleDescription<FakeRuleDescriptionArg> ruleDescription =
@@ -212,7 +212,7 @@ public class RuleAnalysisTransformerTest {
 
     ProviderInfoCollection expectedProviders =
         ProviderInfoCollectionImpl.builder()
-            .put(new FakeInfo(new FakeBuiltInProvider("myprovider", FakeInfo.class)))
+            .put(new FakeInfo(new FakeBuiltInProvider("myprovider")))
             .build();
 
     RuleDescription<FakeRuleDescriptionArg> ruleDescription =
