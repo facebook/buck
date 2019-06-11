@@ -17,6 +17,7 @@ package com.facebook.buck.core.rules.providers.impl;
 
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
+import com.facebook.buck.core.starlark.compatible.BuckStarlarkFunction;
 import com.facebook.buck.core.starlark.compatible.MethodLookup;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -37,12 +38,17 @@ import org.immutables.value.Value;
  * @param <T> the specific type of the {@link com.facebook.buck.core.rules.providers.ProviderInfo}
  *     this instance of the provider creates.
  */
-public class BuiltInProvider<T extends BuiltInProviderInfo<T>> implements Provider<T> {
+public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarlarkFunction
+    implements Provider<T> {
 
   protected final BuiltInKey<T> key;
   private final Constructor<? extends T> infoConstructor;
 
-  private BuiltInProvider(Class<? extends T> infoClass, Constructor<? extends T> infoConstructor) {
+  private BuiltInProvider(
+      Class<? extends T> infoClass,
+      Constructor<? extends T> infoConstructor,
+      List<String> infoApiFields) {
+    super(infoClass.getSimpleName(), infoConstructor, infoApiFields);
     this.key = ImmutableBuiltInKey.of(infoClass);
     this.infoConstructor = infoConstructor;
     this.infoConstructor.setAccessible(true);
@@ -75,7 +81,8 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> implements Provid
                     .getReturnType());
 
     try {
-      return new BuiltInProvider<>(infoApiClass, findConstructor(infoClass, types));
+      return new BuiltInProvider<>(
+          infoApiClass, findConstructor(infoClass, types), ImmutableList.copyOf(info.args()));
     } catch (NoSuchMethodException e) {
       throw new IllegalArgumentException(
           String.format(
