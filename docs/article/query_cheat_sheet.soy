@@ -61,7 +61,7 @@
 
 <hr/>
 
-<ul style="line-height:0.5em">
+<ul>
   <li>
 
     <a href="#list-all-rules">
@@ -103,7 +103,15 @@
 
   <li>
     <a href="#find-dependencies">
-      How do I find the dependencies for a target?
+      How do I find the dependencies for a target, that is, the targets
+      on which a specified target depends?
+    </a>
+  </li>
+
+  <li>
+    <a href="#find-reverse-dependencies">
+      How do I find the reverse-dependencies for a target, that is, the
+      targets that <em>depend on</em> a specified target?
     </a>
   </li>
 
@@ -337,6 +345,28 @@ buck query "deps(set('//foo:bar' '//foo:lib' '//foo/baz:util'))"
       set of transitive dependencies.
     </p>
   {/param}
+{/call}
+
+
+{call .faq}
+  {param id: 'find-reverse-dependencies' /}
+  {param question}
+    <p>
+      How do I find the reverse-dependencies for a target, that is, the
+      targets that <em>depend on</em> a specified target?
+    </p>
+  {/param}
+
+  {param shortAnswer}
+    <p>
+    Use the <code>buck query</code> {call buck.cmd_link}{param name: 'query' /}{param section: 'rdeps'/}{/call}{sp} 
+    (reverse dependencies) operator.
+    </p>
+
+{call buckquery.example_rdeps /}
+
+  {/param}
+
 {/call}
 
 
