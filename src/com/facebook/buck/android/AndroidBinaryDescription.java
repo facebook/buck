@@ -145,7 +145,7 @@ public class AndroidBinaryDescription
 
     DexSplitMode dexSplitMode = createDexSplitMode(args, exopackageModes);
 
-    ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
+    ImmutableSet<JavaLibrary> rulesToExcludeFromDex =
         NoDxArgsHelper.findRulesToExcludeFromDex(graphBuilder, buildTarget, args.getNoDx());
 
     CellPathResolver cellRoots = context.getCellPathResolver();

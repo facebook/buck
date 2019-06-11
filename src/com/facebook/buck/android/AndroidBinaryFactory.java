@@ -33,6 +33,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.Keystore;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
 import java.util.Optional;
@@ -60,7 +61,7 @@ public class AndroidBinaryFactory {
       DexSplitMode dexSplitMode,
       EnumSet<ExopackageMode> exopackageModes,
       ResourceFilter resourceFilter,
-      ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
+      ImmutableSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidBinaryDescriptionArg args,
       JavaOptions javaOptions) {
 

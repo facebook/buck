@@ -143,7 +143,7 @@ public class AndroidBinaryGraphEnhancer {
   private final String dexTool;
   private final AndroidBinaryResourcesGraphEnhancer androidBinaryResourcesGraphEnhancer;
   private final NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs;
-  private final ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex;
+  private final ImmutableSet<JavaLibrary> rulesToExcludeFromDex;
 
   AndroidBinaryGraphEnhancer(
       ToolchainProvider toolchainProvider,
@@ -205,7 +205,7 @@ public class AndroidBinaryGraphEnhancer {
       String dexTool,
       Optional<Arg> postFilterResourcesCmd,
       NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs,
-      ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
+      ImmutableSet<JavaLibrary> rulesToExcludeFromDex,
       boolean useProtoFormat) {
     this.ignoreAaptProguardConfig = ignoreAaptProguardConfig;
     this.androidPlatformTarget = androidPlatformTarget;
@@ -794,7 +794,7 @@ public class AndroidBinaryGraphEnhancer {
 
   private NonPreDexedDexBuildable createNonPredexedDexBuildable(
       DexSplitMode dexSplitMode,
-      ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
+      ImmutableSet<JavaLibrary> rulesToExcludeFromDex,
       int xzCompressionLevel,
       ImmutableList<SourcePath> proguardConfigs,
       AndroidPackageableCollection packageableCollection,

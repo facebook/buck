@@ -24,14 +24,13 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import java.util.Optional;
 
 public class NoDxArgsHelper {
 
   private static final Logger LOG = Logger.get(NoDxArgsHelper.class);
 
-  static ImmutableSortedSet<JavaLibrary> findRulesToExcludeFromDex(
+  static ImmutableSet<JavaLibrary> findRulesToExcludeFromDex(
       ActionGraphBuilder graphBuilder,
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> noDxTargets) {
@@ -50,6 +49,6 @@ public class NoDxArgsHelper {
     ImmutableSortedSet<BuildRule> buildRulesToExcludeFromDex = builder.build();
     return RichStream.from(buildRulesToExcludeFromDex)
         .filter(JavaLibrary.class)
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+        .collect(ImmutableSet.toImmutableSet());
   }
 }

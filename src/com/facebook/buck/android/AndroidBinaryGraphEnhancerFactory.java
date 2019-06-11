@@ -38,7 +38,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.step.fs.XzStep;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.EnumSet;
 import java.util.Locale;
@@ -65,7 +64,7 @@ public class AndroidBinaryGraphEnhancerFactory {
       ResourceFilter resourceFilter,
       DexSplitMode dexSplitMode,
       EnumSet<ExopackageMode> exopackageModes,
-      ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
+      ImmutableSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidGraphEnhancerArgs args,
       boolean useProtoFormat,
       JavaOptions javaOptions,
