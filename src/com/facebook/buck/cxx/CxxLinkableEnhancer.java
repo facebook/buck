@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.linker.HasImportLibrary;
+import com.facebook.buck.cxx.toolchain.linker.HasIncrementalThinLTO;
 import com.facebook.buck.cxx.toolchain.linker.HasLTO;
 import com.facebook.buck.cxx.toolchain.linker.HasLinkerMap;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -96,9 +97,10 @@ public class CxxLinkableEnhancer {
       argsBuilder.addAll(((HasLinkerMap) linker).linkerMap(output));
     }
 
-    argsBuilder.add(StringArg.of("-Wl,-plugin-opt,thinlto-index-only=thinlto.objects"));
-    argsBuilder.add(StringArg.of("-Wl,-plugin-opt,thinlto-emit-imports-files"));
-    argsBuilder.add(StringArg.of("-Wl,-plugin-opt,thinlto-prefix-replace=;" + output.toString()));
+    // ThinLto flags
+    if (linker instanceof HasIncrementalThinLTO) {
+      argsBuilder.addAll(((HasIncrementalThinLTO) linker).incrementalThinLTOFlags(output));
+    }
 
     if (linker instanceof HasImportLibrary) {
       argsBuilder.addAll(((HasImportLibrary) linker).importLibrary(output));

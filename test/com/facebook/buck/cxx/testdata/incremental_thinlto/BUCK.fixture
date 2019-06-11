@@ -1,0 +1,6 @@
+# This binary manually specifies the linker and
+# to emit intermediate build products
+cxx_binary(
+    name = "bin",
+    srcs = ["main.cpp"],
+)

@@ -20,6 +20,7 @@ import static com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer.sanitize;
 import static java.io.File.pathSeparator;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.oneOf;
 import static org.junit.Assert.assertEquals;
@@ -70,6 +71,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -1776,6 +1778,38 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
+  public void testIncrementalThinLtoBinaryWithDependency() throws IOException {
+    assumeThat(Platform.detect(), oneOf(Platform.LINUX, Platform.MACOS));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "incremental_thinlto", tmp);
+
+    workspace.setUp();
+    Path result = workspace.buildAndReturnOutput("//:bin#incremental-thinlto");
+
+    assertThat(Files.exists(result.resolve("main.cpp.o.thinlto.bc")), Matchers.equalTo(true));
+    assertThat(Files.exists(result.resolve("main.cpp.o.imports")), Matchers.equalTo(true));
+
+    String contents =
+        new String(
+            Files.readAllBytes(result.resolve("main.cpp.o.thinlto.bc")), StandardCharsets.UTF_8);
+    if (Platform.detect() == Platform.MACOS) {
+      assertThat(contents, containsString("-Wl,-thinlto_emit_indexes"));
+      assertThat(contents, containsString("-Wl,-thinlto_emit_imports"));
+      assertThat(
+          contents,
+          containsString(
+              "-Xlinker -thinlto_new_prefix -Xlinker buck-out/gen/bin#incremental-thinlto/thinlto.indices"));
+    } else if (Platform.detect() == Platform.LINUX) {
+      assertThat(contents, containsString("-Wl,-plugin-opt,thinlto-index-only=thinlto.objects"));
+      assertThat(contents, containsString("-Wl,-plugin-opt,thinlto-emit-imports-files"));
+      assertThat(
+          contents,
+          containsString(
+              "-Xlinker -plugin-opt -Xlinker 'thinlto-prefix-replace=;buck-out/gen/bin#incremental-thinlto/thinlto.indices'"));
+    }
+  }
+
+  @Test
   public void testCxxBinaryDepfileBuildWithChangedHeader() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -1868,16 +1902,13 @@ public class CxxBinaryIntegrationTest {
     // setup the headers.
     String error = result.getStderr();
     assertThat(
-        error,
-        Matchers.not(
-            Matchers.containsString(filesystem.getBuckPaths().getScratchDir().toString())));
+        error, Matchers.not(containsString(filesystem.getBuckPaths().getScratchDir().toString())));
     assertThat(
-        error,
-        Matchers.not(Matchers.containsString(filesystem.getBuckPaths().getGenDir().toString())));
-    assertThat(error, Matchers.containsString("In file included from lib1.h:1"));
-    assertThat(error, Matchers.containsString("from bin.h:1"));
-    assertThat(error, Matchers.containsString("from bin.cpp:1:"));
-    assertThat(error, Matchers.containsString("lib2.h:1:2: error: invalid preprocessing"));
+        error, Matchers.not(containsString(filesystem.getBuckPaths().getGenDir().toString())));
+    assertThat(error, containsString("In file included from lib1.h:1"));
+    assertThat(error, containsString("from bin.h:1"));
+    assertThat(error, containsString("from bin.cpp:1:"));
+    assertThat(error, containsString("lib2.h:1:2: error: invalid preprocessing"));
   }
 
   @Test
@@ -1934,7 +1965,7 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckBuild("//:binary_matches_default_" + target).assertSuccess();
     ProcessResult result = workspace.runBuckBuild("//:binary_no_match_" + target);
     result.assertFailure();
-    assertThat(result.getStderr(), Matchers.containsString("reference"));
+    assertThat(result.getStderr(), containsString("reference"));
     workspace.runBuckBuild("//:binary_with_library_matches_default_" + target).assertSuccess();
     workspace
         .runBuckBuild("//:binary_with_prebuilt_library_matches_default_" + target)
@@ -2001,7 +2032,7 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckBuild("//:binary_matches_default").assertSuccess();
     ProcessResult result = workspace.runBuckBuild("//:binary_no_match");
     result.assertFailure();
-    assertThat(result.getStderr(), Matchers.containsString("#error"));
+    assertThat(result.getStderr(), containsString("#error"));
     workspace.runBuckBuild("//:binary_with_library_matches_default").assertSuccess();
   }
 
@@ -2016,8 +2047,7 @@ public class CxxBinaryIntegrationTest {
     ProcessResult result = workspace.runBuckBuild("//:binary_no_match");
     result.assertFailure();
     assertThat(
-        result.getStderr(),
-        Matchers.allOf(Matchers.containsString("non-void"), Matchers.containsString("function")));
+        result.getStderr(), Matchers.allOf(containsString("non-void"), containsString("function")));
     workspace.runBuckBuild("//:binary_with_library_matches_default").assertSuccess();
   }
 
@@ -2031,7 +2061,7 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckBuild("//:binary_matches_default").assertSuccess();
     ProcessResult result = workspace.runBuckBuild("//:binary_no_match");
     result.assertFailure();
-    assertThat(result.getStderr(), Matchers.containsString("header.hpp"));
+    assertThat(result.getStderr(), containsString("header.hpp"));
     workspace.runBuckBuild("//:binary_with_library_matches_default").assertSuccess();
   }
 
@@ -2045,7 +2075,7 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckBuild("//:binary_matches_default").assertSuccess();
     ProcessResult result = workspace.runBuckBuild("//:binary_no_match");
     result.assertFailure();
-    assertThat(result.getStderr(), Matchers.containsString("answer()"));
+    assertThat(result.getStderr(), containsString("answer()"));
     workspace.runBuckBuild("//:binary_with_library_matches_default").assertSuccess();
   }
 
@@ -2082,7 +2112,7 @@ public class CxxBinaryIntegrationTest {
     processResult.assertFailure();
     assertThat(
         processResult.getStderr(),
-        Matchers.containsString("in the dependencies have the same output filename"));
+        containsString("in the dependencies have the same output filename"));
   }
 
   @Test

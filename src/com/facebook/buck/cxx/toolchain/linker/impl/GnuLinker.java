@@ -30,6 +30,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.cxx.toolchain.linker.HasIncrementalThinLTO;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.FileScrubber;
@@ -56,7 +57,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /** A specialization of {@link Linker} containing information specific to the GNU implementation. */
-public class GnuLinker extends DelegatingTool implements Linker {
+public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalThinLTO {
   public GnuLinker(Tool tool) {
     super(tool);
   }
@@ -70,6 +71,17 @@ public class GnuLinker extends DelegatingTool implements Linker {
   public Iterable<Arg> linkWhole(Arg input, SourcePathResolver resolver) {
     return ImmutableList.of(
         StringArg.of("-Wl,--whole-archive"), input, StringArg.of("-Wl,--no-whole-archive"));
+  }
+
+  @Override
+  public Iterable<Arg> incrementalThinLTOFlags(Path output) {
+    return StringArg.from(
+        "-Wl,-plugin-opt,thinlto-index-only=thinlto.objects",
+        "-Wl,-plugin-opt,thinlto-emit-imports-files",
+        "-Xlinker",
+        "-plugin-opt",
+        "-Xlinker",
+        "thinlto-prefix-replace=;" + output.toString());
   }
 
   @Override

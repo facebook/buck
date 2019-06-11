@@ -24,6 +24,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.cxx.toolchain.linker.HasIncrementalThinLTO;
 import com.facebook.buck.cxx.toolchain.linker.HasLTO;
 import com.facebook.buck.cxx.toolchain.linker.HasLinkerMap;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -50,7 +51,8 @@ import java.util.function.Consumer;
 /**
  * A specialization of {@link Linker} containing information specific to the Darwin implementation.
  */
-public class DarwinLinker extends DelegatingTool implements Linker, HasLinkerMap, HasLTO {
+public class DarwinLinker extends DelegatingTool
+    implements Linker, HasLinkerMap, HasIncrementalThinLTO, HasLTO {
 
   private final boolean cacheLinks;
 
@@ -91,6 +93,17 @@ public class DarwinLinker extends DelegatingTool implements Linker, HasLinkerMap
   public Iterable<Arg> thinLTO(Path output) {
     return StringArg.from(
         "-flto=thin", "-Xlinker", "-object_path_lto", "-Xlinker", ltoPath(output).toString());
+  }
+
+  @Override
+  public Iterable<Arg> incrementalThinLTOFlags(Path output) {
+    return StringArg.from(
+        "-Wl,-thinlto_emit_indexes",
+        "-Wl,-thinlto_emit_imports",
+        "-Xlinker",
+        "-thinlto_new_prefix",
+        "-Xlinker",
+        output.toString());
   }
 
   @Override
