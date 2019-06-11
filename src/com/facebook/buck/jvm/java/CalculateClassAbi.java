@@ -21,12 +21,13 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
-import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -42,8 +43,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.SortedSet;
 
-public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
+/** Calculates Class ABI. */
+public class CalculateClassAbi extends AbstractBuildRule
     implements CalculateAbi, InitializableFromDisk<Object>, SupportsInputBasedRuleKey {
 
   @AddToRuleKey private final SourcePath binaryJar;
@@ -56,19 +59,29 @@ public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path outputPath;
   private BuildOutputInitializer<Object> buildOutputInitializer;
   private final JavaAbiInfo javaAbiInfo;
+  private final SortedSet<BuildRule> buildDeps;
 
   public CalculateClassAbi(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      SourcePathRuleFinder ruleFinder,
       BuildRuleParams buildRuleParams,
       SourcePath binaryJar,
       AbiGenerationMode compatibilityMode) {
-    super(buildTarget, projectFilesystem, buildRuleParams);
+    super(buildTarget, projectFilesystem);
     this.binaryJar = binaryJar;
     this.compatibilityMode = compatibilityMode;
-    this.outputPath = getAbiJarPath(getProjectFilesystem(), getBuildTarget());
+    this.buildDeps =
+        buildRuleParams
+            .withDeclaredDeps(
+                ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(binaryJar)))
+            .withoutExtraDeps()
+            .getBuildDeps();
+    String outputFileName = String.format("%s-abi.jar", buildTarget.getShortName());
+    this.outputPath =
+        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").resolve(outputFileName);
     this.javaAbiInfo = new DefaultJavaAbiInfo(getSourcePathToOutput());
-    this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 
   public static CalculateClassAbi of(
@@ -89,18 +102,7 @@ public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
       SourcePath library,
       AbiGenerationMode compatibilityMode) {
     return new CalculateClassAbi(
-        target,
-        projectFilesystem,
-        libraryParams
-            .withDeclaredDeps(ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(library)))
-            .withoutExtraDeps(),
-        library,
-        compatibilityMode);
-  }
-
-  public static Path getAbiJarPath(ProjectFilesystem filesystem, BuildTarget buildTarget) {
-    return BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
-        .resolve(String.format("%s-abi.jar", buildTarget.getShortName()));
+        target, projectFilesystem, ruleFinder, libraryParams, library, compatibilityMode);
   }
 
   @Override
@@ -152,5 +154,10 @@ public class CalculateClassAbi extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public BuildOutputInitializer<Object> getBuildOutputInitializer() {
     return buildOutputInitializer;
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDeps;
   }
 }
