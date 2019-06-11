@@ -157,7 +157,8 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
                   FakeActionAnalysisRegistry actionAnalysisRegistry =
                       new FakeActionAnalysisRegistry();
                   ActionWrapperDataFactory actionWrapperDataFactory =
-                      new ActionWrapperDataFactory(target, actionAnalysisRegistry);
+                      new ActionWrapperDataFactory(
+                          target, actionAnalysisRegistry, projectFilesystem);
                   DeclaredArtifact artifact =
                       actionWrapperDataFactory.declareArtifact(Paths.get("foo"));
 

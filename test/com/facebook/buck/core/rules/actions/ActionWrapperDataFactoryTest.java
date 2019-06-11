@@ -22,16 +22,19 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.actions.AbstractAction.ActionConstructorParams;
 import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory.DeclaredArtifact;
 import com.facebook.buck.core.rules.actions.Artifact.BuildArtifact;
 import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -44,10 +47,12 @@ public class ActionWrapperDataFactoryTest {
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
+  private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private FakeActionAnalysisRegistry actionAnalysisDataRegistry;
 
   @Before
   public void setUp() {
+
     actionAnalysisDataRegistry = new FakeActionAnalysisRegistry();
   }
 
@@ -57,7 +62,7 @@ public class ActionWrapperDataFactoryTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     ActionWrapperDataFactory actionWrapperDataFactory =
-        new ActionWrapperDataFactory(target, actionAnalysisDataRegistry);
+        new ActionWrapperDataFactory(target, actionAnalysisDataRegistry, filesystem);
     ImmutableSet<Artifact> inputs =
         ImmutableSet.of(
             ImmutableSourceArtifact.of(PathSourcePath.of(filesystem, Paths.get("myinput"))));
@@ -87,7 +92,9 @@ public class ActionWrapperDataFactoryTest {
     assertThat(action, Matchers.instanceOf(FakeAction.class));
 
     assertThat(action.getOutputs(), Matchers.hasSize(1));
-    assertEquals(Paths.get("myoutput"), builtArtifact.getPath().getResolvedPath());
+    assertEquals(
+        BuildPaths.getGenDir(filesystem, target).resolve("myoutput"),
+        builtArtifact.getPath().getResolvedPath());
     assertSame(target, builtArtifact.getPath().getTarget());
     assertSame(target, builtArtifact.getActionDataKey().getBuildTarget());
 
@@ -105,7 +112,7 @@ public class ActionWrapperDataFactoryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
 
     ActionWrapperDataFactory actionWrapperDataFactory =
-        new ActionWrapperDataFactory(target, actionAnalysisDataRegistry);
+        new ActionWrapperDataFactory(target, actionAnalysisDataRegistry, filesystem);
 
     ImmutableSet<Artifact> inputs = ImmutableSet.of();
     ImmutableSet<DeclaredArtifact> outputs =
@@ -113,5 +120,38 @@ public class ActionWrapperDataFactoryTest {
 
     actionWrapperDataFactory.createActionAnalysisData(
         AbstractAction.class, inputs, outputs, new ActionConstructorParams() {});
+  }
+
+  @Test
+  public void createsActionOutputUsingBasePath() throws ActionCreationException {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+
+    ActionWrapperDataFactory actionWrapperDataFactory =
+        new ActionWrapperDataFactory(target, actionAnalysisDataRegistry, filesystem);
+
+    ImmutableSet<Artifact> inputs = ImmutableSet.of();
+    DeclaredArtifact output = actionWrapperDataFactory.declareArtifact(Paths.get("myoutput"));
+
+    Path expectedBasePath = BuildPaths.getGenDir(filesystem, target);
+
+    assertEquals(expectedBasePath, output.getPackagePath());
+    assertEquals(Paths.get("myoutput"), output.getOutputPath());
+
+    FakeActionConstructorArgs executeFunc =
+        (inputs1, outputs1, executionContext) ->
+            ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
+
+    ImmutableMap<DeclaredArtifact, BuildArtifact> materializedArtifactMap =
+        actionWrapperDataFactory.createActionAnalysisData(
+            FakeAction.class, inputs, ImmutableSet.of(output), executeFunc);
+
+    assertThat(materializedArtifactMap.entrySet(), Matchers.hasSize(1));
+
+    BuildArtifact builtArtifact = materializedArtifactMap.get(output);
+    assertEquals(expectedBasePath, builtArtifact.getPackagePath());
+    assertEquals(Paths.get("myoutput"), builtArtifact.getOutputPath());
+    assertEquals(
+        ExplicitBuildTargetSourcePath.of(target, expectedBasePath.resolve("myoutput")),
+        builtArtifact.getPath());
   }
 }

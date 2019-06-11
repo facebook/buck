@@ -25,6 +25,7 @@ import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeArg;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -64,6 +65,8 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
+
+  private final ProjectFilesystem fakeFilesystem = new FakeProjectFilesystem();
 
   @Test
   public void transformDelegatesWhenOldDescription() {
@@ -146,7 +149,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
     Path output = Paths.get("foo.output");
 
     ActionWrapperDataFactory actionWrapperDataFactory =
-        new ActionWrapperDataFactory(target, fakeActionAnalysisRegistry);
+        new ActionWrapperDataFactory(target, fakeActionAnalysisRegistry, fakeFilesystem);
     DeclaredArtifact declaredArtifact = actionWrapperDataFactory.declareArtifact(output);
     actionWrapperDataFactory.createActionAnalysisData(
         FakeAction.class,
@@ -190,7 +193,10 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
 
     assertTrue(ruleAnalysisCalled.get());
     assertSame(target, rule.getBuildTarget());
-    assertEquals(ExplicitBuildTargetSourcePath.of(target, output), rule.getSourcePathToOutput());
+    assertEquals(
+        ExplicitBuildTargetSourcePath.of(
+            target, BuildPaths.getGenDir(fakeFilesystem, target).resolve(output)),
+        rule.getSourcePathToOutput());
     assertEquals(ImmutableSet.of(), rule.getBuildDeps());
 
     assertThat(rule, Matchers.instanceOf(RuleAnalysisLegacyBuildRuleView.class));

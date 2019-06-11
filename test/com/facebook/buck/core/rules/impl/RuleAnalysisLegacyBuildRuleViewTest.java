@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -71,6 +72,8 @@ import org.junit.Test;
 
 public class RuleAnalysisLegacyBuildRuleViewTest {
 
+  private ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
   @Test
   public void buildRuleViewReturnsCorrectInformation()
       throws ActionCreationException, IOException, InterruptedException {
@@ -106,7 +109,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
         (ins, outs, ctx) -> ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
 
     ActionWrapperDataFactory actionWrapperDataFactory =
-        new ActionWrapperDataFactory(depTarget, actionAnalysisRegistry);
+        new ActionWrapperDataFactory(depTarget, actionAnalysisRegistry, filesystem);
     DeclaredArtifact depArtifact =
         actionWrapperDataFactory.declareArtifact(Paths.get("bar.output"));
     ImmutableMap<DeclaredArtifact, BuildArtifact> materializedDepArtifacts =
@@ -114,6 +117,8 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
             FakeAction.class, ImmutableSet.of(), ImmutableSet.of(depArtifact), depActionFunction);
 
     Path outpath = Paths.get("foo.output");
+    Path packagePath = BuildPaths.getGenDir(filesystem, buildTarget);
+
     AtomicBoolean functionCalled = new AtomicBoolean();
     FakeActionConstructorArgs actionFunction =
         (ins, outs, ctx) -> {
@@ -121,12 +126,15 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
           assertEquals(
               buildTarget, Iterables.getOnlyElement(outs).getActionDataKey().getBuildTarget());
           assertEquals(buildTarget, Iterables.getOnlyElement(outs).getPath().getTarget());
-          assertEquals(outpath, Iterables.getOnlyElement(outs).getPath().getResolvedPath());
+          assertEquals(
+              packagePath.resolve(outpath),
+              Iterables.getOnlyElement(outs).getPath().getResolvedPath());
           functionCalled.set(true);
           return ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
         };
 
-    actionWrapperDataFactory = new ActionWrapperDataFactory(buildTarget, actionAnalysisRegistry);
+    actionWrapperDataFactory =
+        new ActionWrapperDataFactory(buildTarget, actionAnalysisRegistry, filesystem);
     DeclaredArtifact artifact = actionWrapperDataFactory.declareArtifact(outpath);
     ImmutableMap<DeclaredArtifact, BuildArtifact> materializedArtifacts =
         actionWrapperDataFactory.createActionAnalysisData(
@@ -166,14 +174,16 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
     assertSame(projectFilesystem, buildRule.getProjectFilesystem());
     assertEquals("my_type", buildRule.getType());
     assertEquals(
-        ExplicitBuildTargetSourcePath.of(buildTarget, Paths.get("foo.output")),
+        ExplicitBuildTargetSourcePath.of(buildTarget, packagePath.resolve("foo.output")),
         buildRule.getSourcePathToOutput());
 
     assertEquals(ImmutableSortedSet.of(fakeDepRule), buildRule.getBuildDeps());
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     ImmutableList<? extends Step> steps =
         buildRule.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, buildableContext);
-    assertEquals(ImmutableSet.of(Paths.get("foo.output")), buildableContext.getRecordedArtifacts());
+    assertEquals(
+        ImmutableSet.of(packagePath.resolve("foo.output")),
+        buildableContext.getRecordedArtifacts());
     assertThat(steps, Matchers.hasSize(1));
 
     Step step = Iterables.getOnlyElement(steps);

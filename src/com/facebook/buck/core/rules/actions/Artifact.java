@@ -15,8 +15,10 @@
  */
 package com.facebook.buck.core.rules.actions;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import java.nio.file.Path;
 import org.immutables.value.Value;
 import org.immutables.value.Value.Style.ImplementationVisibility;
 
@@ -29,15 +31,33 @@ public interface Artifact {
   /** An artifact generated from build */
   @Value.Immutable(builder = false, copy = false, prehash = true)
   @Value.Style(visibility = ImplementationVisibility.PACKAGE)
-  interface BuildArtifact extends Artifact {
+  abstract class BuildArtifact implements Artifact {
 
     /** @return the key to the {@link ActionAnalysisData} that owns this artifact */
     @Value.Parameter
-    ActionAnalysisDataKey getActionDataKey();
+    public abstract ActionAnalysisDataKey getActionDataKey();
+
+    /** @return the {@link BuildTarget} of the rule that creates this {@link Artifact} */
+    @Value.Parameter
+    abstract BuildTarget getBuildTarget();
+
+    /**
+     * @return the buck-out package path folder that the specific output of this resides in. This is
+     *     a buck-out/gen folder generated using the {@link BuildTarget}.
+     */
+    @Value.Parameter
+    abstract Path getPackagePath();
+
+    /** @return the output path relative to the {@link #getPackagePath()} */
+    @Value.Parameter
+    abstract Path getOutputPath();
 
     /** @return the path to the artifact */
-    @Value.Parameter
-    ExplicitBuildTargetSourcePath getPath();
+    @Value.Derived
+    public ExplicitBuildTargetSourcePath getPath() {
+      return ExplicitBuildTargetSourcePath.of(
+          getBuildTarget(), getPackagePath().resolve(getOutputPath()));
+    }
   }
 
   /** An artifact representing a source file */

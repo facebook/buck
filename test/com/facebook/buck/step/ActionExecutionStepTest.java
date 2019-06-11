@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory.DeclaredArtifact;
 import com.facebook.buck.core.rules.actions.FakeAction;
@@ -67,7 +68,9 @@ public class ActionExecutionStepTest {
           assertEquals(ImmutableSet.of(), inputs);
           assertThat(outputs, Matchers.hasSize(1));
           assertEquals(
-              ExplicitBuildTargetSourcePath.of(buildTarget, output),
+              ExplicitBuildTargetSourcePath.of(
+                  buildTarget,
+                  BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve(output)),
               Iterables.getOnlyElement(outputs).getPath());
           assertSame(baseCell, ctx.getBuildCellRootPath());
           assertFalse(ctx.getShouldDeleteTemporaries());

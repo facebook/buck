@@ -19,6 +19,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory.DeclaredArtifact;
 import com.facebook.buck.core.rules.actions.Artifact.BuildArtifact;
 import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -35,7 +36,8 @@ public class FakeActionFactory {
   public FakeActionFactory(BuildTarget buildTarget) {
     this.actionAnalysisRegistry = new FakeActionAnalysisRegistry();
     this.actionWrapperDataFactory =
-        new ActionWrapperDataFactory(buildTarget, actionAnalysisRegistry);
+        new ActionWrapperDataFactory(
+            buildTarget, actionAnalysisRegistry, new FakeProjectFilesystem());
   }
 
   public DeclaredArtifact declareArtifact(Path path) {

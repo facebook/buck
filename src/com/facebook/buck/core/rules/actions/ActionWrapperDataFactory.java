@@ -16,10 +16,12 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.actions.AbstractAction.ActionConstructorParams;
 import com.facebook.buck.core.rules.actions.ActionAnalysisData.ID;
 import com.facebook.buck.core.rules.actions.Artifact.BuildArtifact;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -40,20 +42,31 @@ public class ActionWrapperDataFactory {
 
   private final BuildTarget buildTarget;
   private final ActionAnalysisDataRegistry actionRegistry;
+  private final Path packagePath;
 
   /**
    * @param buildTarget the {@link BuildTarget} for which all of the {@link Action}s created are for
-   * @param actionRegistry
+   * @param actionRegistry the {@link ActionAnalysisDataRegistry} that all actions created are
+   *     registered to
+   * @param filesystem the {@link ProjectFilesystem} to use for generating paths
    */
   public ActionWrapperDataFactory(
-      BuildTarget buildTarget, ActionAnalysisDataRegistry actionRegistry) {
+      BuildTarget buildTarget,
+      ActionAnalysisDataRegistry actionRegistry,
+      ProjectFilesystem filesystem) {
     this.buildTarget = buildTarget;
     this.actionRegistry = actionRegistry;
+    this.packagePath = BuildPaths.getGenDir(filesystem, buildTarget);
   }
 
-  /** @return a {@link DeclaredArtifact} for the given path */
-  public static DeclaredArtifact declareArtifact(Path output) {
-    return ImmutableDeclaredArtifact.of(output);
+  /**
+   * @param output the output {@link Path} relative to the package path for the current rule that
+   *     the {@link Action}s are being created for
+   * @return a {@link DeclaredArtifact} for the given path
+   */
+  public DeclaredArtifact declareArtifact(Path output) {
+    Preconditions.checkState(!output.isAbsolute());
+    return ImmutableDeclaredArtifact.of(packagePath, output);
   }
 
   /**
@@ -69,12 +82,16 @@ public class ActionWrapperDataFactory {
   @Value.Immutable(builder = false, copy = false)
   @Value.Style(visibility = ImplementationVisibility.PACKAGE)
   public abstract static class DeclaredArtifact {
+
     @Value.Parameter
-    public abstract Path getOutputPath();
+    abstract Path getPackagePath();
+
+    @Value.Parameter
+    abstract Path getOutputPath();
 
     private BuildArtifact materialize(ActionAnalysisDataKey key) {
       return ImmutableBuildArtifact.of(
-          key, ExplicitBuildTargetSourcePath.of(key.getBuildTarget(), getOutputPath()));
+          key, key.getBuildTarget(), getPackagePath(), getOutputPath());
     }
   }
 

@@ -22,6 +22,7 @@ import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableMap;
@@ -40,10 +41,12 @@ class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisData
   private final ActionWrapperDataFactory actionWrapperDataFactory;
 
   RuleAnalysisContextImpl(
-      BuildTarget buildTarget, ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> depProviders) {
+      BuildTarget buildTarget,
+      ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> depProviders,
+      ProjectFilesystem filesystem) {
     this.buildTarget = buildTarget;
     this.depProviders = depProviders;
-    this.actionWrapperDataFactory = new ActionWrapperDataFactory(buildTarget, this);
+    this.actionWrapperDataFactory = new ActionWrapperDataFactory(buildTarget, this, filesystem);
   }
 
   @Override

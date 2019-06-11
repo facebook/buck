@@ -88,8 +88,8 @@ public class RuleAnalysisComputation
             targetNode.getBuildTarget(),
             ImmutableMap.copyOf(
                 Maps.transformValues(
-                    env.getDeps(RuleAnalysisKey.IDENTIFIER),
-                    RuleAnalysisResult::getProviderInfos)));
+                    env.getDeps(RuleAnalysisKey.IDENTIFIER), RuleAnalysisResult::getProviderInfos)),
+            targetNode.getFilesystem());
 
     ProviderInfoCollection providers =
         ruleDescription.ruleImpl(
