@@ -33,8 +33,9 @@ public class SrcZipAwareFileBundler extends FileBundler {
 
   private final PatternsMatcher entriesToExclude;
 
-  public SrcZipAwareFileBundler(BuildTarget target, PatternsMatcher entriesToExclude) {
-    super(target);
+  public SrcZipAwareFileBundler(
+      ProjectFilesystem filesystem, BuildTarget target, PatternsMatcher entriesToExclude) {
+    super(filesystem, target);
     this.entriesToExclude = entriesToExclude;
   }
 

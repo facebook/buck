@@ -27,12 +27,8 @@ import java.nio.file.Path;
 
 public class CopyingFileBundler extends FileBundler {
 
-  public CopyingFileBundler(BuildTarget target) {
-    super(target);
-  }
-
-  public CopyingFileBundler(Path basePath) {
-    super(basePath);
+  public CopyingFileBundler(ProjectFilesystem filesystem, BuildTarget target) {
+    super(filesystem, target);
   }
 
   @Override

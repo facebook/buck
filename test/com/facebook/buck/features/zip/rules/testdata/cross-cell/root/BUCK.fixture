@@ -1,0 +1,10 @@
+export_file(
+    name = "taco",
+    src = "taco.txt",
+    visibility = ["PUBLIC"],
+)
+
+zip_file(
+    name = "from_secondary",
+    srcs = ["secondary//:cake"],
+)

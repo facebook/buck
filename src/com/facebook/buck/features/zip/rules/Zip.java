@@ -89,17 +89,16 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
     if (!zipSources.isEmpty()) {
       steps.addAll(
           ZipFileExtractor.extractZipFiles(
-              getBuildTarget(),
               filesystem,
               scratchDir,
               zipSources,
               buildContext.getSourcePathResolver(),
               excludedEntriesMatcher));
-      bundler = new CopyingFileBundler(getBuildTarget());
+      bundler = new CopyingFileBundler(filesystem, getBuildTarget());
     } else if (!mergeSourceZips.orElse(true)) {
-      bundler = new CopyingFileBundler(getBuildTarget());
+      bundler = new CopyingFileBundler(filesystem, getBuildTarget());
     } else {
-      bundler = new SrcZipAwareFileBundler(getBuildTarget(), excludedEntriesMatcher);
+      bundler = new SrcZipAwareFileBundler(filesystem, getBuildTarget(), excludedEntriesMatcher);
     }
 
     bundler.copy(

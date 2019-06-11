@@ -67,6 +67,7 @@ public class ZipInspector {
   }
 
   public void assertFileContents(String pathRelativeToRoot, String expected) throws IOException {
+    assertFileExists(pathRelativeToRoot);
     assertThat(
         new String(getFileContents(pathRelativeToRoot), Charsets.UTF_8),
         MoreStringsForTests.equalToIgnoringPlatformNewlines(expected));

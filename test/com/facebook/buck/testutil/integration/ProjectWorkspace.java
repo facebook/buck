@@ -259,10 +259,14 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public ProcessResult runBuckBuild(Optional<NGContext> context, String... args) {
+    return runBuckBuild(context, this.destPath, args);
+  }
+
+  public ProcessResult runBuckBuild(Optional<NGContext> context, Path root, String... args) {
     String[] totalArgs = new String[args.length + 1];
     totalArgs[0] = "build";
     System.arraycopy(args, 0, totalArgs, 1, args.length);
-    return runBuckCommand(context, totalArgs);
+    return runBuckCommand(context, root, totalArgs);
   }
 
   public ProcessResult runBuckTest(String... args) {
@@ -281,11 +285,11 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   private ImmutableMap<String, String> buildMultipleAndReturnStringOutputs(
-      Optional<NGContext> context, String... args) {
+      Optional<NGContext> context, Path buildRoot, String... args) {
     // Add in `--show-output` to the build, so we can parse the output paths after the fact.
     ImmutableList<String> buildArgs =
         ImmutableList.<String>builder().add("--show-output").add(args).build();
-    ProcessResult buildResult = runBuckBuild(context, buildArgs.toArray(new String[0]));
+    ProcessResult buildResult = runBuckBuild(context, buildRoot, buildArgs.toArray(new String[0]));
     buildResult.assertSuccess();
 
     // Build outputs are contained on stdout
@@ -323,10 +327,15 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
   public ImmutableMap<String, Path> buildMultipleAndReturnOutputs(
       Optional<NGContext> context, String... args) {
-    return buildMultipleAndReturnStringOutputs(context, args).entrySet().stream()
+    return buildMultipleAndReturnOutputs(context, this.destPath, args);
+  }
+
+  public ImmutableMap<String, Path> buildMultipleAndReturnOutputs(
+      Optional<NGContext> context, Path buildRoot, String[] args) {
+    return buildMultipleAndReturnStringOutputs(context, buildRoot, args).entrySet().stream()
         .collect(
             ImmutableMap.toImmutableMap(
-                entry -> entry.getKey(), entry -> getPath(entry.getValue())));
+                entry -> entry.getKey(), entry -> buildRoot.resolve(entry.getValue())));
   }
 
   public Path buildAndReturnOutput(String... args) {
@@ -334,7 +343,15 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public Path buildAndReturnOutput(Optional<NGContext> context, String... args) {
-    ImmutableMap<String, Path> outputs = buildMultipleAndReturnOutputs(context, args);
+    return buildAndReturnOutput(context, this.destPath, args);
+  }
+
+  public Path buildAndReturnOutput(Path root, String... args) {
+    return buildAndReturnOutput(Optional.empty(), root, args);
+  }
+
+  public Path buildAndReturnOutput(Optional<NGContext> context, Path buildRoot, String[] args) {
+    ImmutableMap<String, Path> outputs = buildMultipleAndReturnOutputs(context, buildRoot, args);
 
     // Verify we only have a single output.
     assertThat(
@@ -348,7 +365,12 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public ImmutableMap<String, Path> buildMultipleAndReturnRelativeOutputs(String... args) {
-    return buildMultipleAndReturnStringOutputs(Optional.empty(), args).entrySet().stream()
+    return buildMultipleAndReturnRelativeOutputs(this.destPath, args);
+  }
+
+  public ImmutableMap<String, Path> buildMultipleAndReturnRelativeOutputs(
+      Path root, String[] args) {
+    return buildMultipleAndReturnStringOutputs(Optional.empty(), root, args).entrySet().stream()
         .collect(
             ImmutableMap.toImmutableMap(
                 entry -> entry.getKey(), entry -> Paths.get(entry.getValue())));
@@ -417,13 +439,11 @@ public class ProjectWorkspace extends AbstractWorkspace {
    */
   @Override
   public ProcessResult runBuckCommand(String... args) {
-    return runBuckCommandWithEnvironmentOverridesAndContext(
-        destPath, Optional.empty(), ImmutableMap.of(), args);
+    return runBuckCommand(Optional.empty(), destPath, args);
   }
 
   public ProcessResult runBuckCommand(Optional<NGContext> context, String... args) {
-    return runBuckCommandWithEnvironmentOverridesAndContext(
-        destPath, context, ImmutableMap.of(), args);
+    return runBuckCommand(context, destPath, args);
   }
 
   @Override
@@ -433,8 +453,12 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public ProcessResult runBuckCommand(Path repoRoot, String... args) {
+    return runBuckCommand(Optional.empty(), repoRoot, args);
+  }
+
+  public ProcessResult runBuckCommand(Optional<NGContext> context, Path repoRoot, String... args) {
     return runBuckCommandWithEnvironmentOverridesAndContext(
-        repoRoot, Optional.empty(), ImmutableMap.of(), args);
+        repoRoot, context, ImmutableMap.of(), args);
   }
 
   public ProcessResult runBuckdCommand(String... args) throws IOException {

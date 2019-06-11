@@ -178,12 +178,9 @@ public class ZipRuleIntegrationTest {
 
     Path zip = workspace.buildAndReturnOutput("//example:excludesnothinginsubfolder");
 
-    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
-      ZipArchiveEntry cake = zipFile.getEntry("cake.txt");
-      assertThat(cake, Matchers.notNullValue());
-      ZipArchiveEntry cheesy = zipFile.getEntry("beans/cheesy.txt");
-      assertThat(cheesy, Matchers.notNullValue());
-    }
+    ZipInspector inspector = new ZipInspector(zip);
+    inspector.assertFileExists("cake.txt");
+    inspector.assertFileExists("beans/cheesy.txt");
   }
 
   @Test
@@ -259,10 +256,8 @@ public class ZipRuleIntegrationTest {
 
     Path zip = workspace.buildAndReturnOutput("//example:zipsources");
 
-    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
-      ZipInspector inspector = new ZipInspector(zip);
-      inspector.assertFileDoesNotExist("taco.txt");
-    }
+    ZipInspector inspector = new ZipInspector(zip);
+    inspector.assertFileDoesNotExist("taco.txt");
   }
 
   @Test
@@ -273,10 +268,8 @@ public class ZipRuleIntegrationTest {
 
     Path zip = workspace.buildAndReturnOutput("//example:exclude_from_zip");
 
-    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
-      ZipInspector inspector = new ZipInspector(zip);
-      inspector.assertFileDoesNotExist("cake.txt");
-    }
+    ZipInspector inspector = new ZipInspector(zip);
+    inspector.assertFileDoesNotExist("cake.txt");
   }
 
   @Test
@@ -287,10 +280,8 @@ public class ZipRuleIntegrationTest {
 
     Path zip = workspace.buildAndReturnOutput("//example:copy_zip");
 
-    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
-      ZipInspector inspector = new ZipInspector(zip);
-      inspector.assertFileExists("copy_out/cake.txt");
-    }
+    ZipInspector inspector = new ZipInspector(zip);
+    inspector.assertFileExists("copy_out/cake.txt");
   }
 
   @Test
@@ -300,10 +291,8 @@ public class ZipRuleIntegrationTest {
     workspace.setUp();
 
     Path zip = workspace.buildAndReturnOutput("//example:overwrite_duplicates");
-    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
-      ZipInspector inspector = new ZipInspector(zip);
-      inspector.assertFileContents(Paths.get("cake.txt"), "Cake :)");
-    }
+    ZipInspector inspector = new ZipInspector(zip);
+    inspector.assertFileContents(Paths.get("cake.txt"), "Cake :)");
   }
 
   @Test
@@ -313,9 +302,26 @@ public class ZipRuleIntegrationTest {
     workspace.setUp();
 
     Path zip = workspace.buildAndReturnOutput("//example:overwrite_duplicates_in_different_order");
-    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
+    ZipInspector inspector = new ZipInspector(zip);
+    inspector.assertFileContents(Paths.get("cake.txt"), "Guten Tag");
+  }
+
+  @Test
+  public void testCrossCellWithEmbeddedBuckOut() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cross-cell", tmp);
+    workspace.setUp();
+    Path root = workspace.resolve("root");
+    Path zip = workspace.buildAndReturnOutput(root, "root//:from_secondary");
+    try (ZipFile ignored = new ZipFile(zip.toFile())) {
       ZipInspector inspector = new ZipInspector(zip);
-      inspector.assertFileContents(Paths.get("cake.txt"), "Guten Tag");
+      inspector.assertFileContents(Paths.get("cake"), "Guten Tag");
+    }
+
+    zip = workspace.buildAndReturnOutput(root, "secondary//:from_root");
+    try (ZipFile ignored = new ZipFile(zip.toFile())) {
+      ZipInspector inspector = new ZipInspector(zip);
+      inspector.assertFileContents(Paths.get("taco"), "Hello");
     }
   }
 

@@ -63,7 +63,7 @@ public class Filegroup extends ModernBuildRule<Filegroup> implements HasOutputNa
       BuildCellRelativePathFactory buildCellPathFactory) {
     Path outputPath = outputPathResolver.resolvePath(this.outputPath);
 
-    FileBundler bundler = new CopyingFileBundler(getBuildTarget());
+    FileBundler bundler = new CopyingFileBundler(filesystem, getBuildTarget());
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 

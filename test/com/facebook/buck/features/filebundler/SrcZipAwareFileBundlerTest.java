@@ -20,7 +20,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -54,7 +53,6 @@ public class SrcZipAwareFileBundlerTest {
   Path subDirectoryFile1;
   Path subDirectoryFile2;
   Path subDirectoryFile3;
-  Path basePath = Paths.get("base");
 
   public void bundleFiles(ImmutableSortedSet<SourcePath> immutableSortedSet) throws IOException {
     ImmutableList.Builder<Step> immutableStepList = ImmutableList.builder();
@@ -66,7 +64,8 @@ public class SrcZipAwareFileBundlerTest {
     Files.createFile(subDirectoryFile2);
     Files.createFile(subDirectoryFile3);
 
-    SrcZipAwareFileBundler bundler = new SrcZipAwareFileBundler(basePath, PatternsMatcher.EMPTY);
+    SrcZipAwareFileBundler bundler =
+        new SrcZipAwareFileBundler(filesystem.getRootPath(), PatternsMatcher.EMPTY);
     bundler.copy(
         filesystem,
         new DefaultBuildCellRelativePathFactory(
@@ -157,51 +156,6 @@ public class SrcZipAwareFileBundlerTest {
           subDirectoryFile1.endsWith(relativePath)
               || subDirectoryFile2.endsWith(relativePath)
               || subDirectoryFile3.endsWith(relativePath));
-    }
-  }
-
-  @Test(expected = HumanReadableException.class)
-  public void shouldThrowAnExceptionIfBundlerOverwritesFiles() throws IOException {
-    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-
-    dest = filesystem.getRootPath().resolve("dest");
-    subDirectoryFile1 = filesystem.getRootPath().resolve("src1/subDir/file1");
-    subDirectoryFile2 = filesystem.getRootPath().resolve("src2/subDir/file1");
-    subDirectoryFile3 = filesystem.getRootPath().resolve("src1/subDir/file3");
-
-    bundleFiles(
-        ImmutableSortedSet.of(
-            PathSourcePath.of(filesystem, filesystem.getRootPath().relativize(subDirectoryFile1)),
-            PathSourcePath.of(filesystem, filesystem.getRootPath().relativize(subDirectoryFile2)),
-            PathSourcePath.of(filesystem, filesystem.getRootPath().relativize(subDirectoryFile3))));
-  }
-
-  @Test
-  public void shouldBundleFilesAndKeepSrcFilesUnderBasePath() throws IOException {
-    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-
-    dest = filesystem.getPath("dest");
-    subDirectoryFile1 = filesystem.getRootPath().resolve("src1/subDir/file1");
-    subDirectoryFile2 = filesystem.getRootPath().resolve("src2/subDir/file2");
-    subDirectoryFile3 = filesystem.getRootPath().resolve("src1/subDir/file3");
-
-    bundleFiles(
-        ImmutableSortedSet.of(
-            PathSourcePath.of(filesystem, filesystem.getRootPath().relativize(subDirectoryFile1)),
-            PathSourcePath.of(filesystem, filesystem.getRootPath().relativize(subDirectoryFile2)),
-            PathSourcePath.of(filesystem, filesystem.getRootPath().relativize(subDirectoryFile3))));
-
-    List<Path> bundledFilesCollection = getBundledFilesCollection();
-
-    assertSame(bundledFilesCollection.size(), 3);
-
-    for (Path path : bundledFilesCollection) {
-      Path relativePath =
-          filesystem.resolve(dest).relativize(filesystem.getPathForRelativePath(path));
-      assertTrue(
-          subDirectoryFile1.getFileName().equals(relativePath)
-              || subDirectoryFile2.getFileName().equals(relativePath)
-              || subDirectoryFile3.getFileName().equals(relativePath));
     }
   }
 }
