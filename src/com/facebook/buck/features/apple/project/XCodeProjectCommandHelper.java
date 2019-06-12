@@ -709,7 +709,7 @@ public class XCodeProjectCommandHelper {
           .getTargetGraph();
     }
     Preconditions.checkState(!passedInTargets.isEmpty());
-    return parser.buildTargetGraph(parsingContext, passedInTargets);
+    return parser.buildTargetGraph(parsingContext, passedInTargets).getTargetGraph();
   }
 
   private TargetGraphAndTargets createTargetGraph(
@@ -733,17 +733,20 @@ public class XCodeProjectCommandHelper {
               graphRootsOrSourceTargets, projectGraph, isWithDependenciesTests, focusedModules);
       if (!needsFullRecursiveParse) {
         projectGraph =
-            parser.buildTargetGraph(
-                parsingContext, MoreSets.union(graphRoots, explicitTestTargets));
+            parser
+                .buildTargetGraph(parsingContext, MoreSets.union(graphRoots, explicitTestTargets))
+                .getTargetGraph();
       } else {
         projectGraph =
-            parser.buildTargetGraph(
-                parsingContext,
-                MoreSets.union(
-                    projectGraph.getNodes().stream()
-                        .map(TargetNode::getBuildTarget)
-                        .collect(ImmutableSet.toImmutableSet()),
-                    explicitTestTargets));
+            parser
+                .buildTargetGraph(
+                    parsingContext,
+                    MoreSets.union(
+                        projectGraph.getNodes().stream()
+                            .map(TargetNode::getBuildTarget)
+                            .collect(ImmutableSet.toImmutableSet()),
+                        explicitTestTargets))
+                .getTargetGraph();
       }
     }
 

@@ -1254,7 +1254,8 @@ public class TargetsCommand extends AbstractCommand {
                   createParsingContext(params.getCell(), executor)
                       .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                       .withExcludeUnsupportedTargets(false),
-                  matchingBuildTargetsWithTests);
+                  matchingBuildTargetsWithTests)
+              .getTargetGraph();
 
       return new Pair<>(
           targetGraphWithTests, targetGraphWithTests.getAll(matchingBuildTargetsWithTests));

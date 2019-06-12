@@ -252,14 +252,16 @@ public class DistBuildStateTest {
     setUp();
     Parser parser = TestParserFactory.create(executor.get(), cell);
     TargetGraph targetGraph =
-        parser.buildTargetGraph(
-            ParsingContext.builder(
-                    cell, MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
-                .build(),
-            ImmutableSet.of(
-                BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib1"),
-                BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib2"),
-                BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib3")));
+        parser
+            .buildTargetGraph(
+                ParsingContext.builder(
+                        cell, MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
+                    .build(),
+                ImmutableSet.of(
+                    BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib1"),
+                    BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib2"),
+                    BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib3")))
+            .getTargetGraph();
 
     DistBuildTargetGraphCodec targetGraphCodec = createDefaultCodec(cell, Optional.of(parser));
     BuildJobState dump =

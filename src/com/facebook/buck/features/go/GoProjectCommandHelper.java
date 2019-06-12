@@ -192,7 +192,7 @@ public class GoProjectCommandHelper {
               targetConfiguration)
           .getTargetGraph();
     }
-    return parser.buildTargetGraph(parsingContext, passedInTargets);
+    return parser.buildTargetGraph(parsingContext, passedInTargets).getTargetGraph();
   }
 
   /**
@@ -394,7 +394,9 @@ public class GoProjectCommandHelper {
     if (isWithTests) {
       explicitTestTargets = getExplicitTestTargets(graphRoots, projectGraph);
       projectGraph =
-          parser.buildTargetGraph(parsingContext, MoreSets.union(graphRoots, explicitTestTargets));
+          parser
+              .buildTargetGraph(parsingContext, MoreSets.union(graphRoots, explicitTestTargets))
+              .getTargetGraph();
     }
 
     TargetGraphAndTargets targetGraphAndTargets =

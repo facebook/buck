@@ -200,7 +200,7 @@ abstract class AbstractParser implements Parser {
   }
 
   @Override
-  public TargetGraph buildTargetGraph(
+  public TargetGraphCreationResult buildTargetGraph(
       ParsingContext parsingContext, ImmutableSet<BuildTarget> toExplore)
       throws IOException, InterruptedException, BuildFileParseException {
     AtomicLong processedBytes = new AtomicLong();
@@ -210,12 +210,12 @@ abstract class AbstractParser implements Parser {
     }
   }
 
-  private TargetGraph buildTargetGraph(
+  private TargetGraphCreationResult buildTargetGraph(
       PerBuildState state, ImmutableSet<BuildTarget> toExplore, AtomicLong processedBytes)
       throws IOException, InterruptedException, BuildFileParseException {
 
     if (toExplore.isEmpty()) {
-      return TargetGraph.EMPTY;
+      return new ImmutableTargetGraphCreationResult(TargetGraph.EMPTY, toExplore);
     }
 
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
@@ -273,7 +273,7 @@ abstract class AbstractParser implements Parser {
       }
 
       targetGraph = new TargetGraph(graph, ImmutableMap.copyOf(index));
-      return targetGraph;
+      return new ImmutableTargetGraphCreationResult(targetGraph, toExplore);
     } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
       throw new HumanReadableException(e.getMessage());
     } catch (RuntimeException e) {
@@ -322,9 +322,7 @@ abstract class AbstractParser implements Parser {
               targetNodeSpecs,
               targetConfiguration,
               excludeConfigurationTargets);
-      TargetGraph graph = buildTargetGraph(state, buildTargets, processedBytes);
-
-      return new ImmutableTargetGraphCreationResult(graph, buildTargets);
+      return buildTargetGraph(state, buildTargets, processedBytes);
     }
   }
 

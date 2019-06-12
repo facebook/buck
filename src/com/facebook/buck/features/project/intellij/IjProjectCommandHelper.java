@@ -237,7 +237,7 @@ public class IjProjectCommandHelper {
           .getTargetGraph();
     }
     Preconditions.checkState(!passedInTargets.isEmpty());
-    return parser.buildTargetGraph(parsingContext, passedInTargets);
+    return parser.buildTargetGraph(parsingContext, passedInTargets).getTargetGraph();
   }
 
   /** Run intellij specific project generation actions. */
@@ -405,7 +405,9 @@ public class IjProjectCommandHelper {
     if (isWithTests) {
       explicitTestTargets = getExplicitTestTargets(graphRoots, projectGraph);
       projectGraph =
-          parser.buildTargetGraph(parsingContext, MoreSets.union(graphRoots, explicitTestTargets));
+          parser
+              .buildTargetGraph(parsingContext, MoreSets.union(graphRoots, explicitTestTargets))
+              .getTargetGraph();
     }
 
     TargetGraphAndTargets targetGraphAndTargets =

@@ -85,7 +85,8 @@ public class AuditInputCommand extends AbstractCommand {
                   createParsingContext(params.getCell(), pool.getListeningExecutorService())
                       .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                       .withExcludeUnsupportedTargets(false),
-                  targets);
+                  targets)
+              .getTargetGraph();
     } catch (BuildFileParseException e) {
       params
           .getBuckEventBus()

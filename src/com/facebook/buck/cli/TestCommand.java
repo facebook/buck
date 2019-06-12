@@ -32,8 +32,6 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
-import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
@@ -528,11 +526,9 @@ public class TestCommand extends BuildCommand {
             LOG.debug("Got related test targets %s, building new target graph...", testTargets);
             ImmutableSet<BuildTarget> allTargets =
                 MoreSets.union(targetGraphCreationResult.getBuildTargets(), testTargets);
-            TargetGraph targetGraph =
+            targetGraphCreationResult =
                 params.getParser().buildTargetGraph(parsingContext, allTargets);
             LOG.debug("Finished building new target graph with tests.");
-            targetGraphCreationResult =
-                new ImmutableTargetGraphCreationResult(targetGraph, allTargets);
           }
         }
 

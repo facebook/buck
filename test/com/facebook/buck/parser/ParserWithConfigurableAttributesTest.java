@@ -360,7 +360,8 @@ public class ParserWithConfigurableAttributesTest {
     FakeBuckEventListener listener = new FakeBuckEventListener();
     eventBus.register(listener);
 
-    TargetGraph targetGraph = parser.buildTargetGraph(parsingContext, buildTargets);
+    TargetGraph targetGraph =
+        parser.buildTargetGraph(parsingContext, buildTargets).getTargetGraph();
     ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
     BuildRule fooRule = graphBuilder.requireRule(fooTarget);
     assertNotNull(fooRule);
@@ -1905,7 +1906,8 @@ public class ParserWithConfigurableAttributesTest {
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(libTarget);
 
     {
-      TargetGraph targetGraph = parser.buildTargetGraph(parsingContext, buildTargets);
+      TargetGraph targetGraph =
+          parser.buildTargetGraph(parsingContext, buildTargets).getTargetGraph();
       ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
@@ -1921,7 +1923,8 @@ public class ParserWithConfigurableAttributesTest {
     parser.getPermState().invalidateBasedOn(createEvent);
 
     {
-      TargetGraph targetGraph = parser.buildTargetGraph(parsingContext, buildTargets);
+      TargetGraph targetGraph =
+          parser.buildTargetGraph(parsingContext, buildTargets).getTargetGraph();
       ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
@@ -1955,7 +1958,8 @@ public class ParserWithConfigurableAttributesTest {
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(libTarget);
 
     {
-      TargetGraph targetGraph = parser.buildTargetGraph(parsingContext, buildTargets);
+      TargetGraph targetGraph =
+          parser.buildTargetGraph(parsingContext, buildTargets).getTargetGraph();
       ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
@@ -1974,7 +1978,8 @@ public class ParserWithConfigurableAttributesTest {
     parser.getPermState().invalidateBasedOn(deleteEvent);
 
     {
-      TargetGraph targetGraph = parser.buildTargetGraph(parsingContext, buildTargets);
+      TargetGraph targetGraph =
+          parser.buildTargetGraph(parsingContext, buildTargets).getTargetGraph();
       ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
@@ -2616,7 +2621,8 @@ public class ParserWithConfigurableAttributesTest {
     // Build the target graph so we can access the hash code cache.
 
     ImmutableSet<BuildTarget> buildTargetsList = ImmutableSet.copyOf(buildTargets);
-    TargetGraph targetGraph = parser.buildTargetGraph(parsingContext, buildTargetsList);
+    TargetGraph targetGraph =
+        parser.buildTargetGraph(parsingContext, buildTargetsList).getTargetGraph();
 
     ImmutableMap<BuildTarget, Map<String, Object>> attributes =
         getRawTargetNodes(

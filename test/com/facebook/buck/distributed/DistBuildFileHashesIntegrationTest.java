@@ -96,11 +96,14 @@ public class DistBuildFileHashesIntegrationTest {
 
     Parser parser = TestParserFactory.create(executor.get(), rootCell);
     TargetGraph targetGraph =
-        parser.buildTargetGraph(
-            ParsingContext.builder(
-                    rootCell, MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
-                .build(),
-            ImmutableSet.of(BuildTargetFactory.newInstance(rootFs.getRootPath(), "//:libA")));
+        parser
+            .buildTargetGraph(
+                ParsingContext.builder(
+                        rootCell,
+                        MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
+                    .build(),
+                ImmutableSet.of(BuildTargetFactory.newInstance(rootFs.getRootPath(), "//:libA")))
+            .getTargetGraph();
 
     DistBuildTargetGraphCodec targetGraphCodec =
         DistBuildStateTest.createDefaultCodec(rootCell, Optional.of(parser));
@@ -155,11 +158,14 @@ public class DistBuildFileHashesIntegrationTest {
 
     Parser parser = TestParserFactory.create(executor.get(), rootCell);
     TargetGraph targetGraph =
-        parser.buildTargetGraph(
-            ParsingContext.builder(
-                    rootCell, MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
-                .build(),
-            ImmutableSet.of(BuildTargetFactory.newInstance(rootFs.getRootPath(), "//:libA")));
+        parser
+            .buildTargetGraph(
+                ParsingContext.builder(
+                        rootCell,
+                        MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
+                    .build(),
+                ImmutableSet.of(BuildTargetFactory.newInstance(rootFs.getRootPath(), "//:libA")))
+            .getTargetGraph();
 
     DistBuildTargetGraphCodec targetGraphCodec =
         DistBuildStateTest.createDefaultCodec(rootCell, Optional.of(parser));

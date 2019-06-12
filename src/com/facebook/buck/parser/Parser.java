@@ -79,7 +79,8 @@ public interface Parser {
   SortedMap<String, Object> getTargetNodeRawAttributes(
       ParsingContext parsingContext, TargetNode<?> targetNode) throws BuildFileParseException;
 
-  TargetGraph buildTargetGraph(ParsingContext parsingContext, ImmutableSet<BuildTarget> toExplore)
+  TargetGraphCreationResult buildTargetGraph(
+      ParsingContext parsingContext, ImmutableSet<BuildTarget> toExplore)
       throws IOException, InterruptedException, BuildFileParseException;
 
   /**
