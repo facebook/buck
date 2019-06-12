@@ -21,7 +21,6 @@ import com.facebook.buck.remoteexecution.CasBlobUploader.UploadResult;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -65,8 +64,8 @@ public class MultiThreadedBlobUploaderTest {
         .once();
 
     UploadResult uploadResult = new UploadResult(digest, 0, "slicespin");
-    EasyMock.expect(casBlobUploader.batchUpdateBlobs(EasyMock.anyObject()))
-        .andReturn(ImmutableList.of(uploadResult))
+    EasyMock.expect(casBlobUploader.uploadFromStream(EasyMock.anyObject()))
+        .andReturn(uploadResult)
         .once();
     EasyMock.replay(casBlobUploader);
 

@@ -205,6 +205,7 @@ public class MultiThreadedBlobUploader {
 
       if (size == 0 || data.getSize() + size < uploadSizeLimit) {
         dataBuilder.put(data.getHash(), data);
+        size += data.getSize();
       } else {
         // This object is too large to fit in this batch.
         // Add it back to the beginning of the upload queue for the next batch.
