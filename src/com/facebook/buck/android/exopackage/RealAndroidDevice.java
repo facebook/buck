@@ -63,7 +63,6 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
-import java.util.zip.GZIPOutputStream;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
@@ -1118,7 +1117,6 @@ public class RealAndroidDevice implements AndroidDevice {
    */
   private void multiInstallFilesToStream(
       OutputStream stream, String filesType, Map<Path, Path> installPaths) throws IOException {
-    GZIPOutputStream gzipStream = new GZIPOutputStream(stream, true);
     for (Map.Entry<Path, Path> entry : installPaths.entrySet()) {
       Path destination = entry.getKey();
       Path source = entry.getValue();
@@ -1128,12 +1126,12 @@ public class RealAndroidDevice implements AndroidDevice {
         byte[] bytes = Files.readAllBytes(source);
         byte[] restOfHeader = (bytes.length + " " + destination + "\n").getBytes(Charsets.UTF_8);
         byte[] headerPrefix = String.format("%04X ", restOfHeader.length).getBytes(Charsets.UTF_8);
-        gzipStream.write(headerPrefix);
-        gzipStream.write(restOfHeader);
-        gzipStream.write(bytes);
+        stream.write(headerPrefix);
+        stream.write(restOfHeader);
+        stream.write(bytes);
       }
     }
-    gzipStream.write("000D 0 --complete\n".getBytes(Charsets.UTF_8));
-    gzipStream.flush();
+    stream.write("000D 0 --complete\n".getBytes(Charsets.UTF_8));
+    stream.flush();
   }
 }

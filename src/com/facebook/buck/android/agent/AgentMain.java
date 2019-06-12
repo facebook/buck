@@ -32,7 +32,6 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger; // NOPMD
-import java.util.zip.GZIPInputStream;
 
 /**
  * Main class for an agent that runs on an Android device to aid app installation.
@@ -286,9 +285,8 @@ public class AgentMain {
   }
 
   private static void multiReceiveFileFromStream(BufferedInputStream stream) throws IOException {
-    GZIPInputStream gzipStream = new GZIPInputStream(stream);
     while (true) {
-      String header = readLine(gzipStream);
+      String header = readLine(stream);
       int space = header.indexOf(' ');
       if (space == -1) {
         throw new IllegalStateException("No space in metadata line.");
@@ -309,7 +307,7 @@ public class AgentMain {
         break;
       }
 
-      doRawReceiveFile(new File(fileName), size, gzipStream);
+      doRawReceiveFile(new File(fileName), size, stream);
     }
   }
 
