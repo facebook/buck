@@ -42,12 +42,17 @@ public interface BuckExecutableDetector {
     return new Impl();
   }
 
+  String DEFAULT_BUCK_NAME = "buck";
+  String DEFAULT_BUILDIFIER_NAME = "buildifier";
+  String DEFAULT_BUILDOZER_NAME = "buildozer";
+  String DEFAULT_ADB_NAME = "adb";
+
   /** Default implementation. */
   class Impl implements BuckExecutableDetector {
-    private static final Path BUCK_EXECUTABLE = Paths.get("buck");
-    private static final Path BUILDIFIER_EXECUTABLE = Paths.get("buildifier");
-    private static final Path BUILDOZER_EXECUTABLE = Paths.get("buildozer");
-    private static final Path ADB_EXECUTABLE = Paths.get("adb");
+    private static final Path BUCK_EXECUTABLE = Paths.get(DEFAULT_BUCK_NAME);
+    private static final Path BUILDIFIER_EXECUTABLE = Paths.get(DEFAULT_BUILDIFIER_NAME);
+    private static final Path BUILDOZER_EXECUTABLE = Paths.get(DEFAULT_BUILDOZER_NAME);
+    private static final Path ADB_EXECUTABLE = Paths.get(DEFAULT_ADB_NAME);
     private static final ExecutableFinder EXECUTABLE_FINDER = new ExecutableFinder();
 
     private Map<String, String> env;
