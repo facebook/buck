@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.rules.analysis.impl;
 
-import com.facebook.buck.core.artifact.Artifact.BuildArtifact;
+import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.artifact.DeclaredArtifact;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;

@@ -40,7 +40,7 @@ public abstract class DeclaredArtifact {
   @Value.Parameter
   public abstract Path getOutputPath();
 
-  public Artifact.BuildArtifact materialize(ActionAnalysisDataKey key) {
+  public BuildArtifact materialize(ActionAnalysisDataKey key) {
     return ImmutableBuildArtifact.of(key, key.getBuildTarget(), getPackagePath(), getOutputPath());
   }
 }

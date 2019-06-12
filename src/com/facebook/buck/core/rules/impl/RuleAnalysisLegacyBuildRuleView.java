@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.rules.impl;
 
-import com.facebook.buck.core.artifact.Artifact.BuildArtifact;
+import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;

@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.rules.providers.lib;
 
-import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProviderInfo;
@@ -38,10 +38,10 @@ public abstract class DefaultInfo extends BuiltInProviderInfo<DefaultInfo> {
    *
    * @return a map of a String, which is the named identifier to a set of outputs.
    */
-  public abstract Map<String, Set<Artifact.BuildArtifact>> namedOutputs();
+  public abstract Map<String, Set<BuildArtifact>> namedOutputs();
 
   /** @return the set of default outputs built by the rule if no output selection is specified. */
-  public abstract Set<Artifact.BuildArtifact> defaultOutputs();
+  public abstract Set<BuildArtifact> defaultOutputs();
 
   // TODO: add run files and such
 }

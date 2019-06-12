@@ -16,7 +16,7 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.Artifact.BuildArtifact;
+import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.artifact.DeclaredArtifact;
 import com.facebook.buck.core.artifact.ImmutableDeclaredArtifact;
 import com.facebook.buck.core.model.BuildTarget;

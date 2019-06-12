@@ -15,8 +15,14 @@
  */
 package com.facebook.buck.core.artifact;
 
-/**
- * An {@link Artifact} is a file used during the build stage. It can either be a source file for the
- * build or a generated file from a build step itself.
- */
-public interface Artifact {}
+import com.facebook.buck.core.sourcepath.SourcePath;
+import org.immutables.value.Value;
+
+/** An artifact representing a source file */
+@Value.Immutable(builder = false, copy = false, prehash = true)
+public interface SourceArtifact extends Artifact {
+
+  /** @return the path to the source file */
+  @Value.Parameter
+  SourcePath getPath();
+}
