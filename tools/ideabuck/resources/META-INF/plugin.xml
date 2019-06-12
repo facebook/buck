@@ -12,6 +12,7 @@
   <change-notes><![CDATA[
 <h3>3.7.4</h3>
 <ul>
+  <li>Support buck commands as "Before Run" tasks/</li>
   <li>Add macros to make it possible to pass buck information to External Tools:
     <ul>
       <li><code>$BuckExecutable$</code>: Path to the buck executable for the active project</li>
@@ -349,6 +350,9 @@
     <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckCellRootMacro"/>
     <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckCellRelativePathMacro"/>
     <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckRuleNameMacro"/>
+
+    <stepsBeforeRunProvider implementation="com.facebook.buck.intellij.ideabuck.configurations.BuckCommandBeforeRunTaskProvider"/>
+
   </extensions>
 
   <actions>
