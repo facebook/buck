@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.core.rules.actions;
+package com.facebook.buck.core.artifact;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
@@ -48,7 +48,7 @@ public interface Artifact {
      *     a buck-out/gen folder generated using the {@link BuildTarget}.
      */
     @Value.Parameter
-    abstract Path getPackagePath();
+    public abstract Path getPackagePath();
 
     /** @return the output path relative to the {@link #getPackagePath()} */
     @Value.Parameter

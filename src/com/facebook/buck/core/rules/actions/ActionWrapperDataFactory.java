@@ -15,10 +15,13 @@
  */
 package com.facebook.buck.core.rules.actions;
 
+import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.Artifact.BuildArtifact;
+import com.facebook.buck.core.artifact.DeclaredArtifact;
+import com.facebook.buck.core.artifact.ImmutableDeclaredArtifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.actions.AbstractAction.ActionConstructorParams;
-import com.facebook.buck.core.rules.actions.Artifact.BuildArtifact;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData.ID;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;

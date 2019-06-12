@@ -13,33 +13,34 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.core.rules.actions;
+package com.facebook.buck.core.artifact;
 
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /**
- * The {@link DeclaredArtifact} is the promise during the rule implementation that an {@link Action}
- * will be created to generate an output at the corresponding path.
+ * The {@link DeclaredArtifact} is the promise during the rule implementation that an {@link
+ * com.facebook.buck.core.rules.actions.Action} will be created to generate an output at the
+ * corresponding path.
  *
- * <p>This is not an {@link Artifact} in itself, and cannot be used as such for any {@link Action}
- * lookup, since it is not fully materialized with a corresponding {@link Action}.
+ * <p>This is not an {@link Artifact} in itself, and cannot be used as such for any {@link
+ * com.facebook.buck.core.rules.actions.Action} lookup, since it is not fully materialized with a
+ * corresponding {@link com.facebook.buck.core.rules.actions.Action}.
  *
- * <p>This {@link DeclaredArtifact} becomes materialized once a corresponding {@link Action} has
- * been created.
+ * <p>This {@link DeclaredArtifact} becomes materialized once a corresponding {@link
+ * com.facebook.buck.core.rules.actions.Action} has been created.
  */
 @Value.Immutable(builder = false, copy = false)
-@Value.Style(visibility = Value.Style.ImplementationVisibility.PACKAGE)
 public abstract class DeclaredArtifact {
 
   @Value.Parameter
-  abstract Path getPackagePath();
+  public abstract Path getPackagePath();
 
   @Value.Parameter
-  abstract Path getOutputPath();
+  public abstract Path getOutputPath();
 
-  Artifact.BuildArtifact materialize(ActionAnalysisDataKey key) {
+  public Artifact.BuildArtifact materialize(ActionAnalysisDataKey key) {
     return ImmutableBuildArtifact.of(key, key.getBuildTarget(), getPackagePath(), getOutputPath());
   }
 }

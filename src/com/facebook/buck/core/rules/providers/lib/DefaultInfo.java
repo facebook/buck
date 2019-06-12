@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.rules.providers.lib;
 
-import com.facebook.buck.core.rules.actions.Artifact;
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProviderInfo;
