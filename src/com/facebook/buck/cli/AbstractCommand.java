@@ -23,7 +23,7 @@ import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -363,8 +363,8 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     return false;
   }
 
-  TargetGraphAndBuildTargets toVersionedTargetGraph(
-      CommandRunnerParams params, TargetGraphAndBuildTargets targetGraphAndBuildTargets)
+  TargetGraphCreationResult toVersionedTargetGraph(
+      CommandRunnerParams params, TargetGraphCreationResult targetGraphCreationResult)
       throws VersionException, InterruptedException {
     return params
         .getVersionedTargetGraphCache()
@@ -373,7 +373,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             params.getBuckConfig(),
             params.getTypeCoercerFactory(),
             params.getUnconfiguredBuildTargetFactory(),
-            targetGraphAndBuildTargets,
+            targetGraphCreationResult,
             params.getTargetConfiguration(),
             params.getBuckEventBus());
   }

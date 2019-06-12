@@ -20,8 +20,9 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.core.util.graph.GraphTraversable;
@@ -284,7 +285,7 @@ abstract class AbstractParser implements Parser {
   }
 
   @Override
-  public synchronized TargetGraphAndBuildTargets buildTargetGraphWithoutConfigurationTargets(
+  public synchronized TargetGraphCreationResult buildTargetGraphWithoutConfigurationTargets(
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       TargetConfiguration targetConfiguration)
@@ -294,7 +295,7 @@ abstract class AbstractParser implements Parser {
   }
 
   @Override
-  public synchronized TargetGraphAndBuildTargets buildTargetGraphWithConfigurationTargets(
+  public synchronized TargetGraphCreationResult buildTargetGraphWithConfigurationTargets(
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       TargetConfiguration targetConfiguration)
@@ -303,7 +304,7 @@ abstract class AbstractParser implements Parser {
         parsingContext, targetNodeSpecs, targetConfiguration, false);
   }
 
-  private synchronized TargetGraphAndBuildTargets buildTargetGraphForTargetNodeSpecs(
+  private synchronized TargetGraphCreationResult buildTargetGraphForTargetNodeSpecs(
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       TargetConfiguration targetConfiguration,
@@ -323,7 +324,7 @@ abstract class AbstractParser implements Parser {
               excludeConfigurationTargets);
       TargetGraph graph = buildTargetGraph(state, buildTargets, processedBytes);
 
-      return TargetGraphAndBuildTargets.of(graph, buildTargets);
+      return new ImmutableTargetGraphCreationResult(graph, buildTargets);
     }
   }
 

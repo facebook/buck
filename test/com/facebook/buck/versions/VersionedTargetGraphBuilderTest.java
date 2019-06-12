@@ -22,8 +22,9 @@ import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -122,7 +123,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            TargetGraphAndBuildTargets.of(graph, ImmutableSet.of(root.getBuildTarget())),
+            new ImmutableTargetGraphCreationResult(graph, ImmutableSet.of(root.getBuildTarget())),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
     TargetGraph versionedGraph = builder.build();
@@ -140,7 +141,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            TargetGraphAndBuildTargets.of(
+            new ImmutableTargetGraphCreationResult(
                 graph,
                 ImmutableSet.of(
                     BuildTargetFactory.newInstance("//:root1"),
@@ -163,7 +164,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            TargetGraphAndBuildTargets.of(
+            new ImmutableTargetGraphCreationResult(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -189,7 +190,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            TargetGraphAndBuildTargets.of(
+            new ImmutableTargetGraphCreationResult(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -218,7 +219,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            TargetGraphAndBuildTargets.of(
+            new ImmutableTargetGraphCreationResult(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root1"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -246,7 +247,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            TargetGraphAndBuildTargets.of(
+            new ImmutableTargetGraphCreationResult(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -291,7 +292,7 @@ public class VersionedTargetGraphBuilderTest {
                 ImmutableMap.of(
                     a, ImmutableMap.of(dep, Version.of("1.0")),
                     b, ImmutableMap.of(dep, Version.of("2.0")))),
-            TargetGraphAndBuildTargets.of(
+            new ImmutableTargetGraphCreationResult(
                 graph,
                 ImmutableSet.of(
                     BuildTargetFactory.newInstance("//:a"),
@@ -333,7 +334,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            TargetGraphAndBuildTargets.of(
+            new ImmutableTargetGraphCreationResult(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -359,7 +360,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            TargetGraphAndBuildTargets.of(
+            new ImmutableTargetGraphCreationResult(
                 graph,
                 ImmutableSet.of(
                     BuildTargetFactory.newInstance("//:root1"),
@@ -380,7 +381,7 @@ public class VersionedTargetGraphBuilderTest {
           public VersionedTargetGraphBuilder create(
               DepsAwareExecutor executor,
               VersionSelector versionSelector,
-              TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
+              TargetGraphCreationResult unversionedTargetGraphAndBuildTargets,
               TypeCoercerFactory typeCoercerFactory,
               UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
             return new ParallelVersionedTargetGraphBuilder(
@@ -405,7 +406,7 @@ public class VersionedTargetGraphBuilderTest {
           public VersionedTargetGraphBuilder create(
               DepsAwareExecutor executor,
               VersionSelector versionSelector,
-              TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
+              TargetGraphCreationResult unversionedTargetGraphAndBuildTargets,
               TypeCoercerFactory typeCoercerFactory,
               UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
             return new AsyncVersionedTargetGraphBuilder(
@@ -430,7 +431,7 @@ public class VersionedTargetGraphBuilderTest {
     VersionedTargetGraphBuilder create(
         DepsAwareExecutor executor,
         VersionSelector versionSelector,
-        TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
+        TargetGraphCreationResult unversionedTargetGraphAndBuildTargets,
         TypeCoercerFactory typeCoercerFactory,
         UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory);
   }

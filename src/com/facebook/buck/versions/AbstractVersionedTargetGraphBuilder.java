@@ -17,7 +17,7 @@ package com.facebook.buck.versions;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -37,29 +37,29 @@ public abstract class AbstractVersionedTargetGraphBuilder implements VersionedTa
 
   protected final TypeCoercerFactory typeCoercerFactory;
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
-  protected final TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets;
+  protected final TargetGraphCreationResult unversionedTargetGraphCreationResult;
   protected final long timeout;
   protected final TimeUnit timeUnit;
 
   protected AbstractVersionedTargetGraphBuilder(
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
+      TargetGraphCreationResult unversionedTargetGraphCreationResult,
       long timeout,
       TimeUnit timeUnit) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
-    this.unversionedTargetGraphAndBuildTargets = unversionedTargetGraphAndBuildTargets;
+    this.unversionedTargetGraphCreationResult = unversionedTargetGraphCreationResult;
     this.timeout = timeout;
     this.timeUnit = timeUnit;
   }
 
   protected TargetNode<?> getNode(BuildTarget target) {
-    return unversionedTargetGraphAndBuildTargets.getTargetGraph().get(target);
+    return unversionedTargetGraphCreationResult.getTargetGraph().get(target);
   }
 
   protected Optional<TargetNode<?>> getNodeOptional(BuildTarget target) {
-    return unversionedTargetGraphAndBuildTargets.getTargetGraph().getOptional(target);
+    return unversionedTargetGraphCreationResult.getTargetGraph().getOptional(target);
   }
 
   protected final TargetNode<?> resolveVersions(

@@ -21,7 +21,8 @@ import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.event.BuckEventBus;
@@ -43,21 +44,21 @@ public class VersionedTargetGraphAndTargets {
       TargetConfiguration targetConfiguration,
       TargetGraphAndTargets targetGraphAndTargets)
       throws VersionException, InterruptedException {
-    TargetGraphAndBuildTargets targetGraphAndBuildTargets =
-        TargetGraphAndBuildTargets.of(
+    TargetGraphCreationResult targetGraphCreationResult =
+        new ImmutableTargetGraphCreationResult(
             targetGraphAndTargets.getTargetGraph(),
             Sets.union(
                 targetGraphAndTargets.getProjectRoots().stream()
                     .map(root -> root.getBuildTarget())
                     .collect(Collectors.toSet()),
                 explicitTestTargets));
-    TargetGraphAndBuildTargets versionedTargetGraphAndBuildTargets =
+    TargetGraphCreationResult versionedTargetGraphAndBuildTargets =
         versionedTargetGraphCache.toVersionedTargetGraph(
             depsAwareExecutor,
             buckConfig,
             typeCoercerFactory,
             unconfiguredBuildTargetFactory,
-            targetGraphAndBuildTargets,
+            targetGraphCreationResult,
             targetConfiguration,
             buckEventBus);
     return new TargetGraphAndTargets(

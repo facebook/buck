@@ -21,7 +21,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.core.util.log.Logger;
@@ -50,7 +50,7 @@ public class VersionedTargetGraphCache {
   @Nullable private CachedVersionedTargetGraph cachedVersionedTargetGraph = null;
 
   /** @return a new versioned target graph. */
-  private TargetGraphAndBuildTargets createdVersionedTargetGraph(
+  private TargetGraphCreationResult createdVersionedTargetGraph(
       DepsAwareExecutor<? super ComputeResult, ?> depsAwareExecutor,
       ImmutableMap<String, VersionUniverse> versionUniverses,
       int numberOfThreads,
@@ -60,7 +60,7 @@ public class VersionedTargetGraphCache {
       Map<VersionTargetGraphMode, Double> versionTargetGraphModeProbabilities,
       long timeoutSeconds,
       BuckEventBus eventBus,
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets)
+      TargetGraphCreationResult targetGraphCreationResult)
       throws VersionException, TimeoutException, InterruptedException {
 
     VersionTargetGraphMode resolvedMode = versionTargetGraphMode;
@@ -86,18 +86,18 @@ public class VersionedTargetGraphCache {
     if (resolvedMode == VersionTargetGraphMode.DISABLED) {
       return ParallelVersionedTargetGraphBuilder.transform(
           new VersionUniverseVersionSelector(
-              targetGraphAndBuildTargets.getTargetGraph(), versionUniverses),
-          targetGraphAndBuildTargets,
+              targetGraphCreationResult.getTargetGraph(), versionUniverses),
+          targetGraphCreationResult,
           numberOfThreads,
           typeCoercerFactory,
           unconfiguredBuildTargetFactory,
           timeoutSeconds);
     } else {
-      TargetGraphAndBuildTargets versionedTargetGraph =
+      TargetGraphCreationResult versionedTargetGraph =
           AsyncVersionedTargetGraphBuilder.transform(
               new VersionUniverseVersionSelector(
-                  targetGraphAndBuildTargets.getTargetGraph(), versionUniverses),
-              targetGraphAndBuildTargets,
+                  targetGraphCreationResult.getTargetGraph(), versionUniverses),
+              targetGraphCreationResult,
               depsAwareExecutor,
               typeCoercerFactory,
               unconfiguredBuildTargetFactory,
@@ -117,20 +117,20 @@ public class VersionedTargetGraphCache {
       long timeoutSeconds,
       BuckEventBus eventBus,
       CacheStatsTracker statsTracker,
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets)
+      TargetGraphCreationResult targetGraphCreationResult)
       throws VersionException, TimeoutException, InterruptedException {
 
     CacheStatsTracker.CacheRequest request = statsTracker.startRequest();
 
     // If new inputs match old ones, we can used the cached graph, if present.
     VersionedTargetGraphInputs newInputs =
-        VersionedTargetGraphInputs.of(targetGraphAndBuildTargets, versionUniverses);
+        VersionedTargetGraphInputs.of(targetGraphCreationResult, versionUniverses);
     if (cachedVersionedTargetGraph != null
         && newInputs.equals(cachedVersionedTargetGraph.getInputs())) {
 
       VersionedTargetGraphCacheResult result =
           VersionedTargetGraphCacheResult.of(
-              ResultType.HIT, cachedVersionedTargetGraph.getTargetGraphAndBuildTargets());
+              ResultType.HIT, cachedVersionedTargetGraph.getTargetGraphCreationResult());
 
       request.recordHit();
 
@@ -147,7 +147,7 @@ public class VersionedTargetGraphCache {
       resultType = ResultType.MISMATCH;
     }
 
-    TargetGraphAndBuildTargets newVersionedTargetGraph =
+    TargetGraphCreationResult newVersionedTargetGraph =
         createdVersionedTargetGraph(
             depsAwareExecutor,
             versionUniverses,
@@ -158,7 +158,7 @@ public class VersionedTargetGraphCache {
             versionTargetGraphModeProbabilities,
             timeoutSeconds,
             eventBus,
-            targetGraphAndBuildTargets);
+            targetGraphCreationResult);
     cachedVersionedTargetGraph = CachedVersionedTargetGraph.of(newInputs, newVersionedTargetGraph);
     VersionedTargetGraphCacheResult result =
         VersionedTargetGraphCacheResult.of(resultType, newVersionedTargetGraph);
@@ -177,7 +177,7 @@ public class VersionedTargetGraphCache {
       BuckConfig buckConfig,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
+      TargetGraphCreationResult targetGraphCreationResult,
       TargetConfiguration targetConfiguration,
       CacheStatsTracker statsTracker,
       BuckEventBus eventBus)
@@ -210,7 +210,7 @@ public class VersionedTargetGraphCache {
                   versionBuckConfig.getVersionTargetGraphTimeoutSeconds(),
                   eventBus,
                   statsTracker,
-                  targetGraphAndBuildTargets);
+                  targetGraphCreationResult);
           LOG.info("versioned target graph " + result.getType().getDescription());
           eventBus.post(result.getType().getEvent());
           return result;
@@ -241,7 +241,7 @@ public class VersionedTargetGraphCache {
       ImmutableMap<String, VersionUniverse> versionUniverses,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
+      TargetGraphCreationResult targetGraphCreationResult,
       int numberOfThreads,
       CacheStatsTracker statsTracker,
       BuckEventBus eventBus)
@@ -257,7 +257,7 @@ public class VersionedTargetGraphCache {
         20,
         eventBus,
         statsTracker,
-        targetGraphAndBuildTargets);
+        targetGraphCreationResult);
   }
 
   /**
@@ -270,7 +270,7 @@ public class VersionedTargetGraphCache {
   interface AbstractVersionedTargetGraphInputs {
 
     /** @return the un-versioned target graph to be transformed. */
-    TargetGraphAndBuildTargets getTargetGraphAndBuildTargets();
+    TargetGraphCreationResult getTargetGraphCreationResult();
 
     /** @return the version universes used when generating the versioned target graph. */
     ImmutableMap<String, VersionUniverse> getVersionUniverses();
@@ -288,7 +288,7 @@ public class VersionedTargetGraphCache {
     VersionedTargetGraphInputs getInputs();
 
     /** @return a versioned target graph. */
-    TargetGraphAndBuildTargets getTargetGraphAndBuildTargets();
+    TargetGraphCreationResult getTargetGraphCreationResult();
   }
 
   @Value.Immutable
@@ -299,7 +299,7 @@ public class VersionedTargetGraphCache {
     ResultType getType();
 
     /** @return a versioned target graph. */
-    TargetGraphAndBuildTargets getTargetGraphAndBuildTargets();
+    TargetGraphCreationResult getTargetGraphCreationResult();
   }
 
   /** The possible result types using the cache. */

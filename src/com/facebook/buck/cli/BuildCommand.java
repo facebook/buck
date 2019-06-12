@@ -32,7 +32,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -430,10 +430,10 @@ public class BuildCommand extends AbstractCommand {
       Function<ImmutableList<TargetNodeSpec>, ImmutableList<TargetNodeSpec>> targetNodeSpecEnhancer,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger)
       throws ActionGraphCreationException, IOException, InterruptedException {
-    TargetGraphAndBuildTargets unversionedTargetGraph =
+    TargetGraphCreationResult unversionedTargetGraph =
         createUnversionedTargetGraph(params, executorService, targetNodeSpecEnhancer);
 
-    Optional<TargetGraphAndBuildTargets> versionedTargetGraph = Optional.empty();
+    Optional<TargetGraphCreationResult> versionedTargetGraph = Optional.empty();
     try {
       if (params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()) {
         versionedTargetGraph = Optional.of(toVersionedTargetGraph(params, unversionedTargetGraph));
@@ -442,7 +442,7 @@ public class BuildCommand extends AbstractCommand {
       throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
     }
 
-    TargetGraphAndBuildTargets targetGraphForLocalBuild =
+    TargetGraphCreationResult targetGraphForLocalBuild =
         ActionAndTargetGraphs.getTargetGraphForLocalBuild(
             unversionedTargetGraph, versionedTargetGraph);
     checkSingleBuildTargetSpecifiedForOutBuildMode(targetGraphForLocalBuild);
@@ -468,7 +468,7 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private void checkSingleBuildTargetSpecifiedForOutBuildMode(
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets) {
+      TargetGraphCreationResult targetGraphAndBuildTargets) {
     // Ideally, we would error out of this before we build the entire graph, but it is possible
     // that `getArguments().size()` is 1 but `targetGraphAndBuildTargets.getBuildTargets().size()`
     // is greater than 1 if the lone argument is a wildcard build target that ends in "...".
@@ -706,7 +706,7 @@ public class BuildCommand extends AbstractCommand {
     }
   }
 
-  private TargetGraphAndBuildTargets createUnversionedTargetGraph(
+  private TargetGraphCreationResult createUnversionedTargetGraph(
       CommandRunnerParams params,
       ListeningExecutorService executor,
       Function<ImmutableList<TargetNodeSpec>, ImmutableList<TargetNodeSpec>> targetNodeSpecEnhancer)
@@ -731,7 +731,7 @@ public class BuildCommand extends AbstractCommand {
 
   private static ActionGraphAndBuilder createActionGraphAndResolver(
       CommandRunnerParams params,
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
+      TargetGraphCreationResult targetGraphAndBuildTargets,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     return params
         .getActionGraphProvider()
@@ -744,7 +744,7 @@ public class BuildCommand extends AbstractCommand {
   private static ImmutableSet<BuildTarget> getBuildTargets(
       CommandRunnerParams params,
       ActionGraphAndBuilder actionGraphAndBuilder,
-      TargetGraphAndBuildTargets targetGraph,
+      TargetGraphCreationResult targetGraph,
       TargetConfiguration targetConfiguration,
       @Nullable String justBuildTarget)
       throws ActionGraphCreationException {

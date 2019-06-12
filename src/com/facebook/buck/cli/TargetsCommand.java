@@ -34,8 +34,9 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.impl.InMemoryBuildFileTree;
+import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphHashing;
@@ -496,7 +497,7 @@ public class TargetsCommand extends AbstractCommand {
     }
 
     // plain or json output
-    TargetGraphAndBuildTargets targetGraphAndBuildTargetsForShowRules =
+    TargetGraphCreationResult targetGraphAndBuildTargetsForShowRules =
         buildTargetGraphAndTargetsForShowRules(params, executor, descriptionClasses);
     boolean useVersioning =
         isShowRuleKey || isShowOutput || isShowFullOutput
@@ -574,7 +575,7 @@ public class TargetsCommand extends AbstractCommand {
    */
   private void printDotFormat(CommandRunnerParams params, ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
-    TargetGraphAndBuildTargets targetGraphAndTargets = buildTargetGraphAndTargets(params, executor);
+    TargetGraphCreationResult targetGraphAndTargets = buildTargetGraphAndTargets(params, executor);
     TargetGraph targetGraph =
         getSubgraphWithoutConfigurationNodes(targetGraphAndTargets.getTargetGraph());
     ActionGraphAndBuilder result = params.getActionGraphProvider().getActionGraph(targetGraph);
@@ -620,7 +621,7 @@ public class TargetsCommand extends AbstractCommand {
     }
   }
 
-  private TargetGraphAndBuildTargets buildTargetGraphAndTargetsForShowRules(
+  private TargetGraphCreationResult buildTargetGraphAndTargetsForShowRules(
       CommandRunnerParams params,
       ListeningExecutorService executor,
       Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses)
@@ -631,7 +632,7 @@ public class TargetsCommand extends AbstractCommand {
             .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
             .withSpeculativeParsing(SpeculativeParsing.ENABLED);
     if (arguments.isEmpty()) {
-      TargetGraphAndBuildTargets completeTargetGraphAndBuildTargets =
+      TargetGraphCreationResult completeTargetGraphAndBuildTargets =
           params
               .getParser()
               .buildTargetGraphWithConfigurationTargets(
@@ -647,10 +648,10 @@ public class TargetsCommand extends AbstractCommand {
       Iterable<BuildTarget> buildTargets =
           FluentIterable.from(matchingNodes.values()).transform(TargetNode::getBuildTarget);
 
-      return TargetGraphAndBuildTargets.of(
+      return new ImmutableTargetGraphCreationResult(
           completeTargetGraphAndBuildTargets.getTargetGraph(), buildTargets);
     } else {
-      return filterTargetGraphAndBuildTargetsByType(
+      return filterTargetGraphCreationResultByType(
           params
               .getParser()
               .buildTargetGraphWithConfigurationTargets(
@@ -664,25 +665,25 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   /**
-   * Filters a TargetGraphAndBuildTargets' build targets by description class. Each of the {@link
+   * Filters a TargetGraphCreationResult' build targets by description class. Each of the {@link
    * BuildTarget}s must exist in the {@link TargetGraph}
    *
-   * @param targetGraphAndBuildTargets The object to filter
+   * @param targetGraphCreationResult The object to filter
    * @param descriptionClasses The classes to accept. If not present, or empty, all classes are
    *     accepted
-   * @return The filtered TargetGraphAndBuildTargets
+   * @return The filtered TargetGraphCreationResult
    */
-  private TargetGraphAndBuildTargets filterTargetGraphAndBuildTargetsByType(
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
+  private TargetGraphCreationResult filterTargetGraphCreationResultByType(
+      TargetGraphCreationResult targetGraphCreationResult,
       Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses) {
     if (!descriptionClasses.isPresent() || descriptionClasses.get().isEmpty()) {
-      return targetGraphAndBuildTargets;
+      return targetGraphCreationResult;
     }
 
-    TargetGraph targetGraph = targetGraphAndBuildTargets.getTargetGraph();
-    return TargetGraphAndBuildTargets.of(
+    TargetGraph targetGraph = targetGraphCreationResult.getTargetGraph();
+    return new ImmutableTargetGraphCreationResult(
         targetGraph,
-        targetGraphAndBuildTargets.getBuildTargets().stream()
+        targetGraphCreationResult.getBuildTargets().stream()
             .filter(
                 f ->
                     descriptionClasses
@@ -711,7 +712,7 @@ public class TargetsCommand extends AbstractCommand {
 
   private SortedMap<String, TargetNode<?>> getMatchingNodes(
       CommandRunnerParams params,
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
+      TargetGraphCreationResult targetGraphAndBuildTargets,
       Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses)
       throws IOException {
     PathArguments.ReferencedFiles referencedFiles =
@@ -739,7 +740,7 @@ public class TargetsCommand extends AbstractCommand {
     return matchingNodes;
   }
 
-  private TargetGraphAndBuildTargets buildTargetGraphAndTargets(
+  private TargetGraphCreationResult buildTargetGraphAndTargets(
       CommandRunnerParams params, ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
@@ -750,10 +751,10 @@ public class TargetsCommand extends AbstractCommand {
     // Parse the entire action graph, or (if targets are specified), only the specified targets and
     // their dependencies. If we're detecting test changes we need the whole graph as tests are not
     // dependencies.
-    TargetGraphAndBuildTargets targetGraphAndBuildTargets;
+    TargetGraphCreationResult targetGraphCreationResult;
     if (arguments.isEmpty() || isDetectTestChanges) {
-      targetGraphAndBuildTargets =
-          TargetGraphAndBuildTargets.of(
+      targetGraphCreationResult =
+          new ImmutableTargetGraphCreationResult(
               params
                   .getParser()
                   .buildTargetGraphWithConfigurationTargets(
@@ -766,7 +767,7 @@ public class TargetsCommand extends AbstractCommand {
                   .getTargetGraph(),
               ImmutableSet.of());
     } else {
-      targetGraphAndBuildTargets =
+      targetGraphCreationResult =
           params
               .getParser()
               .buildTargetGraphWithConfigurationTargets(
@@ -776,8 +777,8 @@ public class TargetsCommand extends AbstractCommand {
                   params.getTargetConfiguration());
     }
     return params.getBuckConfig().getView(BuildBuckConfig.class).getTargetsVersions()
-        ? toVersionedTargetGraph(params, targetGraphAndBuildTargets)
-        : targetGraphAndBuildTargets;
+        ? toVersionedTargetGraph(params, targetGraphCreationResult)
+        : targetGraphCreationResult;
   }
 
   @SuppressWarnings("unchecked")

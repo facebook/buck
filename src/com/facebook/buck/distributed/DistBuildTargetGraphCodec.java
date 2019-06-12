@@ -23,8 +23,9 @@ import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.impl.HostTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
+import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.log.Logger;
@@ -145,7 +146,7 @@ public class DistBuildTargetGraphCodec {
         .configure(HostTargetConfiguration.INSTANCE);
   }
 
-  public TargetGraphAndBuildTargets createTargetGraph(
+  public TargetGraphCreationResult createTargetGraph(
       BuildJobStateTargetGraph remoteTargetGraph, Function<Integer, Cell> cellLookup)
       throws InterruptedException {
 
@@ -187,7 +188,7 @@ public class DistBuildTargetGraphCodec {
 
     TargetGraph targetGraph = new TargetGraph(mutableTargetGraph, targetNodeIndex);
 
-    return TargetGraphAndBuildTargets.of(targetGraph, buildTargets.keySet());
+    return new ImmutableTargetGraphCreationResult(targetGraph, buildTargets.keySet());
   }
 
   private ListenableFuture<Void> asyncProcessRemoteBuildTarget(

@@ -20,7 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.util.log.Logger;
@@ -84,7 +84,7 @@ public class ParallelVersionedTargetGraphBuilder extends AbstractVersionedTarget
   ParallelVersionedTargetGraphBuilder(
       int numberOfThreads,
       VersionSelector versionSelector,
-      TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
+      TargetGraphCreationResult unversionedTargetGraphCreationResult,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       long timeoutSeconds) {
@@ -92,7 +92,7 @@ public class ParallelVersionedTargetGraphBuilder extends AbstractVersionedTarget
     super(
         typeCoercerFactory,
         unconfiguredBuildTargetFactory,
-        unversionedTargetGraphAndBuildTargets,
+        unversionedTargetGraphCreationResult,
         timeoutSeconds,
         TimeUnit.SECONDS);
     this.pool = new ForkJoinPool(numberOfThreads);
@@ -100,17 +100,17 @@ public class ParallelVersionedTargetGraphBuilder extends AbstractVersionedTarget
 
     this.index =
         new ConcurrentHashMap<>(
-            unversionedTargetGraphAndBuildTargets.getTargetGraph().getNodes().size() * 4,
+            unversionedTargetGraphCreationResult.getTargetGraph().getNodes().size() * 4,
             0.75f,
             pool.getParallelism());
     this.rootActions =
         new ConcurrentHashMap<>(
-            unversionedTargetGraphAndBuildTargets.getTargetGraph().getNodes().size() / 2,
+            unversionedTargetGraphCreationResult.getTargetGraph().getNodes().size() / 2,
             0.75f,
             pool.getParallelism());
     this.versionInfo =
         new ConcurrentHashMap<>(
-            2 * unversionedTargetGraphAndBuildTargets.getTargetGraph().getNodes().size(),
+            2 * unversionedTargetGraphCreationResult.getTargetGraph().getNodes().size(),
             0.75f,
             pool.getParallelism());
   }
@@ -187,12 +187,12 @@ public class ParallelVersionedTargetGraphBuilder extends AbstractVersionedTarget
   public TargetGraph build() throws VersionException, TimeoutException, InterruptedException {
     LOG.debug(
         "Starting version target graph transformation (nodes %d)",
-        unversionedTargetGraphAndBuildTargets.getTargetGraph().getNodes().size());
+        unversionedTargetGraphCreationResult.getTargetGraph().getNodes().size());
     long start = System.currentTimeMillis();
 
     // Walk through explicit built targets, separating them into root and non-root nodes.
     ImmutableList<RootAction> actions =
-        unversionedTargetGraphAndBuildTargets.getBuildTargets().stream()
+        unversionedTargetGraphCreationResult.getBuildTargets().stream()
             .map(this::getNode)
             .map(RootAction::new)
             .collect(ImmutableList.toImmutableList());
@@ -216,19 +216,19 @@ public class ParallelVersionedTargetGraphBuilder extends AbstractVersionedTarget
     return targetGraphBuilder.build();
   }
 
-  public static TargetGraphAndBuildTargets transform(
+  public static TargetGraphCreationResult transform(
       VersionSelector versionSelector,
-      TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
+      TargetGraphCreationResult unversionedTargetGraphCreationResult,
       int numberOfThreads,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       long timeoutSeconds)
       throws VersionException, TimeoutException, InterruptedException {
-    return unversionedTargetGraphAndBuildTargets.withTargetGraph(
+    return unversionedTargetGraphCreationResult.withTargetGraph(
         new ParallelVersionedTargetGraphBuilder(
                 numberOfThreads,
                 versionSelector,
-                unversionedTargetGraphAndBuildTargets,
+                unversionedTargetGraphCreationResult,
                 typeCoercerFactory,
                 unconfiguredBuildTargetFactory,
                 timeoutSeconds)

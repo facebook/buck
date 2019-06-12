@@ -18,13 +18,13 @@ package com.facebook.buck.core.model.graph;
 
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 /**
- * Container class for {@link ActionGraphAndBuilder} and {@link TargetGraphAndBuildTargets}. Also
+ * Container class for {@link ActionGraphAndBuilder} and {@link TargetGraphCreationResult}. Also
  * contains helper methods for which {@link TargetGraph} to use for local and distributed builds
  * ({@link com.facebook.buck.versions.VersionedTargetGraph} vs un-versioned).
  */
@@ -32,30 +32,30 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractActionAndTargetGraphs {
 
-  abstract TargetGraphAndBuildTargets getUnversionedTargetGraph();
+  abstract TargetGraphCreationResult getUnversionedTargetGraph();
 
-  abstract Optional<TargetGraphAndBuildTargets> getVersionedTargetGraph();
+  abstract Optional<TargetGraphCreationResult> getVersionedTargetGraph();
 
   public abstract ActionGraphAndBuilder getActionGraphAndBuilder();
 
   /**
    * Helper method to choose versioned vs un-versioned {@link TargetGraph} to use for local builds.
    */
-  public static TargetGraphAndBuildTargets getTargetGraphForLocalBuild(
-      TargetGraphAndBuildTargets unversionedTargetGraph,
-      Optional<TargetGraphAndBuildTargets> versionedTargetGraph) {
+  public static TargetGraphCreationResult getTargetGraphForLocalBuild(
+      TargetGraphCreationResult unversionedTargetGraph,
+      Optional<TargetGraphCreationResult> versionedTargetGraph) {
     // If a versioned target graph was produced then we always use this for the local build,
     // otherwise the unversioned graph is used.
     return versionedTargetGraph.orElse(unversionedTargetGraph);
   }
 
   /** Helper method to get the appropriate {@link TargetGraph} to use for local builds. */
-  public TargetGraphAndBuildTargets getTargetGraphForLocalBuild() {
+  public TargetGraphCreationResult getTargetGraphForLocalBuild() {
     return getTargetGraphForLocalBuild(getUnversionedTargetGraph(), getVersionedTargetGraph());
   }
 
   /** Helper method to get the appropriate {@link TargetGraph} to use for distributed builds. */
-  public TargetGraphAndBuildTargets getTargetGraphForDistributedBuild() {
+  public TargetGraphCreationResult getTargetGraphForDistributedBuild() {
     // Distributed builds serialize and send the unversioned target graph,
     // and then deserialize and version remotely.
     return getUnversionedTargetGraph();

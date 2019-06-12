@@ -19,7 +19,7 @@ import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientSt
 
 import com.facebook.buck.cli.BuildCommand.GraphsAndBuildTargets;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.util.log.Logger;
@@ -84,7 +84,7 @@ public class AsyncJobStateFactory {
 
     // Distributed builds serialize and send the unversioned target graph,
     // and then deserialize and version remotely.
-    TargetGraphAndBuildTargets targetGraphAndBuildTargets =
+    TargetGraphCreationResult targetGraphCreationResult =
         graphsAndBuildTargets.getGraphs().getTargetGraphForDistributedBuild();
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
@@ -107,7 +107,7 @@ public class AsyncJobStateFactory {
                           .build(),
                       input);
             },
-            targetGraphAndBuildTargets.getBuildTargets().stream()
+            targetGraphCreationResult.getBuildTargets().stream()
                 .map(t -> t.getFullyQualifiedName())
                 .collect(Collectors.toSet()));
 
@@ -120,7 +120,7 @@ public class AsyncJobStateFactory {
                         cellIndexer,
                         distributedBuildFileHashes,
                         targetGraphCodec,
-                        targetGraphAndBuildTargets.getTargetGraph(),
+                        targetGraphCreationResult.getTargetGraph(),
                         graphsAndBuildTargets.getBuildTargets(),
                         remoteCommand,
                         clientStatsTracker);

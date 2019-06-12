@@ -22,8 +22,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
@@ -211,10 +212,11 @@ public class CxxGenruleDescriptionTest {
             .setOut("foo");
     TargetGraph graph =
         TargetGraphFactory.newInstance(dep.build(), versionedDep.build(), genruleBuilder.build());
-    TargetGraphAndBuildTargets transformed =
+    TargetGraphCreationResult transformed =
         ParallelVersionedTargetGraphBuilder.transform(
             new NaiveVersionSelector(),
-            TargetGraphAndBuildTargets.of(graph, ImmutableSet.of(genruleBuilder.getTarget())),
+            new ImmutableTargetGraphCreationResult(
+                graph, ImmutableSet.of(genruleBuilder.getTarget())),
             NUMBER_OF_THREADS,
             new DefaultTypeCoercerFactory(),
             new ParsingUnconfiguredBuildTargetViewFactory(),
@@ -248,10 +250,11 @@ public class CxxGenruleDescriptionTest {
     TargetGraph graph =
         TargetGraphFactory.newInstance(
             transitiveDep.build(), versionedDep.build(), dep.build(), genruleBuilder.build());
-    TargetGraphAndBuildTargets transformed =
+    TargetGraphCreationResult transformed =
         ParallelVersionedTargetGraphBuilder.transform(
             new NaiveVersionSelector(),
-            TargetGraphAndBuildTargets.of(graph, ImmutableSet.of(genruleBuilder.getTarget())),
+            new ImmutableTargetGraphCreationResult(
+                graph, ImmutableSet.of(genruleBuilder.getTarget())),
             NUMBER_OF_THREADS,
             new DefaultTypeCoercerFactory(),
             new ParsingUnconfiguredBuildTargetViewFactory(),

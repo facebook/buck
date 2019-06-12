@@ -20,7 +20,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -52,7 +52,7 @@ public class InstrumentedVersionedTargetGraphCache {
       DepsAwareExecutor<? super ComputeResult, ?> depsAwareExecutor,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
+      TargetGraphCreationResult targetGraphCreationResult,
       ImmutableMap<String, VersionUniverse> versionUniverses,
       int numberOfThreads,
       BuckEventBus eventBus)
@@ -62,7 +62,7 @@ public class InstrumentedVersionedTargetGraphCache {
         versionUniverses,
         typeCoercerFactory,
         unconfiguredBuildTargetFactory,
-        targetGraphAndBuildTargets,
+        targetGraphCreationResult,
         numberOfThreads,
         statsTracker,
         eventBus);
@@ -72,12 +72,12 @@ public class InstrumentedVersionedTargetGraphCache {
    * @return a versioned target graph, either generated from the parameters or retrieved from a
    *     cache, with the current CacheStatsTracker
    */
-  public TargetGraphAndBuildTargets toVersionedTargetGraph(
+  public TargetGraphCreationResult toVersionedTargetGraph(
       DepsAwareExecutor<? super ComputeResult, ?> depsAwareExecutor,
       BuckConfig buckConfig,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
+      TargetGraphCreationResult targetGraphCreationResult,
       TargetConfiguration targetConfiguration,
       BuckEventBus eventBus)
       throws VersionException, InterruptedException {
@@ -87,11 +87,11 @@ public class InstrumentedVersionedTargetGraphCache {
             buckConfig,
             typeCoercerFactory,
             unconfiguredBuildTargetFactory,
-            targetGraphAndBuildTargets,
+            targetGraphCreationResult,
             targetConfiguration,
             statsTracker,
             eventBus)
-        .getTargetGraphAndBuildTargets();
+        .getTargetGraphCreationResult();
   }
 
   /** @return a CacheStats object containing the performance data of this cache */

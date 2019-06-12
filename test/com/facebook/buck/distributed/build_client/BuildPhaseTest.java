@@ -41,8 +41,8 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
+import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -224,7 +224,8 @@ public class BuildPhaseTest {
             .setActionGraphAndBuilder(
                 ActionGraphAndBuilder.of(
                     new ActionGraph(graphBuilder.getBuildRules()), graphBuilder))
-            .setUnversionedTargetGraph(TargetGraphAndBuildTargets.of(TargetGraph.EMPTY, targets))
+            .setUnversionedTargetGraph(
+                new ImmutableTargetGraphCreationResult(TargetGraph.EMPTY, targets))
             .build();
 
     FileHashCache fileHashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());

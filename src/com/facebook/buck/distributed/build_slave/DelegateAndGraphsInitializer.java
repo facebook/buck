@@ -23,7 +23,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.impl.HostTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -114,7 +114,7 @@ public class DelegateAndGraphsInitializer {
       TargetGraph targetGraph = null;
       DistBuildTargetGraphCodec codec = createGraphCodec();
       ImmutableMap<Integer, Cell> cells = args.getState().getCells();
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets =
+      TargetGraphCreationResult targetGraphCreationResult =
           Objects.requireNonNull(
               codec.createTargetGraph(
                   args.getState().getRemoteState().getTargetGraph(),
@@ -132,12 +132,12 @@ public class DelegateAndGraphsInitializer {
                       args.getState().getRemoteRootCellConfig(),
                       new DefaultTypeCoercerFactory(),
                       new ParsingUnconfiguredBuildTargetViewFactory(),
-                      targetGraphAndBuildTargets,
+                      targetGraphCreationResult,
                       HostTargetConfiguration.INSTANCE,
                       args.getBuckEventBus())
                   .getTargetGraph();
         } else {
-          targetGraph = targetGraphAndBuildTargets.getTargetGraph();
+          targetGraph = targetGraphCreationResult.getTargetGraph();
         }
       } catch (VersionException e) {
         throw new RuntimeException(e);

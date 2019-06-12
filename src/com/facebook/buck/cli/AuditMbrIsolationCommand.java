@@ -22,8 +22,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
+import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
@@ -98,7 +98,8 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
       }
       if (params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()) {
         targetGraph =
-            toVersionedTargetGraph(params, TargetGraphAndBuildTargets.of(targetGraph, targets))
+            toVersionedTargetGraph(
+                    params, new ImmutableTargetGraphCreationResult(targetGraph, targets))
                 .getTargetGraph();
       }
 

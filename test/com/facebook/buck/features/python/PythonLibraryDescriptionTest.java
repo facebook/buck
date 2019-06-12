@@ -22,8 +22,8 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -205,7 +205,7 @@ public class PythonLibraryDescriptionTest {
                     ImmutableMap.of(
                         builder.getTarget(),
                         ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")))),
-                TargetGraphAndBuildTargets.of(
+                new ImmutableTargetGraphCreationResult(
                     TargetGraphFactory.newInstance(
                         transitiveDepBuilder.build(), depBuilder.build(), builder.build()),
                     ImmutableSet.of(builder.getTarget())),
@@ -255,7 +255,7 @@ public class PythonLibraryDescriptionTest {
                     ImmutableMap.of(
                         builder.getTarget(),
                         ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")))),
-                TargetGraphAndBuildTargets.of(
+                new ImmutableTargetGraphCreationResult(
                     TargetGraphFactory.newInstance(
                         transitiveDepBuilder.build(), depBuilder.build(), builder.build()),
                     ImmutableSet.of(builder.getTarget())),

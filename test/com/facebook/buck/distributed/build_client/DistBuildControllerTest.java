@@ -38,8 +38,8 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
+import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -181,7 +181,8 @@ public class DistBuildControllerTest {
                 ActionGraphAndBuilder.of(
                     createNiceMock(ActionGraph.class), createNiceMock(ActionGraphBuilder.class)))
             .setUnversionedTargetGraph(
-                TargetGraphAndBuildTargets.of(createNiceMock(TargetGraph.class), ImmutableSet.of()))
+                new ImmutableTargetGraphCreationResult(
+                    createNiceMock(TargetGraph.class), ImmutableSet.of()))
             .build();
     return new DistBuildController(
         DistBuildControllerArgs.builder()

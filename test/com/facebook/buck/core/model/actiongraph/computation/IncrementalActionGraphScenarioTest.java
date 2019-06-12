@@ -35,8 +35,8 @@ import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -376,7 +376,7 @@ public class IncrementalActionGraphScenarioTest {
         ParallelVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
                     unversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
-                TargetGraphAndBuildTargets.of(
+                new ImmutableTargetGraphCreationResult(
                     unversionedTargetGraph, ImmutableSet.of(binaryTarget, binaryTarget2)),
                 NUMBER_OF_THREADS,
                 new DefaultTypeCoercerFactory(),
@@ -551,7 +551,7 @@ public class IncrementalActionGraphScenarioTest {
         ParallelVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
                     unversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
-                TargetGraphAndBuildTargets.of(
+                new ImmutableTargetGraphCreationResult(
                     unversionedTargetGraph, ImmutableSet.of(compilationDatabaseTarget)),
                 NUMBER_OF_THREADS,
                 new DefaultTypeCoercerFactory(),
@@ -577,7 +577,7 @@ public class IncrementalActionGraphScenarioTest {
         ParallelVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
                     newUnversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
-                TargetGraphAndBuildTargets.of(
+                new ImmutableTargetGraphCreationResult(
                     newUnversionedTargetGraph, ImmutableSet.of(binaryTarget)),
                 NUMBER_OF_THREADS,
                 new DefaultTypeCoercerFactory(),

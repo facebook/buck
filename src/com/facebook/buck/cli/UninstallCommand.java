@@ -24,7 +24,7 @@ import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.event.ConsoleEvent;
@@ -94,7 +94,7 @@ public class UninstallCommand extends AbstractCommand {
 
     try (CommandThreadManager pool =
         new CommandThreadManager("Uninstall", getConcurrencyLimit(params.getBuckConfig()))) {
-      TargetGraphAndBuildTargets result =
+      TargetGraphCreationResult result =
           params
               .getParser()
               .buildTargetGraphWithConfigurationTargets(

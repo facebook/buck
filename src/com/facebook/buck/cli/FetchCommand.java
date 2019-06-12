@@ -30,7 +30,7 @@ import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.event.ConsoleEvent;
@@ -77,7 +77,7 @@ public class FetchCommand extends BuildCommand {
       ImmutableSet<BuildTarget> buildTargets;
       try {
         ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
-        TargetGraphAndBuildTargets result =
+        TargetGraphCreationResult result =
             params
                 .getParser()
                 .buildTargetGraphWithoutConfigurationTargets(

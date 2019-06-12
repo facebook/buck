@@ -29,7 +29,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -75,33 +75,33 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
   AsyncVersionedTargetGraphBuilder(
       DepsAwareExecutor<? super ComputeResult, ?> executor,
       VersionSelector versionSelector,
-      TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
+      TargetGraphCreationResult unversionedTargetGraphCreationResult,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       long timeoutSeconds) {
     super(
         typeCoercerFactory,
         unconfiguredBuildTargetFactory,
-        unversionedTargetGraphAndBuildTargets,
+        unversionedTargetGraphCreationResult,
         timeoutSeconds,
         TimeUnit.SECONDS);
 
     this.versionedTargetGraphTransformer =
         new VersionedTargetGraphComputation(
-            unversionedTargetGraphAndBuildTargets.getTargetGraph(), versionSelector);
+            unversionedTargetGraphCreationResult.getTargetGraph(), versionSelector);
 
     this.asyncTransformationEngine =
         new DefaultGraphTransformationEngine(
             ImmutableList.of(new GraphComputationStage<>(versionedTargetGraphTransformer)),
-            unversionedTargetGraphAndBuildTargets.getTargetGraph().getSize() * 4,
+            unversionedTargetGraphCreationResult.getTargetGraph().getSize() * 4,
             executor);
     this.versionInfoAsyncTransformationEngine =
         new DefaultGraphTransformationEngine(
             ImmutableList.of(
                 new GraphComputationStage<>(
                     new TargetNodeToVersionInfoComputation(
-                        unversionedTargetGraphAndBuildTargets.getTargetGraph()))),
-            2 * unversionedTargetGraphAndBuildTargets.getTargetGraph().getSize(),
+                        unversionedTargetGraphCreationResult.getTargetGraph()))),
+            2 * unversionedTargetGraphCreationResult.getTargetGraph().getSize(),
             DefaultDepsAwareExecutor.of(2));
   }
 
@@ -116,14 +116,14 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
   public TargetGraph build() throws TimeoutException, InterruptedException, VersionException {
     LOG.debug(
         "Starting version target graph transformation (nodes %d)",
-        unversionedTargetGraphAndBuildTargets.getTargetGraph().getNodes().size());
+        unversionedTargetGraphCreationResult.getTargetGraph().getNodes().size());
     long start = System.currentTimeMillis();
 
     ImmutableSet<VersionTargetGraphKey> rootKeys =
         RichStream.from(
-                unversionedTargetGraphAndBuildTargets
+                unversionedTargetGraphCreationResult
                     .getTargetGraph()
-                    .getAll(unversionedTargetGraphAndBuildTargets.getBuildTargets()))
+                    .getAll(unversionedTargetGraphCreationResult.getBuildTargets()))
             .map(ImmutableVersionTargetGraphKey::of)
             .collect(ImmutableSet.toImmutableSet());
 
@@ -157,20 +157,20 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
     return graph;
   }
 
-  /** Transforms the given {@link TargetGraphAndBuildTargets} such that all versions are resolved */
-  public static TargetGraphAndBuildTargets transform(
+  /** Transforms the given {@link TargetGraphCreationResult} such that all versions are resolved */
+  public static TargetGraphCreationResult transform(
       VersionSelector versionSelector,
-      TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
+      TargetGraphCreationResult unversionedTargetGraphCreationResult,
       DepsAwareExecutor<? super ComputeResult, ?> executor,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       long timeoutSeconds)
       throws VersionException, TimeoutException, InterruptedException {
-    return unversionedTargetGraphAndBuildTargets.withTargetGraph(
+    return unversionedTargetGraphCreationResult.withTargetGraph(
         new AsyncVersionedTargetGraphBuilder(
                 executor,
                 versionSelector,
-                unversionedTargetGraphAndBuildTargets,
+                unversionedTargetGraphCreationResult,
                 typeCoercerFactory,
                 unconfiguredBuildTargetFactory,
                 timeoutSeconds)

@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
@@ -79,7 +79,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
     try (CommandThreadManager pool =
         new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()))) {
       // Create the target graph.
-      TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets =
+      TargetGraphCreationResult unversionedTargetGraphCreationResult =
           params
               .getParser()
               .buildTargetGraphWithoutConfigurationTargets(
@@ -92,16 +92,16 @@ public class AuditActionGraphCommand extends AbstractCommand {
                   parseArgumentsAsTargetNodeSpecs(
                       params.getCell(), params.getBuckConfig(), targetSpecs),
                   params.getTargetConfiguration());
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets =
+      TargetGraphCreationResult targetGraphCreationResult =
           params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()
-              ? toVersionedTargetGraph(params, unversionedTargetGraphAndBuildTargets)
-              : unversionedTargetGraphAndBuildTargets;
+              ? toVersionedTargetGraph(params, unversionedTargetGraphCreationResult)
+              : unversionedTargetGraphCreationResult;
 
       // Create the action graph.
       ActionGraphAndBuilder actionGraphAndBuilder =
           params
               .getActionGraphProvider()
-              .getActionGraph(targetGraphAndBuildTargets.getTargetGraph());
+              .getActionGraph(targetGraphCreationResult.getTargetGraph());
 
       // Dump the action graph.
       if (generateDotOutput) {
