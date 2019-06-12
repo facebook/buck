@@ -19,12 +19,13 @@ import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationId
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import org.immutables.value.Value;
 
 /**
  * The key of a computation of the {@link com.facebook.buck.core.model.targetgraph.TargetGraph} to
  * its corresponding {@link com.google.devtools.build.lib.packages.Provider}s and {@link
- * com.facebook.buck.core.rules.actions.ActionAnalysisData}.
+ * ActionAnalysisData}.
  *
  * <p>This key will be used to indicate which rule's analysis we are currently interested in.
  */

@@ -26,6 +26,8 @@ import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.actions.AbstractAction.ActionConstructorParams;
 import com.facebook.buck.core.rules.actions.Artifact.BuildArtifact;
 import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;

@@ -17,6 +17,7 @@ package com.facebook.buck.core.rules.analysis.computation;
 
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.google.common.collect.ImmutableMap;
 import java.util.Set;
 
@@ -24,8 +25,7 @@ import java.util.Set;
  * Represents the stage of buck where the {@link
  * com.facebook.buck.core.model.targetgraph.TargetGraph} is analyzed and converted into its
  * corresponding {@link RuleAnalysisResult} graph, which consists of a {@link
- * com.google.devtools.build.lib.packages.Provider} graph and a {@link
- * com.facebook.buck.core.rules.actions.ActionAnalysisData} graph.
+ * com.google.devtools.build.lib.packages.Provider} graph and a {@link ActionAnalysisData} graph.
  */
 public interface RuleAnalysisComputation {
 

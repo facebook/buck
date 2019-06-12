@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.actions;
 
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 

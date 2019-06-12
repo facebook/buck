@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.core.rules.actions;
+package com.facebook.buck.core.rules.analysis.action;
 
 import com.facebook.buck.core.model.BuildTarget;
 import org.immutables.value.Value;

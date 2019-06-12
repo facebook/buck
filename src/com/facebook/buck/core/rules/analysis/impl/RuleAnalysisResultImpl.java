@@ -16,8 +16,8 @@
 package com.facebook.buck.core.rules.analysis.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.actions.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;

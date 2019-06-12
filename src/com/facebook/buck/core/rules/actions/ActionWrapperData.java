@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.core.rules.actions;
 
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import org.immutables.value.Value;
 import org.immutables.value.Value.Style.ImplementationVisibility;
 

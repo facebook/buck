@@ -15,6 +15,9 @@
  */
 package com.facebook.buck.core.rules.actions;
 
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataRegistry;
 import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.Map;

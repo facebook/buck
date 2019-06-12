@@ -16,6 +16,8 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import java.nio.file.Path;
