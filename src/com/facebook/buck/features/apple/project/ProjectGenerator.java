@@ -213,6 +213,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /** Generator for xcode project and associated files from a set of xcode/ios rules. */
 public class ProjectGenerator {
@@ -1765,6 +1766,22 @@ public class ProjectGenerator {
       }
 
       if (isFocusedOnTarget) {
+        Iterable<Path> recursivePublicSystemIncludeDirectories =
+            collectRecursivePublicSystemIncludeDirectories(targetNode);
+        Iterable<Path> recursivePublicIncludeDirectories =
+            collectRecursivePublicIncludeDirectories(targetNode);
+        Iterable<Path> includeDirectories = extractIncludeDirectories(targetNode);
+
+        // Explicitly add system include directories to compile flags to mute warnings,
+        // XCode seems to not support system include directories directly.
+        // But even if headers dirs are passed as flags, we still need to add
+        // them to `HEADER_SEARCH_PATH` otherwise header generation for Swift interop
+        // won't work (it doesn't use `OTHER_XXX_FLAGS`).
+        Iterable<String> systemIncludeDirectoryFlags =
+            StreamSupport.stream(recursivePublicSystemIncludeDirectories.spliterator(), false)
+                .map(path -> "-isystem" + path)
+                .collect(Collectors.toList());
+
         ImmutableSet<Path> recursiveHeaderSearchPaths =
             collectRecursiveHeaderSearchPaths(targetNode);
         ImmutableSet<Path> headerMapBases = collectRecursiveHeaderMapBases(targetNode);
@@ -1774,7 +1791,14 @@ public class ProjectGenerator {
             getFrameworkAndLibrarySearchPathConfigs(targetNode, includeFrameworks));
         appendConfigsBuilder.put(
             "HEADER_SEARCH_PATHS",
-            Joiner.on(' ').join(Iterables.concat(recursiveHeaderSearchPaths, headerMapBases)));
+            Joiner.on(' ')
+                .join(
+                    Iterables.concat(
+                        recursiveHeaderSearchPaths,
+                        headerMapBases,
+                        recursivePublicSystemIncludeDirectories,
+                        recursivePublicIncludeDirectories,
+                        includeDirectories)));
         if (hasSwiftVersionArg && containsSwiftCode && isFocusedOnTarget) {
           ImmutableSet<Path> swiftIncludePaths = collectRecursiveSwiftIncludePaths(targetNode);
           Stream<String> allValues =
@@ -1822,9 +1846,7 @@ public class ProjectGenerator {
                 .addAll(
                     convertStringWithMacros(
                         targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
-                .addAll(collectRecursivePublicSystemIncludeDirectories(targetNode))
-                .addAll(collectRecursivePublicIncludeDirectories(targetNode))
-                .addAll(extractIncludeDirectories(targetNode))
+                .addAll(systemIncludeDirectoryFlags)
                 .addAll(testingOverlay)
                 .build();
         Iterable<String> targetCxxFlags =
@@ -1841,9 +1863,7 @@ public class ProjectGenerator {
                 .addAll(
                     convertStringWithMacros(
                         targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
-                .addAll(collectRecursivePublicSystemIncludeDirectories(targetNode))
-                .addAll(collectRecursivePublicIncludeDirectories(targetNode))
-                .addAll(extractIncludeDirectories(targetNode))
+                .addAll(systemIncludeDirectoryFlags)
                 .addAll(testingOverlay)
                 .build();
 
@@ -3973,7 +3993,7 @@ public class ProjectGenerator {
             });
   }
 
-  private Iterable<String> collectRecursivePublicIncludeDirectories(TargetNode<?> targetNode) {
+  private Iterable<Path> collectRecursivePublicIncludeDirectories(TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 xcodeDescriptions,
@@ -3986,8 +4006,7 @@ public class ProjectGenerator {
         .transformAndConcat(this::extractPublicIncludeDirectories);
   }
 
-  private Iterable<String> collectRecursivePublicSystemIncludeDirectories(
-      TargetNode<?> targetNode) {
+  private Iterable<Path> collectRecursivePublicSystemIncludeDirectories(TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 xcodeDescriptions,
@@ -4000,7 +4019,7 @@ public class ProjectGenerator {
         .transformAndConcat(this::extractPublicSystemIncludeDirectories);
   }
 
-  private Iterable<String> extractIncludeDirectories(TargetNode<?> targetNode) {
+  private Iterable<Path> extractIncludeDirectories(TargetNode<?> targetNode) {
     Path basePath =
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
             .resolve(targetNode.getBuildTarget().getBasePath());
@@ -4009,10 +4028,10 @@ public class ProjectGenerator {
             .map(input -> input.getConstructorArg().getIncludeDirectories())
             .orElse(ImmutableSortedSet.of());
     return FluentIterable.from(includeDirectories)
-        .transform(includeDirectory -> "-I" + basePath.resolve(includeDirectory).normalize());
+        .transform(includeDirectory -> basePath.resolve(includeDirectory).normalize());
   }
 
-  private Iterable<String> extractPublicIncludeDirectories(TargetNode<?> targetNode) {
+  private Iterable<Path> extractPublicIncludeDirectories(TargetNode<?> targetNode) {
     Path basePath =
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
             .resolve(targetNode.getBuildTarget().getBasePath());
@@ -4021,10 +4040,10 @@ public class ProjectGenerator {
             .map(input -> input.getConstructorArg().getPublicIncludeDirectories())
             .orElse(ImmutableSortedSet.of());
     return FluentIterable.from(includeDirectories)
-        .transform(includeDirectory -> "-I" + basePath.resolve(includeDirectory).normalize());
+        .transform(includeDirectory -> basePath.resolve(includeDirectory).normalize());
   }
 
-  private Iterable<String> extractPublicSystemIncludeDirectories(TargetNode<?> targetNode) {
+  private Iterable<Path> extractPublicSystemIncludeDirectories(TargetNode<?> targetNode) {
     Path basePath =
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
             .resolve(targetNode.getBuildTarget().getBasePath());
@@ -4033,7 +4052,7 @@ public class ProjectGenerator {
             .map(input -> input.getConstructorArg().getPublicSystemIncludeDirectories())
             .orElse(ImmutableSortedSet.of());
     return FluentIterable.from(includeDirectories)
-        .transform(includeDirectory -> "-isystem" + basePath.resolve(includeDirectory).normalize());
+        .transform(includeDirectory -> basePath.resolve(includeDirectory).normalize());
   }
 
   private ImmutableList<StringWithMacros> collectRecursiveExportedLinkerFlags(
