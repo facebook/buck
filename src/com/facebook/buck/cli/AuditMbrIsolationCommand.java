@@ -22,8 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
-import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
@@ -79,7 +78,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
         throw new CommandLineException("must specify at least one build target");
       }
 
-      TargetGraph targetGraph;
+      TargetGraphCreationResult targetGraph;
       try (CommandThreadManager pool =
           new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()))) {
         targetGraph =
@@ -89,8 +88,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
                     createParsingContext(params.getCell(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                         .withExcludeUnsupportedTargets(false),
-                    targets)
-                .getTargetGraph();
+                    targets);
       } catch (BuildFileParseException e) {
         params
             .getBuckEventBus()
@@ -98,10 +96,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
         return ExitCode.PARSE_ERROR;
       }
       if (params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()) {
-        targetGraph =
-            toVersionedTargetGraph(
-                    params, new ImmutableTargetGraphCreationResult(targetGraph, targets))
-                .getTargetGraph();
+        targetGraph = toVersionedTargetGraph(params, targetGraph);
       }
 
       ActionGraphBuilder graphBuilder =

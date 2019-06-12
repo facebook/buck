@@ -57,6 +57,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TestTargetGraphCreationResultFactory;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
@@ -2587,7 +2588,7 @@ public class ParserWithConfigurableAttributesTest {
                 .withEventBus(eventBus)
                 .withCellProvider(cell.getCellProvider())
                 .build()
-                .getFreshActionGraph(targetGraph))
+                .getFreshActionGraph(TestTargetGraphCreationResultFactory.create(targetGraph)))
         .getActionGraphBuilder();
   }
 

@@ -107,7 +107,7 @@ public class FetchCommand extends BuildCommand {
                                 .getMaxActionGraphCacheEntries()),
                         params.getRuleKeyConfiguration(),
                         params.getBuckConfig())
-                    .getFreshActionGraph(result.getTargetGraph()));
+                    .getFreshActionGraph(result));
         buildTargets =
             RichStream.from(actionGraphAndBuilder.getActionGraph().getNodes())
                 .filter(rule -> isDownloadableRule(rule))

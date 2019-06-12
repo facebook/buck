@@ -55,6 +55,7 @@ import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderB
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TestTargetGraphCreationResultFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -1272,7 +1273,9 @@ public class WorkspaceAndProjectGeneratorTest {
     return input ->
         new ActionGraphProviderBuilder()
             .build()
-            .getFreshActionGraph(targetGraph.getSubgraph(ImmutableSet.of(input)))
+            .getFreshActionGraph(
+                TestTargetGraphCreationResultFactory.create(
+                    targetGraph.getSubgraph(ImmutableSet.of(input))))
             .getActionGraphBuilder();
   }
 }

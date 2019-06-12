@@ -271,11 +271,13 @@ public class ActionGraphProviderTest {
         new ActionGraphProviderBuilder().withEventBus(eventBus).build();
     ActionGraphAndBuilder resultRun1 =
         actionGraphProvider.getFreshActionGraph(
-            new DefaultTargetNodeToBuildRuleTransformer(), targetGraph1);
+            new DefaultTargetNodeToBuildRuleTransformer(),
+            TestTargetGraphCreationResultFactory.create(targetGraph1));
 
     ActionGraphAndBuilder resultRun2 =
         actionGraphProvider.getFreshActionGraph(
-            new DefaultTargetNodeToBuildRuleTransformer(), targetGraph1);
+            new DefaultTargetNodeToBuildRuleTransformer(),
+            TestTargetGraphCreationResultFactory.create(targetGraph1));
 
     // Check all the RuleKeys are the same between the 2 ActionGraphs.
     Map<BuildRule, RuleKey> resultRun1RuleKeys =

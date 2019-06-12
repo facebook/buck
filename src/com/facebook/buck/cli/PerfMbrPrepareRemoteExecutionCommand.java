@@ -19,7 +19,7 @@ import com.facebook.buck.cli.HeapDumper.DumpType;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -91,7 +91,7 @@ public class PerfMbrPrepareRemoteExecutionCommand
       throw new CommandLineException("must specify at least one build target");
     }
 
-    TargetGraph targetGraph = getTargetGraph(params, targets);
+    TargetGraphCreationResult targetGraph = getTargetGraph(params, targets);
 
     // Get a fresh action graph since we might unsafely run init from disks...
     // Also, we don't measure speed of this part.

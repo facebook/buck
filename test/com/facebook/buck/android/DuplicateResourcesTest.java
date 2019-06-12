@@ -31,6 +31,7 @@ import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderB
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TestTargetGraphCreationResultFactory;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -255,7 +256,9 @@ public class DuplicateResourcesTest {
                     .build()
                     .getCellProvider())
             .build()
-            .getFreshActionGraph(new DefaultTargetNodeToBuildRuleTransformer(), targetGraph);
+            .getFreshActionGraph(
+                new DefaultTargetNodeToBuildRuleTransformer(),
+                TestTargetGraphCreationResultFactory.create(targetGraph));
 
     ImmutableSet<ImmutableList<Step>> ruleSteps =
         RichStream.from(actionGraphAndBuilder.getActionGraph().getNodes())

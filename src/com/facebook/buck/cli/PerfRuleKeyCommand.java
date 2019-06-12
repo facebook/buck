@@ -24,7 +24,7 @@ import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
-import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.BuildRule;
@@ -113,7 +113,7 @@ public class PerfRuleKeyCommand extends AbstractPerfCommand<PreparedState> {
         throw new CommandLineException("must specify at least one build target");
       }
 
-      TargetGraph targetGraph = getTargetGraph(params, targets);
+      TargetGraphCreationResult targetGraph = getTargetGraph(params, targets);
 
       // Get a fresh action graph since we might unsafely run init from disks...
       // Also, we don't measure speed of this part.

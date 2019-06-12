@@ -18,7 +18,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.cli.PerfActionGraphCommand.PreparedState;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.util.CommandLineException;
 import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
@@ -39,7 +39,7 @@ public class PerfActionGraphCommand extends AbstractPerfCommand<PreparedState> {
         throw new CommandLineException("must specify at least one build target");
       }
 
-      TargetGraph targetGraph = getTargetGraph(params, targets);
+      TargetGraphCreationResult targetGraph = getTargetGraph(params, targets);
 
       return new PreparedState(targetGraph);
     } catch (Exception e) {
@@ -49,9 +49,9 @@ public class PerfActionGraphCommand extends AbstractPerfCommand<PreparedState> {
 
   /** The state prepared for us to compute keys. */
   static class PreparedState {
-    private final TargetGraph targetGraph;
+    private final TargetGraphCreationResult targetGraph;
 
-    public PreparedState(TargetGraph targetGraph) {
+    public PreparedState(TargetGraphCreationResult targetGraph) {
       this.targetGraph = targetGraph;
     }
   }

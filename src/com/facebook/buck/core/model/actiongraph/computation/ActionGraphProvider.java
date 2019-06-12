@@ -175,7 +175,7 @@ public class ActionGraphProvider {
    * @param targetGraph the target graph that the action graph will be based on.
    * @return a {@link ActionGraphAndBuilder}
    */
-  public ActionGraphAndBuilder getFreshActionGraph(TargetGraph targetGraph) {
+  public ActionGraphAndBuilder getFreshActionGraph(TargetGraphCreationResult targetGraph) {
     TargetNodeToBuildRuleTransformer transformer = new DefaultTargetNodeToBuildRuleTransformer();
     return getFreshActionGraph(transformer, targetGraph);
   }
@@ -190,12 +190,13 @@ public class ActionGraphProvider {
    * @return It returns a {@link ActionGraphAndBuilder}
    */
   public ActionGraphAndBuilder getFreshActionGraph(
-      TargetNodeToBuildRuleTransformer transformer, TargetGraph targetGraph) {
+      TargetNodeToBuildRuleTransformer transformer, TargetGraphCreationResult targetGraph) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
 
     ActionGraphAndBuilder actionGraph =
-        createActionGraph(transformer, targetGraph, IncrementalActionGraphMode.DISABLED);
+        createActionGraph(
+            transformer, targetGraph.getTargetGraph(), IncrementalActionGraphMode.DISABLED);
 
     eventBus.post(ActionGraphEvent.finished(started, actionGraph.getActionGraph().getSize()));
     return actionGraph;

@@ -29,6 +29,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
+import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -220,7 +221,8 @@ public class IjProjectCommandHelper {
 
   private ActionGraphAndBuilder getActionGraph(TargetGraph targetGraph) {
     TargetNodeToBuildRuleTransformer transformer = new ShallowTargetNodeToBuildRuleTransformer();
-    return actionGraphProvider.getFreshActionGraph(transformer, targetGraph);
+    return actionGraphProvider.getFreshActionGraph(
+        transformer, new ImmutableTargetGraphCreationResult(targetGraph, ImmutableSet.of()));
   }
 
   private TargetGraph getProjectGraphForIde(ImmutableSet<BuildTarget> passedInTargets)
