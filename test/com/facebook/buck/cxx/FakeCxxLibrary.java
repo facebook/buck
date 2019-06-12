@@ -31,7 +31,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -137,13 +137,14 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
-    return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
+  public Iterable<NativeLinkableGroup> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
+    return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkableGroup.class);
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableExportedDeps(BuildRuleResolver ruleResolver) {
-    return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
+  public Iterable<NativeLinkableGroup> getNativeLinkableExportedDeps(
+      BuildRuleResolver ruleResolver) {
+    return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkableGroup.class);
   }
 
   @Override
@@ -165,7 +166,7 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+  public NativeLinkableGroup.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
     return Linkage.ANY;
   }
 

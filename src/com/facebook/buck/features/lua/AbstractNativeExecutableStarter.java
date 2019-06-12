@@ -45,7 +45,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -285,7 +285,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
+  public Iterable<? extends NativeLinkableGroup> getNativeLinkTargetDeps(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return getNativeStarterDeps();
   }

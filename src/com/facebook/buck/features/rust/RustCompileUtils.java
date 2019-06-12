@@ -41,7 +41,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -587,7 +587,8 @@ public class RustCompileUtils {
           if (!rustLinkable.isProcMacro()) {
             deps = rustLinkable.getRustLinakbleDeps(rustPlatform);
 
-            if (!forceRlib && rustLinkable.getPreferredLinkage() != NativeLinkable.Linkage.STATIC) {
+            if (!forceRlib
+                && rustLinkable.getPreferredLinkage() != NativeLinkableGroup.Linkage.STATIC) {
               libs.putAll(rustLinkable.getRustSharedLibraries(rustPlatform));
             }
           }

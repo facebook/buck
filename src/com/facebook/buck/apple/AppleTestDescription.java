@@ -64,7 +64,7 @@ import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -72,7 +72,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
-import com.facebook.buck.swift.SwiftRuntimeNativeLinkable;
+import com.facebook.buck.swift.SwiftRuntimeNativeLinkableGroup;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.unarchive.UnzipStep;
 import com.facebook.buck.util.RichStream;
@@ -583,10 +583,13 @@ public class AppleTestDescription
     SourcePath testHostAppBinarySourcePath =
         testHostWithTargetApp.getBinaryBuildRule().getSourcePathToOutput();
 
-    ImmutableMap<BuildTarget, NativeLinkable> roots =
+    ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
         NativeLinkables.getNativeLinkableRoots(
             testHostWithTargetApp.getBinary().get().getBuildDeps(),
-            r -> !(r instanceof NativeLinkable) ? Optional.of(r.getBuildDeps()) : Optional.empty());
+            r ->
+                !(r instanceof NativeLinkableGroup)
+                    ? Optional.of(r.getBuildDeps())
+                    : Optional.empty());
 
     // Union the blacklist of all the platforms. This should give a superset for each particular
     // platform, which should be acceptable as items in the blacklist thare are unmatched are simply
@@ -596,7 +599,7 @@ public class AppleTestDescription
       ImmutableSet<BuildTarget> blacklistables =
           NativeLinkables.getTransitiveNativeLinkables(platform, graphBuilder, roots.values())
               .entrySet().stream()
-              .filter(x -> !(x.getValue() instanceof SwiftRuntimeNativeLinkable))
+              .filter(x -> !(x.getValue() instanceof SwiftRuntimeNativeLinkableGroup))
               .map(x -> x.getKey())
               .collect(ImmutableSet.toImmutableSet());
       blacklistBuilder.addAll(blacklistables);

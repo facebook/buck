@@ -52,8 +52,8 @@ import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableCacheKey;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -250,7 +250,7 @@ public class PrebuiltCxxLibraryDescription
         ImmutableList.of(),
         Linker.LinkableDepType.SHARED,
         CxxLinkOptions.of(),
-        FluentIterable.from(params.getBuildDeps()).filter(NativeLinkable.class),
+        FluentIterable.from(params.getBuildDeps()).filter(NativeLinkableGroup.class),
         Optional.empty(),
         Optional.empty(),
         ImmutableSet.of(),
@@ -628,15 +628,15 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public Iterable<NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
+      public Iterable<NativeLinkableGroup> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
         return getDeclaredDeps().stream()
-            .filter(r -> r instanceof NativeLinkable)
-            .map(r -> (NativeLinkable) r)
+            .filter(r -> r instanceof NativeLinkableGroup)
+            .map(r -> (NativeLinkableGroup) r)
             .collect(ImmutableList.toImmutableList());
       }
 
       @Override
-      public Iterable<NativeLinkable> getNativeLinkableDepsForPlatform(
+      public Iterable<NativeLinkableGroup> getNativeLinkableDepsForPlatform(
           CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         if (!isPlatformSupported(cxxPlatform)) {
           return ImmutableList.of();
@@ -645,17 +645,17 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+      public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
           BuildRuleResolver ruleResolver) {
         return args.getExportedDeps().stream()
             .map(ruleResolver::getRule)
-            .filter(r -> r instanceof NativeLinkable)
-            .map(r -> (NativeLinkable) r)
+            .filter(r -> r instanceof NativeLinkableGroup)
+            .map(r -> (NativeLinkableGroup) r)
             .collect(ImmutableList.toImmutableList());
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
+      public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDepsForPlatform(
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         if (!isPlatformSupported(cxxPlatform)) {
           return ImmutableList.of();
@@ -743,7 +743,7 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+      public NativeLinkableGroup.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
         if (args.isHeaderOnly()) {
           return Linkage.ANY;
         }
@@ -816,7 +816,7 @@ public class PrebuiltCxxLibraryDescription
               }
 
               @Override
-              public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
+              public Iterable<? extends NativeLinkableGroup> getNativeLinkTargetDeps(
                   CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
                 return Iterables.concat(
                     getNativeLinkableDepsForPlatform(cxxPlatform, graphBuilder),
@@ -960,7 +960,7 @@ public class PrebuiltCxxLibraryDescription
       return false;
     }
 
-    Optional<NativeLinkable.Linkage> getPreferredLinkage();
+    Optional<NativeLinkableGroup.Linkage> getPreferredLinkage();
 
     ImmutableList<StringWithMacros> getExportedPreprocessorFlags();
 

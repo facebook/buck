@@ -51,7 +51,7 @@ import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -230,7 +230,7 @@ public class CxxLuaExtensionDescription
         Linker.LinkableDepType.SHARED,
         CxxLinkOptions.of(),
         RichStream.from(args.getCxxDeps().get(graphBuilder, cxxPlatform))
-            .filter(NativeLinkable.class)
+            .filter(NativeLinkableGroup.class)
             .concat(
                 Stream.of(
                     luaPlatform.getLuaCxxLibrary(
@@ -304,10 +304,10 @@ public class CxxLuaExtensionDescription
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
+      public Iterable<? extends NativeLinkableGroup> getNativeLinkTargetDeps(
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         return RichStream.from(args.getCxxDeps().get(graphBuilder, cxxPlatform))
-            .filter(NativeLinkable.class)
+            .filter(NativeLinkableGroup.class)
             .toImmutableList();
       }
 

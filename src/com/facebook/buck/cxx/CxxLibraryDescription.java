@@ -40,7 +40,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
@@ -452,7 +452,7 @@ public class CxxLibraryDescription
 
     Optional<Boolean> getCanBeAsset();
 
-    Optional<NativeLinkable.Linkage> getPreferredLinkage();
+    Optional<NativeLinkableGroup.Linkage> getPreferredLinkage();
 
     Optional<Boolean> getXcodePublicHeadersSymlinks();
 

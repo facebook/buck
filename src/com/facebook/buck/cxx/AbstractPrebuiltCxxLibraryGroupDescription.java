@@ -39,7 +39,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -214,17 +214,18 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableDeps(
+      public Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(
           BuildRuleResolver ruleResolver) {
-        return FluentIterable.from(params.getDeclaredDeps().get()).filter(NativeLinkable.class);
+        return FluentIterable.from(params.getDeclaredDeps().get())
+            .filter(NativeLinkableGroup.class);
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+      public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
           BuildRuleResolver ruleResolver) {
         return FluentIterable.from(args.getExportedDeps())
             .transform(ruleResolver::getRule)
-            .filter(NativeLinkable.class);
+            .filter(NativeLinkableGroup.class);
       }
 
       @Override
@@ -302,7 +303,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableDepsForPlatform(
+      public Iterable<? extends NativeLinkableGroup> getNativeLinkableDepsForPlatform(
           CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
         if (!isPlatformSupported(cxxPlatform)) {
           return ImmutableList.of();
@@ -311,7 +312,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
+      public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDepsForPlatform(
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         if (!isPlatformSupported(cxxPlatform)) {
           return ImmutableList.of();

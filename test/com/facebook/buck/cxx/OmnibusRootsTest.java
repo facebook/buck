@@ -22,7 +22,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -34,9 +34,9 @@ public class OmnibusRootsTest {
   @Test
   public void excludedAndIncludedDeps() throws NoSuchBuildTargetException {
     OmnibusRootNode transitiveRoot = new OmnibusRootNode("//:transitive_root");
-    NativeLinkable excludedDep =
+    NativeLinkableGroup excludedDep =
         new OmnibusExcludedNode(
-            "//:excluded_dep", ImmutableList.<NativeLinkable>of(transitiveRoot));
+            "//:excluded_dep", ImmutableList.<NativeLinkableGroup>of(transitiveRoot));
     NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(excludedDep));
 
     OmnibusRoots.Builder builder =

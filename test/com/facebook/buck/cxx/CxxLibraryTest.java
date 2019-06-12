@@ -35,7 +35,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -206,7 +206,7 @@ public class CxxLibraryTest {
             /* supportedPlatformsRegex */ Optional.empty(),
             ImmutableSet.of(frameworkPath),
             ImmutableSet.of(),
-            NativeLinkable.Linkage.STATIC,
+            NativeLinkableGroup.Linkage.STATIC,
             /* linkWhole */ false,
             Optional.empty(),
             ImmutableSortedSet.of(),
@@ -265,7 +265,7 @@ public class CxxLibraryTest {
             /* supportedPlatformsRegex */ Optional.empty(),
             ImmutableSet.of(frameworkPath),
             ImmutableSet.of(),
-            NativeLinkable.Linkage.STATIC,
+            NativeLinkableGroup.Linkage.STATIC,
             /* linkWhole */ false,
             Optional.empty(),
             ImmutableSortedSet.of(),

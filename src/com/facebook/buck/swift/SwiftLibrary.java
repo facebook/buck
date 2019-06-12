@@ -41,7 +41,7 @@ import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
@@ -63,7 +63,7 @@ import java.util.stream.Stream;
  * interfaces to make it consumable by C/C native linkable rules.
  */
 class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements HasRuntimeDeps, NativeLinkable, CxxPreprocessorDep {
+    implements HasRuntimeDeps, NativeLinkableGroup, CxxPreprocessorDep {
 
   private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
       new TransitiveCxxPreprocessorInputCache(this);
@@ -107,18 +107,18 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
+  public Iterable<NativeLinkableGroup> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
     // TODO(beng, markwang): Use pseudo targets to represent the Swift
     // runtime library's linker args here so NativeLinkables can
     // deduplicate the linker flags on the build target (which would be the same for
     // all libraries).
     return RichStream.from(getDeclaredDeps())
-        .filter(NativeLinkable.class)
+        .filter(NativeLinkableGroup.class)
         .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+  public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
       BuildRuleResolver ruleResolver) {
     throw new RuntimeException(
         "SwiftLibrary does not support getting linkable exported deps "
@@ -126,17 +126,17 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
+  public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDepsForPlatform(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    SwiftRuntimeNativeLinkable swiftRuntimeNativeLinkable =
-        new SwiftRuntimeNativeLinkable(
+    SwiftRuntimeNativeLinkableGroup swiftRuntimeNativeLinkable =
+        new SwiftRuntimeNativeLinkableGroup(
             swiftPlatformFlavorDomain.getValue(cxxPlatform.getFlavor()),
             getBuildTarget().getTargetConfiguration());
     return RichStream.from(exportedDeps)
-        .filter(NativeLinkable.class)
+        .filter(NativeLinkableGroup.class)
         .concat(RichStream.of(swiftRuntimeNativeLinkable))
         .collect(ImmutableSet.toImmutableSet());
   }
@@ -235,7 +235,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+  public NativeLinkableGroup.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
     // don't create dylib for swift companion target.
     if (getBuildTarget().getFlavors().contains(SWIFT_COMPANION_FLAVOR)) {
       return Linkage.STATIC;

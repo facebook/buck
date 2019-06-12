@@ -36,7 +36,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
@@ -123,19 +123,19 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   // Populates an immutable map builder with all given linkables set to the given cpu type.
   // Returns true iff linkables is not empty.
   private void populateMapWithLinkables(
-      ImmutableMultimap<APKModule, NativeLinkable> linkables,
+      ImmutableMultimap<APKModule, NativeLinkableGroup> linkables,
       ImmutableMap.Builder<AndroidLinkableMetadata, SourcePath> builder,
-      Map<AndroidLinkableMetadata, NativeLinkable> nativeLinkableMap,
+      Map<AndroidLinkableMetadata, NativeLinkableGroup> nativeLinkableMap,
       TargetCpuType targetCpuType,
       NdkCxxPlatform platform)
       throws HumanReadableException {
 
-    for (Map.Entry<APKModule, NativeLinkable> linkableEntry : linkables.entries()) {
-      NativeLinkable nativeLinkable = linkableEntry.getValue();
-      if (nativeLinkable.getPreferredLinkage(platform.getCxxPlatform())
-          != NativeLinkable.Linkage.STATIC) {
+    for (Map.Entry<APKModule, NativeLinkableGroup> linkableEntry : linkables.entries()) {
+      NativeLinkableGroup nativeLinkableGroup = linkableEntry.getValue();
+      if (nativeLinkableGroup.getPreferredLinkage(platform.getCxxPlatform())
+          != NativeLinkableGroup.Linkage.STATIC) {
         ImmutableMap<String, SourcePath> solibs =
-            nativeLinkable.getSharedLibraries(platform.getCxxPlatform(), graphBuilder);
+            nativeLinkableGroup.getSharedLibraries(platform.getCxxPlatform(), graphBuilder);
         for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
           AndroidLinkableMetadata metadata =
               AndroidLinkableMetadata.builder()
@@ -148,9 +148,9 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
             throw new HumanReadableException(
                 "Two libraries in the dependencies have the same output filename: %s:\n"
                     + "Those libraries are  %s and %s",
-                metadata.getSoName(), nativeLinkable, nativeLinkableMap.get(metadata));
+                metadata.getSoName(), nativeLinkableGroup, nativeLinkableMap.get(metadata));
           }
-          nativeLinkableMap.put(metadata, nativeLinkable);
+          nativeLinkableMap.put(metadata, nativeLinkableGroup);
         }
       }
     }
@@ -162,9 +162,9 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     ImmutableAndroidNativeLibsGraphEnhancementResult.Builder resultBuilder =
         ImmutableAndroidNativeLibsGraphEnhancementResult.builder();
 
-    ImmutableMultimap<APKModule, NativeLinkable> nativeLinkables =
+    ImmutableMultimap<APKModule, NativeLinkableGroup> nativeLinkables =
         packageableCollection.getNativeLinkables();
-    ImmutableMultimap<APKModule, NativeLinkable> nativeLinkablesAssets =
+    ImmutableMultimap<APKModule, NativeLinkableGroup> nativeLinkablesAssets =
         packageableCollection.getNativeLinkablesAssets();
 
     ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms = ImmutableMap.of();
@@ -226,8 +226,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     ImmutableMap.Builder<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsAssetsBuilder =
         ImmutableMap.builder();
 
-    Map<AndroidLinkableMetadata, NativeLinkable> nativeLinkableLibsMap = new HashMap<>();
-    Map<AndroidLinkableMetadata, NativeLinkable> nativeLinkableLibsAssetsMap = new HashMap<>();
+    Map<AndroidLinkableMetadata, NativeLinkableGroup> nativeLinkableLibsMap = new HashMap<>();
+    Map<AndroidLinkableMetadata, NativeLinkableGroup> nativeLinkableLibsAssetsMap = new HashMap<>();
 
     if (!nativeLinkables.isEmpty() || !nativeLinkablesAssets.isEmpty()) {
       for (TargetCpuType targetCpuType : getFilteredPlatforms(nativePlatforms, cpuFilters)) {

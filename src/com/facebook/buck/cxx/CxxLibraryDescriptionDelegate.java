@@ -22,7 +22,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -67,10 +67,10 @@ public interface CxxLibraryDescriptionDelegate {
       BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform platform);
 
   /**
-   * Provides the ability for the plugin to provide additional {@link NativeLinkable}s that will be
-   * exported.
+   * Provides the ability for the plugin to provide additional {@link NativeLinkableGroup}s that
+   * will be exported.
    */
-  Optional<ImmutableList<NativeLinkable>> getNativeLinkableExportedDeps(
+  Optional<ImmutableList<NativeLinkableGroup>> getNativeLinkableExportedDeps(
       BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform platform);
 
   /** Provides the ability to inject additional exported linker flags. */

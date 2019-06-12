@@ -44,7 +44,7 @@ import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -326,25 +326,25 @@ public class RustLibraryDescription
 
       // NativeLinkable
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableDeps(
+      public Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(
           BuildRuleResolver ruleResolver) {
         return ImmutableList.of();
       }
 
       @Override
-      public Iterable<NativeLinkable> getNativeLinkableExportedDeps(
+      public Iterable<NativeLinkableGroup> getNativeLinkableExportedDeps(
           BuildRuleResolver ruleResolver) {
         return RichStream.from(allDeps.getForAllPlatforms(ruleResolver))
-            .filter(NativeLinkable.class)
+            .filter(NativeLinkableGroup.class)
             .toImmutableList();
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
+      public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDepsForPlatform(
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         // We want to skip over all the transitive Rust deps, and only return non-Rust
         // deps at the edge of the graph
-        ImmutableList.Builder<NativeLinkable> nativedeps = ImmutableList.builder();
+        ImmutableList.Builder<NativeLinkableGroup> nativedeps = ImmutableList.builder();
 
         RustPlatform rustPlatform =
             getRustToolchain()
@@ -358,8 +358,8 @@ public class RustLibraryDescription
               // Rust rule - we just want to visit the children
               return ((RustLinkable) rule).getRustLinakbleDeps(rustPlatform);
             }
-            if (rule instanceof NativeLinkable) {
-              nativedeps.add((NativeLinkable) rule);
+            if (rule instanceof NativeLinkableGroup) {
+              nativedeps.add((NativeLinkableGroup) rule);
             }
             return ImmutableList.of();
           }
@@ -500,8 +500,8 @@ public class RustLibraryDescription
     List<String> getRustcFlags();
 
     @Value.Default
-    default NativeLinkable.Linkage getPreferredLinkage() {
-      return NativeLinkable.Linkage.ANY;
+    default NativeLinkableGroup.Linkage getPreferredLinkage() {
+      return NativeLinkableGroup.Linkage.ANY;
     }
 
     Optional<String> getCrate();

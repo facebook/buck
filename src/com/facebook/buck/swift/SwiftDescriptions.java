@@ -16,7 +16,7 @@
 
 package com.facebook.buck.swift;
 
-import static com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable.Linkage.STATIC;
+import static com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage.STATIC;
 import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPANION_FLAVOR;
 
 import com.facebook.buck.core.model.BuildTarget;

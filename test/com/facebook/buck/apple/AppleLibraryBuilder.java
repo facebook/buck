@@ -22,7 +22,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.AbstractCxxSource;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
@@ -212,7 +212,7 @@ public class AppleLibraryBuilder
     return this;
   }
 
-  public AppleLibraryBuilder setPreferredLinkage(NativeLinkable.Linkage linkage) {
+  public AppleLibraryBuilder setPreferredLinkage(NativeLinkableGroup.Linkage linkage) {
     getArgForPopulating().setPreferredLinkage(Optional.of(linkage));
     return this;
   }

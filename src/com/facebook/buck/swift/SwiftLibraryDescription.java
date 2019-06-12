@@ -55,7 +55,7 @@ import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -319,7 +319,7 @@ public class SwiftLibraryDescription
         args.getFrameworks(),
         args.getLibraries(),
         args.getSupportedPlatformsRegex(),
-        args.getPreferredLinkage().orElse(NativeLinkable.Linkage.ANY));
+        args.getPreferredLinkage().orElse(NativeLinkableGroup.Linkage.ANY));
   }
 
   private BuildRule createSharedLibraryBuildRule(
@@ -339,8 +339,8 @@ public class SwiftLibraryDescription
         CxxDescriptionEnhancer.getSharedLibraryPath(
             projectFilesystem, buildTarget, sharedLibrarySoname);
 
-    SwiftRuntimeNativeLinkable swiftRuntimeLinkable =
-        new SwiftRuntimeNativeLinkable(swiftPlatform, buildTarget.getTargetConfiguration());
+    SwiftRuntimeNativeLinkableGroup swiftRuntimeLinkable =
+        new SwiftRuntimeNativeLinkableGroup(swiftPlatform, buildTarget.getTargetConfiguration());
 
     BuildTarget requiredBuildTarget =
         buildTarget
@@ -373,7 +373,7 @@ public class SwiftLibraryDescription
             Linker.LinkableDepType.SHARED,
             CxxLinkOptions.of(),
             RichStream.from(params.getBuildDeps())
-                .filter(NativeLinkable.class)
+                .filter(NativeLinkableGroup.class)
                 .concat(RichStream.of(swiftRuntimeLinkable))
                 .collect(ImmutableSet.toImmutableSet()),
             Optional.empty(),
@@ -496,6 +496,6 @@ public class SwiftLibraryDescription
 
     Optional<SourcePath> getBridgingHeader();
 
-    Optional<NativeLinkable.Linkage> getPreferredLinkage();
+    Optional<NativeLinkableGroup.Linkage> getPreferredLinkage();
   }
 }

@@ -34,7 +34,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -57,7 +57,7 @@ import java.util.function.Function;
  * {@code deps} list.
  */
 public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements NativeLinkable, CxxPreprocessorDep {
+    implements NativeLinkableGroup, CxxPreprocessorDep {
 
   private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
       InternalFlavor.of("preprocessor-deps");
@@ -117,21 +117,22 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   /**
    * Returns our {@link #getBuildDeps()}, limited to the subset of those which are {@link
-   * NativeLinkable}.
+   * NativeLinkableGroup}.
    */
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
-    return RichStream.from(getBuildDeps()).filter(NativeLinkable.class).toImmutableList();
+  public Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(
+      BuildRuleResolver ruleResolver) {
+    return RichStream.from(getBuildDeps()).filter(NativeLinkableGroup.class).toImmutableList();
   }
 
   /**
    * Returns our {@link #getExportedDeps()}, limited to the subset of those which are {@link
-   * NativeLinkable}.
+   * NativeLinkableGroup}.
    */
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+  public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
       BuildRuleResolver ruleResolver) {
-    return RichStream.from(getExportedDeps()).filter(NativeLinkable.class).toImmutableList();
+    return RichStream.from(getExportedDeps()).filter(NativeLinkableGroup.class).toImmutableList();
   }
 
   /**

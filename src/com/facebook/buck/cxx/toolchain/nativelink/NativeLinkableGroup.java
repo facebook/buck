@@ -28,9 +28,10 @@ import com.google.common.collect.ImmutableMap;
 
 /**
  * Interface for {@link BuildRule} objects (e.g. C++ libraries) which can contribute to the
- * top-level link of a native binary (e.g. C++ binary).
+ * top-level link of a native binary (e.g. C++ binary). This represents the linkable object for all
+ * platforms.
  */
-public interface NativeLinkable {
+public interface NativeLinkableGroup {
 
   BuildTarget getBuildTarget();
 
@@ -39,7 +40,7 @@ public interface NativeLinkable {
    *     platform.
    */
   @SuppressWarnings("unused")
-  default Iterable<? extends NativeLinkable> getNativeLinkableDepsForPlatform(
+  default Iterable<? extends NativeLinkableGroup> getNativeLinkableDepsForPlatform(
       CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     return getNativeLinkableDeps(ruleResolver);
   }
@@ -49,7 +50,7 @@ public interface NativeLinkable {
    *     specific platform.
    */
   @SuppressWarnings("unused")
-  default Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
+  default Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDepsForPlatform(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return getNativeLinkableExportedDeps(graphBuilder);
   }
@@ -58,13 +59,14 @@ public interface NativeLinkable {
    * @return All native linkable dependencies that might be required by this linkable on any
    *     platform.
    */
-  Iterable<? extends NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver);
+  Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(BuildRuleResolver ruleResolver);
 
   /**
    * @return All native linkable exported dependencies that might be required by this linkable on
    *     any platform.
    */
-  Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(BuildRuleResolver ruleResolver);
+  Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
+      BuildRuleResolver ruleResolver);
 
   /**
    * Return input that *dependents* should put on their link line when linking against this
@@ -98,7 +100,7 @@ public interface NativeLinkable {
   ImmutableMap<String, SourcePath> getSharedLibraries(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
-  /** @return whether this {@link NativeLinkable} supports omnibus linking. */
+  /** @return whether this {@link NativeLinkableGroup} supports omnibus linking. */
   @SuppressWarnings("unused")
   default boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
     return true;

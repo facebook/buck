@@ -20,7 +20,7 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.collect.ImmutableList;
@@ -72,10 +72,10 @@ interface AbstractAndroidPackageableCollection {
   ImmutableMap<APKModule, AndroidPackageableCollection.ResourceDetails> getResourceDetails();
 
   /** Native libraries mapped from modules. */
-  ImmutableMultimap<APKModule, NativeLinkable> getNativeLinkables();
+  ImmutableMultimap<APKModule, NativeLinkableGroup> getNativeLinkables();
 
   /** Native libraries to be packaged as assets. */
-  ImmutableMultimap<APKModule, NativeLinkable> getNativeLinkablesAssets();
+  ImmutableMultimap<APKModule, NativeLinkableGroup> getNativeLinkablesAssets();
 
   /** Directories containing native libraries. */
   ImmutableMultimap<APKModule, SourcePath> getNativeLibsDirectories();

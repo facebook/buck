@@ -27,7 +27,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableMap;
@@ -71,8 +71,8 @@ public class PrebuiltRustLibraryDescription
       }
 
       @Override
-      public NativeLinkable.Linkage getPreferredLinkage() {
-        return NativeLinkable.Linkage.STATIC;
+      public NativeLinkableGroup.Linkage getPreferredLinkage() {
+        return NativeLinkableGroup.Linkage.STATIC;
       }
 
       @Override

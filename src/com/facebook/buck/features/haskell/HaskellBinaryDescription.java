@@ -43,7 +43,7 @@ import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -178,7 +178,7 @@ public class HaskellBinaryDescription
                 query ->
                     Objects.requireNonNull(query.getResolvedQuery()).stream()
                         .map(graphBuilder::getRule)
-                        .filter(NativeLinkable.class::isInstance))
+                        .filter(NativeLinkableGroup.class::isInstance))
             .orElse(Stream.of())
             .collect(ImmutableList.toImmutableList());
     depsBuilder.addAll(depQueryDeps);
@@ -281,7 +281,7 @@ public class HaskellBinaryDescription
             Linker.LinkType.EXECUTABLE,
             linkFlags,
             linkInputs,
-            RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
+            RichStream.from(deps).filter(NativeLinkableGroup.class).toImmutableList(),
             args.getLinkDepsQueryWhole()
                 ? RichStream.from(depQueryDeps).map(BuildRule::getBuildTarget).toImmutableSet()
                 : ImmutableSet.of(),

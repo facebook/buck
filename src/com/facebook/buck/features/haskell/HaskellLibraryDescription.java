@@ -55,7 +55,7 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -553,7 +553,7 @@ public class HaskellLibraryDescription
         Linker.LinkType.SHARED,
         ImmutableList.of(),
         ImmutableList.copyOf(SourcePathArg.from(compileRule.getObjects())),
-        RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
+        RichStream.from(deps).filter(NativeLinkableGroup.class).toImmutableList(),
         ImmutableSet.of(),
         Linker.LinkableDepType.SHARED,
         outputPath,
@@ -794,7 +794,7 @@ public class HaskellLibraryDescription
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableDeps(
+      public Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(
           BuildRuleResolver ruleResolver) {
         return ImmutableList.of();
       }
@@ -803,18 +803,18 @@ public class HaskellLibraryDescription
           new TransitiveCxxPreprocessorInputCache(this);
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
+      public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDepsForPlatform(
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         return RichStream.from(allDeps.get(graphBuilder, cxxPlatform))
-            .filter(NativeLinkable.class)
+            .filter(NativeLinkableGroup.class)
             .toImmutableList();
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+      public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
           BuildRuleResolver ruleResolver) {
         return RichStream.from(allDeps.getForAllPlatforms(graphBuilder))
-            .filter(NativeLinkable.class)
+            .filter(NativeLinkableGroup.class)
             .toImmutableList();
       }
 
@@ -983,8 +983,8 @@ public class HaskellLibraryDescription
     }
 
     @Value.Default
-    default NativeLinkable.Linkage getPreferredLinkage() {
-      return NativeLinkable.Linkage.ANY;
+    default NativeLinkableGroup.Linkage getPreferredLinkage() {
+      return NativeLinkableGroup.Linkage.ANY;
     }
 
     @Value.Default

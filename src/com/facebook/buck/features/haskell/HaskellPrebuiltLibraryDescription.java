@@ -35,7 +35,7 @@ import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -115,15 +115,15 @@ public class HaskellPrebuiltLibraryDescription
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableDeps(
+      public Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(
           BuildRuleResolver ruleResolver) {
         return ImmutableList.of();
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+      public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
           BuildRuleResolver ruleResolver) {
-        return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
+        return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkableGroup.class);
       }
 
       @Override

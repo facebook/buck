@@ -54,7 +54,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.CxxRuntimeType;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -792,7 +792,7 @@ public class CxxDescriptionEnhancer {
                         target,
                         indexOutput,
                         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
-                        RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
+                        RichStream.from(deps).filter(NativeLinkableGroup.class).toImmutableList(),
                         args.getCxxRuntimeType(),
                         ImmutableSet.of(),
                         args.getLinkDepsQueryWhole()
@@ -1183,7 +1183,7 @@ public class CxxDescriptionEnhancer {
                         linkerExtraOutputs,
                         linkStyle,
                         linkOptions,
-                        RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
+                        RichStream.from(deps).filter(NativeLinkableGroup.class).toImmutableList(),
                         cxxRuntimeType,
                         Optional.empty(),
                         ImmutableSet.of(),

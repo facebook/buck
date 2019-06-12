@@ -35,8 +35,8 @@ import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableCacheKey;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -228,17 +228,17 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
+  public Iterable<NativeLinkableGroup> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
     return RichStream.from(deps.getForAllPlatforms(ruleResolver))
-        .filter(NativeLinkable.class)
+        .filter(NativeLinkableGroup.class)
         .toImmutableList();
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDepsForPlatform(
+  public Iterable<NativeLinkableGroup> getNativeLinkableDepsForPlatform(
       CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     if (!propagateLinkables) {
       return ImmutableList.of();
@@ -247,23 +247,23 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       return ImmutableList.of();
     }
     return RichStream.from(deps.get(ruleResolver, cxxPlatform))
-        .filter(NativeLinkable.class)
+        .filter(NativeLinkableGroup.class)
         .toImmutableList();
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+  public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
       BuildRuleResolver ruleResolver) {
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
     return RichStream.from(exportedDeps.getForAllPlatforms(ruleResolver))
-        .filter(NativeLinkable.class)
+        .filter(NativeLinkableGroup.class)
         .toImmutableList();
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
+  public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDepsForPlatform(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     if (!propagateLinkables) {
       return ImmutableList.of();
@@ -272,14 +272,14 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       return ImmutableList.of();
     }
 
-    ImmutableList<NativeLinkable> delegateLinkables =
+    ImmutableList<NativeLinkableGroup> delegateLinkables =
         delegate
             .flatMap(
                 d -> d.getNativeLinkableExportedDeps(getBuildTarget(), graphBuilder, cxxPlatform))
             .orElse(ImmutableList.of());
 
     return RichStream.from(exportedDeps.get(graphBuilder, cxxPlatform))
-        .filter(NativeLinkable.class)
+        .filter(NativeLinkableGroup.class)
         .concat(RichStream.from(delegateLinkables))
         .toImmutableList();
   }
@@ -400,7 +400,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+  public NativeLinkableGroup.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
     return linkage;
   }
 
@@ -454,7 +454,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
+  public Iterable<? extends NativeLinkableGroup> getNativeLinkTargetDeps(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return Iterables.concat(
         getNativeLinkableDepsForPlatform(cxxPlatform, graphBuilder),

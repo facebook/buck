@@ -39,7 +39,7 @@ import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
@@ -160,34 +160,34 @@ public class HaskellLibraryDescriptionTest {
         new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:default")).build(graphBuilder);
     assertThat(
         defaultLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
-        Matchers.is(NativeLinkable.Linkage.ANY));
+        Matchers.is(NativeLinkableGroup.Linkage.ANY));
 
     // Test `ANY` value.
     HaskellLibrary anyLib =
         new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:any"))
-            .setPreferredLinkage(NativeLinkable.Linkage.ANY)
+            .setPreferredLinkage(NativeLinkableGroup.Linkage.ANY)
             .build(graphBuilder);
     assertThat(
         anyLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
-        Matchers.is(NativeLinkable.Linkage.ANY));
+        Matchers.is(NativeLinkableGroup.Linkage.ANY));
 
     // Test `STATIC` value.
     HaskellLibrary staticLib =
         new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:static"))
-            .setPreferredLinkage(NativeLinkable.Linkage.STATIC)
+            .setPreferredLinkage(NativeLinkableGroup.Linkage.STATIC)
             .build(graphBuilder);
     assertThat(
         staticLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
-        Matchers.is(NativeLinkable.Linkage.STATIC));
+        Matchers.is(NativeLinkableGroup.Linkage.STATIC));
 
     // Test `SHARED` value.
     HaskellLibrary sharedLib =
         new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:shared"))
-            .setPreferredLinkage(NativeLinkable.Linkage.SHARED)
+            .setPreferredLinkage(NativeLinkableGroup.Linkage.SHARED)
             .build(graphBuilder);
     assertThat(
         sharedLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
-        Matchers.is(NativeLinkable.Linkage.SHARED));
+        Matchers.is(NativeLinkableGroup.Linkage.SHARED));
   }
 
   @Test

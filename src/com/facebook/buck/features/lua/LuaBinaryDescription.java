@@ -52,7 +52,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.features.python.CxxPythonExtension;
 import com.facebook.buck.features.python.PythonBinaryDescription;
@@ -298,7 +298,7 @@ public class LuaBinaryDescription
     OmnibusRoots.Builder omnibusRoots =
         OmnibusRoots.builder(cxxPlatform, ImmutableSet.of(), graphBuilder);
 
-    Map<BuildTarget, NativeLinkable> nativeLinkableRoots = new LinkedHashMap<>();
+    Map<BuildTarget, NativeLinkableGroup> nativeLinkableRoots = new LinkedHashMap<>();
     Map<BuildTarget, CxxLuaExtension> luaExtensions = new LinkedHashMap<>();
     Map<BuildTarget, CxxPythonExtension> pythonExtensions = new LinkedHashMap<>();
 
@@ -317,8 +317,8 @@ public class LuaBinaryDescription
           deps = packageable.getLuaPackageDeps(cxxPlatform, graphBuilder);
           if (components.hasNativeCode(cxxPlatform)) {
             for (BuildRule dep : deps) {
-              if (dep instanceof NativeLinkable) {
-                NativeLinkable linkable = (NativeLinkable) dep;
+              if (dep instanceof NativeLinkableGroup) {
+                NativeLinkableGroup linkable = (NativeLinkableGroup) dep;
                 nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
                 omnibusRoots.addExcludedRoot(linkable);
               }
@@ -340,8 +340,8 @@ public class LuaBinaryDescription
           deps = packageable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
           if (components.hasNativeCode(cxxPlatform)) {
             for (BuildRule dep : deps) {
-              if (dep instanceof NativeLinkable) {
-                NativeLinkable linkable = (NativeLinkable) dep;
+              if (dep instanceof NativeLinkableGroup) {
+                NativeLinkableGroup linkable = (NativeLinkableGroup) dep;
                 nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
                 omnibusRoots.addExcludedRoot(linkable);
               }
@@ -351,8 +351,8 @@ public class LuaBinaryDescription
           CxxLuaExtension extension = (CxxLuaExtension) rule;
           luaExtensions.put(extension.getBuildTarget(), extension);
           omnibusRoots.addIncludedRoot(extension);
-        } else if (rule instanceof NativeLinkable) {
-          NativeLinkable linkable = (NativeLinkable) rule;
+        } else if (rule instanceof NativeLinkableGroup) {
+          NativeLinkableGroup linkable = (NativeLinkableGroup) rule;
           nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
           omnibusRoots.addPotentialRoot(linkable);
         }
@@ -454,7 +454,7 @@ public class LuaBinaryDescription
         nativeLinkableRoots.putAll(
             Maps.uniqueIndex(
                 extension.getNativeLinkTargetDeps(cxxPlatform, graphBuilder),
-                NativeLinkable::getBuildTarget));
+                NativeLinkableGroup::getBuildTarget));
       }
 
       // Add in native executable deps.
@@ -462,7 +462,7 @@ public class LuaBinaryDescription
         NativeExecutableStarter executableStarter = (NativeExecutableStarter) starter;
         nativeLinkableRoots.putAll(
             Maps.uniqueIndex(
-                executableStarter.getNativeStarterDeps(), NativeLinkable::getBuildTarget));
+                executableStarter.getNativeStarterDeps(), NativeLinkableGroup::getBuildTarget));
       }
 
       // For regular linking, add all extensions via the package components interface and their
@@ -480,18 +480,18 @@ public class LuaBinaryDescription
                     .getValue()
                     .getNativeLinkTarget(pythonPlatform)
                     .getNativeLinkTargetDeps(cxxPlatform, graphBuilder),
-                NativeLinkable::getBuildTarget));
+                NativeLinkableGroup::getBuildTarget));
       }
 
       // Add shared libraries from all native linkables.
-      for (NativeLinkable nativeLinkable :
+      for (NativeLinkableGroup nativeLinkableGroup :
           NativeLinkables.getTransitiveNativeLinkables(
                   cxxPlatform, graphBuilder, nativeLinkableRoots.values())
               .values()) {
-        NativeLinkable.Linkage linkage = nativeLinkable.getPreferredLinkage(cxxPlatform);
-        if (linkage != NativeLinkable.Linkage.STATIC) {
+        NativeLinkableGroup.Linkage linkage = nativeLinkableGroup.getPreferredLinkage(cxxPlatform);
+        if (linkage != NativeLinkableGroup.Linkage.STATIC) {
           builder.putAllNativeLibraries(
-              nativeLinkable.getSharedLibraries(cxxPlatform, graphBuilder));
+              nativeLinkableGroup.getSharedLibraries(cxxPlatform, graphBuilder));
         }
       }
     }

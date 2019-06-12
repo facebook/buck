@@ -19,11 +19,11 @@ package com.facebook.buck.features.rust;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 
 public abstract class RustLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements RustLinkable, NativeLinkable {
+    implements RustLinkable, NativeLinkableGroup {
 
   public RustLibrary(
       BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {

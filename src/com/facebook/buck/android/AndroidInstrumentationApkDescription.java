@@ -42,7 +42,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -128,7 +128,7 @@ public class AndroidInstrumentationApkDescription
             .getNativeLibsDirectories()
             .get(rootAPKModule);
 
-    ImmutableCollection<NativeLinkable> nativeLinkablesToExclude =
+    ImmutableCollection<NativeLinkableGroup> nativeLinkablesToExcludeGroup =
         apkUnderTest.getAndroidPackageableCollection().getNativeLinkables().get(rootAPKModule);
 
     ImmutableCollection<SourcePath> nativeLibAssetsToExclude =
@@ -137,7 +137,7 @@ public class AndroidInstrumentationApkDescription
             .getNativeLibAssetsDirectories()
             .get(rootAPKModule);
 
-    ImmutableCollection<NativeLinkable> nativeLinkableAssetsToExclude =
+    ImmutableCollection<NativeLinkableGroup> nativeLinkableGroupAssetsToExclude =
         apkUnderTest
             .getAndroidPackageableCollection()
             .getNativeLinkablesAssets()
@@ -207,9 +207,9 @@ public class AndroidInstrumentationApkDescription
                 .collect(ImmutableSet.toImmutableSet()),
             resourcesToExclude,
             nativeLibsToExclude,
-            nativeLinkablesToExclude,
+            nativeLinkablesToExcludeGroup,
             nativeLibAssetsToExclude,
-            nativeLinkableAssetsToExclude,
+            nativeLinkableGroupAssetsToExclude,
             /* skipCrunchPngs */ false,
             args.getIncludesVectorDrawables(),
             /* noAutoVersionResources */ false,

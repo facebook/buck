@@ -38,8 +38,8 @@ import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableCacheKey;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -65,12 +65,12 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 
 public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements CxxPreprocessorDep, NativeLinkable, HasOutputName {
+    implements CxxPreprocessorDep, NativeLinkableGroup, HasOutputName {
 
   @AddToRuleKey(stringify = true)
   private final Path out;
 
-  @AddToRuleKey private final NativeLinkable.Linkage preferredLinkage;
+  @AddToRuleKey private final NativeLinkableGroup.Linkage preferredLinkage;
 
   @AddToRuleKey private final SourcePath frameworkPath;
   private final String frameworkName;
@@ -189,12 +189,12 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
-    return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
+  public Iterable<NativeLinkableGroup> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
+    return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkableGroup.class);
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDepsForPlatform(
+  public Iterable<NativeLinkableGroup> getNativeLinkableDepsForPlatform(
       CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
@@ -203,7 +203,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+  public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
       BuildRuleResolver ruleResolver) {
     return ImmutableList.of();
   }
@@ -255,7 +255,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   }
 
   @Override
-  public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+  public NativeLinkableGroup.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
     return this.preferredLinkage;
   }
 

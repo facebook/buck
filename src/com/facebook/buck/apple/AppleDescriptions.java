@@ -57,7 +57,7 @@ import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -691,7 +691,7 @@ public class AppleDescriptions {
               .get()
               .getConstructorArg()
               .getPreferredLinkage()
-              .equals(NativeLinkable.Linkage.STATIC)) {
+              .equals(NativeLinkableGroup.Linkage.STATIC)) {
         frameworksBuilder.add(graphBuilder.requireRule(dep).getSourcePathToOutput());
       }
     }

@@ -41,7 +41,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -97,7 +97,7 @@ abstract class DDescriptionUtils {
   }
 
   /**
-   * Creates a {@link NativeLinkable} using sources compiled by the D compiler.
+   * Creates a {@link NativeLinkableGroup} using sources compiled by the D compiler.
    *
    * @param cellPathResolver
    * @param params build parameters for the build target
@@ -149,7 +149,7 @@ abstract class DDescriptionUtils {
         ImmutableList.of(),
         Linker.LinkableDepType.STATIC,
         CxxLinkOptions.of(),
-        FluentIterable.from(params.getBuildDeps()).filter(NativeLinkable.class),
+        FluentIterable.from(params.getBuildDeps()).filter(NativeLinkableGroup.class),
         /* cxxRuntimeType */ Optional.empty(),
         /* bundleLoader */ Optional.empty(),
         ImmutableSet.of(),

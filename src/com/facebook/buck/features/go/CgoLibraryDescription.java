@@ -35,7 +35,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -117,7 +117,7 @@ public class CgoLibraryDescription
 
       ImmutableList<BuildTarget> nonCxxDeps =
           args.getDeps().stream()
-              .filter(target -> !(graphBuilder.requireRule(target) instanceof NativeLinkable))
+              .filter(target -> !(graphBuilder.requireRule(target) instanceof NativeLinkableGroup))
               .collect(ImmutableList.toImmutableList());
 
       return Optional.of(
@@ -149,7 +149,7 @@ public class CgoLibraryDescription
 
       ImmutableList<BuildTarget> cxxDeps =
           params.getDeclaredDeps().get().stream()
-              .filter(rule -> rule instanceof NativeLinkable)
+              .filter(rule -> rule instanceof NativeLinkableGroup)
               .map(BuildRule::getBuildTarget)
               .collect(ImmutableList.toImmutableList());
 
@@ -170,7 +170,7 @@ public class CgoLibraryDescription
 
       ImmutableList<BuildTarget> nonCxxDeps =
           params.getDeclaredDeps().get().stream()
-              .filter(rule -> !(rule instanceof NativeLinkable))
+              .filter(rule -> !(rule instanceof NativeLinkableGroup))
               .map(BuildRule::getBuildTarget)
               .collect(ImmutableList.toImmutableList());
 

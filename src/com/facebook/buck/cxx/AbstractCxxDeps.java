@@ -23,7 +23,7 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
@@ -39,7 +39,7 @@ import org.immutables.value.Value;
 
 /**
  * The group of {@link BuildTarget}s from C/C++ constructor args which comprise a C/C++ descriptions
- * logical C/C++ deps used to find dependency {@link NativeLinkable}s or {@link
+ * logical C/C++ deps used to find dependency {@link NativeLinkableGroup}s or {@link
  * CxxPreprocessorDep}s.
  */
 @Value.Immutable(builder = false, copy = false, singleton = true)

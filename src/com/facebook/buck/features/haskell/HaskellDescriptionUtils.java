@@ -44,8 +44,8 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable.Linkage;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables.SharedLibrariesBuilder;
@@ -251,7 +251,7 @@ public class HaskellDescriptionUtils {
       Linker.LinkType linkType,
       ImmutableList<Arg> linkerFlags,
       Iterable<Arg> linkerInputs,
-      Iterable<? extends NativeLinkable> deps,
+      Iterable<? extends NativeLinkableGroup> deps,
       ImmutableSet<BuildTarget> linkWholeDeps,
       Linker.LinkableDepType depType,
       Path outputPath,
@@ -288,15 +288,16 @@ public class HaskellDescriptionUtils {
     // We pass in the linker inputs and all native linkable deps by prefixing with `-optl` so that
     // the args go straight to the linker, and preserve their order.
     linkerArgsBuilder.addAll(linkerInputs);
-    for (NativeLinkable nativeLinkable :
+    for (NativeLinkableGroup nativeLinkableGroup :
         NativeLinkables.getNativeLinkables(
             platform.getCxxPlatform(), graphBuilder, deps, depType)) {
-      NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(platform.getCxxPlatform());
+      NativeLinkableGroup.Linkage link =
+          nativeLinkableGroup.getPreferredLinkage(platform.getCxxPlatform());
       NativeLinkableInput input =
-          nativeLinkable.getNativeLinkableInput(
+          nativeLinkableGroup.getNativeLinkableInput(
               platform.getCxxPlatform(),
               NativeLinkables.getLinkStyle(link, depType),
-              linkWholeDeps.contains(nativeLinkable.getBuildTarget()),
+              linkWholeDeps.contains(nativeLinkableGroup.getBuildTarget()),
               graphBuilder,
               target.getTargetConfiguration());
       linkerArgsBuilder.addAll(input.getArgs());
@@ -477,7 +478,7 @@ public class HaskellDescriptionUtils {
             platform.getCxxPlatform(),
             graphBuilder,
             NativeLinkables.getNativeLinkableRoots(
-                RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
+                RichStream.from(deps).filter(NativeLinkableGroup.class).toImmutableList(),
                 n ->
                     n instanceof HaskellLibrary || n instanceof PrebuiltHaskellLibrary
                         ? Optional.of(
@@ -487,8 +488,8 @@ public class HaskellDescriptionUtils {
             // The preloaded deps form our excluded roots, which we need to keep them separate from
             // the omnibus library so that they can be `LD_PRELOAD`ed early.
             RichStream.from(preloadDeps)
-                .filter(NativeLinkable.class)
-                .collect(ImmutableMap.toImmutableMap(NativeLinkable::getBuildTarget, l -> l)));
+                .filter(NativeLinkableGroup.class)
+                .collect(ImmutableMap.toImmutableMap(NativeLinkableGroup::getBuildTarget, l -> l)));
 
     // Add an -rpath to the omnibus for shared library dependencies
     Path symlinkRelDir = HaskellGhciDescription.getSoLibsRelDir(buildTarget);
@@ -523,7 +524,7 @@ public class HaskellDescriptionUtils {
     // on (basically, stuff we couldn't statically link in).  At this point, this should *not* be
     // pulling in any excluded deps.
     SharedLibrariesBuilder sharedLibsBuilder = new SharedLibrariesBuilder();
-    ImmutableMap<BuildTarget, NativeLinkable> transitiveDeps =
+    ImmutableMap<BuildTarget, NativeLinkableGroup> transitiveDeps =
         NativeLinkables.getTransitiveNativeLinkables(
             platform.getCxxPlatform(), graphBuilder, omnibusSpec.getDeps().values());
     transitiveDeps.values().stream()

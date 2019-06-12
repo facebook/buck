@@ -46,7 +46,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.AllExistingProjectFilesystem;
@@ -594,7 +594,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
         prebuiltCxxLibrary.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
-        Matchers.equalTo(NativeLinkable.Linkage.STATIC));
+        Matchers.equalTo(NativeLinkableGroup.Linkage.STATIC));
   }
 
   @Test
@@ -731,7 +731,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PrebuiltCxxLibraryBuilder prebuiltCxxLibraryBuilder =
         new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setPreferredLinkage(NativeLinkable.Linkage.SHARED)
+            .setPreferredLinkage(NativeLinkableGroup.Linkage.SHARED)
             .setSharedLib(FakeSourcePath.of("libfoo.so"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(prebuiltCxxLibraryBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
@@ -855,7 +855,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
-        rule.getPreferredLinkage(CXX_PLATFORM), Matchers.equalTo(NativeLinkable.Linkage.ANY));
+        rule.getPreferredLinkage(CXX_PLATFORM), Matchers.equalTo(NativeLinkableGroup.Linkage.ANY));
   }
 
   @Test

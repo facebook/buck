@@ -32,7 +32,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -48,8 +48,8 @@ public class OmnibusTest {
 
   @Test
   public void includedDeps() throws NoSuchBuildTargetException {
-    NativeLinkable a = new OmnibusNode("//:a");
-    NativeLinkable b = new OmnibusNode("//:b");
+    NativeLinkableGroup a = new OmnibusNode("//:a");
+    NativeLinkableGroup b = new OmnibusNode("//:b");
     NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(a, b));
 
     // Verify the spec.
@@ -112,8 +112,8 @@ public class OmnibusTest {
 
   @Test
   public void excludedAndIncludedDeps() throws NoSuchBuildTargetException {
-    NativeLinkable a = new OmnibusNode("//:a");
-    NativeLinkable b = new OmnibusExcludedNode("//:b");
+    NativeLinkableGroup a = new OmnibusNode("//:a");
+    NativeLinkableGroup b = new OmnibusExcludedNode("//:b");
     NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(a, b));
 
     // Verify the spec.
@@ -176,9 +176,9 @@ public class OmnibusTest {
 
   @Test
   public void excludedDepExcludesTransitiveDep() throws NoSuchBuildTargetException {
-    NativeLinkable a = new OmnibusNode("//:a");
-    NativeLinkable b = new OmnibusNode("//:b");
-    NativeLinkable c = new OmnibusExcludedNode("//:c", ImmutableList.of(b));
+    NativeLinkableGroup a = new OmnibusNode("//:a");
+    NativeLinkableGroup b = new OmnibusNode("//:b");
+    NativeLinkableGroup c = new OmnibusExcludedNode("//:c", ImmutableList.of(b));
     NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(a, c));
 
     // Verify the spec.
@@ -249,10 +249,10 @@ public class OmnibusTest {
 
   @Test
   public void depOfExcludedRoot() throws NoSuchBuildTargetException {
-    NativeLinkable a = new OmnibusNode("//:a");
+    NativeLinkableGroup a = new OmnibusNode("//:a");
     NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(a));
-    NativeLinkable b = new OmnibusNode("//:b");
-    NativeLinkable excludedRoot = new OmnibusNode("//:excluded_root", ImmutableList.of(b));
+    NativeLinkableGroup b = new OmnibusNode("//:b");
+    NativeLinkableGroup excludedRoot = new OmnibusNode("//:excluded_root", ImmutableList.of(b));
 
     // Verify the spec.
     Omnibus.OmnibusSpec spec =
@@ -317,9 +317,9 @@ public class OmnibusTest {
 
   @Test
   public void commondDepOfIncludedAndExcludedRoots() throws NoSuchBuildTargetException {
-    NativeLinkable a = new OmnibusNode("//:a");
+    NativeLinkableGroup a = new OmnibusNode("//:a");
     NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(a));
-    NativeLinkable excludedRoot = new OmnibusNode("//:excluded_root", ImmutableList.of(a));
+    NativeLinkableGroup excludedRoot = new OmnibusNode("//:excluded_root", ImmutableList.of(a));
 
     // Verify the spec.
     Omnibus.OmnibusSpec spec =
@@ -375,10 +375,10 @@ public class OmnibusTest {
 
   @Test
   public void unusedStaticDepsAreNotIncludedInBody() throws NoSuchBuildTargetException {
-    NativeLinkable a =
+    NativeLinkableGroup a =
         new OmnibusNode(
-            "//:a", ImmutableList.of(), ImmutableList.of(), NativeLinkable.Linkage.STATIC);
-    NativeLinkable b = new OmnibusNode("//:b");
+            "//:a", ImmutableList.of(), ImmutableList.of(), NativeLinkableGroup.Linkage.STATIC);
+    NativeLinkableGroup b = new OmnibusNode("//:b");
     NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(a, b));
 
     // Verify the spec.
@@ -438,9 +438,12 @@ public class OmnibusTest {
   @Test
   public void excludedStaticRootsProduceSharedLibraries() throws NoSuchBuildTargetException {
     NativeLinkTarget includedRoot = new OmnibusRootNode("//:included", ImmutableList.of());
-    NativeLinkable excludedRoot =
+    NativeLinkableGroup excludedRoot =
         new OmnibusNode(
-            "//:excluded", ImmutableList.of(), ImmutableList.of(), NativeLinkable.Linkage.STATIC);
+            "//:excluded",
+            ImmutableList.of(),
+            ImmutableList.of(),
+            NativeLinkableGroup.Linkage.STATIC);
 
     // Verify the spec.
     Omnibus.OmnibusSpec spec =
@@ -475,7 +478,7 @@ public class OmnibusTest {
 
   @Test
   public void extraLdFlags() throws NoSuchBuildTargetException {
-    NativeLinkable a = new OmnibusNode("//:a");
+    NativeLinkableGroup a = new OmnibusNode("//:a");
     NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(a));
     String flag = "-flag";
 

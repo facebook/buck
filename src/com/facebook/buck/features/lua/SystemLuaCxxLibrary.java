@@ -28,7 +28,7 @@ import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
@@ -74,12 +74,13 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibrary {
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
+  public Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(
+      BuildRuleResolver ruleResolver) {
     return ImmutableList.of();
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+  public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
       BuildRuleResolver ruleResolver) {
     return ImmutableList.of();
   }

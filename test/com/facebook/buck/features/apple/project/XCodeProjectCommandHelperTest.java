@@ -36,7 +36,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable.Linkage;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;

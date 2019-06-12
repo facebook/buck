@@ -48,7 +48,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -78,16 +78,17 @@ public class CxxLinkableEnhancerTest {
   private static final ImmutableList<Arg> DEFAULT_INPUTS =
       SourcePathArg.from(
           FakeSourcePath.of("a.o"), FakeSourcePath.of("b.o"), FakeSourcePath.of("c.o"));
-  private static final ImmutableSortedSet<NativeLinkable> EMPTY_DEPS = ImmutableSortedSet.of();
+  private static final ImmutableSortedSet<NativeLinkableGroup> EMPTY_DEPS = ImmutableSortedSet.of();
   private static final CxxPlatform CXX_PLATFORM =
       CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
-  private static class FakeNativeLinkable extends FakeBuildRule implements NativeLinkable {
+  private static class FakeNativeLinkableGroup extends FakeBuildRule
+      implements NativeLinkableGroup {
 
     private final NativeLinkableInput staticInput;
     private final NativeLinkableInput sharedInput;
 
-    public FakeNativeLinkable(
+    public FakeNativeLinkableGroup(
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
@@ -99,13 +100,14 @@ public class CxxLinkableEnhancerTest {
     }
 
     @Override
-    public Iterable<NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
-      return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
+    public Iterable<NativeLinkableGroup> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
+      return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkableGroup.class);
     }
 
     @Override
-    public Iterable<NativeLinkable> getNativeLinkableExportedDeps(BuildRuleResolver ruleResolver) {
-      return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
+    public Iterable<NativeLinkableGroup> getNativeLinkableExportedDeps(
+        BuildRuleResolver ruleResolver) {
+      return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkableGroup.class);
     }
 
     @Override
@@ -119,7 +121,7 @@ public class CxxLinkableEnhancerTest {
     }
 
     @Override
-    public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+    public NativeLinkableGroup.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
       return Linkage.ANY;
     }
 
@@ -130,13 +132,13 @@ public class CxxLinkableEnhancerTest {
     }
   }
 
-  private static FakeNativeLinkable createNativeLinkable(
+  private static FakeNativeLinkableGroup createNativeLinkable(
       String target,
       NativeLinkableInput staticNativeLinkableInput,
       NativeLinkableInput sharedNativeLinkableInput,
       BuildRule... deps) {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(target);
-    return new FakeNativeLinkable(
+    return new FakeNativeLinkableGroup(
         buildTarget,
         new FakeProjectFilesystem(),
         TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.copyOf(deps)),
@@ -214,7 +216,7 @@ public class CxxLinkableEnhancerTest {
             ImmutableList.of(SourcePathArg.of(fakeBuildRule.getSourcePathToOutput())),
             ImmutableSet.of(),
             ImmutableSet.of());
-    FakeNativeLinkable nativeLinkable =
+    FakeNativeLinkableGroup nativeLinkable =
         createNativeLinkable("//:dep", nativeLinkableInput, nativeLinkableInput);
 
     // Construct a CxxLink object and pass the native linkable above as the dep.
@@ -232,7 +234,7 @@ public class CxxLinkableEnhancerTest {
             ImmutableList.of(),
             Linker.LinkableDepType.STATIC,
             CxxLinkOptions.of(),
-            ImmutableList.<NativeLinkable>of(nativeLinkable),
+            ImmutableList.<NativeLinkableGroup>of(nativeLinkable),
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
@@ -354,7 +356,8 @@ public class CxxLinkableEnhancerTest {
     NativeLinkableInput sharedInput =
         NativeLinkableInput.of(
             ImmutableList.of(StringArg.of(sharedArg)), ImmutableSet.of(), ImmutableSet.of());
-    FakeNativeLinkable nativeLinkable = createNativeLinkable("//:dep", staticInput, sharedInput);
+    FakeNativeLinkableGroup nativeLinkable =
+        createNativeLinkable("//:dep", staticInput, sharedInput);
 
     // Construct a CxxLink object which links using static dependencies.
     CxxLink staticLink =
@@ -370,7 +373,7 @@ public class CxxLinkableEnhancerTest {
             ImmutableList.of(),
             Linker.LinkableDepType.STATIC,
             CxxLinkOptions.of(),
-            ImmutableList.<NativeLinkable>of(nativeLinkable),
+            ImmutableList.<NativeLinkableGroup>of(nativeLinkable),
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
@@ -398,7 +401,7 @@ public class CxxLinkableEnhancerTest {
             ImmutableList.of(),
             Linker.LinkableDepType.SHARED,
             CxxLinkOptions.of(),
-            ImmutableList.<NativeLinkable>of(nativeLinkable),
+            ImmutableList.<NativeLinkableGroup>of(nativeLinkable),
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),

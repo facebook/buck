@@ -42,7 +42,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkType;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -337,8 +337,8 @@ public class CxxLibraryFactory {
         args.getFrameworks(),
         args.getLibraries(),
         args.getForceStatic().orElse(false)
-            ? NativeLinkable.Linkage.STATIC
-            : args.getPreferredLinkage().orElse(NativeLinkable.Linkage.ANY),
+            ? NativeLinkableGroup.Linkage.STATIC
+            : args.getPreferredLinkage().orElse(NativeLinkableGroup.Linkage.ANY),
         args.getLinkWhole().orElse(false),
         args.getSoname(),
         args.getTests(),
@@ -594,15 +594,15 @@ public class CxxLibraryFactory {
         CxxDescriptionEnhancer.getSharedLibraryPath(
             projectFilesystem, sharedTarget, sharedLibrarySoname);
 
-    ImmutableList<NativeLinkable> delegateNativeLinkables =
+    ImmutableList<NativeLinkableGroup> delegateNativeLinkableGroups =
         delegate
             .flatMap(d -> d.getNativeLinkableExportedDeps(sharedTarget, graphBuilder, cxxPlatform))
             .orElse(ImmutableList.of());
 
-    ImmutableList<NativeLinkable> allNativeLinkables =
+    ImmutableList<NativeLinkableGroup> allNativeLinkableGroups =
         RichStream.from(deps)
-            .filter(NativeLinkable.class)
-            .concat(RichStream.from(delegateNativeLinkables))
+            .filter(NativeLinkableGroup.class)
+            .concat(RichStream.from(delegateNativeLinkableGroups))
             .toImmutableList();
 
     CxxLinkOptions linkOptions =
@@ -622,7 +622,7 @@ public class CxxLibraryFactory {
         args.getLinkerExtraOutputs(),
         linkableDepType,
         linkOptions,
-        allNativeLinkables,
+        allNativeLinkableGroups,
         cxxRuntimeType,
         bundleLoader,
         blacklist,

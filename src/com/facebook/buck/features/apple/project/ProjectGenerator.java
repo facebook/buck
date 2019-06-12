@@ -119,8 +119,8 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable.Linkage;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.ProjectGenerationEvent;
@@ -926,7 +926,7 @@ public class ProjectGenerator {
                     // by marking its preferred linkage static (what does preferred linkage even
                     // mean for a prebuilt thing? none of this makes sense anyways).
                     if (prebuiltFramework.getConstructorArg().getPreferredLinkage()
-                        != NativeLinkable.Linkage.STATIC) {
+                        != NativeLinkableGroup.Linkage.STATIC) {
                       filteredRules.add(node);
                     }
                   });
@@ -2454,7 +2454,7 @@ public class ProjectGenerator {
                                 + resolveSourcePath(prebuilt.getConstructorArg().getFramework())
                                     .getParent());
                         if (prebuilt.getConstructorArg().getPreferredLinkage()
-                            != NativeLinkable.Linkage.STATIC) {
+                            != NativeLinkableGroup.Linkage.STATIC) {
                           // Frameworks that are copied into the binary.
                           iOSLdRunpathSearchPaths.add("/usr/lib/swift");
                           iOSLdRunpathSearchPaths.add("@loader_path/Frameworks");

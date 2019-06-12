@@ -36,7 +36,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -187,7 +187,7 @@ public class PythonUtil {
         new PythonPackageComponents.Builder(buildTarget);
 
     Map<BuildTarget, CxxPythonExtension> extensions = new LinkedHashMap<>();
-    Map<BuildTarget, NativeLinkable> nativeLinkableRoots = new LinkedHashMap<>();
+    Map<BuildTarget, NativeLinkableGroup> nativeLinkableRoots = new LinkedHashMap<>();
 
     OmnibusRoots.Builder omnibusRoots =
         OmnibusRoots.builder(cxxPlatform, preloadDeps, graphBuilder);
@@ -225,16 +225,16 @@ public class PythonUtil {
           if (packagable.doesPythonPackageDisallowOmnibus() || comps.hasNativeCode(cxxPlatform)) {
             for (BuildRule dep :
                 packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder)) {
-              if (dep instanceof NativeLinkable) {
-                NativeLinkable linkable = (NativeLinkable) dep;
+              if (dep instanceof NativeLinkableGroup) {
+                NativeLinkableGroup linkable = (NativeLinkableGroup) dep;
                 nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
                 omnibusRoots.addExcludedRoot(linkable);
               }
             }
           }
           deps = packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
-        } else if (rule instanceof NativeLinkable) {
-          NativeLinkable linkable = (NativeLinkable) rule;
+        } else if (rule instanceof NativeLinkableGroup) {
+          NativeLinkableGroup linkable = (NativeLinkableGroup) rule;
           nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
           omnibusRoots.addPotentialRoot(linkable);
         }
@@ -292,7 +292,7 @@ public class PythonUtil {
     } else {
 
       // For regular linking, add all extensions via the package components interface.
-      Map<BuildTarget, NativeLinkable> extensionNativeDeps = new LinkedHashMap<>();
+      Map<BuildTarget, NativeLinkableGroup> extensionNativeDeps = new LinkedHashMap<>();
       for (Map.Entry<BuildTarget, CxxPythonExtension> entry : extensions.entrySet()) {
         allComponents.addComponent(
             entry.getValue().getPythonPackageComponents(pythonPlatform, cxxPlatform, graphBuilder),
@@ -303,24 +303,24 @@ public class PythonUtil {
                     .getValue()
                     .getNativeLinkTarget(pythonPlatform)
                     .getNativeLinkTargetDeps(cxxPlatform, graphBuilder),
-                NativeLinkable::getBuildTarget));
+                NativeLinkableGroup::getBuildTarget));
       }
 
       // Add all the native libraries.
-      ImmutableMap<BuildTarget, NativeLinkable> nativeLinkables =
+      ImmutableMap<BuildTarget, NativeLinkableGroup> nativeLinkables =
           NativeLinkables.getTransitiveNativeLinkables(
               cxxPlatform,
               graphBuilder,
               Iterables.concat(nativeLinkableRoots.values(), extensionNativeDeps.values()));
-      for (NativeLinkable nativeLinkable : nativeLinkables.values()) {
-        NativeLinkable.Linkage linkage = nativeLinkable.getPreferredLinkage(cxxPlatform);
-        if (nativeLinkableRoots.containsKey(nativeLinkable.getBuildTarget())
-            || linkage != NativeLinkable.Linkage.STATIC) {
+      for (NativeLinkableGroup nativeLinkableGroup : nativeLinkables.values()) {
+        NativeLinkableGroup.Linkage linkage = nativeLinkableGroup.getPreferredLinkage(cxxPlatform);
+        if (nativeLinkableRoots.containsKey(nativeLinkableGroup.getBuildTarget())
+            || linkage != NativeLinkableGroup.Linkage.STATIC) {
           ImmutableMap<String, SourcePath> libs =
-              nativeLinkable.getSharedLibraries(cxxPlatform, graphBuilder);
+              nativeLinkableGroup.getSharedLibraries(cxxPlatform, graphBuilder);
           for (Map.Entry<String, SourcePath> ent : libs.entrySet()) {
             allComponents.addNativeLibraries(
-                Paths.get(ent.getKey()), ent.getValue(), nativeLinkable.getBuildTarget());
+                Paths.get(ent.getKey()), ent.getValue(), nativeLinkableGroup.getBuildTarget());
           }
         }
       }
@@ -338,11 +338,11 @@ public class PythonUtil {
   static ImmutableSet<String> getPreloadNames(
       ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform, Iterable<BuildTarget> preloadDeps) {
     ImmutableSet.Builder<String> builder = ImmutableSortedSet.naturalOrder();
-    for (NativeLinkable nativeLinkable :
+    for (NativeLinkableGroup nativeLinkableGroup :
         FluentIterable.from(preloadDeps)
             .transform(graphBuilder::getRule)
-            .filter(NativeLinkable.class)) {
-      builder.addAll(nativeLinkable.getSharedLibraries(cxxPlatform, graphBuilder).keySet());
+            .filter(NativeLinkableGroup.class)) {
+      builder.addAll(nativeLinkableGroup.getSharedLibraries(cxxPlatform, graphBuilder).keySet());
     }
     return builder.build();
   }

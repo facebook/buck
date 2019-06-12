@@ -47,7 +47,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.features.python.CxxPythonExtensionDescription.Type;
 import com.facebook.buck.features.python.toolchain.PythonEnvironment;
@@ -352,7 +352,7 @@ public class CxxPythonExtensionDescriptionTest {
         ImmutableList.copyOf(
             nativeLinkTarget.getNativeLinkTargetDeps(
                 CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)),
-        Matchers.<NativeLinkable>hasItem(dep));
+        Matchers.<NativeLinkableGroup>hasItem(dep));
   }
 
   @Test
@@ -376,7 +376,7 @@ public class CxxPythonExtensionDescriptionTest {
         ImmutableList.copyOf(
             nativeLinkTarget.getNativeLinkTargetDeps(
                 CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)),
-        Matchers.hasItem((NativeLinkable) graphBuilder.getRule(PYTHON2_DEP_TARGET)));
+        Matchers.hasItem((NativeLinkableGroup) graphBuilder.getRule(PYTHON2_DEP_TARGET)));
   }
 
   @Test
@@ -425,13 +425,13 @@ public class CxxPythonExtensionDescriptionTest {
         ImmutableList.copyOf(
             py2NativeLinkTarget.getNativeLinkTargetDeps(
                 CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)),
-        Matchers.<NativeLinkable>hasItem(dep));
+        Matchers.<NativeLinkableGroup>hasItem(dep));
     NativeLinkTarget py3NativeLinkTarget = rule.getNativeLinkTarget(PY3);
     assertThat(
         ImmutableList.copyOf(
             py3NativeLinkTarget.getNativeLinkTargetDeps(
                 CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)),
-        Matchers.not(Matchers.<NativeLinkable>hasItem(dep)));
+        Matchers.not(Matchers.<NativeLinkableGroup>hasItem(dep)));
   }
 
   @Test

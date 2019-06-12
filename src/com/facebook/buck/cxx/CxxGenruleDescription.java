@@ -50,7 +50,7 @@ import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -560,11 +560,11 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
     private NativeLinkableInput getNativeLinkableInput(
         ActionGraphBuilder graphBuilder, Iterable<BuildRule> rules, Optional<Pattern> filter) {
-      ImmutableList<NativeLinkable> nativeLinkables =
+      ImmutableList<NativeLinkableGroup> nativeLinkableGroups =
           NativeLinkables.getNativeLinkables(
               cxxPlatform,
               graphBuilder,
-              FluentIterable.from(rules).filter(NativeLinkable.class),
+              FluentIterable.from(rules).filter(NativeLinkableGroup.class),
               depType,
               !filter.isPresent()
                   ? x -> true
@@ -577,24 +577,24 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
                         .find();
                   });
       ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
-      for (NativeLinkable nativeLinkable : nativeLinkables) {
+      for (NativeLinkableGroup nativeLinkableGroup : nativeLinkableGroups) {
         nativeLinkableInputs.add(
             NativeLinkables.getNativeLinkableInput(
                 cxxPlatform,
                 depType,
-                nativeLinkable,
+                nativeLinkableGroup,
                 graphBuilder,
                 buildTarget.getTargetConfiguration()));
       }
       return NativeLinkableInput.concat(nativeLinkableInputs.build());
     }
 
-    /** Make sure all resolved targets are instances of {@link NativeLinkable}. */
+    /** Make sure all resolved targets are instances of {@link NativeLinkableGroup}. */
     @Override
     protected ImmutableList<BuildRule> resolve(
         BuildRuleResolver resolver, ImmutableList<BuildTarget> input) throws MacroException {
       return FluentIterable.from(super.resolve(resolver, input))
-          .filter(NativeLinkable.class::isInstance)
+          .filter(NativeLinkableGroup.class::isInstance)
           .toList();
     }
 

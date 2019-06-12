@@ -61,7 +61,7 @@ import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.cxx.toolchain.ToolType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -421,13 +421,17 @@ public class CxxPrecompiledHeaderRuleTest {
     CxxPrecompiledHeader pch = foundPCH;
 
     ImmutableList<SourcePath> binObjects = ImmutableList.of(FakeSourcePath.of(filesystem, "bin.o"));
-    ImmutableList<NativeLinkable> nativeLinkableDeps =
-        ImmutableList.<NativeLinkable>builder()
+    ImmutableList<NativeLinkableGroup> nativeLinkableGroupDeps =
+        ImmutableList.<NativeLinkableGroup>builder()
             .add(pchTemplate)
             .addAll(
-                RichStream.from(pch.getBuildDeps()).filter(NativeLinkable.class).toImmutableList())
+                RichStream.from(pch.getBuildDeps())
+                    .filter(NativeLinkableGroup.class)
+                    .toImmutableList())
             .addAll(
-                RichStream.from(lib.getBuildDeps()).filter(NativeLinkable.class).toImmutableList())
+                RichStream.from(lib.getBuildDeps())
+                    .filter(NativeLinkableGroup.class)
+                    .toImmutableList())
             .build();
     CxxLink binLink =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
@@ -443,7 +447,7 @@ public class CxxPrecompiledHeaderRuleTest {
             ImmutableList.of(),
             Linker.LinkableDepType.STATIC,
             CxxLinkOptions.of(),
-            nativeLinkableDeps,
+            nativeLinkableGroupDeps,
             Optional.empty(), // cxxRuntimeType,
             Optional.empty(), // bundleLoader,
             ImmutableSet.of(), // blacklist,

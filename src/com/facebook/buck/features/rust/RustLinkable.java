@@ -20,7 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableMap;
 
@@ -64,7 +64,7 @@ interface RustLinkable {
    *
    * @return Linkage mode.
    */
-  NativeLinkable.Linkage getPreferredLinkage();
+  NativeLinkableGroup.Linkage getPreferredLinkage();
 
   /** Return true if this is a compiler plugin */
   boolean isProcMacro();

@@ -31,7 +31,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
@@ -163,7 +163,7 @@ public class CxxLibraryBuilder
     return this;
   }
 
-  public CxxLibraryBuilder setPreferredLinkage(NativeLinkable.Linkage linkage) {
+  public CxxLibraryBuilder setPreferredLinkage(NativeLinkableGroup.Linkage linkage) {
     getArgForPopulating().setPreferredLinkage(Optional.of(linkage));
     return this;
   }

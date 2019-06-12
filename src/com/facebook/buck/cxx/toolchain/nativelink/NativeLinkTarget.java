@@ -29,8 +29,8 @@ public interface NativeLinkTarget {
 
   NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform);
 
-  /** @return the {@link NativeLinkable} dependencies used to link this target. */
-  Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
+  /** @return the {@link NativeLinkableGroup} dependencies used to link this target. */
+  Iterable<? extends NativeLinkableGroup> getNativeLinkTargetDeps(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
   /** @return the {@link NativeLinkableInput} used to link this target. */

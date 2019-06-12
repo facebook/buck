@@ -67,7 +67,7 @@ import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -1049,7 +1049,7 @@ public class CxxLibraryDescriptionTest {
         ImmutableList.copyOf(
             rule.getNativeLinkableExportedDepsForPlatform(
                 CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)),
-        Matchers.<NativeLinkable>empty());
+        Matchers.<NativeLinkableGroup>empty());
   }
 
   @Test
@@ -1237,13 +1237,13 @@ public class CxxLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxLibraryBuilder cxxLibraryBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setPreferredLinkage(NativeLinkable.Linkage.STATIC);
+            .setPreferredLinkage(NativeLinkableGroup.Linkage.STATIC);
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(cxxLibraryBuilder.build()));
     CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(graphBuilder, filesystem);
     assertThat(
         rule.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
-        equalTo(NativeLinkable.Linkage.STATIC));
+        equalTo(NativeLinkableGroup.Linkage.STATIC));
   }
 
   @Test

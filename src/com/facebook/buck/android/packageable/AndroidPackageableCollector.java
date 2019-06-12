@@ -25,7 +25,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.jvm.core.HasJavaClassHashes;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.MoreSuppliers;
@@ -60,9 +60,9 @@ public class AndroidPackageableCollector {
   private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
   private final ImmutableSet<BuildTarget> resourcesToExclude;
   private final ImmutableCollection<SourcePath> nativeLibsToExclude;
-  private final ImmutableCollection<NativeLinkable> nativeLinkablesToExclude;
+  private final ImmutableCollection<NativeLinkableGroup> nativeLinkablesToExcludeGroup;
   private final ImmutableCollection<SourcePath> nativeLibAssetsToExclude;
-  private final ImmutableCollection<NativeLinkable> nativeLinkablesAssetsToExclude;
+  private final ImmutableCollection<NativeLinkableGroup> nativeLinkablesAssetsToExcludeGroup;
   private final APKModuleGraph apkModuleGraph;
 
   @VisibleForTesting
@@ -96,17 +96,17 @@ public class AndroidPackageableCollector {
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
       ImmutableSet<BuildTarget> resourcesToExclude,
       ImmutableCollection<SourcePath> nativeLibsToExclude,
-      ImmutableCollection<NativeLinkable> nativeLinkablesToExclude,
+      ImmutableCollection<NativeLinkableGroup> nativeLinkablesToExcludeGroup,
       ImmutableCollection<SourcePath> nativeLibAssetsToExclude,
-      ImmutableCollection<NativeLinkable> nativeLinkableAssetsToExclude,
+      ImmutableCollection<NativeLinkableGroup> nativeLinkableGroupAssetsToExclude,
       APKModuleGraph apkModuleGraph) {
     this.collectionRoot = collectionRoot;
     this.buildTargetsToExcludeFromDex = buildTargetsToExcludeFromDex;
     this.resourcesToExclude = resourcesToExclude;
     this.nativeLibsToExclude = nativeLibsToExclude;
-    this.nativeLinkablesToExclude = nativeLinkablesToExclude;
+    this.nativeLinkablesToExcludeGroup = nativeLinkablesToExcludeGroup;
     this.nativeLibAssetsToExclude = nativeLibAssetsToExclude;
-    this.nativeLinkablesAssetsToExclude = nativeLinkableAssetsToExclude;
+    this.nativeLinkablesAssetsToExcludeGroup = nativeLinkableGroupAssetsToExclude;
     this.apkModuleGraph = apkModuleGraph;
     apkModuleGraph
         .getAPKModules()
@@ -183,25 +183,26 @@ public class AndroidPackageableCollector {
     return this;
   }
 
-  public AndroidPackageableCollector addNativeLinkable(NativeLinkable nativeLinkable) {
-    if (nativeLinkablesToExclude.contains(nativeLinkable)) {
+  public AndroidPackageableCollector addNativeLinkable(NativeLinkableGroup nativeLinkableGroup) {
+    if (nativeLinkablesToExcludeGroup.contains(nativeLinkableGroup)) {
       return this;
     }
-    APKModule module = apkModuleGraph.findModuleForTarget(nativeLinkable.getBuildTarget());
+    APKModule module = apkModuleGraph.findModuleForTarget(nativeLinkableGroup.getBuildTarget());
     if (module.isRootModule()) {
-      collectionBuilder.putNativeLinkables(module, nativeLinkable);
+      collectionBuilder.putNativeLinkables(module, nativeLinkableGroup);
     } else {
-      collectionBuilder.putNativeLinkablesAssets(module, nativeLinkable);
+      collectionBuilder.putNativeLinkablesAssets(module, nativeLinkableGroup);
     }
     return this;
   }
 
-  public AndroidPackageableCollector addNativeLinkableAsset(NativeLinkable nativeLinkable) {
-    if (nativeLinkablesAssetsToExclude.contains(nativeLinkable)) {
+  public AndroidPackageableCollector addNativeLinkableAsset(
+      NativeLinkableGroup nativeLinkableGroup) {
+    if (nativeLinkablesAssetsToExcludeGroup.contains(nativeLinkableGroup)) {
       return this;
     }
-    APKModule module = apkModuleGraph.findModuleForTarget(nativeLinkable.getBuildTarget());
-    collectionBuilder.putNativeLinkablesAssets(module, nativeLinkable);
+    APKModule module = apkModuleGraph.findModuleForTarget(nativeLinkableGroup.getBuildTarget());
+    collectionBuilder.putNativeLinkablesAssets(module, nativeLinkableGroup);
     return this;
   }
 

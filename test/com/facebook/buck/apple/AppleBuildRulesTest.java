@@ -38,7 +38,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -239,7 +239,7 @@ public class AppleBuildRulesTest {
     TargetNode<?> foo2LibNode =
         AppleLibraryBuilder.createBuilder(foo2LibTarget)
             .setDeps(ImmutableSortedSet.of(sharedResourceTarget))
-            .setPreferredLinkage(NativeLinkable.Linkage.SHARED)
+            .setPreferredLinkage(NativeLinkableGroup.Linkage.SHARED)
             .build();
 
     BuildTarget fooFrameworkTarget = BuildTargetFactory.newInstance("//foo:framework#default");
@@ -260,7 +260,7 @@ public class AppleBuildRulesTest {
     TargetNode<?> bazLibNode =
         AppleLibraryBuilder.createBuilder(bazLibTarget)
             .setDeps(ImmutableSortedSet.of(staticResourceTarget))
-            .setPreferredLinkage(NativeLinkable.Linkage.SHARED)
+            .setPreferredLinkage(NativeLinkableGroup.Linkage.SHARED)
             .build();
 
     BuildTarget barBinaryTarget = BuildTargetFactory.newInstance("//bar:binary");

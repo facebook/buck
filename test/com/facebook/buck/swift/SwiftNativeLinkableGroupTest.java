@@ -35,7 +35,7 @@ import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SwiftNativeLinkableTest {
+public class SwiftNativeLinkableGroupTest {
 
   private Tool swiftcTool;
   private Tool swiftStdTool;
@@ -57,11 +57,11 @@ public class SwiftNativeLinkableTest {
             "iphoneos", ImmutableSet.of(), swiftcTool, Optional.of(swiftStdTool));
 
     ImmutableList.Builder<Arg> staticArgsBuilder = ImmutableList.builder();
-    SwiftRuntimeNativeLinkable.populateLinkerArguments(
+    SwiftRuntimeNativeLinkableGroup.populateLinkerArguments(
         staticArgsBuilder, swiftPlatform, Linker.LinkableDepType.STATIC);
 
     ImmutableList.Builder<Arg> sharedArgsBuilder = ImmutableList.builder();
-    SwiftRuntimeNativeLinkable.populateLinkerArguments(
+    SwiftRuntimeNativeLinkableGroup.populateLinkerArguments(
         sharedArgsBuilder, swiftPlatform, Linker.LinkableDepType.SHARED);
 
     ImmutableList<Arg> staticArgs = staticArgsBuilder.build();
@@ -93,7 +93,7 @@ public class SwiftNativeLinkableTest {
             "macosx", ImmutableSet.of(), swiftcTool, Optional.of(swiftStdTool));
 
     ImmutableList.Builder<Arg> sharedArgsBuilder = ImmutableList.builder();
-    SwiftRuntimeNativeLinkable.populateLinkerArguments(
+    SwiftRuntimeNativeLinkableGroup.populateLinkerArguments(
         sharedArgsBuilder, swiftPlatform, Linker.LinkableDepType.SHARED);
 
     ImmutableList<Arg> sharedArgs = sharedArgsBuilder.build();

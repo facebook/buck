@@ -32,7 +32,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable.Linkage;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -44,21 +44,22 @@ import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-public class NativeLinkablesTest {
+public class NativeLinkableGroupTest {
 
-  private static class FakeNativeLinkable extends FakeBuildRule implements NativeLinkable {
+  private static class FakeNativeLinkableGroup extends FakeBuildRule
+      implements NativeLinkableGroup {
 
-    private final Iterable<NativeLinkable> deps;
-    private final Iterable<NativeLinkable> exportedDeps;
-    private final NativeLinkable.Linkage preferredLinkage;
+    private final Iterable<NativeLinkableGroup> deps;
+    private final Iterable<NativeLinkableGroup> exportedDeps;
+    private final NativeLinkableGroup.Linkage preferredLinkage;
     private final NativeLinkableInput nativeLinkableInput;
     private final ImmutableMap<String, SourcePath> sharedLibraries;
 
-    FakeNativeLinkable(
+    FakeNativeLinkableGroup(
         String target,
-        Iterable<? extends NativeLinkable> deps,
-        Iterable<? extends NativeLinkable> exportedDeps,
-        NativeLinkable.Linkage preferredLinkage,
+        Iterable<? extends NativeLinkableGroup> deps,
+        Iterable<? extends NativeLinkableGroup> exportedDeps,
+        NativeLinkableGroup.Linkage preferredLinkage,
         NativeLinkableInput nativeLinkableInput,
         ImmutableMap<String, SourcePath> sharedLibraries,
         BuildRule... ruleDeps) {
@@ -71,12 +72,13 @@ public class NativeLinkablesTest {
     }
 
     @Override
-    public Iterable<NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
+    public Iterable<NativeLinkableGroup> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
       return deps;
     }
 
     @Override
-    public Iterable<NativeLinkable> getNativeLinkableExportedDeps(BuildRuleResolver ruleResolver) {
+    public Iterable<NativeLinkableGroup> getNativeLinkableExportedDeps(
+        BuildRuleResolver ruleResolver) {
       return exportedDeps;
     }
 
@@ -91,7 +93,7 @@ public class NativeLinkablesTest {
     }
 
     @Override
-    public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+    public NativeLinkableGroup.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
       return preferredLinkage;
     }
 
@@ -104,20 +106,20 @@ public class NativeLinkablesTest {
 
   @Test
   public void regularDepsUsingSharedLinkageAreNotTransitive() {
-    FakeNativeLinkable b =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup b =
+        new FakeNativeLinkableGroup(
             "//:b",
             ImmutableList.of(),
             ImmutableList.of(),
-            NativeLinkable.Linkage.ANY,
+            NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().addAllArgs(StringArg.from("b")).build(),
             ImmutableMap.of());
-    FakeNativeLinkable a =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup a =
+        new FakeNativeLinkableGroup(
             "//:a",
             ImmutableList.of(b),
             ImmutableList.of(),
-            NativeLinkable.Linkage.ANY,
+            NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().addAllArgs(StringArg.from("a")).build(),
             ImmutableMap.of());
     assertThat(
@@ -127,27 +129,27 @@ public class NativeLinkablesTest {
                 ImmutableList.of(a),
                 Linker.LinkableDepType.SHARED)
             .stream()
-            .map(NativeLinkable::getBuildTarget)
+            .map(NativeLinkableGroup::getBuildTarget)
             .collect(Collectors.toSet()),
         Matchers.not(Matchers.hasItem(b.getBuildTarget())));
   }
 
   @Test
   public void exportedDepsUsingSharedLinkageAreTransitive() {
-    FakeNativeLinkable b =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup b =
+        new FakeNativeLinkableGroup(
             "//:b",
             ImmutableList.of(),
             ImmutableList.of(),
-            NativeLinkable.Linkage.ANY,
+            NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().addAllArgs(StringArg.from("b")).build(),
             ImmutableMap.of());
-    FakeNativeLinkable a =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup a =
+        new FakeNativeLinkableGroup(
             "//:a",
             ImmutableList.of(),
             ImmutableList.of(b),
-            NativeLinkable.Linkage.ANY,
+            NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().addAllArgs(StringArg.from("a")).build(),
             ImmutableMap.of());
     assertThat(
@@ -157,27 +159,27 @@ public class NativeLinkablesTest {
                 ImmutableList.of(a),
                 Linker.LinkableDepType.SHARED)
             .stream()
-            .map(NativeLinkable::getBuildTarget)
+            .map(NativeLinkableGroup::getBuildTarget)
             .collect(Collectors.toSet()),
         Matchers.hasItem(b.getBuildTarget()));
   }
 
   @Test
   public void regularDepsFromStaticLibsUsingSharedLinkageAreTransitive() {
-    FakeNativeLinkable b =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup b =
+        new FakeNativeLinkableGroup(
             "//:b",
             ImmutableList.of(),
             ImmutableList.of(),
-            NativeLinkable.Linkage.ANY,
+            NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().addAllArgs(StringArg.from("b")).build(),
             ImmutableMap.of());
-    FakeNativeLinkable a =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup a =
+        new FakeNativeLinkableGroup(
             "//:a",
             ImmutableList.of(b),
             ImmutableList.of(),
-            NativeLinkable.Linkage.STATIC,
+            NativeLinkableGroup.Linkage.STATIC,
             NativeLinkableInput.builder().addAllArgs(StringArg.from("a")).build(),
             ImmutableMap.of());
     assertThat(
@@ -187,27 +189,27 @@ public class NativeLinkablesTest {
                 ImmutableList.of(a),
                 Linker.LinkableDepType.SHARED)
             .stream()
-            .map(NativeLinkable::getBuildTarget)
+            .map(NativeLinkableGroup::getBuildTarget)
             .collect(Collectors.toSet()),
         Matchers.hasItem(b.getBuildTarget()));
   }
 
   @Test
   public void regularDepsUsingStaticLinkageAreTransitive() {
-    FakeNativeLinkable b =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup b =
+        new FakeNativeLinkableGroup(
             "//:b",
             ImmutableList.of(),
             ImmutableList.of(),
-            NativeLinkable.Linkage.ANY,
+            NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().addAllArgs(StringArg.from("b")).build(),
             ImmutableMap.of());
-    FakeNativeLinkable a =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup a =
+        new FakeNativeLinkableGroup(
             "//:a",
             ImmutableList.of(b),
             ImmutableList.of(),
-            NativeLinkable.Linkage.ANY,
+            NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().addAllArgs(StringArg.from("a")).build(),
             ImmutableMap.of());
     assertThat(
@@ -217,35 +219,35 @@ public class NativeLinkablesTest {
                 ImmutableList.of(a),
                 Linker.LinkableDepType.STATIC)
             .stream()
-            .map(NativeLinkable::getBuildTarget)
+            .map(NativeLinkableGroup::getBuildTarget)
             .collect(Collectors.toSet()),
         Matchers.hasItem(b.getBuildTarget()));
   }
 
   @Test
   public void gatherTransitiveSharedLibraries() {
-    FakeNativeLinkable c =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup c =
+        new FakeNativeLinkableGroup(
             "//:c",
             ImmutableList.of(),
             ImmutableList.of(),
-            NativeLinkable.Linkage.ANY,
+            NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().build(),
             ImmutableMap.of("libc.so", FakeSourcePath.of("libc.so")));
-    FakeNativeLinkable b =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup b =
+        new FakeNativeLinkableGroup(
             "//:b",
             ImmutableList.of(c),
             ImmutableList.of(),
-            NativeLinkable.Linkage.STATIC,
+            NativeLinkableGroup.Linkage.STATIC,
             NativeLinkableInput.builder().build(),
             ImmutableMap.of("libb.so", FakeSourcePath.of("libb.so")));
-    FakeNativeLinkable a =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup a =
+        new FakeNativeLinkableGroup(
             "//:a",
             ImmutableList.of(b),
             ImmutableList.of(),
-            NativeLinkable.Linkage.ANY,
+            NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().build(),
             ImmutableMap.of("liba.so", FakeSourcePath.of("liba.so")));
     ImmutableSortedMap<String, SourcePath> sharedLibs =
@@ -265,21 +267,21 @@ public class NativeLinkablesTest {
 
   @Test
   public void nonNativeLinkableDepsAreIgnored() {
-    FakeNativeLinkable c =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup c =
+        new FakeNativeLinkableGroup(
             "//:c",
             ImmutableList.of(),
             ImmutableList.of(),
-            NativeLinkable.Linkage.ANY,
+            NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().addAllArgs(StringArg.from("c")).build(),
             ImmutableMap.of());
     FakeBuildRule b = new FakeBuildRule("//:b", c);
-    FakeNativeLinkable a =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup a =
+        new FakeNativeLinkableGroup(
             "//:a",
             ImmutableList.of(),
             ImmutableList.of(),
-            NativeLinkable.Linkage.ANY,
+            NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().addAllArgs(StringArg.from("a")).build(),
             ImmutableMap.of(),
             b);
@@ -291,7 +293,7 @@ public class NativeLinkablesTest {
                 ImmutableList.of(a),
                 Linker.LinkableDepType.STATIC)
             .stream()
-            .map(NativeLinkable::getBuildTarget)
+            .map(NativeLinkableGroup::getBuildTarget)
             .collect(Collectors.toSet()),
         Matchers.not(Matchers.hasItem(c.getBuildTarget())));
   }
@@ -299,32 +301,35 @@ public class NativeLinkablesTest {
   @Test
   public void getLinkStyle() {
     assertThat(
-        NativeLinkables.getLinkStyle(NativeLinkable.Linkage.STATIC, Linker.LinkableDepType.SHARED),
+        NativeLinkables.getLinkStyle(
+            NativeLinkableGroup.Linkage.STATIC, Linker.LinkableDepType.SHARED),
         Matchers.equalTo(Linker.LinkableDepType.STATIC_PIC));
     assertThat(
-        NativeLinkables.getLinkStyle(NativeLinkable.Linkage.SHARED, Linker.LinkableDepType.STATIC),
+        NativeLinkables.getLinkStyle(
+            NativeLinkableGroup.Linkage.SHARED, Linker.LinkableDepType.STATIC),
         Matchers.equalTo(Linker.LinkableDepType.SHARED));
     assertThat(
-        NativeLinkables.getLinkStyle(NativeLinkable.Linkage.ANY, Linker.LinkableDepType.STATIC),
+        NativeLinkables.getLinkStyle(
+            NativeLinkableGroup.Linkage.ANY, Linker.LinkableDepType.STATIC),
         Matchers.equalTo(Linker.LinkableDepType.STATIC));
   }
 
   @Test(expected = HumanReadableException.class)
   public void duplicateDifferentLibsConflict() {
-    FakeNativeLinkable a =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup a =
+        new FakeNativeLinkableGroup(
             "//:a",
             ImmutableList.of(),
             ImmutableList.of(),
-            NativeLinkable.Linkage.ANY,
+            NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().build(),
             ImmutableMap.of("liba.so", FakeSourcePath.of("liba1.so")));
-    FakeNativeLinkable b =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup b =
+        new FakeNativeLinkableGroup(
             "//:b",
             ImmutableList.of(),
             ImmutableList.of(),
-            NativeLinkable.Linkage.ANY,
+            NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().build(),
             ImmutableMap.of("liba.so", FakeSourcePath.of("liba2.so")));
     NativeLinkables.getTransitiveSharedLibraries(
@@ -338,20 +343,20 @@ public class NativeLinkablesTest {
   @Test
   public void duplicateIdenticalLibsDoNotConflict() {
     PathSourcePath path = FakeSourcePath.of("libc.so");
-    FakeNativeLinkable a =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup a =
+        new FakeNativeLinkableGroup(
             "//:a",
             ImmutableList.of(),
             ImmutableList.of(),
-            NativeLinkable.Linkage.ANY,
+            NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().build(),
             ImmutableMap.of("libc.so", path));
-    FakeNativeLinkable b =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup b =
+        new FakeNativeLinkableGroup(
             "//:b",
             ImmutableList.of(),
             ImmutableList.of(),
-            NativeLinkable.Linkage.ANY,
+            NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().build(),
             ImmutableMap.of("libc.so", path));
     ImmutableSortedMap<String, SourcePath> sharedLibs =
@@ -368,20 +373,20 @@ public class NativeLinkablesTest {
   @Test
   public void traversePredicate() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    FakeNativeLinkable b =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup b =
+        new FakeNativeLinkableGroup(
             "//:b",
             ImmutableList.of(),
             ImmutableList.of(),
-            NativeLinkable.Linkage.ANY,
+            NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().build(),
             ImmutableMap.of());
-    FakeNativeLinkable a =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup a =
+        new FakeNativeLinkableGroup(
             "//:a",
-            ImmutableList.<NativeLinkable>of(b),
+            ImmutableList.<NativeLinkableGroup>of(b),
             ImmutableList.of(),
-            NativeLinkable.Linkage.ANY,
+            NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().build(),
             ImmutableMap.of());
     assertThat(
@@ -392,7 +397,7 @@ public class NativeLinkablesTest {
                 Linker.LinkableDepType.STATIC,
                 n -> true)
             .stream()
-            .map(NativeLinkable::getBuildTarget)
+            .map(NativeLinkableGroup::getBuildTarget)
             .collect(Collectors.toSet()),
         Matchers.equalTo(ImmutableSet.of(a.getBuildTarget(), b.getBuildTarget())));
     assertThat(
@@ -403,23 +408,23 @@ public class NativeLinkablesTest {
                 Linker.LinkableDepType.STATIC,
                 a::equals)
             .stream()
-            .map(NativeLinkable::getBuildTarget)
+            .map(NativeLinkableGroup::getBuildTarget)
             .collect(Collectors.toSet()),
         Matchers.equalTo(ImmutableSet.of(a.getBuildTarget())));
   }
 
   @Test
   public void transitiveSharedLibrariesDynamicallyLinksStaticRoots() {
-    FakeNativeLinkable b =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup b =
+        new FakeNativeLinkableGroup(
             "//:b",
             ImmutableList.of(),
             ImmutableList.of(),
             Linkage.ANY,
             NativeLinkableInput.builder().build(),
             ImmutableMap.of("libb.so", FakeSourcePath.of("libb.so")));
-    FakeNativeLinkable a =
-        new FakeNativeLinkable(
+    FakeNativeLinkableGroup a =
+        new FakeNativeLinkableGroup(
             "//:a",
             ImmutableList.of(b),
             ImmutableList.of(),

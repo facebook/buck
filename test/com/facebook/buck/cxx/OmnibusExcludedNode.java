@@ -16,12 +16,12 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 
 /** A node that is always excluded from omnibus linking. */
 class OmnibusExcludedNode extends OmnibusNode {
 
-  public OmnibusExcludedNode(String target, Iterable<? extends NativeLinkable> deps) {
+  public OmnibusExcludedNode(String target, Iterable<? extends NativeLinkableGroup> deps) {
     super(target, deps);
   }
 

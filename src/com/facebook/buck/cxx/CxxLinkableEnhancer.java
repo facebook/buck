@@ -34,8 +34,8 @@ import com.facebook.buck.cxx.toolchain.linker.HasLinkerMap;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.ExtraOutputsDeriver;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable.Linkage;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.file.MorePaths;
@@ -81,7 +81,7 @@ public class CxxLinkableEnhancer {
       BuildTarget target,
       Path output,
       Linker.LinkableDepType depType,
-      Iterable<? extends NativeLinkable> nativeLinkableDeps,
+      Iterable<? extends NativeLinkableGroup> nativeLinkableDeps,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       ImmutableSet<BuildTarget> blacklist,
       ImmutableSet<BuildTarget> linkWholeDeps,
@@ -237,7 +237,7 @@ public class CxxLinkableEnhancer {
       Linker.LinkType linkType,
       Optional<String> soname,
       Linker.LinkableDepType depType,
-      Iterable<? extends NativeLinkable> nativeLinkableDeps,
+      Iterable<? extends NativeLinkableGroup> nativeLinkableDeps,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
       ImmutableSet<BuildTarget> linkWholeDeps,
@@ -330,7 +330,7 @@ public class CxxLinkableEnhancer {
 
   /**
    * Construct a {@link CxxLink} rule that builds a native linkable from top-level input objects and
-   * a dependency tree of {@link NativeLinkable} dependencies.
+   * a dependency tree of {@link NativeLinkableGroup} dependencies.
    *
    * @param nativeLinkableDeps library dependencies that the linkable links in
    * @param immediateLinkableInput framework and libraries of the linkable itself
@@ -348,7 +348,7 @@ public class CxxLinkableEnhancer {
       ImmutableList<String> extraOutputNames,
       Linker.LinkableDepType depType,
       CxxLinkOptions linkOptions,
-      Iterable<? extends NativeLinkable> nativeLinkableDeps,
+      Iterable<? extends NativeLinkableGroup> nativeLinkableDeps,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,

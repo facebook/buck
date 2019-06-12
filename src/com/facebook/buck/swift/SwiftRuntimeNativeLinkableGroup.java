@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
@@ -40,7 +40,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /** Pseudo linkable for representing Swift runtime library's linker arguments. */
-public final class SwiftRuntimeNativeLinkable implements NativeLinkable {
+public final class SwiftRuntimeNativeLinkableGroup implements NativeLinkableGroup {
 
   private static final String SWIFT_RUNTIME = "_swift_runtime";
 
@@ -51,7 +51,7 @@ public final class SwiftRuntimeNativeLinkable implements NativeLinkable {
   private final SwiftPlatform swiftPlatform;
   private final BuildTarget buildTarget;
 
-  public SwiftRuntimeNativeLinkable(
+  public SwiftRuntimeNativeLinkableGroup(
       SwiftPlatform swiftPlatform, TargetConfiguration targetConfiguration) {
     this.swiftPlatform = swiftPlatform;
     this.buildTarget = PSEUDO_BUILD_TARGET.configure(targetConfiguration);
@@ -63,12 +63,13 @@ public final class SwiftRuntimeNativeLinkable implements NativeLinkable {
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
+  public Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(
+      BuildRuleResolver ruleResolver) {
     return ImmutableSet.of();
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+  public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
       BuildRuleResolver ruleResolver) {
     return ImmutableSet.of();
   }

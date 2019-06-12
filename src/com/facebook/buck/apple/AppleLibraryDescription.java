@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import static com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable.Linkage;
+import static com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import static com.facebook.buck.swift.SwiftLibraryDescription.isSwiftTarget;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
@@ -76,13 +76,13 @@ import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftCompile;
 import com.facebook.buck.swift.SwiftLibraryDescription;
-import com.facebook.buck.swift.SwiftRuntimeNativeLinkable;
+import com.facebook.buck.swift.SwiftRuntimeNativeLinkableGroup;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
 import com.facebook.buck.util.types.Either;
@@ -1117,7 +1117,7 @@ public class AppleLibraryDescription
   }
 
   @Override
-  public Optional<ImmutableList<NativeLinkable>> getNativeLinkableExportedDeps(
+  public Optional<ImmutableList<NativeLinkableGroup>> getNativeLinkableExportedDeps(
       BuildTarget target, ActionGraphBuilder graphBuilder, CxxPlatform platform) {
     if (!targetContainsSwift(target, graphBuilder)) {
       return Optional.empty();
@@ -1134,7 +1134,8 @@ public class AppleLibraryDescription
     return swiftPlatform.map(
         theSwiftPlatform ->
             ImmutableList.of(
-                new SwiftRuntimeNativeLinkable(theSwiftPlatform, target.getTargetConfiguration())));
+                new SwiftRuntimeNativeLinkableGroup(
+                    theSwiftPlatform, target.getTargetConfiguration())));
   }
 
   @Override

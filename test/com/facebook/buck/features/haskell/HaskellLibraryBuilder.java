@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.google.common.collect.ImmutableList;
@@ -75,7 +75,7 @@ public class HaskellLibraryBuilder
     return this;
   }
 
-  public HaskellLibraryBuilder setPreferredLinkage(NativeLinkable.Linkage preferredLinkage) {
+  public HaskellLibraryBuilder setPreferredLinkage(NativeLinkableGroup.Linkage preferredLinkage) {
     getArgForPopulating().setPreferredLinkage(preferredLinkage);
     return this;
   }

@@ -38,7 +38,7 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
@@ -124,9 +124,9 @@ public class AndroidBinaryGraphEnhancer {
   private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
   private final ImmutableSet<BuildTarget> resourcesToExclude;
   private final ImmutableCollection<SourcePath> nativeLibsToExclude;
-  private final ImmutableCollection<NativeLinkable> nativeLinkablesToExclude;
+  private final ImmutableCollection<NativeLinkableGroup> nativeLinkablesToExcludeGroup;
   private final ImmutableCollection<SourcePath> nativeLibAssetsToExclude;
-  private final ImmutableCollection<NativeLinkable> nativeLinkablesAssetsToExclude;
+  private final ImmutableCollection<NativeLinkableGroup> nativeLinkablesAssetsToExcludeGroup;
   private final JavaBuckConfig javaBuckConfig;
   private final Javac javac;
   private final JavacFactory javacFactory;
@@ -172,9 +172,9 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
       ImmutableSet<BuildTarget> resourcesToExclude,
       ImmutableCollection<SourcePath> nativeLibsToExclude,
-      ImmutableCollection<NativeLinkable> nativeLinkablesToExclude,
+      ImmutableCollection<NativeLinkableGroup> nativeLinkablesToExcludeGroup,
       ImmutableCollection<SourcePath> nativeLibAssetsToExclude,
-      ImmutableCollection<NativeLinkable> nativeLinkableAssetsToExclude,
+      ImmutableCollection<NativeLinkableGroup> nativeLinkableGroupAssetsToExclude,
       boolean skipCrunchPngs,
       boolean includesVectorDrawables,
       boolean noAutoVersionResources,
@@ -223,9 +223,9 @@ public class AndroidBinaryGraphEnhancer {
     this.buildTargetsToExcludeFromDex = buildTargetsToExcludeFromDex;
     this.resourcesToExclude = resourcesToExclude;
     this.nativeLibsToExclude = nativeLibsToExclude;
-    this.nativeLinkablesToExclude = nativeLinkablesToExclude;
+    this.nativeLinkablesToExcludeGroup = nativeLinkablesToExcludeGroup;
     this.nativeLibAssetsToExclude = nativeLibAssetsToExclude;
-    this.nativeLinkablesAssetsToExclude = nativeLinkableAssetsToExclude;
+    this.nativeLinkablesAssetsToExcludeGroup = nativeLinkableGroupAssetsToExclude;
     this.javaBuckConfig = javaBuckConfig;
     this.javacOptions = javacOptions;
     this.exopackageModes = exopackageModes;
@@ -300,9 +300,9 @@ public class AndroidBinaryGraphEnhancer {
             buildTargetsToExcludeFromDex,
             resourcesToExclude,
             nativeLibsToExclude,
-            nativeLinkablesToExclude,
+            nativeLinkablesToExcludeGroup,
             nativeLibAssetsToExclude,
-            nativeLinkablesAssetsToExclude,
+            nativeLinkablesAssetsToExcludeGroup,
             apkModuleGraph);
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(originalDeps), graphBuilder);
