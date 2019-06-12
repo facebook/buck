@@ -43,6 +43,8 @@ message BuckInfo {
   string build_id = 1;
   // Name of the Build Rule that's being executed
   string rule_name = 2;
+  // Auxiliary tag set for builds with non-standard configurations.
+  string auxiliary_build_tag = 3;
 }
 
 // Data about the client that wants to start the session - may be ignored if

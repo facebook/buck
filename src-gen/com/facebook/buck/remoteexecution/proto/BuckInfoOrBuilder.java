@@ -44,4 +44,22 @@ public interface BuckInfoOrBuilder extends
    */
   com.google.protobuf.ByteString
       getRuleNameBytes();
+
+  /**
+   * <pre>
+   * Auxiliary tag set for builds with non-standard configurations.
+   * </pre>
+   *
+   * <code>string auxiliary_build_tag = 3;</code>
+   */
+  java.lang.String getAuxiliaryBuildTag();
+  /**
+   * <pre>
+   * Auxiliary tag set for builds with non-standard configurations.
+   * </pre>
+   *
+   * <code>string auxiliary_build_tag = 3;</code>
+   */
+  com.google.protobuf.ByteString
+      getAuxiliaryBuildTagBytes();
 }

@@ -35,6 +35,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 /** Config object for the [remoteexecution] section of .buckconfig. */
@@ -118,6 +119,9 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final String AUTO_RE_BUILD_PROJECTS_WHITELIST_KEY =
       "auto_re_build_projects_whitelist";
   public static final String AUTO_RE_BUILD_USERS_BLACKLIST_KEY = "auto_re_build_users_blacklist";
+
+  // Auxiliary flag used for setting custom build tags.
+  public static final String BUILD_TAGS_KEY = "build_tags";
 
   public String getRemoteHost() {
     return getValue("remote_host").orElse("localhost");
@@ -335,6 +339,15 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   public String getReSessionLabel() {
     return getValue(RE_SESSION_LABEL_KEY).orElse("");
+  }
+
+  /** Provides an auxiliary tag used for capturing any custom configurations. */
+  public String getAuxiliaryBuildTag() {
+    ImmutableList<String> tags =
+        getDelegate()
+            .getOptionalListWithoutComments(SECTION, BUILD_TAGS_KEY)
+            .orElse(ImmutableList.of());
+    return tags.stream().sorted().collect(Collectors.joining("::"));
   }
 
   public void validateCertificatesOrThrow() {
