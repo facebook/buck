@@ -112,9 +112,9 @@ public class AuditClasspathCommand extends AbstractCommand {
       if (shouldGenerateDotOutput()) {
         return printDotOutput(params, targetGraph);
       } else if (shouldGenerateJsonOutput()) {
-        return printJsonClasspath(params, targetGraph, targets);
+        return printJsonClasspath(params, targetGraph);
       } else {
-        return printClasspath(params, targetGraph, targets);
+        return printClasspath(params, targetGraph);
       }
     } catch (VersionException e) {
       throw new HumanReadableException(e, MoreExceptions.getHumanReadableOrLocalizedMessage(e));
@@ -143,13 +143,11 @@ public class AuditClasspathCommand extends AbstractCommand {
 
   @VisibleForTesting
   ExitCode printClasspath(
-      CommandRunnerParams params,
-      TargetGraphCreationResult targetGraph,
-      ImmutableSet<BuildTarget> targets)
+      CommandRunnerParams params, TargetGraphCreationResult targetGraphCreationResult)
       throws InterruptedException, VersionException {
 
     if (params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()) {
-      targetGraph = toVersionedTargetGraph(params, targetGraph);
+      targetGraphCreationResult = toVersionedTargetGraph(params, targetGraphCreationResult);
     }
 
     ActionGraphBuilder graphBuilder =
@@ -169,11 +167,11 @@ public class AuditClasspathCommand extends AbstractCommand {
                                 .getMaxActionGraphCacheEntries()),
                         params.getRuleKeyConfiguration(),
                         params.getBuckConfig())
-                    .getFreshActionGraph(targetGraph))
+                    .getFreshActionGraph(targetGraphCreationResult))
             .getActionGraphBuilder();
     SortedSet<Path> classpathEntries = new TreeSet<>();
 
-    for (BuildTarget target : targets) {
+    for (BuildTarget target : targetGraphCreationResult.getBuildTargets()) {
       BuildRule rule = Objects.requireNonNull(graphBuilder.requireRule(target));
       HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
       if (hasClasspathEntries != null) {
@@ -196,13 +194,11 @@ public class AuditClasspathCommand extends AbstractCommand {
 
   @VisibleForTesting
   ExitCode printJsonClasspath(
-      CommandRunnerParams params,
-      TargetGraphCreationResult targetGraph,
-      ImmutableSet<BuildTarget> targets)
+      CommandRunnerParams params, TargetGraphCreationResult targetGraphCreationResult)
       throws IOException, InterruptedException, VersionException {
 
     if (params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()) {
-      targetGraph = toVersionedTargetGraph(params, targetGraph);
+      targetGraphCreationResult = toVersionedTargetGraph(params, targetGraphCreationResult);
     }
 
     ActionGraphBuilder graphBuilder =
@@ -222,11 +218,11 @@ public class AuditClasspathCommand extends AbstractCommand {
                                 .getMaxActionGraphCacheEntries()),
                         params.getRuleKeyConfiguration(),
                         params.getBuckConfig())
-                    .getFreshActionGraph(targetGraph))
+                    .getFreshActionGraph(targetGraphCreationResult))
             .getActionGraphBuilder();
     Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
 
-    for (BuildTarget target : targets) {
+    for (BuildTarget target : targetGraphCreationResult.getBuildTargets()) {
       BuildRule rule = Objects.requireNonNull(graphBuilder.requireRule(target));
       HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
       if (hasClasspathEntries == null) {
