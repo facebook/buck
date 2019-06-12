@@ -25,7 +25,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
-import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory.DeclaredArtifact;
+import com.facebook.buck.core.rules.actions.DeclaredArtifact;
 import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
 import com.facebook.buck.core.rules.actions.FakeActionFactory;

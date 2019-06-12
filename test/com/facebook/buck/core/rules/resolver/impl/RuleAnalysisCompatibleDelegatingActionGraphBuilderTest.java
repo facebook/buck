@@ -32,7 +32,7 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.ActionAnalysisData;
 import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory;
-import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory.DeclaredArtifact;
+import com.facebook.buck.core.rules.actions.DeclaredArtifact;
 import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
 import com.facebook.buck.core.rules.actions.FakeActionAnalysisRegistry;

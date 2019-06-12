@@ -26,8 +26,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import java.nio.file.Path;
-import org.immutables.value.Value;
-import org.immutables.value.Value.Style.ImplementationVisibility;
 
 /**
  * The factory for creating {@link ActionWrapperData}.
@@ -67,32 +65,6 @@ public class ActionWrapperDataFactory {
   public DeclaredArtifact declareArtifact(Path output) {
     Preconditions.checkState(!output.isAbsolute());
     return ImmutableDeclaredArtifact.of(packagePath, output);
-  }
-
-  /**
-   * The {@link DeclaredArtifact} is the promise during the rule implementation that an {@link
-   * Action} will be created to generate an output at the corresponding path.
-   *
-   * <p>This is not an {@link Artifact} in itself, and cannot be used as such for any {@link Action}
-   * lookup, since it is not fully materialized with a corresponding {@link Action}.
-   *
-   * <p>This {@link DeclaredArtifact} becomes materialized once a corresponding {@link Action} has
-   * been created.
-   */
-  @Value.Immutable(builder = false, copy = false)
-  @Value.Style(visibility = ImplementationVisibility.PACKAGE)
-  public abstract static class DeclaredArtifact {
-
-    @Value.Parameter
-    abstract Path getPackagePath();
-
-    @Value.Parameter
-    abstract Path getOutputPath();
-
-    private BuildArtifact materialize(ActionAnalysisDataKey key) {
-      return ImmutableBuildArtifact.of(
-          key, key.getBuildTarget(), getPackagePath(), getOutputPath());
-    }
   }
 
   /**

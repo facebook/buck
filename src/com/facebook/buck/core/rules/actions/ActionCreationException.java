@@ -17,7 +17,6 @@ package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.AbstractAction.ActionConstructorParams;
-import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory.DeclaredArtifact;
 import com.google.common.collect.ImmutableSet;
 
 /** Represents an error during action creation */
