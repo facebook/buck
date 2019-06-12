@@ -105,11 +105,7 @@ public class UninstallCommand extends AbstractCommand {
                       params.getCell(), params.getBuckConfig(), getArguments()),
                   params.getTargetConfiguration());
       buildTargets = result.getBuildTargets();
-      graphBuilder =
-          params
-              .getActionGraphProvider()
-              .getActionGraph(result.getTargetGraph())
-              .getActionGraphBuilder();
+      graphBuilder = params.getActionGraphProvider().getActionGraph(result).getActionGraphBuilder();
     } catch (BuildFileParseException e) {
       params
           .getBuckEventBus()

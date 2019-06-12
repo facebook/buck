@@ -737,7 +737,7 @@ public class BuildCommand extends AbstractCommand {
         .getActionGraphProvider()
         .getActionGraph(
             new DefaultTargetNodeToBuildRuleTransformer(),
-            targetGraphAndBuildTargets.getTargetGraph(),
+            targetGraphAndBuildTargets,
             ruleKeyLogger);
   }
 

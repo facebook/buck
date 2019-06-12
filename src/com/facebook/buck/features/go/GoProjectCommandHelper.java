@@ -29,8 +29,10 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
+import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -175,7 +177,7 @@ public class GoProjectCommandHelper {
     return initGoWorkspace(targetGraphAndTargets);
   }
 
-  private ActionGraphAndBuilder getActionGraph(TargetGraph targetGraph) {
+  private ActionGraphAndBuilder getActionGraph(TargetGraphCreationResult targetGraph) {
     return params.getActionGraphProvider().getActionGraph(targetGraph);
   }
 
@@ -243,7 +245,10 @@ public class GoProjectCommandHelper {
       vendorPath = Paths.get("vendor");
     }
     ActionGraphAndBuilder result =
-        Objects.requireNonNull(getActionGraph(targetGraphAndTargets.getTargetGraph()));
+        Objects.requireNonNull(
+            getActionGraph(
+                new ImmutableTargetGraphCreationResult(
+                    targetGraphAndTargets.getTargetGraph(), ImmutableSet.of())));
 
     // cleanup files from previous runs
     for (BuildTargetSourcePath sourcePath : generatedPackages.keySet()) {

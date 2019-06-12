@@ -99,9 +99,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
 
       // Create the action graph.
       ActionGraphAndBuilder actionGraphAndBuilder =
-          params
-              .getActionGraphProvider()
-              .getActionGraph(targetGraphCreationResult.getTargetGraph());
+          params.getActionGraphProvider().getActionGraph(targetGraphCreationResult);
 
       // Dump the action graph.
       if (generateDotOutput) {

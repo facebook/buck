@@ -22,7 +22,6 @@ import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDeleg
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.impl.HostTargetConfiguration;
-import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -94,7 +93,7 @@ public class DelegateAndGraphsInitializer {
     StackedFileHashCaches stackedCaches = createStackedFileHashesAndPreload();
     LOG.info("Finished pre-loading source files.");
     LOG.info("Starting to create the target graph.");
-    TargetGraph targetGraph = createTargetGraph();
+    TargetGraphCreationResult targetGraph = createTargetGraph();
     LOG.info("Finished creating the target graph.");
     LOG.info("Starting to create the action graph.");
     ActionGraphAndBuilder actionGraphAndBuilder = createActionGraphAndResolver(targetGraph);
@@ -102,16 +101,16 @@ public class DelegateAndGraphsInitializer {
     CachingBuildEngineDelegate engineDelegate =
         createBuildEngineDelegate(stackedCaches, actionGraphAndBuilder);
     return DelegateAndGraphs.builder()
-        .setTargetGraph(targetGraph)
+        .setTargetGraph(targetGraph.getTargetGraph())
         .setActionGraphAndBuilder(actionGraphAndBuilder)
         .setCachingBuildEngineDelegate(engineDelegate)
         .build();
   }
 
-  private TargetGraph createTargetGraph() throws InterruptedException {
+  private TargetGraphCreationResult createTargetGraph() throws InterruptedException {
     args.getTimingStatsTracker().startTimer(SlaveEvents.TARGET_GRAPH_DESERIALIZATION_TIME);
     try {
-      TargetGraph targetGraph = null;
+      TargetGraphCreationResult targetGraph = null;
       DistBuildTargetGraphCodec codec = createGraphCodec();
       ImmutableMap<Integer, Cell> cells = args.getState().getCells();
       TargetGraphCreationResult targetGraphCreationResult =
@@ -134,10 +133,9 @@ public class DelegateAndGraphsInitializer {
                       new ParsingUnconfiguredBuildTargetViewFactory(),
                       targetGraphCreationResult,
                       HostTargetConfiguration.INSTANCE,
-                      args.getBuckEventBus())
-                  .getTargetGraph();
+                      args.getBuckEventBus());
         } else {
-          targetGraph = targetGraphCreationResult.getTargetGraph();
+          targetGraph = targetGraphCreationResult;
         }
       } catch (VersionException e) {
         throw new RuntimeException(e);
@@ -150,7 +148,8 @@ public class DelegateAndGraphsInitializer {
   }
 
   // TODO(ruibm): This thing is time consuming and should execute in the background.
-  private ActionGraphAndBuilder createActionGraphAndResolver(TargetGraph targetGraph) {
+  private ActionGraphAndBuilder createActionGraphAndResolver(
+      TargetGraphCreationResult targetGraph) {
     args.getTimingStatsTracker().startTimer(SlaveEvents.ACTION_GRAPH_CREATION_TIME);
     try {
       return args.getActionGraphProvider().getActionGraph(Objects.requireNonNull(targetGraph));

@@ -544,9 +544,7 @@ public class TestCommand extends BuildCommand {
       }
 
       ActionGraphAndBuilder actionGraphAndBuilder =
-          params
-              .getActionGraphProvider()
-              .getActionGraph(targetGraphCreationResult.getTargetGraph());
+          params.getActionGraphProvider().getActionGraph(targetGraphCreationResult);
       // Look up all of the test rules in the action graph.
       Iterable<TestRule> testRules =
           Iterables.filter(actionGraphAndBuilder.getActionGraph().getNodes(), TestRule.class);

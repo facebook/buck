@@ -32,6 +32,7 @@ import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TestTargetGraphCreationResultFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
@@ -205,7 +206,8 @@ public class DistBuildFileHashesIntegrationTest {
             .withCellProvider(rootCell.getCellProvider())
             .withCheckActionGraphs()
             .build();
-    ActionGraphAndBuilder actionGraphAndBuilder = cache.getActionGraph(targetGraph);
+    ActionGraphAndBuilder actionGraphAndBuilder =
+        cache.getActionGraph(TestTargetGraphCreationResultFactory.create(targetGraph));
     BuildRuleResolver ruleResolver = actionGraphAndBuilder.getActionGraphBuilder();
     DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(rootCell);
 

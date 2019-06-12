@@ -20,6 +20,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -103,7 +104,7 @@ public class ActionGraphProvider {
   }
 
   /** Create an ActionGraph, using options extracted from a BuckConfig. */
-  public ActionGraphAndBuilder getActionGraph(TargetGraph targetGraph) {
+  public ActionGraphAndBuilder getActionGraph(TargetGraphCreationResult targetGraph) {
     return getActionGraph(
         new DefaultTargetNodeToBuildRuleTransformer(), targetGraph, Optional.empty());
   }
@@ -118,13 +119,14 @@ public class ActionGraphProvider {
    */
   public ActionGraphAndBuilder getActionGraph(
       TargetNodeToBuildRuleTransformer transformer,
-      TargetGraph targetGraph,
+      TargetGraphCreationResult targetGraphCreationResult,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     ActionGraphEvent.Started started = ActionGraphEvent.started();
     eventBus.post(started);
     ActionGraphAndBuilder out;
     ActionGraphEvent.Finished finished = ActionGraphEvent.finished(started);
     try {
+      TargetGraph targetGraph = targetGraphCreationResult.getTargetGraph();
       RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(ruleKeyConfiguration);
       ActionGraphAndBuilder cachedActionGraph = actionGraphCache.getIfPresent(targetGraph);
       if (cachedActionGraph != null) {
