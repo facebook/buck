@@ -68,6 +68,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
@@ -88,6 +89,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
 
   private ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeHits = Maps.newConcurrentMap();
   private ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeErrors = Maps.newConcurrentMap();
+  private ConcurrentMap<ArtifactCacheMode, AtomicLong> cacheModeBytes = Maps.newConcurrentMap();
   private AtomicInteger cacheMisses = new AtomicInteger(0);
   private AtomicInteger cacheIgnores = new AtomicInteger(0);
   private AtomicInteger localKeyUnchangedHits = new AtomicInteger(0);
@@ -116,6 +118,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     for (ArtifactCacheMode mode : cacheModes) {
       cacheModeHits.put(mode, new AtomicInteger(0));
       cacheModeErrors.put(mode, new AtomicInteger(0));
+      cacheModeBytes.put(mode, new AtomicLong(0L));
     }
 
     this.objectWriter =
@@ -161,7 +164,17 @@ public class MachineReadableLoggerListener implements BuckEventListener {
       if (cacheResult.getType() == CacheResultType.LOCAL_KEY_UNCHANGED_HIT) {
         localKeyUnchangedHits.incrementAndGet();
       } else if (cacheResult.getType() == CacheResultType.HIT) {
-        cacheResult.cacheMode().ifPresent(mode -> cacheModeHits.get(mode).incrementAndGet());
+        if (cacheResult.cacheMode().isPresent()) {
+          ArtifactCacheMode mode = cacheResult.cacheMode().get();
+          AtomicInteger hits = cacheModeHits.get(mode);
+          if (hits != null) {
+            hits.incrementAndGet();
+          }
+          AtomicLong bytes = cacheModeBytes.get(mode);
+          if (bytes != null) {
+            bytes.addAndGet(cacheResult.artifactSizeBytes().orElse(0L));
+          }
+        }
       } else {
         throw new IllegalArgumentException("Unexpected CacheResult: " + cacheResult);
       }
@@ -261,10 +274,12 @@ public class MachineReadableLoggerListener implements BuckEventListener {
                 CacheCountersSummary.of(
                     cacheModeHits,
                     cacheModeErrors,
+                    cacheModeBytes,
                     cacheModeHits.values().stream().mapToInt(AtomicInteger::get).sum(),
                     cacheModeErrors.values().stream().mapToInt(AtomicInteger::get).sum(),
                     cacheMisses.get(),
                     cacheIgnores.get(),
+                    cacheModeBytes.values().stream().mapToLong(AtomicLong::get).sum(),
                     localKeyUnchangedHits.get(),
                     cacheUploadSuccessCount,
                     cacheUploadFailureCount));

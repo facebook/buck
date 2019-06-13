@@ -58,6 +58,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -204,15 +205,18 @@ public class CacheCommand extends AbstractCommand {
 
     HashMap<ArtifactCacheMode, AtomicInteger> cacheHitsPerMode = new HashMap<>();
     HashMap<ArtifactCacheMode, AtomicInteger> cacheErrorsPerMode = new HashMap<>();
+    HashMap<ArtifactCacheMode, AtomicLong> cacheBytesPerMode = new HashMap<>();
     for (ArtifactCacheMode mode : ArtifactCacheMode.values()) {
       cacheHitsPerMode.put(mode, new AtomicInteger(0));
       cacheErrorsPerMode.put(mode, new AtomicInteger(0));
+      cacheBytesPerMode.put(mode, new AtomicLong(0L));
     }
     int cacheHits = 0;
     int cacheMisses = 0;
     int cacheErrors = 0;
     int cacheIgnored = 0;
     int localKeyUnchanged = 0;
+    long cacheBytes = 0L;
 
     for (ArtifactRunner r : results) {
       if (r.completed) {
@@ -234,7 +238,12 @@ public class CacheCommand extends AbstractCommand {
           if (cacheHitsPerMode.containsKey(artifactCacheMode)) {
             cacheHitsPerMode.get(artifactCacheMode).incrementAndGet();
           }
+          AtomicLong bytes = cacheBytesPerMode.get(artifactCacheMode);
+          if (bytes != null) {
+            bytes.addAndGet(r.artifactSize);
+          }
           ++cacheHits;
+          cacheBytes += r.artifactSize;
           break;
         case MISS:
           ++cacheMisses;
@@ -283,6 +292,8 @@ public class CacheCommand extends AbstractCommand {
                     .setTotalCacheLocalKeyUnchangedHits(localKeyUnchanged)
                     .setFailureUploadCount(new AtomicInteger(0))
                     .setSuccessUploadCount(new AtomicInteger(0))
+                    .setCacheBytesPerMode(cacheBytesPerMode)
+                    .setTotalCacheBytes(cacheBytes)
                     .build()));
 
     ExitCode exitCode = (totalRuns == goodRuns) ? ExitCode.SUCCESS : ExitCode.BUILD_ERROR;
@@ -423,6 +434,7 @@ public class CacheCommand extends AbstractCommand {
     StringBuilder resultString;
     ArtifactCache cache;
     boolean completed;
+    long artifactSize;
 
     public ArtifactRunner(
         ProjectFilesystemFactory projectFilesystemFactory,
@@ -465,6 +477,7 @@ public class CacheCommand extends AbstractCommand {
       resultString.append("Artifact metadata:\n");
       resultString.append(ObjectMappers.WRITER.writeValueAsString(metadata));
       resultString.append(System.lineSeparator());
+      artifactSize = success.getType() == CacheResultType.HIT ? success.getArtifactSizeBytes() : 0L;
       boolean cacheSuccess = success.getType().isSuccess();
       if (!cacheSuccess) {
         statusString = String.format("FAILED FETCHING %s %s", ruleKey, cacheResult);

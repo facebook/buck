@@ -48,7 +48,6 @@ public class CacheRateStatsKeeper {
   private final AtomicInteger cacheIgnores = new AtomicInteger(0);
   private final AtomicInteger cacheLocalKeyUnchangedHits = new AtomicInteger(0);
   private final AtomicInteger unexpectedCacheMissesInStampedeBuildSlave = new AtomicInteger(0);
-
   private final AtomicInteger ruleCount = new AtomicInteger(0);
 
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {

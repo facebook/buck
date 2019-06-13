@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import org.immutables.value.Value;
 
 /**
@@ -44,6 +45,10 @@ abstract class AbstractCacheCountersSummary {
 
   @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract ImmutableMap<ArtifactCacheMode, AtomicLong> getCacheBytesPerMode();
+
+  @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
   public abstract int getTotalCacheHits();
 
   @Value.Parameter
@@ -57,6 +62,10 @@ abstract class AbstractCacheCountersSummary {
   @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract int getTotalCacheIgnores();
+
+  @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract long getTotalCacheBytes();
 
   @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
