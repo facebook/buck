@@ -1,5 +1,5 @@
 <component name="libraryTable">
-  <library name="idea-ce-2018.3.4">
+  <library name="idea-ce-2019.1.3">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/third-party/java/intellij/android.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/intellij/annotations.jar!/" />
