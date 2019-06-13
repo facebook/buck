@@ -59,6 +59,7 @@ java_immutables_library(
         "//src/com/facebook/buck/remoteexecution/event/listener/model:model",
         "//src/com/facebook/buck/remoteexecution/interfaces:interfaces",
         "//src/com/facebook/buck/rules/keys:keys",
+        "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/support/bgtasks:bgtasks",
