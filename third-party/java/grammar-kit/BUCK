@@ -23,7 +23,7 @@ java_binary(
 
 prebuilt_jar(
     name = "grammar-kit_prebuilt",
-    binary_jar = "grammar-kit-2018.3-SNAPSHOT.jar",
+    binary_jar = "grammar-kit-2019.1.jar",
 )
 
 prebuilt_jar(
