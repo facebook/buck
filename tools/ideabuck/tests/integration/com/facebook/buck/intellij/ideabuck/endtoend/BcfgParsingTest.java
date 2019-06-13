@@ -58,4 +58,8 @@ public class BcfgParsingTest extends ParsingTestCase {
   public void testSample() {
     doTest();
   }
+
+  public void testRecoverFromErrors() {
+    doTest();
+  }
 }

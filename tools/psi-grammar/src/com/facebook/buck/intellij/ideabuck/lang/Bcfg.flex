@@ -66,12 +66,14 @@ PROPERTY_VALUE_FRAGMENT = ([^\\\s\r\n]|\\[^\r\n]) ([^\\\r\n]|\\[^\r\n])*
   "["                       { yybegin(IN_SECTION_HEADER); return BcfgTypes.L_BRACKET; }
   "<file:"                  { yybegin(IN_FILE_PATH); return BcfgTypes.REQUIRED_FILE; }
   "<?file:"                 { yybegin(IN_FILE_PATH); return BcfgTypes.OPTIONAL_FILE; }
-  [^]                       { yybegin(IN_PROPERTY_NAME); }
+  [^]                       { yypushback(1); yybegin(IN_PROPERTY_NAME); }
   <<EOF>>                   { return null; }
 }
 
 // Inside "[section_name]"
 <IN_SECTION_HEADER> {
+  {EOL}                            { yybegin(YYINITIAL); return TokenType.WHITE_SPACE; }
+  <<EOF>>                          { yybegin(YYINITIAL); return null; }
   {LINE_WHITESPACE}                { return TokenType.WHITE_SPACE; }
   {LINE_CONTINUATION_PLUS_INDENT}  { return TokenType.WHITE_SPACE; }
   {SECTION_NAME_FRAGMENT}          { return BcfgTypes.SECTION_NAME_FRAGMENT; }
@@ -81,6 +83,8 @@ PROPERTY_VALUE_FRAGMENT = ([^\\\s\r\n]|\\[^\r\n]) ([^\\\r\n]|\\[^\r\n])*
 
 // Collecting multiple parts of property name before the '='
 <IN_PROPERTY_NAME> {
+  {EOL}                            { yypushback(1); yybegin(YYINITIAL); return BcfgTypes.PROPERTY_END; }
+  <<EOF>>                          { yybegin(YYINITIAL); return BcfgTypes.PROPERTY_END; }
   {LINE_WHITESPACE}                { return TokenType.WHITE_SPACE; } // significant
   {LINE_CONTINUATION_PLUS_INDENT}  { return TokenType.WHITE_SPACE; }
   {ASSIGN}                         { yybegin(IN_PROPERTY_VALUE); return BcfgTypes.ASSIGN; }
@@ -91,10 +95,10 @@ PROPERTY_VALUE_FRAGMENT = ([^\\\s\r\n]|\\[^\r\n]) ([^\\\r\n]|\\[^\r\n])*
 // Collecting multiple values for "property = ..."
 <IN_PROPERTY_VALUE> {
   {EOL}                            { yypushback(1); yybegin(YYINITIAL); return BcfgTypes.PROPERTY_END; }
+  <<EOF>>                          { yybegin(YYINITIAL); return BcfgTypes.PROPERTY_END; }
   {LINE_WHITESPACE}                { return TokenType.WHITE_SPACE; }
   {LINE_CONTINUATION_PLUS_INDENT}  { return TokenType.WHITE_SPACE; }
   {PROPERTY_VALUE_FRAGMENT}        { return BcfgTypes.PROPERTY_VALUE_FRAGMENT; }
-  <<EOF>>                          { yybegin(YYINITIAL); return BcfgTypes.PROPERTY_END; }
   [^]                              { return TokenType.BAD_CHARACTER; }
 }
 
