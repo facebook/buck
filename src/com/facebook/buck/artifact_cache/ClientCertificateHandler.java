@@ -21,6 +21,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteStreams;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -36,7 +38,9 @@ import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -153,6 +157,32 @@ public class ClientCertificateHandler {
   }
 
   /**
+   * Filter an InputStream containing PEM sections into another InputStream just containing sections
+   * of a specific PEM block type
+   *
+   * @param inStream original input stream
+   * @param label PEM block label e.g. CERTIFICATE or PRIVATE KEY
+   * @return filtered {@code inStream}
+   * @throws IOException
+   */
+  public static InputStream filterPEMInputStream(InputStream inStream, String label)
+      throws IOException {
+    String fileContent = new String(ByteStreams.toByteArray(inStream), Charsets.UTF_8);
+    /* See https://www.rfc-editor.org/rfc/rfc7468.html#section-3 */
+    Matcher matcher =
+        Pattern.compile(
+                "-----BEGIN " + label + "-----" + "[^-]*" + "-----END " + label + "-----",
+                Pattern.DOTALL | Pattern.MULTILINE)
+            .matcher(fileContent);
+    List<String> pemSections = new ArrayList<>();
+    while (matcher.find()) {
+      pemSections.add(fileContent.substring(matcher.start(), matcher.end()));
+    }
+    return new ByteArrayInputStream(
+        String.join(System.lineSeparator(), pemSections).getBytes(Charsets.UTF_8));
+  }
+
+  /**
    * Parse a PEM encoded private key, with the algorithm decided by {@code certificate}
    *
    * @param keyPathOptional The path to a PEM encoded PKCS#8 private key
@@ -212,7 +242,8 @@ public class ClientCertificateHandler {
     X509Certificate primaryCert = null;
     ImmutableList.Builder<X509Certificate> chainBuilder = new ImmutableList.Builder<>();
     int numCertsInChain = 0;
-    try (InputStream certificateIn = Files.newInputStream(certPath)) {
+    try (InputStream certificateIn =
+        filterPEMInputStream(Files.newInputStream(certPath), "CERTIFICATE")) {
       while (true) {
         X509Certificate cert =
             (X509Certificate)

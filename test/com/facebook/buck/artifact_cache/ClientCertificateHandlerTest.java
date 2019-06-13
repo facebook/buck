@@ -365,6 +365,7 @@ public class ClientCertificateHandlerTest {
   @Test
   public void handlesCombinedKeyAndCertAndIntermediateCA() throws IOException {
     Path identityPath = temporaryPaths.newFile("client.pem");
+    Path identityPathReverse = temporaryPaths.newFile("client_reverse.pem");
     Files.write(
         identityPath,
         (SAMPLE_CLIENT_INTERMEDIATE_CERT
@@ -373,36 +374,49 @@ public class ClientCertificateHandlerTest {
                 + "\n"
                 + SAMPLE_CLIENT_INTERMEDIATE_KEY)
             .getBytes(Charsets.UTF_8));
-
-    ArtifactCacheBuckConfig config =
-        ArtifactCacheBuckConfigTest.createFromText(
-            "[cache]",
-            "http_client_tls_key = " + identityPath.toString(),
-            "http_client_tls_cert = " + identityPath.toString(),
-            "http_client_tls_cert_required = yes");
+    Files.write(
+        identityPathReverse,
+        (SAMPLE_CLIENT_INTERMEDIATE_KEY
+                + "\n"
+                + SAMPLE_CLIENT_INTERMEDIATE_CERT
+                + "\n"
+                + SAMPLE_CA_INTERMEDIATE_CERT)
+            .getBytes(Charsets.UTF_8));
 
     String[] keyLines = SAMPLE_CLIENT_INTERMEDIATE_KEY.split("\n");
     byte[] expectedPrivateKey =
         Base64.getDecoder()
             .decode(String.join("", Arrays.copyOfRange(keyLines, 1, keyLines.length - 1)));
-    String expectedPublic =
-        "CN=Client Intermediate, OU=Buck, O=\"Facebook, Inc.\", L=Seattle, ST=WA, C=US";
-    String expectedIntermediateCa =
-        "CN=Test CA Intermediate, OU=Buck, O=\"Facebook, Inc.\", L=Seattle, ST=WA, C=US";
 
-    Optional<ClientCertificateHandler> handler = ClientCertificateHandler.fromConfiguration(config);
+    Path[] testPaths = {identityPath, identityPathReverse};
+    for (Path testPath : testPaths) {
+      ArtifactCacheBuckConfig config =
+          ArtifactCacheBuckConfigTest.createFromText(
+              "[cache]",
+              "http_client_tls_key = " + testPath.toString(),
+              "http_client_tls_cert = " + testPath.toString(),
+              "http_client_tls_cert_required = yes");
 
-    X509KeyManager keyManager = handler.get().getHandshakeCertificates().keyManager();
-    String alias = keyManager.getClientAliases("RSA", null)[0];
-    PrivateKey privateKey = keyManager.getPrivateKey(alias);
-    String subjectName = keyManager.getCertificateChain(alias)[0].getSubjectDN().getName();
-    String intermediateCaSubjectName =
-        keyManager.getCertificateChain(alias)[1].getSubjectDN().getName();
+      String expectedPublic =
+          "CN=Client Intermediate, OU=Buck, O=\"Facebook, Inc.\", L=Seattle, ST=WA, C=US";
+      String expectedIntermediateCa =
+          "CN=Test CA Intermediate, OU=Buck, O=\"Facebook, Inc.\", L=Seattle, ST=WA, C=US";
 
-    Assert.assertArrayEquals(expectedPrivateKey, privateKey.getEncoded());
-    Assert.assertEquals(expectedPublic, subjectName);
-    Assert.assertEquals(expectedIntermediateCa, intermediateCaSubjectName);
-    Assert.assertFalse(handler.get().getHostnameVerifier().isPresent());
+      Optional<ClientCertificateHandler> handler =
+          ClientCertificateHandler.fromConfiguration(config);
+
+      X509KeyManager keyManager = handler.get().getHandshakeCertificates().keyManager();
+      String alias = keyManager.getClientAliases("RSA", null)[0];
+      PrivateKey privateKey = keyManager.getPrivateKey(alias);
+      String subjectName = keyManager.getCertificateChain(alias)[0].getSubjectDN().getName();
+      String intermediateCaSubjectName =
+          keyManager.getCertificateChain(alias)[1].getSubjectDN().getName();
+
+      Assert.assertArrayEquals(expectedPrivateKey, privateKey.getEncoded());
+      Assert.assertEquals(expectedPublic, subjectName);
+      Assert.assertEquals(expectedIntermediateCa, intermediateCaSubjectName);
+      Assert.assertFalse(handler.get().getHostnameVerifier().isPresent());
+    }
   }
 
   @Test
