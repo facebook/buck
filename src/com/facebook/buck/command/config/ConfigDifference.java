@@ -26,8 +26,10 @@ import com.google.common.collect.Maps;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Helper methods for calculating and logging the config differences that cause state invalidation
@@ -123,7 +125,7 @@ public class ConfigDifference {
         .append(
             diff.entrySet().stream()
                 .limit(linesToPrint)
-                .map(ConfigDifference::formatConfigChange)
+                .map((change) -> formatConfigChange(change, true))
                 .collect(Collectors.joining(System.lineSeparator() + "  ")));
     if (linesToPrint < diff.size()) {
       builder
@@ -138,21 +140,25 @@ public class ConfigDifference {
   /** Format the full set of changes between configs to be logged */
   public static String formatConfigDiff(Map<String, ConfigChange> diff) {
     return diff.entrySet().stream()
-        .map(ConfigDifference::formatConfigChange)
+        .map((change) -> formatConfigChange(change, false))
         .collect(Collectors.joining(", "));
   }
 
   /** Format a single config change */
-  public static String formatConfigChange(Entry<String, ConfigChange> change) {
-    if (change.getValue().getPrevValue() == null) {
-      return String.format("New value %s='%s'", change.getKey(), change.getValue().getNewValue());
+  public static String formatConfigChange(Entry<String, ConfigChange> change, boolean truncate) {
+    String prevVal = change.getValue().getPrevValue();
+    String newVal = change.getValue().getNewValue();
+    BiFunction<String, Integer, String> abbrev =
+        (value, width) -> truncate ? StringUtils.abbreviate(value, width) : value;
+    if (prevVal == null) {
+      return String.format("New value %s='%s'", change.getKey(), abbrev.apply(newVal, 80));
     }
-    if (change.getValue().getNewValue() == null) {
-      return String.format(
-          "Removed value %s='%s'", change.getKey(), change.getValue().getPrevValue());
+    if (newVal == null) {
+      return String.format("Removed value %s='%s'", change.getKey(), abbrev.apply(prevVal, 80));
     }
+
     return String.format(
         "Changed value %s='%s' (was '%s')",
-        change.getKey(), change.getValue().getNewValue(), change.getValue().getPrevValue());
+        change.getKey(), abbrev.apply(newVal, 40), abbrev.apply(prevVal, 40));
   }
 }
