@@ -168,6 +168,11 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
     return getProjectFilesystem().getRootPath().relativize(resolver.getAbsolutePath(getInput()));
   }
 
+  /** Returns the original path of the source file relative to its own project root */
+  public String getSourceInputPath(SourcePathResolver resolver) {
+    return resolver.getSourcePathName(getBuildable().targetName, getBuildable().input);
+  }
+
   @VisibleForTesting
   static Path getGcnoPath(Path output) {
     String basename = MorePaths.getNameWithoutExtension(output);

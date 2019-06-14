@@ -1784,7 +1784,10 @@ public class CxxBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "incremental_thinlto", tmp);
 
     workspace.setUp();
-    Path result = workspace.buildAndReturnOutput("//:bin#incremental-thinlto");
+    workspace.runBuckBuild("//:bin#incremental-thinlto");
+
+    Path result =
+        tmp.getRoot().resolve("buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices/");
 
     assertThat(Files.exists(result.resolve("main.cpp.o.thinlto.bc")), Matchers.equalTo(true));
     assertThat(Files.exists(result.resolve("main.cpp.o.imports")), Matchers.equalTo(true));
@@ -1798,14 +1801,14 @@ public class CxxBinaryIntegrationTest {
       assertThat(
           contents,
           containsString(
-              "-Xlinker -thinlto_new_prefix -Xlinker buck-out/gen/bin#incremental-thinlto/thinlto.indices"));
+              "-Xlinker -thinlto_new_prefix -Xlinker buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices"));
     } else if (Platform.detect() == Platform.LINUX) {
       assertThat(contents, containsString("-Wl,-plugin-opt,thinlto-index-only=thinlto.objects"));
       assertThat(contents, containsString("-Wl,-plugin-opt,thinlto-emit-imports-files"));
       assertThat(
           contents,
           containsString(
-              "-Xlinker -plugin-opt -Xlinker 'thinlto-prefix-replace=;buck-out/gen/bin#incremental-thinlto/thinlto.indices'"));
+              "-Xlinker -plugin-opt -Xlinker 'thinlto-prefix-replace=;buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices'"));
     }
   }
 

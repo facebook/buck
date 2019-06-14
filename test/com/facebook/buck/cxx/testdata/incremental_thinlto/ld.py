@@ -18,13 +18,14 @@ def main():
 
     # write the args to the expected files manually
     with open(
-        "buck-out/gen/bin#incremental-thinlto/thinlto.indices/main.cpp.o.thinlto.bc",
+        "buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices/main.cpp.o.thinlto.bc",
         "w",
     ) as f:
         f.writelines(expanded_args)
 
     with open(
-        "buck-out/gen/bin#incremental-thinlto/thinlto.indices/main.cpp.o.imports", "w"
+        "buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices/main.cpp.o.imports",
+        "w",
     ) as f:
         f.writelines(expanded_args)
 

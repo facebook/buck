@@ -50,6 +50,7 @@ public abstract class AbstractCxxSource { // NOPMD
         "CPP",
         "c++",
         "C"),
+    CXX_THINLINK("ir", "ir", Optional.of("c++-thinlink"), "o"),
     OBJC("objective-c", "objective-c-cpp-output", Optional.of("objective-c-header"), "m"),
     OBJCXX("objective-c++", "objective-c++-cpp-output", Optional.of("objective-c++-header"), "mm"),
     CUDA("cuda", "cuda-cpp-output", "cu"),
