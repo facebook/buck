@@ -52,6 +52,16 @@ abstract class AbstractRuleType {
     return getName().endsWith("_test");
   }
 
+  /**
+   * @return {@code true} if this rule type is a build rule, {@code false} otherwise (for example,
+   *     for configuration rule types).
+   */
+  @Value.Derived
+  @JsonIgnore
+  public boolean isBuildRule() {
+    return getKind() == Kind.BUILD;
+  }
+
   @Value.Check
   protected void check() {
     String name = getName();

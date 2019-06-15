@@ -49,4 +49,10 @@ public class RuleTypeTest {
     assertNotEquals(
         RuleType.of("foo", RuleType.Kind.BUILD), RuleType.of("foo", RuleType.Kind.CONFIGURATION));
   }
+
+  @Test
+  public void buildRuleTypeIsTrueForBuildRules() {
+    assertTrue(RuleType.of("java_library", RuleType.Kind.BUILD).isBuildRule());
+    assertFalse(RuleType.of("platform", RuleType.Kind.CONFIGURATION).isBuildRule());
+  }
 }

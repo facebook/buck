@@ -23,7 +23,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.HasDefaultFlavors;
-import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -364,7 +363,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
   }
 
   private static boolean filterOutNonBuildTargets(TargetNode<?> node) {
-    return node.getRuleType().getKind() == RuleType.Kind.BUILD;
+    return node.getRuleType().isBuildRule();
   }
 
   @Override
