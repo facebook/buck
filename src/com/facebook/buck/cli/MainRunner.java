@@ -550,6 +550,12 @@ public final class MainRunner {
       rootCellConfigOverrides =
           command.getConfigOverrides(cellMapping).getForCell(CellName.ROOT_CELL_NAME);
     }
+    if (commandMode == CommandMode.TEST) {
+      // test mode: we skip looking into /etc and /home for config files for determinism
+      return Configs.createDefaultConfig(
+          rootPath, Configs.getRepoConfigurationFiles(rootPath), rootCellConfigOverrides);
+    }
+
     return Configs.createDefaultConfig(Objects.requireNonNull(rootPath), rootCellConfigOverrides);
   }
 

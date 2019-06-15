@@ -75,6 +75,7 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
+import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.string.MoreStrings;
@@ -175,7 +176,9 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
   private ProjectFilesystemAndConfig getProjectFilesystemAndConfig() throws IOException {
     if (projectFilesystemAndConfig == null) {
-      Config config = Configs.createDefaultConfig(destPath);
+      Config config =
+          Configs.createDefaultConfig(
+              destPath, Configs.getRepoConfigurationFiles(destPath), RawConfig.of());
       projectFilesystemAndConfig =
           new ProjectFilesystemAndConfig(
               TestProjectFilesystems.createProjectFilesystem(destPath, config), config);
