@@ -51,8 +51,6 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
-import com.facebook.buck.parser.BuildFileSpec;
-import com.facebook.buck.parser.ImmutableTargetNodePredicateSpec;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParsingContext;
@@ -71,7 +69,6 @@ import com.facebook.buck.util.collect.MoreSets;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionException;
 import com.facebook.buck.versions.VersionedTargetGraphAndTargets;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -176,7 +173,10 @@ public class IjProjectCommandHelper {
               Iterables.concat(
                   parser.resolveTargetSpecs(
                       parsingContext, argsParser.apply(targets), targetConfiguration)));
-      projectGraph = getProjectGraphForIde(passedInTargetsSet);
+      if (passedInTargetsSet.isEmpty()) {
+        throw new HumanReadableException("Could not find targets matching arguments");
+      }
+      projectGraph = parser.buildTargetGraph(parsingContext, passedInTargetsSet).getTargetGraph();
     } catch (BuildFileParseException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -185,21 +185,10 @@ public class IjProjectCommandHelper {
       return ExitCode.BUILD_ERROR;
     }
 
-    ImmutableSet<BuildTarget> graphRoots;
-    if (passedInTargetsSet.isEmpty()) {
-      graphRoots =
-          projectGraph.getNodes().stream()
-              .map(TargetNode::getBuildTarget)
-              .collect(ImmutableSet.toImmutableSet());
-    } else {
-      graphRoots = passedInTargetsSet;
-    }
-
     TargetGraphAndTargets targetGraphAndTargets;
     try {
       targetGraphAndTargets =
-          createTargetGraph(
-              depsAwareExecutorSupplier, graphRoots, passedInTargetsSet.isEmpty(), projectGraph);
+          createTargetGraph(depsAwareExecutorSupplier, passedInTargetsSet, projectGraph);
     } catch (BuildFileParseException | NoSuchTargetException | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -223,23 +212,6 @@ public class IjProjectCommandHelper {
     TargetNodeToBuildRuleTransformer transformer = new ShallowTargetNodeToBuildRuleTransformer();
     return actionGraphProvider.getFreshActionGraph(
         transformer, new ImmutableTargetGraphCreationResult(targetGraph, ImmutableSet.of()));
-  }
-
-  private TargetGraph getProjectGraphForIde(ImmutableSet<BuildTarget> passedInTargets)
-      throws InterruptedException, BuildFileParseException, IOException {
-
-    if (passedInTargets.isEmpty()) {
-      return parser
-          .buildTargetGraphWithConfigurationTargets(
-              parsingContext,
-              ImmutableList.of(
-                  ImmutableTargetNodePredicateSpec.of(
-                      BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
-              targetConfiguration)
-          .getTargetGraph();
-    }
-    Preconditions.checkState(!passedInTargets.isEmpty());
-    return parser.buildTargetGraph(parsingContext, passedInTargets).getTargetGraph();
   }
 
   /** Run intellij specific project generation actions. */
@@ -392,17 +364,11 @@ public class IjProjectCommandHelper {
   private TargetGraphAndTargets createTargetGraph(
       Supplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutorSupplier,
       ImmutableSet<BuildTarget> graphRoots,
-      boolean needsFullRecursiveParse,
       TargetGraph projectGraph)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
 
     boolean isWithTests = isWithTests();
     ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();
-
-    if (needsFullRecursiveParse) {
-      return TargetGraphAndTargets.create(
-          graphRoots, projectGraph, isWithTests, explicitTestTargets);
-    }
 
     if (isWithTests) {
       explicitTestTargets = getExplicitTestTargets(graphRoots, projectGraph);
