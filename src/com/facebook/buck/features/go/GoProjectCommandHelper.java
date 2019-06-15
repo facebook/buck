@@ -43,8 +43,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.features.go.CgoLibraryDescription.AbstractCgoLibraryDescriptionArg;
 import com.facebook.buck.features.go.GoLibraryDescription.AbstractGoLibraryDescriptionArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.parser.BuildFileSpec;
-import com.facebook.buck.parser.ImmutableTargetNodePredicateSpec;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParsingContext;
@@ -132,7 +130,10 @@ public class GoProjectCommandHelper {
               Iterables.concat(
                   parser.resolveTargetSpecs(
                       parsingContext, argsParser.apply(targets), targetConfiguration)));
-      projectGraph = getProjectGraphForIde(passedInTargetsSet);
+      if (passedInTargetsSet.isEmpty()) {
+        throw new HumanReadableException("Could not find targets matching arguments");
+      }
+      projectGraph = parser.buildTargetGraph(parsingContext, passedInTargetsSet).getTargetGraph();
     } catch (BuildFileParseException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -141,24 +142,11 @@ public class GoProjectCommandHelper {
       return ExitCode.BUILD_ERROR;
     }
 
-    ImmutableSet<BuildTarget> graphRoots;
-    if (passedInTargetsSet.isEmpty()) {
-      graphRoots =
-          projectGraph.getNodes().stream()
-              .map(TargetNode::getBuildTarget)
-              .collect(ImmutableSet.toImmutableSet());
-    } else {
-      graphRoots = passedInTargetsSet;
-    }
-
     TargetGraphAndTargets targetGraphAndTargets;
     try {
       targetGraphAndTargets =
           createTargetGraph(
-              params.getDepsAwareExecutorSupplier().get(),
-              projectGraph,
-              passedInTargetsSet.isEmpty(),
-              graphRoots);
+              params.getDepsAwareExecutorSupplier().get(), projectGraph, passedInTargetsSet);
     } catch (BuildFileParseException | NoSuchTargetException | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -179,22 +167,6 @@ public class GoProjectCommandHelper {
 
   private ActionGraphAndBuilder getActionGraph(TargetGraphCreationResult targetGraph) {
     return params.getActionGraphProvider().getActionGraph(targetGraph);
-  }
-
-  private TargetGraph getProjectGraphForIde(ImmutableSet<BuildTarget> passedInTargets)
-      throws InterruptedException, BuildFileParseException, IOException {
-
-    if (passedInTargets.isEmpty()) {
-      return parser
-          .buildTargetGraphWithConfigurationTargets(
-              parsingContext,
-              ImmutableList.of(
-                  ImmutableTargetNodePredicateSpec.of(
-                      BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
-              targetConfiguration)
-          .getTargetGraph();
-    }
-    return parser.buildTargetGraph(parsingContext, passedInTargets).getTargetGraph();
   }
 
   /**
@@ -384,17 +356,11 @@ public class GoProjectCommandHelper {
   private TargetGraphAndTargets createTargetGraph(
       DepsAwareExecutor<? super ComputeResult, ?> depsAwareExecutor,
       TargetGraph projectGraph,
-      boolean needsFullRecursiveParse,
       ImmutableSet<BuildTarget> graphRoots)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
 
     boolean isWithTests = isWithTests();
     ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();
-
-    if (needsFullRecursiveParse) {
-      return TargetGraphAndTargets.create(
-          graphRoots, projectGraph, isWithTests, explicitTestTargets);
-    }
 
     if (isWithTests) {
       explicitTestTargets = getExplicitTestTargets(graphRoots, projectGraph);
