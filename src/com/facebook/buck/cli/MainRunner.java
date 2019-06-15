@@ -537,8 +537,9 @@ public final class MainRunner {
 
   private Config setupDefaultConfig(ImmutableMap<CellName, Path> cellMapping, BuckCommand command)
       throws IOException {
-    Path rootPath = cellMapping.get(CellName.ROOT_CELL_NAME);
-    Objects.requireNonNull(rootPath, "Root cell should be implicitly added");
+    Path rootPath =
+        Objects.requireNonNull(
+            cellMapping.get(CellName.ROOT_CELL_NAME), "Root cell should be implicitly added");
     RawConfig rootCellConfigOverrides;
 
     try {
@@ -556,7 +557,7 @@ public final class MainRunner {
           rootPath, Configs.getRepoConfigurationFiles(rootPath), rootCellConfigOverrides);
     }
 
-    return Configs.createDefaultConfig(Objects.requireNonNull(rootPath), rootCellConfigOverrides);
+    return Configs.createDefaultConfig(rootPath, rootCellConfigOverrides);
   }
 
   private ImmutableSet<Path> getProjectWatchList(
