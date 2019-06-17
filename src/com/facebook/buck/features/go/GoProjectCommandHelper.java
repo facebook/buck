@@ -177,7 +177,7 @@ public class GoProjectCommandHelper {
    */
   private ExitCode initGoWorkspace(TargetGraphAndTargets targetGraphAndTargets) throws Exception {
     Map<BuildTargetSourcePath, Path> generatedPackages =
-        findCodeGenerationTargets(targetGraphAndTargets);
+        findCodeGenerationTargets(targetGraphAndTargets.getTargetGraph());
     if (generatedPackages.isEmpty()) {
       return ExitCode.SUCCESS;
     }
@@ -261,10 +261,9 @@ public class GoProjectCommandHelper {
    * which indicates that the cxx_library is in the same package as the cgo_library. In such case,
    * the srcs and headers of the cxx_library that are Buck targets are also copied.
    */
-  private Map<BuildTargetSourcePath, Path> findCodeGenerationTargets(
-      TargetGraphAndTargets targetGraphAndTargets) {
+  private Map<BuildTargetSourcePath, Path> findCodeGenerationTargets(TargetGraph targetGraph) {
     Map<BuildTargetSourcePath, Path> generatedPackages = new HashMap<>();
-    for (TargetNode<?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
+    for (TargetNode<?> targetNode : targetGraph.getNodes()) {
       Object constructorArg = targetNode.getConstructorArg();
       BuildTarget buildTarget = targetNode.getBuildTarget();
       if (constructorArg instanceof AbstractGoLibraryDescriptionArg) {
@@ -285,12 +284,8 @@ public class GoProjectCommandHelper {
             cgoArgs.getCxxDeps().getDeps().stream()
                 .filter(
                     target ->
-                        targetGraphAndTargets.getTargetGraph().get(target).getConstructorArg()
-                            instanceof CxxConstructorArg)
-                .map(
-                    target ->
-                        (CxxConstructorArg)
-                            targetGraphAndTargets.getTargetGraph().get(target).getConstructorArg())
+                        targetGraph.get(target).getConstructorArg() instanceof CxxConstructorArg)
+                .map(target -> (CxxConstructorArg) targetGraph.get(target).getConstructorArg())
                 .filter(
                     cxxArgs -> cxxArgs.getHeaderNamespace().filter(ns -> ns.equals("")).isPresent())
                 .collect(Collectors.toList());
