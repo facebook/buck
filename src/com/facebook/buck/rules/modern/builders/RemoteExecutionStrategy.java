@@ -296,14 +296,15 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
             () -> Futures.immediateFuture(getRemoteExecutionActionInfo(rule, strategyContext)));
     return Futures.transformAsync(
         actionInfoFuture,
-        actionInfo -> uploadInputs(rule.getBuildTarget(), actionInfo),
+        actionInfo -> uploadInputs(rule, actionInfo),
         MoreExecutors.directExecutor());
   }
 
   private ListenableFuture<RemoteExecutionActionInfo> uploadInputs(
-      BuildTarget buildTarget, RemoteExecutionActionInfo actionInfo) throws Exception {
+      BuildRule rule, RemoteExecutionActionInfo actionInfo) throws Exception {
     Objects.requireNonNull(actionInfo);
-    if (maxInputSizeBytes.isPresent()
+    if (rule.shouldRespectInputSizeLimitForRemoteExecution()
+        && maxInputSizeBytes.isPresent()
         && maxInputSizeBytes.getAsLong() < actionInfo.getTotalInputSize()) {
       throw new RuntimeException(
           "Max file size exceeded for Remote Execution, action contains: "
@@ -314,7 +315,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     Digest actionDigest = actionInfo.getActionDigest();
     Scope uploadingInputsScope =
         RemoteExecutionActionEvent.sendEvent(
-            eventBus, State.UPLOADING_INPUTS, buildTarget, Optional.of(actionDigest));
+            eventBus, State.UPLOADING_INPUTS, rule.getBuildTarget(), Optional.of(actionDigest));
     ListenableFuture<Void> inputsUploadedFuture =
         executionClients.getContentAddressedStorage().addMissing(actionInfo.getRequiredData());
     inputsUploadedFuture.addListener(uploadingInputsScope::close, MoreExecutors.directExecutor());

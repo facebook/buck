@@ -265,6 +265,11 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
     return inputs.build();
   }
 
+  @Override
+  public final boolean shouldRespectInputSizeLimitForRemoteExecution() {
+    return false;
+  }
+
   public CxxPreprocessAndCompileStep makeMainStep(BuildContext context, boolean useArgFile) {
     return getBuildable()
         .makeMainStep(context, getProjectFilesystem(), getOutputPathResolver(), useArgFile);

@@ -71,4 +71,12 @@ public interface BuildEngineAction {
   default boolean shouldBuildLocally() {
     return false;
   }
+
+  /**
+   * @return true if this rule should only be allowed to be executed via Remote Execution if it
+   *     satisfies input size limits.
+   */
+  default boolean shouldRespectInputSizeLimitForRemoteExecution() {
+    return true;
+  }
 }
