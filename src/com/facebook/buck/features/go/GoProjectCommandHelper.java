@@ -121,11 +121,10 @@ public class GoProjectCommandHelper {
       targets = ImmutableList.of("//...");
     }
 
-    ImmutableSet<BuildTarget> passedInTargetsSet;
-    TargetGraph projectGraph;
+    TargetGraphCreationResult targetGraphCreationResult;
 
     try {
-      passedInTargetsSet =
+      ImmutableSet<BuildTarget> passedInTargetsSet =
           ImmutableSet.copyOf(
               Iterables.concat(
                   parser.resolveTargetSpecs(
@@ -133,7 +132,7 @@ public class GoProjectCommandHelper {
       if (passedInTargetsSet.isEmpty()) {
         throw new HumanReadableException("Could not find targets matching arguments");
       }
-      projectGraph = parser.buildTargetGraph(parsingContext, passedInTargetsSet).getTargetGraph();
+      targetGraphCreationResult = parser.buildTargetGraph(parsingContext, passedInTargetsSet);
     } catch (BuildFileParseException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -145,8 +144,7 @@ public class GoProjectCommandHelper {
     TargetGraphAndTargets targetGraphAndTargets;
     try {
       targetGraphAndTargets =
-          createTargetGraph(
-              params.getDepsAwareExecutorSupplier().get(), projectGraph, passedInTargetsSet);
+          createTargetGraph(params.getDepsAwareExecutorSupplier().get(), targetGraphCreationResult);
     } catch (BuildFileParseException | NoSuchTargetException | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -350,9 +348,11 @@ public class GoProjectCommandHelper {
 
   private TargetGraphAndTargets createTargetGraph(
       DepsAwareExecutor<? super ComputeResult, ?> depsAwareExecutor,
-      TargetGraph projectGraph,
-      ImmutableSet<BuildTarget> graphRoots)
+      TargetGraphCreationResult targetGraphCreationResult)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
+
+    TargetGraph projectGraph = targetGraphCreationResult.getTargetGraph();
+    ImmutableSet<BuildTarget> graphRoots = targetGraphCreationResult.getBuildTargets();
 
     boolean isWithTests = isWithTests();
     ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();
