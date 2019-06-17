@@ -29,7 +29,6 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
@@ -54,7 +53,6 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.collect.MoreSets;
 import com.facebook.buck.versions.VersionException;
-import com.facebook.buck.versions.VersionedTargetGraphAndTargets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -141,10 +139,10 @@ public class GoProjectCommandHelper {
       return ExitCode.BUILD_ERROR;
     }
 
-    TargetGraphAndTargets targetGraphAndTargets;
     try {
-      targetGraphAndTargets =
-          createTargetGraph(params.getDepsAwareExecutorSupplier().get(), targetGraphCreationResult);
+      targetGraphCreationResult =
+          enhanceTargetGraphIfNeeded(
+              params.getDepsAwareExecutorSupplier().get(), targetGraphCreationResult);
     } catch (BuildFileParseException | NoSuchTargetException | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -154,13 +152,13 @@ public class GoProjectCommandHelper {
     }
 
     if (projectGeneratorParameters.isDryRun()) {
-      for (TargetNode<?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
+      for (TargetNode<?> targetNode : targetGraphCreationResult.getTargetGraph().getNodes()) {
         console.getStdOut().println(targetNode.toString());
       }
 
       return ExitCode.SUCCESS;
     }
-    return initGoWorkspace(targetGraphAndTargets);
+    return initGoWorkspace(targetGraphCreationResult);
   }
 
   private ActionGraphAndBuilder getActionGraph(TargetGraphCreationResult targetGraph) {
@@ -173,9 +171,10 @@ public class GoProjectCommandHelper {
    * or to the "vendor" folder of a project. This method identifies code generation targets, builds
    * them, and copy the generated code from buck-out to vendor, so that they are accessible by IDEs.
    */
-  private ExitCode initGoWorkspace(TargetGraphAndTargets targetGraphAndTargets) throws Exception {
+  private ExitCode initGoWorkspace(TargetGraphCreationResult targetGraphCreationResult)
+      throws Exception {
     Map<BuildTargetSourcePath, Path> generatedPackages =
-        findCodeGenerationTargets(targetGraphAndTargets.getTargetGraph());
+        findCodeGenerationTargets(targetGraphCreationResult.getTargetGraph());
     if (generatedPackages.isEmpty()) {
       return ExitCode.SUCCESS;
     }
@@ -189,7 +188,7 @@ public class GoProjectCommandHelper {
       return exitCode;
     }
 
-    copyGeneratedGoCode(targetGraphAndTargets, generatedPackages);
+    copyGeneratedGoCode(targetGraphCreationResult, generatedPackages);
     return ExitCode.SUCCESS;
   }
 
@@ -200,7 +199,7 @@ public class GoProjectCommandHelper {
    * expensive and unreliable (e.g., what if there are multiple src directory?).
    */
   private void copyGeneratedGoCode(
-      TargetGraphAndTargets targetGraphAndTargets,
+      TargetGraphCreationResult targetGraphCreationResult,
       Map<BuildTargetSourcePath, Path> generatedPackages)
       throws IOException {
     Path vendorPath;
@@ -215,10 +214,7 @@ public class GoProjectCommandHelper {
       vendorPath = Paths.get("vendor");
     }
     ActionGraphAndBuilder result =
-        Objects.requireNonNull(
-            getActionGraph(
-                new ImmutableTargetGraphCreationResult(
-                    targetGraphAndTargets.getTargetGraph(), ImmutableSet.of())));
+        Objects.requireNonNull(getActionGraph(targetGraphCreationResult));
 
     // cleanup files from previous runs
     for (BuildTargetSourcePath sourcePath : generatedPackages.keySet()) {
@@ -346,7 +342,7 @@ public class GoProjectCommandHelper {
     return testsMode() == ProjectTestsMode.WITH_TESTS;
   }
 
-  private TargetGraphAndTargets createTargetGraph(
+  private TargetGraphCreationResult enhanceTargetGraphIfNeeded(
       DepsAwareExecutor<? super ComputeResult, ?> depsAwareExecutor,
       TargetGraphCreationResult targetGraphCreationResult)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
@@ -354,33 +350,27 @@ public class GoProjectCommandHelper {
     TargetGraph projectGraph = targetGraphCreationResult.getTargetGraph();
     ImmutableSet<BuildTarget> graphRoots = targetGraphCreationResult.getBuildTargets();
 
-    boolean isWithTests = isWithTests();
-    ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();
-
-    if (isWithTests) {
-      explicitTestTargets = getExplicitTestTargets(graphRoots, projectGraph);
-      projectGraph =
-          parser
-              .buildTargetGraph(parsingContext, MoreSets.union(graphRoots, explicitTestTargets))
-              .getTargetGraph();
+    if (isWithTests()) {
+      targetGraphCreationResult =
+          parser.buildTargetGraph(
+              parsingContext,
+              MoreSets.union(graphRoots, getExplicitTestTargets(graphRoots, projectGraph)));
     }
 
-    TargetGraphAndTargets targetGraphAndTargets =
-        TargetGraphAndTargets.create(graphRoots, projectGraph, isWithTests, explicitTestTargets);
     if (buckConfig.getView(BuildBuckConfig.class).getBuildVersions()) {
-      targetGraphAndTargets =
-          VersionedTargetGraphAndTargets.toVersionedTargetGraphAndTargets(
-              depsAwareExecutor,
-              params.getVersionedTargetGraphCache(),
-              buckEventBus,
-              buckConfig,
-              params.getTypeCoercerFactory(),
-              params.getUnconfiguredBuildTargetFactory(),
-              explicitTestTargets,
-              targetConfiguration,
-              targetGraphAndTargets);
+      targetGraphCreationResult =
+          params
+              .getVersionedTargetGraphCache()
+              .toVersionedTargetGraph(
+                  depsAwareExecutor,
+                  buckConfig,
+                  params.getTypeCoercerFactory(),
+                  params.getUnconfiguredBuildTargetFactory(),
+                  targetGraphCreationResult,
+                  targetConfiguration,
+                  buckEventBus);
     }
-    return targetGraphAndTargets;
+    return targetGraphCreationResult;
   }
 
   /**
