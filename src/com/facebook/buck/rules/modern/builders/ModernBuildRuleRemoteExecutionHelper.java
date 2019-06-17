@@ -105,6 +105,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
   private static final String pluginResources = System.getProperty("buck.module.resources");
   private static final String pluginRoot = System.getProperty("pf4j.pluginsDir");
   public static final Path TRAMPOLINE_PATH = Paths.get("__trampoline__.sh");
+  public static final Path METADATA_PATH = Paths.get(".buck.metadata");
 
   private final InputsMapBuilder inputsMapBuilder;
 
@@ -395,6 +396,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
       rule.recordOutputs(
           path ->
               outputs.add(cellPathPrefix.relativize(rule.getProjectFilesystem().resolve(path))));
+      outputs.add(METADATA_PATH);
     }
 
     try (Scope ignored2 = LeafEvents.scope(eventBus, "constructing_action_info")) {
@@ -595,7 +597,8 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
     if (rootString.isEmpty()) {
       rootString = "./";
     }
-    return ImmutableList.of("./" + TRAMPOLINE_PATH.toString(), rootString, hash);
+    return ImmutableList.of(
+        "./" + TRAMPOLINE_PATH.toString(), rootString, hash, METADATA_PATH.toString());
   }
 
   private static class Node implements Comparable<Node> {

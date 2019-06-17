@@ -57,6 +57,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -376,6 +377,11 @@ public class RemoteExecutionStrategyTest {
         @Override
         public boolean containsDigest(Digest digest) {
           return SimpleRemoteExecutionClients.this.containsDigest(digest);
+        }
+
+        @Override
+        public ListenableFuture<ByteBuffer> fetch(Digest digest) {
+          return Futures.immediateFuture(null);
         }
       };
     }

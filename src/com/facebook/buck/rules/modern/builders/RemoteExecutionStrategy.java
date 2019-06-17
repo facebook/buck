@@ -36,10 +36,12 @@ import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionH
 import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionResult;
 import com.facebook.buck.remoteexecution.WorkerRequirementsProvider;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
+import com.facebook.buck.remoteexecution.event.RemoteBuildRuleExecutionEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionSessionEvent;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
+import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.util.OutputsMaterializer.FilesystemFileMaterializer;
 import com.facebook.buck.rules.modern.ModernBuildRule;
@@ -54,6 +56,7 @@ import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Streams;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -61,7 +64,10 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalLong;
@@ -198,16 +204,14 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
               executionInfo.set(result.get());
               // actionInfoFuture must be set at this point
               Preconditions.checkState(actionInfo.get() != null);
-              actionInfo
-                  .get()
-                  .getOutputs()
-                  .forEach(
+              Streams.stream(actionInfo.get().getOutputs())
+                  .filter(
                       output ->
-                          strategyContext
-                              .getBuildableContext()
-                              .recordArtifact(
-                                  rule.getProjectFilesystem()
-                                      .relativize(mbrHelper.getCellPathPrefix().resolve(output))));
+                          !output
+                              .toString()
+                              .contains(
+                                  ModernBuildRuleRemoteExecutionHelper.METADATA_PATH.toString()))
+                  .forEach(output -> recordArtifact(rule, strategyContext, output));
               return Futures.immediateFuture(
                   Optional.of(
                       strategyContext.createBuildResult(
@@ -275,6 +279,13 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         return buildResult;
       }
     };
+  }
+
+  private void recordArtifact(BuildRule rule, BuildStrategyContext strategyContext, Path output) {
+    strategyContext
+        .getBuildableContext()
+        .recordArtifact(
+            rule.getProjectFilesystem().relativize(mbrHelper.getCellPathPrefix().resolve(output)));
   }
 
   private ListenableFuture<RemoteExecutionActionInfo> computeActionAndUpload(
@@ -442,7 +453,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
               () ->
                   handleExecutionResult(
                       strategyContext,
-                      buildRule.getBuildTarget(),
+                      buildRule,
                       result,
                       actionDigest,
                       actionOutputs,
@@ -453,12 +464,13 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
 
   private ListenableFuture<Optional<ExecutionResult>> handleExecutionResult(
       BuildStrategyContext strategyContext,
-      BuildTarget buildTarget,
+      BuildRule buildRule,
       ExecutionResult result,
       Digest actionDigest,
       Iterable<? extends Path> actionOutputs,
       MetadataProvider metadataProvider)
       throws IOException, StepFailedException {
+    BuildTarget buildTarget = buildRule.getBuildTarget();
     LOG.debug(
         "[RE] Built target [%s] with exit code [%d]. Action: [%s]. ActionResult: [%s]",
         buildTarget.getFullyQualifiedName(),
@@ -498,16 +510,42 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         RemoteExecutionActionEvent.sendEvent(
             eventBus, State.MATERIALIZING_OUTPUTS, buildTarget, Optional.of(actionDigest));
 
+    List<Protocol.OutputFile> files = new ArrayList<>();
+    ListenableFuture<Void> metadata = stripMetadata(result.getOutputFiles(), files, buildRule);
     ListenableFuture<Void> materializationFuture =
         executionClients
             .getContentAddressedStorage()
             .materializeOutputs(
                 result.getOutputDirectories(),
-                result.getOutputFiles(),
+                files,
                 new FilesystemFileMaterializer(mbrHelper.getCellPathPrefix()));
     materializationFuture.addListener(materializationScope::close, MoreExecutors.directExecutor());
-    return Futures.transform(
-        materializationFuture, ignored -> Optional.of(result), MoreExecutors.directExecutor());
+    return Futures.whenAllSucceed(ImmutableList.of(metadata, materializationFuture))
+        .call(() -> Optional.of(result), MoreExecutors.directExecutor());
+  }
+
+  private ListenableFuture<Void> stripMetadata(
+      List<Protocol.OutputFile> outputFiles, List<Protocol.OutputFile> files, BuildRule buildRule) {
+    Digest metadataDigest = null;
+    for (Protocol.OutputFile file : outputFiles) {
+      if (file.getPath().contains(ModernBuildRuleRemoteExecutionHelper.METADATA_PATH.toString())) {
+        metadataDigest = file.getDigest();
+      } else {
+        files.add(file);
+      }
+    }
+    if (metadataDigest != null) {
+      return Futures.transform(
+          executionClients.getContentAddressedStorage().fetch(metadataDigest),
+          bytes -> {
+            long duration = Long.valueOf(StandardCharsets.UTF_8.decode(bytes).toString());
+            RemoteBuildRuleExecutionEvent.postEvent(eventBus, buildRule, duration);
+            return null;
+          },
+          MoreExecutors.directExecutor());
+    }
+
+    return Futures.immediateFuture(null);
   }
 
   private static class GuardContext {

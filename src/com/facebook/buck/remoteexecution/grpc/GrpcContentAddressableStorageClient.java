@@ -31,6 +31,7 @@ import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
 
@@ -38,6 +39,7 @@ import java.util.List;
 public class GrpcContentAddressableStorageClient implements ContentAddressedStorageClient {
   private final MultiThreadedBlobUploader uploader;
   private final OutputsMaterializer outputsMaterializer;
+  private final GrpcAsyncBlobFetcher fetcher;
 
   public GrpcContentAddressableStorageClient(
       ContentAddressableStorageFutureStub storageStub,
@@ -54,10 +56,8 @@ public class GrpcContentAddressableStorageClient implements ContentAddressedStor
             new GrpcCasBlobUploader(
                 instanceName, storageStub, byteStreamStub, buckEventBus, metadata));
 
-    this.outputsMaterializer =
-        new OutputsMaterializer(
-            new GrpcAsyncBlobFetcher(instanceName, byteStreamStub, buckEventBus, metadata),
-            protocol);
+    this.fetcher = new GrpcAsyncBlobFetcher(instanceName, byteStreamStub, buckEventBus, metadata);
+    this.outputsMaterializer = new OutputsMaterializer(fetcher, protocol);
   }
 
   @Override
@@ -77,5 +77,10 @@ public class GrpcContentAddressableStorageClient implements ContentAddressedStor
   @Override
   public boolean containsDigest(Digest digest) {
     return uploader.containsDigest(digest);
+  }
+
+  @Override
+  public ListenableFuture<ByteBuffer> fetch(Digest digest) {
+    return fetcher.fetch(digest);
   }
 }

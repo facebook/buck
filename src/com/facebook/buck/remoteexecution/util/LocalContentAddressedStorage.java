@@ -75,6 +75,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
   private final OutputsMaterializer outputsMaterializer;
   private final InputsMaterializer inputsMaterializer;
   private final Protocol protocol;
+  private final AsyncBlobFetcher fetcher;
 
   public LocalContentAddressedStorage(Path cacheDir, Protocol protocol) {
     this.cacheDir = cacheDir;
@@ -106,7 +107,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
                     .collect(ImmutableSet.toImmutableSet());
               }
             });
-    AsyncBlobFetcher fetcher =
+    this.fetcher =
         new AsyncBlobFetcher() {
           @Override
           public ListenableFuture<ByteBuffer> fetch(Protocol.Digest digest) {
@@ -203,6 +204,11 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
   @Override
   public boolean containsDigest(Digest digest) {
     return uploader.containsDigest(digest);
+  }
+
+  @Override
+  public ListenableFuture<ByteBuffer> fetch(Digest digest) {
+    return fetcher.fetch(digest);
   }
 
   /**

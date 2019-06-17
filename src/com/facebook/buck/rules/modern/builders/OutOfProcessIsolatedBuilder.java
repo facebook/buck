@@ -39,7 +39,7 @@ import java.util.logging.LogManager;
 /** This implements out of process rule execution. */
 public class OutOfProcessIsolatedBuilder {
   private static final Logger LOG = Logger.get(OutOfProcessIsolatedBuilder.class);
-
+  private static final int NUM_ARGS = 4;
   /**
    * Entry point for out of process rule execution. This should be run within the build root
    * directory (i.e. within the root cell's root).
@@ -58,14 +58,16 @@ public class OutOfProcessIsolatedBuilder {
           System.exit(1);
         });
     Preconditions.checkState(
-        args.length == 3,
-        "Expected three arguments, got %d: <%s>",
+        args.length == NUM_ARGS,
+        "Expected %s arguments, got %s: <%s>",
+        NUM_ARGS,
         args.length,
         Joiner.on(",").join(args));
     Path buildDir = Paths.get(args[0]);
     Path projectRoot = Paths.get(args[1]);
     HashCode hash = HashCode.fromString(args[2]);
-    new IsolatedBuildableBuilder(buildDir, projectRoot) {
+    Path metadataPath = Paths.get(args[3]);
+    new IsolatedBuildableBuilder(buildDir, projectRoot, metadataPath) {
 
       @Override
       protected Console createConsole() {

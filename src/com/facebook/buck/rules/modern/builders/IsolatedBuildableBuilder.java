@@ -74,6 +74,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -103,12 +104,13 @@ public abstract class IsolatedBuildableBuilder {
   private final Path dataRoot;
   private final BuckEventBus eventBus;
   private final Function<Optional<String>, ToolchainProvider> toolchainProviderFunction;
+  private final Path metadataPath;
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  IsolatedBuildableBuilder(Path workRoot, Path projectRoot) throws IOException {
+  IsolatedBuildableBuilder(Path workRoot, Path projectRoot, Path metadataPath) throws IOException {
     Path canonicalWorkRoot = workRoot.toRealPath().normalize();
     Path canonicalProjectRoot = canonicalWorkRoot.resolve(projectRoot).normalize();
-
+    this.metadataPath = metadataPath;
     this.dataRoot = workRoot.resolve("__data__");
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
@@ -339,11 +341,21 @@ public abstract class IsolatedBuildableBuilder {
         StepRunner.runStep(executionContext, step);
       }
 
+      long duration =
+          Instant.now().minusMillis(deserializationComplete.toEpochMilli()).toEpochMilli();
+      writeDurationToFile(duration);
       LOG.info(
           String.format(
               "Finished running the build at [%s], took %d ms. Exiting buck now.",
-              new java.util.Date(),
-              Instant.now().minusMillis(deserializationComplete.toEpochMilli()).toEpochMilli()));
+              new java.util.Date(), duration));
+    }
+  }
+
+  private void writeDurationToFile(long duration) {
+    try (BufferedWriter writer = Files.newBufferedWriter(metadataPath)) {
+      writer.write(Long.toString(duration));
+    } catch (IOException e) {
+      LOG.error(e);
     }
   }
 

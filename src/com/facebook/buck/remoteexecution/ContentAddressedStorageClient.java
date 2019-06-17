@@ -16,11 +16,13 @@
 
 package com.facebook.buck.remoteexecution;
 
+import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -38,6 +40,8 @@ public interface ContentAddressedStorageClient {
       throws IOException;
 
   boolean containsDigest(Digest digest);
+
+  ListenableFuture<ByteBuffer> fetch(Protocol.Digest digest);
 
   /** Interface for filesystem operations required for materialization. */
   interface FileMaterializer {

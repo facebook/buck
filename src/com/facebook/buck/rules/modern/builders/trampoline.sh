@@ -48,5 +48,5 @@ java -cp $CLASSPATH \
   -Dbuck.module.resources=$BUCK_PLUGIN_RESOURCES \
   com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper \
   com.facebook.buck.rules.modern.builders.OutOfProcessIsolatedBuilder \
-  $BUCK_ISOLATED_ROOT $1 $2
+  $BUCK_ISOLATED_ROOT "$@"
 )
