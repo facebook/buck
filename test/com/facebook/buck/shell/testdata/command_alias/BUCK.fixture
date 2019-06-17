@@ -33,6 +33,7 @@ export_file(
 export_file(
     name = "windows",
     src = "//scripts:echo.bat",
+    out = "windows.bat",
 )
 
 export_file(
