@@ -54,8 +54,6 @@ import com.facebook.buck.cxx.toolchain.impl.LegacyToolchainProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.features.halide.HalideBuckConfig;
-import com.facebook.buck.parser.BuildFileSpec;
-import com.facebook.buck.parser.ImmutableTargetNodePredicateSpec;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParsingContext;
@@ -92,7 +90,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -233,8 +230,19 @@ public class XCodeProjectCommandHelper {
           ImmutableSet.copyOf(
               Iterables.concat(
                   parser.resolveTargetSpecs(
-                      parsingContext, argsParser.apply(arguments), targetConfiguration)));
-      projectGraph = getProjectGraphForIde(passedInTargetsSet);
+                      parsingContext,
+                      argsParser.apply(arguments.isEmpty() ? ImmutableList.of("//...") : arguments),
+                      targetConfiguration)));
+      if (passedInTargetsSet.isEmpty()) {
+        throw new HumanReadableException("Could not find targets matching arguments");
+      }
+      projectGraph = parser.buildTargetGraph(parsingContext, passedInTargetsSet).getTargetGraph();
+      if (arguments.isEmpty()) {
+        passedInTargetsSet =
+            getRootsFromPredicate(
+                projectGraph,
+                node -> node.getDescription() instanceof XcodeWorkspaceConfigDescription);
+      }
     } catch (BuildFileParseException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -247,18 +255,6 @@ public class XCodeProjectCommandHelper {
 
     checkForAndKillXcodeIfRunning(getIDEForceKill(buckConfig));
 
-    LOG.debug("Xcode project generation: Computing graph roots");
-
-    ImmutableSet<BuildTarget> graphRoots;
-    if (passedInTargetsSet.isEmpty()) {
-      graphRoots =
-          getRootsFromPredicate(
-              projectGraph,
-              node -> node.getDescription() instanceof XcodeWorkspaceConfigDescription);
-    } else {
-      graphRoots = passedInTargetsSet;
-    }
-
     LOG.debug("Xcode project generation: Getting more part of the target graph");
 
     TargetGraphAndTargets targetGraphAndTargets;
@@ -266,10 +262,9 @@ public class XCodeProjectCommandHelper {
       targetGraphAndTargets =
           createTargetGraph(
               depsAwareExecutorSupplier,
-              graphRoots,
+              passedInTargetsSet,
               isWithTests(buckConfig),
               isWithDependenciesTests(buckConfig),
-              passedInTargetsSet.isEmpty(),
               projectGraph);
     } catch (BuildFileParseException | NoSuchTargetException | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
@@ -457,24 +452,15 @@ public class XCodeProjectCommandHelper {
       PathOutputPresenter presenter,
       Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle)
       throws IOException, InterruptedException {
-    ImmutableSet<BuildTarget> targets;
-    if (passedInTargetsSet.isEmpty()) {
-      targets =
-          targetGraphAndTargets.getProjectRoots().stream()
-              .map(TargetNode::getBuildTarget)
-              .collect(ImmutableSet.toImmutableSet());
-    } else {
-      targets = passedInTargetsSet;
-    }
 
     LazyActionGraph lazyActionGraph =
         new LazyActionGraph(targetGraphAndTargets.getTargetGraph(), cell.getCellProvider());
 
     XCodeDescriptions xcodeDescriptions = XCodeDescriptionsFactory.create(pluginManager);
 
-    LOG.debug("Generating workspace for config targets %s", targets);
+    LOG.debug("Generating workspace for config targets %s", passedInTargetsSet);
     ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
-    for (BuildTarget inputTarget : targets) {
+    for (BuildTarget inputTarget : passedInTargetsSet) {
       TargetNode<?> inputNode = targetGraphAndTargets.getTargetGraph().get(inputTarget);
       XcodeWorkspaceConfigDescriptionArg workspaceArgs;
       if (inputNode.getDescription() instanceof XcodeWorkspaceConfigDescription) {
@@ -695,29 +681,11 @@ public class XCodeProjectCommandHelper {
         .collect(ImmutableSet.toImmutableSet());
   }
 
-  private TargetGraph getProjectGraphForIde(ImmutableSet<BuildTarget> passedInTargets)
-      throws InterruptedException, BuildFileParseException, IOException {
-
-    if (passedInTargets.isEmpty()) {
-      return parser
-          .buildTargetGraphWithConfigurationTargets(
-              parsingContext,
-              ImmutableList.of(
-                  ImmutableTargetNodePredicateSpec.of(
-                      BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
-              targetConfiguration)
-          .getTargetGraph();
-    }
-    Preconditions.checkState(!passedInTargets.isEmpty());
-    return parser.buildTargetGraph(parsingContext, passedInTargets).getTargetGraph();
-  }
-
   private TargetGraphAndTargets createTargetGraph(
       Supplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutorSupplier,
       ImmutableSet<BuildTarget> graphRoots,
       boolean isWithTests,
       boolean isWithDependenciesTests,
-      boolean needsFullRecursiveParse,
       TargetGraph projectGraph)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
 
@@ -731,23 +699,10 @@ public class XCodeProjectCommandHelper {
       explicitTestTargets =
           getExplicitTestTargets(
               graphRootsOrSourceTargets, projectGraph, isWithDependenciesTests, focusedModules);
-      if (!needsFullRecursiveParse) {
-        projectGraph =
-            parser
-                .buildTargetGraph(parsingContext, MoreSets.union(graphRoots, explicitTestTargets))
-                .getTargetGraph();
-      } else {
-        projectGraph =
-            parser
-                .buildTargetGraph(
-                    parsingContext,
-                    MoreSets.union(
-                        projectGraph.getNodes().stream()
-                            .map(TargetNode::getBuildTarget)
-                            .collect(ImmutableSet.toImmutableSet()),
-                        explicitTestTargets))
-                .getTargetGraph();
-      }
+      projectGraph =
+          parser
+              .buildTargetGraph(parsingContext, MoreSets.union(graphRoots, explicitTestTargets))
+              .getTargetGraph();
     }
 
     TargetGraphAndTargets targetGraphAndTargets =
