@@ -111,11 +111,7 @@ public class MetadataProviderFactory {
 
       @Override
       public RemoteExecutionMetadata getForAction(String actionDigest, String ruleName) {
-        BuckInfo buckInfo =
-            BuckInfo.newBuilder()
-                .setBuildId(get().getBuckInfo().getBuildId())
-                .setRuleName(ruleName)
-                .build();
+        BuckInfo buckInfo = builder.getBuckInfo().toBuilder().setRuleName(ruleName).build();
         builder.setBuckInfo(buckInfo);
         return builder.build();
       }
@@ -140,7 +136,11 @@ public class MetadataProviderFactory {
                 .setTraceId(traceInfoProvider.getTraceId())
                 .setEdgeId(traceInfoProvider.getEdgeId(actionDigest))
                 .build();
-        return metadataProvider.get().toBuilder().setTraceInfo(traceInfo).build();
+        return metadataProvider
+            .getForAction(actionDigest, ruleName)
+            .toBuilder()
+            .setTraceInfo(traceInfo)
+            .build();
       }
     };
   }
