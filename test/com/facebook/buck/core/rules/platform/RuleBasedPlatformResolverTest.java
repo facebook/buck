@@ -22,7 +22,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.util.Optional;
 import org.junit.Rule;
@@ -64,7 +64,10 @@ public class RuleBasedPlatformResolverTest {
         buildTarget -> {
           if (buildTarget.equals(platformTarget)) {
             return PlatformRule.of(
-                platformTarget, "platform", ImmutableList.of(constraintValue), ImmutableList.of());
+                platformTarget,
+                "platform",
+                ImmutableSortedSet.of(constraintValue),
+                ImmutableSortedSet.of());
           }
           if (buildTarget.equals(constraintValue)) {
             return new ConstraintValueRule(constraintValue, "value", constraintSetting);

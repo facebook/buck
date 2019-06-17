@@ -21,8 +21,8 @@ import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 
 /**
@@ -64,8 +64,10 @@ public class ConfigSettingDescription implements ConfigurationRuleDescription<Co
   interface AbstractConfigSettingArg {
     String getName();
 
-    ImmutableMap<String, String> getValues();
+    @Value.NaturalOrder
+    ImmutableSortedMap<String, String> getValues();
 
-    ImmutableSet<UnconfiguredBuildTargetView> getConstraintValues();
+    @Value.NaturalOrder
+    ImmutableSortedSet<UnconfiguredBuildTargetView> getConstraintValues();
   }
 }
