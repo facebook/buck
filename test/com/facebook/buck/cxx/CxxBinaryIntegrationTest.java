@@ -1786,30 +1786,47 @@ public class CxxBinaryIntegrationTest {
     workspace.setUp();
     workspace.runBuckBuild("//:bin#incremental-thinlto");
 
-    Path result =
+    Path indexResult =
         tmp.getRoot().resolve("buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices/");
 
-    assertThat(Files.exists(result.resolve("main.cpp.o.thinlto.bc")), Matchers.equalTo(true));
-    assertThat(Files.exists(result.resolve("main.cpp.o.imports")), Matchers.equalTo(true));
+    assertThat(Files.exists(indexResult.resolve("main.cpp.o.thinlto.bc")), Matchers.equalTo(true));
+    assertThat(Files.exists(indexResult.resolve("main.cpp.o.imports")), Matchers.equalTo(true));
 
-    String contents =
+    String indexContents =
         new String(
-            Files.readAllBytes(result.resolve("main.cpp.o.thinlto.bc")), StandardCharsets.UTF_8);
+            Files.readAllBytes(indexResult.resolve("main.cpp.o.thinlto.bc")),
+            StandardCharsets.UTF_8);
     if (Platform.detect() == Platform.MACOS) {
-      assertThat(contents, containsString("-Wl,-thinlto_emit_indexes"));
-      assertThat(contents, containsString("-Wl,-thinlto_emit_imports"));
+      assertThat(indexContents, containsString("-Wl,-thinlto_emit_indexes"));
+      assertThat(indexContents, containsString("-Wl,-thinlto_emit_imports"));
       assertThat(
-          contents,
+          indexContents,
           containsString(
               "-Xlinker -thinlto_new_prefix -Xlinker buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices"));
     } else if (Platform.detect() == Platform.LINUX) {
-      assertThat(contents, containsString("-Wl,-plugin-opt,thinlto-index-only=thinlto.objects"));
-      assertThat(contents, containsString("-Wl,-plugin-opt,thinlto-emit-imports-files"));
       assertThat(
-          contents,
+          indexContents, containsString("-Wl,-plugin-opt,thinlto-index-only=thinlto.objects"));
+      assertThat(indexContents, containsString("-Wl,-plugin-opt,thinlto-emit-imports-files"));
+      assertThat(
+          indexContents,
           containsString(
               "-Xlinker -plugin-opt -Xlinker 'thinlto-prefix-replace=;buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices'"));
     }
+
+    // Since we don't have the full thinLTO toolchain, we're just going to verify that the
+    // -fthinlto-index
+    // parameter is populated correctly.
+    Path optResult =
+        tmp.getRoot()
+            .resolve("buck-out/bin/bin#default,incremental-thinlto,optimize-main.cpp.o.o55eba575/");
+    String optContents =
+        new String(
+            Files.readAllBytes(optResult.resolve("ppandcompile.argsfile")), StandardCharsets.UTF_8);
+    assertThat(Files.exists(optResult.resolve("ppandcompile.argsfile")), Matchers.equalTo(true));
+    assertThat(
+        optContents,
+        containsString(
+            "-fthinlto-index=buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices/buck-out/gen/bin#compile-main.cpp.oa5b6a1ba,default,incremental-thinlto/main.cpp.o.thinlto.bc"));
   }
 
   @Test

@@ -697,7 +697,7 @@ public class CxxDescriptionEnhancer {
     }
   }
 
-  public static BuildRule createBuildRuleForCxxThinLtoBinary(
+  public static CxxLinkAndCompileRules createBuildRuleForCxxThinLtoBinary(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
@@ -705,7 +705,9 @@ public class CxxDescriptionEnhancer {
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       CommonArg args,
-      ImmutableSet<BuildTarget> extraDeps) {
+      ImmutableSet<BuildTarget> extraDeps,
+      Optional<StripStyle> stripStyle,
+      Optional<LinkerMapMode> flavoredLinkerMapMode) {
     ImmutableMap<String, CxxSource> srcs = parseCxxSources(target, graphBuilder, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
         parseHeaders(target, graphBuilder, Optional.of(cxxPlatform), args);
@@ -784,14 +786,14 @@ public class CxxDescriptionEnhancer {
     CxxThinLTOIndex cxxThinLTOIndex =
         (CxxThinLTOIndex)
             graphBuilder.computeIfAbsent(
-                target,
+                thinIndexTarget,
                 ignored ->
                     CxxLinkableEnhancer.createCxxThinLTOIndexBuildRule(
                         cxxBuckConfig,
                         cxxPlatform,
                         projectFilesystem,
                         graphBuilder,
-                        target,
+                        thinIndexTarget,
                         indexOutput,
                         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
                         RichStream.from(deps).filter(NativeLinkableGroup.class).toImmutableList(),
@@ -854,7 +856,106 @@ public class CxxDescriptionEnhancer {
             args.getPrecompiledHeader(),
             cxxThinLTOIndex.getSourcePathToOutput());
 
-    return nativeObjects.keySet().iterator().next();
+    Path linkOutput =
+        getBinaryOutputPath(
+            flavoredLinkerMapMode.isPresent()
+                ? target.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor())
+                : target,
+            projectFilesystem,
+            cxxPlatform.getBinaryExtension(),
+            args.getExecutableName());
+
+    ImmutableList<Arg> linkArgs =
+        createLinkArgsForCxxBinary(
+            target,
+            projectFilesystem,
+            graphBuilder,
+            cellRoots,
+            cxxPlatform,
+            nativeObjects,
+            deps,
+            executableBuilder,
+            linker,
+            args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+            indexOutput,
+            args.getLinkerFlags(),
+            args.getPlatformLinkerFlags());
+
+    BuildTarget linkRuleTarget = createCxxLinkTarget(target, flavoredLinkerMapMode);
+
+    CxxLink cxxLink =
+        (CxxLink)
+            graphBuilder.computeIfAbsent(
+                linkRuleTarget,
+                ignored ->
+                    // Generate the final link rule.  We use the top-level target as the link rule's
+                    // target, so that it corresponds to the actual binary we build.
+                    CxxLinkableEnhancer.createCxxLinkableBuildRule(
+                        cxxBuckConfig,
+                        cxxPlatform,
+                        projectFilesystem,
+                        graphBuilder,
+                        linkRuleTarget,
+                        Linker.LinkType.EXECUTABLE,
+                        Optional.empty(),
+                        linkOutput,
+                        args.getLinkerExtraOutputs(),
+                        args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+                        CxxLinkOptions.of(
+                            args.getThinLto(),
+                            args.getFatLto()
+                            ),
+                        RichStream.from(deps).filter(NativeLinkableGroup.class).toImmutableList(),
+                        args.getCxxRuntimeType(),
+                        Optional.empty(),
+                        ImmutableSet.of(),
+                        args.getLinkDepsQueryWhole()
+                            ? RichStream.from(depQueryDeps)
+                                .map(BuildRule::getBuildTarget)
+                                .toImmutableSet()
+                            : ImmutableSet.of(),
+                        NativeLinkableInput.builder()
+                            .setArgs(linkArgs)
+                            .setFrameworks(args.getFrameworks())
+                            .setLibraries(args.getLibraries())
+                            .build(),
+                        Optional.empty(),
+                        cellRoots));
+
+    BuildRule binaryRuleForExecutable;
+    Optional<CxxStrip> cxxStrip = Optional.empty();
+    if (stripStyle.isPresent()) {
+      BuildTarget cxxTarget = target;
+      if (flavoredLinkerMapMode.isPresent()) {
+        cxxTarget = cxxTarget.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor());
+      }
+      CxxStrip stripRule =
+          createCxxStripRule(
+              cxxTarget,
+              projectFilesystem,
+              graphBuilder,
+              stripStyle.get(),
+              cxxBuckConfig.shouldCacheStrip(),
+              cxxLink,
+              cxxPlatform,
+              args.getExecutableName());
+      cxxStrip = Optional.of(stripRule);
+      binaryRuleForExecutable = stripRule;
+    } else {
+      binaryRuleForExecutable = cxxLink;
+    }
+
+    SourcePath sourcePathToExecutable = binaryRuleForExecutable.getSourcePathToOutput();
+
+    // Add the output of the link as the lone argument needed to invoke this binary as a tool.
+    executableBuilder.addArg(SourcePathArg.of(sourcePathToExecutable));
+
+    return new CxxLinkAndCompileRules(
+        cxxLink,
+        cxxStrip,
+        ImmutableSortedSet.copyOf(objects.keySet()),
+        executableBuilder.build(),
+        deps);
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinaryDescriptionArg(
@@ -937,7 +1038,7 @@ public class CxxDescriptionEnhancer {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
-      ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects,
+      ImmutableMap<? extends CxxIntermediateBuildProduct, SourcePath> objects,
       SortedSet<BuildRule> deps,
       CommandTool.Builder executableBuilder,
       Linker linker,

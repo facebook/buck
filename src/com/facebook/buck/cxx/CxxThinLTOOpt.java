@@ -42,7 +42,8 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /** A build rule which runs the opt phase of an incremental ThinLTO build */
-public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl> {
+public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
+    implements CxxIntermediateBuildProduct {
   private CxxThinLTOOpt(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,

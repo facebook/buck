@@ -130,30 +130,30 @@ public class CxxBinaryFactory {
           inferBuckConfig);
     }
 
-    if (flavors.contains(CxxDescriptionEnhancer.INCREMENTAL_THINLTO)) {
-      return CxxDescriptionEnhancer.createBuildRuleForCxxThinLtoBinary(
-          target,
-          projectFilesystem,
-          graphBuilder,
-          cellRoots,
-          cxxBuckConfig,
-          cxxPlatform,
-          args,
-          extraCxxDeps);
-    }
-
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
-        CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
-            target,
-            projectFilesystem,
-            graphBuilder,
-            cellRoots,
-            cxxBuckConfig,
-            cxxPlatform,
-            args,
-            extraCxxDeps,
-            flavoredStripStyle,
-            flavoredLinkerMapMode);
+        flavors.contains(CxxDescriptionEnhancer.INCREMENTAL_THINLTO)
+            ? CxxDescriptionEnhancer.createBuildRuleForCxxThinLtoBinary(
+                target,
+                projectFilesystem,
+                graphBuilder,
+                cellRoots,
+                cxxBuckConfig,
+                cxxPlatform,
+                args,
+                extraCxxDeps,
+                flavoredStripStyle,
+                flavoredLinkerMapMode)
+            : CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
+                target,
+                projectFilesystem,
+                graphBuilder,
+                cellRoots,
+                cxxBuckConfig,
+                cxxPlatform,
+                args,
+                extraCxxDeps,
+                flavoredStripStyle,
+                flavoredLinkerMapMode);
 
     if (target.getFlavors().contains(CxxDescriptionEnhancer.CXX_LINK_MAP_FLAVOR)) {
       return CxxDescriptionEnhancer.createLinkMap(

@@ -58,7 +58,7 @@ import java.util.function.Predicate;
 
 /** A build rule which preprocesses and/or compiles a C/C++ source in a single step. */
 public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCompile.Impl>
-    implements SupportsDependencyFileRuleKey {
+    implements SupportsDependencyFileRuleKey, CxxIntermediateBuildProduct {
   private static final Logger LOG = Logger.get(CxxPreprocessAndCompile.class);
 
   private final Path output;
