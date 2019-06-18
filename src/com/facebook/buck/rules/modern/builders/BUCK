@@ -38,6 +38,7 @@ java_immutables_library(
         "//src/com/facebook/buck/jvm/core:packagefinder",
         "//src/com/facebook/buck/jvm/java:config",
         "//src/com/facebook/buck/jvm/java:packagefinder",
+        "//src/com/facebook/buck/jvm/java/version:version",
         "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/remoteexecution:remoteexecution",
         "//src/com/facebook/buck/remoteexecution/config:config",

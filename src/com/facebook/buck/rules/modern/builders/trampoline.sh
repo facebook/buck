@@ -31,6 +31,35 @@ function resolve() {
   echo $1 | sed "s/^\([^/].*\)$/$(echo $PWD | sed 's/\//\\\//g')\/\1/"
 }
 
+function getJavaPathForVersion() {
+  local java_path
+  case "$(uname)" in
+      Darwin)
+          local version_string
+          [[ "$1" -le 8 ]] && version_string="1.$1" || version_string="$1"
+          set +e
+          java_path=$(/usr/libexec/java_home -v "$version_string")
+          if [[ $? -ne 0 ]]; then
+            echo "Java $1 is not installed." >&2
+            exit 127
+          fi
+          set -e
+          java_path="$java_path/bin/java"
+          ;;
+      Linux)
+          java_path="/usr/local/java-runtime/$1/bin/java"
+          if [[ ! -x "$java_path" ]]; then
+            echo "Java not found at $java_path. Is the java_runtime fbpkg installed?" >&2
+            exit 127
+          fi
+          ;;
+      *)
+          echo "Unsupported platform" >&2
+          exit 1
+  esac
+  echo "$java_path"
+}
+
 export BUCK_CLASSPATH=$(resolveList $BUCK_CLASSPATH)
 export CLASSPATH=$(resolveList $CLASSPATH)
 export BUCK_ISOLATED_ROOT=$PWD
@@ -42,7 +71,9 @@ export BUCK_BUILD_ID="RE_buck_build_id"
 
 cd $1
 
-java -cp $CLASSPATH \
+JAVA_PATH=$(getJavaPathForVersion $BUCK_JAVA_VERSION)
+
+$JAVA_PATH -cp $CLASSPATH \
   -Xverify:none -XX:+TieredCompilation -XX:TieredStopAtLevel=1 \
   -Dpf4j.pluginsDir=$BUCK_PLUGIN_ROOT \
   -Dbuck.module.resources=$BUCK_PLUGIN_RESOURCES \
