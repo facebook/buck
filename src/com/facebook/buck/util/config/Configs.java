@@ -85,11 +85,10 @@ public final class Configs {
       Path root, ImmutableList<Path> configFiles, RawConfig configOverrides) throws IOException {
     LOG.debug("Loading configuration for %s", root);
 
-    RawConfig.Builder builder = RawConfig.builder();
-    builder.putAll(createDefaultRawConfig(root, configFiles));
+    Config config = createConfigFromFiles(root, configFiles);
+
     LOG.debug("Adding configuration overrides %s", configOverrides);
-    builder.putAll(configOverrides);
-    return new Config(builder.build());
+    return config.overrideWith(new Config(configOverrides));
   }
 
   /**
@@ -101,10 +100,11 @@ public final class Configs {
    * @return the resulting {@code RawConfig}.
    * @throws IOException on any exceptions during the underlying filesystem operations.
    */
-  public static RawConfig createDefaultRawConfig(Path root, ImmutableList<Path> configFiles)
+  public static Config createConfigFromFiles(Path root, ImmutableList<Path> configFiles)
       throws IOException {
     Path configFile = getMainConfigurationFile(root);
 
+    ImmutableMap.Builder<Path, RawConfig> configsMapBuilder = ImmutableMap.builder();
     RawConfig.Builder builder = RawConfig.builder();
     for (Path path : configFiles) {
       ImmutableMap<String, ImmutableMap<String, String>> parsedConfiguration =
@@ -116,8 +116,9 @@ public final class Configs {
         LOG.debug("Loaded a configuration file %s, %s", path, parsedConfiguration);
       }
       builder.putAll(parsedConfiguration);
+      configsMapBuilder.put(path, RawConfig.of(parsedConfiguration));
     }
-    return builder.build();
+    return new Config(builder.build(), configsMapBuilder.build());
   }
 
   private static ImmutableSortedSet<Path> listFiles(Path root) throws IOException {

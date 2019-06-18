@@ -38,6 +38,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.List;
 import java.util.Locale;
@@ -64,6 +65,13 @@ public class Config {
   // rawConfig is the flattened configuration relevant to the current cell
   private final RawConfig rawConfig;
 
+  /**
+   * Because rawConfig is a merge of other RawConfigs, the source of each field-value is lost. As
+   * that information is useful for diagnosis, this map stores each merged rawConfig with it's path
+   * as a key.
+   */
+  private final ImmutableMap<Path, RawConfig> configsMap;
+
   // The order-independent {@link HashCode} of the flattened configuration relevant to the current
   // cell.
   private final Supplier<HashCode> orderIndependentHashCode =
@@ -83,11 +91,16 @@ public class Config {
 
   /** Convenience constructor to create an empty config. */
   public Config() {
-    this(RawConfig.of());
+    this(RawConfig.of(), ImmutableMap.of());
   }
 
   public Config(RawConfig rawConfig) {
+    this(rawConfig, ImmutableMap.of());
+  }
+
+  public Config(RawConfig rawConfig, ImmutableMap<Path, RawConfig> configsMap) {
     this.rawConfig = rawConfig;
+    this.configsMap = configsMap;
   }
 
   // Some `.buckconfig`s embed genrule macros which break with recent changes to support the config
@@ -527,7 +540,7 @@ public class Config {
     RawConfig.Builder builder = RawConfig.builder();
     builder.putAll(this.rawConfig);
     builder.putAll(other.rawConfig);
-    return new Config(builder.build());
+    return new Config(builder.build(), this.configsMap);
   }
 
   /**
@@ -582,5 +595,15 @@ public class Config {
 
   public RawConfig getRawConfig() {
     return rawConfig;
+  }
+
+  /**
+   * A map of Paths to the RawConfig that came from that config file. When accessing this structure,
+   * bear in mind that it might have values that have been overriden in the merged rawConfig.
+   *
+   * @return A map of Paths to the RawConfig whose origin is that config file.
+   */
+  public ImmutableMap<Path, RawConfig> getConfigsMap() {
+    return configsMap;
   }
 }
