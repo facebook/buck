@@ -165,6 +165,7 @@ java_immutables_library(
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/support/bgtasks:bgtasks",
+        "//src/com/facebook/buck/support/build/report:report",
         "//src/com/facebook/buck/support/cli/args:args",
         "//src/com/facebook/buck/support/cli/config:config",
         "//src/com/facebook/buck/support/exceptions/handler:handler",

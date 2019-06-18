@@ -78,6 +78,10 @@ public class HttpdForTests implements AutoCloseable {
   private final String localhost;
 
   public HttpdForTests() throws SocketException {
+    this(true);
+  }
+
+  private HttpdForTests(boolean allowedScopedLinkLocal) throws SocketException {
     // Configure the logging for jetty. Which uses a singleton. Ho hum.
     Log.setLog(new JavaUtilLog());
     server = new Server();
@@ -89,7 +93,18 @@ public class HttpdForTests implements AutoCloseable {
     server.addConnector(connector);
 
     handlerList = new HandlerList();
-    localhost = getLocalhostAddress(true).getHostAddress();
+    localhost = getLocalhostAddress(allowedScopedLinkLocal).getHostAddress();
+  }
+
+  /**
+   * Create an instance of {@link HttpdForTests} that does not use '%{scope}' syntax in its
+   * localhost URI. This is done for OkHttp, as it does not support this functionality.
+   *
+   * @return an HttpdForTests instance
+   * @throws SocketException
+   */
+  public static HttpdForTests httpdForOkHttpTests() throws SocketException {
+    return new HttpdForTests(false);
   }
 
   /**
