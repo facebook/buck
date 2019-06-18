@@ -29,9 +29,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
@@ -68,7 +68,6 @@ import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.collect.MoreSets;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionException;
-import com.facebook.buck.versions.VersionedTargetGraphAndTargets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -164,11 +163,10 @@ public class IjProjectCommandHelper {
       targets = ImmutableList.of("//...");
     }
 
-    ImmutableSet<BuildTarget> passedInTargetsSet;
-    TargetGraph projectGraph;
+    TargetGraphCreationResult targetGraphCreationResult;
 
     try {
-      passedInTargetsSet =
+      ImmutableSet<BuildTarget> passedInTargetsSet =
           ImmutableSet.copyOf(
               Iterables.concat(
                   parser.resolveTargetSpecs(
@@ -176,7 +174,7 @@ public class IjProjectCommandHelper {
       if (passedInTargetsSet.isEmpty()) {
         throw new HumanReadableException("Could not find targets matching arguments");
       }
-      projectGraph = parser.buildTargetGraph(parsingContext, passedInTargetsSet).getTargetGraph();
+      targetGraphCreationResult = parser.buildTargetGraph(parsingContext, passedInTargetsSet);
     } catch (BuildFileParseException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -185,10 +183,9 @@ public class IjProjectCommandHelper {
       return ExitCode.BUILD_ERROR;
     }
 
-    TargetGraphAndTargets targetGraphAndTargets;
     try {
-      targetGraphAndTargets =
-          createTargetGraph(depsAwareExecutorSupplier, passedInTargetsSet, projectGraph);
+      targetGraphCreationResult =
+          createTargetGraph(depsAwareExecutorSupplier, targetGraphCreationResult);
     } catch (BuildFileParseException | NoSuchTargetException | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -198,27 +195,27 @@ public class IjProjectCommandHelper {
     }
 
     if (projectGeneratorParameters.isDryRun()) {
-      for (TargetNode<?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
+      for (TargetNode<?> targetNode : targetGraphCreationResult.getTargetGraph().getNodes()) {
         console.getStdOut().println(targetNode.toString());
       }
 
       return ExitCode.SUCCESS;
     }
 
-    return runIntellijProjectGenerator(targetGraphAndTargets);
+    return runIntellijProjectGenerator(targetGraphCreationResult);
   }
 
-  private ActionGraphAndBuilder getActionGraph(TargetGraph targetGraph) {
+  private ActionGraphAndBuilder getActionGraph(
+      TargetGraphCreationResult targetGraphCreationResult) {
     TargetNodeToBuildRuleTransformer transformer = new ShallowTargetNodeToBuildRuleTransformer();
-    return actionGraphProvider.getFreshActionGraph(
-        transformer, new ImmutableTargetGraphCreationResult(targetGraph, ImmutableSet.of()));
+    return actionGraphProvider.getFreshActionGraph(transformer, targetGraphCreationResult);
   }
 
   /** Run intellij specific project generation actions. */
-  private ExitCode runIntellijProjectGenerator(TargetGraphAndTargets targetGraphAndTargets)
+  private ExitCode runIntellijProjectGenerator(TargetGraphCreationResult targetGraphCreationResult)
       throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> requiredBuildTargets =
-        writeProjectAndGetRequiredBuildTargets(targetGraphAndTargets);
+        writeProjectAndGetRequiredBuildTargets(targetGraphCreationResult);
 
     if (requiredBuildTargets.isEmpty()) {
       return ExitCode.SUCCESS;
@@ -232,7 +229,7 @@ public class IjProjectCommandHelper {
 
     return processAnnotations
         ? buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(
-            targetGraphAndTargets.getTargetGraph(), requiredBuildTargets)
+            targetGraphCreationResult.getTargetGraph(), requiredBuildTargets)
         : runBuild(requiredBuildTargets);
   }
 
@@ -247,9 +244,9 @@ public class IjProjectCommandHelper {
   }
 
   private ImmutableSet<BuildTarget> writeProjectAndGetRequiredBuildTargets(
-      TargetGraphAndTargets targetGraphAndTargets) throws IOException {
+      TargetGraphCreationResult targetGraphCreationResult) throws IOException {
     ActionGraphAndBuilder result =
-        Objects.requireNonNull(getActionGraph(targetGraphAndTargets.getTargetGraph()));
+        Objects.requireNonNull(getActionGraph(targetGraphCreationResult));
 
     ActionGraphBuilder graphBuilder = result.getActionGraphBuilder();
 
@@ -258,7 +255,7 @@ public class IjProjectCommandHelper {
 
     IjProject project =
         new IjProject(
-            targetGraphAndTargets.getTargetGraph(),
+            targetGraphCreationResult.getTargetGraph(),
             getJavaPackageFinder(buckConfig),
             JavaFileParser.createJavaFileParser(languageLevelOptions),
             graphBuilder,
@@ -361,52 +358,49 @@ public class IjProjectCommandHelper {
     return testsMode() == ProjectTestsMode.WITH_TESTS;
   }
 
-  private TargetGraphAndTargets createTargetGraph(
+  private TargetGraphCreationResult createTargetGraph(
       Supplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutorSupplier,
-      ImmutableSet<BuildTarget> graphRoots,
-      TargetGraph projectGraph)
+      TargetGraphCreationResult targetGraphCreationResult)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
 
-    boolean isWithTests = isWithTests();
-    ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();
-
-    if (isWithTests) {
-      explicitTestTargets = getExplicitTestTargets(graphRoots, projectGraph);
-      projectGraph =
-          parser
-              .buildTargetGraph(parsingContext, MoreSets.union(graphRoots, explicitTestTargets))
-              .getTargetGraph();
+    if (isWithTests()) {
+      ImmutableSet<BuildTarget> explicitTestTargets =
+          getExplicitTestTargets(targetGraphCreationResult);
+      targetGraphCreationResult =
+          parser.buildTargetGraph(
+              parsingContext,
+              MoreSets.union(targetGraphCreationResult.getBuildTargets(), explicitTestTargets));
     }
 
-    TargetGraphAndTargets targetGraphAndTargets =
-        TargetGraphAndTargets.create(graphRoots, projectGraph, isWithTests, explicitTestTargets);
     if (buckConfig.getView(BuildBuckConfig.class).getBuildVersions()) {
-      targetGraphAndTargets =
-          VersionedTargetGraphAndTargets.toVersionedTargetGraphAndTargets(
+      targetGraphCreationResult =
+          versionedTargetGraphCache.toVersionedTargetGraph(
               depsAwareExecutorSupplier.get(),
-              versionedTargetGraphCache,
-              buckEventBus,
               buckConfig,
               typeCoercerFactory,
               unconfiguredBuildTargetFactory,
-              explicitTestTargets,
+              targetGraphCreationResult,
               targetConfiguration,
-              targetGraphAndTargets);
+              buckEventBus);
     }
-    return targetGraphAndTargets;
+    return targetGraphCreationResult;
   }
 
   /**
-   * @param buildTargets The set of targets for which we would like to find tests
-   * @param projectGraph A TargetGraph containing all nodes and their tests.
-   * @return A set of all test targets that test any of {@code buildTargets} or their dependencies.
+   * @param targetGraphCreationResult A target graph creation result containing all nodes and their
+   *     tests in the target graph.
+   * @return A set of all test targets that test any of build targets of {@code
+   *     targetGraphCreationResult} or their dependencies.
    */
   private ImmutableSet<BuildTarget> getExplicitTestTargets(
-      ImmutableSet<BuildTarget> buildTargets, TargetGraph projectGraph) {
-    Iterable<TargetNode<?>> projectRoots = projectGraph.getAll(buildTargets);
+      TargetGraphCreationResult targetGraphCreationResult) {
+    Iterable<TargetNode<?>> projectRoots =
+        targetGraphCreationResult
+            .getTargetGraph()
+            .getAll(targetGraphCreationResult.getBuildTargets());
     Iterable<TargetNode<?>> nodes;
     if (isWithDependenciesTests()) {
-      nodes = projectGraph.getSubgraph(projectRoots).getNodes();
+      nodes = targetGraphCreationResult.getTargetGraph().getSubgraph(projectRoots).getNodes();
     } else {
       nodes = projectRoots;
     }
