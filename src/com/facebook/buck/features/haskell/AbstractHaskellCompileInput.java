@@ -31,6 +31,6 @@ interface AbstractHaskellCompileInput {
   /** @return any haskell compilation flags to include in the top-level compile job. */
   ImmutableList<String> getFlags();
 
-  /** @return any haskell packages used by the top-level compile job. */
-  ImmutableList<HaskellPackage> getPackages();
+  /** @return haskell package produced by this compile job. */
+  HaskellPackage getPackage();
 }

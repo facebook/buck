@@ -121,7 +121,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     HaskellCompileInput input =
         library.getCompileInput(
             HaskellTestUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
-    assertThat(input.getPackages().get(0).getInterfaces(), Matchers.contains(interfaces));
+    assertThat(input.getPackage().getInterfaces(), Matchers.contains(interfaces));
   }
 
   @Test
@@ -137,7 +137,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     HaskellCompileInput input =
         library.getCompileInput(
             HaskellTestUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
-    assertThat(input.getPackages().get(0).getPackageDb(), Matchers.equalTo(db));
+    assertThat(input.getPackage().getPackageDb(), Matchers.equalTo(db));
   }
 
   @Test
@@ -156,7 +156,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
         library.getCompileInput(
             HaskellTestUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, false);
     assertThat(
-        input.getPackages().get(0).getInfo(),
+        input.getPackage().getInfo(),
         Matchers.equalTo(HaskellPackageInfo.of("rule", "1.0.0", "id")));
   }
 

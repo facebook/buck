@@ -323,11 +323,9 @@ public class HaskellLibraryDescription
         ImmutableSortedMap.naturalOrder();
     for (BuildRule rule : deps) {
       if (rule instanceof HaskellCompileDep) {
-        ImmutableList<HaskellPackage> packages =
-            ((HaskellCompileDep) rule).getCompileInput(platform, depType, hsProfile).getPackages();
-        for (HaskellPackage pkg : packages) {
-          depPackagesBuilder.put(pkg.getInfo().getIdentifier(), pkg);
-        }
+        HaskellPackage pkg =
+            ((HaskellCompileDep) rule).getCompileInput(platform, depType, hsProfile).getPackage();
+        depPackagesBuilder.put(pkg.getIdentifier(), pkg);
       }
     }
 
@@ -470,13 +468,11 @@ public class HaskellLibraryDescription
           HaskellCompileInput compileInput =
               haskellCompileDep.getCompileInput(
                   platform, Linker.LinkableDepType.STATIC, args.isEnableProfiling());
-          boolean firstOrderDep = deps.contains(rule);
-          for (HaskellPackage pkg : compileInput.getPackages()) {
-            if (firstOrderDep) {
-              exposedPackagesBuilder.put(pkg.getInfo().getIdentifier(), pkg);
-            } else {
-              packagesBuilder.put(pkg.getInfo().getIdentifier(), pkg);
-            }
+          HaskellPackage pkg = compileInput.getPackage();
+          if (deps.contains(rule)) {
+            exposedPackagesBuilder.put(pkg.getInfo().getIdentifier(), pkg);
+          } else {
+            packagesBuilder.put(pkg.getInfo().getIdentifier(), pkg);
           }
           traverse.addAll(haskellCompileDep.getCompileDeps(platform));
         }
@@ -739,7 +735,7 @@ public class HaskellLibraryDescription
                 allDeps.get(graphBuilder, platform.getCxxPlatform()),
                 depType,
                 hsProfile);
-        return HaskellCompileInput.builder().addPackages(rule.getPackage()).build();
+        return HaskellCompileInput.builder().setPackage(rule.getPackage()).build();
       }
 
       @Override

@@ -126,15 +126,13 @@ public class HaskellDescriptionUtils {
               haskellCompileDep.getCompileInput(platform, depType, hsProfile);
           depFlags.put(rule.getBuildTarget(), compileInput.getFlags());
 
+          HaskellPackage pkg = compileInput.getPackage();
           // We add packages from first-order deps as expose modules, and transitively included
           // packages as hidden ones.
-          boolean firstOrderDep = deps.contains(rule);
-          for (HaskellPackage pkg : compileInput.getPackages()) {
-            if (firstOrderDep) {
-              exposedPackagesBuilder.put(pkg.getInfo().getIdentifier(), pkg);
-            } else {
-              packagesBuilder.put(pkg.getInfo().getIdentifier(), pkg);
-            }
+          if (deps.contains(rule)) {
+            exposedPackagesBuilder.put(pkg.getIdentifier(), pkg);
+          } else {
+            packagesBuilder.put(pkg.getIdentifier(), pkg);
           }
         }
         return ruleDeps;
@@ -454,13 +452,13 @@ public class HaskellDescriptionUtils {
                       platform, Linker.LinkableDepType.STATIC_PIC, hsProfile);
 
               if (params.getBuildDeps().contains(rule)) {
-                firstOrderHaskellPackages.addAll(ci.getPackages());
+                firstOrderHaskellPackages.add(ci.getPackage());
               }
 
               if (rule instanceof HaskellLibrary) {
-                haskellPackages.addAll(ci.getPackages());
+                haskellPackages.add(ci.getPackage());
               } else if (rule instanceof PrebuiltHaskellLibrary) {
-                prebuiltHaskellPackages.addAll(ci.getPackages());
+                prebuiltHaskellPackages.add(ci.getPackage());
               }
 
               traverse.addAll(haskellRule.getCompileDeps(platform));

@@ -102,7 +102,7 @@ public class HaskellPrebuiltLibraryDescription
 
         return HaskellCompileInput.builder()
             .addAllFlags(args.getExportedCompilerFlags())
-            .addPackages(pkg)
+            .setPackage(pkg)
             .build();
       }
 
