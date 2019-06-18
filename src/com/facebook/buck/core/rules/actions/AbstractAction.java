@@ -71,5 +71,5 @@ public abstract class AbstractAction<T extends ActionConstructorParams> implemen
    * The additional constructor parameters that are passed to the constructor of the {@link Action}
    * being created
    */
-  interface ActionConstructorParams {}
+  public interface ActionConstructorParams {}
 }
