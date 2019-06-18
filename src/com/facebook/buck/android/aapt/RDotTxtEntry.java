@@ -107,7 +107,6 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
   public static final String CUSTOM_DRAWABLE_IDENTIFIER = "#";
   public static final String GRAYSCALE_IMAGE_IDENTIFIER = "G";
   public static final String INT_ARRAY_SEPARATOR = ",";
-  private static final Pattern INT_ARRAY_VALUES = Pattern.compile("\\s*\\{\\s*(\\S+)?\\s*\\}\\s*");
   private static final Pattern TEXT_SYMBOLS_LINE =
       Pattern.compile(
           "(\\S+) (\\S+) (\\S+) ([^("
@@ -196,17 +195,6 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
     } else {
       return String.format("0x%08x", Integer.parseInt(idValue));
     }
-  }
-
-  public int getNumArrayValues() {
-    Preconditions.checkState(idType == IdType.INT_ARRAY);
-
-    Matcher matcher = INT_ARRAY_VALUES.matcher(idValue);
-    if (!matcher.matches() || matcher.group(1) == null) {
-      return 0;
-    }
-
-    return matcher.group(1).split(INT_ARRAY_SEPARATOR).length;
   }
 
   public RDotTxtEntry copyWithNewIdValue(String newIdValue) {

@@ -102,13 +102,6 @@ public class RDotTxtResourceCollector implements ResourceCollector {
     resources.add(new RDotTxtEntry(idType, rType, name, idValue, parent));
   }
 
-  @Override
-  public void addResourceIfNotPresent(RDotTxtEntry rDotTxtEntry) {
-    if (!resources.contains(rDotTxtEntry)) {
-      resources.add(rDotTxtEntry.copyWithNewIdValue(getNextIdValue(rDotTxtEntry)));
-    }
-  }
-
   public void addCustomResource(RType rType, IdType idType, String name, String idValue) {
     resources.add(
         new RDotTxtEntry(idType, rType, name, idValue, RDotTxtEntry.CustomDrawableType.CUSTOM));
@@ -129,22 +122,6 @@ public class RDotTxtResourceCollector implements ResourceCollector {
       enumerators.put(rType, new ResourceIdEnumerator(currentTypeId++));
     }
     return Objects.requireNonNull(enumerators.get(rType));
-  }
-
-  String getNextIdValue(RDotTxtEntry rDotTxtEntry) {
-    if (rDotTxtEntry.idType == IdType.INT_ARRAY) {
-      return getNextArrayIdValue(rDotTxtEntry.type, rDotTxtEntry.getNumArrayValues());
-    } else if (rDotTxtEntry.type == RType.STYLEABLE) {
-      // styleable int entries are just incremented ints that receive a value when created as
-      // siblings of a style (non unique within R.txt)
-      return rDotTxtEntry.idValue;
-    } else if (rDotTxtEntry.customType == RDotTxtEntry.CustomDrawableType.CUSTOM) {
-      return getNextCustomIdValue(rDotTxtEntry.type);
-    } else if (rDotTxtEntry.customType == RDotTxtEntry.CustomDrawableType.GRAYSCALE_IMAGE) {
-      return getNextGrayscaleImageIdValue(rDotTxtEntry.type);
-    } else {
-      return getNextIdValue(rDotTxtEntry.type);
-    }
   }
 
   String getNextIdValue(RType rType) {

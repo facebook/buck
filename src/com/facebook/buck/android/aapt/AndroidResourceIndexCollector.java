@@ -93,11 +93,6 @@ class AndroidResourceIndexCollector implements ResourceCollector {
             path));
   }
 
-  @Override
-  public void addResourceIfNotPresent(RDotTxtEntry rDotTxtEntry) {
-    // do nothing -- this method just adds references from rDotTxt files
-  }
-
   public SortedSet<AndroidResourceIndexEntry> getResourceIndex() {
     return Collections.unmodifiableSortedSet(resources);
   }

@@ -42,6 +42,4 @@ interface ResourceCollector {
       @Nullable String parent,
       Path path,
       DocumentLocation documentLocation);
-
-  void addResourceIfNotPresent(RDotTxtEntry rDotTxtEntry);
 }
