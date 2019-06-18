@@ -38,7 +38,6 @@ import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceTypes;
 import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.ExplicitCxxToolFlags;
-import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
@@ -68,10 +67,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.TreeMap;
 import java.util.stream.Stream;
 
 public class HaskellDescriptionUtils {
@@ -87,6 +84,61 @@ public class HaskellDescriptionUtils {
       ImmutableList.of("-dynamic", "-osuf", "dyn_o", "-hisuf", "dyn_hi");
   static final ImmutableList<String> PIC_FLAGS =
       ImmutableList.of("-fPIC", "-fexternal-dynamic-refs");
+
+  /** Create common Haskell compile flags used by HaskellCompileRule or HaskellHaddockLibRule. */
+  protected static HaskellCompilerFlags createCompileFlags(
+      ActionGraphBuilder graphBuilder,
+      ImmutableSet<BuildRule> deps,
+      HaskellPlatform platform,
+      Linker.LinkableDepType depType,
+      boolean hsProfile,
+      ImmutableList<String> additionalFlags) {
+    HaskellCompilerFlags.Builder builder = HaskellCompilerFlags.builder();
+    builder.addAllAdditionalFlags(additionalFlags);
+
+    CxxPlatform cxxPlatform = platform.getCxxPlatform();
+    Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
+        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder, deps);
+    ExplicitCxxToolFlags.Builder preprocessorFlagsBuilder = CxxToolFlags.explicitBuilder();
+
+    preprocessorFlagsBuilder.setPlatformFlags(
+        StringArg.from(CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, CxxSource.Type.C)));
+    for (CxxPreprocessorInput preprocessorInput : cxxPreprocessorInputs) {
+      builder
+          .addAllIncludes(preprocessorInput.getIncludes())
+          .addAllFrameworkPaths(preprocessorInput.getFrameworks());
+      preprocessorFlagsBuilder.addAllRuleFlags(
+          preprocessorInput.getPreprocessorFlags().get(CxxSource.Type.C));
+    }
+    builder.setAdditionalPreprocessorFlags(preprocessorFlagsBuilder.build());
+
+    new AbstractBreadthFirstTraversal<BuildRule>(deps) {
+      @Override
+      public Iterable<BuildRule> visit(BuildRule rule) {
+        ImmutableSet.Builder<BuildRule> traverse = ImmutableSet.builder();
+        if (rule instanceof HaskellCompileDep) {
+          HaskellCompileDep haskellCompileDep = (HaskellCompileDep) rule;
+          traverse.addAll(haskellCompileDep.getCompileDeps(platform));
+
+          HaskellHaddockInput haddockInput = haskellCompileDep.getHaddockInput(platform);
+          builder.addAllHaddockInterfaces(haddockInput.getInterfaces());
+
+          HaskellCompileInput compileInput =
+              haskellCompileDep.getCompileInput(platform, depType, hsProfile);
+          HaskellPackage pkg = compileInput.getPackage();
+          builder.putPackageExportedFlags(pkg.getIdentifier(), compileInput.getFlags());
+          if (deps.contains(rule)) {
+            builder.putExposedPackages(pkg.getIdentifier(), pkg);
+          } else {
+            builder.putPackages(pkg.getIdentifier(), pkg);
+          }
+        }
+        return traverse.build();
+      }
+    }.start();
+
+    return builder.build();
+  }
 
   /**
    * Create a Haskell compile rule that compiles all the given haskell sources in one step and pulls
@@ -107,61 +159,10 @@ public class HaskellDescriptionUtils {
       HaskellSources sources) {
 
     CxxPlatform cxxPlatform = platform.getCxxPlatform();
-
-    Map<BuildTarget, ImmutableList<String>> depFlags = new TreeMap<>();
-    ImmutableSortedMap.Builder<String, HaskellPackage> exposedPackagesBuilder =
-        ImmutableSortedMap.naturalOrder();
-    ImmutableSortedMap.Builder<String, HaskellPackage> packagesBuilder =
-        ImmutableSortedMap.naturalOrder();
-    new AbstractBreadthFirstTraversal<BuildRule>(deps) {
-      private final ImmutableSet<BuildRule> empty = ImmutableSet.of();
-
-      @Override
-      public Iterable<BuildRule> visit(BuildRule rule) {
-        Iterable<BuildRule> ruleDeps = empty;
-        if (rule instanceof HaskellCompileDep) {
-          HaskellCompileDep haskellCompileDep = (HaskellCompileDep) rule;
-          ruleDeps = haskellCompileDep.getCompileDeps(platform);
-          HaskellCompileInput compileInput =
-              haskellCompileDep.getCompileInput(platform, depType, hsProfile);
-          depFlags.put(rule.getBuildTarget(), compileInput.getFlags());
-
-          HaskellPackage pkg = compileInput.getPackage();
-          // We add packages from first-order deps as expose modules, and transitively included
-          // packages as hidden ones.
-          if (deps.contains(rule)) {
-            exposedPackagesBuilder.put(pkg.getIdentifier(), pkg);
-          } else {
-            packagesBuilder.put(pkg.getIdentifier(), pkg);
-          }
-        }
-        return ruleDeps;
-      }
-    }.start();
-
-    Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder, deps);
-    ExplicitCxxToolFlags.Builder toolFlagsBuilder = CxxToolFlags.explicitBuilder();
-    PreprocessorFlags.Builder ppFlagsBuilder = PreprocessorFlags.builder();
-    toolFlagsBuilder.setPlatformFlags(
-        StringArg.from(CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, CxxSource.Type.C)));
-    for (CxxPreprocessorInput input : cxxPreprocessorInputs) {
-      ppFlagsBuilder.addAllIncludes(input.getIncludes());
-      ppFlagsBuilder.addAllFrameworkPaths(input.getFrameworks());
-      toolFlagsBuilder.addAllRuleFlags(input.getPreprocessorFlags().get(CxxSource.Type.C));
-    }
-    ppFlagsBuilder.setOtherFlags(toolFlagsBuilder.build());
-    PreprocessorFlags ppFlags = ppFlagsBuilder.build();
-
-    ImmutableList<String> compileFlags =
-        ImmutableList.<String>builder()
-            .addAll(platform.getCompilerFlags())
-            .addAll(flags)
-            .addAll(Iterables.concat(depFlags.values()))
-            .build();
-
-    ImmutableSortedMap<String, HaskellPackage> exposedPackages = exposedPackagesBuilder.build();
-    ImmutableSortedMap<String, HaskellPackage> packages = packagesBuilder.build();
+    ImmutableList<String> additionalFlags =
+        ImmutableList.<String>builder().addAll(platform.getCompilerFlags()).addAll(flags).build();
+    HaskellCompilerFlags compilerFlags =
+        createCompileFlags(graphBuilder, deps, platform, depType, hsProfile, additionalFlags);
 
     return HaskellCompileRule.from(
         target,
@@ -171,15 +172,12 @@ public class HaskellDescriptionUtils {
         platform.getCompiler().resolve(graphBuilder, target.getTargetConfiguration()),
         platform.getHaskellVersion(),
         platform.shouldUseArgsfile(),
-        compileFlags,
-        ppFlags,
+        compilerFlags,
         cxxPlatform,
         depType,
         hsProfile,
         main,
         packageInfo,
-        exposedPackages,
-        packages,
         sources,
         CxxSourceTypes.getPreprocessor(cxxPlatform, CxxSource.Type.C)
             .resolve(graphBuilder, target.getTargetConfiguration()));
