@@ -75,7 +75,6 @@ import com.facebook.buck.util.collect.MoreSets;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionException;
-import com.facebook.buck.versions.VersionedTargetGraphAndTargets;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -258,10 +257,9 @@ public class XCodeProjectCommandHelper {
 
     LOG.debug("Xcode project generation: Getting more part of the target graph");
 
-    TargetGraphAndTargets targetGraphAndTargets;
     try {
-      targetGraphAndTargets =
-          createTargetGraph(
+      targetGraphCreationResult =
+          enhanceTargetGraphIfNeeded(
               depsAwareExecutorSupplier,
               targetGraphCreationResult,
               isWithTests(buckConfig),
@@ -280,11 +278,12 @@ public class XCodeProjectCommandHelper {
       sharedLibraryToBundle =
           Optional.of(
               ProjectGenerator.computeSharedLibrariesToBundles(
-                  targetGraphAndTargets.getTargetGraph().getNodes(), targetGraphAndTargets));
+                  targetGraphCreationResult.getTargetGraph().getNodes(),
+                  targetGraphCreationResult.getTargetGraph()));
     }
 
     if (dryRun) {
-      for (TargetNode<?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
+      for (TargetNode<?> targetNode : targetGraphCreationResult.getTargetGraph().getNodes()) {
         console.getStdOut().println(targetNode.toString());
       }
 
@@ -293,8 +292,7 @@ public class XCodeProjectCommandHelper {
 
     LOG.debug("Xcode project generation: Run the project generator");
 
-    return runXcodeProjectGenerator(
-        targetGraphAndTargets, targetGraphCreationResult, sharedLibraryToBundle);
+    return runXcodeProjectGenerator(targetGraphCreationResult, sharedLibraryToBundle);
   }
 
   private static String getIDEForceKillSectionName() {
@@ -352,7 +350,6 @@ public class XCodeProjectCommandHelper {
 
   /** Run xcode specific project generation actions. */
   private ExitCode runXcodeProjectGenerator(
-      TargetGraphAndTargets targetGraphAndTargets,
       TargetGraphCreationResult targetGraphCreationResult,
       Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle)
       throws IOException, InterruptedException {
@@ -388,8 +385,7 @@ public class XCodeProjectCommandHelper {
             buckConfig,
             ruleKeyConfiguration,
             executorService,
-            targetGraphAndTargets,
-            targetGraphCreationResult.getBuildTargets(),
+            targetGraphCreationResult,
             options,
             appleCxxFlavors,
             getFocusModules(),
@@ -442,8 +438,7 @@ public class XCodeProjectCommandHelper {
       BuckConfig buckConfig,
       RuleKeyConfiguration ruleKeyConfiguration,
       ListeningExecutorService executorService,
-      TargetGraphAndTargets targetGraphAndTargets,
-      ImmutableSet<BuildTarget> passedInTargetsSet,
+      TargetGraphCreationResult targetGraphCreationResult,
       ProjectGeneratorOptions options,
       ImmutableSet<Flavor> appleCxxFlavors,
       FocusedModuleTargetMatcher focusModules,
@@ -454,14 +449,15 @@ public class XCodeProjectCommandHelper {
       throws IOException, InterruptedException {
 
     LazyActionGraph lazyActionGraph =
-        new LazyActionGraph(targetGraphAndTargets.getTargetGraph(), cell.getCellProvider());
+        new LazyActionGraph(targetGraphCreationResult.getTargetGraph(), cell.getCellProvider());
 
     XCodeDescriptions xcodeDescriptions = XCodeDescriptionsFactory.create(pluginManager);
 
-    LOG.debug("Generating workspace for config targets %s", passedInTargetsSet);
+    LOG.debug(
+        "Generating workspace for config targets %s", targetGraphCreationResult.getBuildTargets());
     ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
-    for (BuildTarget inputTarget : passedInTargetsSet) {
-      TargetNode<?> inputNode = targetGraphAndTargets.getTargetGraph().get(inputTarget);
+    for (BuildTarget inputTarget : targetGraphCreationResult.getBuildTargets()) {
+      TargetNode<?> inputNode = targetGraphCreationResult.getTargetGraph().get(inputTarget);
       XcodeWorkspaceConfigDescriptionArg workspaceArgs;
       if (inputNode.getDescription() instanceof XcodeWorkspaceConfigDescription) {
         TargetNode<XcodeWorkspaceConfigDescriptionArg> castedWorkspaceNode =
@@ -492,7 +488,7 @@ public class XCodeProjectCommandHelper {
           new WorkspaceAndProjectGenerator(
               xcodeDescriptions,
               workspaceCell,
-              targetGraphAndTargets.getTargetGraph(),
+              targetGraphCreationResult.getTargetGraph(),
               workspaceArgs,
               inputTarget,
               options,
@@ -681,54 +677,55 @@ public class XCodeProjectCommandHelper {
         .collect(ImmutableSet.toImmutableSet());
   }
 
-  private TargetGraphAndTargets createTargetGraph(
+  private TargetGraphCreationResult enhanceTargetGraphIfNeeded(
       Supplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutorSupplier,
       TargetGraphCreationResult targetGraphCreationResult,
       boolean isWithTests,
       boolean isWithDependenciesTests)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
 
-    ImmutableSet<BuildTarget> graphRoots = targetGraphCreationResult.getBuildTargets();
-    TargetGraph projectGraph = targetGraphCreationResult.getTargetGraph();
-
-    ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();
-    ImmutableSet<BuildTarget> graphRootsOrSourceTargets =
-        replaceWorkspacesWithSourceTargetsIfPossible(graphRoots, projectGraph);
+    ImmutableSet<BuildTarget> originalBuildTargets = targetGraphCreationResult.getBuildTargets();
 
     if (isWithTests) {
       FocusedModuleTargetMatcher focusedModules = getFocusModules();
 
-      explicitTestTargets =
+      ImmutableSet<BuildTarget> graphRootsOrSourceTargets =
+          replaceWorkspacesWithSourceTargetsIfPossible(targetGraphCreationResult);
+
+      ImmutableSet<BuildTarget> explicitTestTargets =
           getExplicitTestTargets(
-              graphRootsOrSourceTargets, projectGraph, isWithDependenciesTests, focusedModules);
-      projectGraph =
-          parser
-              .buildTargetGraph(parsingContext, MoreSets.union(graphRoots, explicitTestTargets))
-              .getTargetGraph();
+              graphRootsOrSourceTargets,
+              targetGraphCreationResult.getTargetGraph(),
+              isWithDependenciesTests,
+              focusedModules);
+
+      targetGraphCreationResult =
+          parser.buildTargetGraph(
+              parsingContext,
+              MoreSets.union(targetGraphCreationResult.getBuildTargets(), explicitTestTargets));
     }
 
-    TargetGraphAndTargets targetGraphAndTargets =
-        TargetGraphAndTargets.create(graphRoots, projectGraph, isWithTests, explicitTestTargets);
     if (buckConfig.getView(BuildBuckConfig.class).getBuildVersions()) {
-      targetGraphAndTargets =
-          VersionedTargetGraphAndTargets.toVersionedTargetGraphAndTargets(
+      targetGraphCreationResult =
+          versionedTargetGraphCache.toVersionedTargetGraph(
               depsAwareExecutorSupplier.get(),
-              versionedTargetGraphCache,
-              buckEventBus,
               buckConfig,
               typeCoercerFactory,
               unconfiguredBuildTargetFactory,
-              explicitTestTargets,
+              targetGraphCreationResult,
               targetConfiguration,
-              targetGraphAndTargets);
+              buckEventBus);
     }
-    return targetGraphAndTargets;
+    return targetGraphCreationResult.withBuildTargets(originalBuildTargets);
   }
 
   @VisibleForTesting
   static ImmutableSet<BuildTarget> replaceWorkspacesWithSourceTargetsIfPossible(
-      ImmutableSet<BuildTarget> buildTargets, TargetGraph projectGraph) {
-    Iterable<TargetNode<?>> targetNodes = projectGraph.getAll(buildTargets);
+      TargetGraphCreationResult targetGraphCreationResult) {
+    Iterable<TargetNode<?>> targetNodes =
+        targetGraphCreationResult
+            .getTargetGraph()
+            .getAll(targetGraphCreationResult.getBuildTargets());
     ImmutableSet.Builder<BuildTarget> resultBuilder = ImmutableSet.builder();
     for (TargetNode<?> node : targetNodes) {
       if (node.getDescription() instanceof XcodeWorkspaceConfigDescription) {

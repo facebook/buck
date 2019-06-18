@@ -33,6 +33,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TestTargetGraphCreationResultFactory;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -328,7 +329,7 @@ public class XCodeProjectCommandHelperTest {
 
     ImmutableMap<BuildTarget, TargetNode<?>> sharedLibraryToBundle =
         ProjectGenerator.computeSharedLibrariesToBundles(
-            ImmutableSet.of(sharedLibNode, bundleNode), targetGraphAndTargets);
+            ImmutableSet.of(sharedLibNode, bundleNode), targetGraphAndTargets.getTargetGraph());
     assertTrue(sharedLibraryToBundle.containsKey(sharedLibTarget));
     assertTrue(sharedLibraryToBundle.containsValue(bundleNode));
     assertEquals(sharedLibraryToBundle.size(), 1);
@@ -459,7 +460,7 @@ public class XCodeProjectCommandHelperTest {
 
     ImmutableSet<BuildTarget> graphRootsOrSourceTargets =
         XCodeProjectCommandHelper.replaceWorkspacesWithSourceTargetsIfPossible(
-            graphRoots, projectGraph);
+            TestTargetGraphCreationResultFactory.create(projectGraph, graphRoots));
 
     ImmutableSet<BuildTarget> explicitTests;
     if (withTests) {
@@ -497,8 +498,8 @@ public class XCodeProjectCommandHelperTest {
         FakeBuckConfig.builder().build(),
         TestRuleKeyConfigurationFactory.create(),
         MoreExecutors.newDirectExecutorService(),
-        targetGraphAndTargets,
-        passedInTargetsSet,
+        TestTargetGraphCreationResultFactory.create(
+            targetGraphAndTargets.getTargetGraph(), passedInTargetsSet),
         ProjectGeneratorOptions.builder()
             .setShouldGenerateReadOnlyFiles(false)
             .setShouldIncludeTests(isWithTests)
