@@ -41,6 +41,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 
 /**
  * Transformation engine that transforms supplied {@link ComputeKey} into {@link ComputeResult} via
@@ -167,6 +168,8 @@ public final class DefaultGraphTransformationEngine implements GraphTransformati
     @VisibleForTesting
     final ConcurrentHashMap<ComputeKey<? extends ComputeResult>, TaskType> computationIndex;
 
+    private volatile boolean isClosed;
+
     /**
      * @param transformationStageMap a map of the key types to the transformation stages
      * @param estimatedNumOps the estimated number of operations this engine will execute given a
@@ -183,12 +186,17 @@ public final class DefaultGraphTransformationEngine implements GraphTransformati
     }
 
     public void close() {
-      executor.close();
+      isClosed = true;
+      computationIndex.clear();
     }
 
     @SuppressWarnings("unchecked")
     private <UResultType extends ComputeResult, UKeyType extends ComputeKey<UResultType>>
         Future<UResultType> compute(UKeyType key) {
+      if (isClosed) {
+        throw new RejectedExecutionException("GraphEngine has been closed");
+      }
+
       LOG.verbose("Attempting to load from cache for key: %s", key);
       GraphComputationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult> stage =
           transformationStageMap.get(key);
