@@ -16,22 +16,17 @@
 package com.facebook.buck.intellij.ideabuck.macro;
 
 import com.facebook.buck.intellij.ideabuck.api.BuckCellManager;
-import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.DataContext;
-import com.intellij.openapi.project.Project;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * Macro that expands to the cell name, e.g., for "foo//bar/baz:qux/file.txt", returns the
- * fully-qualified path to the root of the "foo" cell.
- */
-public class BuckCellRootMacro extends AbstractBuckTargetPatternMacro {
+/** Macro that expands to the root of a buck cell. */
+public class BuckCellRootDirMacro extends AbstractBuckMacro {
 
   @Override
   public String getName() {
-    return "BuckCellRoot";
+    return "BuckCellRootDir";
   }
 
   @Override
@@ -42,39 +37,32 @@ public class BuckCellRootMacro extends AbstractBuckTargetPatternMacro {
   }
 
   @Nullable
-  private String expandCellName(DataContext dataContext, String cellName) {
-    Project project = CommonDataKeys.PROJECT.getData(dataContext);
-    if (project == null || project.isDefault()) {
-      return null;
-    }
-    BuckCellManager buckCellManager = BuckCellManager.getInstance(project);
-    Optional<? extends BuckCellManager.Cell> cell;
-    if ("".equals(cellName)) {
-      cell = buckCellManager.getDefaultCell();
-    } else {
-      cell = buckCellManager.findCellByName(cellName);
-    }
-    return cell.map(BuckCellManager.Cell::getRootPath)
+  private String extractCellPath(BuckCellManager.Cell cell) {
+    return Optional.of(cell)
+        .map(BuckCellManager.Cell::getRootPath)
         .map(Path::toAbsolutePath)
         .map(Path::toString)
         .orElse(null);
   }
 
-  /** With no arguments, expands to the cell root of the active selection. */
+  /**
+   * Unparameterized version expands to the path to the root of the cell containing the active
+   * selection. e.g., if "foo//bar/baz:qux/file.txt", is selected, this returns the fully-qualified
+   * path to the root of the "foo" cell.
+   */
   @Nullable
   @Override
   public String expand(DataContext dataContext) {
-    return expandToTargetPattern(dataContext)
-        .map(pattern -> pattern.getCellName().orElse(""))
-        .map(cellName -> expandCellName(dataContext, cellName))
-        .orElse(null);
+    return getSelectedCell(dataContext).map(this::extractCellPath).orElse(null);
   }
 
-  /** With an argument, expands to the cell root of the named cell. */
+  /**
+   * Parameterized version of this macro expands to the path to the root of the named cell (or the
+   * default cell, if no parameter or the empty string are supplied).
+   */
   @Nullable
   @Override
   public String expand(DataContext dataContext, String... args) {
-    String cellName = (args.length == 0) ? expand(dataContext) : args[0];
-    return expandCellName(dataContext, cellName);
+    return getCellFromParameters(dataContext, args).map(this::extractCellPath).orElse(null);
   }
 }

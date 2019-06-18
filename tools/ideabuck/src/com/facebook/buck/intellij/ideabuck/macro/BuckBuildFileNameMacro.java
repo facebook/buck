@@ -15,33 +15,30 @@
  */
 package com.facebook.buck.intellij.ideabuck.macro;
 
+import com.facebook.buck.intellij.ideabuck.api.BuckCellManager;
 import com.intellij.openapi.actionSystem.DataContext;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * For a selection that resolves to a {@link
- * com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern}, expands to the target's rule.
- *
- * <p>Example: for {@code foo//bar/baz:qux/file.txt}, returns {@code qux/file.txt}.
- */
-public class BuckRuleNameMacro extends AbstractBuckTargetPatternMacro {
-
-  @Override
-  public String getName() {
-    return "BuckRuleName";
-  }
-
+/** Expands to the buildfile name of the selected or named cell. */
+public class BuckBuildFileNameMacro extends AbstractBuckMacro {
   @Override
   public String getDescription() {
-    return "Relative path to the selected file from its build file"
-        + " (or from the cell root, if no build file exists) to the selected file.";
+    return "If no parameters are supplied and a file is selected,"
+        + " returns the buildfile name of the cell containing the selection."
+        + " If a parameter is supplied, returns the buildfile name of the named cell.";
   }
 
   @Nullable
   @Override
   public String expand(DataContext dataContext) {
-    return expandToTargetPattern(dataContext)
-        .map(pattern -> pattern.getRuleName().orElse(""))
+    return getSelectedCell(dataContext).map(BuckCellManager.Cell::getBuildfileName).orElse(null);
+  }
+
+  @Nullable
+  @Override
+  public String expand(DataContext dataContext, String... args) {
+    return getCellFromParameters(dataContext, args)
+        .map(BuckCellManager.Cell::getBuildfileName)
         .orElse(null);
   }
 }

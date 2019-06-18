@@ -12,21 +12,20 @@
   <change-notes><![CDATA[
 <h3>3.7.5</h3>
 <ul>
-  <li></li>
+  <li>Refine macros for External Tools:
+    <ul>
+      <li><code>$BuckExecutable$</code>: Path to the buck executable for the active project</li>
+      <li><code>$BuckCoordinates$</code>: fully-qualified TargetPattern for the active selection</li>
+      <li><code>$BuckCellName$, $BuckCellRelativePath$, $BuckRuleName$</code>: components of the <code>$BuckCoordinates$</code></li>
+      <li><code>$BuckCellRoot$</code>: path to cell root for the selected file</li>
+      <li><code>$BuckCellRoot(name)$</code>: path to cell root for the named cell</li>
+    </ul>
+  </li>
 </ul>
 </h3>
 <h3>3.7.4</h3>
 <ul>
   <li>Support buck commands as "Before Run" tasks/</li>
-  <li>Add macros to make it possible to pass buck information to External Tools:
-    <ul>
-      <li><code>$BuckExecutable$</code>: Path to the buck executable for the active project</li>
-      <li><code>$BuckTargetPattern$</code>: fully-qualified TargetPattern for the active selection</li>
-      <li><code>$BuckCellName$, $BuckCellRelativePath$, $BuckRuleName$</code>: components of the <code>$BuckTargetPattern$</code></li>
-      <li><code>$BuckCellRoot$</code>: path to cell root for the selected file</li>
-      <li><code>$BuckCellRoot(name)$</code>: path to cell root for the named cell</li>
-    </ul>
-  </li>
 </ul>
 <h3>3.7.3</h3>
 <ul>
@@ -349,12 +348,13 @@
     <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$SimpleExpression"/>
     <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$Statement"/>
 
-    <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckExecutableMacro"/>
-    <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckTargetPatternMacro"/>
+    <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckBuildFileNameMacro"/>
+    <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckBuildFilePathMacro"/>
     <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckCellNameMacro"/>
-    <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckCellRootMacro"/>
-    <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckCellRelativePathMacro"/>
-    <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckRuleNameMacro"/>
+    <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckCellRelativeBuildFilePathMacro"/>
+    <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckCellRelativeFilePathMacro"/>
+    <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckCellRootDirMacro"/>
+    <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckExecutableMacro"/>
 
     <stepsBeforeRunProvider implementation="com.facebook.buck.intellij.ideabuck.configurations.BuckCommandBeforeRunTaskProvider"/>
 

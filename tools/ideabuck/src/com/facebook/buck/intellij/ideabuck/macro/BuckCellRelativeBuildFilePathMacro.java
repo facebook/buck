@@ -15,26 +15,37 @@
  */
 package com.facebook.buck.intellij.ideabuck.macro;
 
-import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
+import com.facebook.buck.intellij.ideabuck.api.BuckCellManager;
 import com.intellij.openapi.actionSystem.DataContext;
 import org.jetbrains.annotations.Nullable;
 
-/** Macro that expands to the fully-qualified target pattern, e.g., "foo//bar/baz:qux/file.txt" */
-public class BuckTargetPatternMacro extends AbstractBuckTargetPatternMacro {
+/**
+ * For a selection within a cell, expands to the path to its nearest ancestral build file, relative
+ * to the cell root.
+ *
+ * <p>Example: for {@code foo//bar/baz:qux/file.txt}, returns {@code bar/baz/BUCK}.
+ */
+public class BuckCellRelativeBuildFilePathMacro extends AbstractBuckMacro {
 
   @Override
   public String getName() {
-    return "BuckTargetPattern";
+    return "BuckCellRelativeBuildFilePath";
   }
 
   @Override
   public String getDescription() {
-    return "Full target pattern for the selected file";
+    return "Relative path from the root of the cell to the build file for the selected file";
   }
 
   @Nullable
   @Override
   public String expand(DataContext dataContext) {
-    return expandToTargetPattern(dataContext).map(BuckTargetPattern::toString).orElse(null);
+    return getBuildFile(dataContext)
+        .flatMap(
+            buildFile ->
+                getSelectedCell(dataContext)
+                    .flatMap(BuckCellManager.Cell::getRootDirectory)
+                    .map(root -> getRelativePath(root, buildFile)))
+        .orElse(null);
   }
 }

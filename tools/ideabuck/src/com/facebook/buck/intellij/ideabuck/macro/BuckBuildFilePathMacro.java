@@ -16,32 +16,33 @@
 package com.facebook.buck.intellij.ideabuck.macro;
 
 import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * For a selection that resolves to a {@link
- * com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern}, expands to the target's relative path
- * within the cell.
- *
- * <p>Example: for {@code foo//bar/baz:qux/file.txt}, returns {@code bar/baz}.
+ * Returns the full path to the nearest ancestral buck build file for the active selection, within
+ * the selection's cell.
  */
-public class BuckCellRelativePathMacro extends AbstractBuckTargetPatternMacro {
-
+public class BuckBuildFilePathMacro extends AbstractBuckMacro {
   @Override
   public String getName() {
-    return "BuckCellRelativePath";
+    return "BuckBuildFilePath";
   }
 
   @Override
   public String getDescription() {
-    return "Relative path from the root of the cell to the build file for the selected file";
+    return "The absolute path to the Buck build file for the active selection";
   }
 
   @Nullable
   @Override
   public String expand(DataContext dataContext) {
-    return expandToTargetPattern(dataContext)
-        .map(pattern -> pattern.getCellPath().orElse(""))
+    return getSelection(dataContext)
+        .flatMap(
+            selection ->
+                getBuckTargetLocator(dataContext)
+                    .flatMap(locator -> locator.findBuckFileForVirtualFile(selection))
+                    .map(VirtualFile::getPath))
         .orElse(null);
   }
 }

@@ -18,13 +18,8 @@ package com.facebook.buck.intellij.ideabuck.macro;
 import com.intellij.openapi.actionSystem.DataContext;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * For a selection that resolves to a {@link
- * com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern}, expands to the target's cell name.
- *
- * <p>Example: for {@code foo//bar/baz:qux/file.txt}, returns {@code foo}.
- */
-public class BuckCellNameMacro extends AbstractBuckTargetPatternMacro {
+/** Macro that expands to a cell name. */
+public class BuckCellNameMacro extends AbstractBuckMacro {
 
   @Override
   public String getName() {
@@ -33,14 +28,27 @@ public class BuckCellNameMacro extends AbstractBuckTargetPatternMacro {
 
   @Override
   public String getDescription() {
-    return "Name of the cell containing the selected file";
+    return "Unparameterized, expands to the name of the cell containing the selection."
+        + " Parameterized, expands to the cell with the given name (only if it exists).";
   }
 
+  /** Unparameterized, expands to the name of the cell containing the active selection. */
   @Nullable
   @Override
   public String expand(DataContext dataContext) {
-    return expandToTargetPattern(dataContext)
-        .map(pattern -> pattern.getCellName().orElse(""))
+    return getSelectedCell(dataContext).map(cell -> cell.getName().orElse("")).orElse(null);
+  }
+
+  /**
+   * Parameterized, expands the default cell (for no args) or the given cell name, but <em>only if
+   * these cells exist</em>. Therefore, this macro can be used to verify that the user's ideabuck
+   * configuration includes knowledge of a cell of a given name.
+   */
+  @Nullable
+  @Override
+  public String expand(DataContext dataContext, String... args) {
+    return getCellFromParameters(dataContext, args)
+        .map(cell -> cell.getName().orElse(""))
         .orElse(null);
   }
 }
