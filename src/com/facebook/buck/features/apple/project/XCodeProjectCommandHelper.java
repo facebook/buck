@@ -38,6 +38,7 @@ import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -220,13 +221,12 @@ public class XCodeProjectCommandHelper {
   }
 
   public ExitCode parseTargetsAndRunXCodeGenerator() throws IOException, InterruptedException {
-    ImmutableSet<BuildTarget> passedInTargetsSet;
-    TargetGraph projectGraph;
+    TargetGraphCreationResult targetGraphCreationResult;
 
     LOG.debug("Xcode project generation: Getting the target graph");
 
     try {
-      passedInTargetsSet =
+      ImmutableSet<BuildTarget> passedInTargetsSet =
           ImmutableSet.copyOf(
               Iterables.concat(
                   parser.resolveTargetSpecs(
@@ -236,12 +236,13 @@ public class XCodeProjectCommandHelper {
       if (passedInTargetsSet.isEmpty()) {
         throw new HumanReadableException("Could not find targets matching arguments");
       }
-      projectGraph = parser.buildTargetGraph(parsingContext, passedInTargetsSet).getTargetGraph();
+      targetGraphCreationResult = parser.buildTargetGraph(parsingContext, passedInTargetsSet);
       if (arguments.isEmpty()) {
-        passedInTargetsSet =
-            getRootsFromPredicate(
-                projectGraph,
-                node -> node.getDescription() instanceof XcodeWorkspaceConfigDescription);
+        targetGraphCreationResult =
+            targetGraphCreationResult.withBuildTargets(
+                getRootsFromPredicate(
+                    targetGraphCreationResult.getTargetGraph(),
+                    node -> node.getDescription() instanceof XcodeWorkspaceConfigDescription));
       }
     } catch (BuildFileParseException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
@@ -262,10 +263,9 @@ public class XCodeProjectCommandHelper {
       targetGraphAndTargets =
           createTargetGraph(
               depsAwareExecutorSupplier,
-              passedInTargetsSet,
+              targetGraphCreationResult,
               isWithTests(buckConfig),
-              isWithDependenciesTests(buckConfig),
-              projectGraph);
+              isWithDependenciesTests(buckConfig));
     } catch (BuildFileParseException | NoSuchTargetException | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -294,7 +294,7 @@ public class XCodeProjectCommandHelper {
     LOG.debug("Xcode project generation: Run the project generator");
 
     return runXcodeProjectGenerator(
-        targetGraphAndTargets, passedInTargetsSet, sharedLibraryToBundle);
+        targetGraphAndTargets, targetGraphCreationResult, sharedLibraryToBundle);
   }
 
   private static String getIDEForceKillSectionName() {
@@ -353,7 +353,7 @@ public class XCodeProjectCommandHelper {
   /** Run xcode specific project generation actions. */
   private ExitCode runXcodeProjectGenerator(
       TargetGraphAndTargets targetGraphAndTargets,
-      ImmutableSet<BuildTarget> passedInTargetsSet,
+      TargetGraphCreationResult targetGraphCreationResult,
       Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle)
       throws IOException, InterruptedException {
     ExitCode exitCode = ExitCode.SUCCESS;
@@ -389,7 +389,7 @@ public class XCodeProjectCommandHelper {
             ruleKeyConfiguration,
             executorService,
             targetGraphAndTargets,
-            passedInTargetsSet,
+            targetGraphCreationResult.getBuildTargets(),
             options,
             appleCxxFlavors,
             getFocusModules(),
@@ -683,11 +683,13 @@ public class XCodeProjectCommandHelper {
 
   private TargetGraphAndTargets createTargetGraph(
       Supplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutorSupplier,
-      ImmutableSet<BuildTarget> graphRoots,
+      TargetGraphCreationResult targetGraphCreationResult,
       boolean isWithTests,
-      boolean isWithDependenciesTests,
-      TargetGraph projectGraph)
+      boolean isWithDependenciesTests)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
+
+    ImmutableSet<BuildTarget> graphRoots = targetGraphCreationResult.getBuildTargets();
+    TargetGraph projectGraph = targetGraphCreationResult.getTargetGraph();
 
     ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();
     ImmutableSet<BuildTarget> graphRootsOrSourceTargets =
