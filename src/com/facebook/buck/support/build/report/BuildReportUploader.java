@@ -56,7 +56,11 @@ public class BuildReportUploader {
             .readTimeout(timeout, TimeUnit.MILLISECONDS)
             .writeTimeout(timeout, TimeUnit.MILLISECONDS);
 
-    return uploadReport(httpClientBuilder.build(), report, endpointUrl, ImmutableMap.of());
+    return uploadReport(
+        httpClientBuilder.build(),
+        report,
+        endpointUrl,
+        ImmutableMap.of("uuid", report.getBuildId().toString()));
   }
 
   private static RequestBody createRequestBody(

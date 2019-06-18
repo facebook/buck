@@ -19,6 +19,7 @@ import static org.junit.Assert.*;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -41,6 +42,8 @@ public class BuildReportUploaderTest {
               "[section1]\nfield1 = value1.1, value1.2\n[section2]\nfield2 = value2\nfield4 = value2")
           .build();
 
+  private BuildId buildId = new BuildId();
+
   private class BuildReportHandler extends AbstractHandler {
     @Override
     public void handle(
@@ -48,6 +51,9 @@ public class BuildReportUploaderTest {
         throws IOException {
       httpResponse.setStatus(200);
       request.setHandled(true);
+
+      String uuid = request.getParameter("uuid");
+      assertEquals(buildId.toString(), uuid);
 
       JsonNode reportReceived = ObjectMappers.READER.readTree(httpRequest.getParameter("data"));
 
@@ -70,7 +76,7 @@ public class BuildReportUploaderTest {
   @Test
   public void uploadReportToTestServer() throws Exception {
 
-    FullBuildReport reportToSend = new ImmutableFullBuildReport(buckConfig.getConfig());
+    FullBuildReport reportToSend = new ImmutableFullBuildReport(buckConfig.getConfig(), buildId);
 
     try (HttpdForTests httpd = HttpdForTests.httpdForOkHttpTests()) {
       httpd.addHandler(new BuildReportHandler());

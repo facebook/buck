@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.support.build.report;
 
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.config.Config;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -32,4 +33,6 @@ public interface FullBuildReport {
   /** @return the contents of the message that endpoint returned. */
   @JsonProperty
   Config currentConfig();
+
+  BuildId getBuildId();
 }

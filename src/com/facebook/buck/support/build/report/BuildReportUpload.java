@@ -16,6 +16,7 @@
 package com.facebook.buck.support.build.report;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
@@ -35,8 +36,8 @@ public class BuildReportUpload {
   private final TaskManagerCommandScope managerScope;
   private final FullBuildReport report;
 
-  BuildReportUpload(TaskManagerCommandScope managerScope, Config config) {
-    this.report = new ImmutableFullBuildReport(config);
+  BuildReportUpload(TaskManagerCommandScope managerScope, Config config, BuildId buildId) {
+    this.report = new ImmutableFullBuildReport(config, buildId);
     this.managerScope = managerScope;
   }
 
@@ -48,8 +49,13 @@ public class BuildReportUpload {
    *     determine whether the report should be uploaded
    */
   public static void runBuildReportUpload(
-      TaskManagerCommandScope managerScope, BuckConfig buckConfig) {
+      TaskManagerCommandScope managerScope, BuckConfig buckConfig, BuildId buildId) {
     BuildReportConfig buildReportConfig = buckConfig.getView(BuildReportConfig.class);
+
+    if (!buildReportConfig.getEnabled()) {
+      LOG.info("Build report is not enabled");
+      return;
+    }
 
     Optional<URL> endpointUrl = buildReportConfig.getEndpointUrl();
 
@@ -58,7 +64,7 @@ public class BuildReportUpload {
       return;
     }
 
-    new BuildReportUpload(managerScope, buckConfig.getConfig())
+    new BuildReportUpload(managerScope, buckConfig.getConfig(), buildId)
         .uploadInBackground(endpointUrl.get(), buildReportConfig.getEndpointTimeoutMs());
   }
 

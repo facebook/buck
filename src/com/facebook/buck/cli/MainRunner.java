@@ -148,6 +148,7 @@ import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
+import com.facebook.buck.support.build.report.BuildReportUpload;
 import com.facebook.buck.support.cli.args.BuckArgsMethods;
 import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.support.exceptions.handler.ExceptionHandlerRegistryFactory;
@@ -963,6 +964,11 @@ public final class MainRunner {
                   },
                   ManifestService::close);
           ) {
+
+        if (command.getSubcommand().isPresent()
+            && command.getSubcommand().get() instanceof BuildCommand) {
+          BuildReportUpload.runBuildReportUpload(managerScope, buckConfig, buildId);
+        }
 
         CommonThreadFactoryState commonThreadFactoryState =
             GlobalStateManager.singleton().getThreadToCommandRegister();
