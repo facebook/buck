@@ -32,8 +32,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
@@ -110,10 +108,9 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
 
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar#dex");
-    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(
-            buildTarget, filesystem, androidPlatformTarget, params, javaLibraryRule);
+            buildTarget, filesystem, graphBuilder, androidPlatformTarget, javaLibraryRule);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
@@ -172,13 +169,12 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#dex");
-    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(
             buildTarget,
             projectFilesystem,
+            graphBuilder,
             TestAndroidPlatformTargetFactory.create(),
-            params,
             javaLibrary);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
@@ -214,13 +210,12 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary preDexWithClasses =
         new DexProducedFromJavaLibrary(
             buildTarget,
             projectFilesystem,
+            graphBuilder,
             TestAndroidPlatformTargetFactory.create(),
-            params,
             accumulateClassNames);
     assertNull(preDexWithClasses.getSourcePathToOutput());
     assertEquals(

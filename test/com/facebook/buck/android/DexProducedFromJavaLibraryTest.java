@@ -26,7 +26,6 @@ import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -91,8 +90,8 @@ public class DexProducedFromJavaLibraryTest {
         new DexProducedFromJavaLibrary(
             BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar#d8"),
             filesystem,
+            graphBuilder,
             TestAndroidPlatformTargetFactory.create(),
-            TestBuildRuleParams.create(),
             javaBarRule,
             DxStep.D8,
             1,

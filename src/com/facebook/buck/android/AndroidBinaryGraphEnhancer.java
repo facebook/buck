@@ -590,8 +590,8 @@ public class AndroidBinaryGraphEnhancer {
           new DexProducedFromJavaLibrary(
               splitJarTarget.withAppendedFlavors(dexFlavor, rtypeFlavor, getDexFlavor(dexTool)),
               projectFilesystem,
+              graphBuilder,
               androidPlatformTarget,
-              buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(prebuiltJar)),
               prebuiltJar,
               dexTool,
               weightFactor,
@@ -754,14 +754,12 @@ public class AndroidBinaryGraphEnhancer {
                             && javaLibrary.isInterfaceMethodsDesugarEnabled()
                         ? getDesugarDeps(javaLibrary, graphBuilder::getRule)
                         : ImmutableSortedSet.of();
-                BuildRuleParams paramsForPreDex =
-                    buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(javaLibrary));
 
                 return new DexProducedFromJavaLibrary(
                     preDexTarget,
                     javaLibrary.getProjectFilesystem(),
+                    graphBuilder,
                     androidPlatformTarget,
-                    paramsForPreDex,
                     javaLibrary,
                     dexTool,
                     1,

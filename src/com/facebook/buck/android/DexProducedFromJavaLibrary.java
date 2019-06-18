@@ -26,11 +26,12 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
-import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -43,6 +44,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.util.Memoizer;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -63,6 +65,7 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -77,7 +80,7 @@ import javax.annotation.Nullable;
  * until runtime. Unfortunately, because there is no such thing as an empty {@code .dex} file, we
  * cannot write a meaningful "dummy .dex" if there are no class files to pass to {@code dx}.
  */
-public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
+public class DexProducedFromJavaLibrary extends AbstractBuildRule
     implements SupportsInputBasedRuleKey,
         InitializableFromDisk<DexProducedFromJavaLibrary.BuildOutput> {
 
@@ -98,20 +101,21 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
 
   private final JavaLibrary javaLibrary;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
+  private final SourcePathRuleFinder sourcePathRuleFinder;
+  private final Memoizer<ImmutableSortedSet<BuildRule>> buildDepsSupplier = new Memoizer<>();
 
   public DexProducedFromJavaLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      SourcePathRuleFinder ruleFinder,
       AndroidPlatformTarget androidPlatformTarget,
-      BuildRuleParams params,
       JavaLibrary javaLibrary,
       String dexTool,
       int weightFactor,
       ImmutableSortedSet<BuildRule> desugarDeps) {
-    super(
-        buildTarget,
-        projectFilesystem,
-        !desugarDeps.isEmpty() ? params.withExtraDeps(desugarDeps) : params);
+    super(buildTarget, projectFilesystem);
+    this.sourcePathRuleFinder = ruleFinder;
+
     this.dexTool = dexTool;
     this.weightFactor = weightFactor;
     this.desugarDeps = getDesugarClassPaths(desugarDeps);
@@ -126,14 +130,14 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
   public DexProducedFromJavaLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      SourcePathRuleFinder ruleFinder,
       AndroidPlatformTarget androidPlatformTarget,
-      BuildRuleParams params,
       JavaLibrary javaLibrary) {
     this(
         buildTarget,
         projectFilesystem,
+        ruleFinder,
         androidPlatformTarget,
-        params,
         javaLibrary,
         DxStep.DX,
         1,
@@ -391,5 +395,13 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
             .resolve(DEX_RULE_METADATA)
             .resolve(REFERENCED_RESOURCES);
     return filesystem.readFileIfItExists(resourcesFile);
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDepsSupplier.get(
+        () ->
+            BuildableSupport.deriveDeps(this, sourcePathRuleFinder)
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder())));
   }
 }

@@ -22,9 +22,7 @@ import static org.junit.Assert.assertNull;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -44,13 +42,12 @@ public class DexWithClassesTest {
     JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget);
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:lib#dex");
-    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary dexFromJavaLibrary =
         new DexProducedFromJavaLibrary(
             buildTarget,
             new FakeProjectFilesystem(),
+            new TestActionGraphBuilder(),
             TestAndroidPlatformTargetFactory.create(),
-            params,
             javaLibrary);
     dexFromJavaLibrary
         .getBuildOutputInitializer()
@@ -78,13 +75,12 @@ public class DexWithClassesTest {
     JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget);
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:lib#dex");
-    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary dexFromJavaLibrary =
         new DexProducedFromJavaLibrary(
             buildTarget,
             new FakeProjectFilesystem(),
+            new TestActionGraphBuilder(),
             TestAndroidPlatformTargetFactory.create(),
-            params,
             javaLibrary);
     dexFromJavaLibrary
         .getBuildOutputInitializer()
