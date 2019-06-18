@@ -232,7 +232,7 @@ public class IjProjectCommandHelper {
 
     return processAnnotations
         ? buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(
-            targetGraphAndTargets, requiredBuildTargets)
+            targetGraphAndTargets.getTargetGraph(), requiredBuildTargets)
         : runBuild(requiredBuildTargets);
   }
 
@@ -258,7 +258,7 @@ public class IjProjectCommandHelper {
 
     IjProject project =
         new IjProject(
-            targetGraphAndTargets,
+            targetGraphAndTargets.getTargetGraph(),
             getJavaPackageFinder(buckConfig),
             JavaFileParser.createJavaFileParser(languageLevelOptions),
             graphBuilder,
@@ -276,10 +276,10 @@ public class IjProjectCommandHelper {
   }
 
   private ExitCode buildRequiredTargetsWithoutUsingCacheForAnnotatedTargets(
-      TargetGraphAndTargets targetGraphAndTargets, ImmutableSet<BuildTarget> requiredBuildTargets)
+      TargetGraph targetGraph, ImmutableSet<BuildTarget> requiredBuildTargets)
       throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> annotatedTargets =
-        getTargetsWithAnnotations(targetGraphAndTargets.getTargetGraph(), requiredBuildTargets);
+        getTargetsWithAnnotations(targetGraph, requiredBuildTargets);
 
     ImmutableSet<BuildTarget> unannotatedTargets =
         Sets.difference(requiredBuildTargets, annotatedTargets).immutableCopy();
