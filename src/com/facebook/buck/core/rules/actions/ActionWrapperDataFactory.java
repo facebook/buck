@@ -32,6 +32,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import java.lang.reflect.Constructor;
 import java.nio.file.Path;
 
 /**
@@ -104,9 +105,13 @@ public class ActionWrapperDataFactory {
     try {
       // TODO(bobyf): we can probably do some stuff here with annotation processing to generate
       // typed creation instead of reflection
+      Constructor<?>[] constructors = actionClazz.getConstructors();
+      Preconditions.checkArgument(
+          constructors.length == 1,
+          "Action classes must be public, and have exactly one public constructor");
       T action =
           (T)
-              actionClazz.getConstructors()[0].newInstance(
+              constructors[0].newInstance(
                   buildTarget, inputs, materializedOutputsMap.values(), args);
       ActionWrapperData actionAnalysisData = ImmutableActionWrapperData.of(key, action);
       actionRegistry.registerAction(actionAnalysisData);
