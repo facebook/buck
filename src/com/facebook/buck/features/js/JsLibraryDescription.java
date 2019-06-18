@@ -58,7 +58,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -160,7 +159,7 @@ public class JsLibraryDescription
               .filter(target -> JsUtil.isJsLibraryTarget(target, context.getTargetGraph()));
       Stream<BuildTarget> declaredDeps = args.getDeps().stream();
       Stream<BuildTarget> deps = Stream.concat(declaredDeps, queryDeps);
-      return new LibraryBuilder(context.getTargetGraph(), graphBuilder, buildTarget, baseParams)
+      return new LibraryBuilder(context.getTargetGraph(), graphBuilder, buildTarget)
           .setLibraryDependencies(deps)
           .build(projectFilesystem, worker);
     }
@@ -264,18 +263,13 @@ public class JsLibraryDescription
     private final TargetGraph targetGraph;
     private final ActionGraphBuilder graphBuilder;
     private final BuildTarget baseTarget;
-    private final BuildRuleParams baseParams;
 
     @Nullable private ImmutableList<JsLibrary> libraryDependencies;
 
     private LibraryBuilder(
-        TargetGraph targetGraph,
-        ActionGraphBuilder graphBuilder,
-        BuildTarget baseTarget,
-        BuildRuleParams baseParams) {
+        TargetGraph targetGraph, ActionGraphBuilder graphBuilder, BuildTarget baseTarget) {
       this.targetGraph = targetGraph;
       this.baseTarget = baseTarget;
-      this.baseParams = baseParams;
       this.graphBuilder = graphBuilder;
     }
 
@@ -293,12 +287,11 @@ public class JsLibraryDescription
       Objects.requireNonNull(libraryDependencies, "No library dependencies set");
 
       BuildTarget filesTarget = baseTarget.withAppendedFlavors(JsFlavors.LIBRARY_FILES);
-      BuildRule filesRule = graphBuilder.requireRule(filesTarget);
+      graphBuilder.requireRule(filesTarget);
       return new JsLibrary(
           baseTarget,
           projectFilesystem,
-          baseParams.copyAppendingExtraDeps(
-              Iterables.concat(ImmutableList.of(filesRule), libraryDependencies)),
+          graphBuilder,
           graphBuilder.getRuleWithType(filesTarget, JsLibrary.Files.class).getSourcePathToOutput(),
           libraryDependencies.stream()
               .map(JsLibrary::getSourcePathToOutput)

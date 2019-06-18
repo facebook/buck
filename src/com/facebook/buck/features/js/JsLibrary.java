@@ -25,6 +25,8 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -40,28 +42,30 @@ import com.facebook.buck.util.json.JsonBuilder.ObjectBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.SortedSet;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
-public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+/** JsLibrary rule */
+public class JsLibrary extends AbstractBuildRule {
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> libraryDependencies;
-
   @AddToRuleKey private final BuildTargetSourcePath filesDependency;
-
   @AddToRuleKey private final WorkerTool worker;
+  private final BuildableSupport.DepsSupplier depsSupplier;
 
-  protected JsLibrary(
+  JsLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      SourcePathRuleFinder ruleFinder,
       BuildTargetSourcePath filesDependency,
       ImmutableSortedSet<SourcePath> libraryDependencies,
       WorkerTool worker) {
-    super(buildTarget, projectFilesystem, params);
+    super(buildTarget, projectFilesystem);
     this.filesDependency = filesDependency;
     this.libraryDependencies = libraryDependencies;
     this.worker = worker;
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
   }
 
   @Override
@@ -102,7 +106,7 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jslib"));
   }
 
-  public ImmutableSortedSet<SourcePath> getLibraryDependencies() {
+  ImmutableSortedSet<SourcePath> getLibraryDependencies() {
     return libraryDependencies;
   }
 
@@ -117,11 +121,16 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             getBuildTarget()));
   }
 
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return depsSupplier.get();
+  }
+
   /**
-   * An internal rule type to make he aggregation result of {@link JsFile} dependencies cacheable
+   * An internal rule type to make the aggregation result of {@link JsFile} dependencies cacheable
    * independently of {@link JsLibrary} dependencies.
    */
-  public static class Files extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+  static class Files extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     @AddToRuleKey private final ImmutableSortedSet<BuildTargetSourcePath> sources;
 
