@@ -33,7 +33,7 @@ import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
+import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.CxxConstructorArg;
@@ -387,7 +387,7 @@ public class GoProjectCommandHelper {
     } else {
       nodes = projectRoots;
     }
-    return TargetGraphAndTargets.getExplicitTestTargets(nodes.iterator());
+    return TargetNodes.getTestTargetsForNodes(nodes.iterator());
   }
 
   private ExitCode runBuild(ImmutableSet<BuildTarget> targets) throws Exception {

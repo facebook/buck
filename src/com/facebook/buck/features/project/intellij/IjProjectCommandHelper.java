@@ -33,7 +33,7 @@ import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
+import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -404,8 +404,7 @@ public class IjProjectCommandHelper {
     } else {
       nodes = projectRoots;
     }
-    ImmutableSet<BuildTarget> tests =
-        TargetGraphAndTargets.getExplicitTestTargets(nodes.iterator());
+    ImmutableSet<BuildTarget> tests = TargetNodes.getTestTargetsForNodes(nodes.iterator());
 
     return filterTests(
         tests,

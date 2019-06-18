@@ -19,7 +19,10 @@ package com.facebook.buck.core.model.targetgraph.impl;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.util.RichStream;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Iterator;
 import java.util.Optional;
 
 /** Utility class to work with {@link TargetNode} objects. */
@@ -39,6 +42,16 @@ public class TargetNodes {
     } else {
       return ImmutableSortedSet.of();
     }
+  }
+
+  /**
+   * @param nodes Nodes whose test targets we would like to find
+   * @return A set of all test targets that test the targets in {@code nodes}.
+   */
+  public static ImmutableSet<BuildTarget> getTestTargetsForNodes(Iterator<TargetNode<?>> nodes) {
+    return RichStream.from(nodes)
+        .flatMap(node -> getTestTargetsForNode(node).stream())
+        .toImmutableSet();
   }
 
   /** Type safe checked cast of the constructor arg. */

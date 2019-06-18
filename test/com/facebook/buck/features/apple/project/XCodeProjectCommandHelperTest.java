@@ -34,7 +34,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TestTargetGraphCreationResultFactory;
-import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
@@ -47,6 +46,7 @@ import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -72,7 +72,7 @@ public class XCodeProjectCommandHelperTest {
   private TargetNode<?> workspaceExtraTestNode;
   private TargetNode<?> smallWorkspaceNode;
 
-  private TargetGraph targetGraph;
+  private TargetGraph originalTargetGraph;
 
   @Before
   public void buildGraph() {
@@ -173,7 +173,7 @@ public class XCodeProjectCommandHelperTest {
             .setSrcTarget(Optional.of(bazLibTarget))
             .build();
 
-    targetGraph =
+    originalTargetGraph =
         TargetGraphFactory.newInstance(
             barLibNode,
             fooLibNode,
@@ -191,9 +191,9 @@ public class XCodeProjectCommandHelperTest {
 
   @Test
   public void testCreateTargetGraphWithoutTests() {
-    TargetGraphAndTargets targetGraphAndTargets =
+    TargetGraph targetGraph =
         createTargetGraph(
-            targetGraph,
+            originalTargetGraph,
             ImmutableSet.of(),
             /* withTests = */ false,
             /* withDependenciesTests = */ false);
@@ -208,14 +208,14 @@ public class XCodeProjectCommandHelperTest {
             smallWorkspaceNode,
             bazLibNode,
             workspaceExtraTestNode),
-        ImmutableSortedSet.copyOf(targetGraphAndTargets.getTargetGraph().getNodes()));
+        ImmutableSortedSet.copyOf(targetGraph.getNodes()));
   }
 
   @Test
   public void testCreateTargetGraphWithTests() {
-    TargetGraphAndTargets targetGraphAndTargets =
+    TargetGraph targetGraph =
         createTargetGraph(
-            targetGraph,
+            originalTargetGraph,
             ImmutableSet.of(),
             /* withTests = */ true,
             /* withDependenciesTests */ true);
@@ -233,14 +233,14 @@ public class XCodeProjectCommandHelperTest {
             bazLibNode,
             bazTestNode,
             workspaceExtraTestNode),
-        ImmutableSortedSet.copyOf(targetGraphAndTargets.getTargetGraph().getNodes()));
+        ImmutableSortedSet.copyOf(targetGraph.getNodes()));
   }
 
   @Test
   public void testCreateTargetGraphForSliceWithoutTests() {
-    TargetGraphAndTargets targetGraphAndTargets =
+    TargetGraph targetGraph =
         createTargetGraph(
-            targetGraph,
+            originalTargetGraph,
             ImmutableSet.of(workspaceNode.getBuildTarget()),
             /* withTests = */ false,
             /* withDependenciesTests */ false);
@@ -253,14 +253,14 @@ public class XCodeProjectCommandHelperTest {
             fooLibNode,
             barLibNode,
             workspaceExtraTestNode),
-        ImmutableSortedSet.copyOf(targetGraphAndTargets.getTargetGraph().getNodes()));
+        ImmutableSortedSet.copyOf(targetGraph.getNodes()));
   }
 
   @Test
   public void testCreateTargetGraphForSliceWithTests() {
-    TargetGraphAndTargets targetGraphAndTargets =
+    TargetGraph targetGraph =
         createTargetGraph(
-            targetGraph,
+            originalTargetGraph,
             ImmutableSet.of(workspaceNode.getBuildTarget()),
             /* withTests = */ true,
             /* withDependenciesTests */ true);
@@ -276,7 +276,7 @@ public class XCodeProjectCommandHelperTest {
             barLibNode,
             bazLibNode,
             workspaceExtraTestNode),
-        ImmutableSortedSet.copyOf(targetGraphAndTargets.getTargetGraph().getNodes()));
+        ImmutableSortedSet.copyOf(targetGraph.getNodes()));
   }
 
   @Test
@@ -317,19 +317,19 @@ public class XCodeProjectCommandHelperTest {
         .setSrcTarget(Optional.of(fooBinTarget))
         .build();
 
-    TargetGraph targetGraph =
+    TargetGraph originalTargetGraph =
         TargetGraphFactory.newInstance(
             sharedLibNode, bundleNode, fooBinBinaryNode, fooBinNode, workspaceNode);
-    TargetGraphAndTargets targetGraphAndTargets =
+    TargetGraph targetGraph =
         createTargetGraph(
-            targetGraph,
+            originalTargetGraph,
             ImmutableSet.of(workspaceNode.getBuildTarget()),
             /* withTests = */ false,
             /* withDependenciesTests */ false);
 
     ImmutableMap<BuildTarget, TargetNode<?>> sharedLibraryToBundle =
         ProjectGenerator.computeSharedLibrariesToBundles(
-            ImmutableSet.of(sharedLibNode, bundleNode), targetGraphAndTargets.getTargetGraph());
+            ImmutableSet.of(sharedLibNode, bundleNode), targetGraph);
     assertTrue(sharedLibraryToBundle.containsKey(sharedLibTarget));
     assertTrue(sharedLibraryToBundle.containsValue(bundleNode));
     assertEquals(sharedLibraryToBundle.size(), 1);
@@ -337,30 +337,30 @@ public class XCodeProjectCommandHelperTest {
 
   @Test
   public void testCreateTargetGraphForSmallSliceWithoutTests() {
-    TargetGraphAndTargets targetGraphAndTargets =
+    TargetGraph targetGraph =
         createTargetGraph(
-            targetGraph,
+            originalTargetGraph,
             ImmutableSet.of(smallWorkspaceNode.getBuildTarget()),
             /* withTests = */ false,
             /* withDependenciesTests */ false);
 
     assertEquals(
         ImmutableSortedSet.of(smallWorkspaceNode, bazLibNode),
-        ImmutableSortedSet.copyOf(targetGraphAndTargets.getTargetGraph().getNodes()));
+        ImmutableSortedSet.copyOf(targetGraph.getNodes()));
   }
 
   @Test
   public void testCreateTargetGraphForSmallSliceWithTests() {
-    TargetGraphAndTargets targetGraphAndTargets =
+    TargetGraph targetGraph =
         createTargetGraph(
-            targetGraph,
+            originalTargetGraph,
             ImmutableSet.of(smallWorkspaceNode.getBuildTarget()),
             /* withTests = */ true,
             /* withDependenciesTests */ true);
 
     assertEquals(
         ImmutableSortedSet.of(smallWorkspaceNode, bazLibNode, bazTestNode),
-        ImmutableSortedSet.copyOf(targetGraphAndTargets.getTargetGraph().getNodes()));
+        ImmutableSortedSet.copyOf(targetGraph.getNodes()));
   }
 
   @Test
@@ -383,7 +383,7 @@ public class XCodeProjectCommandHelperTest {
       boolean isWithDependenciesTests)
       throws IOException, InterruptedException {
     return generateWorkspacesForTargets(
-        targetGraph, passedInTargetsSet, isWithTests, isWithDependenciesTests);
+        originalTargetGraph, passedInTargetsSet, isWithTests, isWithDependenciesTests);
   }
 
   @Test
@@ -443,7 +443,7 @@ public class XCodeProjectCommandHelperTest {
     ProjectGeneratorTestUtils.assertTargetExists(projectGenerators.get(Paths.get("baz")), "xctest");
   }
 
-  private static TargetGraphAndTargets createTargetGraph(
+  private static TargetGraph createTargetGraph(
       TargetGraph projectGraph,
       ImmutableSet<BuildTarget> passedInTargetsSet,
       boolean withTests,
@@ -462,29 +462,31 @@ public class XCodeProjectCommandHelperTest {
         XCodeProjectCommandHelper.replaceWorkspacesWithSourceTargetsIfPossible(
             TestTargetGraphCreationResultFactory.create(projectGraph, graphRoots));
 
-    ImmutableSet<BuildTarget> explicitTests;
+    Iterable<TargetNode<?>> associatedTests = ImmutableSet.of();
     if (withTests) {
-      explicitTests =
+      ImmutableSet<BuildTarget> explicitTests =
           XCodeProjectCommandHelper.getExplicitTestTargets(
               graphRootsOrSourceTargets,
               projectGraph,
               withDependenciesTests,
               FocusedModuleTargetMatcher.noFocus());
-    } else {
-      explicitTests = ImmutableSet.of();
+      associatedTests = projectGraph.getAll(explicitTests);
     }
 
-    return TargetGraphAndTargets.create(graphRoots, projectGraph, withTests, explicitTests);
+    Iterable<TargetNode<?>> projectRoots = projectGraph.getAll(graphRoots);
+
+    return projectGraph.getSubgraph(Iterables.concat(projectRoots, associatedTests));
   }
 
   private static Map<Path, ProjectGenerator> generateWorkspacesForTargets(
-      TargetGraph targetGraph,
+      TargetGraph originalTargetGraph,
       ImmutableSet<BuildTarget> passedInTargetsSet,
       boolean isWithTests,
       boolean isWithDependenciesTests)
       throws IOException, InterruptedException {
-    TargetGraphAndTargets targetGraphAndTargets =
-        createTargetGraph(targetGraph, passedInTargetsSet, isWithTests, isWithDependenciesTests);
+    TargetGraph targetGraph =
+        createTargetGraph(
+            originalTargetGraph, passedInTargetsSet, isWithTests, isWithDependenciesTests);
 
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     Cell cell =
@@ -498,8 +500,7 @@ public class XCodeProjectCommandHelperTest {
         FakeBuckConfig.builder().build(),
         TestRuleKeyConfigurationFactory.create(),
         MoreExecutors.newDirectExecutorService(),
-        TestTargetGraphCreationResultFactory.create(
-            targetGraphAndTargets.getTargetGraph(), passedInTargetsSet),
+        TestTargetGraphCreationResultFactory.create(targetGraph, passedInTargetsSet),
         ProjectGeneratorOptions.builder()
             .setShouldGenerateReadOnlyFiles(false)
             .setShouldIncludeTests(isWithTests)

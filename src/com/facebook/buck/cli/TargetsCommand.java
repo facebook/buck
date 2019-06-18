@@ -38,7 +38,6 @@ import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResu
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphHashing;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDepsPackage;
@@ -1240,7 +1239,7 @@ public class TargetsCommand extends AbstractCommand {
 
     if (isDetectTestChanges) {
       ImmutableSet<BuildTarget> explicitTestTargets =
-          TargetGraphAndTargets.getExplicitTestTargets(
+          TargetNodes.getTestTargetsForNodes(
               targetGraphAndTargetNodes
                   .getFirst()
                   .getSubgraph(targetGraphAndTargetNodes.getSecond())

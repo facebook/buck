@@ -40,7 +40,7 @@ import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
+import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilder;
@@ -787,7 +787,7 @@ public class XCodeProjectCommandHelper {
       nodes = projectRoots;
     }
 
-    return TargetGraphAndTargets.getExplicitTestTargets(
+    return TargetNodes.getTestTargetsForNodes(
         RichStream.from(nodes)
             .filter(node -> focusedModules.isFocusedOn(node.getBuildTarget()))
             .iterator());
