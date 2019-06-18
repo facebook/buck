@@ -131,7 +131,9 @@
   {param desc}
   A list of C/C++ library dependencies that need to be loaded before any 
   other libraries when the PEX starts up. This requires dynamic loader support, 
-  such as <code>LD_PRELOAD</code>, found on most systems.
+  such as <code>LD_PRELOAD</code>, found on most systems.  This list is order-
+  sensitive and the preload libraries listed here are passed down to the dynamic
+  linker in the same order.
   {/param}
 {/call}
 {/template}

@@ -337,7 +337,7 @@ public class PythonUtil {
 
   static ImmutableSet<String> getPreloadNames(
       ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform, Iterable<BuildTarget> preloadDeps) {
-    ImmutableSet.Builder<String> builder = ImmutableSortedSet.naturalOrder();
+    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
     for (NativeLinkableGroup nativeLinkableGroup :
         FluentIterable.from(preloadDeps)
             .transform(graphBuilder::getRule)

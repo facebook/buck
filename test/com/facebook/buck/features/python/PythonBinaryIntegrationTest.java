@@ -53,6 +53,7 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.unarchive.Unzip;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -482,5 +483,27 @@ public class PythonBinaryIntegrationTest {
                 .setCommand(ImmutableList.of(pexPath.toString()))
                 .build());
     Assert.assertEquals(0, ret.getExitCode());
+  }
+
+  @Test
+  public void preloadDepsOrder() throws IOException, InterruptedException {
+    assumeThat(packageStyle, Matchers.is(PackageStyle.INPLACE));
+    DefaultProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
+
+    for (Pair<String, String> test :
+        ImmutableList.of(
+            new Pair<>("//preload_deps:bin_a_first", "a\n"),
+            new Pair<>("//preload_deps:bin_b_first", "b\n"))) {
+      Path pexPath = workspace.buildAndReturnOutput(test.getFirst());
+      Result ret =
+          executor.launchAndExecute(
+              ProcessExecutorParams.builder()
+                  .setDirectory(workspace.resolve("pathtest"))
+                  .setCommand(ImmutableList.of(pexPath.toString()))
+                  .build());
+      Assert.assertEquals(
+          ret.getStdout().orElse("") + ret.getStderr().orElse(""), 0, ret.getExitCode());
+      assertThat(ret.getStdout().orElse(""), equalTo(test.getSecond()));
+    }
   }
 }
