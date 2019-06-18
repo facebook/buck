@@ -27,6 +27,7 @@ import com.facebook.buck.remoteexecution.WorkerRequirementsProvider;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.util.Scope;
 import com.google.common.base.Verify;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -64,6 +65,7 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
   private final ConcurrentLinkedQueue<Job> pendingDelegateOnlyQueue;
 
   private final Semaphore localSemaphore;
+  private final Semaphore localDelegateSemaphore;
   private final Semaphore delegateSemaphore;
 
   private final DelegateJobTracker tracker = new DelegateJobTracker();
@@ -114,6 +116,7 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
 
   public HybridLocalStrategy(
       int numLocalJobs,
+      int numLocalDelegateJobs,
       int numDelegateJobs,
       BuildRuleStrategy delegate,
       WorkerRequirementsProvider workerRequirementsProvider,
@@ -122,6 +125,7 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
     this.workerRequirementsProvider = workerRequirementsProvider;
     this.maxWorkerSizeToStealFrom = maxWorkerSizeToStealFrom;
     this.localSemaphore = new Semaphore(numLocalJobs);
+    this.localDelegateSemaphore = new Semaphore(numLocalDelegateJobs);
     this.delegateSemaphore = new Semaphore(numDelegateJobs);
     this.pendingLocalQueue = new ConcurrentLinkedQueue<>();
     this.pendingDelegateOrLocalQueue = new ConcurrentLinkedQueue<>();
@@ -338,15 +342,50 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
     }
 
     try {
-      // Try scheduling a local task.
+      // Try scheduling a local task from local or delegate queues.
       semaphoreScopedSchedule(
           localSemaphore,
           () -> {
             Job job = pendingLocalQueue.poll();
-            if (job == null) {
-              job = pendingDelegateOrLocalQueue.poll();
+            if (job != null) {
+              return job.scheduleLocally();
+            } else {
+              if (localDelegateSemaphore.tryAcquire()) {
+                job = pendingDelegateOrLocalQueue.poll();
+                ListenableFuture<?> future;
+                if (job != null) {
+                  future = job.scheduleLocally();
+                } else {
+                  future = tracker.stealFromDelegate();
+                }
+                if (future != null) {
+                  SettableFuture<Object> semaphoreFuture = SettableFuture.create();
+                  Futures.addCallback(
+                      future,
+                      new FutureCallback<Object>() {
+
+                        @Override
+                        public void onSuccess(@Nullable Object result) {
+                          localDelegateSemaphore.release();
+                          semaphoreFuture.set(result);
+                        }
+
+                        @Override
+                        public void onFailure(Throwable t) {
+                          localDelegateSemaphore.release();
+                          semaphoreFuture.setException(t);
+                        }
+                      },
+                      MoreExecutors.directExecutor());
+
+                  return semaphoreFuture;
+                } else {
+                  localDelegateSemaphore.release();
+                  return null;
+                }
+              }
+              return null;
             }
-            return job == null ? tracker.stealFromDelegate() : job.scheduleLocally();
           });
 
       // Try scheduling a delegate task.

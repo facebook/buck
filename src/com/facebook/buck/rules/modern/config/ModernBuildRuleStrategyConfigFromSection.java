@@ -55,6 +55,7 @@ public class ModernBuildRuleStrategyConfigFromSection implements ModernBuildRule
 
   @Override
   public HybridLocalBuildStrategyConfig getHybridLocalConfig() {
+    int localDelegateJobs;
     int localJobs = delegate.getView(BuildBuckConfig.class).getNumThreads();
     OptionalInt localJobsConfig = delegate.getInteger(section, "local_jobs");
     Optional<Float> localJobsRatioConfig = delegate.getFloat(section, "local_jobs_ratio");
@@ -63,12 +64,20 @@ public class ModernBuildRuleStrategyConfigFromSection implements ModernBuildRule
     } else if (localJobsConfig.isPresent()) {
       localJobs = localJobsConfig.getAsInt();
     }
+    Optional<Float> localDelegateJobsRatioConfig =
+        delegate.getFloat(section, "local_delegate_jobs_ratio");
+    if (localDelegateJobsRatioConfig.isPresent()) {
+      localDelegateJobs = (int) Math.ceil(localJobs * localDelegateJobsRatioConfig.get());
+    } else {
+      localDelegateJobs = localJobs;
+    }
+
     int remoteJobs =
         delegate.getInteger(section, "delegate_jobs").orElseThrow(requires("delegate_jobs"));
     String delegateFlavor =
         delegate.getValue(section, "delegate").orElseThrow(requires("delegate"));
     ModernBuildRuleStrategyConfig delegate = getFlavoredStrategyConfig(delegateFlavor);
-    return new HybridLocalBuildStrategyConfig(localJobs, remoteJobs, delegate);
+    return new HybridLocalBuildStrategyConfig(localJobs, localDelegateJobs, remoteJobs, delegate);
   }
 
   private Supplier<HumanReadableException> requires(String key) {

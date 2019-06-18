@@ -131,6 +131,7 @@ public class ModernBuildRuleBuilderFactory {
                 () -> new HumanReadableException("Delegate config configured incorrectly."));
     return new HybridLocalStrategy(
         hybridLocalConfig.getLocalJobs(),
+        hybridLocalConfig.getLocalDelegateJobs(),
         hybridLocalConfig.getDelegateJobs(),
         delegate,
         workerRequirementsProvider,

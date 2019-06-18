@@ -19,12 +19,17 @@ package com.facebook.buck.rules.modern.config;
 /** Configuration for the "hybrid_local" build strategy. */
 public class HybridLocalBuildStrategyConfig {
   private final int localJobs;
+  private final int localDelegateJobs;
   private final int delegateJobs;
   private final ModernBuildRuleStrategyConfig delegate;
 
   public HybridLocalBuildStrategyConfig(
-      int localJobs, int delegateJobs, ModernBuildRuleStrategyConfig delegate) {
+      int localJobs,
+      int localDelegateJobs,
+      int delegateJobs,
+      ModernBuildRuleStrategyConfig delegate) {
     this.localJobs = localJobs;
+    this.localDelegateJobs = localDelegateJobs;
     this.delegateJobs = delegateJobs;
     this.delegate = delegate;
   }
@@ -35,6 +40,10 @@ public class HybridLocalBuildStrategyConfig {
 
   public int getLocalJobs() {
     return localJobs;
+  }
+
+  public int getLocalDelegateJobs() {
+    return localDelegateJobs;
   }
 
   public int getDelegateJobs() {
