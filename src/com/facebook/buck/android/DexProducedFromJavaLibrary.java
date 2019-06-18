@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.DexProducedFromJavaLibrary.BuildOutput;
 import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.android.dalvik.EstimateDexWeightStep;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
@@ -59,8 +58,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -77,62 +78,28 @@ import javax.annotation.Nullable;
  * cannot write a meaningful "dummy .dex" if there are no class files to pass to {@code dx}.
  */
 public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements SupportsInputBasedRuleKey, InitializableFromDisk<BuildOutput> {
+    implements SupportsInputBasedRuleKey,
+        InitializableFromDisk<DexProducedFromJavaLibrary.BuildOutput> {
 
-  @VisibleForTesting static final String WEIGHT_ESTIMATE = "weight_estimate";
-  @VisibleForTesting static final String CLASSNAMES_TO_HASHES = "classnames_to_hashes";
-  @VisibleForTesting static final String REFERENCED_RESOURCES = "referenced_resources";
+  private static final String DEX_RULE_METADATA = "metadata";
+  private static final String WEIGHT_ESTIMATE = "weight_estimate";
+  private static final String CLASSNAMES_TO_HASHES = "classnames_to_hashes";
+  private static final String REFERENCED_RESOURCES = "referenced_resources";
 
-  @AddToRuleKey private final SourcePath javaLibrarySourcePath;
   @AddToRuleKey private final String dexTool;
   /** Scale factor to apply to our weight estimate, for deceptive dexes. */
   @AddToRuleKey private final int weightFactor;
 
-  @AddToRuleKey @Nullable private final ImmutableSortedSet<SourcePath> desugarDeps;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> desugarDeps;
 
   private final AndroidPlatformTarget androidPlatformTarget;
+  private final boolean desugarEnabled;
+  @AddToRuleKey private final SourcePath javaLibrarySourcePath;
+
   private final JavaLibrary javaLibrary;
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
-  DexProducedFromJavaLibrary(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      AndroidPlatformTarget androidPlatformTarget,
-      BuildRuleParams params,
-      JavaLibrary javaLibrary) {
-    this(buildTarget, projectFilesystem, androidPlatformTarget, params, javaLibrary, DxStep.DX);
-  }
-
-  DexProducedFromJavaLibrary(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      AndroidPlatformTarget androidPlatformTarget,
-      BuildRuleParams params,
-      JavaLibrary javaLibrary,
-      String dexTool) {
-    this(buildTarget, projectFilesystem, androidPlatformTarget, params, javaLibrary, dexTool, 1);
-  }
-
-  DexProducedFromJavaLibrary(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      AndroidPlatformTarget androidPlatformTarget,
-      BuildRuleParams params,
-      JavaLibrary javaLibrary,
-      String dexTool,
-      int weightFactor) {
-    this(
-        buildTarget,
-        projectFilesystem,
-        androidPlatformTarget,
-        params,
-        javaLibrary,
-        dexTool,
-        weightFactor,
-        null);
-  }
-
-  DexProducedFromJavaLibrary(
+  public DexProducedFromJavaLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       AndroidPlatformTarget androidPlatformTarget,
@@ -140,50 +107,57 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
       JavaLibrary javaLibrary,
       String dexTool,
       int weightFactor,
-      @Nullable ImmutableSortedSet<BuildRule> desugarDeps) {
+      ImmutableSortedSet<BuildRule> desugarDeps) {
     super(
         buildTarget,
         projectFilesystem,
-        desugarDeps != null ? params.withExtraDeps(desugarDeps) : params);
-    this.androidPlatformTarget = androidPlatformTarget;
-    this.javaLibrary = javaLibrary;
+        !desugarDeps.isEmpty() ? params.withExtraDeps(desugarDeps) : params);
     this.dexTool = dexTool;
-    this.javaLibrarySourcePath = javaLibrary.getSourcePathToOutput();
-    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
     this.weightFactor = weightFactor;
-    this.desugarDeps = desugarDeps != null ? getDesugarClassPaths(desugarDeps) : null;
+    this.desugarDeps = getDesugarClassPaths(desugarDeps);
+    this.androidPlatformTarget = androidPlatformTarget;
+    this.desugarEnabled = javaLibrary.isDesugarEnabled();
+    this.javaLibrarySourcePath = javaLibrary.getSourcePathToOutput();
+
+    this.javaLibrary = javaLibrary;
+    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+  }
+
+  public DexProducedFromJavaLibrary(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      AndroidPlatformTarget androidPlatformTarget,
+      BuildRuleParams params,
+      JavaLibrary javaLibrary) {
+    this(
+        buildTarget,
+        projectFilesystem,
+        androidPlatformTarget,
+        params,
+        javaLibrary,
+        DxStep.DX,
+        1,
+        ImmutableSortedSet.of());
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
+    ProjectFilesystem filesystem = getProjectFilesystem();
+    SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-
-    steps.add(
-        RmStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), getPathToDex())));
-
-    // Make sure that the buck-out/gen/ directory exists for this.buildTarget.
-    steps.add(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                getPathToDex().getParent())));
+    addPrepareDirSteps(context, steps);
 
     // If there are classes, run dx.
-    ImmutableSortedMap<String, HashCode> classNamesToHashes = javaLibrary.getClassNamesToHashes();
+    ImmutableSortedMap<String, HashCode> classNamesToHashes = getClassNamesToHashes();
     boolean hasClassesToDx = !classNamesToHashes.isEmpty();
     Supplier<Integer> weightEstimate;
 
     @Nullable DxStep dx;
 
     if (hasClassesToDx) {
-      Path pathToOutputFile =
-          context.getSourcePathResolver().getAbsolutePath(javaLibrarySourcePath);
-      EstimateDexWeightStep estimate =
-          new EstimateDexWeightStep(getProjectFilesystem(), pathToOutputFile);
+      Path pathToOutputFile = sourcePathResolver.getAbsolutePath(javaLibrarySourcePath);
+      EstimateDexWeightStep estimate = new EstimateDexWeightStep(filesystem, pathToOutputFile);
       steps.add(estimate);
       weightEstimate = estimate;
 
@@ -195,28 +169,27 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
               DxStep.Option.RUN_IN_PROCESS,
               DxStep.Option.NO_OPTIMIZE,
               DxStep.Option.FORCE_JUMBO);
-      if (!javaLibrary.isDesugarEnabled()) {
+      if (!desugarEnabled) {
         options.add(Option.NO_DESUGAR);
       }
+      Path pathToDex = getPathToDex();
       dx =
           new DxStep(
-              getProjectFilesystem(),
+              filesystem,
               androidPlatformTarget,
-              getPathToDex(),
+              pathToDex,
               Collections.singleton(pathToOutputFile),
               options,
               Optional.empty(),
               dexTool,
               dexTool.equals(DxStep.D8),
-              desugarDeps != null
-                  ? getAbsolutePaths(desugarDeps, context.getSourcePathResolver())
-                  : null,
+              getAbsolutePaths(desugarDeps, sourcePathResolver),
               Optional.empty());
       steps.add(dx);
 
       // The `DxStep` delegates to android tools to build a ZIP with timestamps in it, making
       // the output non-deterministic.  So use an additional scrubbing step to zero these out.
-      steps.add(ZipScrubberStep.of(getProjectFilesystem().resolve(getPathToDex())));
+      steps.add(ZipScrubberStep.of(filesystem.resolve(pathToDex)));
 
     } else {
       dx = null;
@@ -228,6 +201,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
     String stepName = hasClassesToDx ? "record_dx_success" : "record_empty_dx";
     AbstractExecutionStep recordArtifactAndMetadataStep =
         new AbstractExecutionStep(stepName) {
+
           @Override
           public StepExecutionResult execute(ExecutionContext context) throws IOException {
             if (hasClassesToDx) {
@@ -235,10 +209,11 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
 
               @Nullable Collection<String> referencedResources = dx.getResourcesReferencedInCode();
               if (referencedResources != null) {
-                writeMetadataValues(
+                writeMetadataValue(
                     buildableContext,
                     REFERENCED_RESOURCES,
-                    Ordering.natural().immutableSortedCopy(referencedResources));
+                    ObjectMappers.WRITER.writeValueAsString(
+                        Ordering.natural().immutableSortedCopy(referencedResources)));
               }
             }
 
@@ -256,84 +231,94 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
 
             return StepExecutionResults.SUCCESS;
           }
+
+          private void writeMetadataValue(
+              BuildableContext buildableContext, String key, String value) throws IOException {
+            Path path = getMetadataPath(key);
+            filesystem.mkdirs(path.getParent());
+            filesystem.writeContentsToPath(value, path);
+            buildableContext.recordArtifact(path);
+          }
         };
     steps.add(recordArtifactAndMetadataStep);
 
     return steps.build();
   }
 
-  private static ImmutableSortedSet<SourcePath> getDesugarClassPaths(
-      Collection<BuildRule> desugarDeps) {
-    ImmutableSortedSet.Builder<SourcePath> resultBuilder = ImmutableSortedSet.naturalOrder();
-    new ImmutableSortedSet.Builder<>(Ordering.natural());
-    for (BuildRule rule : desugarDeps) {
-      SourcePath sourcePath = rule.getSourcePathToOutput();
-      if (sourcePath != null) {
-        resultBuilder.add(sourcePath);
-      }
-    }
-    return resultBuilder.build();
+  private ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
+    return javaLibrary.getClassNamesToHashes();
   }
 
-  private static Collection<Path> getAbsolutePaths(
+  private void addPrepareDirSteps(BuildContext context, ImmutableList.Builder<Step> steps) {
+    steps.add(
+        RmStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), getPathToDex())));
+
+    // Make sure that the buck-out/gen/ directory exists for this.buildTarget.
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                getPathToDex().getParent())));
+  }
+
+  private Collection<Path> getAbsolutePaths(
       Collection<SourcePath> sourcePaths, SourcePathResolver sourcePathResolver) {
-    ImmutableSortedSet.Builder<Path> resultBuilder = ImmutableSortedSet.naturalOrder();
-    new ImmutableSortedSet.Builder<>(Ordering.natural());
-    for (SourcePath sourcePath : sourcePaths) {
-      if (sourcePath != null) {
-        resultBuilder.add(sourcePathResolver.getAbsolutePath(sourcePath));
-      }
+    return sourcePaths.stream()
+        .filter(Objects::nonNull)
+        .map(sourcePathResolver::getAbsolutePath)
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
+  }
+
+  private ImmutableSortedSet<SourcePath> getDesugarClassPaths(Collection<BuildRule> desugarDeps) {
+    if (desugarDeps == null) {
+      return ImmutableSortedSet.of();
     }
-    return resultBuilder.build();
+    return desugarDeps.stream()
+        .map(BuildRule::getSourcePathToOutput)
+        .filter(Objects::nonNull)
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
   }
 
   @Override
   public BuildOutput initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
-    int weightEstimate =
-        Integer.parseInt(
-            readMetadataValue(getProjectFilesystem(), getBuildTarget(), WEIGHT_ESTIMATE).get());
+    return new BuildOutput(
+        readWeightEstimateFromMetadata(),
+        readClassNamesToHashesFromMetadata(),
+        readReferencedResourcesFromMetadata());
+  }
+
+  private int readWeightEstimateFromMetadata() {
+    return Integer.parseInt(readMetadataValue(WEIGHT_ESTIMATE).get());
+  }
+
+  private ImmutableSortedMap<String, HashCode> readClassNamesToHashesFromMetadata()
+      throws IOException {
     Map<String, String> map =
         ObjectMappers.readValue(
-            readMetadataValue(getProjectFilesystem(), getBuildTarget(), CLASSNAMES_TO_HASHES).get(),
+            readMetadataValue(CLASSNAMES_TO_HASHES).get(),
             new TypeReference<Map<String, String>>() {});
-    Map<String, HashCode> classnamesToHashes = Maps.transformValues(map, HashCode::fromString);
-    ImmutableList<String> referencedResources = readMetadataValues(REFERENCED_RESOURCES);
-    return new BuildOutput(
-        weightEstimate, ImmutableSortedMap.copyOf(classnamesToHashes), referencedResources);
+    return ImmutableSortedMap.copyOf(Maps.transformValues(map, HashCode::fromString));
   }
 
-  private static Path getMetadataPath(
-      ProjectFilesystem projectFilesystem, BuildTarget buildTarget, String key) {
-    return BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/metadata/" + key);
-  }
-
-  private void writeMetadataValues(
-      BuildableContext buildableContext, String key, ImmutableList<String> values)
-      throws IOException {
-    writeMetadataValue(buildableContext, key, ObjectMappers.WRITER.writeValueAsString(values));
-  }
-
-  private void writeMetadataValue(BuildableContext buildableContext, String key, String value)
-      throws IOException {
-    Path path = getMetadataPath(getProjectFilesystem(), getBuildTarget(), key);
-    getProjectFilesystem().mkdirs(path.getParent());
-    getProjectFilesystem().writeContentsToPath(value, path);
-    buildableContext.recordArtifact(path);
-  }
-
-  @VisibleForTesting
-  static Optional<String> readMetadataValue(
-      ProjectFilesystem projectFilesystem, BuildTarget buildTarget, String key) {
-    Path path = getMetadataPath(projectFilesystem, buildTarget, key);
-    return projectFilesystem.readFileIfItExists(path);
-  }
-
-  private ImmutableList<String> readMetadataValues(String key) throws IOException {
-    Optional<String> value = readMetadataValue(getProjectFilesystem(), getBuildTarget(), key);
-    if (value.isPresent()) {
-      return ObjectMappers.readValue(value.get(), new TypeReference<ImmutableList<String>>() {});
+  private ImmutableList<String> readReferencedResourcesFromMetadata() throws IOException {
+    Optional<String> value = readMetadataValue(REFERENCED_RESOURCES);
+    if (!value.isPresent()) {
+      return ImmutableList.of();
     }
-    return ImmutableList.of();
+    return ObjectMappers.readValue(value.get(), new TypeReference<ImmutableList<String>>() {});
+  }
+
+  private Optional<String> readMetadataValue(String key) {
+    Path path = getMetadataPath(key);
+    return getProjectFilesystem().readFileIfItExists(path);
+  }
+
+  private Path getMetadataPath(String key) {
+    return BuildTargetPaths.getGenPath(
+        getProjectFilesystem(), getBuildTarget(), "%s/" + DEX_RULE_METADATA + "/" + key);
   }
 
   @Override
@@ -342,7 +327,8 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
   }
 
   static class BuildOutput {
-    @VisibleForTesting final int weightEstimate;
+
+    private final int weightEstimate;
     private final ImmutableSortedMap<String, HashCode> classnamesToHashes;
     private final ImmutableList<String> referencedResources;
 
@@ -354,6 +340,11 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
       this.classnamesToHashes = classnamesToHashes;
       this.referencedResources = referencedResources;
     }
+
+    @VisibleForTesting
+    int getWeightEstimate() {
+      return weightEstimate;
+    }
   }
 
   @Override
@@ -363,7 +354,6 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
     return null;
   }
 
-  @Nullable
   @VisibleForTesting
   public ImmutableSortedSet<SourcePath> getDesugarDeps() {
     return desugarDeps;
@@ -391,5 +381,15 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
 
   ImmutableList<String> getReferencedResources() {
     return buildOutputInitializer.getBuildOutput().referencedResources;
+  }
+
+  @VisibleForTesting
+  static Optional<String> getMetadataResources(
+      ProjectFilesystem filesystem, BuildTarget buildTarget) {
+    Path resourcesFile =
+        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+            .resolve(DEX_RULE_METADATA)
+            .resolve(REFERENCED_RESOURCES);
+    return filesystem.readFileIfItExists(resourcesFile);
   }
 }

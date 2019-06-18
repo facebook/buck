@@ -113,7 +113,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(
-            buildTarget, filesystem, androidPlatformTarget, params, javaLibraryRule, DxStep.DX);
+            buildTarget, filesystem, androidPlatformTarget, params, javaLibraryRule);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
@@ -146,7 +146,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     BuildOutputInitializer<DexProducedFromJavaLibrary.BuildOutput> outputInitializer =
         preDex.getBuildOutputInitializer();
     outputInitializer.initializeFromDisk(graphBuilder.getSourcePathResolver());
-    assertEquals(250, outputInitializer.getBuildOutput().weightEstimate);
+    assertEquals(250, outputInitializer.getBuildOutput().getWeightEstimate());
   }
 
   private void createFiles(ProjectFilesystem filesystem, String... paths) throws IOException {
@@ -179,8 +179,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
             projectFilesystem,
             TestAndroidPlatformTargetFactory.create(),
             params,
-            javaLibrary,
-            DxStep.DX);
+            javaLibrary);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     Path dexOutput = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s.dex.jar");
@@ -222,8 +221,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
             projectFilesystem,
             TestAndroidPlatformTargetFactory.create(),
             params,
-            accumulateClassNames,
-            DxStep.DX);
+            accumulateClassNames);
     assertNull(preDexWithClasses.getSourcePathToOutput());
     assertEquals(
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s.dex.jar"),

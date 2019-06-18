@@ -51,8 +51,7 @@ public class DexWithClassesTest {
             new FakeProjectFilesystem(),
             TestAndroidPlatformTargetFactory.create(),
             params,
-            javaLibrary,
-            DxStep.DX);
+            javaLibrary);
     dexFromJavaLibrary
         .getBuildOutputInitializer()
         .setBuildOutputForTests(
@@ -86,8 +85,7 @@ public class DexWithClassesTest {
             new FakeProjectFilesystem(),
             TestAndroidPlatformTargetFactory.create(),
             params,
-            javaLibrary,
-            DxStep.DX);
+            javaLibrary);
     dexFromJavaLibrary
         .getBuildOutputInitializer()
         .setBuildOutputForTests(

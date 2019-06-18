@@ -594,7 +594,8 @@ public class AndroidBinaryGraphEnhancer {
               buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(prebuiltJar)),
               prebuiltJar,
               dexTool,
-              weightFactor);
+              weightFactor,
+              ImmutableSortedSet.of());
       graphBuilder.addToIndex(dexJar);
       builder.add(dexJar);
     }
@@ -647,7 +648,7 @@ public class AndroidBinaryGraphEnhancer {
                     "int",
                     BuildConfigs.EXOPACKAGE_FLAGS,
                     String.valueOf(ExopackageMode.toBitmask(exopackageModes)))));
-    for (Map.Entry<String, BuildConfigFields> entry :
+    for (Entry<String, BuildConfigFields> entry :
         packageableCollection.getBuildConfigs().entrySet()) {
       // Merge the user-defined constants with the APK-specific overrides.
       BuildConfigFields totalBuildConfigValues =
@@ -752,7 +753,7 @@ public class AndroidBinaryGraphEnhancer {
                             && javaLibrary.isDesugarEnabled()
                             && javaLibrary.isInterfaceMethodsDesugarEnabled()
                         ? getDesugarDeps(javaLibrary, graphBuilder::getRule)
-                        : null;
+                        : ImmutableSortedSet.of();
                 BuildRuleParams paramsForPreDex =
                     buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(javaLibrary));
 

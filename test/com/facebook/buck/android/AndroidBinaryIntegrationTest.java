@@ -307,8 +307,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
     Optional<String> resourcesFromMetadata =
-        DexProducedFromJavaLibrary.readMetadataValue(
-            filesystem, dexTarget, DexProducedFromJavaLibrary.REFERENCED_RESOURCES);
+        DexProducedFromJavaLibrary.getMetadataResources(filesystem, dexTarget);
     assertTrue(resourcesFromMetadata.isPresent());
     assertEquals("[\"com.sample.top_layout\",\"com.sample2.title\"]", resourcesFromMetadata.get());
   }
@@ -320,8 +319,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
     Optional<String> resourcesFromMetadata =
-        DexProducedFromJavaLibrary.readMetadataValue(
-            filesystem, dexTarget, DexProducedFromJavaLibrary.REFERENCED_RESOURCES);
+        DexProducedFromJavaLibrary.getMetadataResources(filesystem, dexTarget);
     assertTrue(resourcesFromMetadata.isPresent());
     assertEquals("[\"com.sample.top_layout\",\"com.sample2.title\"]", resourcesFromMetadata.get());
   }
