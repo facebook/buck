@@ -111,14 +111,11 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
       Pattern.compile(
           "(\\S+) (\\S+) (\\S+) ([^("
               + CUSTOM_DRAWABLE_IDENTIFIER
-              + "|"
               + GRAYSCALE_IMAGE_IDENTIFIER
-              + ")]+)"
-              + "( ("
+              + ")]+)( ["
               + CUSTOM_DRAWABLE_IDENTIFIER
-              + "|"
               + GRAYSCALE_IMAGE_IDENTIFIER
-              + "))?");
+              + "])?");
 
   // A symbols file may look like:
   //
@@ -219,7 +216,8 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
     String custom = matcher.group(5);
 
     if (custom != null && custom.length() > 0) {
-      custom = matcher.group(6);
+      // Remove the leading space.
+      custom = custom.substring(1);
     }
 
     if (CUSTOM_DRAWABLE_IDENTIFIER.equals(custom)) {
