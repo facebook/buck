@@ -237,7 +237,7 @@ public class AndroidAarDescription
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             Optional.empty(),
-            RelinkerMode.DISABLED,
+            args.isEnableRelinker() ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
             ImmutableList.of(),
             apkModuleGraph);
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> nativeLibrariesOptional =
@@ -296,6 +296,11 @@ public class AndroidAarDescription
 
     @Value.Default
     default Boolean getIncludeBuildConfigClass() {
+      return false;
+    }
+
+    @Value.Default
+    default boolean isEnableRelinker() {
       return false;
     }
   }

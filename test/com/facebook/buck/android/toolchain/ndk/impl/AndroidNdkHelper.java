@@ -40,6 +40,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -217,6 +218,17 @@ public class AndroidNdkHelper {
       ImmutableSet<String> dtNeeded = Symbols.getDtNeeded(executor, objdump, resolver, lib);
       return new SymbolsAndDtNeeded(symbols, dtNeeded);
     }
+  }
+
+  public static SymbolGetter getSymbolGetter(ProjectFilesystem filesystem, TemporaryPaths tmp)
+      throws IOException {
+    NdkCxxPlatform platform = getNdkCxxPlatform(filesystem);
+    Path tmpDir = tmp.newFolder("symbols_tmp");
+    return new SymbolGetter(
+        new DefaultProcessExecutor(new TestConsole()),
+        tmpDir,
+        platform.getObjdump(),
+        new TestActionGraphBuilder().getSourcePathResolver());
   }
 
   public static class SymbolsAndDtNeeded {
