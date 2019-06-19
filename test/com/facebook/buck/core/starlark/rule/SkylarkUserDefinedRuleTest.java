@@ -48,7 +48,6 @@ import javax.annotation.Nullable;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class SkylarkUserDefinedRuleTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
@@ -77,7 +76,7 @@ public class SkylarkUserDefinedRuleTest {
     @Override
     public Object call(Object[] args, @Nullable FuncallExpression ast, Environment env)
         throws EvalException, InterruptedException {
-      throw new NotImplementedException();
+      throw new UnsupportedOperationException();
     }
   }
 
@@ -87,7 +86,7 @@ public class SkylarkUserDefinedRuleTest {
         new ParseContext(
             PackageContext.of(
                 (include, exclude, excludeDirectories) -> {
-                  throw new NotImplementedException();
+                  throw new UnsupportedOperationException();
                 },
                 ImmutableMap.of(),
                 PackageIdentifier.create(
