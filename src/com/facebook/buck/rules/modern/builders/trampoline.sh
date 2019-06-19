@@ -49,7 +49,7 @@ function getJavaPathForVersion() {
       Linux)
           java_path="/usr/local/java-runtime/$1/bin/java"
           if [[ ! -x "$java_path" ]]; then
-            echo "Java not found at $java_path. Is the java_runtime fbpkg installed?" >&2
+            echo "Java not found at $java_path. Is the java-runtime fbpkg installed?" >&2
             exit 127
           fi
           ;;
