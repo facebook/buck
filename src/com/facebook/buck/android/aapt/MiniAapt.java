@@ -17,6 +17,7 @@
 package com.facebook.buck.android.aapt;
 
 import com.facebook.buck.android.AaptStep;
+import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
@@ -342,10 +343,10 @@ public class MiniAapt implements Step {
     DocumentLocation location = DocumentLocation.of(0, 0);
     if (isCustomDrawable) {
       resourceCollector.addCustomDrawableResourceIfNotPresent(
-          RType.DRAWABLE, resourceName, resourceFile, location);
+          RType.DRAWABLE, resourceName, resourceFile, location, CustomDrawableType.CUSTOM);
     } else if (isGrayscaleImage) {
-      resourceCollector.addGrayscaleImageResourceIfNotPresent(
-          RType.DRAWABLE, resourceName, resourceFile, location);
+      resourceCollector.addCustomDrawableResourceIfNotPresent(
+          RType.DRAWABLE, resourceName, resourceFile, location, CustomDrawableType.GRAYSCALE_IMAGE);
     } else {
       resourceCollector.addIntResourceIfNotPresent(
           RType.DRAWABLE, resourceName, resourceFile, location);
