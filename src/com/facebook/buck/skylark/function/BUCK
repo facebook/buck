@@ -4,7 +4,7 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/starlark/rule:rule",
-        "//src/com/facebook/buck/core/starlark/rule/attr:attr",
+        "//src/com/facebook/buck/core/starlark/rule/attr/impl:impl",
         "//src/com/facebook/buck/skylark/io:io",
         "//src/com/facebook/buck/skylark/packages:packages",
         "//src/com/facebook/buck/skylark/parser/context:context",

@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.core.starlark.rule.attr;
+package com.facebook.buck.core.starlark.rule.attr.impl;
 
 import static org.junit.Assert.assertEquals;
 

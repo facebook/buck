@@ -17,7 +17,6 @@ package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
-import com.facebook.buck.core.starlark.rule.attr.ImmutableStringAttribute;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -49,13 +48,6 @@ import javax.annotation.Nullable;
 public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExportable {
   /** Matches python identifiers in the parser */
   private static final Pattern VALID_IDENTIFIER_REGEX = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
-
-  /** The attributes that are applicable to all rules. This will expand over time. */
-  // TODO: Once list attributes are added, ensure visibility exists
-  private static ImmutableMap<String, Attribute<?>> IMPLICIT_ATTRIBUTES =
-      ImmutableMap.of(
-          "name",
-          new ImmutableStringAttribute("", "The name of the target", true, ImmutableList.of()));
 
   private boolean isExported = false;
   @Nullable private String name = null;
@@ -133,12 +125,16 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
 
   /** Create an instance of {@link SkylarkUserDefinedRule} */
   public static SkylarkUserDefinedRule of(
-      Location location, BaseFunction implementation, Map<String, AttributeHolder> attrs)
+      Location location,
+      BaseFunction implementation,
+      ImmutableMap<String, Attribute<?>> implicitAttributes,
+      Map<String, AttributeHolder> attrs)
       throws EvalException {
 
     validateImplementation(location, implementation);
 
-    ImmutableMap<String, Attribute<?>> validatedAttrs = validateAttrs(location, attrs);
+    ImmutableMap<String, Attribute<?>> validatedAttrs =
+        validateAttrs(location, implicitAttributes, attrs);
 
     FunctionSignature.WithValues<Object, SkylarkType> signature =
         createSignature(validatedAttrs, location);
@@ -163,13 +159,16 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   }
 
   private static ImmutableMap<String, Attribute<?>> validateAttrs(
-      Location location, Map<String, AttributeHolder> attrs) throws EvalException {
+      Location location,
+      Map<String, Attribute<?>> implicitAttributes,
+      Map<String, AttributeHolder> attrs)
+      throws EvalException {
     /**
      * Make sure no one is trying to override built-in names. Ensuring that names are valid
      * identifiers happens when the {@link SkylarkUserDefinedRule} is created, in {@link
      * #createSignature(ImmutableMap, Location)}
      */
-    for (String implicitAttribute : IMPLICIT_ATTRIBUTES.keySet()) {
+    for (String implicitAttribute : implicitAttributes.keySet()) {
       if (attrs.containsKey(implicitAttribute)) {
         throw new EvalException(
             location,
@@ -185,7 +184,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
                 ImmutableMap.toImmutableMap(Map.Entry::getKey, v -> v.getValue().getAttribute()));
 
     return ImmutableMap.<String, Attribute<?>>builder()
-        .putAll(IMPLICIT_ATTRIBUTES)
+        .putAll(implicitAttributes)
         .putAll(attrsWithoutHolder)
         .build();
   }

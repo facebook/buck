@@ -36,7 +36,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
   public abstract CoercedType getDefaultValue();
 
   /** The docstring to use for this attribute */
-  abstract String getDoc();
+  public abstract String getDoc();
 
   /** Whether this attribute is mandatory or not */
   public abstract boolean getMandatory();
@@ -45,7 +45,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
    * The type coercer to use to convert raw values from the parser into something usable internally.
    * This coercer also performs validation
    */
-  abstract TypeCoercer<CoercedType> getTypeCoercer();
+  public abstract TypeCoercer<CoercedType> getTypeCoercer();
 
   /**
    * Validates values post-coercion to ensure other properties besides 'type' are valid

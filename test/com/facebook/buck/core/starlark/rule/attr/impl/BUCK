@@ -1,12 +1,12 @@
 load("//tools/build_rules:java_rules.bzl", "java_test")
 
 java_test(
-    name = "attr",
+    name = "impl",
     srcs = glob(
         ["*Test.java"],
     ),
     deps = [
-        "//src/com/facebook/buck/core/starlark/rule/attr:attr",
+        "//src/com/facebook/buck/core/starlark/rule/attr/impl:impl",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//test/com/facebook/buck/core/cell:testutil",
         "//third-party/java/junit:junit",

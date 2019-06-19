@@ -13,15 +13,13 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.core.starlark.rule;
+package com.facebook.buck.core.starlark.rule.attr.impl;
 
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
-import com.facebook.buck.core.starlark.rule.attr.ImmutableStringAttribute;
-import com.facebook.buck.core.starlark.rule.attr.StringAttribute;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.google.common.collect.ImmutableList;

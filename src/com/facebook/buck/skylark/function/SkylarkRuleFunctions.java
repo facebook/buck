@@ -17,8 +17,11 @@
 package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
+import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
+import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
@@ -38,6 +41,13 @@ import java.util.concurrent.ExecutionException;
 public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
 
   private final LoadingCache<String, Label> labelCache;
+
+  /** The attributes that are applicable to all rules. This will expand over time. */
+  // TODO: Once list attributes are added, ensure visibility exists
+  public static ImmutableMap<String, Attribute<?>> IMPLICIT_ATTRIBUTES =
+      ImmutableMap.of(
+          "name",
+          new ImmutableStringAttribute("", "The name of the target", true, ImmutableList.of()));
 
   public SkylarkRuleFunctions(LoadingCache<String, Label> labelCache) {
     this.labelCache = labelCache;
@@ -78,6 +88,6 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
     Map<String, AttributeHolder> checkedAttributes =
         attrs.getContents(String.class, AttributeHolder.class, "attrs keyword of rule()");
 
-    return SkylarkUserDefinedRule.of(loc, implementation, checkedAttributes);
+    return SkylarkUserDefinedRule.of(loc, implementation, IMPLICIT_ATTRIBUTES, checkedAttributes);
   }
 }
