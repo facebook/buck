@@ -6,8 +6,8 @@ java_test(
         ["*Test.java"],
     ),
     deps = [
+        "//src/com/facebook/buck/core/starlark/rule/attr:attr",
         "//src/com/facebook/buck/rules/coercer:interface",
-        "//src/com/facebook/buck/skylark/function/attr:attr",
         "//test/com/facebook/buck/core/cell:testutil",
         "//third-party/java/junit:junit",
     ],

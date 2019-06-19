@@ -16,7 +16,8 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.facebook.buck.skylark.function.attr.AttributeHolder;
+import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
+import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.Param;

@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.skylark.function.attr;
+package com.facebook.buck.core.starlark.rule.attr;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -56,7 +56,17 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
    */
   protected void validateCoercedValue(CoercedType value) throws CoerceFailedException {}
 
-  CoercedType getValue(
+  /**
+   * Get the coerced value for this attribute.
+   *
+   * @param cellRoots The cell roots
+   * @param projectFilesystem The project file system
+   * @param pathRelativeToProjectRoot The path relative to the project root
+   * @param targetConfiguration The configuration for this target
+   * @param value The object that is to be coerced. This generally comes directly from the parser.
+   * @throws CoerceFailedException if the value could not be coerced
+   */
+  public CoercedType getValue(
       CellPathResolver cellRoots,
       ProjectFilesystem projectFilesystem,
       Path pathRelativeToProjectRoot,

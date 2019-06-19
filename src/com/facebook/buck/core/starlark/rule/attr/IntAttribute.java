@@ -13,23 +13,23 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.skylark.function.attr;
+package com.facebook.buck.core.starlark.rule.attr;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.rules.coercer.StringTypeCoercer;
+import com.facebook.buck.rules.coercer.NumberTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.util.List;
 
-/** Class that represents a String attribute to a user defined rule */
+/** Class that represents an Integer attribute to a user defined rule */
 @BuckStyleValue
-public abstract class StringAttribute extends Attribute<String> {
+public abstract class IntAttribute extends Attribute<Integer> {
 
-  private static final TypeCoercer<String> coercer = new StringTypeCoercer();
+  private static final NumberTypeCoercer<Integer> coercer = new NumberTypeCoercer<>(Integer.class);
 
   @Override
-  public abstract String getDefaultValue();
+  public abstract Integer getDefaultValue();
 
   @Override
   abstract String getDoc();
@@ -38,20 +38,20 @@ public abstract class StringAttribute extends Attribute<String> {
   public abstract boolean getMandatory();
 
   /** The list of values that are acceptable. If empty, allow any values */
-  abstract List<String> getValues();
+  abstract List<Integer> getValues();
 
   @Override
   public void repr(SkylarkPrinter printer) {
-    printer.append("<attr.string>");
+    printer.append("<attr.int>");
   }
 
   @Override
-  protected TypeCoercer<String> getTypeCoercer() {
+  protected TypeCoercer<Integer> getTypeCoercer() {
     return coercer;
   }
 
   @Override
-  protected void validateCoercedValue(String value) throws CoerceFailedException {
+  protected void validateCoercedValue(Integer value) throws CoerceFailedException {
     validateValueInList(getValues(), value);
   }
 }

@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.skylark.function.attr;
 
+import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
