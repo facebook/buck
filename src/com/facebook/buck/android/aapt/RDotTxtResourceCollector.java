@@ -130,12 +130,15 @@ public class RDotTxtResourceCollector implements ResourceCollector {
 
   String getNextCustomIdValue(RType rType) {
     return String.format(
-        "0x%08x %s", getEnumerator(rType).next(), RDotTxtEntry.CUSTOM_DRAWABLE_IDENTIFIER);
+        "0x%08x %s",
+        getEnumerator(rType).next(), RDotTxtEntry.CustomDrawableType.CUSTOM.getIdentifier());
   }
 
   String getNextGrayscaleImageIdValue(RType rType) {
     return String.format(
-        "0x%08x %s", getEnumerator(rType).next(), RDotTxtEntry.GRAYSCALE_IMAGE_IDENTIFIER);
+        "0x%08x %s",
+        getEnumerator(rType).next(),
+        RDotTxtEntry.CustomDrawableType.GRAYSCALE_IMAGE.getIdentifier());
   }
 
   String getNextArrayIdValue(RType rType, int numValues) {

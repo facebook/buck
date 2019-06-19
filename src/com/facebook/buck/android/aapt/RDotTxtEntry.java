@@ -36,9 +36,29 @@ import javax.annotation.Nullable;
 public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
 
   public enum CustomDrawableType {
-    NONE,
-    CUSTOM,
-    GRAYSCALE_IMAGE,
+    NONE("") {
+      @Override
+      public String getIdentifier() {
+        throw new IllegalArgumentException(
+            String.format("'%s' does not have a custom identifier.", this));
+      }
+    },
+    CUSTOM(CUSTOM_DRAWABLE_IDENTIFIER),
+    GRAYSCALE_IMAGE(GRAYSCALE_IMAGE_IDENTIFIER);
+
+    private final String identifier;
+
+    CustomDrawableType(String identifier) {
+      this.identifier = identifier;
+    }
+
+    /**
+     * Get the string identifier (currently a single character) for the custom drawable type. Used
+     * in R.txt files to identify custom drawables.
+     */
+    public String getIdentifier() {
+      return identifier;
+    }
   }
 
   // Taken from http://developer.android.com/reference/android/R.html
@@ -104,8 +124,8 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
       };
 
   // An identifier for custom drawables.
-  public static final String CUSTOM_DRAWABLE_IDENTIFIER = "#";
-  public static final String GRAYSCALE_IMAGE_IDENTIFIER = "G";
+  private static final String CUSTOM_DRAWABLE_IDENTIFIER = "#";
+  private static final String GRAYSCALE_IMAGE_IDENTIFIER = "G";
   public static final String INT_ARRAY_SEPARATOR = ",";
   private static final Pattern TEXT_SYMBOLS_LINE =
       Pattern.compile(
