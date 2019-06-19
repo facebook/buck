@@ -6,6 +6,7 @@ load(
 java_library(
     name = "testutil",
     srcs = [
+        "FakeJavaClassHashesProvider.java",
         "FakeJavaLibrary.java",
         "FakeJavac.java",
         "FakeStandardJavaFileManager.java",
@@ -19,6 +20,7 @@ java_library(
         "PrebuiltJarBuilder.java",
     ],
     exported_deps = [
+        "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
         "//src/com/facebook/buck/jvm/java:rules",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/core/rules/impl:testutil",

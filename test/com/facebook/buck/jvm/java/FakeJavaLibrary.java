@@ -27,6 +27,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
+import com.facebook.buck.jvm.core.JavaClassHashesProvider;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -153,7 +154,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   @Override
   public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
-    throw new UnsupportedOperationException();
+    return ImmutableSortedMap.of();
   }
 
   @Override
@@ -174,5 +175,10 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   public FakeJavaLibrary setMavenCoords(String mavenCoords) {
     this.mavenCoords = Optional.of(mavenCoords);
     return this;
+  }
+
+  @Override
+  public JavaClassHashesProvider getClassHashesProvider() {
+    return new FakeJavaClassHashesProvider(getClassNamesToHashes());
   }
 }

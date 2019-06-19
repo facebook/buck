@@ -90,11 +90,15 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
     CompilerOutputPaths outputPaths = CompilerOutputPaths.of(buildTarget, filesystem);
 
-    Path pathToClassHashes = JavaLibraryRules.getPathToClassHashes(buildTarget, filesystem);
+    Path pathToClassHashes = getPathToClassHashes(filesystem);
     this.pathToClassHashesOutputPath = new PublicOutputPath(pathToClassHashes);
 
     this.rootOutputPath = new PublicOutputPath(outputPaths.getOutputJarDirPath());
     this.annotationsOutputPath = new PublicOutputPath(outputPaths.getAnnotationPath());
+  }
+
+  Path getPathToClassHashes(ProjectFilesystem filesystem) {
+    return JavaLibraryRules.getPathToClassHashes(buildTarget, filesystem);
   }
 
   public ImmutableSortedSet<SourcePath> getSources() {

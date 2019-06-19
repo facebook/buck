@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright 2019-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,25 +13,17 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.jvm.core;
 
-import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
 
-/**
- * This should be considered deprecated. It comes from a time before the target/action graph split
- * and input-based rule keys. It will be a lot of work to eliminate (including getting rid of
- * SmartDexingStep), but we should do it at some point.
- */
-public interface HasJavaClassHashes extends BuildRule {
+/** Provider that can load java class hashes from the filesystem. */
+public interface JavaClassHashesProvider extends AddsToRuleKey {
 
-  /**
-   * @return a (possibly empty) map of names of {@code .class} files in the output of this rule to
-   *     SHA-1 hashes of their contents.
-   */
-  ImmutableSortedMap<String, HashCode> getClassNamesToHashes();
-
-  JavaClassHashesProvider getClassHashesProvider();
+  ImmutableSortedMap<String, HashCode> getClassNamesToHashes(
+      ProjectFilesystem filesystem, SourcePathResolver sourcePathResolver);
 }

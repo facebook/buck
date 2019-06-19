@@ -31,9 +31,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -58,10 +56,7 @@ public class JavaLibraryRules {
   static JavaLibrary.Data initializeFromDisk(BuildTarget buildTarget, ProjectFilesystem filesystem)
       throws IOException {
     List<String> lines = filesystem.readLines(getPathToClassHashes(buildTarget, filesystem));
-    ImmutableSortedMap<String, HashCode> classHashes =
-        AccumulateClassNamesStep.parseClassHashes(lines);
-
-    return new JavaLibrary.Data(classHashes);
+    return new JavaLibrary.Data(AccumulateClassNamesStep.parseClassHashes(lines));
   }
 
   static Path getPathToClassHashes(BuildTarget buildTarget, ProjectFilesystem filesystem) {

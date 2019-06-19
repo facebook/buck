@@ -33,6 +33,7 @@ import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -40,6 +41,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.EmptyJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
+import com.facebook.buck.jvm.core.JavaClassHashesProvider;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.rules.modern.PipelinedModernBuildRule;
@@ -118,6 +120,8 @@ public class DefaultJavaLibrary
   private final Optional<SourcePath> sourcePathForOutputJar;
   private final Optional<SourcePath> sourcePathForGeneratedAnnotationPath;
 
+  private JavaClassHashesProvider javaClassHashesProvider;
+
   public static DefaultJavaLibraryRules.Builder rulesBuilder(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -179,11 +183,11 @@ public class DefaultJavaLibrary
     this.ruleFinder = ruleFinder;
     this.sourcePathForOutputJar =
         Optional.ofNullable(
-            jarBuildStepsFactory.getSourcePathToOutput(getBuildTarget(), getProjectFilesystem()));
+            jarBuildStepsFactory.getSourcePathToOutput(buildTarget, projectFilesystem));
     this.sourcePathForGeneratedAnnotationPath =
         Optional.ofNullable(
             jarBuildStepsFactory.getSourcePathToGeneratedAnnotationPath(
-                getBuildTarget(), getProjectFilesystem()));
+                buildTarget, projectFilesystem));
 
     this.sourceAbi = sourceAbi;
     this.isDesugarEnabled = isDesugarEnabled;
@@ -210,7 +214,7 @@ public class DefaultJavaLibrary
 
     this.javaAbiInfo =
         getSourcePathToOutput() == null
-            ? new EmptyJavaAbiInfo(getBuildTarget())
+            ? new EmptyJavaAbiInfo(buildTarget)
             : new DefaultJavaAbiInfo(getSourcePathToOutput());
     this.abiJar = abiJar;
     this.sourceOnlyAbiJar = sourceOnlyAbiJar;
@@ -232,6 +236,10 @@ public class DefaultJavaLibrary
             () -> JavaLibraryClasspathProvider.getTransitiveClasspathDeps(DefaultJavaLibrary.this));
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+    this.javaClassHashesProvider =
+        new DefaultJavaClassHashesProvider(
+            ExplicitBuildTargetSourcePath.of(
+                buildTarget, getBuildable().getPathToClassHashes(projectFilesystem)));
   }
 
   private static void validateExportedDepsType(
@@ -469,5 +477,14 @@ public class DefaultJavaLibrary
   @Override
   public SupportsPipelining<JavacPipelineState> getPreviousRuleInPipeline() {
     return sourceAbi;
+  }
+
+  @Override
+  public JavaClassHashesProvider getClassHashesProvider() {
+    return javaClassHashesProvider;
+  }
+
+  public void setJavaClassHashesProvider(JavaClassHashesProvider javaClassHashesProvider) {
+    this.javaClassHashesProvider = javaClassHashesProvider;
   }
 }

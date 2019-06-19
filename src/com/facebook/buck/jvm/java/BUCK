@@ -310,6 +310,7 @@ java_library_with_plugins(
         "CompareAbis.java",
         "CompileAgainstLibraryType.java",
         "ConfiguredCompilerFactory.java",
+        "DefaultJavaClassHashesProvider.java",
         "DefaultJavaLibrary.java",
         "DefaultJavaLibraryBuildable.java",
         "DefaultJavaLibraryRules.java",

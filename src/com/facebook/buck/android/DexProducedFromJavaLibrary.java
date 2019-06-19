@@ -23,32 +23,29 @@ import static com.facebook.buck.android.DexProducedFromJavaLibrary.MetadataResou
 import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.android.dalvik.EstimateDexWeightStep;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
-import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
-import com.facebook.buck.core.rules.common.BuildableSupport;
-import com.facebook.buck.core.rules.impl.AbstractBuildRule;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaClassHashesProvider;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
+import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.ModernBuildRule;
+import com.facebook.buck.rules.modern.OutputPath;
+import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -69,7 +66,6 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.SortedSet;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -84,13 +80,10 @@ import javax.annotation.Nullable;
  * until runtime. Unfortunately, because there is no such thing as an empty {@code .dex} file, we
  * cannot write a meaningful "dummy .dex" if there are no class files to pass to {@code dx}.
  */
-public class DexProducedFromJavaLibrary extends AbstractBuildRule
-    implements SupportsInputBasedRuleKey,
-        InitializableFromDisk<DexProducedFromJavaLibrary.BuildOutput> {
+public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJavaLibrary.Impl>
+    implements InitializableFromDisk<DexProducedFromJavaLibrary.BuildOutput> {
 
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
-  private final BuildableSupport.DepsSupplier buildDepsSupplier;
-  @AddToRuleKey private final Impl buildable;
 
   public DexProducedFromJavaLibrary(
       BuildTarget buildTarget,
@@ -101,17 +94,18 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
       String dexTool,
       int weightFactor,
       ImmutableSortedSet<BuildRule> desugarDeps) {
-    super(buildTarget, projectFilesystem);
-    this.buildable =
+    super(
+        buildTarget,
+        projectFilesystem,
+        ruleFinder,
         new Impl(
-            buildTarget,
+            projectFilesystem,
             dexTool,
             weightFactor,
             getDesugarClassPaths(desugarDeps),
             androidPlatformTarget,
-            javaLibrary);
+            javaLibrary));
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
-    this.buildDepsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
   }
 
   public DexProducedFromJavaLibrary(
@@ -132,7 +126,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
   }
 
   /** Impl class */
-  static class Impl implements AddsToRuleKey {
+  static class Impl implements Buildable {
 
     private static final String DEX_RULE_METADATA = "metadata";
 
@@ -141,15 +135,17 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
     @AddToRuleKey private final int weightFactor;
     @AddToRuleKey private final ImmutableSortedSet<SourcePath> desugarDeps;
     @AddToRuleKey private final SourcePath javaLibrarySourcePath;
+    @AddToRuleKey private final AndroidPlatformTarget androidPlatformTarget;
+    @AddToRuleKey private final boolean desugarEnabled;
+    @AddToRuleKey private final JavaClassHashesProvider javaClassHashesProvider;
 
-    private final AndroidPlatformTarget androidPlatformTarget;
-    private final boolean desugarEnabled;
-
-    private final BuildTarget buildTarget;
-    private final JavaLibrary javaLibrary;
+    @AddToRuleKey private final OutputPath outputDex;
+    @AddToRuleKey private final OutputPath metadataWeight;
+    @AddToRuleKey private final OutputPath metadataClassnamesToHashes;
+    @AddToRuleKey private final OutputPath metadataReferencedResources;
 
     Impl(
-        BuildTarget buildTarget,
+        ProjectFilesystem projectFilesystem,
         String dexTool,
         int weightFactor,
         ImmutableSortedSet<SourcePath> desugarDeps,
@@ -161,18 +157,29 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
       this.androidPlatformTarget = androidPlatformTarget;
       this.desugarEnabled = javaLibrary.isDesugarEnabled();
       this.javaLibrarySourcePath = javaLibrary.getSourcePathToOutput();
-      this.buildTarget = buildTarget;
-      this.javaLibrary = javaLibrary;
+      this.javaClassHashesProvider = javaLibrary.getClassHashesProvider();
+
+      this.outputDex = new OutputPath(projectFilesystem.getPath("dex.jar"));
+      Path metadataDir = projectFilesystem.getPath(DEX_RULE_METADATA);
+      this.metadataWeight = new OutputPath(metadataDir.resolve(WEIGHT_ESTIMATE.toString()));
+      this.metadataClassnamesToHashes =
+          new OutputPath(metadataDir.resolve(CLASSNAMES_TO_HASHES.toString()));
+      this.metadataReferencedResources =
+          new OutputPath(metadataDir.resolve(REFERENCED_RESOURCES.toString()));
     }
 
+    @Override
     public ImmutableList<Step> getBuildSteps(
-        BuildContext context, BuildableContext buildableContext, ProjectFilesystem filesystem) {
-      SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+        BuildContext buildContext,
+        ProjectFilesystem filesystem,
+        OutputPathResolver outputPathResolver,
+        BuildCellRelativePathFactory buildCellPathFactory) {
+      SourcePathResolver sourcePathResolver = buildContext.getSourcePathResolver();
       ImmutableList.Builder<Step> steps = ImmutableList.builder();
-      addPrepareDirSteps(filesystem, context, steps);
 
       // If there are classes, run dx.
-      ImmutableSortedMap<String, HashCode> classNamesToHashes = getClassNamesToHashes();
+      ImmutableSortedMap<String, HashCode> classNamesToHashes =
+          javaClassHashesProvider.getClassNamesToHashes(filesystem, sourcePathResolver);
       boolean hasClassesToDx = !classNamesToHashes.isEmpty();
       Supplier<Integer> weightEstimate;
 
@@ -195,7 +202,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
         if (!desugarEnabled) {
           options.add(Option.NO_DESUGAR);
         }
-        Path pathToDex = getPathToDex(filesystem);
+        Path pathToDex = outputPathResolver.resolvePath(outputDex);
         dx =
             new DxStep(
                 filesystem,
@@ -228,13 +235,11 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
             @Override
             public StepExecutionResult execute(ExecutionContext context) throws IOException {
               if (hasClassesToDx) {
-                buildableContext.recordArtifact(getPathToDex(filesystem));
 
                 @Nullable
                 Collection<String> referencedResources = dx.getResourcesReferencedInCode();
                 if (referencedResources != null) {
                   writeMetadataValue(
-                      buildableContext,
                       REFERENCED_RESOURCES,
                       ObjectMappers.WRITER.writeValueAsString(
                           Ordering.natural().immutableSortedCopy(referencedResources)));
@@ -242,13 +247,10 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
               }
 
               writeMetadataValue(
-                  buildableContext,
-                  WEIGHT_ESTIMATE,
-                  String.valueOf(weightFactor * weightEstimate.get()));
+                  WEIGHT_ESTIMATE, String.valueOf(weightFactor * weightEstimate.get()));
 
               // Record the classnames to hashes map.
               writeMetadataValue(
-                  buildableContext,
                   CLASSNAMES_TO_HASHES,
                   ObjectMappers.WRITER.writeValueAsString(
                       Maps.transformValues(classNamesToHashes, Object::toString)));
@@ -256,37 +258,16 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
               return StepExecutionResults.SUCCESS;
             }
 
-            private void writeMetadataValue(
-                BuildableContext buildableContext, String key, String value) throws IOException {
-              Path path = getMetadataPath(filesystem, key);
+            private void writeMetadataValue(MetadataResource metadataResource, String value)
+                throws IOException {
+              Path path = metadataResource.getMetadataPath(Impl.this, outputPathResolver);
               filesystem.mkdirs(path.getParent());
               filesystem.writeContentsToPath(value, path);
-              buildableContext.recordArtifact(path);
             }
           };
       steps.add(recordArtifactAndMetadataStep);
 
       return steps.build();
-    }
-
-    private ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
-      return javaLibrary.getClassNamesToHashes();
-    }
-
-    private void addPrepareDirSteps(
-        ProjectFilesystem filesystem, BuildContext context, ImmutableList.Builder<Step> steps) {
-      steps.add(
-          RmStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(), filesystem, getPathToDex(filesystem))));
-
-      // Make sure that the buck-out/gen/ directory exists for this.buildTarget.
-      steps.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(),
-                  filesystem,
-                  getPathToDex(filesystem).getParent())));
     }
 
     private Collection<Path> getAbsolutePaths(
@@ -296,32 +277,40 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
           .map(sourcePathResolver::getAbsolutePath)
           .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
     }
+  }
 
-    private Path getPathToDex(ProjectFilesystem filesystem) {
-      return BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.dex.jar");
+  /** Metadata Resource enum */
+  enum MetadataResource {
+    WEIGHT_ESTIMATE,
+    CLASSNAMES_TO_HASHES,
+    REFERENCED_RESOURCES;
+
+    Path getMetadataPath(Impl buildable, OutputPathResolver outputPathResolver) {
+      OutputPath outputPath;
+      switch (this) {
+        case WEIGHT_ESTIMATE:
+          outputPath = buildable.metadataWeight;
+          break;
+        case CLASSNAMES_TO_HASHES:
+          outputPath = buildable.metadataClassnamesToHashes;
+          break;
+        case REFERENCED_RESOURCES:
+          outputPath = buildable.metadataReferencedResources;
+          break;
+        default:
+          throw new IllegalStateException(this + " is not supported");
+      }
+      return outputPathResolver.resolvePath(outputPath);
     }
 
-    private Path getMetadataPath(ProjectFilesystem filesystem, String key) {
-      return BuildTargetPaths.getGenPath(
-          filesystem, buildTarget, "%s/" + DEX_RULE_METADATA + "/" + key);
+    @Override
+    public String toString() {
+      return name().toLowerCase();
     }
   }
 
-  /** Metadata Resource constants */
-  static class MetadataResource {
-
-    static final String WEIGHT_ESTIMATE = "weight_estimate";
-    static final String CLASSNAMES_TO_HASHES = "classnames_to_hashes";
-    static final String REFERENCED_RESOURCES = "referenced_resources";
-  }
-
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
-    return getBuildable().getBuildSteps(context, buildableContext, getProjectFilesystem());
-  }
-
-  private ImmutableSortedSet<SourcePath> getDesugarClassPaths(Collection<BuildRule> desugarDeps) {
+  private static ImmutableSortedSet<SourcePath> getDesugarClassPaths(
+      Collection<BuildRule> desugarDeps) {
     if (desugarDeps == null) {
       return ImmutableSortedSet.of();
     }
@@ -360,8 +349,8 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
     return ObjectMappers.readValue(value.get(), new TypeReference<ImmutableList<String>>() {});
   }
 
-  private Optional<String> readMetadataValue(String key) {
-    Path path = getBuildable().getMetadataPath(getProjectFilesystem(), key);
+  private Optional<String> readMetadataValue(MetadataResource metadataResource) {
+    Path path = metadataResource.getMetadataPath(getBuildable(), getOutputPathResolver());
     return getProjectFilesystem().readFileIfItExists(path);
   }
 
@@ -404,11 +393,11 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
   }
 
   public SourcePath getSourcePathToDex() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToDex());
+    return getSourcePath(getPathToDex());
   }
 
-  public Path getPathToDex() {
-    return getBuildable().getPathToDex(getProjectFilesystem());
+  public OutputPath getPathToDex() {
+    return getBuildable().outputDex;
   }
 
   public boolean hasOutput() {
@@ -433,16 +422,7 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRule
     Path resourcesFile =
         BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
             .resolve(Impl.DEX_RULE_METADATA)
-            .resolve(REFERENCED_RESOURCES);
+            .resolve(REFERENCED_RESOURCES.toString());
     return filesystem.readFileIfItExists(resourcesFile);
-  }
-
-  @Override
-  public SortedSet<BuildRule> getBuildDeps() {
-    return buildDepsSupplier.get();
-  }
-
-  private Impl getBuildable() {
-    return buildable;
   }
 }
