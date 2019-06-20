@@ -274,8 +274,8 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     long realSize = getOutputSize(getPathsForArtifact());
     if (realSize != outputSize) {
       LOG.warn(
-          "Artifact output size (%s) doesn't match artifactMetadata OUTPUT_SIZE (%s).",
-          realSize, outputSize);
+          "Target (%s) Artifact output size (%s) doesn't match artifactMetadata OUTPUT_SIZE (%s).",
+          buildTarget.getFullyQualifiedName(), realSize, outputSize);
     }
   }
 
