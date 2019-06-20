@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
+import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
@@ -170,10 +171,14 @@ public class CriticalPathEventListener implements BuckEventListener {
     }
   }
 
-  /** Return all the build targets in the critical path */
-  public ImmutableList<BuildTarget> getCriticalPathBuildTargets() {
+  /** Return all the build targets in the critical path and their elapsed time */
+  public ImmutableList<Pair<BuildTarget, Duration>> getCriticalPathBuildTargets() {
     Collection<Pair<BuildTarget, CriticalPathNode>> criticalPath = getCriticalPath();
-    return criticalPath.stream().map(Pair::getFirst).collect(ImmutableList.toImmutableList());
+    return criticalPath.stream()
+        .map(
+            pair ->
+                new Pair<>(pair.getFirst(), Duration.ofMillis(pair.getSecond().getElapsedTimeMs())))
+        .collect(ImmutableList.toImmutableList());
   }
 
   @VisibleForTesting
