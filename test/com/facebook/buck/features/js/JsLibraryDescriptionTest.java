@@ -165,8 +165,8 @@ public class JsLibraryDescriptionTest {
   public void internalFileRuleDependsOnWorker() {
     JsTestScenario scenario = scenarioBuilder.library(target).build();
     BuildRule filesRule = internalFileRule(scenario.graphBuilder);
-    assertThat(
-        filesRule.getBuildDeps(), hasItem(scenario.graphBuilder.getRule(scenario.workerTarget)));
+    BuildRule workerRule = scenario.graphBuilder.getRule(scenario.workerTarget);
+    assertThat(filesRule.getBuildDeps(), hasItem(workerRule));
   }
 
   @Test

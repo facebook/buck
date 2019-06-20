@@ -23,9 +23,9 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -46,7 +46,7 @@ import com.facebook.buck.util.json.JsonBuilder.ObjectBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.function.BiFunction;
+import java.util.SortedSet;
 import java.util.stream.Stream;
 
 /** JsLibrary rule */
@@ -167,33 +167,38 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
    * An internal rule type to make the aggregation result of {@link JsFile} dependencies cacheable
    * independently of {@link JsLibrary} dependencies.
    */
-  static class Files extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+  static class Files extends AbstractBuildRule {
 
     @AddToRuleKey private final ImmutableSortedSet<BuildTargetSourcePath> sources;
-
-    @AddToRuleKey private final WorkerTool worker;
+    @AddToRuleKey final WorkerTool worker;
+    private final BuildableSupport.DepsSupplier depsSupplier;
 
     Files(
         BuildTarget target,
         ProjectFilesystem filesystem,
-        BuildRuleParams params,
+        SourcePathRuleFinder ruleFinder,
         ImmutableSortedSet<BuildTargetSourcePath> sources,
         WorkerTool worker) {
-      super(target, filesystem, params);
+      super(target, filesystem);
       this.sources = sources;
       this.worker = worker;
+      this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
     }
 
     @Override
     public ImmutableList<? extends Step> getBuildSteps(
         BuildContext context, BuildableContext buildableContext) {
-      return JsLibrary.getBuildSteps(
-          context,
-          buildableContext,
-          getSourcePathToOutput(),
-          getProjectFilesystem(),
-          worker,
-          this::getJobArgs);
+      BuildTargetSourcePath output = getSourcePathToOutput();
+      ProjectFilesystem filesystem = getProjectFilesystem();
+      SourcePathResolver resolver = context.getSourcePathResolver();
+      Path outputPath = resolver.getAbsolutePath(output);
+      buildableContext.recordArtifact(resolver.getRelativePath(output));
+      return ImmutableList.of(
+          RmStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), filesystem, outputPath)),
+          JsUtil.jsonWorkerShellStepAddingFlavors(
+              worker, getJobArgs(resolver, outputPath), output.getTarget(), resolver, filesystem));
     }
 
     private ObjectBuilder getJobArgs(SourcePathResolver resolver, Path outputPath) {
@@ -233,23 +238,10 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
               "JsLibrary.Files rule %s has a source that is not a JsFile instance: %s",
               getBuildTarget(), x.getBuildTarget()));
     }
-  }
 
-  private static ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext,
-      BuildTargetSourcePath output,
-      ProjectFilesystem filesystem,
-      WorkerTool worker,
-      BiFunction<SourcePathResolver, Path, ObjectBuilder> jobArgs) {
-    SourcePathResolver resolver = context.getSourcePathResolver();
-    Path outputPath = resolver.getAbsolutePath(output);
-    buildableContext.recordArtifact(resolver.getRelativePath(output));
-    return ImmutableList.of(
-        RmStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), filesystem, outputPath)),
-        JsUtil.jsonWorkerShellStepAddingFlavors(
-            worker, jobArgs.apply(resolver, outputPath), output.getTarget(), resolver, filesystem));
+    @Override
+    public SortedSet<BuildRule> getBuildDeps() {
+      return depsSupplier.get();
+    }
   }
 }
