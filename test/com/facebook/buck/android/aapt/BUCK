@@ -1,9 +1,28 @@
 load("//tools/build_rules:java_rules.bzl", "java_test")
 
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/android/aapt:aapt",
+    ],
+    visibility = [
+        "//test/...",
+    ],
+    deps = [
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)
+
 java_test(
     name = "aapt",
     srcs = glob(["*Test.java"]),
     deps = [
+        ":testutil",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:split_dex",

@@ -27,9 +27,10 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.MergeAndroidResourcesStep.DuplicateResourceException;
-import com.facebook.buck.android.aapt.FakeRDotTxtEntryWithID;
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.android.aapt.RDotTxtEntryUtil;
+import com.facebook.buck.android.aapt.RDotTxtEntryUtil.FakeEntry;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -59,7 +60,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.stream.IntStream;
+import java.util.stream.Collectors;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.StringContains;
@@ -69,6 +70,10 @@ import org.junit.rules.ExpectedException;
 
 public class MergeAndroidResourcesStepTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
+
+  private List<RDotTxtEntry> createTestingFakesWithIds(List<RDotTxtEntry> ls) {
+    return ls.stream().map(RDotTxtEntryUtil::matchId).collect(Collectors.toList());
+  }
 
   @Test
   public void testGenerateRDotJavaForMultipleSymbolsFiles() throws DuplicateResourceException {
@@ -186,44 +191,38 @@ public class MergeAndroidResourcesStepTest {
 
     System.out.println(resources);
 
-    ImmutableList<FakeRDotTxtEntryWithID> fakeRDotTxtEntryWithIDS =
+    ImmutableList<RDotTxtEntry> fakeRDotTxtEntryWithIDS =
         ImmutableList.of(
-            new FakeRDotTxtEntryWithID(INT, ATTR, "android_layout_gravity", "0x07f01005"),
-            new FakeRDotTxtEntryWithID(INT, ATTR, "background", "0x07f01006"),
-            new FakeRDotTxtEntryWithID(INT, ATTR, "backgroundSplit", "0x07f01007"),
-            new FakeRDotTxtEntryWithID(INT, ATTR, "backgroundStacked", "0x07f01008"),
-            new FakeRDotTxtEntryWithID(INT, ATTR, "buttonPanelSideLayout", "0x07f01001"),
-            new FakeRDotTxtEntryWithID(INT, ATTR, "layout_heightPercent", "0x07f01009"),
-            new FakeRDotTxtEntryWithID(INT, ATTR, "listLayout", "0x07f01002"),
-            new FakeRDotTxtEntryWithID(INT, ID, "a1", "0x07f01003"),
-            new FakeRDotTxtEntryWithID(INT, ID, "a2", "0x07f01004"),
-            new FakeRDotTxtEntryWithID(
+            FakeEntry.createWithId(INT, ATTR, "android_layout_gravity", "0x07f01005"),
+            FakeEntry.createWithId(INT, ATTR, "background", "0x07f01006"),
+            FakeEntry.createWithId(INT, ATTR, "backgroundSplit", "0x07f01007"),
+            FakeEntry.createWithId(INT, ATTR, "backgroundStacked", "0x07f01008"),
+            FakeEntry.createWithId(INT, ATTR, "buttonPanelSideLayout", "0x07f01001"),
+            FakeEntry.createWithId(INT, ATTR, "layout_heightPercent", "0x07f01009"),
+            FakeEntry.createWithId(INT, ATTR, "listLayout", "0x07f01002"),
+            FakeEntry.createWithId(INT, ID, "a1", "0x07f01003"),
+            FakeEntry.createWithId(INT, ID, "a2", "0x07f01004"),
+            FakeEntry.createWithId(
                 INT_ARRAY, STYLEABLE, "ActionBar", "{ 0x07f01006,0x07f01007,0x07f01008 }"),
-            new FakeRDotTxtEntryWithID(INT, STYLEABLE, "ActionBar_background", "0"),
-            new FakeRDotTxtEntryWithID(INT, STYLEABLE, "ActionBar_backgroundSplit", "1"),
-            new FakeRDotTxtEntryWithID(INT, STYLEABLE, "ActionBar_backgroundStacked", "2"),
-            new FakeRDotTxtEntryWithID(
+            FakeEntry.createWithId(INT, STYLEABLE, "ActionBar_background", "0"),
+            FakeEntry.createWithId(INT, STYLEABLE, "ActionBar_backgroundSplit", "1"),
+            FakeEntry.createWithId(INT, STYLEABLE, "ActionBar_backgroundStacked", "2"),
+            FakeEntry.createWithId(
                 INT_ARRAY, STYLEABLE, "ActionBarLayout", "{ 0x010100f2,0x07f01005 }"),
-            new FakeRDotTxtEntryWithID(INT, STYLEABLE, "ActionBarLayout_android_layout", "0"),
-            new FakeRDotTxtEntryWithID(
-                INT, STYLEABLE, "ActionBarLayout_android_layout_gravity", "1"),
-            new FakeRDotTxtEntryWithID(
+            FakeEntry.createWithId(INT, STYLEABLE, "ActionBarLayout_android_layout", "0"),
+            FakeEntry.createWithId(INT, STYLEABLE, "ActionBarLayout_android_layout_gravity", "1"),
+            FakeEntry.createWithId(
                 INT_ARRAY, STYLEABLE, "AlertDialog", "{ 0x010100f2,0x07f01001,0x7f01003b }"),
-            new FakeRDotTxtEntryWithID(INT, STYLEABLE, "AlertDialog_android_layout", "0"),
-            new FakeRDotTxtEntryWithID(INT, STYLEABLE, "AlertDialog_buttonPanelSideLayout", "1"),
-            new FakeRDotTxtEntryWithID(INT, STYLEABLE, "AlertDialog_multiChoiceItemLayout", "2"),
-            new FakeRDotTxtEntryWithID(
+            FakeEntry.createWithId(INT, STYLEABLE, "AlertDialog_android_layout", "0"),
+            FakeEntry.createWithId(INT, STYLEABLE, "AlertDialog_buttonPanelSideLayout", "1"),
+            FakeEntry.createWithId(INT, STYLEABLE, "AlertDialog_multiChoiceItemLayout", "2"),
+            FakeEntry.createWithId(
                 INT_ARRAY, STYLEABLE, "PercentLayout_Layout", "{ 0x00000000,0x07f01009 }"),
-            new FakeRDotTxtEntryWithID(
-                INT, STYLEABLE, "PercentLayout_Layout_layout_aspectRatio", "0"),
-            new FakeRDotTxtEntryWithID(
+            FakeEntry.createWithId(INT, STYLEABLE, "PercentLayout_Layout_layout_aspectRatio", "0"),
+            FakeEntry.createWithId(
                 INT, STYLEABLE, "PercentLayout_Layout_layout_heightPercent", "1"));
 
-    IntStream.range(0, resources.size())
-        .forEach(
-            action -> {
-              assertEquals(fakeRDotTxtEntryWithIDS.get(action), resources.get(action));
-            });
+    assertEquals(createTestingFakesWithIds(resources), fakeRDotTxtEntryWithIDS);
   }
 
   @Test

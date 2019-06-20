@@ -16,14 +16,15 @@
 
 package com.facebook.buck.android.aapt;
 
+import static com.facebook.buck.android.aapt.RDotTxtEntryUtil.FakeEntry;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.aapt.MiniAapt.ResourceParseException;
+import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.core.model.BuildId;
@@ -40,6 +41,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.xml.xpath.XPathExpressionException;
 import org.hamcrest.core.IsEqual;
 import org.hamcrest.junit.ExpectedException;
@@ -68,6 +71,24 @@ public class MiniAaptTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
+  private static Set<RDotTxtEntry> createTestingFakes(
+      Set<RDotTxtEntry> entries, Function<RDotTxtEntry, RDotTxtEntry> converter) {
+    return entries.stream().map(converter).collect(Collectors.toSet());
+  }
+
+  private static Set<RDotTxtEntry> createTestingFakes(Set<RDotTxtEntry> entries) {
+    return createTestingFakes(entries, RDotTxtEntryUtil::matchDefault);
+  }
+
+  private static Set<RDotTxtEntry> createTestingFakesWithParents(Set<RDotTxtEntry> entries) {
+    return createTestingFakes(entries, RDotTxtEntryUtil::matchParent);
+  }
+
+  private static Set<RDotTxtEntry> createTestingFakesWithCustomDrawables(
+      Set<RDotTxtEntry> entries) {
+    return createTestingFakes(entries, RDotTxtEntryUtil::matchCustomDrawables);
+  }
+
   @Test
   public void testFindingResourceIdsInXml()
       throws IOException, XPathExpressionException, ResourceParseException {
@@ -88,18 +109,18 @@ public class MiniAaptTest {
         ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
 
     assertEquals(
-        definitions,
-        ImmutableSet.<RDotTxtEntry>of(
-            new FakeRDotTxtEntry(IdType.INT, RType.ID, "button1"),
-            new FakeRDotTxtEntry(IdType.INT, RType.ID, "button3")));
+        createTestingFakes(definitions),
+        ImmutableSet.of(
+            FakeEntry.create(IdType.INT, RType.ID, "button1"),
+            FakeEntry.create(IdType.INT, RType.ID, "button3")));
 
     assertEquals(
-        references.build(),
-        ImmutableSet.<RDotTxtEntry>of(
-            new FakeRDotTxtEntry(IdType.INT, RType.DRAWABLE, "some_image"),
-            new FakeRDotTxtEntry(IdType.INT, RType.STRING, "text"),
-            new FakeRDotTxtEntry(IdType.INT, RType.STYLE, "Buck_Theme"),
-            new FakeRDotTxtEntry(IdType.INT, RType.ID, "button2")));
+        createTestingFakes(references.build()),
+        ImmutableSet.of(
+            FakeEntry.create(IdType.INT, RType.DRAWABLE, "some_image"),
+            FakeEntry.create(IdType.INT, RType.STRING, "text"),
+            FakeEntry.create(IdType.INT, RType.STYLE, "Buck_Theme"),
+            FakeEntry.create(IdType.INT, RType.ID, "button2")));
   }
 
   @Test
@@ -151,22 +172,22 @@ public class MiniAaptTest {
         ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
 
     assertEquals(
-        definitions,
-        ImmutableSet.<RDotTxtEntry>of(
-            new FakeRDotTxtEntry(IdType.INT, RType.STRING, "hello"),
-            new FakeRDotTxtEntry(IdType.INT, RType.PLURALS, "people"),
-            new FakeRDotTxtEntry(IdType.INT, RType.INTEGER, "number"),
-            new FakeRDotTxtEntry(IdType.INT, RType.DIMEN, "dimension"),
-            new FakeRDotTxtEntry(IdType.INT_ARRAY, RType.STYLEABLE, "MyNiceView"),
-            new FakeRDotTxtEntry(IdType.INT, RType.STYLEABLE, "MyNiceView_titleText"),
-            new FakeRDotTxtEntry(IdType.INT, RType.STYLEABLE, "MyNiceView_subtitleText"),
-            new FakeRDotTxtEntry(IdType.INT, RType.STYLEABLE, "MyNiceView_complexAttr"),
-            new FakeRDotTxtEntry(IdType.INT, RType.STYLEABLE, "MyNiceView_android_layout_gravity"),
-            new FakeRDotTxtEntry(IdType.INT, RType.ATTR, "titleText"),
-            new FakeRDotTxtEntry(IdType.INT, RType.ATTR, "subtitleText"),
-            new FakeRDotTxtEntry(IdType.INT, RType.ATTR, "complexAttr"),
-            new FakeRDotTxtEntry(IdType.INT, RType.ID, "some_id"),
-            new FakeRDotTxtEntry(IdType.INT, RType.STYLE, "Widget_Theme")));
+        createTestingFakes(definitions),
+        ImmutableSet.of(
+            FakeEntry.create(IdType.INT, RType.STRING, "hello"),
+            FakeEntry.create(IdType.INT, RType.PLURALS, "people"),
+            FakeEntry.create(IdType.INT, RType.INTEGER, "number"),
+            FakeEntry.create(IdType.INT, RType.DIMEN, "dimension"),
+            FakeEntry.create(IdType.INT_ARRAY, RType.STYLEABLE, "MyNiceView"),
+            FakeEntry.create(IdType.INT, RType.STYLEABLE, "MyNiceView_titleText"),
+            FakeEntry.create(IdType.INT, RType.STYLEABLE, "MyNiceView_subtitleText"),
+            FakeEntry.create(IdType.INT, RType.STYLEABLE, "MyNiceView_complexAttr"),
+            FakeEntry.create(IdType.INT, RType.STYLEABLE, "MyNiceView_android_layout_gravity"),
+            FakeEntry.create(IdType.INT, RType.ATTR, "titleText"),
+            FakeEntry.create(IdType.INT, RType.ATTR, "subtitleText"),
+            FakeEntry.create(IdType.INT, RType.ATTR, "complexAttr"),
+            FakeEntry.create(IdType.INT, RType.ID, "some_id"),
+            FakeEntry.create(IdType.INT, RType.STYLE, "Widget_Theme")));
 
     boolean foundElement = false;
     for (RDotTxtEntry definition : definitions) {
@@ -211,40 +232,20 @@ public class MiniAaptTest {
     Set<RDotTxtEntry> definitions =
         ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
 
-    assertThat(definitions.size(), equalTo(9));
-    for (RDotTxtEntry entry : definitions) {
-      switch (entry.name) {
-        case "justAttr":
-          assertEquals("justAttr", entry.parent);
-          break;
-        case "MyLayout":
-          assertEquals("MyLayout", entry.parent);
-          break;
-        case "MyLayout_myAttr":
-          assertEquals("MyLayout", entry.parent);
-          break;
-        case "MyLayout_myAttr2":
-          assertEquals("MyLayout", entry.parent);
-          break;
-        case "MyLayout_Layout":
-          assertEquals("MyLayout_Layout", entry.parent);
-          break;
-        case "MyLayout_Layout_android_text":
-          assertEquals("MyLayout_Layout", entry.parent);
-          break;
-        case "MyLayout_Layout_android_color":
-          assertEquals("MyLayout_Layout", entry.parent);
-          break;
-        case "myAttr":
-          assertEquals("myAttr", entry.parent);
-          break;
-        case "myAttr2":
-          assertEquals("myAttr2", entry.parent);
-          break;
-        default:
-          fail("Unexpected entry: " + entry.name);
-      }
-    }
+    assertEquals(
+        createTestingFakesWithParents(definitions),
+        ImmutableSet.of(
+            FakeEntry.create(IdType.INT, RType.ATTR, "justAttr"),
+            FakeEntry.create(IdType.INT_ARRAY, RType.STYLEABLE, "MyLayout"),
+            FakeEntry.createWithParent(IdType.INT, RType.STYLEABLE, "MyLayout_myAttr", "MyLayout"),
+            FakeEntry.createWithParent(IdType.INT, RType.STYLEABLE, "MyLayout_myAttr2", "MyLayout"),
+            FakeEntry.create(IdType.INT_ARRAY, RType.STYLEABLE, "MyLayout_Layout"),
+            FakeEntry.createWithParent(
+                IdType.INT, RType.STYLEABLE, "MyLayout_Layout_android_text", "MyLayout_Layout"),
+            FakeEntry.createWithParent(
+                IdType.INT, RType.STYLEABLE, "MyLayout_Layout_android_color", "MyLayout_Layout"),
+            FakeEntry.create(IdType.INT, RType.ATTR, "myAttr"),
+            FakeEntry.create(IdType.INT, RType.ATTR, "myAttr2")));
   }
 
   @Test
@@ -301,8 +302,8 @@ public class MiniAaptTest {
         ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
 
     assertEquals(
-        definitions,
-        ImmutableSet.<RDotTxtEntry>of(new FakeRDotTxtEntry(IdType.INT, RType.STRING, "hello")));
+        createTestingFakes(definitions),
+        ImmutableSet.<RDotTxtEntry>of(FakeEntry.create(IdType.INT, RType.STRING, "hello")));
   }
 
   @Test
@@ -332,11 +333,10 @@ public class MiniAaptTest {
     Set<RDotTxtEntry> definitions =
         ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
 
-    assertThat(
-        definitions,
-        IsEqual.equalToObject(
-            ImmutableSet.<RDotTxtEntry>of(
-                new FakeRDotTxtEntry(IdType.INT, RType.DRAWABLE, "android_drawable"))));
+    assertEquals(
+        createTestingFakes(definitions),
+        ImmutableSet.<RDotTxtEntry>of(
+            FakeEntry.create(IdType.INT, RType.DRAWABLE, "android_drawable")));
   }
 
   @Test
@@ -369,15 +369,11 @@ public class MiniAaptTest {
     Set<RDotTxtEntry> definitions =
         ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
 
-    assertThat(
-        definitions,
-        IsEqual.equalToObject(
-            ImmutableSet.<RDotTxtEntry>of(
-                new FakeRDotTxtEntry(
-                    IdType.INT,
-                    RType.DRAWABLE,
-                    "custom_drawable",
-                    RDotTxtEntry.CustomDrawableType.CUSTOM))));
+    assertEquals(
+        createTestingFakesWithCustomDrawables(definitions),
+        ImmutableSet.<RDotTxtEntry>of(
+            FakeEntry.createWithCustomDrawable(
+                IdType.INT, RType.DRAWABLE, "custom_drawable", CustomDrawableType.CUSTOM)));
   }
 
   @Test
@@ -400,14 +396,14 @@ public class MiniAaptTest {
         ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
 
     assertThat(
-        definitions,
+        createTestingFakesWithCustomDrawables(definitions),
         IsEqual.equalToObject(
             ImmutableSet.<RDotTxtEntry>of(
-                new FakeRDotTxtEntry(
+                FakeEntry.createWithCustomDrawable(
                     IdType.INT,
                     RType.DRAWABLE,
                     "fbui_tomato",
-                    RDotTxtEntry.CustomDrawableType.GRAYSCALE_IMAGE))));
+                    CustomDrawableType.GRAYSCALE_IMAGE))));
   }
 
   @Test(expected = ResourceParseException.class)
@@ -571,9 +567,8 @@ public class MiniAaptTest {
     Set<RDotTxtEntry> missing = aapt.verifyReferences(filesystem, references.build());
 
     assertEquals(
-        ImmutableSet.<RDotTxtEntry>of(
-            new FakeRDotTxtEntry(IdType.INT, RType.DRAWABLE, "some_image")),
-        missing);
+        ImmutableSet.<RDotTxtEntry>of(FakeEntry.create(IdType.INT, RType.DRAWABLE, "some_image")),
+        createTestingFakes(missing));
   }
 
   @Test
@@ -638,10 +633,11 @@ public class MiniAaptTest {
 
     assertEquals(
         ImmutableSet.<RDotTxtEntry>of(
-            new FakeRDotTxtEntry(IdType.INT, RType.DRAWABLE, "icon"),
-            new FakeRDotTxtEntry(IdType.INT, RType.DRAWABLE, "nine_patch"),
-            new FakeRDotTxtEntry(IdType.INT, RType.TRANSITION, "some_transition")),
-        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources());
+            FakeEntry.create(IdType.INT, RType.DRAWABLE, "icon"),
+            FakeEntry.create(IdType.INT, RType.DRAWABLE, "nine_patch"),
+            FakeEntry.create(IdType.INT, RType.TRANSITION, "some_transition")),
+        createTestingFakes(
+            ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources()));
   }
 
   @Test
@@ -672,9 +668,9 @@ public class MiniAaptTest {
     aapt.processXmlFile(filesystem, Paths.get("resource.xml"), references);
 
     assertEquals(
-        references.build(),
+        createTestingFakes(references.build()),
         ImmutableSet.<RDotTxtEntry>of(
-            new FakeRDotTxtEntry(IdType.INT, RType.STRING, "com_buckbuild_taskname")));
+            FakeEntry.create(IdType.INT, RType.STRING, "com_buckbuild_taskname")));
   }
 
   @Test

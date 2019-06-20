@@ -25,10 +25,6 @@ public class FakeRDotTxtEntry extends RDotTxtEntry {
   private static final String FAKE_ID = "0x00000000";
 
   public FakeRDotTxtEntry(IdType idType, RType type, String name) {
-    this(idType, type, name, CustomDrawableType.NONE);
-  }
-
-  public FakeRDotTxtEntry(IdType idType, RType type, String name, CustomDrawableType customType) {
-    super(idType, type, name, FAKE_ID, customType);
+    super(idType, type, name, FAKE_ID);
   }
 }

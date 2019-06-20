@@ -64,7 +64,7 @@ public class RDotTxtResourceCollector implements ResourceCollector {
       Path path,
       DocumentLocation documentLocation,
       CustomDrawableType drawableType) {
-    RDotTxtEntry entry = new FakeRDotTxtEntry(IdType.INT, rType, name, drawableType);
+    RDotTxtEntry entry = new FakeRDotTxtEntry(IdType.INT, rType, name);
     if (!resources.contains(entry)) {
       String idValue = getNextCustomIdValue(rType, drawableType);
       resources.add(new RDotTxtEntry(IdType.INT, rType, name, idValue, drawableType));
