@@ -36,6 +36,7 @@ from subprocutils import which
 from timing import monotonic_time_nanos
 from tracing import Tracing
 
+
 BUCKD_CLIENT_TIMEOUT_MILLIS = 180000
 BUCKD_STARTUP_TIMEOUT_MILLIS = 10000
 GC_MAX_PAUSE_TARGET = 15000
@@ -905,12 +906,18 @@ class BuckTool(object):
             # simplify the transition while we need to support multiple versions of the JVM.
             # TODO: Remove once Java 11 upgrade is done.
             if self.get_buck_compiled_java_version() >= 9:
-                unsupported_args = set(["-XX:+UseParNewGC"])
+                unsupported_args = set(
+                    [
+                        "-XX:+PrintGCDateStamps",
+                        "-XX:+PrintGCTimeStamps",
+                        "-XX:+UseParNewGC",
+                    ]
+                )
                 stripped_args = []
                 for arg in java_args:
                     if arg in unsupported_args:
                         logging.warning(
-                            "Removing JVM arg %s, which is not supported in Java %d.",
+                            "Warning: Removing JVM arg %s, which is not supported in Java %d.",
                             arg,
                             self.get_buck_compiled_java_version(),
                         )
