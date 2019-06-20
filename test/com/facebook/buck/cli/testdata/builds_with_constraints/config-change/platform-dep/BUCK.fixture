@@ -3,4 +3,7 @@ platform(
     constraint_values = [
         "buck//config/constraints:linux",
     ],
+    visibility = [
+        "PUBLIC",
+    ],
 )

@@ -609,6 +609,7 @@ public class BuildCommandIntegrationTest {
               + "    constraint_values = [\n"
               + "        \"buck//config/constraints:osx\",\n"
               + "    ],\n"
+              + "    visibility = [\"PUBLIC\"],\n"
               + ")\n",
           "config-change/platform-dep/BUCK");
 
