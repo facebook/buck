@@ -39,3 +39,13 @@ android_instrumentation_apk(
         "//java/com/sample/app:app",
     ],
 )
+
+android_instrumentation_apk(
+    name = "instrumentation_apk_with_instrumentation_apk",
+    apk = ":app_cxx_lib_dep",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//:cxx",
+        "//java/com/sample/app:app",
+    ],
+)

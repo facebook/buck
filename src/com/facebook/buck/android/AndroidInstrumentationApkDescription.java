@@ -99,7 +99,8 @@ public class AndroidInstrumentationApkDescription
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     params = params.withoutExtraDeps();
     BuildRule installableApk = graphBuilder.getRule(args.getApk());
-    if (!(installableApk instanceof HasInstallableApk)) {
+    if (!(installableApk instanceof HasInstallableApk)
+        || (installableApk instanceof AndroidInstrumentationApk)) {
       throw new HumanReadableException(
           "In %s, apk='%s' must be an android_binary() or apk_genrule() but was %s().",
           buildTarget, installableApk.getFullyQualifiedName(), installableApk.getType());
