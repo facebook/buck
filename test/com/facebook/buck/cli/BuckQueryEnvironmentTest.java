@@ -69,6 +69,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
@@ -173,7 +174,7 @@ public class BuckQueryEnvironmentTest {
 
   @Test
   public void testResolveSingleTargets() throws QueryException {
-    ImmutableSet<QueryTarget> targets;
+    Set<QueryTarget> targets;
     ImmutableSet<QueryTarget> expectedTargets;
 
     targets = buckQueryEnvironment.getTargetsMatchingPattern("//example:six");

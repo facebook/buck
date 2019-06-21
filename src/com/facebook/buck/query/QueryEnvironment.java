@@ -204,7 +204,7 @@ public interface QueryEnvironment<NODE_TYPE> {
    */
   interface TargetEvaluator {
     /** Returns the set of target nodes for the specified target pattern, in 'buck build' syntax. */
-    ImmutableSet<QueryTarget> evaluateTarget(String target) throws QueryException;
+    Set<QueryTarget> evaluateTarget(String target) throws QueryException;
 
     Type getType();
 
@@ -221,13 +221,12 @@ public interface QueryEnvironment<NODE_TYPE> {
    * Returns the set of target nodes in the graph for the specified target pattern, in 'buck build'
    * syntax.
    */
-  default ImmutableSet<QueryTarget> getTargetsMatchingPattern(String pattern)
-      throws QueryException {
+  default Set<QueryTarget> getTargetsMatchingPattern(String pattern) throws QueryException {
     return getTargetEvaluator().evaluateTarget(pattern);
   }
 
   /** Returns the direct forward dependencies of the specified targets. */
-  ImmutableSet<NODE_TYPE> getFwdDeps(Iterable<NODE_TYPE> targets) throws QueryException;
+  Set<NODE_TYPE> getFwdDeps(Iterable<NODE_TYPE> targets) throws QueryException;
 
   /**
    * Applies {@code action} to each forward dependencies of the specified targets.
@@ -263,13 +262,13 @@ public interface QueryEnvironment<NODE_TYPE> {
   String getTargetKind(NODE_TYPE target) throws QueryException;
 
   /** Returns the tests associated with the given target. */
-  ImmutableSet<NODE_TYPE> getTestsForTarget(NODE_TYPE target) throws QueryException;
+  Set<NODE_TYPE> getTestsForTarget(NODE_TYPE target) throws QueryException;
 
   /** Returns the build files that define the given targets. */
-  ImmutableSet<QueryFileTarget> getBuildFiles(Set<NODE_TYPE> targets) throws QueryException;
+  Set<QueryFileTarget> getBuildFiles(Set<NODE_TYPE> targets) throws QueryException;
 
   /** Returns the targets that own one or more of the given files. */
-  ImmutableSet<NODE_TYPE> getFileOwners(ImmutableList<String> files) throws QueryException;
+  Set<NODE_TYPE> getFileOwners(ImmutableList<String> files) throws QueryException;
 
   /**
    * Returns the existing targets in the value of `attribute` of the given `target`.
@@ -277,18 +276,18 @@ public interface QueryEnvironment<NODE_TYPE> {
    * <p>Note that unlike most methods in this interface, this method can return a heterogeneous
    * collection of objects that implement {@link QueryTarget}.
    */
-  ImmutableSet<? extends QueryTarget> getTargetsInAttribute(NODE_TYPE target, String attribute)
+  Set<? extends QueryTarget> getTargetsInAttribute(NODE_TYPE target, String attribute)
       throws QueryException;
 
   /** Returns the objects in the `attribute` of the given `target` that satisfy `predicate` */
-  ImmutableSet<Object> filterAttributeContents(
+  Set<Object> filterAttributeContents(
       NODE_TYPE target, String attribute, Predicate<Object> predicate) throws QueryException;
 
   /** Returns the set of query functions implemented by this query environment. */
   Iterable<QueryFunction<? extends QueryTarget, NODE_TYPE>> getFunctions();
 
   /** @return the {@link QueryTarget}s expanded from the given variable {@code name}. */
-  default ImmutableSet<NODE_TYPE> resolveTargetVariable(String name) {
+  default Set<NODE_TYPE> resolveTargetVariable(String name) {
     throw new IllegalArgumentException(String.format("unexpected target variable \"%s\"", name));
   }
 }

@@ -168,7 +168,7 @@ public class DepsFunction<T extends QueryTarget> implements QueryFunction<T, T> 
     }
 
     @Override
-    public ImmutableSet<T> eval(
+    public Set<T> eval(
         QueryEvaluator<T> evaluator, QueryEnvironment<T> env, ImmutableList<Argument<T>> args) {
       Preconditions.checkArgument(args.isEmpty());
       return env.resolveTargetVariable(getName());

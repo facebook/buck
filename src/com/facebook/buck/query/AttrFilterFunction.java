@@ -56,7 +56,7 @@ public class AttrFilterFunction implements QueryFunction<QueryBuildTarget, Query
   }
 
   @Override
-  public ImmutableSet<QueryBuildTarget> eval(
+  public Set<QueryBuildTarget> eval(
       QueryEvaluator<QueryBuildTarget> evaluator,
       QueryEnvironment<QueryBuildTarget> env,
       ImmutableList<Argument<QueryBuildTarget>> args)
@@ -77,7 +77,7 @@ public class AttrFilterFunction implements QueryFunction<QueryBuildTarget, Query
     ImmutableSet.Builder<QueryBuildTarget> result = new ImmutableSet.Builder<>();
     Set<QueryBuildTarget> targets = evaluator.eval(argument, env);
     for (QueryBuildTarget target : targets) {
-      ImmutableSet<Object> matchingObjects = env.filterAttributeContents(target, attr, predicate);
+      Set<Object> matchingObjects = env.filterAttributeContents(target, attr, predicate);
       if (!matchingObjects.isEmpty()) {
         result.add(target);
       }
