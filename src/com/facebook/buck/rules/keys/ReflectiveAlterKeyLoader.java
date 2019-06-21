@@ -37,7 +37,6 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection<AlterRuleKey>> {
@@ -64,8 +63,7 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
     while (!workQueue.isEmpty()) {
       Class<?> cls = workQueue.poll();
       if (superClassesAndInterfaces.add(cls)) {
-        workQueue.addAll(
-            Stream.of(cls.getInterfaces()).filter(x -> isBuckType(x)).collect(Collectors.toList()));
+        Stream.of(cls.getInterfaces()).filter(x -> isBuckType(x)).forEach(workQueue::add);
       }
     }
 
