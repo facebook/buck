@@ -16,7 +16,6 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.artifact.BuildArtifactFactory;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.AbstractAction.ActionConstructorParams;
@@ -36,7 +35,8 @@ import java.nio.file.Path;
  * The factory for creating {@link ActionWrapperData}.
  *
  * <p>This helps to hide and enforce the relationship between {@link ActionAnalysisDataKey}, {@link
- * ActionAnalysisData}, {@link Action}, and {@link BuildArtifact}.
+ * ActionAnalysisData}, {@link Action}, and {@link
+ * com.facebook.buck.core.artifact.BuildArtifactApi}.
  *
  * <p>There is one factory per {@link BuildTarget}, such that all {@link Action}s created by this
  * factory are considered to be associated with the build target.

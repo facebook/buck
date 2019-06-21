@@ -37,7 +37,7 @@ abstract class AbstractArtifact implements Artifact {
     return (BoundArtifact) this;
   }
 
-  /** @return a view of this artifact as a {@link DeclaredArtifact} */
+  /** @return a view of this artifact as a {@link DeclaredArtifactApi} */
   @Override
   public final DeclaredArtifactApi asDeclared() {
     requireDeclared();
