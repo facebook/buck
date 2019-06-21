@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.core.rules.transformer.impl;
 
-import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -32,6 +31,7 @@ import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.Iterables;
+import java.util.Objects;
 
 /**
  * A {@link TargetNodeToBuildRuleTransformer} that delegates to the {@link RuleAnalysisComputation}
@@ -71,7 +71,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
 
       graphBuilder.requireAllRules(
           RichStream.from(correspondingAction.getInputs())
-              .filter(BuildArtifact.class)
+              .map(artifact -> artifact.asBound().asBuildArtifact())
+              .filter(Objects::nonNull)
               .map(buildArtifact -> buildArtifact.getActionDataKey().getBuildTarget())
               .toImmutableList());
 

@@ -16,7 +16,6 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
 import com.facebook.buck.util.function.TriFunction;
@@ -27,7 +26,7 @@ public class FakeAction extends AbstractAction<FakeActionConstructorArgs> {
   public FakeAction(
       BuildTarget owner,
       ImmutableSet<Artifact> inputs,
-      ImmutableSet<BuildArtifact> outputs,
+      ImmutableSet<Artifact> outputs,
       FakeActionConstructorArgs executeFunction) {
     super(owner, inputs, outputs, executeFunction);
   }
@@ -49,7 +48,7 @@ public class FakeAction extends AbstractAction<FakeActionConstructorArgs> {
 
   public TriFunction<
           ImmutableSet<Artifact>,
-          ImmutableSet<BuildArtifact>,
+          ImmutableSet<Artifact>,
           ActionExecutionContext,
           ActionExecutionResult>
       getExecuteFunction() {
@@ -61,7 +60,7 @@ public class FakeAction extends AbstractAction<FakeActionConstructorArgs> {
       extends AbstractAction.ActionConstructorParams,
           TriFunction<
               ImmutableSet<Artifact>,
-              ImmutableSet<BuildArtifact>,
+              ImmutableSet<Artifact>,
               ActionExecutionContext,
               ActionExecutionResult> {}
 }

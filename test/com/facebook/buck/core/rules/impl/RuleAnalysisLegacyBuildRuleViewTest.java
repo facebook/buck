@@ -65,6 +65,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.hamcrest.Matchers;
@@ -124,11 +125,13 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
         (ins, outs, ctx) -> {
           assertEquals(ImmutableSet.of(materializedDepArtifacts.get(depArtifact)), ins);
           assertEquals(
-              buildTarget, Iterables.getOnlyElement(outs).getActionDataKey().getBuildTarget());
-          assertEquals(buildTarget, Iterables.getOnlyElement(outs).getSourcePath().getTarget());
+              buildTarget,
+              Objects.requireNonNull(Iterables.getOnlyElement(outs).asBound().asBuildArtifact())
+                  .getActionDataKey()
+                  .getBuildTarget());
           assertEquals(
-              packagePath.resolve(outpath),
-              Iterables.getOnlyElement(outs).getSourcePath().getResolvedPath());
+              ExplicitBuildTargetSourcePath.of(buildTarget, packagePath.resolve(outpath)),
+              Iterables.getOnlyElement(outs).asBound().getSourcePath());
           functionCalled.set(true);
           return ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
         };

@@ -70,7 +70,7 @@ public class ActionExecutionStepTest {
               ExplicitBuildTargetSourcePath.of(
                   buildTarget,
                   BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve(output)),
-              Iterables.getOnlyElement(outputs).getSourcePath());
+              Iterables.getOnlyElement(outputs).asBound().getSourcePath());
           assertFalse(ctx.getShouldDeleteTemporaries());
           ctx.logError(new RuntimeException("message"), "my error %s", 1);
           ctx.postEvent(ConsoleEvent.info("my test info"));

@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.rules.analysis.impl;
 
-import com.facebook.buck.core.artifact.BuildArtifact;
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.DeclaredArtifact;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
@@ -49,12 +49,11 @@ public class FakeRuleDescription implements RuleDescription<FakeRuleDescriptionA
 
     FakeActionConstructorArgs actionExecution =
         (inputs, outputs, ctx) -> {
-          BuildArtifact output = Iterables.getOnlyElement(outputs);
+          Artifact output = Iterables.getOnlyElement(outputs);
           try {
             try (OutputStream fileout = ctx.getArtifactFilesystem().getOutputStream(output)) {
               fileout.write("testcontent".getBytes(Charsets.UTF_8));
             }
-
           } catch (IOException e) {
             return ImmutableActionExecutionFailure.of(
                 Optional.empty(), Optional.empty(), Optional.of(e));

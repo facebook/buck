@@ -16,7 +16,6 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.google.common.collect.ImmutableSet;
 
@@ -34,7 +33,7 @@ public interface Action {
   ImmutableSet<Artifact> getInputs();
 
   /** @return the set of outputs this action generates */
-  ImmutableSet<BuildArtifact> getOutputs();
+  ImmutableSet<Artifact> getOutputs();
 
   /**
    * @return a name for this action to be printed to console when executing and for logging purposes

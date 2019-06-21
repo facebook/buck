@@ -26,7 +26,7 @@ import javax.annotation.Nullable;
  *
  * <p>This interface is not intended to be used by users, but only by the framework.
  */
-interface BoundArtifact extends Artifact {
+public interface BoundArtifact extends Artifact {
 
   /**
    * @return this artifact as a {@link SourceArtifact}, null if this is not a {@link SourceArtifact}

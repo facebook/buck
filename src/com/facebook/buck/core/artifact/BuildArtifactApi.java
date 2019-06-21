@@ -26,7 +26,7 @@ import org.immutables.value.Value;
  *
  * <p>This is not intended to be exposed to users, but used only by the build engine.
  */
-interface BuildArtifactApi extends Artifact {
+public interface BuildArtifactApi extends Artifact {
 
   /** @return the key to the {@link ActionAnalysisData} that owns this artifact */
   @Value.Parameter

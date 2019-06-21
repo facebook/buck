@@ -16,7 +16,6 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.AbstractAction.ActionConstructorParams;
 import com.google.common.collect.ImmutableSet;
@@ -30,7 +29,7 @@ public abstract class AbstractAction<T extends ActionConstructorParams> implemen
 
   protected final BuildTarget owner;
   protected final ImmutableSet<Artifact> inputs;
-  protected final ImmutableSet<BuildArtifact> outputs;
+  protected final ImmutableSet<Artifact> outputs;
   protected final T params;
 
   /**
@@ -42,10 +41,7 @@ public abstract class AbstractAction<T extends ActionConstructorParams> implemen
    *     enforce the type signature of the implementations.
    */
   protected AbstractAction(
-      BuildTarget owner,
-      ImmutableSet<Artifact> inputs,
-      ImmutableSet<BuildArtifact> outputs,
-      T params) {
+      BuildTarget owner, ImmutableSet<Artifact> inputs, ImmutableSet<Artifact> outputs, T params) {
     this.owner = owner;
     this.inputs = inputs;
     this.outputs = outputs;
@@ -63,7 +59,7 @@ public abstract class AbstractAction<T extends ActionConstructorParams> implemen
   }
 
   @Override
-  public final ImmutableSet<BuildArtifact> getOutputs() {
+  public final ImmutableSet<Artifact> getOutputs() {
     return outputs;
   }
 
