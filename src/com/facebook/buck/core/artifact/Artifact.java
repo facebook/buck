@@ -17,6 +17,8 @@ package com.facebook.buck.core.artifact;
 
 /**
  * An {@link Artifact} is a file used during the build stage. It can either be a source file for the
- * build or a generated file from a build step itself.
+ * build or a generated file from an action
+ *
+ * <p>This is the interface exposed to users.
  */
 public interface Artifact {}
