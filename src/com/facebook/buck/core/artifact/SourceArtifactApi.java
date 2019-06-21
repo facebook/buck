@@ -16,13 +16,14 @@
 package com.facebook.buck.core.artifact;
 
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import org.immutables.value.Value;
 
-/** An artifact representing a source file */
-@Value.Immutable(builder = false, copy = false, prehash = true)
-public interface SourceArtifact extends SourceArtifactApi {
+/**
+ * Represents an artifact that is a source file in the project
+ *
+ * <p>This interface is not intended to be used by the user, but by the framework
+ */
+public interface SourceArtifactApi extends Artifact {
 
-  @Value.Parameter
-  @Override
+  /** @return the path to the source file */
   PathSourcePath getPath();
 }
