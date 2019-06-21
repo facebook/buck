@@ -46,7 +46,7 @@ public class BuildArtifactFactoryTest {
     assertEquals(
         ExplicitBuildTargetSourcePath.of(
             target, BuildPaths.getGenDir(filesystem, target).resolve(Paths.get("bar"))),
-        buildArtifact.getPath());
+        buildArtifact.getSourcePath());
 
     assertEquals(key, buildArtifact.getActionDataKey());
   }

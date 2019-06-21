@@ -25,5 +25,5 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 public interface SourceArtifactApi extends Artifact {
 
   /** @return the path to the source file */
-  PathSourcePath getPath();
+  PathSourcePath getSourcePath();
 }

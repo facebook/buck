@@ -70,7 +70,7 @@ public class ActionExecutionStepTest {
               ExplicitBuildTargetSourcePath.of(
                   buildTarget,
                   BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve(output)),
-              Iterables.getOnlyElement(outputs).getPath());
+              Iterables.getOnlyElement(outputs).getSourcePath());
           assertEquals(
               projectFilesystem.resolve(BuildPaths.getGenDir(projectFilesystem, buildTarget)),
               ctx.getGenOutputFilesystem().getRootPath());

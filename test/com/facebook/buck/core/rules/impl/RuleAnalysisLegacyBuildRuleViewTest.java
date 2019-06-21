@@ -125,10 +125,10 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
           assertEquals(ImmutableSet.of(materializedDepArtifacts.get(depArtifact)), ins);
           assertEquals(
               buildTarget, Iterables.getOnlyElement(outs).getActionDataKey().getBuildTarget());
-          assertEquals(buildTarget, Iterables.getOnlyElement(outs).getPath().getTarget());
+          assertEquals(buildTarget, Iterables.getOnlyElement(outs).getSourcePath().getTarget());
           assertEquals(
               packagePath.resolve(outpath),
-              Iterables.getOnlyElement(outs).getPath().getResolvedPath());
+              Iterables.getOnlyElement(outs).getSourcePath().getResolvedPath());
           functionCalled.set(true);
           return ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
         };

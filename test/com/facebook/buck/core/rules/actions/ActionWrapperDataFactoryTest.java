@@ -98,8 +98,8 @@ public class ActionWrapperDataFactoryTest {
     assertThat(action.getOutputs(), Matchers.hasSize(1));
     assertEquals(
         BuildPaths.getGenDir(filesystem, target).resolve("myoutput"),
-        builtArtifact.getPath().getResolvedPath());
-    assertSame(target, builtArtifact.getPath().getTarget());
+        builtArtifact.getSourcePath().getResolvedPath());
+    assertSame(target, builtArtifact.getSourcePath().getTarget());
     assertSame(target, builtArtifact.getActionDataKey().getBuildTarget());
 
     assertSame(data.getKey(), builtArtifact.getActionDataKey());
@@ -156,6 +156,6 @@ public class ActionWrapperDataFactoryTest {
     assertEquals(Paths.get("myoutput"), builtArtifact.getOutputPath());
     assertEquals(
         ExplicitBuildTargetSourcePath.of(target, expectedBasePath.resolve("myoutput")),
-        builtArtifact.getPath());
+        builtArtifact.getSourcePath());
   }
 }

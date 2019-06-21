@@ -33,5 +33,5 @@ interface BuildArtifactApi extends Artifact {
   ActionAnalysisDataKey getActionDataKey();
 
   /** @return the path to the artifact */
-  ExplicitBuildTargetSourcePath getPath();
+  ExplicitBuildTargetSourcePath getSourcePath();
 }

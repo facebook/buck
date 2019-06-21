@@ -54,7 +54,7 @@ public abstract class BuildArtifact extends AbstractArtifact
 
   @Override
   @Value.Derived
-  public ExplicitBuildTargetSourcePath getPath() {
+  public ExplicitBuildTargetSourcePath getSourcePath() {
     return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(), getPackagePath().resolve(getOutputPath()));
   }

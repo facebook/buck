@@ -29,9 +29,10 @@ public abstract class SourceArtifact extends AbstractArtifact
     return true;
   }
 
-  @Value.Parameter
+  /** @return the path to the source file */
   @Override
-  public abstract PathSourcePath getPath();
+  @Value.Parameter
+  public abstract PathSourcePath getSourcePath();
 
   @Nullable
   @Override

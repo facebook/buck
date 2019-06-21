@@ -89,7 +89,7 @@ class ArtifactImpl extends AbstractArtifact
   }
 
   @Override
-  public ExplicitBuildTargetSourcePath getPath() {
+  public ExplicitBuildTargetSourcePath getSourcePath() {
     requireBound();
     return Objects.requireNonNull(sourcePath);
   }

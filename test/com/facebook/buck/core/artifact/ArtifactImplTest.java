@@ -46,6 +46,6 @@ public class ArtifactImplTest {
     assertEquals(key, materialized.getActionDataKey());
     assertEquals(
         ExplicitBuildTargetSourcePath.of(target, packagePath.resolve(path)),
-        materialized.getPath());
+        materialized.getSourcePath());
   }
 }

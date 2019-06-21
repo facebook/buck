@@ -92,7 +92,7 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule {
     // TODO(bobyf): refactor build engine and build rules to not require getBuildSteps but runs
     // actions
     for (BuildArtifact artifact : action.getOutputs()) {
-      buildableContext.recordArtifact(artifact.getPath().getResolvedPath());
+      buildableContext.recordArtifact(artifact.getSourcePath().getResolvedPath());
     }
     return ImmutableList.of(
         new ActionExecutionStep(
@@ -105,7 +105,7 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule {
   @Nullable
   @Override
   public SourcePath getSourcePathToOutput() {
-    return Iterables.getOnlyElement(action.getOutputs()).getPath();
+    return Iterables.getOnlyElement(action.getOutputs()).getSourcePath();
   }
 
   @Override

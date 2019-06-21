@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.artifact;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import javax.annotation.Nullable;
 
 /**
@@ -39,4 +40,7 @@ interface BoundArtifact extends Artifact {
    */
   @Nullable
   BuildArtifactApi asBuildArtifact();
+
+  /** @return the {@link SourcePath} that represents where this artifact is. */
+  SourcePath getSourcePath();
 }
