@@ -16,7 +16,6 @@
 package com.facebook.buck.core.artifact;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import java.nio.file.Path;
@@ -25,9 +24,9 @@ import org.immutables.value.Value;
 /** An artifact generated from build */
 @Value.Immutable(builder = false, copy = false, prehash = true)
 @Value.Style(visibility = Value.Style.ImplementationVisibility.PACKAGE)
-public abstract class BuildArtifact implements Artifact {
+public abstract class BuildArtifact implements Artifact, BuildArtifactApi {
 
-  /** @return the key to the {@link ActionAnalysisData} that owns this artifact */
+  @Override
   @Value.Parameter
   public abstract ActionAnalysisDataKey getActionDataKey();
 
@@ -46,7 +45,7 @@ public abstract class BuildArtifact implements Artifact {
   @Value.Parameter
   public abstract Path getOutputPath();
 
-  /** @return the path to the artifact */
+  @Override
   @Value.Derived
   public ExplicitBuildTargetSourcePath getPath() {
     return ExplicitBuildTargetSourcePath.of(
