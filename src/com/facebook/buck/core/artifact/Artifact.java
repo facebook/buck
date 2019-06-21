@@ -21,4 +21,16 @@ package com.facebook.buck.core.artifact;
  *
  * <p>This is the interface exposed to users.
  */
-public interface Artifact {}
+public interface Artifact {
+
+  /** TODO: we should make the below package protected. */
+
+  /** @return whether the artifact is bound, as described above */
+  boolean isBound();
+
+  /** @return a view of this artifact as a {@link BoundArtifact} */
+  BoundArtifact asBound();
+
+  /** @return a view of this artifact as a {@link DeclaredArtifact} */
+  DeclaredArtifactApi asDeclared();
+}

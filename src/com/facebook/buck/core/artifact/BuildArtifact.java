@@ -19,12 +19,19 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import java.nio.file.Path;
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 /** An artifact generated from build */
 @Value.Immutable(builder = false, copy = false, prehash = true)
 @Value.Style(visibility = Value.Style.ImplementationVisibility.PACKAGE)
-public abstract class BuildArtifact implements Artifact, BuildArtifactApi {
+public abstract class BuildArtifact extends AbstractArtifact
+    implements BoundArtifact, BuildArtifactApi {
+
+  @Override
+  public final boolean isBound() {
+    return true;
+  }
 
   @Override
   @Value.Parameter
@@ -50,5 +57,17 @@ public abstract class BuildArtifact implements Artifact, BuildArtifactApi {
   public ExplicitBuildTargetSourcePath getPath() {
     return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(), getPackagePath().resolve(getOutputPath()));
+  }
+
+  @Nullable
+  @Override
+  public BuildArtifactApi asBuildArtifact() {
+    return this;
+  }
+
+  @Nullable
+  @Override
+  public SourceArtifact asSource() {
+    return null;
   }
 }

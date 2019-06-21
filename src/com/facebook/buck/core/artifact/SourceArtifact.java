@@ -16,13 +16,32 @@
 package com.facebook.buck.core.artifact;
 
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 /** An artifact representing a source file */
 @Value.Immutable(builder = false, copy = false, prehash = true)
-public interface SourceArtifact extends SourceArtifactApi {
+public abstract class SourceArtifact extends AbstractArtifact
+    implements SourceArtifactApi, BoundArtifact {
+
+  @Override
+  public final boolean isBound() {
+    return true;
+  }
 
   @Value.Parameter
   @Override
-  PathSourcePath getPath();
+  public abstract PathSourcePath getPath();
+
+  @Nullable
+  @Override
+  public SourceArtifact asSource() {
+    return this;
+  }
+
+  @Nullable
+  @Override
+  public BuildArtifactApi asBuildArtifact() {
+    return null;
+  }
 }

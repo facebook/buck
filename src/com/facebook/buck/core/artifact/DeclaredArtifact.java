@@ -32,7 +32,12 @@ import org.immutables.value.Value;
  * com.facebook.buck.core.rules.actions.Action} has been created.
  */
 @Value.Immutable(builder = false, copy = false)
-public abstract class DeclaredArtifact implements DeclaredArtifactApi {
+public abstract class DeclaredArtifact extends AbstractArtifact implements DeclaredArtifactApi {
+
+  @Override
+  public final boolean isBound() {
+    return false;
+  }
 
   @Value.Parameter
   public abstract Path getPackagePath();

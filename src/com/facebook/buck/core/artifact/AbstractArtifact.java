@@ -26,9 +26,11 @@ import com.google.common.base.Preconditions;
 abstract class AbstractArtifact implements Artifact {
 
   /** @return whether the artifact is bound, as described above */
+  @Override
   public abstract boolean isBound();
 
   /** @return a view of this artifact as a {@link BoundArtifact} */
+  @Override
   public final BoundArtifact asBound() {
     requireBound();
 
@@ -36,6 +38,7 @@ abstract class AbstractArtifact implements Artifact {
   }
 
   /** @return a view of this artifact as a {@link DeclaredArtifact} */
+  @Override
   public final DeclaredArtifactApi asDeclared() {
     requireDeclared();
     return (DeclaredArtifactApi) this;
