@@ -37,11 +37,11 @@ abstract class AbstractArtifact implements Artifact {
     return (BoundArtifact) this;
   }
 
-  /** @return a view of this artifact as a {@link DeclaredArtifactApi} */
+  /** @return a view of this artifact as a {@link DeclaredArtifact} */
   @Override
-  public final DeclaredArtifactApi asDeclared() {
+  public final DeclaredArtifact asDeclared() {
     requireDeclared();
-    return (DeclaredArtifactApi) this;
+    return (DeclaredArtifact) this;
   }
 
   protected void requireBound() {

@@ -21,8 +21,8 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.BuildArtifactApi;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifact;
+import com.facebook.buck.core.artifact.BuildArtifact;
+import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -68,7 +68,7 @@ public class ActionWrapperDataFactoryTest {
         new ActionWrapperDataFactory(target, actionAnalysisDataRegistry, filesystem);
     ImmutableSet<Artifact> inputs =
         ImmutableSet.of(
-            ImmutableSourceArtifact.of(PathSourcePath.of(filesystem, Paths.get("myinput"))));
+            ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("myinput"))));
 
     Artifact output = actionWrapperDataFactory.declareArtifact(Paths.get("myoutput"));
     ImmutableSet<Artifact> outputs = ImmutableSet.of(output);
@@ -80,7 +80,7 @@ public class ActionWrapperDataFactoryTest {
     actionWrapperDataFactory.createActionAnalysisData(
         FakeAction.class, inputs, outputs, executeFunc);
 
-    BuildArtifactApi buildArtifact = Objects.requireNonNull(output.asBound().asBuildArtifact());
+    BuildArtifact buildArtifact = Objects.requireNonNull(output.asBound().asBuildArtifact());
 
     ImmutableMap<ActionAnalysisDataKey, ActionAnalysisData> registered =
         actionAnalysisDataRegistry.getRegistered();
@@ -143,7 +143,7 @@ public class ActionWrapperDataFactoryTest {
     actionWrapperDataFactory.createActionAnalysisData(
         FakeAction.class, inputs, ImmutableSet.of(output), executeFunc);
 
-    BuildArtifactApi builtArtifact = Objects.requireNonNull(output.asBound().asBuildArtifact());
+    BuildArtifact builtArtifact = Objects.requireNonNull(output.asBound().asBuildArtifact());
     assertEquals(
         ExplicitBuildTargetSourcePath.of(target, expectedBasePath.resolve("myoutput")),
         builtArtifact.getSourcePath());

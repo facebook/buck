@@ -26,11 +26,11 @@ import javax.annotation.Nullable;
  * An implementation of an {@link AbstractArtifact} that internally transitions from a {@link
  * DeclaredArtifact} to a {@link BoundArtifact} when bound with an action.
  *
- * <p>This is considered to be an instance of a {@link BuildArtifactApi} as these are only used to
+ * <p>This is considered to be an instance of a {@link BuildArtifact} as these are only used to
  * represent {@link Artifact}s created by rules, not source files.
  */
 class ArtifactImpl extends AbstractArtifact
-    implements BoundArtifact, DeclaredArtifactApi, BuildArtifactApi {
+    implements BoundArtifact, DeclaredArtifact, BuildArtifact {
 
   private @Nullable ActionAnalysisDataKey actionAnalysisDataKey = null;
   private @Nullable ExplicitBuildTargetSourcePath sourcePath;
@@ -39,7 +39,7 @@ class ArtifactImpl extends AbstractArtifact
   private final Path packagePath;
   private final Path outputPath;
 
-  static DeclaredArtifactApi of(BuildTarget target, Path packagePath, Path outputPath) {
+  static DeclaredArtifact of(BuildTarget target, Path packagePath, Path outputPath) {
     return new ArtifactImpl(target, packagePath, outputPath);
   }
 
@@ -67,7 +67,7 @@ class ArtifactImpl extends AbstractArtifact
   }
 
   @Override
-  public BuildArtifactApi materialize(ActionAnalysisDataKey key) {
+  public BuildArtifact materialize(ActionAnalysisDataKey key) {
     requireDeclared();
     actionAnalysisDataKey = key;
     sourcePath =
@@ -77,7 +77,7 @@ class ArtifactImpl extends AbstractArtifact
   }
 
   @Override
-  public BuildArtifactApi asBuildArtifact() {
+  public BuildArtifact asBuildArtifact() {
     requireBound();
     return this;
   }
@@ -101,7 +101,7 @@ class ArtifactImpl extends AbstractArtifact
   }
 
   @Override
-  public @Nullable SourceArtifact asSource() {
+  public @Nullable SourceArtifactImpl asSource() {
     return null;
   }
 }

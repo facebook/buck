@@ -15,23 +15,23 @@
  */
 package com.facebook.buck.core.artifact;
 
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import org.immutables.value.Value;
 
 /**
- * Represents an {@link Artifact} that is just declared by a rule implemention, with no {@link
- * com.facebook.buck.core.rules.actions.Action}s attached to build it.
+ * Represents an {@link Artifact} that is materialized by an {@link
+ * com.facebook.buck.core.rules.actions.Action}.
  *
- * <p>This is not intended to be used by users, but only by the build engine.
+ * <p>This is not intended to be exposed to users, but used only by the build engine.
  */
-interface DeclaredArtifactApi extends Artifact {
+public interface BuildArtifact extends Artifact {
 
-  /**
-   * Binds an corresponding {@link com.facebook.buck.core.rules.actions.Action} as represented by
-   * the {@link ActionAnalysisDataKey} to this {@link Artifact}.
-   *
-   * @param key the {@link ActionAnalysisDataKey} to attach to this {@link Artifact}
-   * @return the {@link BuildArtifactApi} of this instance after attaching the {@link
-   *     ActionAnalysisDataKey}.
-   */
-  BuildArtifactApi materialize(ActionAnalysisDataKey key);
+  /** @return the key to the {@link ActionAnalysisData} that owns this artifact */
+  @Value.Parameter
+  ActionAnalysisDataKey getActionDataKey();
+
+  /** @return the path to the artifact */
+  ExplicitBuildTargetSourcePath getSourcePath();
 }

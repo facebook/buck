@@ -22,7 +22,7 @@ import javax.annotation.Nullable;
  * Represents an {@link Artifact} that will be materialized by the action execution phase. This can
  * either be a source file or a file produced by an action.
  *
- * <p>A bound artifact is only either an {@link SourceArtifact} or {@link BuildArtifactApi}
+ * <p>A bound artifact is only either an {@link SourceArtifact} or {@link BuildArtifact}
  *
  * <p>This interface is not intended to be used by users, but only by the framework.
  */
@@ -35,11 +35,10 @@ public interface BoundArtifact extends Artifact {
   SourceArtifact asSource();
 
   /**
-   * @return this artifact as a {@link BuildArtifactApi}, null if this is not a {@link
-   *     BuildArtifactApi}
+   * @return this artifact as a {@link BuildArtifact}, null if this is not a {@link BuildArtifact}
    */
   @Nullable
-  BuildArtifactApi asBuildArtifact();
+  BuildArtifact asBuildArtifact();
 
   /** @return the {@link SourcePath} that represents where this artifact is. */
   SourcePath getSourcePath();

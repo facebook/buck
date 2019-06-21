@@ -21,7 +21,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.BuildArtifactApi;
+import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
@@ -162,7 +162,7 @@ public class RuleAnalysisContextImplTest {
         .actionFactory()
         .createActionAnalysisData(FakeAction.class, inputs, outputs, actionFunction);
 
-    BuildArtifactApi artifact =
+    BuildArtifact artifact =
         Objects.requireNonNull(Iterables.getOnlyElement(outputs).asBound().asBuildArtifact());
 
     assertThat(context.getRegisteredActionData().entrySet(), Matchers.hasSize(1));

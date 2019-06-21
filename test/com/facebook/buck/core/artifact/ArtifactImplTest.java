@@ -35,12 +35,12 @@ public class ArtifactImplTest {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     Path packagePath = Paths.get("my/foo__");
     Path path = Paths.get("bar");
-    DeclaredArtifactApi artifact = ArtifactImpl.of(target, packagePath, path);
+    DeclaredArtifact artifact = ArtifactImpl.of(target, packagePath, path);
     assertFalse(artifact.isBound());
 
     ImmutableActionAnalysisDataKey key =
         ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
-    BuildArtifactApi materialized = artifact.materialize(key);
+    BuildArtifact materialized = artifact.materialize(key);
 
     assertTrue(materialized.isBound());
     assertEquals(key, materialized.getActionDataKey());

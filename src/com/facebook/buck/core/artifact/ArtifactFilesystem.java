@@ -57,7 +57,7 @@ public class ArtifactFilesystem {
   private Path resolveToPath(Artifact artifact) {
     BoundArtifact boundArtifact = artifact.asBound();
 
-    BuildArtifactApi buildArtifact = boundArtifact.asBuildArtifact();
+    BuildArtifact buildArtifact = boundArtifact.asBuildArtifact();
     if (buildArtifact != null) {
       return buildArtifact.getSourcePath().getResolvedPath();
     }

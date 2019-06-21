@@ -40,7 +40,7 @@ public class ArtifactFilesystemTest {
     filesystem.writeContentsToPath("foo", Paths.get("bar"));
     InputStream inputStream =
         artifactFilesystem.getInputStream(
-            ImmutableSourceArtifact.of(PathSourcePath.of(filesystem, Paths.get("bar"))));
+            ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("bar"))));
 
     assertEquals("foo", new BufferedReader(new InputStreamReader(inputStream)).readLine());
   }
@@ -51,7 +51,7 @@ public class ArtifactFilesystemTest {
 
     OutputStream outputStream =
         artifactFilesystem.getOutputStream(
-            ImmutableSourceArtifact.of(PathSourcePath.of(filesystem, Paths.get("bar"))));
+            ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("bar"))));
 
     outputStream.write("foo".getBytes(Charsets.UTF_8));
     outputStream.close();

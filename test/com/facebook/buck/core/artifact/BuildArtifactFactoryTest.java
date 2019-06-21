@@ -40,8 +40,8 @@ public class BuildArtifactFactoryTest {
 
     ActionAnalysisDataKey key =
         ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
-    DeclaredArtifactApi declaredArtifact = factory.createDeclaredArtifact(Paths.get("bar"));
-    BuildArtifactApi buildArtifact = declaredArtifact.materialize(key);
+    DeclaredArtifact declaredArtifact = factory.createDeclaredArtifact(Paths.get("bar"));
+    BuildArtifact buildArtifact = declaredArtifact.materialize(key);
 
     assertEquals(
         ExplicitBuildTargetSourcePath.of(

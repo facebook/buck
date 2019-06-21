@@ -31,6 +31,6 @@ public interface Artifact {
   /** @return a view of this artifact as a {@link BoundArtifact} */
   BoundArtifact asBound();
 
-  /** @return a view of this artifact as a {@link DeclaredArtifactApi} */
-  DeclaredArtifactApi asDeclared();
+  /** @return a view of this artifact as a {@link DeclaredArtifact} */
+  DeclaredArtifact asDeclared();
 }
