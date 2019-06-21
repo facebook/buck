@@ -176,6 +176,9 @@ class MultitenantQueryEnvironment(
     ): Set<Any> {
         TODO("filterAttributeContents() not implemented")
     }
+
+    /** @see Index.getRefs */
+    fun getRefs(target: UnconfiguredBuildTarget): List<UnconfiguredBuildTarget> = index.getRefs(generation, target)
 }
 
 private class TargetEvaluator(private val index: Index, private val generation: Generation) : QueryEnvironment.TargetEvaluator {

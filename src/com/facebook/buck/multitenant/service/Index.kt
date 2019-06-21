@@ -244,6 +244,22 @@ class Index internal constructor(
     }
 
     /**
+     * Get all references for `target` at the specified `generation`. This is almost the same thing
+     * as `rdeps(//..., target, 1)` except that `//...` is a universe that would exclude rdeps
+     * outside of the current cell whereas this method is designed for the "Show References in an
+     * IDE" use case, so it returns <em>all</em> references without considering cell boundaries.
+     */
+    fun getRefs(generation: Generation, target: UnconfiguredBuildTarget): List<UnconfiguredBuildTarget> {
+        val targetId = buildTargetCache.get(target)
+        val rdeps = indexGenerationData.withRdepsMap { rDepsMap ->
+            rDepsMap.getVersion(targetId, generation)
+        } ?: return listOf()
+        val out = ArrayList<UnconfiguredBuildTarget>()
+        buildTargetCache.addAllByIndex(rdeps.asSequence(), out)
+        return out
+    }
+
+    /**
      * @param generation at which to enumerate all build targets
      */
     fun getTargets(generation: Generation): List<UnconfiguredBuildTarget> {
