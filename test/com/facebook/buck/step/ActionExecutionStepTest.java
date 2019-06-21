@@ -19,8 +19,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
-import com.facebook.buck.core.artifact.DeclaredArtifact;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
@@ -78,7 +78,7 @@ public class ActionExecutionStepTest {
         };
 
     FakeActionFactory fakeActionFactory = new FakeActionFactory(buildTarget);
-    DeclaredArtifact declaredArtifact = fakeActionFactory.declareArtifact(output);
+    Artifact declaredArtifact = fakeActionFactory.declareArtifact(output);
     FakeAction action =
         fakeActionFactory.createFakeAction(
             ImmutableSet.of(), ImmutableSet.of(declaredArtifact), actionFunction);

@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.core.artifact.DeclaredArtifact;
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.model.BuildTarget;
@@ -150,11 +150,11 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
 
     ActionWrapperDataFactory actionWrapperDataFactory =
         new ActionWrapperDataFactory(target, fakeActionAnalysisRegistry, fakeFilesystem);
-    DeclaredArtifact declaredArtifact = actionWrapperDataFactory.declareArtifact(output);
+    Artifact artifact = actionWrapperDataFactory.declareArtifact(output);
     actionWrapperDataFactory.createActionAnalysisData(
         FakeAction.class,
         ImmutableSet.of(),
-        ImmutableSet.of(declaredArtifact),
+        ImmutableSet.of(artifact),
         (ins, outs, ctx) -> ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty()));
 
     AtomicBoolean ruleAnalysisCalled = new AtomicBoolean();

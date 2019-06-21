@@ -17,10 +17,8 @@ package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.BuildArtifact;
-import com.facebook.buck.core.artifact.DeclaredArtifact;
-import com.facebook.buck.core.artifact.ImmutableDeclaredArtifact;
+import com.facebook.buck.core.artifact.BuildArtifactFactory;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.actions.AbstractAction.ActionConstructorParams;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData.ID;
@@ -29,9 +27,8 @@ import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataRegistry;
 import com.facebook.buck.core.rules.analysis.action.ImmutableActionAnalysisDataKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Iterables;
 import java.lang.reflect.Constructor;
 import java.nio.file.Path;
 
@@ -44,11 +41,9 @@ import java.nio.file.Path;
  * <p>There is one factory per {@link BuildTarget}, such that all {@link Action}s created by this
  * factory are considered to be associated with the build target.
  */
-public class ActionWrapperDataFactory {
+public class ActionWrapperDataFactory extends BuildArtifactFactory {
 
-  private final BuildTarget buildTarget;
   private final ActionAnalysisDataRegistry actionRegistry;
-  private final Path packagePath;
 
   /**
    * @param buildTarget the {@link BuildTarget} for which all of the {@link Action}s created are for
@@ -60,48 +55,62 @@ public class ActionWrapperDataFactory {
       BuildTarget buildTarget,
       ActionAnalysisDataRegistry actionRegistry,
       ProjectFilesystem filesystem) {
-    this.buildTarget = buildTarget;
+    super(buildTarget, filesystem);
     this.actionRegistry = actionRegistry;
-    this.packagePath = BuildPaths.getGenDir(filesystem, buildTarget);
   }
 
   /**
    * @param output the output {@link Path} relative to the package path for the current rule that
    *     the {@link Action}s are being created for
-   * @return a {@link DeclaredArtifact} for the given path
+   * @return a {@link Artifact} for the given path
    */
-  public DeclaredArtifact declareArtifact(Path output) {
-    Preconditions.checkState(!output.isAbsolute());
-    return ImmutableDeclaredArtifact.of(packagePath, output);
+  public Artifact declareArtifact(Path output) {
+    return createDeclaredArtifact(output);
   }
 
   /**
    * Creates the {@link ActionWrapperData} and its related {@link Action} from a set of {@link
-   * DeclaredArtifact}s. The created {@link ActionWrapperData} is registered to the {@link
+   * Artifact}s. The created {@link ActionWrapperData} is registered to the {@link
    * ActionAnalysisDataRegistry}.
    *
-   * <p>This will materialize the declared {@link DeclaredArtifact}s into {@link BuildArtifact}s
-   * that can be passed via {@link com.google.devtools.build.lib.packages.Provider}s to be consumed.
+   * <p>This will materialize the declared {@link Artifact}s and bind them to the action. These
+   * {@link Artifact}s that can be passed via {@link
+   * com.google.devtools.build.lib.packages.Provider}s to be consumed.
    *
+   * @param <T> the concrete type of the {@link Action}
    * @param actionClazz
    * @param inputs the inputs to the {@link Action}
    * @param outputs the declared outputs of the {@link Action}
    * @param args the arguments for construction the {@link Action}
-   * @param <T> the concrete type of the {@link Action}
-   * @return a map of the given {@link DeclaredArtifact} to the corresponding {@link BuildArtifact}
-   *     to propagate to other rules
    */
   @SuppressWarnings("unchecked")
   public <T extends AbstractAction<U>, U extends ActionConstructorParams>
-      ImmutableMap<DeclaredArtifact, BuildArtifact> createActionAnalysisData(
+      void createActionAnalysisData(
           Class<T> actionClazz,
           ImmutableSet<Artifact> inputs,
-          ImmutableSet<DeclaredArtifact> outputs,
+          ImmutableSet<Artifact> outputs,
           U args)
           throws ActionCreationException {
-    ActionAnalysisDataKey key = ImmutableActionAnalysisDataKey.of(buildTarget, new ID() {});
-    ImmutableMap<DeclaredArtifact, BuildArtifact> materializedOutputsMap =
-        ImmutableMap.copyOf(Maps.toMap(outputs, declared -> declared.materialize(key)));
+
+    // require all inputs to be bound for now. We could change this.
+    for (Artifact input : inputs) {
+      if (!input.isBound()) {
+        throw new ActionCreationException(
+            actionClazz,
+            target,
+            inputs,
+            outputs,
+            args,
+            "Input Artifact %s should be bound to an Action, but is actually not",
+            input);
+      }
+    }
+
+    ActionAnalysisDataKey key = ImmutableActionAnalysisDataKey.of(target, new ID() {});
+    ImmutableSet<Artifact> materializedOutputs =
+        ImmutableSet.copyOf(
+            Iterables.transform(outputs, artifact -> bindtoBuildArtifact(key, artifact)));
+
     try {
       // TODO(bobyf): we can probably do some stuff here with annotation processing to generate
       // typed creation instead of reflection
@@ -109,16 +118,11 @@ public class ActionWrapperDataFactory {
       Preconditions.checkArgument(
           constructors.length == 1,
           "Action classes must be public, and have exactly one public constructor");
-      T action =
-          (T)
-              constructors[0].newInstance(
-                  buildTarget, inputs, materializedOutputsMap.values(), args);
+      T action = (T) constructors[0].newInstance(target, inputs, materializedOutputs, args);
       ActionWrapperData actionAnalysisData = ImmutableActionWrapperData.of(key, action);
       actionRegistry.registerAction(actionAnalysisData);
-
-      return materializedOutputsMap;
     } catch (Exception e) {
-      throw new ActionCreationException(e, actionClazz, buildTarget, inputs, outputs, args);
+      throw new ActionCreationException(e, actionClazz, target, inputs, outputs, args);
     }
   }
 }

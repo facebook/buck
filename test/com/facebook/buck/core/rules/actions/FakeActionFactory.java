@@ -16,13 +16,10 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.BuildArtifact;
-import com.facebook.buck.core.artifact.DeclaredArtifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
@@ -42,29 +39,27 @@ public class FakeActionFactory {
             buildTarget, actionAnalysisRegistry, new FakeProjectFilesystem());
   }
 
-  public DeclaredArtifact declareArtifact(Path path) {
+  public Artifact declareArtifact(Path path) {
     return actionWrapperDataFactory.declareArtifact(path);
   }
 
-  public DeclaredArtifact declareArtifact(String path) {
+  public Artifact declareArtifact(String path) {
     return declareArtifact(Paths.get(path));
   }
 
   public FakeAction createFakeAction(
       ImmutableSet<Artifact> inputs,
-      ImmutableSet<DeclaredArtifact> outputs,
+      ImmutableSet<Artifact> outputs,
       FakeActionConstructorArgs actionFunction)
       throws ActionCreationException {
     try {
-      ImmutableMap<DeclaredArtifact, BuildArtifact> materializedArtifactMap =
-          actionWrapperDataFactory.createActionAnalysisData(
-              FakeAction.class, inputs, outputs, actionFunction);
-      BuildArtifact artifact =
-          Objects.requireNonNull(
-              Iterables.getFirst(materializedArtifactMap.entrySet(), null).getValue());
+      actionWrapperDataFactory.createActionAnalysisData(
+          FakeAction.class, inputs, outputs, actionFunction);
       ActionAnalysisData actionAnalysisData =
           Objects.requireNonNull(
-              actionAnalysisRegistry.getRegistered().get(artifact.getActionDataKey()));
+              actionAnalysisRegistry
+                  .getRegistered()
+                  .get(Iterables.getLast(outputs).asBound().asBuildArtifact().getActionDataKey()));
 
       return (FakeAction) ((ActionWrapperData) actionAnalysisData).getAction();
 
@@ -75,7 +70,7 @@ public class FakeActionFactory {
 
   public FakeAction createFakeAction(
       ImmutableSet<Artifact> inputs,
-      ImmutableSet<DeclaredArtifact> outputs,
+      ImmutableSet<Artifact> outputs,
       Supplier<ActionExecutionResult> actionFunction)
       throws ActionCreationException {
     return createFakeAction(

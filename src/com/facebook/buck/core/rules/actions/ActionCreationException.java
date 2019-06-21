@@ -16,7 +16,6 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.DeclaredArtifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.AbstractAction.ActionConstructorParams;
 import com.google.common.collect.ImmutableSet;
@@ -29,12 +28,26 @@ public class ActionCreationException extends Exception {
       Class<? extends Action> clazz,
       BuildTarget target,
       ImmutableSet<Artifact> inputs,
-      ImmutableSet<DeclaredArtifact> outputs,
+      ImmutableSet<Artifact> outputs,
       ActionConstructorParams args) {
     super(
         String.format(
-            "Got exception creating action %s of target: %s, inputs: %s, output: %s, args: %s, ",
+            "Got exception creating action %s of target: %s, inputs: %s, output: %s, args: %s.",
             clazz, target, inputs, outputs, args),
         e);
+  }
+
+  public <T extends AbstractAction<U>, U extends ActionConstructorParams> ActionCreationException(
+      Class<T> clazz,
+      BuildTarget target,
+      ImmutableSet<Artifact> inputs,
+      ImmutableSet<Artifact> outputs,
+      U args,
+      String fmt,
+      Object... fmtArgs) {
+    super(
+        String.format(
+            "Error %s when creating action %s of target: %s, inputs: %s, output: %s, args: %s.",
+            String.format(fmt, fmtArgs), clazz, target, inputs, outputs, args));
   }
 }

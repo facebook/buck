@@ -21,8 +21,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.BuildArtifact;
-import com.facebook.buck.core.artifact.DeclaredArtifact;
+import com.facebook.buck.core.artifact.BuildArtifactApi;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
@@ -44,6 +43,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import org.hamcrest.Matchers;
@@ -153,19 +153,17 @@ public class RuleAnalysisContextImplTest {
         new RuleAnalysisContextImpl(target, ImmutableMap.of(), fakeFilesystem);
 
     ImmutableSet<Artifact> inputs = ImmutableSet.of();
-    ImmutableSet<DeclaredArtifact> outputs =
+    ImmutableSet<Artifact> outputs =
         ImmutableSet.of(context.actionFactory().declareArtifact(Paths.get("output")));
     FakeActionConstructorArgs actionFunction =
         (inputs1, outputs1, ctx) ->
             ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
-    ImmutableMap<DeclaredArtifact, BuildArtifact> materializedArtifacts =
-        context
-            .actionFactory()
-            .createActionAnalysisData(FakeAction.class, inputs, outputs, actionFunction);
+    context
+        .actionFactory()
+        .createActionAnalysisData(FakeAction.class, inputs, outputs, actionFunction);
 
-    assertThat(materializedArtifacts.entrySet(), Matchers.hasSize(1));
-    @Nullable BuildArtifact artifact = materializedArtifacts.get(Iterables.getOnlyElement(outputs));
-    assertNotNull(artifact);
+    BuildArtifactApi artifact =
+        Objects.requireNonNull(Iterables.getOnlyElement(outputs).asBound().asBuildArtifact());
 
     assertThat(context.getRegisteredActionData().entrySet(), Matchers.hasSize(1));
     @Nullable
@@ -177,7 +175,7 @@ public class RuleAnalysisContextImplTest {
     ActionWrapperData actionWrapperData = (ActionWrapperData) actionAnalysisData;
     assertSame(target, actionWrapperData.getAction().getOwner());
     assertSame(inputs, actionWrapperData.getAction().getInputs());
-    assertEquals(materializedArtifacts.values(), actionWrapperData.getAction().getOutputs());
+    assertEquals(outputs, actionWrapperData.getAction().getOutputs());
 
     assertSame(actionFunction, ((FakeAction) actionWrapperData.getAction()).getExecuteFunction());
   }

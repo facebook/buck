@@ -20,8 +20,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.artifact.BuildArtifact;
-import com.facebook.buck.core.artifact.DeclaredArtifact;
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.model.BuildTarget;
@@ -111,11 +110,9 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
 
     ActionWrapperDataFactory actionWrapperDataFactory =
         new ActionWrapperDataFactory(depTarget, actionAnalysisRegistry, filesystem);
-    DeclaredArtifact depArtifact =
-        actionWrapperDataFactory.declareArtifact(Paths.get("bar.output"));
-    ImmutableMap<DeclaredArtifact, BuildArtifact> materializedDepArtifacts =
-        actionWrapperDataFactory.createActionAnalysisData(
-            FakeAction.class, ImmutableSet.of(), ImmutableSet.of(depArtifact), depActionFunction);
+    Artifact depArtifact = actionWrapperDataFactory.declareArtifact(Paths.get("bar.output"));
+    actionWrapperDataFactory.createActionAnalysisData(
+        FakeAction.class, ImmutableSet.of(), ImmutableSet.of(depArtifact), depActionFunction);
 
     Path outpath = Paths.get("foo.output");
     Path packagePath = BuildPaths.getGenDir(filesystem, buildTarget);
@@ -123,7 +120,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
     AtomicBoolean functionCalled = new AtomicBoolean();
     FakeActionConstructorArgs actionFunction =
         (ins, outs, ctx) -> {
-          assertEquals(ImmutableSet.of(materializedDepArtifacts.get(depArtifact)), ins);
+          assertEquals(ImmutableSet.of(depArtifact), ins);
           assertEquals(
               buildTarget,
               Objects.requireNonNull(Iterables.getOnlyElement(outs).asBound().asBuildArtifact())
@@ -138,13 +135,9 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
 
     actionWrapperDataFactory =
         new ActionWrapperDataFactory(buildTarget, actionAnalysisRegistry, filesystem);
-    DeclaredArtifact artifact = actionWrapperDataFactory.declareArtifact(outpath);
-    ImmutableMap<DeclaredArtifact, BuildArtifact> materializedArtifacts =
-        actionWrapperDataFactory.createActionAnalysisData(
-            FakeAction.class,
-            ImmutableSet.of(materializedDepArtifacts.get(depArtifact)),
-            ImmutableSet.of(artifact),
-            actionFunction);
+    Artifact artifact = actionWrapperDataFactory.declareArtifact(outpath);
+    actionWrapperDataFactory.createActionAnalysisData(
+        FakeAction.class, ImmutableSet.of(depArtifact), ImmutableSet.of(artifact), actionFunction);
 
     ProviderInfoCollection providerInfoCollection =
         ProviderInfoCollectionImpl.builder()
@@ -163,7 +156,9 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
     ActionWrapperData actionWrapperData =
         (ActionWrapperData)
             actionAnalysisDataMap.get(
-                materializedArtifacts.get(artifact).getActionDataKey().getID());
+                Objects.requireNonNull(artifact.asBound().asBuildArtifact())
+                    .getActionDataKey()
+                    .getID());
 
     BuildRule buildRule =
         new RuleAnalysisLegacyBuildRuleView(

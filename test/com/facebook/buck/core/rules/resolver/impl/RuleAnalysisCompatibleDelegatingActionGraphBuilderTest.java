@@ -19,7 +19,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.core.artifact.DeclaredArtifact;
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.TestCellBuilder;
@@ -159,8 +159,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
                   ActionWrapperDataFactory actionWrapperDataFactory =
                       new ActionWrapperDataFactory(
                           target, actionAnalysisRegistry, projectFilesystem);
-                  DeclaredArtifact artifact =
-                      actionWrapperDataFactory.declareArtifact(Paths.get("foo"));
+                  Artifact artifact = actionWrapperDataFactory.declareArtifact(Paths.get("foo"));
 
                   FakeActionConstructorArgs actionFunction =
                       (ignored, ignored2, ignored3) ->

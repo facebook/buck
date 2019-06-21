@@ -16,7 +16,6 @@
 package com.facebook.buck.core.rules.analysis.impl;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.DeclaredArtifact;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.model.BuildTarget;
@@ -45,7 +44,7 @@ public class FakeRuleDescription implements RuleDescription<FakeRuleDescriptionA
       RuleAnalysisContext context, BuildTarget target, FakeRuleDescriptionArg args)
       throws ActionCreationException {
 
-    DeclaredArtifact artifact = context.actionFactory().declareArtifact(Paths.get("output"));
+    Artifact artifact = context.actionFactory().declareArtifact(Paths.get("output"));
 
     FakeActionConstructorArgs actionExecution =
         (inputs, outputs, ctx) -> {

@@ -41,18 +41,17 @@ public class BuildArtifactFactory {
    *     the {@link com.facebook.buck.core.rules.actions.Action}s are being created for
    * @return a {@link DeclaredArtifact} for the given path
    */
-  protected DeclaredArtifactApi declareArtifact(Path output) {
+  protected DeclaredArtifactApi createDeclaredArtifact(Path output) {
     return ArtifactImpl.of(target, packagePath, output);
   }
 
   /**
    * @param key the {@link ActionAnalysisDataKey} corresponding to an {@link
    *     com.facebook.buck.core.rules.actions.Action} to bind the given {@link Artifact} to.
-   * @param declaredArtifactApi the {@link Artifact} to bind
+   * @param artifact the {@link Artifact} to bind
    * @return a {@link BuildArtifactApi} by binding the action to the given artifact
    */
-  protected BuildArtifactApi createBuildArtifact(
-      ActionAnalysisDataKey key, DeclaredArtifactApi declaredArtifactApi) {
-    return declaredArtifactApi.materialize(key);
+  protected BuildArtifactApi bindtoBuildArtifact(ActionAnalysisDataKey key, Artifact artifact) {
+    return artifact.asDeclared().materialize(key);
   }
 }
