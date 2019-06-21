@@ -88,7 +88,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
   @AddToRuleKey
   private final ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap;
 
-  @AddToRuleKey private final Optional<ImmutableSet<SourcePath>> classpathEntriesToDexSourcePaths;
+  @AddToRuleKey private final ImmutableSet<SourcePath> classpathEntriesToDexSourcePaths;
   @AddToRuleKey private final Optional<SourcePath> dexReorderDataDumpFile;
   @AddToRuleKey private final Optional<SourcePath> dexReorderToolFile;
   @AddToRuleKey private final DexSplitMode dexSplitMode;
@@ -162,7 +162,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
       SourcePathRuleFinder ruleFinder,
       ImmutableSortedSet<SourcePath> additionalJarsForProguardAndDesugar,
       ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap,
-      Optional<ImmutableSet<SourcePath>> classpathEntriesToDexSourcePaths,
+      ImmutableSet<SourcePath> classpathEntriesToDexSourcePaths,
       DexSplitMode dexSplitMode,
       Optional<ImmutableSortedMap<APKModule, ImmutableList<SourcePath>>>
           moduleMappedClasspathEntriesToDex,
@@ -233,7 +233,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     // Redex access the constructed proguard command line and then goes and opens a bunch of the
     // files listed there.
     return ImmutableList.<SourcePath>builder()
-        .addAll(classpathEntriesToDexSourcePaths.orElse(ImmutableSet.of()))
+        .addAll(classpathEntriesToDexSourcePaths)
         .addAll(RichStream.from(proguardConfig).collect(Collectors.toList()))
         .addAll(proguardConfigs)
         .build();
@@ -281,7 +281,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
       BuildContext buildContext, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ImmutableSet<Path> classpathEntriesToDex =
-        classpathEntriesToDexSourcePaths.get().stream()
+        classpathEntriesToDexSourcePaths.stream()
             .map(
                 input ->
                     getProjectFilesystem()

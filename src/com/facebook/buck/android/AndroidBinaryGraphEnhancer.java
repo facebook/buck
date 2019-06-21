@@ -809,11 +809,10 @@ public class AndroidBinaryGraphEnhancer {
             .flatMap((javaLibrary) -> javaLibrary.getImmediateClasspaths().stream())
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
 
-    Optional<ImmutableSet<SourcePath>> classpathEntriesToDexSourcePaths =
-        Optional.of(
-            RichStream.from(classpathEntriesToDex)
-                .concat(RichStream.of(compiledUberRDotJava.getSourcePathToOutput()))
-                .collect(ImmutableSet.toImmutableSet()));
+    ImmutableSet<SourcePath> classpathEntriesToDexSourcePaths =
+        RichStream.from(classpathEntriesToDex)
+            .concat(RichStream.of(compiledUberRDotJava.getSourcePathToOutput()))
+            .collect(ImmutableSet.toImmutableSet());
     Optional<ImmutableSortedMap<APKModule, ImmutableList<SourcePath>>>
         moduleMappedClasspathEntriesToDex =
             Optional.of(
