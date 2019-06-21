@@ -257,7 +257,6 @@ public class AndroidInstrumentationApkDescription
         params,
         graphBuilder,
         apkUnderTest,
-        rulesToExcludeFromDex,
         enhancementResult,
         filesInfo.getDexFilesInfo(),
         filesInfo.getNativeFilesInfo(),
