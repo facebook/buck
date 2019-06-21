@@ -24,7 +24,6 @@ import com.facebook.buck.multitenant.importer.RuleTypeFactory
 import com.facebook.buck.multitenant.importer.ServiceRawTargetNode
 import com.facebook.buck.multitenant.importer.populateIndexFromStream
 import com.google.common.collect.ImmutableMap
-import com.google.common.collect.ImmutableSet
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -107,21 +106,17 @@ class IndexTest {
                 index.getTransitiveDeps(generation3, targetSequence("//java/com/facebook/buck/model:model"))
         )
 
-        val commit1baseFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
-        index.getFwdDeps(generation1, targetList("//java/com/facebook/buck/base:base"), commit1baseFwdDeps)
-        assertEquals(commit1baseFwdDeps.build(), targetSet())
+        val commit1baseFwdDeps = index.getFwdDeps(generation1, targetList("//java/com/facebook/buck/base:base"))
+        assertEquals(commit1baseFwdDeps, targetSet())
 
-        val commit2modelFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
-        index.getFwdDeps(generation2, targetList("//java/com/facebook/buck/model:model"), commit2modelFwdDeps)
-        assertEquals(commit2modelFwdDeps.build(), targetSet("//java/com/facebook/buck/base:base"))
+        val commit2modelFwdDeps = index.getFwdDeps(generation2, targetList("//java/com/facebook/buck/model:model"))
+        assertEquals(commit2modelFwdDeps, targetSet("//java/com/facebook/buck/base:base"))
 
-        val commit3modelFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
-        index.getFwdDeps(generation3, targetList("//java/com/facebook/buck/model:model"), commit3modelFwdDeps)
-        assertEquals(commit3modelFwdDeps.build(), targetSet("//java/com/facebook/buck/base:base", "//java/com/facebook/buck/util:util"))
+        val commit3modelFwdDeps = index.getFwdDeps(generation3, targetList("//java/com/facebook/buck/model:model"))
+        assertEquals(commit3modelFwdDeps, targetSet("//java/com/facebook/buck/base:base", "//java/com/facebook/buck/util:util"))
 
-        val commit3utilFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
-        index.getFwdDeps(generation3, targetList("//java/com/facebook/buck/util:util"), commit3utilFwdDeps)
-        assertEquals(commit3utilFwdDeps.build(), targetSet("//java/com/facebook/buck/base:base"))
+        val commit3utilFwdDeps = index.getFwdDeps(generation3, targetList("//java/com/facebook/buck/util:util"))
+        assertEquals(commit3utilFwdDeps, targetSet("//java/com/facebook/buck/base:base"))
     }
 
     @Test

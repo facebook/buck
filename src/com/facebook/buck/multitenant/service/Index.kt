@@ -18,7 +18,6 @@ package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
-import com.google.common.collect.ImmutableSet
 import java.util.ArrayDeque
 import kotlin.collections.HashSet
 
@@ -178,9 +177,8 @@ class Index internal constructor(
 
     fun getFwdDeps(
         generation: Generation,
-        targets: Iterable<UnconfiguredBuildTarget>,
-        out: ImmutableSet.Builder<UnconfiguredBuildTarget>
-    ) {
+        targets: Iterable<UnconfiguredBuildTarget>
+    ): Set<UnconfiguredBuildTarget> {
         val targetIds = targets.map { buildTargetCache.get(it) }
         val rules: List<InternalRawBuildRule> = indexGenerationData.withRuleMap { ruleMap ->
             targetIds.mapNotNull { targetId ->
@@ -188,11 +186,15 @@ class Index internal constructor(
             }
         }
 
+        // Although the resulting set will likely be larger than rules.size, it is a reasonable
+        // lower bound, so it seems like a reasonable initialCapacity.
+        val out = HashSet<UnconfiguredBuildTarget>(rules.size)
         rules.forEach { rule ->
-            rule.deps.forEach { dep ->
-                out.add(buildTargetCache.getByIndex(dep))
+            rule.deps.mapTo(out) { dep ->
+                buildTargetCache.getByIndex(dep)
             }
         }
+        return out
     }
 
     /**
