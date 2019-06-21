@@ -15,10 +15,14 @@
  */
 package com.facebook.buck.core.artifact;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import java.io.BufferedReader;
@@ -27,10 +31,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.file.Paths;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class ArtifactFilesystemTest {
-
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
   @Test
@@ -57,5 +62,31 @@ public class ArtifactFilesystemTest {
     outputStream.close();
 
     assertEquals("foo", Iterables.getOnlyElement(filesystem.readLines(Paths.get("bar"))));
+  }
+
+  @Test
+  public void makeExecutable() throws IOException {
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+
+    ArtifactFilesystem artifactFilesystem = new ArtifactFilesystem(filesystem);
+    ImmutableSourceArtifactImpl artifact =
+        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("bar")));
+
+    artifactFilesystem.writeContentsToPath("foobar", artifact);
+    artifactFilesystem.makeExecutable(artifact);
+
+    assertEquals("foobar", Iterables.getOnlyElement(filesystem.readLines(Paths.get("bar"))));
+    assertTrue(filesystem.isExecutable(artifact.getSourcePath().getRelativePath()));
+  }
+
+  @Test
+  public void writeContents() throws IOException {
+    ArtifactFilesystem artifactFilesystem = new ArtifactFilesystem(filesystem);
+    ImmutableSourceArtifactImpl artifact =
+        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("bar")));
+
+    artifactFilesystem.writeContentsToPath("foobar", artifact);
+
+    assertEquals("foobar", Iterables.getOnlyElement(filesystem.readLines(Paths.get("bar"))));
   }
 }

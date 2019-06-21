@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.artifact;
 
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,5 +64,29 @@ public class ArtifactFilesystem {
     }
 
     return Objects.requireNonNull(boundArtifact.asSource()).getSourcePath().getRelativePath();
+  }
+
+  /**
+   * Write a string to a given {@link Artifact}, creating parent directories as necessary
+   *
+   * @param contents the desired contents
+   * @param artifact the artifact to write. It must be bound.
+   * @throws IOException The file could not be written
+   */
+  public void writeContentsToPath(String contents, Artifact artifact) throws IOException {
+    Path path = resolveToPath(artifact);
+    filesystem.createParentDirs(path);
+    filesystem.writeContentsToPath(contents, path);
+  }
+
+  /**
+   * Make an {@link Artifact} executable
+   *
+   * @param artifact the artifact to write. It must be bound.
+   * @throws IOException Making the file executable failed
+   */
+  public void makeExecutable(Artifact artifact) throws IOException {
+    Path path = resolveToPath(artifact);
+    MostFiles.makeExecutable(filesystem.resolve(path));
   }
 }
