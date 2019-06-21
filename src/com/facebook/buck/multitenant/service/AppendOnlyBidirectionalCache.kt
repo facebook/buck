@@ -19,6 +19,7 @@ package com.facebook.buck.multitenant.service
 import java.util.ArrayList
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import javax.annotation.concurrent.GuardedBy
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
@@ -30,7 +31,6 @@ import kotlin.concurrent.write
  * This class is threadsafe.
  */
 internal class AppendOnlyBidirectionalCache<K> {
-    private val lock: ReentrantReadWriteLock = ReentrantReadWriteLock()
     // Note that we rely on the specific implementation of ConcurrentHashMap.computeIfAbsent()
     // because it provides stronger guarantees than ConcurrentMap.computeIfAbsent(). Specifically,
     // ConcurrentMap.computeIfAbsent() says that it can potentially call the mapping function
@@ -38,6 +38,9 @@ internal class AppendOnlyBidirectionalCache<K> {
     // function is applied at most once per key. We need the "at most once" guarantee to ensure
     // inserts into the forward and reverse maps are one-to-one.
     private val forward = ConcurrentHashMap<K, Int>()
+
+    private val lock: ReentrantReadWriteLock = ReentrantReadWriteLock()
+    @GuardedBy("lock")
     private val reverse = ArrayList<K>()
 
     /**
@@ -56,6 +59,17 @@ internal class AppendOnlyBidirectionalCache<K> {
     fun getByIndex(index: Int): K {
         return lock.read {
             reverse[index]
+        }
+    }
+
+    /**
+     * Batch operation to add the reverse mapping of each index in `indexes` to the specified
+     * `destination`. This is preferable to running [getByIndex] in a loop because it only takes the
+     * read lock on the reverse index once.
+     */
+    fun addAllByIndex(indexes: Sequence<Int>, destination: MutableCollection<K>) {
+        lock.read {
+            indexes.mapTo(destination) { reverse[it] }
         }
     }
 }

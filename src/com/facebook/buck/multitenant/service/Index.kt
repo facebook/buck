@@ -19,6 +19,8 @@ package com.facebook.buck.multitenant.service
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import java.util.ArrayDeque
+import java.util.TreeSet
+import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 
 /**
@@ -121,7 +123,8 @@ class Index internal constructor(
         // not need to be guarded by rwLock.
         return internalRules.map {
             if (it != null) {
-                val deps = it.deps.asSequence().map { buildTargetCache.getByIndex(it) }.toSet()
+                val deps = HashSet<UnconfiguredBuildTarget>(it.deps.size)
+                buildTargetCache.addAllByIndex(it.deps.asSequence(), deps)
                 RawBuildRule(it.targetNode, deps)
             } else {
                 null
@@ -172,7 +175,8 @@ class Index internal constructor(
 
         // We use a HashSet instead of a Kotlin Set so we can specify the initialCapacity.
         val out = HashSet<UnconfiguredBuildTarget>(visited.size)
-        return visited.mapTo(out) { buildTargetCache.getByIndex(it) }
+        buildTargetCache.addAllByIndex(visited.asSequence(), out)
+        return out
     }
 
     fun getFwdDeps(
@@ -186,14 +190,16 @@ class Index internal constructor(
             }
         }
 
-        // Although the resulting set will likely be larger than rules.size, it is a reasonable
-        // lower bound, so it seems like a reasonable initialCapacity.
-        val out = HashSet<UnconfiguredBuildTarget>(rules.size)
+        // Take the union of all of the deps across all of the rules so we can make one call to
+        // addAllByIndex(). We make it a sorted set so that addAllByIndex() can traverse its
+        // internal list in order.
+        val union = TreeSet<Int>()
         rules.forEach { rule ->
-            rule.deps.mapTo(out) { dep ->
-                buildTargetCache.getByIndex(dep)
-            }
+            union.addAll(rule.deps.asSequence())
         }
+
+        val out = HashSet<UnconfiguredBuildTarget>(union.size)
+        buildTargetCache.addAllByIndex(union.asSequence(), out)
         return out
     }
 
@@ -210,13 +216,31 @@ class Index internal constructor(
             }
         }
 
-        val out = mutableSetOf<UnconfiguredBuildTarget>()
-        rdepsSets.forEach { rdepsSet ->
-            rdepsSet.forEach { dep ->
-                out.add(buildTargetCache.getByIndex(dep))
+        // Try to be clever depending on the number of sets there are.
+        return when (rdepsSets.size) {
+            0 -> {
+               setOf()
+            }
+            1 -> {
+                val onlySet = rdepsSets.single()
+                val out = HashSet<UnconfiguredBuildTarget>(onlySet.size)
+                buildTargetCache.addAllByIndex(onlySet.asSequence(), out)
+                out
+            }
+            else -> {
+                // When there are multiple sets, merge them into one large set so that we can call
+                // addAllByIndex() once instead of once per set. Since we have to create a new set
+                // anyway, we might as well make it a sorted set so that addAllByIndex() can
+                // traverse its internal list in order.
+                val union = TreeSet<Int>()
+                for (set in rdepsSets) {
+                    union.addAll(set)
+                }
+                val out = HashSet<UnconfiguredBuildTarget>(union.size)
+                buildTargetCache.addAllByIndex(union.asSequence(), out)
+                out
             }
         }
-        return out
     }
 
     /**
@@ -224,15 +248,14 @@ class Index internal constructor(
      */
     fun getTargets(generation: Generation): List<UnconfiguredBuildTarget> {
         val pairs = indexGenerationData.withRuleMap { ruleMap ->
-            ruleMap.getEntries(generation)
+            ruleMap.getEntries(generation).toList()
         }
 
         // Note that we release the read lock before making a bunch of requests to the
-        // buildTargetCache. As this is going to do a LOT of lookups to the buildTargetCache, we
-        // should probably see whether we can do some sort of "multi-get" operation that requires
-        // less locking, or potentially change the locking strategy for AppendOnlyBidirectionalCache
-        // completely so that it is not thread-safe internally, but is guarded by its own lock.
-        return pairs.map { buildTargetCache.getByIndex(it.first) }.toList()
+        // buildTargetCache.
+        val out = ArrayList<UnconfiguredBuildTarget>(pairs.size)
+        buildTargetCache.addAllByIndex(pairs.asSequence().map { it.first }, out)
+        return out
     }
 
     /**
