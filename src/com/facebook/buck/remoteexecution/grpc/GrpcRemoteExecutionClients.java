@@ -21,6 +21,7 @@ import build.bazel.remote.execution.v2.ContentAddressableStorageGrpc.ContentAddr
 import build.bazel.remote.execution.v2.Digest;
 import build.bazel.remote.execution.v2.ExecutionGrpc;
 import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionStub;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
@@ -99,10 +100,14 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
     byteStreamStub.read(
         ReadRequest.newBuilder().setResourceName(name).setReadLimit(0).setReadOffset(0).build(),
         new StreamObserver<ReadResponse>() {
+          int size = 0;
+
           @Override
           public void onNext(ReadResponse value) {
             try {
-              dataConsumer.accept(value.getData());
+              ByteString data = value.getData();
+              size += data.size();
+              dataConsumer.accept(data);
             } catch (IOException e) {
               onError(e);
             }
@@ -115,7 +120,16 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
 
           @Override
           public void onCompleted() {
-            future.set(null);
+            if (size == digest.getSize()) {
+              future.set(null);
+            } else {
+              future.setException(
+                  new BuckUncheckedExecutionException(
+                      "Size of received bytes: "
+                          + size
+                          + " doesn't match expected size of: "
+                          + digest));
+            }
           }
         });
     return future;
