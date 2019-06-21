@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.core.starlark.compatible;
 
-import com.google.common.base.Preconditions;
 import com.google.common.primitives.Primitives;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.ParamType;
@@ -30,17 +29,14 @@ import javax.annotation.Nullable;
 @SuppressWarnings("all")
 class BuckStarlarkParam implements Param {
 
-  public static final BuckStarlarkParam NONE =
-      new BuckStarlarkParam("", Object.class, Object.class);
+  public static final BuckStarlarkParam NONE = new BuckStarlarkParam("", Object.class);
 
   private final String name;
   private final Class<?> type;
-  private final Class<?> generic;
 
-  private BuckStarlarkParam(String name, Class<?> type, Class<?> generic) {
+  private BuckStarlarkParam(String name, Class<?> type) {
     this.name = name;
     this.type = type;
-    this.generic = generic;
   }
 
   /**
@@ -57,16 +53,7 @@ class BuckStarlarkParam implements Param {
     if (type.isPrimitive()) {
       type = Primitives.wrap(type);
     }
-    Class<?> genericType = Object.class;
-    int numGenericType = type.getTypeParameters().length;
-    // TODO: we can't infer the contained generic types via reflection, so right now we are just
-    // unsafe. See if we want annotations in the future or something to properly deal with these
-    // stuff
-    Preconditions.checkState(
-        numGenericType <= 1,
-        "Skylark only supports collection types of one generic type but there was %s",
-        numGenericType);
-    return new BuckStarlarkParam(namedParameter, type, genericType);
+    return new BuckStarlarkParam(namedParameter, type);
   }
 
   @Override
@@ -86,7 +73,7 @@ class BuckStarlarkParam implements Param {
 
   @Override
   public Class<?> generic1() {
-    return generic;
+    return Object.class;
   }
 
   @Override

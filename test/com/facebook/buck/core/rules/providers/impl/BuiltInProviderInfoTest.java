@@ -30,6 +30,7 @@ import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.Identifier;
 import com.google.devtools.build.lib.syntax.IntegerLiteral;
 import com.google.devtools.build.lib.syntax.Mutability;
+import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.StringLiteral;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Set;
@@ -64,6 +65,15 @@ public class BuiltInProviderInfoTest {
 
     @Value.Parameter(order = 0)
     public abstract Set<String> set();
+  }
+
+  @ImmutableInfo(args = {"map"})
+  public abstract static class InfoWithMap extends BuiltInProviderInfo<InfoWithMap> {
+    public static final BuiltInProvider<InfoWithMap> PROVIDER =
+        BuiltInProvider.of(ImmutableInfoWithMap.class);
+
+    @Value.Parameter(order = 0)
+    public abstract SkylarkDict<String, Integer> map();
   }
 
   @Test
@@ -116,6 +126,19 @@ public class BuiltInProviderInfoTest {
 
     InfoWithSet someInfo3 = InfoWithSet.PROVIDER.createInfo(ImmutableSet.of());
     assertEquals(ImmutableSet.of(), someInfo3.set());
+  }
+
+  @Test
+  public void infoWithMapCanBeCreatedProperly()
+      throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    InfoWithMap someInfo1 = new ImmutableInfoWithMap(SkylarkDict.of(null, "a", 1));
+    assertEquals(SkylarkDict.of(null, "a", 1), someInfo1.map());
+
+    InfoWithMap someInfo2 = someInfo1.getProvider().createInfo(SkylarkDict.of(null, "b", 2));
+    assertEquals(SkylarkDict.of(null, "b", 2), someInfo2.map());
+
+    InfoWithMap someInfo3 = InfoWithMap.PROVIDER.createInfo(SkylarkDict.of(null));
+    assertEquals(SkylarkDict.of(null), someInfo3.map());
   }
 
   @Test
