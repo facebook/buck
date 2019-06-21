@@ -27,7 +27,10 @@ java_test(
     deps = [
         ":testutil",
         "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/io/filesystem/impl:testutil",
+        "//test/com/facebook/buck/step:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
     ],

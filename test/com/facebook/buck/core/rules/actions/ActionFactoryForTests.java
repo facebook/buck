@@ -28,11 +28,11 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 /** Creates {@link FakeAction}s conveniently for tests */
-public class FakeActionFactory {
+public class ActionFactoryForTests {
   private final FakeActionAnalysisRegistry actionAnalysisRegistry;
   private final ActionWrapperDataFactory actionWrapperDataFactory;
 
-  public FakeActionFactory(BuildTarget buildTarget) {
+  public ActionFactoryForTests(BuildTarget buildTarget) {
     this.actionAnalysisRegistry = new FakeActionAnalysisRegistry();
     this.actionWrapperDataFactory =
         new ActionWrapperDataFactory(
@@ -52,20 +52,7 @@ public class FakeActionFactory {
       ImmutableSet<Artifact> outputs,
       FakeActionConstructorArgs actionFunction)
       throws ActionCreationException {
-    try {
-      actionWrapperDataFactory.createActionAnalysisData(
-          FakeAction.class, inputs, outputs, actionFunction);
-      ActionAnalysisData actionAnalysisData =
-          Objects.requireNonNull(
-              actionAnalysisRegistry
-                  .getRegistered()
-                  .get(Iterables.getLast(outputs).asBound().asBuildArtifact().getActionDataKey()));
-
-      return (FakeAction) ((ActionWrapperData) actionAnalysisData).getAction();
-
-    } finally {
-      actionAnalysisRegistry.clear();
-    }
+    return createAction(FakeAction.class, inputs, outputs, actionFunction);
   }
 
   public FakeAction createFakeAction(
@@ -75,5 +62,28 @@ public class FakeActionFactory {
       throws ActionCreationException {
     return createFakeAction(
         inputs, outputs, (ignored1, ignored2, ignored3) -> actionFunction.get());
+  }
+
+  @SuppressWarnings("unchecked")
+  public <T extends AbstractAction<U>, U extends AbstractAction.ActionConstructorParams>
+      T createAction(
+          Class<T> clazz,
+          ImmutableSet<Artifact> inputs,
+          ImmutableSet<Artifact> outputs,
+          U actionArgs)
+          throws ActionCreationException {
+    try {
+      actionWrapperDataFactory.createActionAnalysisData(clazz, inputs, outputs, actionArgs);
+      ActionAnalysisData actionAnalysisData =
+          Objects.requireNonNull(
+              actionAnalysisRegistry
+                  .getRegistered()
+                  .get(Iterables.getLast(outputs).asBound().asBuildArtifact().getActionDataKey()));
+
+      return (T) ((ActionWrapperData) actionAnalysisData).getAction();
+
+    } finally {
+      actionAnalysisRegistry.clear();
+    }
   }
 }

@@ -1,6 +1,6 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+load("//tools/build_rules:java_rules.bzl", "standard_java_test", "java_immutables_library")
 
-java_library(
+java_immutables_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
@@ -9,6 +9,9 @@ java_library(
             "*Test.java",
         ],
     ),
+    exported_deps = [
+        "//src/com/facebook/buck/step:step",
+    ],
     visibility = ["//test/..."],
     deps = [
         "//src-gen:thrift",
@@ -28,7 +31,6 @@ java_library(
         "//src/com/facebook/buck/io/watchman:transport",
         "//src/com/facebook/buck/jvm/core:core",
         "//src/com/facebook/buck/rules/coercer:interface",
-        "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/test/selectors:selectors",
         "//src/com/facebook/buck/util:io",
@@ -43,6 +45,7 @@ java_library(
         "//src/com/facebook/buck/versions:types",
         "//src/com/facebook/buck/worker:worker_process",
         "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/rules/actions:testutil",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/jvm/java:fakepackagefinder",
         "//test/com/facebook/buck/testutil:testutil",

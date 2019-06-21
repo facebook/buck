@@ -1,0 +1,19 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_test",
+)
+
+java_test(
+    name = "lib",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//src/com/facebook/buck/core/rules/actions/lib:lib",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/rules/actions:testutil",
+        "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/step:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)
