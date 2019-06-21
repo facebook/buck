@@ -85,6 +85,7 @@ message WorkerRequirements {
     MEDIUM = 1;
     LARGE = 2;
     XLARGE = 3;
+    XXLARGE = 4;
   }
 
   WorkerSize worker_size = 1;

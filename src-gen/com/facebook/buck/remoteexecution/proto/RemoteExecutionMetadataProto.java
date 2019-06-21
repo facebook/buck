@@ -85,36 +85,36 @@ public final class RemoteExecutionMetadataProto {
       "ent_type\030\002 \001(\t\"\'\n\023ExecutionEngineInfo\022\020\n" +
       "\010hostname\030\001 \001(\t\"6\n\nWorkerInfo\022\020\n\010hostnam" +
       "e\030\001 \001(\t\022\026\n\016execution_path\030\002 \001(\t\"\035\n\rCasCl" +
-      "ientInfo\022\014\n\004name\030\001 \001(\t\"\330\002\n\022WorkerRequire" +
+      "ientInfo\022\014\n\004name\030\001 \001(\t\"\345\002\n\022WorkerRequire" +
       "ments\022M\n\013worker_size\030\001 \001(\01628.facebook.re" +
       "mote_execution.WorkerRequirements.Worker" +
       "Size\022W\n\rplatform_type\030\002 \001(\0162@.facebook.r" +
       "emote_execution.WorkerRequirements.Worke" +
       "rPlatformType\022\'\n\037should_try_larger_worke" +
       "r_on_oom\030\003 \001(\010\"5\n\022WorkerPlatformType\022\t\n\005" +
-      "LINUX\020\000\022\024\n\020ANDROID_EMULATOR\020\001\":\n\nWorkerS" +
+      "LINUX\020\000\022\024\n\020ANDROID_EMULATOR\020\001\"G\n\nWorkerS" +
       "ize\022\t\n\005SMALL\020\000\022\n\n\006MEDIUM\020\001\022\t\n\005LARGE\020\002\022\n\n" +
-      "\006XLARGE\020\003\"j\n\020ClientActionInfo\022\022\n\nreposit" +
-      "ory\030\001 \001(\t\022\025\n\rschedule_type\030\002 \001(\t\022\030\n\020re_s" +
-      "ession_label\030\003 \001(\t\022\021\n\ttenant_id\030\004 \001(\t\"\341\004" +
-      "\n\027RemoteExecutionMetadata\022=\n\rre_session_" +
-      "id\030\001 \001(\0132&.facebook.remote_execution.RES" +
-      "essionID\0226\n\tbuck_info\030\002 \001(\0132#.facebook.r" +
-      "emote_execution.BuckInfo\0228\n\ntrace_info\030\003" +
-      " \001(\0132$.facebook.remote_execution.TraceIn" +
-      "fo\022<\n\014creator_info\030\004 \001(\0132&.facebook.remo" +
-      "te_execution.CreatorInfo\022C\n\013engine_info\030" +
-      "\005 \001(\0132..facebook.remote_execution.Execut" +
-      "ionEngineInfo\022:\n\013worker_info\030\006 \001(\0132%.fac" +
-      "ebook.remote_execution.WorkerInfo\022A\n\017cas" +
-      "_client_info\030\007 \001(\0132(.facebook.remote_exe" +
-      "cution.CasClientInfo\022J\n\023worker_requireme" +
-      "nts\030\010 \001(\0132-.facebook.remote_execution.Wo" +
-      "rkerRequirements\022G\n\022client_action_info\030\n" +
-      " \001(\0132+.facebook.remote_execution.ClientA" +
-      "ctionInfoBI\n\'com.facebook.buck.remoteexe" +
-      "cution.protoB\034RemoteExecutionMetadataPro" +
-      "toP\001b\006proto3"
+      "\006XLARGE\020\003\022\013\n\007XXLARGE\020\004\"j\n\020ClientActionIn" +
+      "fo\022\022\n\nrepository\030\001 \001(\t\022\025\n\rschedule_type\030" +
+      "\002 \001(\t\022\030\n\020re_session_label\030\003 \001(\t\022\021\n\ttenan" +
+      "t_id\030\004 \001(\t\"\341\004\n\027RemoteExecutionMetadata\022=" +
+      "\n\rre_session_id\030\001 \001(\0132&.facebook.remote_" +
+      "execution.RESessionID\0226\n\tbuck_info\030\002 \001(\013" +
+      "2#.facebook.remote_execution.BuckInfo\0228\n" +
+      "\ntrace_info\030\003 \001(\0132$.facebook.remote_exec" +
+      "ution.TraceInfo\022<\n\014creator_info\030\004 \001(\0132&." +
+      "facebook.remote_execution.CreatorInfo\022C\n" +
+      "\013engine_info\030\005 \001(\0132..facebook.remote_exe" +
+      "cution.ExecutionEngineInfo\022:\n\013worker_inf" +
+      "o\030\006 \001(\0132%.facebook.remote_execution.Work" +
+      "erInfo\022A\n\017cas_client_info\030\007 \001(\0132(.facebo" +
+      "ok.remote_execution.CasClientInfo\022J\n\023wor" +
+      "ker_requirements\030\010 \001(\0132-.facebook.remote" +
+      "_execution.WorkerRequirements\022G\n\022client_" +
+      "action_info\030\n \001(\0132+.facebook.remote_exec" +
+      "ution.ClientActionInfoBI\n\'com.facebook.b" +
+      "uck.remoteexecution.protoB\034RemoteExecuti" +
+      "onMetadataProtoP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
