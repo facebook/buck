@@ -29,10 +29,11 @@ import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -50,8 +51,10 @@ public class FakeRuleDescription implements RuleDescription<FakeRuleDescriptionA
         (inputs, outputs, ctx) -> {
           BuildArtifact output = Iterables.getOnlyElement(outputs);
           try {
-            ctx.getGenOutputFilesystem()
-                .writeLinesToPath(ImmutableList.of("testcontent"), output.getOutputPath());
+            try (OutputStream fileout = ctx.getArtifactFilesystem().getOutputStream(output)) {
+              fileout.write("testcontent".getBytes(Charsets.UTF_8));
+            }
+
           } catch (IOException e) {
             return ImmutableActionExecutionFailure.of(
                 Optional.empty(), Optional.empty(), Optional.of(e));

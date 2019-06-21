@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.impl;
 
+import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
@@ -98,8 +99,7 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule {
         new ActionExecutionStep(
             action,
             context.getShouldDeleteTemporaries(),
-            getProjectFilesystem(),
-            getBuildTarget()));
+            new ArtifactFilesystem(getProjectFilesystem())));
   }
 
   @Nullable

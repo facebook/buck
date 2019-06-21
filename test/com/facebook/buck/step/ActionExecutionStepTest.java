@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.DeclaredArtifact;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.TestCellPathResolver;
@@ -54,8 +55,7 @@ import org.junit.Test;
 
 public class ActionExecutionStepTest {
   @Test
-  public void canExecuteAnAction()
-      throws IOException, InterruptedException, ActionCreationException {
+  public void canExecuteAnAction() throws IOException, ActionCreationException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     Path baseCell = Paths.get("cell");
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:foo");
@@ -71,9 +71,6 @@ public class ActionExecutionStepTest {
                   buildTarget,
                   BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve(output)),
               Iterables.getOnlyElement(outputs).getSourcePath());
-          assertEquals(
-              projectFilesystem.resolve(BuildPaths.getGenDir(projectFilesystem, buildTarget)),
-              ctx.getGenOutputFilesystem().getRootPath());
           assertFalse(ctx.getShouldDeleteTemporaries());
           ctx.logError(new RuntimeException("message"), "my error %s", 1);
           ctx.postEvent(ConsoleEvent.info("my test info"));
@@ -87,7 +84,7 @@ public class ActionExecutionStepTest {
             ImmutableSet.of(), ImmutableSet.of(declaredArtifact), actionFunction);
 
     ActionExecutionStep step =
-        new ActionExecutionStep(action, false, projectFilesystem, buildTarget);
+        new ActionExecutionStep(action, false, new ArtifactFilesystem(projectFilesystem));
     BuckEventBus testEventBus = BuckEventBusForTests.newInstance();
     BuckEventBusForTests.CapturingConsoleEventListener consoleEventListener =
         new CapturingConsoleEventListener();
