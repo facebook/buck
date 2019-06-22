@@ -47,6 +47,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxHeaders;
@@ -102,7 +103,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -166,13 +166,8 @@ public class AppleLibraryDescription
 
   enum MetadataType implements FlavorConvertible {
     APPLE_SWIFT_METADATA(InternalFlavor.of("swift-metadata")),
-    APPLE_SWIFT_EXPORTED_OBJC_CXX_HEADERS(InternalFlavor.of("swift-objc-cxx-headers")),
-    APPLE_SWIFT_OBJC_CXX_HEADERS(InternalFlavor.of("swift-private-objc-cxx-headers")),
-    APPLE_SWIFT_MODULE_CXX_HEADERS(InternalFlavor.of("swift-module-cxx-headers")),
-    APPLE_SWIFT_PREPROCESSOR_INPUT(InternalFlavor.of("swift-preprocessor-input")),
-    APPLE_SWIFT_PRIVATE_PREPROCESSOR_INPUT(InternalFlavor.of("swift-private-preprocessor-input")),
     APPLE_SWIFT_UNDERLYING_MODULE_INPUT(InternalFlavor.of("swift-underlying-module-input")),
-    ;
+    APPLE_SWIFT_PREPROCESSOR_INPUT(InternalFlavor.of("swift-preprocessor-input"));
 
     private final Flavor flavor;
 
@@ -811,39 +806,6 @@ public class AppleLibraryDescription
             return Optional.of(metadata).map(metadataClass::cast);
           }
 
-        case APPLE_SWIFT_EXPORTED_OBJC_CXX_HEADERS:
-          {
-            return Optional.of(
-                    createSwiftObjcHeaders(
-                        graphBuilder, baseTarget, Type.SWIFT_EXPORTED_OBJC_GENERATED_HEADER))
-                .map(metadataClass::cast);
-          }
-
-        case APPLE_SWIFT_OBJC_CXX_HEADERS:
-          {
-            return Optional.of(
-                    createSwiftObjcHeaders(
-                        graphBuilder, baseTarget, Type.SWIFT_OBJC_GENERATED_HEADER))
-                .map(metadataClass::cast);
-          }
-
-        case APPLE_SWIFT_MODULE_CXX_HEADERS:
-          {
-            return Optional.of(createSwiftModuleHeaders(graphBuilder, baseTarget))
-                .map(metadataClass::cast);
-          }
-
-        case APPLE_SWIFT_PREPROCESSOR_INPUT:
-          {
-            return Optional.of(createSwiftPreprocessorInput(graphBuilder, baseTarget))
-                .map(metadataClass::cast);
-          }
-
-        case APPLE_SWIFT_PRIVATE_PREPROCESSOR_INPUT:
-          {
-            return Optional.of(createSwiftPrivatePreprocessorInput(graphBuilder, baseTarget))
-                .map(metadataClass::cast);
-          }
         case APPLE_SWIFT_UNDERLYING_MODULE_INPUT:
           {
             if (!args.isModular()) {
@@ -861,46 +823,54 @@ public class AppleLibraryDescription
             }
             return Optional.empty();
           }
+        case APPLE_SWIFT_PREPROCESSOR_INPUT:
+          return Optional.of(createMetadataCxxSwiftPreprocessorInput(graphBuilder, baseTarget))
+              .map(metadataClass::cast);
       }
     }
 
     return Optional.empty();
   }
 
-  private CxxPreprocessorInput createSwiftPrivatePreprocessorInput(
+  private static CxxPreprocessorInput createSwiftPrivateCxxPreprocessorInput(
       ActionGraphBuilder graphBuilder, BuildTarget baseTarget) {
-    BuildTarget objcHeadersTarget =
-        baseTarget.withAppendedFlavors(MetadataType.APPLE_SWIFT_OBJC_CXX_HEADERS.getFlavor());
-    Optional<CxxHeaders> objcHeaders =
-        graphBuilder.requireMetadata(objcHeadersTarget, CxxHeaders.class);
-
+    CxxHeaders headers =
+        createSwiftObjcHeaders(graphBuilder, baseTarget, Type.SWIFT_OBJC_GENERATED_HEADER);
     CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
-    objcHeaders.ifPresent(s -> builder.addIncludes(s));
-
+    builder.addIncludes(headers);
     return builder.build();
   }
 
-  private CxxPreprocessorInput createSwiftPreprocessorInput(
+  private static CxxPreprocessorInput createSwiftPreprocessorInput(
       ActionGraphBuilder graphBuilder, BuildTarget baseTarget) {
-    BuildTarget moduleHeadersTarget =
-        baseTarget.withAppendedFlavors(MetadataType.APPLE_SWIFT_MODULE_CXX_HEADERS.getFlavor());
-    Optional<CxxHeaders> moduleHeaders =
-        graphBuilder.requireMetadata(moduleHeadersTarget, CxxHeaders.class);
-
-    BuildTarget objcHeadersTarget =
-        baseTarget.withAppendedFlavors(
-            MetadataType.APPLE_SWIFT_EXPORTED_OBJC_CXX_HEADERS.getFlavor());
-    Optional<CxxHeaders> objcHeaders =
-        graphBuilder.requireMetadata(objcHeadersTarget, CxxHeaders.class);
+    CxxHeaders swiftCompileHeaders = createSwiftModuleHeaders(graphBuilder, baseTarget);
+    CxxHeaders headers =
+        createSwiftObjcHeaders(graphBuilder, baseTarget, Type.SWIFT_EXPORTED_OBJC_GENERATED_HEADER);
 
     CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
-    moduleHeaders.ifPresent(s -> builder.addIncludes(s));
-    objcHeaders.ifPresent(s -> builder.addIncludes(s));
-
-    return builder.build();
+    builder.addIncludes(swiftCompileHeaders);
+    builder.addIncludes(headers);
+    CxxPreprocessorInput input = builder.build();
+    return input;
   }
 
-  private CxxHeaders createSwiftModuleHeaders(
+  /** Holds both the public and the private preprocessor input for swift targets. */
+  @BuckStyleValue
+  interface SwiftCxxPreprocessorInput {
+    CxxPreprocessorInput getPublicInput();
+
+    CxxPreprocessorInput getPrivateInput();
+  }
+
+  private SwiftCxxPreprocessorInput createMetadataCxxSwiftPreprocessorInput(
+      ActionGraphBuilder graphBuilder, BuildTarget baseTarget) {
+    CxxPreprocessorInput publicInput = createSwiftPreprocessorInput(graphBuilder, baseTarget);
+    CxxPreprocessorInput privateInput =
+        createSwiftPrivateCxxPreprocessorInput(graphBuilder, baseTarget);
+    return new ImmutableSwiftCxxPreprocessorInput(publicInput, privateInput);
+  }
+
+  private static CxxHeaders createSwiftModuleHeaders(
       ActionGraphBuilder graphBuilder, BuildTarget baseTarget) {
     BuildTarget swiftCompileTarget = baseTarget.withAppendedFlavors(Type.SWIFT_COMPILE.getFlavor());
     SwiftCompile compile = (SwiftCompile) graphBuilder.requireRule(swiftCompileTarget);
@@ -908,7 +878,7 @@ public class AppleLibraryDescription
     return CxxHeadersDir.of(CxxPreprocessables.IncludeType.LOCAL, compile.getOutputPath());
   }
 
-  private CxxHeaders createSwiftObjcHeaders(
+  private static CxxHeaders createSwiftObjcHeaders(
       ActionGraphBuilder graphBuilder,
       BuildTarget baseTarget,
       Type swiftExportedObjcGeneratedHeader) {
@@ -1042,30 +1012,15 @@ public class AppleLibraryDescription
     return metadata.map(m -> !m.getSwiftSources().isEmpty()).orElse(false);
   }
 
-  public static Optional<CxxPreprocessorInput> queryMetadataCxxSwiftPreprocessorInput(
-      ActionGraphBuilder graphBuilder,
-      BuildTarget baseTarget,
-      CxxPlatform platform,
-      HeaderVisibility headerVisibility) {
-    if (!targetContainsSwift(baseTarget, graphBuilder)) {
-      return Optional.empty();
-    }
-
-    MetadataType metadataType = null;
-    switch (headerVisibility) {
-      case PUBLIC:
-        metadataType = MetadataType.APPLE_SWIFT_PREPROCESSOR_INPUT;
-        break;
-      case PRIVATE:
-        metadataType = MetadataType.APPLE_SWIFT_PRIVATE_PREPROCESSOR_INPUT;
-        break;
-    }
-
-    Objects.requireNonNull(metadataType);
-
-    return graphBuilder.requireMetadata(
-        baseTarget.withAppendedFlavors(metadataType.getFlavor(), platform.getFlavor()),
-        CxxPreprocessorInput.class);
+  private SwiftCxxPreprocessorInput queryMetadataCxxSwiftPreprocessorInput(
+      ActionGraphBuilder graphBuilder, BuildTarget target, CxxPlatform platform) {
+    return graphBuilder
+        .requireMetadata(
+            target.withFlavors(
+                platform.getFlavor(),
+                AppleLibraryDescription.MetadataType.APPLE_SWIFT_PREPROCESSOR_INPUT.getFlavor()),
+            SwiftCxxPreprocessorInput.class)
+        .get();
   }
 
   public static Optional<CxxPreprocessorInput> underlyingModuleCxxPreprocessorInput(
@@ -1084,8 +1039,8 @@ public class AppleLibraryDescription
       return Optional.empty();
     }
 
-    return queryMetadataCxxSwiftPreprocessorInput(
-        graphBuilder, target, platform, HeaderVisibility.PUBLIC);
+    return Optional.of(
+        queryMetadataCxxSwiftPreprocessorInput(graphBuilder, target, platform).getPublicInput());
   }
 
   @Override
@@ -1095,8 +1050,8 @@ public class AppleLibraryDescription
       return Optional.empty();
     }
 
-    return queryMetadataCxxSwiftPreprocessorInput(
-        graphBuilder, target, platform, HeaderVisibility.PRIVATE);
+    return Optional.of(
+        queryMetadataCxxSwiftPreprocessorInput(graphBuilder, target, platform).getPrivateInput());
   }
 
   @Override
