@@ -37,9 +37,11 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPreprocessables;
+import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceTypes;
@@ -72,9 +74,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
@@ -197,10 +202,24 @@ public class NdkLibraryDescription
 
       // Collect the preprocessor input for all C/C++ library deps.  We search *through* other
       // NDK library rules.
+      SortedSet<BuildRule> buildDeps = params.getBuildDeps();
+
+      List<CxxPreprocessorDep> preprocessorDeps = new ArrayList<>();
+      // Build up the map of all C/C++ preprocessable dependencies.
+      new AbstractBreadthFirstTraversal<BuildRule>(buildDeps) {
+        @Override
+        public Iterable<BuildRule> visit(BuildRule rule) {
+          if (rule instanceof CxxPreprocessorDep) {
+            preprocessorDeps.add((CxxPreprocessorDep) rule);
+          }
+          return rule instanceof NdkLibrary ? rule.getBuildDeps() : ImmutableList.of();
+        }
+      }.start();
+
       CxxPreprocessorInput cxxPreprocessorInput =
           CxxPreprocessorInput.concat(
               CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                  cxxPlatform, graphBuilder, params.getBuildDeps(), NdkLibrary.class::isInstance));
+                  cxxPlatform, graphBuilder, preprocessorDeps));
 
       // We add any dependencies from the C/C++ preprocessor input to this rule, even though
       // it technically should be added to the top-level rule.
@@ -237,7 +256,7 @@ public class NdkLibraryDescription
               cxxPlatform,
               graphBuilder,
               targetConfiguration,
-              params.getBuildDeps(),
+              buildDeps,
               Linker.LinkableDepType.SHARED,
               r -> r instanceof NdkLibrary ? Optional.of(r.getBuildDeps()) : Optional.empty());
 

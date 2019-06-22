@@ -170,7 +170,7 @@ public class CxxPreprocessablesTest {
     ImmutableList<CxxPreprocessorInput> actual =
         ImmutableList.copyOf(
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                cxxPlatform, new TestActionGraphBuilder(), ImmutableList.<BuildRule>of(dep3)));
+                cxxPlatform, new TestActionGraphBuilder(), ImmutableList.of(dep3)));
     assertEquals(expected, actual);
   }
 
@@ -229,7 +229,7 @@ public class CxxPreprocessablesTest {
 
     // Create a native linkable that sits at the top of the dep chain.
     CxxPreprocessorInput topInput = CxxPreprocessorInput.of();
-    BuildRule top = createFakeCxxPreprocessorDep("//:top", topInput, middle);
+    CxxPreprocessorDep top = createFakeCxxPreprocessorDep("//:top", topInput, middle);
 
     // Now grab all input via traversing deps and verify that the middle rule prevents pulling
     // in the bottom input.

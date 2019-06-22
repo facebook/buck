@@ -177,7 +177,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
         CxxPreprocessables.getTransitiveCxxPreprocessorInput(
             cxxPlatform,
             getActionGraphBuilder(),
-            FluentIterable.from(deps).filter(BuildRule.class)));
+            FluentIterable.from(deps).filter(CxxPreprocessorDep.class)));
     for (CxxPreprocessorDep dep :
         Iterables.filter(deps, Predicates.not(BuildRule.class::isInstance))) {
       inputs.add(dep.getCxxPreprocessorInput(cxxPlatform, getActionGraphBuilder()));

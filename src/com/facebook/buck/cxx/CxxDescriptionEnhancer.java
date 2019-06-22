@@ -480,7 +480,7 @@ public class CxxDescriptionEnhancer {
 
           // Add any dependent headers
           cxxPreprocessorInputFromTestedRulesBuilder.addAll(
-              CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+              CxxPreprocessables.getTransitiveCxxPreprocessorInputFromDeps(
                   cxxPlatform, graphBuilder, ImmutableList.of(rule)));
         }
       }
@@ -1268,7 +1268,7 @@ public class CxxDescriptionEnhancer {
                     macrosConverter::convert)),
             ImmutableList.of(headerSymlinkTree),
             frameworks,
-            CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+            CxxPreprocessables.getTransitiveCxxPreprocessorInputFromDeps(
                 cxxPlatform,
                 graphBuilder,
                 RichStream.from(deps)

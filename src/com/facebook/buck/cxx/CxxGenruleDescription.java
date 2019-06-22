@@ -413,7 +413,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     /** Get the transitive C/C++ preprocessor input rooted at the given rules. */
     private Collection<CxxPreprocessorInput> getCxxPreprocessorInput(
         ActionGraphBuilder graphBuilder, ImmutableList<BuildRule> rules) {
-      return CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder, rules);
+      return CxxPreprocessables.getTransitiveCxxPreprocessorInputFromDeps(
+          cxxPlatform, graphBuilder, rules);
     }
 
     /**

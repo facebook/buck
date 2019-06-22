@@ -201,7 +201,7 @@ public class OcamlRuleBuilder {
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 ocamlPlatform.getCxxPlatform(),
                 graphBuilder,
-                FluentIterable.from(deps).filter(CxxPreprocessorDep.class::isInstance)));
+                FluentIterable.from(deps).filter(CxxPreprocessorDep.class)));
 
     ImmutableList<String> nativeIncludes =
         FluentIterable.from(deps)
@@ -333,7 +333,7 @@ public class OcamlRuleBuilder {
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 ocamlPlatform.getCxxPlatform(),
                 graphBuilder,
-                FluentIterable.from(deps).filter(CxxPreprocessorDep.class::isInstance)));
+                FluentIterable.from(deps).filter(CxxPreprocessorDep.class)));
 
     ImmutableList<String> nativeIncludes =
         FluentIterable.from(deps)

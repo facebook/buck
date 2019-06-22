@@ -37,6 +37,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibrary;
@@ -44,6 +45,7 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessables;
+import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.DepsBuilder;
@@ -70,9 +72,12 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
@@ -225,15 +230,16 @@ public class SwiftLibraryDescription
       // during compilation.
 
       // Direct swift dependencies.
+      SortedSet<BuildRule> buildDeps = params.getBuildDeps();
       ImmutableSet<SwiftCompile> swiftCompileRules =
-          RichStream.from(params.getBuildDeps())
+          RichStream.from(buildDeps)
               .filter(SwiftLibrary.class)
               .map(input -> input.requireSwiftCompileRule(cxxPlatform.getFlavor()))
               .toImmutableSet();
 
       // Implicitly generated swift libraries of apple_library dependencies with swift code.
       ImmutableSet<SwiftCompile> implicitSwiftCompileRules =
-          RichStream.from(params.getBuildDeps())
+          RichStream.from(buildDeps)
               .filter(CxxLibrary.class)
               .flatMap(
                   input -> {
@@ -252,12 +258,24 @@ public class SwiftLibraryDescription
                   })
               .toImmutableSet();
 
-      // Transitive C libraries whose headers might be visible to swift via bridging.
+      List<CxxPreprocessorDep> preprocessorDeps = new ArrayList<>();
+      // Build up the map of all C/C++ preprocessable dependencies.
+      new AbstractBreadthFirstTraversal<BuildRule>(buildDeps) {
+        @Override
+        public Iterable<BuildRule> visit(BuildRule rule) {
+          if (rule instanceof CxxPreprocessorDep) {
+            preprocessorDeps.add((CxxPreprocessorDep) rule);
+          }
+          return rule.getBuildDeps();
+        }
+      }.start();
 
+      // Transitive C libraries whose headers might be visible to swift via bridging.
       CxxPreprocessorInput inputs =
           CxxPreprocessorInput.concat(
               CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                  cxxPlatform, graphBuilder, params.getBuildDeps(), x -> true));
+                  cxxPlatform, graphBuilder, preprocessorDeps));
+
       PreprocessorFlags cxxDeps =
           PreprocessorFlags.of(
               Optional.empty(),

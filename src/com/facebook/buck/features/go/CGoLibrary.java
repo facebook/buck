@@ -115,7 +115,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
             .collect(ImmutableList.toImmutableList());
 
     Collection<CxxPreprocessorInput> cxxPreprocessorInputs =
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+        CxxPreprocessables.getTransitiveCxxPreprocessorInputFromDeps(
             platform.getCxxPlatform(), graphBuilder, cxxDepsRules);
 
     PreprocessorFlags.Builder ppFlagsBuilder = PreprocessorFlags.builder();

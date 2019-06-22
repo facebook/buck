@@ -200,7 +200,8 @@ public class CxxPythonExtensionDescription
                     macrosConverter::convert)),
             ImmutableList.of(headerSymlinkTree),
             ImmutableSet.of(),
-            CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder, deps),
+            CxxPreprocessables.getTransitiveCxxPreprocessorInputFromDeps(
+                cxxPlatform, graphBuilder, deps),
             args.getRawHeaders(),
             args.getIncludeDirectories(),
             projectFilesystem);

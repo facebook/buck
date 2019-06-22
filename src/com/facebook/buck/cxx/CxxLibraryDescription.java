@@ -56,7 +56,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -353,20 +355,15 @@ public class CxxLibraryDescription
      */
     static TransitiveCxxPreprocessorInputFunction fromDeps() {
       return (target, ruleResolver, cxxPlatform, deps, privateDeps) -> {
-        Map<BuildTarget, CxxPreprocessorInput> input = new LinkedHashMap<>();
-        input.put(
-            target,
+        List<CxxPreprocessorInput> input = new ArrayList<>();
+        input.add(
             queryMetadataCxxPreprocessorInput(
                     ruleResolver, target, cxxPlatform, HeaderVisibility.PUBLIC)
                 .orElseThrow(IllegalStateException::new));
-        for (BuildRule rule : deps) {
-          if (rule instanceof CxxPreprocessorDep) {
-            input.putAll(
-                ((CxxPreprocessorDep) rule)
-                    .getTransitiveCxxPreprocessorInput(cxxPlatform, ruleResolver));
-          }
-        }
-        return input.values().stream();
+        input.addAll(
+            CxxPreprocessables.getTransitiveCxxPreprocessorInputFromDeps(
+                cxxPlatform, ruleResolver, deps));
+        return input.stream();
       };
     }
   }

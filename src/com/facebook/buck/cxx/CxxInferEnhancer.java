@@ -297,7 +297,7 @@ public final class CxxInferEnhancer {
                     ::convert)),
         ImmutableList.of(headerSymlinkTree),
         args.getFrameworks(),
-        CxxPreprocessables.getTransitiveCxxPreprocessorInput(
+        CxxPreprocessables.getTransitiveCxxPreprocessorInputFromDeps(
             cxxPlatform,
             graphBuilder,
             RichStream.from(deps).filter(CxxPreprocessorDep.class::isInstance).toImmutableList()),
