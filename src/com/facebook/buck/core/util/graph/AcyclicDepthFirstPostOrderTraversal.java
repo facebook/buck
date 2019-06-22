@@ -87,7 +87,7 @@ public class AcyclicDepthFirstPostOrderTraversal<T> {
       // Find children that need to be explored to add to the stack.
       int stackSize = toExplore.size();
       if (shouldExploreChildren.test(node)) {
-        for (Iterator<T> iter = explorable.children; iter.hasNext(); ) {
+        for (Iterator<? extends T> iter = explorable.children; iter.hasNext(); ) {
           T child = iter.next();
           if (inProgress.contains(child)) {
             throw createCycleException(child, toExplore);
@@ -122,7 +122,7 @@ public class AcyclicDepthFirstPostOrderTraversal<T> {
    */
   private class Explorable {
     private final T node;
-    private final Iterator<T> children;
+    private final Iterator<? extends T> children;
 
     Explorable(T node) {
       this.node = node;
