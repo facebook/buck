@@ -40,7 +40,7 @@ import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkType;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -847,8 +847,8 @@ public class CxxLibraryFactory {
       CxxPlatform cxxPlatform,
       SharedLibraryInterfaceParams params) {
 
-    NativeLinkTarget linkTarget =
-        (NativeLinkTarget)
+    NativeLinkTargetGroup linkTarget =
+        (NativeLinkTargetGroup)
             graphBuilder.requireRule(baseTarget.withoutFlavors(cxxPlatform.getFlavor()));
 
     NativeLinkTargetMode linkTargetMode = linkTarget.getNativeLinkTargetMode(cxxPlatform);

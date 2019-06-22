@@ -50,7 +50,7 @@ import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableCacheKey;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
@@ -798,13 +798,13 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public Optional<NativeLinkTarget> getNativeLinkTarget(
+      public Optional<NativeLinkTargetGroup> getNativeLinkTarget(
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         if (getPreferredLinkage(cxxPlatform) == Linkage.SHARED) {
           return Optional.empty();
         }
         return Optional.of(
-            new NativeLinkTarget() {
+            new NativeLinkTargetGroup() {
               @Override
               public BuildTarget getBuildTarget() {
                 return buildTarget;

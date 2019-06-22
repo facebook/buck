@@ -50,7 +50,7 @@ import com.facebook.buck.cxx.OmnibusRoots;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
@@ -326,7 +326,7 @@ public class LuaBinaryDescription
           }
         } else if (rule instanceof CxxPythonExtension) {
           CxxPythonExtension extension = (CxxPythonExtension) rule;
-          NativeLinkTarget target = extension.getNativeLinkTarget(pythonPlatform);
+          NativeLinkTargetGroup target = extension.getNativeLinkTarget(pythonPlatform);
           pythonExtensions.put(target.getBuildTarget(), (CxxPythonExtension) rule);
           omnibusRoots.addIncludedRoot(target);
         } else if (rule instanceof PythonPackagable) {
@@ -423,7 +423,7 @@ public class LuaBinaryDescription
         }
 
         // Otherwise, add it as a native library.
-        NativeLinkTarget target =
+        NativeLinkTargetGroup target =
             Preconditions.checkNotNull(
                 roots.getIncludedRoots().get(root.getKey()),
                 "%s: linked unexpected omnibus root: %s",

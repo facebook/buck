@@ -23,7 +23,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -47,5 +47,5 @@ public abstract class CxxPythonExtension extends NoopBuildRuleWithDeclaredAndExt
   public abstract PythonPackageComponents getPythonPackageComponents(
       PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
-  public abstract NativeLinkTarget getNativeLinkTarget(PythonPlatform pythonPlatform);
+  public abstract NativeLinkTargetGroup getNativeLinkTarget(PythonPlatform pythonPlatform);
 }

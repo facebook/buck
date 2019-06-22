@@ -323,11 +323,13 @@ public class NativeLinkables {
     return builder.build();
   }
 
-  /** @return the {@link NativeLinkTarget} that can be extracted from {@code object}, if any. */
-  public static Optional<NativeLinkTarget> getNativeLinkTarget(
+  /**
+   * @return the {@link NativeLinkTargetGroup} that can be extracted from {@code object}, if any.
+   */
+  public static Optional<NativeLinkTargetGroup> getNativeLinkTarget(
       Object object, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    if (object instanceof NativeLinkTarget) {
-      return Optional.of((NativeLinkTarget) object);
+    if (object instanceof NativeLinkTargetGroup) {
+      return Optional.of((NativeLinkTargetGroup) object);
     }
     if (object instanceof CanProvideNativeLinkTarget) {
       return ((CanProvideNativeLinkTarget) object).getNativeLinkTarget(cxxPlatform, graphBuilder);

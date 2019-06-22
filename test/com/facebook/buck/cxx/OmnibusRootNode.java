@@ -18,7 +18,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -27,7 +27,7 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
 
-class OmnibusRootNode extends OmnibusNode implements NativeLinkTarget, NativeLinkableGroup {
+class OmnibusRootNode extends OmnibusNode implements NativeLinkTargetGroup, NativeLinkableGroup {
 
   public OmnibusRootNode(String target, Iterable<? extends NativeLinkableGroup> deps) {
     super(target, deps);

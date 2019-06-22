@@ -43,7 +43,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -70,7 +70,7 @@ import org.immutables.value.Value;
 /** {@link Starter} implementation which builds a starter as a native executable. */
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTarget {
+abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTargetGroup {
 
   private static final String NATIVE_STARTER_CXX_SOURCE = "native-starter.cpp.in";
 

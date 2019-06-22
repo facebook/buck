@@ -23,7 +23,8 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import java.nio.file.Path;
 import java.util.Optional;
 
-public interface NativeLinkTarget {
+/** Represents a target of a native link. */
+public interface NativeLinkTargetGroup {
 
   BuildTarget getBuildTarget();
 

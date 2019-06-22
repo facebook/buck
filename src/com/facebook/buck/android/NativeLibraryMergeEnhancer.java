@@ -48,7 +48,7 @@ import com.facebook.buck.cxx.toolchain.elf.Elf;
 import com.facebook.buck.cxx.toolchain.elf.ElfSection;
 import com.facebook.buck.cxx.toolchain.elf.ElfSymbolTable;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -913,11 +913,11 @@ class NativeLibraryMergeEnhancer {
 
       for (NativeLinkableGroup linkable :
           Iterables.concat(usingGlue, constituents.getLinkables())) {
-        if (linkable instanceof NativeLinkTarget) {
+        if (linkable instanceof NativeLinkTargetGroup) {
           // If this constituent is a NativeLinkTarget, use its input to get raw objects and
           // linker flags.
           builder.add(
-              ((NativeLinkTarget) linkable)
+              ((NativeLinkTargetGroup) linkable)
                   .getNativeLinkTargetInput(
                       cxxPlatform, graphBuilder, graphBuilder.getSourcePathResolver()));
         } else {

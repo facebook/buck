@@ -21,9 +21,10 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import java.util.Optional;
 
 /**
- * Helper interface for nodes which conditionally support the {@link NativeLinkTarget} interface.
+ * Helper interface for nodes which conditionally support the {@link NativeLinkTargetGroup}
+ * interface.
  */
 public interface CanProvideNativeLinkTarget {
-  Optional<NativeLinkTarget> getNativeLinkTarget(
+  Optional<NativeLinkTargetGroup> getNativeLinkTarget(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 }

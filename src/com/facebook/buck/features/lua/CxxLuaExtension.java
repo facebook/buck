@@ -21,11 +21,11 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 
 public abstract class CxxLuaExtension extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements NativeLinkTarget {
+    implements NativeLinkTargetGroup {
 
   public CxxLuaExtension(
       BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {

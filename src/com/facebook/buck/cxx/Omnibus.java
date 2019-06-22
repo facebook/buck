@@ -33,7 +33,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -82,7 +82,8 @@ public class Omnibus {
     return root.withAppendedFlavors(InternalFlavor.of("dummy"));
   }
 
-  private static boolean shouldCreateDummyRoot(NativeLinkTarget target, CxxPlatform cxxPlatform) {
+  private static boolean shouldCreateDummyRoot(
+      NativeLinkTargetGroup target, CxxPlatform cxxPlatform) {
     return target.getNativeLinkTargetMode(cxxPlatform).getType() == Linker.LinkType.EXECUTABLE;
   }
 
@@ -99,7 +100,7 @@ public class Omnibus {
   // `NativeLinkTarget`.
   private static Iterable<? extends NativeLinkableGroup> getDeps(
       BuildTarget target,
-      Map<BuildTarget, ? extends NativeLinkTarget> nativeLinkTargets,
+      Map<BuildTarget, ? extends NativeLinkTargetGroup> nativeLinkTargets,
       Map<BuildTarget, ? extends NativeLinkableGroup> nativeLinkables,
       CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder) {
@@ -107,8 +108,9 @@ public class Omnibus {
       NativeLinkableGroup nativeLinkableGroup = Objects.requireNonNull(nativeLinkables.get(target));
       return getDeps(nativeLinkableGroup, cxxPlatform, graphBuilder);
     } else {
-      NativeLinkTarget nativeLinkTarget = Objects.requireNonNull(nativeLinkTargets.get(target));
-      return nativeLinkTarget.getNativeLinkTargetDeps(cxxPlatform, graphBuilder);
+      NativeLinkTargetGroup nativeLinkTargetGroup =
+          Objects.requireNonNull(nativeLinkTargets.get(target));
+      return nativeLinkTargetGroup.getNativeLinkTargetDeps(cxxPlatform, graphBuilder);
     }
   }
 
@@ -116,7 +118,7 @@ public class Omnibus {
   // given included and excluded roots.
   static OmnibusSpec buildSpec(
       CxxPlatform cxxPlatform,
-      Iterable<? extends NativeLinkTarget> includedRoots,
+      Iterable<? extends NativeLinkTargetGroup> includedRoots,
       Iterable<? extends NativeLinkableGroup> excludedRoots,
       ActionGraphBuilder actionGraphBuilder) {
 
@@ -129,9 +131,9 @@ public class Omnibus {
     Set<BuildTarget> excluded = new LinkedHashSet<>();
 
     // Process all the roots included in the omnibus link.
-    Map<BuildTarget, NativeLinkTarget> roots = new LinkedHashMap<>();
+    Map<BuildTarget, NativeLinkTargetGroup> roots = new LinkedHashMap<>();
     Map<BuildTarget, NativeLinkableGroup> rootDeps = new LinkedHashMap<>();
-    for (NativeLinkTarget root : includedRoots) {
+    for (NativeLinkTargetGroup root : includedRoots) {
       roots.put(root.getBuildTarget(), root);
       for (NativeLinkableGroup dep :
           NativeLinkables.getNativeLinkables(
@@ -283,7 +285,7 @@ public class Omnibus {
       CxxPlatform cxxPlatform,
       OmnibusSpec spec,
       SourcePath omnibus,
-      NativeLinkTarget root,
+      NativeLinkTargetGroup root,
       BuildTarget rootTargetBase,
       Optional<Path> output) {
 
@@ -443,7 +445,7 @@ public class Omnibus {
       CxxPlatform cxxPlatform,
       OmnibusSpec spec,
       SourcePath omnibus,
-      NativeLinkTarget root) {
+      NativeLinkTargetGroup root) {
     return createRoot(
         buildTarget,
         projectFilesystem,
@@ -467,7 +469,7 @@ public class Omnibus {
       CxxPlatform cxxPlatform,
       OmnibusSpec spec,
       SourcePath omnibus,
-      NativeLinkTarget root) {
+      NativeLinkTargetGroup root) {
     return createRoot(
         target,
         projectFilesystem,
@@ -533,7 +535,7 @@ public class Omnibus {
     List<SourcePath> undefinedSymbolsOnlyRoots = new ArrayList<>();
     for (BuildTarget target :
         Sets.difference(spec.getRoots().keySet(), spec.getGraph().getNodes())) {
-      NativeLinkTarget linkTarget = Objects.requireNonNull(spec.getRoots().get(target));
+      NativeLinkTargetGroup linkTarget = Objects.requireNonNull(spec.getRoots().get(target));
       undefinedSymbolsOnlyRoots.add(
           graphBuilder
               .requireRule(
@@ -560,7 +562,7 @@ public class Omnibus {
       // If this is a root, just place the shared library we've linked above onto the link line.
       // We need this so that the linker can grab any undefined symbols from it, and therefore
       // know which symbols to pull in from the body nodes.
-      NativeLinkTarget root = spec.getRoots().get(target);
+      NativeLinkTargetGroup root = spec.getRoots().get(target);
       if (root != null) {
         argsBuilder.add(
             SourcePathArg.of(
@@ -641,7 +643,7 @@ public class Omnibus {
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraOmnibusLdflags,
-      Iterable<? extends NativeLinkTarget> nativeLinkTargetRoots,
+      Iterable<? extends NativeLinkTargetGroup> nativeLinkTargetRoots,
       Iterable<? extends NativeLinkableGroup> nativeLinkableRoots) {
 
     OmnibusLibraries.Builder libs = OmnibusLibraries.builder();
@@ -663,7 +665,7 @@ public class Omnibus {
             extraOmnibusLdflags);
 
     // Create rule for each of the root nodes, linking against the dummy omnibus library above.
-    for (NativeLinkTarget target : spec.getRoots().values()) {
+    for (NativeLinkTargetGroup target : spec.getRoots().values()) {
 
       // For executable roots, some platforms can't properly build them when there are any
       // unresolved symbols, so we initially link a dummy root just to provide a way to grab the
@@ -715,7 +717,7 @@ public class Omnibus {
 
     // Do another pass over executable roots, building the real DSO which links to the real omnibus.
     // See the comment above in the first pass for more details.
-    for (NativeLinkTarget target : spec.getRoots().values()) {
+    for (NativeLinkTargetGroup target : spec.getRoots().values()) {
       if (shouldCreateDummyRoot(target, cxxPlatform)) {
         OmnibusRoot root =
             createRoot(
@@ -756,7 +758,7 @@ public class Omnibus {
 
     // All native roots included in the omnibus.  These will get linked into separate shared
     // libraries which depend on the giant statically linked omnibus body.
-    public abstract ImmutableMap<BuildTarget, NativeLinkTarget> getRoots();
+    public abstract ImmutableMap<BuildTarget, NativeLinkTargetGroup> getRoots();
 
     // All native nodes which are to be statically linked into the giant combined shared library.
     public abstract ImmutableMap<BuildTarget, NativeLinkableGroup> getBody();

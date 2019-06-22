@@ -26,7 +26,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.ElfSharedLibraryInterface.AbstractBuildable;
 import com.facebook.buck.cxx.toolchain.elf.ElfDynamicSection;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -73,7 +73,7 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
 
   /**
    * @return a {@link ElfSharedLibraryInterface} built for the library represented by {@link
-   *     NativeLinkTarget}.
+   *     NativeLinkTargetGroup}.
    */
   public static ElfSharedLibraryInterface<LinkerBasedElfSharedLibraryImpl> from(
       BuildTarget target,

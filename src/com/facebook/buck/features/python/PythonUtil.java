@@ -34,7 +34,7 @@ import com.facebook.buck.cxx.OmnibusRoots;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
@@ -206,7 +206,8 @@ public class PythonUtil {
         Iterable<BuildRule> deps = empty;
         if (rule instanceof CxxPythonExtension) {
           CxxPythonExtension extension = (CxxPythonExtension) rule;
-          NativeLinkTarget target = ((CxxPythonExtension) rule).getNativeLinkTarget(pythonPlatform);
+          NativeLinkTargetGroup target =
+              ((CxxPythonExtension) rule).getNativeLinkTarget(pythonPlatform);
           extensions.put(target.getBuildTarget(), extension);
           omnibusRoots.addIncludedRoot(target);
           List<BuildRule> cxxpydeps = new ArrayList<>();
@@ -266,7 +267,7 @@ public class PythonUtil {
         if (extension != null) {
           allComponents.addModule(extension.getModule(), root.getValue().getPath(), root.getKey());
         } else {
-          NativeLinkTarget target =
+          NativeLinkTargetGroup target =
               Preconditions.checkNotNull(
                   roots.getIncludedRoots().get(root.getKey()),
                   "%s: linked unexpected omnibus root: %s",
