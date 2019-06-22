@@ -324,20 +324,6 @@ public class NativeLinkables {
   }
 
   /**
-   * @return the {@link NativeLinkTargetGroup} that can be extracted from {@code object}, if any.
-   */
-  public static Optional<NativeLinkTargetGroup> getNativeLinkTarget(
-      Object object, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    if (object instanceof NativeLinkTargetGroup) {
-      return Optional.of((NativeLinkTargetGroup) object);
-    }
-    if (object instanceof CanProvideNativeLinkTarget) {
-      return ((CanProvideNativeLinkTarget) object).getNativeLinkTarget(cxxPlatform, graphBuilder);
-    }
-    return Optional.empty();
-  }
-
-  /**
    * Builds a map of shared library names to paths from {@link NativeLinkableGroup}s, throwing a
    * useful error on duplicates.
    */

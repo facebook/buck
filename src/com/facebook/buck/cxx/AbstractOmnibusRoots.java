@@ -23,7 +23,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -89,8 +88,7 @@ abstract class AbstractOmnibusRoots {
      * @return whether the node was added as a root.
      */
     public void addPotentialRoot(NativeLinkableGroup node) {
-      Optional<NativeLinkTargetGroup> target =
-          NativeLinkables.getNativeLinkTarget(node, cxxPlatform, graphBuilder);
+      Optional<NativeLinkTargetGroup> target = node.getNativeLinkTarget(cxxPlatform, graphBuilder);
       if (target.isPresent()
           && !excludes.contains(node.getBuildTarget())
           && node.supportsOmnibusLinking(cxxPlatform)) {

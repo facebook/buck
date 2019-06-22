@@ -25,6 +25,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
 
 /**
  * Interface for {@link BuildRule} objects (e.g. C++ libraries) which can contribute to the
@@ -89,6 +90,19 @@ public interface NativeLinkableGroup {
       ActionGraphBuilder graphBuilder,
       TargetConfiguration targetConfiguration) {
     return getNativeLinkableInput(cxxPlatform, type, false, graphBuilder, targetConfiguration);
+  }
+
+  /**
+   * Optionally returns a {@link NativeLinkTargetGroup}. Most implementations of NativeLinkableGroup
+   * are themselves instances of NativeLinkTargetGroup.
+   */
+  @SuppressWarnings("unused")
+  default Optional<NativeLinkTargetGroup> getNativeLinkTarget(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    if (this instanceof NativeLinkTargetGroup) {
+      return Optional.of((NativeLinkTargetGroup) this);
+    }
+    return Optional.empty();
   }
 
   Linkage getPreferredLinkage(CxxPlatform cxxPlatform);
