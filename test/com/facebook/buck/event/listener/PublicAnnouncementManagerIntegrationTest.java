@@ -129,9 +129,10 @@ public class PublicAnnouncementManagerIntegrationTest {
                   ImmutableMap.of(
                       "log",
                       ImmutableMap.of(
-                          "slb_server_pool", "http://localhost:" + httpd.getRootUri().getPort()),
-                      "cache",
-                      ImmutableMap.of("repository", REPOSITORY)))
+                          "slb_server_pool",
+                          "http://localhost:" + httpd.getRootUri().getPort(),
+                          "repository",
+                          REPOSITORY)))
               .build();
 
       TestConsole console = new TestConsole();
