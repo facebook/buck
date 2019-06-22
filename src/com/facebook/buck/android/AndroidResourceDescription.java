@@ -211,7 +211,9 @@ public class AndroidResourceDescription
         // not cached or tracked in any way.
         Preconditions.checkArgument(
             symlinkAttribute.get().getLeft() instanceof PathSourcePath,
-            "Resource or asset symlink tree can only be built for a PathSourcePath");
+            "Resource or asset symlink tree can only be built for a PathSourcePath (%s for %s)",
+            symlinkAttribute.get().getLeft(),
+            buildTarget);
         PathSourcePath path = (PathSourcePath) symlinkAttribute.get().getLeft();
         links = collectInputFiles(path.getFilesystem(), path.getRelativePath());
       } else {
