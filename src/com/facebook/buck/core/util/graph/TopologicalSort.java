@@ -22,18 +22,18 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Queues;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TopologicalSort {
 
   private TopologicalSort() {}
 
-  public static <T extends Comparable<?>> ImmutableList<T> sort(TraversableGraph<T> graph) {
-
+  /** Returns a topologocially sorted list of all nodes in the graph. */
+  public static <T> ImmutableList<T> sort(TraversableGraph<T> graph) {
     // AtomicInteger is used to decrement the integer value in-place.
     Map<T, AtomicInteger> effectiveOutDegreesOfExplorableNodes = new HashMap<>();
     Queue<T> nextLevel = Queues.newArrayDeque(graph.getNodesWithNoOutgoingEdges());
@@ -44,7 +44,7 @@ public class TopologicalSort {
       Queue<T> toExplore = nextLevel;
       nextLevel = Queues.newArrayDeque();
 
-      Set<T> level = new TreeSet<>();
+      Set<T> level = new LinkedHashSet<>();
 
       while (!toExplore.isEmpty()) {
         T node = toExplore.remove();

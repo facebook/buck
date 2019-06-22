@@ -93,31 +93,21 @@ public class NativeLinkables {
   public static ImmutableList<NativeLinkableGroup> getTopoSortedNativeLinkables(
       Iterable<? extends NativeLinkableGroup> roots,
       Function<? super NativeLinkableGroup, Stream<? extends NativeLinkableGroup>> depsFn) {
-
-    Map<BuildTarget, NativeLinkableGroup> nativeLinkables = new HashMap<>();
-    for (NativeLinkableGroup nativeLinkableGroup : roots) {
-      nativeLinkables.put(nativeLinkableGroup.getBuildTarget(), nativeLinkableGroup);
-    }
-
-    MutableDirectedGraph<BuildTarget> graph = new MutableDirectedGraph<>();
-    AbstractBreadthFirstTraversal<BuildTarget> visitor =
-        new AbstractBreadthFirstTraversal<BuildTarget>(nativeLinkables.keySet()) {
+    MutableDirectedGraph<NativeLinkableGroup> graph = new MutableDirectedGraph<>();
+    AbstractBreadthFirstTraversal<NativeLinkableGroup> visitor =
+        new AbstractBreadthFirstTraversal<NativeLinkableGroup>(roots) {
           @Override
-          public ImmutableSet<BuildTarget> visit(BuildTarget target) {
-            NativeLinkableGroup nativeLinkableGroup =
-                Objects.requireNonNull(nativeLinkables.get(target));
-            graph.addNode(target);
+          public ImmutableSet<NativeLinkableGroup> visit(NativeLinkableGroup nativeLinkableGroup) {
+            graph.addNode(nativeLinkableGroup);
 
             // Process all the traversable deps.
-            ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+            ImmutableSet.Builder<NativeLinkableGroup> deps = ImmutableSet.builder();
             depsFn
                 .apply(nativeLinkableGroup)
                 .forEach(
                     dep -> {
-                      BuildTarget depTarget = dep.getBuildTarget();
-                      graph.addEdge(target, depTarget);
-                      deps.add(depTarget);
-                      nativeLinkables.put(depTarget, dep);
+                      graph.addEdge(nativeLinkableGroup, dep);
+                      deps.add(dep);
                     });
             return deps.build();
           }
@@ -125,8 +115,7 @@ public class NativeLinkables {
     visitor.start();
 
     // Topologically sort the rules.
-    ImmutableList<BuildTarget> ordered = TopologicalSort.sort(graph).reverse();
-    return ordered.stream().map(nativeLinkables::get).collect(ImmutableList.toImmutableList());
+    return TopologicalSort.sort(graph).reverse();
   }
 
   /**
