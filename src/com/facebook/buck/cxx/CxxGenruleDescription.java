@@ -51,8 +51,8 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
@@ -562,7 +562,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     private NativeLinkableInput getNativeLinkableInput(
         ActionGraphBuilder graphBuilder, Iterable<BuildRule> rules, Optional<Pattern> filter) {
       ImmutableList<NativeLinkableGroup> nativeLinkableGroups =
-          NativeLinkables.getNativeLinkables(
+          NativeLinkableGroups.getNativeLinkables(
               cxxPlatform,
               graphBuilder,
               FluentIterable.from(rules).filter(NativeLinkableGroup.class),
@@ -580,7 +580,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
       for (NativeLinkableGroup nativeLinkableGroup : nativeLinkableGroups) {
         nativeLinkableInputs.add(
-            NativeLinkables.getNativeLinkableInput(
+            NativeLinkableGroups.getNativeLinkableInput(
                 cxxPlatform,
                 depType,
                 nativeLinkableGroup,

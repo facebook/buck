@@ -48,8 +48,8 @@ import com.facebook.buck.cxx.CxxSourceTypes;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.EnvironmentVariableMacroExpander;
@@ -252,7 +252,7 @@ public class NdkLibraryDescription
       // Collect the native linkable input for all C/C++ library deps.  We search *through* other
       // NDK library rules.
       NativeLinkableInput nativeLinkableInput =
-          NativeLinkables.getTransitiveNativeLinkableInput(
+          NativeLinkableGroups.getTransitiveNativeLinkableInput(
               cxxPlatform,
               graphBuilder,
               targetConfiguration,

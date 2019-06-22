@@ -36,8 +36,8 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -136,13 +136,13 @@ public class Omnibus {
     for (NativeLinkTargetGroup root : includedRoots) {
       roots.put(root.getBuildTarget(), root);
       for (NativeLinkableGroup dep :
-          NativeLinkables.getNativeLinkables(
+          NativeLinkableGroups.getNativeLinkables(
               cxxPlatform,
               actionGraphBuilder,
               root.getNativeLinkTargetDeps(cxxPlatform, actionGraphBuilder),
               Linker.LinkableDepType.SHARED)) {
         Linker.LinkableDepType linkStyle =
-            NativeLinkables.getLinkStyle(
+            NativeLinkableGroups.getLinkStyle(
                 dep.getPreferredLinkage(cxxPlatform), Linker.LinkableDepType.SHARED);
         Preconditions.checkState(linkStyle != Linker.LinkableDepType.STATIC);
 
@@ -316,7 +316,7 @@ public class Omnibus {
 
     // Grab a topologically sorted mapping of all the root's deps.
     ImmutableList<NativeLinkableGroup> deps =
-        NativeLinkables.getNativeLinkables(
+        NativeLinkableGroups.getNativeLinkables(
             cxxPlatform,
             graphBuilder,
             root.getNativeLinkTargetDeps(cxxPlatform, graphBuilder),
@@ -327,7 +327,7 @@ public class Omnibus {
     for (NativeLinkableGroup nativeLinkableGroup : deps) {
       BuildTarget linkableTarget = nativeLinkableGroup.getBuildTarget();
       Linker.LinkableDepType linkStyle =
-          NativeLinkables.getLinkStyle(
+          NativeLinkableGroups.getLinkStyle(
               nativeLinkableGroup.getPreferredLinkage(cxxPlatform), Linker.LinkableDepType.SHARED);
 
       // If this dep needs to be linked statically, then we always link it directly.
@@ -576,7 +576,7 @@ public class Omnibus {
       // so that the linker can discard unused object files from it.
       NativeLinkableGroup nativeLinkableGroup = Objects.requireNonNull(spec.getBody().get(target));
       NativeLinkableInput input =
-          NativeLinkables.getNativeLinkableInput(
+          NativeLinkableGroups.getNativeLinkableInput(
               cxxPlatform,
               Linker.LinkableDepType.STATIC_PIC,
               nativeLinkableGroup,
@@ -588,11 +588,11 @@ public class Omnibus {
     // We process all excluded omnibus deps last, and just add their components as if this were a
     // normal shared link.
     ImmutableList<NativeLinkableGroup> deps =
-        NativeLinkables.getNativeLinkables(
+        NativeLinkableGroups.getNativeLinkables(
             cxxPlatform, graphBuilder, spec.getDeps().values(), Linker.LinkableDepType.SHARED);
     for (NativeLinkableGroup nativeLinkableGroup : deps) {
       NativeLinkableInput input =
-          NativeLinkables.getNativeLinkableInput(
+          NativeLinkableGroups.getNativeLinkableInput(
               cxxPlatform,
               Linker.LinkableDepType.SHARED,
               nativeLinkableGroup,

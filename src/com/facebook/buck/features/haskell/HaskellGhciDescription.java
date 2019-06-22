@@ -43,8 +43,8 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -135,7 +135,7 @@ public class HaskellGhciDescription
 
     // Calculate excluded roots/deps, and add them to the link.
     ImmutableMap<BuildTarget, NativeLinkableGroup> transitiveExcludedLinkables =
-        NativeLinkables.getTransitiveNativeLinkables(
+        NativeLinkableGroups.getTransitiveNativeLinkables(
             cxxPlatform, graphBuilder, excludedRoots.values());
     builder.setExcludedRoots(excludedRoots);
     builder.setExcludedTransitiveDeps(transitiveExcludedLinkables);
@@ -207,7 +207,7 @@ public class HaskellGhciDescription
     ImmutableSet<BuildTarget> bodyTargets =
         RichStream.from(body).map(NativeLinkableGroup::getBuildTarget).toImmutableSet();
     ImmutableList<NativeLinkableGroup> topoSortedBody =
-        NativeLinkables.getTopoSortedNativeLinkables(
+        NativeLinkableGroups.getTopoSortedNativeLinkables(
             body,
             nativeLinkable ->
                 RichStream.from(
@@ -227,7 +227,7 @@ public class HaskellGhciDescription
         nativeLinkableInputs.add(
             nativeLinkableGroup.getNativeLinkableInput(
                 cxxPlatform,
-                NativeLinkables.getLinkStyle(link, Linker.LinkableDepType.STATIC_PIC),
+                NativeLinkableGroups.getLinkStyle(link, Linker.LinkableDepType.STATIC_PIC),
                 true,
                 graphBuilder,
                 baseTarget.getTargetConfiguration()));
@@ -240,7 +240,7 @@ public class HaskellGhciDescription
       // Link prebuilt C/C++ libraries statically.
       if (nativeLinkableGroup instanceof PrebuiltCxxLibrary) {
         nativeLinkableInputs.add(
-            NativeLinkables.getNativeLinkableInput(
+            NativeLinkableGroups.getNativeLinkableInput(
                 cxxPlatform,
                 Linker.LinkableDepType.STATIC_PIC,
                 nativeLinkableGroup,
@@ -260,10 +260,11 @@ public class HaskellGhciDescription
 
     // Link in omnibus deps dynamically.
     ImmutableList<NativeLinkableGroup> depLinkables =
-        NativeLinkables.getNativeLinkables(cxxPlatform, graphBuilder, deps, LinkableDepType.SHARED);
+        NativeLinkableGroups.getNativeLinkables(
+            cxxPlatform, graphBuilder, deps, LinkableDepType.SHARED);
     for (NativeLinkableGroup linkable : depLinkables) {
       nativeLinkableInputs.add(
-          NativeLinkables.getNativeLinkableInput(
+          NativeLinkableGroups.getNativeLinkableInput(
               cxxPlatform,
               LinkableDepType.SHARED,
               linkable,

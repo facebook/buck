@@ -37,7 +37,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
@@ -309,7 +309,7 @@ public class PythonUtil {
 
       // Add all the native libraries.
       ImmutableMap<BuildTarget, NativeLinkableGroup> nativeLinkables =
-          NativeLinkables.getTransitiveNativeLinkables(
+          NativeLinkableGroups.getTransitiveNativeLinkables(
               cxxPlatform,
               graphBuilder,
               Iterables.concat(nativeLinkableRoots.values(), extensionNativeDeps.values()));

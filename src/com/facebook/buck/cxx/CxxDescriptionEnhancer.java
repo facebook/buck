@@ -55,8 +55,8 @@ import com.facebook.buck.cxx.toolchain.linker.Linker.CxxRuntimeType;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.json.JsonConcatenate;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
@@ -1609,7 +1609,7 @@ public class CxxDescriptionEnhancer {
         getSharedLibrarySymlinkTreePath(filesystem, baseBuildTarget, cxxPlatform.getFlavor());
 
     ImmutableSortedMap<String, SourcePath> libraries =
-        NativeLinkables.getTransitiveSharedLibraries(
+        NativeLinkableGroups.getTransitiveSharedLibraries(
             cxxPlatform, graphBuilder, deps, passthrough, false);
 
     ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();
@@ -1672,7 +1672,7 @@ public class CxxDescriptionEnhancer {
             filesystem, baseBuildTarget, cxxPlatform.getFlavor());
 
     ImmutableSortedMap<String, SourcePath> libraries =
-        NativeLinkables.getTransitiveSharedLibraries(
+        NativeLinkableGroups.getTransitiveSharedLibraries(
             cxxPlatform, graphBuilder, deps, n -> Optional.empty(), false);
 
     ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();

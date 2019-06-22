@@ -39,8 +39,8 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.file.MorePaths;
@@ -266,7 +266,7 @@ abstract class GoDescriptors {
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
 
     NativeLinkableInput linkableInput =
-        NativeLinkables.getTransitiveNativeLinkableInput(
+        NativeLinkableGroups.getTransitiveNativeLinkableInput(
             cxxPlatform,
             graphBuilder,
             targetConfiguration,

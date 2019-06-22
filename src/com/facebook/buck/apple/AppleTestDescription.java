@@ -65,7 +65,7 @@ import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -584,7 +584,7 @@ public class AppleTestDescription
         testHostWithTargetApp.getBinaryBuildRule().getSourcePathToOutput();
 
     ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
-        NativeLinkables.getNativeLinkableRoots(
+        NativeLinkableGroups.getNativeLinkableRoots(
             testHostWithTargetApp.getBinary().get().getBuildDeps(),
             r ->
                 !(r instanceof NativeLinkableGroup)
@@ -597,7 +597,7 @@ public class AppleTestDescription
     ImmutableSet.Builder<BuildTarget> blacklistBuilder = ImmutableSet.builder();
     for (CxxPlatform platform : cxxPlatforms) {
       ImmutableSet<BuildTarget> blacklistables =
-          NativeLinkables.getTransitiveNativeLinkables(platform, graphBuilder, roots.values())
+          NativeLinkableGroups.getTransitiveNativeLinkables(platform, graphBuilder, roots.values())
               .entrySet().stream()
               .filter(x -> !(x.getValue() instanceof SwiftRuntimeNativeLinkableGroup))
               .map(x -> x.getKey())

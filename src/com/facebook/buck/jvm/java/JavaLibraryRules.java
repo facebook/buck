@@ -22,7 +22,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -72,7 +72,7 @@ public class JavaLibraryRules {
     // Allow the transitive walk to find NativeLinkables through the BuildRuleParams deps of a
     // JavaLibrary or CalculateAbi object. The deps may be either one depending if we're compiling
     // against ABI rules or full rules
-    return NativeLinkables.getTransitiveSharedLibraries(
+    return NativeLinkableGroups.getTransitiveSharedLibraries(
         cxxPlatform,
         graphBuilder,
         deps,

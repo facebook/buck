@@ -38,8 +38,8 @@ import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
@@ -171,7 +171,7 @@ public class OcamlRuleBuilder {
       ActionGraphBuilder graphBuilder,
       TargetConfiguration targetConfiguration,
       Iterable<BuildRule> deps) {
-    return NativeLinkables.getTransitiveNativeLinkableInput(
+    return NativeLinkableGroups.getTransitiveNativeLinkableInput(
         platform.getCxxPlatform(),
         graphBuilder,
         targetConfiguration,

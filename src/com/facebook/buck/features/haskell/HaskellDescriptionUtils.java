@@ -45,9 +45,9 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups.SharedLibrariesBuilder;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables.SharedLibrariesBuilder;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -286,14 +286,14 @@ public class HaskellDescriptionUtils {
     // the args go straight to the linker, and preserve their order.
     linkerArgsBuilder.addAll(linkerInputs);
     for (NativeLinkableGroup nativeLinkableGroup :
-        NativeLinkables.getNativeLinkables(
+        NativeLinkableGroups.getNativeLinkables(
             platform.getCxxPlatform(), graphBuilder, deps, depType)) {
       NativeLinkableGroup.Linkage link =
           nativeLinkableGroup.getPreferredLinkage(platform.getCxxPlatform());
       NativeLinkableInput input =
           nativeLinkableGroup.getNativeLinkableInput(
               platform.getCxxPlatform(),
-              NativeLinkables.getLinkStyle(link, depType),
+              NativeLinkableGroups.getLinkStyle(link, depType),
               linkWholeDeps.contains(nativeLinkableGroup.getBuildTarget()),
               graphBuilder,
               target.getTargetConfiguration());
@@ -474,7 +474,7 @@ public class HaskellDescriptionUtils {
             buildTarget,
             platform.getCxxPlatform(),
             graphBuilder,
-            NativeLinkables.getNativeLinkableRoots(
+            NativeLinkableGroups.getNativeLinkableRoots(
                 RichStream.from(deps).filter(NativeLinkableGroup.class).toImmutableList(),
                 n ->
                     n instanceof HaskellLibrary || n instanceof PrebuiltHaskellLibrary
@@ -522,7 +522,7 @@ public class HaskellDescriptionUtils {
     // pulling in any excluded deps.
     SharedLibrariesBuilder sharedLibsBuilder = new SharedLibrariesBuilder();
     ImmutableMap<BuildTarget, NativeLinkableGroup> transitiveDeps =
-        NativeLinkables.getTransitiveNativeLinkables(
+        NativeLinkableGroups.getTransitiveNativeLinkables(
             platform.getCxxPlatform(), graphBuilder, omnibusSpec.getDeps().values());
     transitiveDeps.values().stream()
         // Skip statically linked libraries.

@@ -44,9 +44,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-public class NativeLinkables {
+public class NativeLinkableGroups {
 
-  private NativeLinkables() {}
+  private NativeLinkableGroups() {}
 
   /**
    * Find {@link NativeLinkableGroup} nodes transitively reachable from the given roots.

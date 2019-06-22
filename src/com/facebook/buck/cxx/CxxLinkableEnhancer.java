@@ -36,8 +36,8 @@ import com.facebook.buck.cxx.toolchain.linker.Linker.ExtraOutputsDeriver;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
@@ -256,7 +256,7 @@ public class CxxLinkableEnhancer {
             .getParallelizer()
             .maybeParallelizeTransform(
                 Collections2.filter(
-                    NativeLinkables.getNativeLinkables(
+                    NativeLinkableGroups.getNativeLinkables(
                         cxxPlatform, graphBuilder, nativeLinkableDeps, depType),
                     linkable -> !blacklist.contains(linkable.getBuildTarget())),
                 nativeLinkable -> {
@@ -264,7 +264,7 @@ public class CxxLinkableEnhancer {
                   NativeLinkableInput input =
                       nativeLinkable.getNativeLinkableInput(
                           cxxPlatform,
-                          NativeLinkables.getLinkStyle(link, depType),
+                          NativeLinkableGroups.getLinkStyle(link, depType),
                           linkWholeDeps.contains(nativeLinkable.getBuildTarget()),
                           graphBuilder,
                           target.getTargetConfiguration());

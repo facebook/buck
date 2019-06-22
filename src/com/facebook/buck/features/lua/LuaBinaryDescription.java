@@ -53,7 +53,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.features.python.CxxPythonExtension;
 import com.facebook.buck.features.python.PythonBinaryDescription;
 import com.facebook.buck.features.python.PythonPackagable;
@@ -485,7 +485,7 @@ public class LuaBinaryDescription
 
       // Add shared libraries from all native linkables.
       for (NativeLinkableGroup nativeLinkableGroup :
-          NativeLinkables.getTransitiveNativeLinkables(
+          NativeLinkableGroups.getTransitiveNativeLinkables(
                   cxxPlatform, graphBuilder, nativeLinkableRoots.values())
               .values()) {
         NativeLinkableGroup.Linkage linkage = nativeLinkableGroup.getPreferredLinkage(cxxPlatform);

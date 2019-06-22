@@ -49,8 +49,8 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -483,7 +483,7 @@ public class CxxLinkableEnhancerTest {
     // Now grab all input via traversing deps and verify that the middle rule prevents pulling
     // in the bottom input.
     NativeLinkableInput totalInput =
-        NativeLinkables.getTransitiveNativeLinkableInput(
+        NativeLinkableGroups.getTransitiveNativeLinkableInput(
             cxxPlatform,
             graphBuilder,
             EmptyTargetConfiguration.INSTANCE,

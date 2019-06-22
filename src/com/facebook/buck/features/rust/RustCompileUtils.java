@@ -42,7 +42,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -229,7 +229,7 @@ public class RustCompileUtils {
     // also need all dependencies available.
     if (crateType.needAllDeps()) {
       ImmutableList<Arg> nativeArgs =
-          NativeLinkables.getTransitiveNativeLinkableInput(
+          NativeLinkableGroups.getTransitiveNativeLinkableInput(
                   cxxPlatform,
                   graphBuilder,
                   target.getTargetConfiguration(),
