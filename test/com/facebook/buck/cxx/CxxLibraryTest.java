@@ -214,7 +214,7 @@ public class CxxLibraryTest {
             true,
             true,
             true,
-            Optional.empty());
+            CxxLibraryDescriptionDelegate.noop());
 
     NativeLinkableInput expectedSharedNativeLinkableInput =
         NativeLinkableInput.of(
@@ -273,7 +273,7 @@ public class CxxLibraryTest {
             true,
             true,
             true,
-            Optional.empty());
+            CxxLibraryDescriptionDelegate.noop());
 
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
     linkerArgsBuilder.add(StringArg.of("-ldl"));

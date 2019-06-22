@@ -93,7 +93,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final boolean reexportAllHeaderDependencies;
   private final boolean supportsOmnibusLinking;
 
-  private final Optional<CxxLibraryDescriptionDelegate> delegate;
+  private final CxxLibraryDescriptionDelegate delegate;
 
   /**
    * Whether Native Linkable dependencies should be propagated for the purpose of computing objects
@@ -131,7 +131,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       boolean propagateLinkables,
       boolean reexportAllHeaderDependencies,
       boolean supportsOmnibusLinking,
-      Optional<CxxLibraryDescriptionDelegate> delegate) {
+      CxxLibraryDescriptionDelegate delegate) {
     super(buildTarget, projectFilesystem, params);
     this.deps = deps;
     this.exportedDeps = exportedDeps;
@@ -188,7 +188,9 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     CxxPreprocessorInput publicHeaders =
         getPublicCxxPreprocessorInputExcludingDelegate(cxxPlatform, graphBuilder);
     Optional<CxxPreprocessorInput> pluginHeaders =
-        delegate.flatMap(p -> p.getPreprocessorInput(getBuildTarget(), graphBuilder, cxxPlatform));
+        delegate
+            .requireDelegate(getBuildTarget(), cxxPlatform, graphBuilder)
+            .flatMap(p -> p.getPreprocessorInput());
 
     if (pluginHeaders.isPresent()) {
       return CxxPreprocessorInput.concat(ImmutableList.of(publicHeaders, pluginHeaders.get()));
@@ -211,8 +213,9 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     CxxPreprocessorInput privateInput =
         getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PRIVATE, graphBuilder);
     Optional<CxxPreprocessorInput> delegateInput =
-        delegate.flatMap(
-            p -> p.getPrivatePreprocessorInput(getBuildTarget(), graphBuilder, cxxPlatform));
+        delegate
+            .requireDelegate(getBuildTarget(), cxxPlatform, graphBuilder)
+            .flatMap(p -> p.getPrivatePreprocessorInput());
 
     if (delegateInput.isPresent()) {
       return CxxPreprocessorInput.concat(ImmutableList.of(privateInput, delegateInput.get()));
@@ -274,8 +277,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
     ImmutableList<NativeLinkableGroup> delegateLinkables =
         delegate
-            .flatMap(
-                d -> d.getNativeLinkableExportedDeps(getBuildTarget(), graphBuilder, cxxPlatform))
+            .requireDelegate(getBuildTarget(), cxxPlatform, graphBuilder)
+            .flatMap(d -> d.getNativeLinkableExportedDeps())
             .orElse(ImmutableList.of());
 
     return RichStream.from(exportedDeps.get(graphBuilder, cxxPlatform))
@@ -304,7 +307,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
     boolean delegateWantsArtifact =
         delegate
-            .map(d -> d.getShouldProduceLibraryArtifact(getBuildTarget(), graphBuilder))
+            .requireDelegate(getBuildTarget(), cxxPlatform, graphBuilder)
+            .map(d -> d.getShouldProduceLibraryArtifact())
             .orElse(false);
     boolean headersOnly = headerOnly.test(cxxPlatform);
     boolean shouldProduceArtifact = (!headersOnly || delegateWantsArtifact) && propagateLinkables;
