@@ -254,7 +254,7 @@ class Index internal constructor(
         val rdeps = indexGenerationData.withRdepsMap { rDepsMap ->
             rDepsMap.getVersion(targetId, generation)
         } ?: return listOf()
-        val out = ArrayList<UnconfiguredBuildTarget>()
+        val out = ArrayList<UnconfiguredBuildTarget>(rdeps.size)
         buildTargetCache.addAllByIndex(rdeps.asSequence(), out)
         return out
     }
