@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.impl.WriteStringTemplateRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import com.facebook.buck.cxx.AbstractCxxLibrary;
+import com.facebook.buck.cxx.AbstractCxxLibraryGroup;
 import com.facebook.buck.cxx.AbstractCxxSource.Type;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxLinkOptions;
@@ -185,18 +185,18 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
     return inputs.build();
   }
 
-  public Iterable<? extends AbstractCxxLibrary> getNativeStarterDeps() {
+  public Iterable<? extends AbstractCxxLibraryGroup> getNativeStarterDeps() {
     return ImmutableList.of(
         getNativeStarterLibrary().isPresent()
             ? getActionGraphBuilder()
-                .getRuleWithType(getNativeStarterLibrary().get(), AbstractCxxLibrary.class)
+                .getRuleWithType(getNativeStarterLibrary().get(), AbstractCxxLibraryGroup.class)
             : getLuaPlatform()
                 .getLuaCxxLibrary(
                     getActionGraphBuilder(), getBaseTarget().getTargetConfiguration()));
   }
 
   private NativeLinkableInput getNativeLinkableInput() {
-    Iterable<? extends AbstractCxxLibrary> nativeStarterDeps = getNativeStarterDeps();
+    Iterable<? extends AbstractCxxLibraryGroup> nativeStarterDeps = getNativeStarterDeps();
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
         CxxSourceRuleFactory.of(
                 getProjectFilesystem(),

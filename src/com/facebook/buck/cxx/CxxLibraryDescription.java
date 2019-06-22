@@ -327,7 +327,7 @@ public class CxxLibraryDescription
                     .add(cxxPlatform.getFlavor())
                     .build());
         BuildRule rawRule = graphBuilder.requireRule(rawTarget);
-        CxxLibrary rule = (CxxLibrary) rawRule;
+        CxxLibraryGroup rule = (CxxLibraryGroup) rawRule;
         ImmutableMap<BuildTarget, CxxPreprocessorInput> inputs =
             rule.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder);
 

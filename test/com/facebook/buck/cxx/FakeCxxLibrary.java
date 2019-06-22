@@ -45,9 +45,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/** Fake implementation of {@link CxxLibrary} for testing. */
+/** Fake implementation of {@link CxxLibraryGroup} for testing. */
 public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements AbstractCxxLibrary, NativeTestable {
+    implements AbstractCxxLibraryGroup, NativeTestable {
 
   private final BuildTarget publicHeaderTarget;
   private final BuildTarget publicHeaderSymlinkTreeTarget;

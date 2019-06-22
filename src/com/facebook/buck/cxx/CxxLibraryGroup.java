@@ -67,10 +67,10 @@ import java.util.stream.Stream;
  * An action graph representation of a C/C++ library from the target graph, providing the various
  * interfaces to make it consumable by C/C++ preprocessing and native linkable rules.
  */
-public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements AbstractCxxLibrary, HasRuntimeDeps, NativeTestable, NativeLinkTarget {
+public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
+    implements AbstractCxxLibraryGroup, HasRuntimeDeps, NativeTestable, NativeLinkTarget {
 
-  private static final Logger LOG = Logger.get(CxxLibrary.class);
+  private static final Logger LOG = Logger.get(CxxLibraryGroup.class);
 
   private final CxxDeps deps;
   private final CxxDeps exportedDeps;
@@ -107,7 +107,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache;
 
-  public CxxLibrary(
+  public CxxLibraryGroup(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,

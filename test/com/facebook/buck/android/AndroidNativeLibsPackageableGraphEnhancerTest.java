@@ -44,9 +44,9 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
-import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
+import com.facebook.buck.cxx.CxxLibraryGroup;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableCollection;
@@ -140,8 +140,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     TargetNode<CxxLibraryDescriptionArg> cxxLibraryDescription = cxxLibraryBuilder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(cxxLibraryDescription);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    CxxLibrary cxxLibrary =
-        (CxxLibrary)
+    CxxLibraryGroup cxxLibrary =
+        (CxxLibraryGroup)
             cxxLibraryBuilder.build(graphBuilder, new FakeProjectFilesystem(), targetGraph);
     graphBuilder.addToIndex(cxxLibrary);
 
@@ -207,8 +207,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
   public void testEmptyNativePlatformsWithNativeLinkables() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
-    CxxLibrary cxxLibrary =
-        (CxxLibrary)
+    CxxLibraryGroup cxxLibrary =
+        (CxxLibraryGroup)
             new CxxLibraryBuilder(
                     BuildTargetFactory.newInstance("//:cxxlib"), CxxPlatformUtils.DEFAULT_CONFIG)
                 .build(graphBuilder);
@@ -250,8 +250,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
   public void testEmptyNativePlatformsWithNativeLinkableAssets() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
-    CxxLibrary cxxLibrary =
-        (CxxLibrary)
+    CxxLibraryGroup cxxLibrary =
+        (CxxLibraryGroup)
             new CxxLibraryBuilder(
                     BuildTargetFactory.newInstance("//:cxxlib"), CxxPlatformUtils.DEFAULT_CONFIG)
                 .build(graphBuilder);
@@ -328,12 +328,12 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         TargetGraphFactory.newInstance(
             ImmutableList.of(cxxLibraryDescription1, cxxLibraryDescription2));
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    CxxLibrary cxxLibrary1 =
-        (CxxLibrary)
+    CxxLibraryGroup cxxLibrary1 =
+        (CxxLibraryGroup)
             cxxLibraryBuilder1.build(graphBuilder, new FakeProjectFilesystem(), targetGraph);
     graphBuilder.addToIndex(cxxLibrary1);
-    CxxLibrary cxxLibrary2 =
-        (CxxLibrary)
+    CxxLibraryGroup cxxLibrary2 =
+        (CxxLibraryGroup)
             cxxLibraryBuilder2.build(graphBuilder, new FakeProjectFilesystem(), targetGraph);
     graphBuilder.addToIndex(cxxLibrary2);
 

@@ -37,7 +37,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TopologicalSort;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.cxx.CxxLibrary;
+import com.facebook.buck.cxx.CxxLibraryGroup;
 import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.LinkOutputPostprocessor;
@@ -876,9 +876,9 @@ class NativeLibraryMergeEnhancer {
 
       // If our constituents have exported linker flags, our dependents should use them.
       for (NativeLinkableGroup linkable : constituents.getLinkables()) {
-        if (linkable instanceof CxxLibrary) {
+        if (linkable instanceof CxxLibraryGroup) {
           argsBuilder.addAll(
-              ((CxxLibrary) linkable).getExportedLinkerFlags(cxxPlatform, graphBuilder));
+              ((CxxLibraryGroup) linkable).getExportedLinkerFlags(cxxPlatform, graphBuilder));
         } else if (linkable instanceof PrebuiltCxxLibrary) {
           argsBuilder.addAll(
               ((PrebuiltCxxLibrary) linkable).getExportedLinkerArgs(cxxPlatform, graphBuilder));
@@ -887,9 +887,9 @@ class NativeLibraryMergeEnhancer {
 
       // If our constituents have post exported linker flags, our dependents should use them.
       for (NativeLinkableGroup linkable : constituents.getLinkables()) {
-        if (linkable instanceof CxxLibrary) {
+        if (linkable instanceof CxxLibraryGroup) {
           argsBuilder.addAll(
-              ((CxxLibrary) linkable).getExportedPostLinkerFlags(cxxPlatform, graphBuilder));
+              ((CxxLibraryGroup) linkable).getExportedPostLinkerFlags(cxxPlatform, graphBuilder));
         } else if (linkable instanceof PrebuiltCxxLibrary) {
           argsBuilder.addAll(
               StringArg.from(

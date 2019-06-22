@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 public abstract class PrebuiltCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements AbstractCxxLibrary, CanProvideNativeLinkTarget {
+    implements AbstractCxxLibraryGroup, CanProvideNativeLinkTarget {
 
   PrebuiltCxxLibrary(
       BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {

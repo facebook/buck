@@ -162,8 +162,8 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
   public void exportedDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
-    CxxLibrary dep =
-        (CxxLibrary)
+    CxxLibraryGroup dep =
+        (CxxLibraryGroup)
             new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep")).build(graphBuilder);
     NativeLinkableGroup lib =
         (NativeLinkableGroup)
@@ -266,11 +266,11 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
   @Test
   public void supportedPlatforms() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    CxxLibrary dep1 =
-        (CxxLibrary)
+    CxxLibraryGroup dep1 =
+        (CxxLibraryGroup)
             new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep")).build(graphBuilder);
-    CxxLibrary dep2 =
-        (CxxLibrary)
+    CxxLibraryGroup dep2 =
+        (CxxLibraryGroup)
             new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep2")).build(graphBuilder);
     BuildTarget target = BuildTargetFactory.newInstance("//:lib");
     SourcePath lib1 = FakeSourcePath.of("dir/lib1.so");

@@ -266,7 +266,7 @@ public class CxxLibraryFactory {
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
-    return new CxxLibrary(
+    return new CxxLibraryGroup(
         buildTarget,
         projectFilesystem,
         metadataRuleParams,

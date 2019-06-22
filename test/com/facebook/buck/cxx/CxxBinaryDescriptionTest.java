@@ -380,7 +380,8 @@ public class CxxBinaryDescriptionTest {
         TargetGraphFactory.newInstance(
             transitiveDepBuilder.build(), depBuilder.build(), builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    CxxLibrary transitiveDep = (CxxLibrary) transitiveDepBuilder.build(graphBuilder, targetGraph);
+    CxxLibraryGroup transitiveDep =
+        (CxxLibraryGroup) transitiveDepBuilder.build(graphBuilder, targetGraph);
     depBuilder.build(graphBuilder, targetGraph);
     CxxBinary binary = builder.build(graphBuilder, targetGraph);
     // TODO(agallagher): should also test that `:dep` does *not* get included.

@@ -192,8 +192,8 @@ public class CxxLibraryTest {
             DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//foo:baz")));
 
     // Construct a CxxLibrary object to test.
-    CxxLibrary cxxLibrary =
-        new CxxLibrary(
+    CxxLibraryGroup cxxLibrary =
+        new CxxLibraryGroup(
             target,
             projectFilesystem,
             params,
@@ -251,8 +251,8 @@ public class CxxLibraryTest {
             DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//foo:baz")));
 
     // Construct a CxxLibrary object to test.
-    CxxLibrary cxxLibrary =
-        new CxxLibrary(
+    CxxLibraryGroup cxxLibrary =
+        new CxxLibraryGroup(
             target,
             projectFilesystem,
             params,

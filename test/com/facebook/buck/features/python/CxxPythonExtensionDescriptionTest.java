@@ -37,8 +37,8 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
-import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
+import com.facebook.buck.cxx.CxxLibraryGroup;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxTestUtils;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
@@ -178,7 +178,8 @@ public class CxxPythonExtensionDescriptionTest {
         TargetGraphFactory.newInstance(cxxLibraryBuilder.build(), builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
 
-    CxxLibrary dep = (CxxLibrary) cxxLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
+    CxxLibraryGroup dep =
+        (CxxLibraryGroup) cxxLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
     CxxPythonExtension extension = builder.build(graphBuilder, filesystem, targetGraph);
 
     NativeLinkableInput depInput =
@@ -336,8 +337,8 @@ public class CxxPythonExtensionDescriptionTest {
   @Test
   public void nativeLinkTargetDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    CxxLibrary dep =
-        (CxxLibrary)
+    CxxLibraryGroup dep =
+        (CxxLibraryGroup)
             new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep")).build(graphBuilder);
     CxxPythonExtensionBuilder builder =
         new CxxPythonExtensionBuilder(
@@ -402,8 +403,8 @@ public class CxxPythonExtensionDescriptionTest {
   @Test
   public void platformDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    CxxLibrary dep =
-        (CxxLibrary)
+    CxxLibraryGroup dep =
+        (CxxLibraryGroup)
             new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep")).build(graphBuilder);
     CxxPythonExtensionBuilder builder =
         new CxxPythonExtensionBuilder(

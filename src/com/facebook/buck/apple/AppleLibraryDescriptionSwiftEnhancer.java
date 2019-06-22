@@ -24,7 +24,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.cxx.CxxLibrary;
+import com.facebook.buck.cxx.CxxLibraryGroup;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
 import com.facebook.buck.cxx.PreprocessorFlags;
@@ -111,7 +111,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       ActionGraphBuilder graphBuilder,
       CxxPlatform platform,
       AppleNativeTargetDescriptionArg arg) {
-    CxxLibrary lib = (CxxLibrary) graphBuilder.requireRule(target.withFlavors());
+    CxxLibraryGroup lib = (CxxLibraryGroup) graphBuilder.requireRule(target.withFlavors());
     ImmutableMap<BuildTarget, CxxPreprocessorInput> transitiveMap =
         TransitiveCxxPreprocessorInputCache.computeTransitiveCxxToPreprocessorInputMap(
             platform, lib, false, graphBuilder);

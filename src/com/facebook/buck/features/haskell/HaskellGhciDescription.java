@@ -34,7 +34,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.cxx.CxxLibrary;
+import com.facebook.buck.cxx.CxxLibraryGroup;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.PrebuiltCxxLibrary;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryGroupDescription;
@@ -170,7 +170,7 @@ public class HaskellGhciDescription
         //
         // TODO(agallagher): This should probably be *any* `NativeLinkable` that supports omnibus
         // linking.
-        if (nativeLinkableGroup instanceof CxxLibrary
+        if (nativeLinkableGroup instanceof CxxLibraryGroup
             || nativeLinkableGroup instanceof PrebuiltCxxLibrary) {
           builder.putBody(nativeLinkableGroup.getBuildTarget(), nativeLinkableGroup);
           LOG.verbose(
@@ -222,7 +222,7 @@ public class HaskellGhciDescription
     for (NativeLinkableGroup nativeLinkableGroup : topoSortedBody) {
 
       // We link C/C++ libraries whole...
-      if (nativeLinkableGroup instanceof CxxLibrary) {
+      if (nativeLinkableGroup instanceof CxxLibraryGroup) {
         NativeLinkableGroup.Linkage link = nativeLinkableGroup.getPreferredLinkage(cxxPlatform);
         nativeLinkableInputs.add(
             nativeLinkableGroup.getNativeLinkableInput(

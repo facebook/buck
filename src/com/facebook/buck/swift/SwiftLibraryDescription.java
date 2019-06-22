@@ -40,8 +40,8 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
-import com.facebook.buck.cxx.CxxLibrary;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxLibraryGroup;
 import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -240,7 +240,7 @@ public class SwiftLibraryDescription
       // Implicitly generated swift libraries of apple_library dependencies with swift code.
       ImmutableSet<SwiftCompile> implicitSwiftCompileRules =
           RichStream.from(buildDeps)
-              .filter(CxxLibrary.class)
+              .filter(CxxLibraryGroup.class)
               .flatMap(
                   input -> {
                     BuildTarget companionTarget =
