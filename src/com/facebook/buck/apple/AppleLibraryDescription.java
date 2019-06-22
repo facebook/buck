@@ -813,75 +813,36 @@ public class AppleLibraryDescription
 
         case APPLE_SWIFT_EXPORTED_OBJC_CXX_HEADERS:
           {
-            BuildTarget swiftHeadersTarget =
-                baseTarget.withAppendedFlavors(
-                    Type.SWIFT_EXPORTED_OBJC_GENERATED_HEADER.getFlavor());
-            HeaderSymlinkTreeWithHeaderMap headersRule =
-                (HeaderSymlinkTreeWithHeaderMap) graphBuilder.requireRule(swiftHeadersTarget);
-
-            CxxHeaders headers =
-                CxxSymlinkTreeHeaders.from(headersRule, CxxPreprocessables.IncludeType.LOCAL);
-            return Optional.of(headers).map(metadataClass::cast);
+            return Optional.of(
+                    createSwiftObjcHeaders(
+                        graphBuilder, baseTarget, Type.SWIFT_EXPORTED_OBJC_GENERATED_HEADER))
+                .map(metadataClass::cast);
           }
 
         case APPLE_SWIFT_OBJC_CXX_HEADERS:
           {
-            BuildTarget swiftHeadersTarget =
-                baseTarget.withAppendedFlavors(Type.SWIFT_OBJC_GENERATED_HEADER.getFlavor());
-            HeaderSymlinkTreeWithHeaderMap headersRule =
-                (HeaderSymlinkTreeWithHeaderMap) graphBuilder.requireRule(swiftHeadersTarget);
-
-            CxxHeaders headers =
-                CxxSymlinkTreeHeaders.from(headersRule, CxxPreprocessables.IncludeType.LOCAL);
-            return Optional.of(headers).map(metadataClass::cast);
+            return Optional.of(
+                    createSwiftObjcHeaders(
+                        graphBuilder, baseTarget, Type.SWIFT_OBJC_GENERATED_HEADER))
+                .map(metadataClass::cast);
           }
 
         case APPLE_SWIFT_MODULE_CXX_HEADERS:
           {
-            BuildTarget swiftCompileTarget =
-                baseTarget.withAppendedFlavors(Type.SWIFT_COMPILE.getFlavor());
-            SwiftCompile compile = (SwiftCompile) graphBuilder.requireRule(swiftCompileTarget);
-
-            CxxHeaders headers =
-                CxxHeadersDir.of(CxxPreprocessables.IncludeType.LOCAL, compile.getOutputPath());
-            return Optional.of(headers).map(metadataClass::cast);
+            return Optional.of(createSwiftModuleHeaders(graphBuilder, baseTarget))
+                .map(metadataClass::cast);
           }
 
         case APPLE_SWIFT_PREPROCESSOR_INPUT:
           {
-            BuildTarget moduleHeadersTarget =
-                baseTarget.withAppendedFlavors(
-                    MetadataType.APPLE_SWIFT_MODULE_CXX_HEADERS.getFlavor());
-            Optional<CxxHeaders> moduleHeaders =
-                graphBuilder.requireMetadata(moduleHeadersTarget, CxxHeaders.class);
-
-            BuildTarget objcHeadersTarget =
-                baseTarget.withAppendedFlavors(
-                    MetadataType.APPLE_SWIFT_EXPORTED_OBJC_CXX_HEADERS.getFlavor());
-            Optional<CxxHeaders> objcHeaders =
-                graphBuilder.requireMetadata(objcHeadersTarget, CxxHeaders.class);
-
-            CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
-            moduleHeaders.ifPresent(s -> builder.addIncludes(s));
-            objcHeaders.ifPresent(s -> builder.addIncludes(s));
-
-            CxxPreprocessorInput input = builder.build();
-            return Optional.of(input).map(metadataClass::cast);
+            return Optional.of(createSwiftPreprocessorInput(graphBuilder, baseTarget))
+                .map(metadataClass::cast);
           }
 
         case APPLE_SWIFT_PRIVATE_PREPROCESSOR_INPUT:
           {
-            BuildTarget objcHeadersTarget =
-                baseTarget.withAppendedFlavors(
-                    MetadataType.APPLE_SWIFT_OBJC_CXX_HEADERS.getFlavor());
-            Optional<CxxHeaders> objcHeaders =
-                graphBuilder.requireMetadata(objcHeadersTarget, CxxHeaders.class);
-
-            CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
-            objcHeaders.ifPresent(s -> builder.addIncludes(s));
-
-            CxxPreprocessorInput input = builder.build();
-            return Optional.of(input).map(metadataClass::cast);
+            return Optional.of(createSwiftPrivatePreprocessorInput(graphBuilder, baseTarget))
+                .map(metadataClass::cast);
           }
         case APPLE_SWIFT_UNDERLYING_MODULE_INPUT:
           {
@@ -904,6 +865,59 @@ public class AppleLibraryDescription
     }
 
     return Optional.empty();
+  }
+
+  private CxxPreprocessorInput createSwiftPrivatePreprocessorInput(
+      ActionGraphBuilder graphBuilder, BuildTarget baseTarget) {
+    BuildTarget objcHeadersTarget =
+        baseTarget.withAppendedFlavors(MetadataType.APPLE_SWIFT_OBJC_CXX_HEADERS.getFlavor());
+    Optional<CxxHeaders> objcHeaders =
+        graphBuilder.requireMetadata(objcHeadersTarget, CxxHeaders.class);
+
+    CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
+    objcHeaders.ifPresent(s -> builder.addIncludes(s));
+
+    return builder.build();
+  }
+
+  private CxxPreprocessorInput createSwiftPreprocessorInput(
+      ActionGraphBuilder graphBuilder, BuildTarget baseTarget) {
+    BuildTarget moduleHeadersTarget =
+        baseTarget.withAppendedFlavors(MetadataType.APPLE_SWIFT_MODULE_CXX_HEADERS.getFlavor());
+    Optional<CxxHeaders> moduleHeaders =
+        graphBuilder.requireMetadata(moduleHeadersTarget, CxxHeaders.class);
+
+    BuildTarget objcHeadersTarget =
+        baseTarget.withAppendedFlavors(
+            MetadataType.APPLE_SWIFT_EXPORTED_OBJC_CXX_HEADERS.getFlavor());
+    Optional<CxxHeaders> objcHeaders =
+        graphBuilder.requireMetadata(objcHeadersTarget, CxxHeaders.class);
+
+    CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
+    moduleHeaders.ifPresent(s -> builder.addIncludes(s));
+    objcHeaders.ifPresent(s -> builder.addIncludes(s));
+
+    return builder.build();
+  }
+
+  private CxxHeaders createSwiftModuleHeaders(
+      ActionGraphBuilder graphBuilder, BuildTarget baseTarget) {
+    BuildTarget swiftCompileTarget = baseTarget.withAppendedFlavors(Type.SWIFT_COMPILE.getFlavor());
+    SwiftCompile compile = (SwiftCompile) graphBuilder.requireRule(swiftCompileTarget);
+
+    return CxxHeadersDir.of(CxxPreprocessables.IncludeType.LOCAL, compile.getOutputPath());
+  }
+
+  private CxxHeaders createSwiftObjcHeaders(
+      ActionGraphBuilder graphBuilder,
+      BuildTarget baseTarget,
+      Type swiftExportedObjcGeneratedHeader) {
+    BuildTarget swiftHeadersTarget =
+        baseTarget.withAppendedFlavors(swiftExportedObjcGeneratedHeader.getFlavor());
+    HeaderSymlinkTreeWithHeaderMap headersRule =
+        (HeaderSymlinkTreeWithHeaderMap) graphBuilder.requireRule(swiftHeadersTarget);
+
+    return CxxSymlinkTreeHeaders.from(headersRule, CxxPreprocessables.IncludeType.LOCAL);
   }
 
   private <U> Optional<U> createCxxPreprocessorInputMetadata(
