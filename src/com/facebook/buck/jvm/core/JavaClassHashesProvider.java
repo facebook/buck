@@ -26,4 +26,7 @@ public interface JavaClassHashesProvider extends AddsToRuleKey {
 
   ImmutableSortedMap<String, HashCode> getClassNamesToHashes(
       ProjectFilesystem filesystem, SourcePathResolver sourcePathResolver);
+
+  /** Invalidates a state */
+  void invalidate();
 }

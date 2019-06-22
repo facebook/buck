@@ -36,11 +36,11 @@ public class DefaultJavaClassHashesProvider implements JavaClassHashesProvider {
   @AddToRuleKey private final SourcePath classNamesToHashesSourcePath;
 
   @CustomFieldBehavior(EmptyMemoizerDeserialization.class)
-  private final Memoizer<ImmutableSortedMap<String, HashCode>> classNamesToHashesSupplier =
-      new Memoizer<>();
+  private Memoizer<ImmutableSortedMap<String, HashCode>> classNamesToHashesSupplier;
 
   public DefaultJavaClassHashesProvider(SourcePath classNamesToHashesSourcePath) {
     this.classNamesToHashesSourcePath = classNamesToHashesSourcePath;
+    this.classNamesToHashesSupplier = new Memoizer<>();
   }
 
   @Override
@@ -63,5 +63,10 @@ public class DefaultJavaClassHashesProvider implements JavaClassHashesProvider {
           e, "I/O exception during reading from the path: %s", classHashesAbsolutePath);
     }
     return AccumulateClassNamesStep.parseClassHashes(lines);
+  }
+
+  @Override
+  public void invalidate() {
+    this.classNamesToHashesSupplier = new Memoizer<>();
   }
 }

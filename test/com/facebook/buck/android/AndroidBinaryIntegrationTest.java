@@ -20,6 +20,9 @@ import static com.facebook.buck.testutil.RegexMatcher.containsPattern;
 import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -44,6 +47,8 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -225,17 +230,29 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testEditingPrimaryDexClassForcesRebuildForSimplePackage() throws IOException {
-    workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(SIMPLE_TARGET);
+    Path outputPath = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.apk");
+    HashFunction hashFunction = Hashing.sha1();
+    String dexFileName = "classes.dex";
+
+    workspace.runBuckdCommand("build", SIMPLE_TARGET).assertSuccess();
+    ZipInspector zipInspector = new ZipInspector(workspace.getPath(outputPath));
+    HashCode originalHash = hashFunction.hashBytes(zipInspector.getFileContents(dexFileName));
 
     workspace.replaceFileContents(
-        "java/com/sample/app/MyApplication.java", "package com", "package\ncom");
+        "java/com/sample/app/MyApplication.java", "MyReplaceableName", "ChangedValue");
 
     workspace.resetBuildLogFile();
-    ProcessResult result = workspace.runBuckCommand("build", SIMPLE_TARGET);
+    ProcessResult result = workspace.runBuckdCommand("build", SIMPLE_TARGET);
     result.assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-
     buildLog.assertTargetBuiltLocally(SIMPLE_TARGET);
+
+    HashCode hashAfterChange = hashFunction.hashBytes(zipInspector.getFileContents(dexFileName));
+    assertThat(
+        "MyApplication.java file has been edited. Final artifact hash must change as well",
+        originalHash,
+        is(not(equalTo(hashAfterChange))));
   }
 
   @Test
@@ -382,7 +399,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
     try (ZipInputStream is = new ZipInputStream(Files.newInputStream(apk))) {
       for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
-        assertThat(entry.getName(), new Date(entry.getTime()), Matchers.equalTo(dosEpoch));
+        assertThat(entry.getName(), new Date(entry.getTime()), equalTo(dosEpoch));
       }
     }
   }

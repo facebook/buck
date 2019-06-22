@@ -176,6 +176,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public void invalidateInitializeFromDiskState() {
     javaAbiInfo.invalidate();
+    javaClassHashesProvider.invalidate();
   }
 
   @Override

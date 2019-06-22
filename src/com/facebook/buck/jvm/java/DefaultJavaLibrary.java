@@ -365,6 +365,7 @@ public class DefaultJavaLibrary
   @Override
   public void invalidateInitializeFromDiskState() {
     javaAbiInfo.invalidate();
+    javaClassHashesProvider.invalidate();
   }
 
   /**

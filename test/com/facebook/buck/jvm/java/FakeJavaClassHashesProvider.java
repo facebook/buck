@@ -38,4 +38,7 @@ public class FakeJavaClassHashesProvider implements JavaClassHashesProvider {
       ProjectFilesystem filesystem, SourcePathResolver sourcePathResolver) {
     return classNamesToHashes;
   }
+
+  @Override
+  public void invalidate() {}
 }
