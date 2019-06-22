@@ -315,7 +315,7 @@ public class Omnibus {
     argsBuilder.addAll(input.getArgs());
 
     // Grab a topologically sorted mapping of all the root's deps.
-    ImmutableList<NativeLinkableGroup> deps =
+    ImmutableList<? extends NativeLinkableGroup> deps =
         NativeLinkableGroups.getNativeLinkables(
             cxxPlatform,
             graphBuilder,
@@ -587,7 +587,7 @@ public class Omnibus {
 
     // We process all excluded omnibus deps last, and just add their components as if this were a
     // normal shared link.
-    ImmutableList<NativeLinkableGroup> deps =
+    ImmutableList<? extends NativeLinkableGroup> deps =
         NativeLinkableGroups.getNativeLinkables(
             cxxPlatform, graphBuilder, spec.getDeps().values(), Linker.LinkableDepType.SHARED);
     for (NativeLinkableGroup nativeLinkableGroup : deps) {

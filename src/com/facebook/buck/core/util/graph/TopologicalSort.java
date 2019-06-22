@@ -18,6 +18,7 @@ package com.facebook.buck.core.util.graph;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Queues;
 import java.util.HashMap;
@@ -31,6 +32,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class TopologicalSort {
 
   private TopologicalSort() {}
+
+  // TODO(cjhopman): The implementations here aren't great and should be improved and migrated to
+  // GraphTraversables (probably).
 
   /** Returns a topologocially sorted list of all nodes in the graph. */
   public static <T> ImmutableList<T> sort(TraversableGraph<T> graph) {
@@ -76,5 +80,31 @@ public class TopologicalSort {
     }
 
     return toReturn.build();
+  }
+
+  /** Returns a topologocially sorted list of all nodes in the graph. */
+  public static <T> ImmutableList<? extends T> sort(
+      Iterable<? extends T> roots, GraphTraversable<T> traversable) {
+    MutableDirectedGraph<T> graph = new MutableDirectedGraph<>();
+    AbstractBreadthFirstTraversal<T> visitor =
+        new AbstractBreadthFirstTraversal<T>(roots) {
+          @Override
+          public ImmutableSet<T> visit(T node) {
+            graph.addNode(node);
+
+            // Process all the traversable deps.
+            ImmutableSet.Builder<T> deps = ImmutableSet.builder();
+            traversable
+                .findChildren(node)
+                .forEachRemaining(
+                    dep -> {
+                      graph.addEdge(node, dep);
+                      deps.add(dep);
+                    });
+            return deps.build();
+          }
+        };
+    visitor.start();
+    return sort(graph);
   }
 }
