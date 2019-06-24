@@ -17,6 +17,7 @@ package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
+import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -266,13 +267,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
 
   @Override
   public void export(Label extensionLabel, String exportedName) {
-    this.name =
-        String.format(
-            "%s//%s:%s:%s",
-            extensionLabel.getPackageIdentifier().getRepository(),
-            extensionLabel.getPackageIdentifier().getPackageFragment().getPathString(),
-            extensionLabel.getName(),
-            exportedName);
+    this.name = UserDefinedRuleNames.getIdentifier(extensionLabel, exportedName);
     this.isExported = true;
   }
 
