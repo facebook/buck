@@ -15,6 +15,7 @@ kotlin_library(
         "//src/com/facebook/buck/io/pathformat:pathformat",
         "//src/com/facebook/buck/multitenant/collect:collect",
         "//src/com/facebook/buck/multitenant/fs:fs",
+        "//third-party/java/fastutil:fastutil",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/vavr:vavr",

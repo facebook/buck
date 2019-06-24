@@ -17,6 +17,7 @@ package com.facebook.buck.multitenant.service
 
 import io.vavr.collection.HashSet
 import io.vavr.collection.Set
+import it.unimi.dsi.fastutil.ints.IntCollection
 
 /**
  * A set of rdeps. Note that the type of storage we use depends on a combination of (1) the size of
@@ -26,11 +27,20 @@ internal sealed class RdepsSet : Iterable<BuildTargetId> {
     abstract val size: Int
 
     /**
+     * Custom method for adding the values in this set to an [IntCollection]. This gives the
+     * implementation the opportunity to avoid boxing and unboxing integers.
+     */
+    abstract fun addAllTo(destination: IntCollection)
+
+    /**
      * Unique representation of a set of rdeps that does not share any memory with another RdepsSet.
      */
     class Unique(val rdeps: BuildTargetSet) : RdepsSet() {
         override val size: Int get() = rdeps.size
         override fun iterator(): Iterator<BuildTargetId> = rdeps.iterator()
+        override fun addAllTo(destination: IntCollection) {
+            addBuildTargetSetToCollection(rdeps, destination)
+        }
     }
 
     /**
@@ -40,6 +50,24 @@ internal sealed class RdepsSet : Iterable<BuildTargetId> {
     class Persistent(val rdeps: Set<BuildTargetId>) : RdepsSet() {
         override val size: Int get() = rdeps.size()
         override fun iterator(): Iterator<BuildTargetId> = rdeps.iterator()
+        override fun addAllTo(destination: IntCollection) {
+            for (buildTargetId in rdeps) {
+                destination.add(buildTargetId)
+            }
+        }
+    }
+}
+
+internal fun addBuildTargetSetToCollection(source: BuildTargetSet, destination: IntCollection) {
+    // Although it might be slightly more efficient to wrap the BuildTargetSet as an IntCollection
+    // so that we can use IntCollection.addAll(IntCollection), as it does some some capacity checks
+    // before calling add() in a loop, but IntCollection is a little annoying to implement, so we
+    // should only bother if profiling proves it is worth it.
+    //
+    // Incidentally, it.unimi.dsi.fastutil.ints.IntIterators.wrap(int[]) almost does what we need
+    // except addAll() requires an IntCollection rather than an IntListIterator.
+    for (buildTargetId in source) {
+        destination.add(buildTargetId)
     }
 }
 

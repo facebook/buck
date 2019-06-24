@@ -18,6 +18,7 @@ package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import java.util.ArrayDeque
 import java.util.ArrayList
 import java.util.HashSet
@@ -191,9 +192,9 @@ class Index internal constructor(
 
         // Take the union of all of the deps across all of the rules so we can make one call to
         // addAllByIndex().
-        val union = mutableSetOf<Int>()
+        val union = IntOpenHashSet()
         rules.forEach { rule ->
-            union.addAll(rule.deps.asSequence())
+            addBuildTargetSetToCollection(rule.deps, union)
         }
 
         val out = HashSet<UnconfiguredBuildTarget>(union.size)
@@ -228,9 +229,9 @@ class Index internal constructor(
             else -> {
                 // Take the union of all of the deps across all of the rules so we can make one call to
                 // addAllByIndex().
-                val union = mutableSetOf<Int>()
+                val union = IntOpenHashSet()
                 for (set in rdepsSets) {
-                    union.addAll(set)
+                    set.addAllTo(union)
                 }
                 val out = HashSet<UnconfiguredBuildTarget>(union.size)
                 buildTargetCache.addAllByIndex(union.asSequence(), out)
