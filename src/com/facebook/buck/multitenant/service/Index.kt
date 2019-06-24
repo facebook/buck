@@ -198,7 +198,7 @@ class Index internal constructor(
         }
 
         val out = HashSet<UnconfiguredBuildTarget>(union.size)
-        buildTargetCache.addAllByIndex(union.asSequence(), out)
+        buildTargetCache.addAllByIndex(union.iterator(), out)
         return out
     }
 
@@ -234,7 +234,7 @@ class Index internal constructor(
                     set.addAllTo(union)
                 }
                 val out = HashSet<UnconfiguredBuildTarget>(union.size)
-                buildTargetCache.addAllByIndex(union.asSequence(), out)
+                buildTargetCache.addAllByIndex(union.iterator(), out)
                 out
             }
         }

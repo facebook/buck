@@ -16,6 +16,7 @@
 
 package com.facebook.buck.multitenant.service
 
+import it.unimi.dsi.fastutil.ints.IntIterator
 import java.util.ArrayList
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantReadWriteLock
@@ -70,6 +71,15 @@ internal class AppendOnlyBidirectionalCache<K> {
     fun addAllByIndex(indexes: Sequence<Int>, destination: MutableCollection<K>) {
         lock.read {
             indexes.mapTo(destination) { reverse[it] }
+        }
+    }
+
+    fun addAllByIndex(indexes: IntIterator, destination: MutableCollection<K>) {
+        lock.read {
+            while (indexes.hasNext()) {
+                val value = reverse[indexes.nextInt()]
+                destination.add(value)
+            }
         }
     }
 }
