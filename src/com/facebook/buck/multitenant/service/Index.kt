@@ -18,8 +18,8 @@ package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
+import it.unimi.dsi.fastutil.ints.IntArrayFIFOQueue
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet
-import java.util.ArrayDeque
 import java.util.ArrayList
 import java.util.HashSet
 
@@ -136,23 +136,22 @@ class Index internal constructor(
      * @return the transitive deps of the specified targets (includes targets)
      */
     fun getTransitiveDeps(generation: Generation, targets: Sequence<UnconfiguredBuildTarget>): Set<UnconfiguredBuildTarget> {
-        val queue = ArrayDeque<BuildTargetId>()
+        val queue = IntArrayFIFOQueue()
 
-        val visited: HashSet<BuildTargetId> = if (targets is Collection<*>) {
-            HashSet(targets.size)
+        val visited: IntOpenHashSet = if (targets is Collection<*>) {
+            IntOpenHashSet(targets.size)
         } else {
-            hashSetOf()
+            IntOpenHashSet()
         }
 
         indexGenerationData.withRuleMap { ruleMap ->
-
             val visitDeps: (BuildTargetId) -> Unit = { targetId ->
                 val node = ruleMap.getVersion(targetId, generation)
 
                 node?.deps?.forEach { dep ->
                     if (visited.add(dep)) {
                         // only traverse node if it was not seen before
-                        queue.add(dep)
+                        queue.enqueue(dep)
                     }
                 }
             }
@@ -167,15 +166,15 @@ class Index internal constructor(
             }
 
             // now traverse all deps recursively
-            while (queue.isNotEmpty()) {
-                val targetId = queue.pop()
+            while (!queue.isEmpty()) {
+                val targetId = queue.dequeueInt()
                 visitDeps(targetId)
             }
         }
 
         // We use a HashSet instead of a Kotlin Set so we can specify the initialCapacity.
         val out = HashSet<UnconfiguredBuildTarget>(visited.size)
-        buildTargetCache.addAllByIndex(visited.asSequence(), out)
+        buildTargetCache.addAllByIndex(visited.iterator(), out)
         return out
     }
 
