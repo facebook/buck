@@ -19,9 +19,8 @@ package com.facebook.buck.multitenant.service
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import java.util.ArrayDeque
-import java.util.TreeSet
-import kotlin.collections.ArrayList
-import kotlin.collections.HashSet
+import java.util.ArrayList
+import java.util.HashSet
 
 /**
  * View of build graph data across a range of generations. Because this is a "view," it is not
@@ -191,9 +190,8 @@ class Index internal constructor(
         }
 
         // Take the union of all of the deps across all of the rules so we can make one call to
-        // addAllByIndex(). We make it a sorted set so that addAllByIndex() can traverse its
-        // internal list in order.
-        val union = TreeSet<Int>()
+        // addAllByIndex().
+        val union = mutableSetOf<Int>()
         rules.forEach { rule ->
             union.addAll(rule.deps.asSequence())
         }
@@ -228,11 +226,9 @@ class Index internal constructor(
                 out
             }
             else -> {
-                // When there are multiple sets, merge them into one large set so that we can call
-                // addAllByIndex() once instead of once per set. Since we have to create a new set
-                // anyway, we might as well make it a sorted set so that addAllByIndex() can
-                // traverse its internal list in order.
-                val union = TreeSet<Int>()
+                // Take the union of all of the deps across all of the rules so we can make one call to
+                // addAllByIndex().
+                val union = mutableSetOf<Int>()
                 for (set in rdepsSets) {
                     union.addAll(set)
                 }
