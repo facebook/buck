@@ -24,6 +24,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -35,7 +37,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
@@ -43,25 +44,24 @@ import javax.annotation.Nullable;
 /** Perform the "aapt2 compile" step of a single Android resource. */
 public class Aapt2Compile extends AbstractBuildRule {
   private final AndroidPlatformTarget androidPlatformTarget;
-  // TODO(dreiss): Eliminate this and just make resDir our dep.
-  private final ImmutableSortedSet<BuildRule> compileDeps;
+  private final BuildableSupport.DepsSupplier depsSupplier;
   @AddToRuleKey private final SourcePath resDir;
 
   public Aapt2Compile(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      SourcePathRuleFinder ruleFinder,
       AndroidPlatformTarget androidPlatformTarget,
-      ImmutableSortedSet<BuildRule> compileDeps,
       SourcePath resDir) {
     super(buildTarget, projectFilesystem);
     this.androidPlatformTarget = androidPlatformTarget;
-    this.compileDeps = compileDeps;
     this.resDir = resDir;
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
   }
 
   @Override
   public SortedSet<BuildRule> getBuildDeps() {
-    return compileDeps;
+    return depsSupplier.get();
   }
 
   @Override

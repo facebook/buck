@@ -145,11 +145,7 @@ public class AndroidResourceDescription
               .getToolchainProvider()
               .getByName(AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
       return new Aapt2Compile(
-          buildTarget,
-          projectFilesystem,
-          androidPlatformTarget,
-          ImmutableSortedSet.copyOf(graphBuilder.filterBuildRuleInputs(resDir.get())),
-          resDir.get());
+          buildTarget, projectFilesystem, graphBuilder, androidPlatformTarget, resDir.get());
     }
 
     params =

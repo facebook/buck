@@ -276,8 +276,8 @@ public class JsBundleDescription
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
+          ruleFinder,
           androidPlatformTarget,
-          ImmutableSortedSet.of(jsBundle),
           jsBundle.getSourcePathToResources());
     }
 

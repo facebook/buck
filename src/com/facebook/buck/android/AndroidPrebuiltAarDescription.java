@@ -171,8 +171,8 @@ public class AndroidPrebuiltAarDescription
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
+          graphBuilder,
           androidPlatformTarget,
-          ImmutableSortedSet.of(unzipAarRule),
           unzipAar.getResDirectory());
     }
 

@@ -512,13 +512,7 @@ class AndroidBinaryResourcesGraphEnhancer {
 
     ImmutableList.Builder<Aapt2Compile> compileListBuilder = ImmutableList.builder();
     if (filteredResourcesProvider.isPresent()) {
-      Optional<BuildRule> resourceFilterRule =
-          filteredResourcesProvider.get().getResourceFilterRule();
-      Preconditions.checkState(
-          resourceFilterRule.isPresent(),
-          "Expected ResourceFilterRule to be present when filtered resources are present.");
 
-      ImmutableSortedSet<BuildRule> compileDeps = ImmutableSortedSet.of(resourceFilterRule.get());
       int index = 0;
       for (SourcePath resDir : filteredResourcesProvider.get().getResDirectories()) {
         Aapt2Compile compileRule =
@@ -526,8 +520,8 @@ class AndroidBinaryResourcesGraphEnhancer {
                 buildTarget.withAppendedFlavors(
                     InternalFlavor.of("aapt2_compile_" + index), flavor),
                 projectFilesystem,
+                graphBuilder,
                 androidPlatformTarget,
-                compileDeps,
                 resDir);
         graphBuilder.addToIndex(compileRule);
         compileListBuilder.add(compileRule);
