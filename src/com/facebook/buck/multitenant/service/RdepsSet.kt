@@ -17,6 +17,7 @@ package com.facebook.buck.multitenant.service
 
 import io.vavr.collection.HashSet
 import io.vavr.collection.Set
+import it.unimi.dsi.fastutil.ints.IntArrayList
 import it.unimi.dsi.fastutil.ints.IntCollection
 
 /**
@@ -37,7 +38,7 @@ internal sealed class RdepsSet : Iterable<BuildTargetId> {
      */
     class Unique(val rdeps: BuildTargetSet) : RdepsSet() {
         override val size: Int get() = rdeps.size
-        override fun iterator(): Iterator<BuildTargetId> = rdeps.iterator()
+        override fun iterator(): Iterator<BuildTargetId> = IntArrayList.wrap(rdeps).iterator()
         override fun addAllTo(destination: IntCollection) {
             addBuildTargetSetToCollection(rdeps, destination)
         }
