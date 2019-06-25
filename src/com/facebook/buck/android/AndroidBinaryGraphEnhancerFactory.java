@@ -42,6 +42,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.EnumSet;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -64,7 +65,7 @@ public class AndroidBinaryGraphEnhancerFactory {
       ResourceFilter resourceFilter,
       DexSplitMode dexSplitMode,
       EnumSet<ExopackageMode> exopackageModes,
-      ImmutableSet<JavaLibrary> rulesToExcludeFromDex,
+      Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex,
       AndroidGraphEnhancerArgs args,
       boolean useProtoFormat,
       JavaOptions javaOptions,

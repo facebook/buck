@@ -83,7 +83,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         apkUnderTest.getCpuFilters(),
         apkUnderTest.getResourceFilter(),
         EnumSet.noneOf(ExopackageMode.class),
-        ImmutableSet.of(),
+        ImmutableSet::of,
         enhancementResult,
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         false,

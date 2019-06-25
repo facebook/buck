@@ -79,6 +79,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -143,7 +144,7 @@ public class AndroidBinaryGraphEnhancer {
   private final String dexTool;
   private final AndroidBinaryResourcesGraphEnhancer androidBinaryResourcesGraphEnhancer;
   private final NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs;
-  private final ImmutableSet<JavaLibrary> rulesToExcludeFromDex;
+  private final Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex;
 
   AndroidBinaryGraphEnhancer(
       ToolchainProvider toolchainProvider,
@@ -205,7 +206,7 @@ public class AndroidBinaryGraphEnhancer {
       String dexTool,
       Optional<Arg> postFilterResourcesCmd,
       NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs,
-      ImmutableSet<JavaLibrary> rulesToExcludeFromDex,
+      Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex,
       boolean useProtoFormat) {
     this.ignoreAaptProguardConfig = ignoreAaptProguardConfig;
     this.androidPlatformTarget = androidPlatformTarget;
@@ -458,7 +459,7 @@ public class AndroidBinaryGraphEnhancer {
           Either.ofRight(
               createNonPredexedDexBuildable(
                   dexSplitMode,
-                  rulesToExcludeFromDex,
+                  rulesToExcludeFromDex.get(),
                   xzCompressionLevel,
                   proguardConfigs,
                   packageableCollection,

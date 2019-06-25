@@ -64,6 +64,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -102,7 +103,7 @@ public class AndroidBinary extends AbstractBuildRule
   private final ImmutableSet<TargetCpuType> cpuFilters;
   private final ResourceFilter resourceFilter;
   private final EnumSet<ExopackageMode> exopackageModes;
-  private final ImmutableSet<JavaLibrary> rulesToExcludeFromDex;
+  private final Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex;
 
   private final AndroidGraphEnhancementResult enhancementResult;
   private final ManifestEntries manifestEntries;
@@ -139,7 +140,7 @@ public class AndroidBinary extends AbstractBuildRule
       Set<TargetCpuType> cpuFilters,
       ResourceFilter resourceFilter,
       EnumSet<ExopackageMode> exopackageModes,
-      ImmutableSet<JavaLibrary> rulesToExcludeFromDex,
+      Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex,
       AndroidGraphEnhancementResult enhancementResult,
       int xzCompressionLevel,
       boolean packageAssetLibraries,
@@ -257,7 +258,7 @@ public class AndroidBinary extends AbstractBuildRule
     return buildRuleParams.getTargetGraphOnlyDeps();
   }
 
-  public ImmutableSet<JavaLibrary> getRulesToExcludeFromDex() {
+  public Supplier<ImmutableSet<JavaLibrary>> getRulesToExcludeFromDex() {
     return rulesToExcludeFromDex;
   }
 

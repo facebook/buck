@@ -149,8 +149,8 @@ public class AndroidBundleDescription
 
     DexSplitMode dexSplitMode = createDexSplitMode(args, exopackageModes);
 
-    ImmutableSet<JavaLibrary> rulesToExcludeFromDex =
-        NoDxArgsHelper.findRulesToExcludeFromDex(graphBuilder, buildTarget, args.getNoDx());
+    Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex =
+        NoDxArgsHelper.createSupplierForRulesToExclude(graphBuilder, buildTarget, args.getNoDx());
 
     CellPathResolver cellRoots = context.getCellPathResolver();
 

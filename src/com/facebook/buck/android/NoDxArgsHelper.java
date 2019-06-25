@@ -22,13 +22,23 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.util.RichStream;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class NoDxArgsHelper {
 
   private static final Logger LOG = Logger.get(NoDxArgsHelper.class);
+
+  static Supplier<ImmutableSet<JavaLibrary>> createSupplierForRulesToExclude(
+      ActionGraphBuilder graphBuilder,
+      BuildTarget buildTarget,
+      ImmutableSet<BuildTarget> noDxTargets) {
+    return Suppliers.memoize(
+        () -> findRulesToExcludeFromDex(graphBuilder, buildTarget, noDxTargets));
+  }
 
   static ImmutableSet<JavaLibrary> findRulesToExcludeFromDex(
       ActionGraphBuilder graphBuilder,

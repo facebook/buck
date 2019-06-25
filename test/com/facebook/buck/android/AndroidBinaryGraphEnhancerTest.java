@@ -200,7 +200,7 @@ public class AndroidBinaryGraphEnhancerTest {
             DxStep.D8,
             Optional.empty(),
             defaultNonPredexedArgs(),
-            ImmutableSortedSet.of(),
+            ImmutableSortedSet::of,
             false);
 
     BuildTarget aaptPackageResourcesTarget =
@@ -381,7 +381,7 @@ public class AndroidBinaryGraphEnhancerTest {
             DxStep.D8,
             Optional.empty(),
             defaultNonPredexedArgs(),
-            ImmutableSortedSet.of(),
+            ImmutableSortedSet::of,
             false);
 
     BuildTarget aaptPackageResourcesTarget =
@@ -582,7 +582,7 @@ public class AndroidBinaryGraphEnhancerTest {
             DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
-            ImmutableSortedSet.of(),
+            ImmutableSortedSet::of,
             false);
 
     BuildTarget aaptPackageResourcesTarget =
@@ -733,7 +733,7 @@ public class AndroidBinaryGraphEnhancerTest {
             DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
-            ImmutableSortedSet.of(),
+            ImmutableSortedSet::of,
             false);
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
@@ -868,7 +868,7 @@ public class AndroidBinaryGraphEnhancerTest {
             DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
-            ImmutableSortedSet.of(),
+            ImmutableSortedSet::of,
             false);
     graphEnhancer.createAdditionalBuildables();
 
@@ -950,7 +950,7 @@ public class AndroidBinaryGraphEnhancerTest {
             DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
-            ImmutableSortedSet.of(),
+            ImmutableSortedSet::of,
             false);
     graphEnhancer.createAdditionalBuildables();
 
@@ -1060,7 +1060,7 @@ public class AndroidBinaryGraphEnhancerTest {
             DxStep.DX,
             Optional.empty(),
             defaultNonPredexedArgs(),
-            ImmutableSortedSet.of(),
+            ImmutableSortedSet::of,
             false);
     graphEnhancer.createAdditionalBuildables();
 

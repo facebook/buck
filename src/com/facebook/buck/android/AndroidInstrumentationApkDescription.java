@@ -110,7 +110,7 @@ public class AndroidInstrumentationApkDescription
 
     ImmutableSet<JavaLibrary> rulesToExcludeFromDex =
         ImmutableSet.<JavaLibrary>builder()
-            .addAll(apkUnderTest.getRulesToExcludeFromDex())
+            .addAll(apkUnderTest.getRulesToExcludeFromDex().get())
             .addAll(getClasspathDeps(apkUnderTest.getClasspathDeps()))
             .build();
 
@@ -243,7 +243,7 @@ public class AndroidInstrumentationApkDescription
             args.getDexTool(),
             /* postFilterResourcesCommands */ Optional.empty(),
             nonPreDexedDexBuildableArgs,
-            rulesToExcludeFromDex,
+            () -> rulesToExcludeFromDex,
             false);
 
     AndroidGraphEnhancementResult enhancementResult = graphEnhancer.createAdditionalBuildables();
