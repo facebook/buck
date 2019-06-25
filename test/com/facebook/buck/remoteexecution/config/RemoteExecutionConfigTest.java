@@ -64,6 +64,48 @@ public class RemoteExecutionConfigTest {
     }
   }
 
+  @Test
+  public void testIsRemoteExecutionAutoEnabled() {
+    Assert.assertFalse(
+        RemoteExecutionConfig.isRemoteExecutionAutoEnabled(
+            true, true, AutoRemoteExecutionStrategy.DISABLED));
+
+    Assert.assertTrue(
+        RemoteExecutionConfig.isRemoteExecutionAutoEnabled(
+            false, true, AutoRemoteExecutionStrategy.RE_IF_EXPERIMENT_ENABLED));
+
+    Assert.assertFalse(
+        RemoteExecutionConfig.isRemoteExecutionAutoEnabled(
+            true, false, AutoRemoteExecutionStrategy.RE_IF_EXPERIMENT_ENABLED));
+
+    Assert.assertFalse(
+        RemoteExecutionConfig.isRemoteExecutionAutoEnabled(
+            false, true, AutoRemoteExecutionStrategy.RE_IF_WHITELIST_MATCH));
+
+    Assert.assertTrue(
+        RemoteExecutionConfig.isRemoteExecutionAutoEnabled(
+            true, false, AutoRemoteExecutionStrategy.RE_IF_WHITELIST_MATCH));
+
+    Assert.assertFalse(
+        RemoteExecutionConfig.isRemoteExecutionAutoEnabled(
+            true, false, AutoRemoteExecutionStrategy.RE_IF_EXPERIMENT_ENABLED_AND_WHITELIST_MATCH));
+
+    Assert.assertFalse(
+        RemoteExecutionConfig.isRemoteExecutionAutoEnabled(
+            false, true, AutoRemoteExecutionStrategy.RE_IF_EXPERIMENT_ENABLED_AND_WHITELIST_MATCH));
+
+    Assert.assertTrue(
+        RemoteExecutionConfig.isRemoteExecutionAutoEnabled(
+            true, true, AutoRemoteExecutionStrategy.RE_IF_EXPERIMENT_ENABLED_AND_WHITELIST_MATCH));
+
+    Assert.assertTrue(
+        RemoteExecutionConfig.isRemoteExecutionAutoEnabled(
+            true, false, AutoRemoteExecutionStrategy.RE_IF_EXPERIMENT_ENABLED_OR_WHITELIST_MATCH));
+    Assert.assertTrue(
+        RemoteExecutionConfig.isRemoteExecutionAutoEnabled(
+            false, true, AutoRemoteExecutionStrategy.RE_IF_EXPERIMENT_ENABLED_OR_WHITELIST_MATCH));
+  }
+
   private RemoteExecutionConfig getConfig(String debugFormatString) {
     BuckConfig config =
         FakeBuckConfig.builder()

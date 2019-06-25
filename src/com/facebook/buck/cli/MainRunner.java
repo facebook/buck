@@ -1516,18 +1516,18 @@ public final class MainRunner {
     }
 
     BuildCommand subcommand = (BuildCommand) command.getSubcommand().get();
-    boolean whitelistedForRemoteExecution =
+    boolean remoteExecutionAutoEnabled =
         config
             .getView(RemoteExecutionConfig.class)
-            .isBuildWhitelistedForRemoteExecution(username, subcommand.getArguments());
+            .isRemoteExecutionAutoEnabled(username, subcommand.getArguments());
 
     ModernBuildRuleStrategyConfig strategyConfig =
         config.getView(ModernBuildRuleConfig.class).getDefaultStrategyConfig();
-    while (strategyConfig.getBuildStrategy(whitelistedForRemoteExecution)
+    while (strategyConfig.getBuildStrategy(remoteExecutionAutoEnabled)
         == ModernBuildRuleBuildStrategy.HYBRID_LOCAL) {
       strategyConfig = strategyConfig.getHybridLocalConfig().getDelegateConfig();
     }
-    return strategyConfig.getBuildStrategy(whitelistedForRemoteExecution)
+    return strategyConfig.getBuildStrategy(remoteExecutionAutoEnabled)
         == ModernBuildRuleBuildStrategy.REMOTE;
   }
 

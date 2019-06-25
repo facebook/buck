@@ -784,11 +784,11 @@ public class BuildCommand extends AbstractCommand {
 
     ActionGraphAndBuilder actionGraphAndBuilder =
         graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder();
-    boolean whitelistedForRemoteExecution =
+    boolean remoteExecutionAutoEnabled =
         params
             .getBuckConfig()
             .getView(RemoteExecutionConfig.class)
-            .isBuildWhitelistedForRemoteExecution(
+            .isRemoteExecutionAutoEnabled(
                 params.getBuildEnvironmentDescription().getUser(), getArguments());
     LocalBuildExecutor builder =
         new LocalBuildExecutor(
@@ -808,7 +808,7 @@ public class BuildCommand extends AbstractCommand {
             params.getUnconfiguredBuildTargetFactory(),
             params.getTargetConfiguration(),
             params.getTargetConfigurationSerializer(),
-            whitelistedForRemoteExecution);
+            remoteExecutionAutoEnabled);
     // TODO(buck_team): use try-with-resources instead
     try {
       buildReference.set(builder.getBuild());
