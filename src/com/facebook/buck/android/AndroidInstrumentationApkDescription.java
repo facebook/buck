@@ -108,10 +108,21 @@ public class AndroidInstrumentationApkDescription
     AndroidBinary apkUnderTest =
         ApkGenruleDescription.getUnderlyingApk((HasInstallableApk) installableApk);
 
+    ImmutableSet<JavaLibrary> apkUnderTestTransitiveClasspathDeps =
+        getClasspathDeps(apkUnderTest.getClasspathDeps());
+
+    ImmutableSet.Builder<BuildTarget> buildTargetsToExclude = ImmutableSet.builder();
+    apkUnderTest.getRulesToExcludeFromDex().get().stream()
+        .map(BuildRule::getBuildTarget)
+        .forEach(buildTargetsToExclude::add);
+    apkUnderTestTransitiveClasspathDeps.stream()
+        .map(BuildRule::getBuildTarget)
+        .forEach(buildTargetsToExclude::add);
+
     ImmutableSet<JavaLibrary> rulesToExcludeFromDex =
         ImmutableSet.<JavaLibrary>builder()
             .addAll(apkUnderTest.getRulesToExcludeFromDex().get())
-            .addAll(getClasspathDeps(apkUnderTest.getClasspathDeps()))
+            .addAll(apkUnderTestTransitiveClasspathDeps)
             .build();
 
     APKModule rootAPKModule = APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true);
@@ -203,9 +214,7 @@ public class AndroidInstrumentationApkDescription
             /* shouldBuildStringSourceMap */ false,
             /* shouldPreDex */ false,
             DexSplitMode.NO_SPLIT,
-            rulesToExcludeFromDex.stream()
-                .map(BuildRule::getBuildTarget)
-                .collect(ImmutableSet.toImmutableSet()),
+            buildTargetsToExclude.build(),
             resourcesToExclude,
             nativeLibsToExclude,
             nativeLinkablesToExcludeGroup,
