@@ -16,8 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.jvm.java.JavaLibraryClasspathProvider.getClasspathDeps;
-
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.android.apkmodule.APKModule;
@@ -111,7 +109,7 @@ public class AndroidInstrumentationApkDescription
         ApkGenruleDescription.getUnderlyingApk((HasInstallableApk) installableApk);
 
     ImmutableSet<JavaLibrary> apkUnderTestTransitiveClasspathDeps =
-        getClasspathDeps(apkUnderTest.getClasspathDeps());
+        apkUnderTest.getTransitiveClasspathDeps();
 
     ImmutableSet.Builder<BuildTarget> buildTargetsToExclude = ImmutableSet.builder();
     apkUnderTest.getRulesToExcludeFromDex().get().stream()
