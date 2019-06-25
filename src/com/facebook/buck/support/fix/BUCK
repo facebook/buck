@@ -1,0 +1,16 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "fix",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jackson:jackson-databind",
+    ],
+    tests = [
+        "//test/com/facebook/buck/support/fix:fix",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

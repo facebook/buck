@@ -24,6 +24,8 @@ import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.support.fix.BuckRunSpec;
+import com.facebook.buck.support.fix.ImmutableBuckRunSpec;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ForwardingProcessListener;
@@ -172,17 +174,14 @@ public final class RunCommand extends AbstractCommand {
               .addAll(executable.getCommandPrefix(resolver))
               .addAll(getTargetArguments())
               .build();
-      ImmutableMap<String, Object> cmd =
-          ImmutableMap.of(
-              "path", argv.get(0),
-              "argv", argv,
-              "envp",
-                  ImmutableMap.<String, String>builder()
-                      .putAll(params.getEnvironment())
-                      .putAll(executable.getEnvironment(resolver))
-                      .build(),
-              "cwd", params.getCell().getFilesystem().getRootPath(),
-              "is_fix_script", false);
+      ImmutableMap<String, String> envp =
+          ImmutableMap.<String, String>builder()
+              .putAll(params.getEnvironment())
+              .putAll(executable.getEnvironment(resolver))
+              .build();
+      BuckRunSpec cmd =
+          new ImmutableBuckRunSpec(
+              argv, envp, params.getCell().getFilesystem().getRootPath(), false);
       Files.write(Paths.get(commandArgsFile), ObjectMappers.WRITER.writeValueAsBytes(cmd));
       return ExitCode.SUCCESS;
     }

@@ -42,7 +42,6 @@ public class RunEndToEndTest {
   @Test
   public void shouldRunBuiltBinaries(EndToEndTestDescriptor test, EndToEndWorkspace workspace)
       throws Throwable {
-
     ProcessResult result =
         workspace.runBuckCommand(
             test.getBuckdEnabled(),
