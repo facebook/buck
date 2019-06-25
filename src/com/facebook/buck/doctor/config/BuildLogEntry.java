@@ -58,6 +58,9 @@ public interface BuildLogEntry {
   Optional<Path> getTraceFile();
 
   @Value.Parameter
+  Optional<Path> getConfigJsonFile();
+
+  @Value.Parameter
   long getSize();
 
   @Value.Parameter

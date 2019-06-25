@@ -132,6 +132,10 @@ public class BuildLogHelper {
             .filter(input -> input.toString().endsWith(".trace"))
             .findFirst();
 
+    Optional<Path> configJsonFile =
+        Optional.of(logFile.resolveSibling(BuckConstant.CONFIG_JSON_FILE_NAME))
+            .filter(projectFilesystem::isFile);
+
     return ImmutableBuildLogEntry.of(
         logFile,
         buildId,
@@ -143,6 +147,7 @@ public class BuildLogHelper {
         ruleKeyDiagKeysFile,
         ruleKeyDiagGraphFile,
         traceFile,
+        configJsonFile,
         projectFilesystem.getFileSize(logFile),
         Date.from(projectFilesystem.getLastModifiedTime(logFile).toInstant()));
   }

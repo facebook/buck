@@ -76,6 +76,7 @@ public class InteractiveReportIntegrationTest {
     ZipInspector zipInspector = new ZipInspector(reportFile);
     zipInspector.assertFileExists("report.json");
     zipInspector.assertFileExists("buckconfig.local");
+    zipInspector.assertFileExists(BUILD_PATH + "buckconfig.json");
     zipInspector.assertFileExists(BUILD_PATH + "buck-machine-log");
     zipInspector.assertFileExists(BUILD_PATH + "buck.log");
     zipInspector.assertFileExists(BUILD_PATH + "file.trace");

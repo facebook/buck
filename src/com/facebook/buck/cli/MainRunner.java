@@ -151,6 +151,7 @@ import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.build.report.BuildReportUpload;
 import com.facebook.buck.support.cli.args.BuckArgsMethods;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
+import com.facebook.buck.support.cli.config.BuckConfigWriter;
 import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.support.exceptions.handler.ExceptionHandlerRegistryFactory;
 import com.facebook.buck.support.log.LogBuckConfig;
@@ -970,6 +971,7 @@ public final class MainRunner {
                   },
                   ManifestService::close);
           ) {
+        BuckConfigWriter.writeConfig(filesystem.getRootPath(), invocationInfo, buckConfig);
 
         if (command.getSubcommand().isPresent()
             && command.getSubcommand().get() instanceof BuildCommand) {

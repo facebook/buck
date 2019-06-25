@@ -21,8 +21,8 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.ImmutableSourceControlInfo;
-import com.facebook.buck.doctor.config.SourceControlInfo;
 import com.facebook.buck.doctor.config.ImmutableUserLocalConfiguration;
+import com.facebook.buck.doctor.config.SourceControlInfo;
 import com.facebook.buck.doctor.config.UserLocalConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigPaths;
@@ -148,6 +148,7 @@ public abstract class AbstractReport {
                   Optionals.addIfPresent(input.getMachineReadableLogFile(), result);
                   Optionals.addIfPresent(input.getRuleKeyDiagKeysFile(), result);
                   Optionals.addIfPresent(input.getRuleKeyDiagGraphFile(), result);
+                  Optionals.addIfPresent(input.getConfigJsonFile(), result);
                   result.add(input.getRelativePath());
                   return result.build();
                 })

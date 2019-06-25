@@ -33,6 +33,7 @@ java_immutables_library(
         "//src/com/facebook/buck/remoteexecution/grpc:grpc",
         "//src/com/facebook/buck/rules/modern/builders:builders",
         "//src/com/facebook/buck/slb:slb",
+        "//src/com/facebook/buck/support/cli/config:config",
         "//src/com/facebook/buck/util/perf:perf",
         "//test/...",
     ],
