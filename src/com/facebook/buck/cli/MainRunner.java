@@ -150,6 +150,7 @@ import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.build.report.BuildReportUpload;
 import com.facebook.buck.support.cli.args.BuckArgsMethods;
+import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.support.exceptions.handler.ExceptionHandlerRegistryFactory;
 import com.facebook.buck.support.log.LogBuckConfig;
@@ -594,6 +595,11 @@ public final class MainRunner {
     ImmutableList<String> args =
         BuckArgsMethods.expandAtFiles(unexpandedCommandLineArgs, rootCellMapping);
 
+    // Filter out things like --command-args-file from the arguments lists that we log
+    ImmutableList<String> filteredUnexpandedArgsForLogging =
+        filterArgsForLogging(unexpandedCommandLineArgs);
+    ImmutableList<String> filteredArgsForLogging = filterArgsForLogging(args);
+
     // Parse command line arguments
     BuckCommand command = new BuckCommand();
     command.setPluginManager(pluginManager);
@@ -637,7 +643,7 @@ public final class MainRunner {
 
       // statically configure Buck logging environment based on Buck config, usually buck-x.log
       // files
-      setupLogging(command, args);
+      setupLogging(command, filteredArgsForLogging);
 
       ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
       UnconfiguredBuildTargetViewFactory buildTargetFactory =
@@ -912,8 +918,8 @@ public final class MainRunner {
               superConsoleConfig.isEnabled(console.getAnsi(), console.getVerbosity()),
               context.isPresent(),
               command.getSubCommandNameForLogging(),
-              args,
-              unexpandedCommandLineArgs,
+              filteredArgsForLogging,
+              filteredUnexpandedArgsForLogging,
               filesystem.getBuckPaths().getLogDir(),
               isRemoteExecutionBuild);
 
@@ -1270,7 +1276,9 @@ public final class MainRunner {
           NetworkInfo.generateActiveNetworkAsync(diskIoExecutorService.get(), buildEventBus);
 
           ImmutableList<String> remainingArgs =
-              args.isEmpty() ? ImmutableList.of() : args.subList(1, args.size());
+              filteredArgsForLogging.isEmpty()
+                  ? ImmutableList.of()
+                  : filteredArgsForLogging.subList(1, filteredArgsForLogging.size());
 
           CommandEvent.Started startedEvent =
               CommandEvent.started(
@@ -1433,6 +1441,28 @@ public final class MainRunner {
       }
     }
     return exitCode;
+  }
+
+  /**
+   * Filters out command line arguments that are provided by the python wrapper.
+   *
+   * <p>These arguments are generally not useful to users, and we do not want them showing up in
+   * logging, as they are not provided by users and their values are not really actionable.
+   */
+  private ImmutableList<String> filterArgsForLogging(ImmutableList<String> args) {
+    ImmutableList.Builder<String> builder = ImmutableList.builderWithExpectedSize(args.size());
+    for (int i = 0; i < args.size(); i++) {
+      String arg = args.get(i);
+      if (arg.equals(GlobalCliOptions.COMMAND_ARGS_FILE_LONG_ARG)
+          || arg.equals(GlobalCliOptions.FIX_SPEC_FILE_LONG_ARG)) {
+        // Skip --command-args-file and its argument. These are added by the python wrapper
+        // and aren't useful to users.
+        i++;
+        continue;
+      }
+      builder.add(arg);
+    }
+    return builder.build();
   }
 
   private Supplier<TargetConfiguration> createTargetConfigurationSupplier(

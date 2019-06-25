@@ -14,7 +14,6 @@
 
 from __future__ import print_function
 
-import contextlib
 import errno
 import json
 import os

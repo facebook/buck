@@ -45,7 +45,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.Option;
@@ -60,14 +59,6 @@ public final class RunCommand extends AbstractCommand {
    * </pre>
    */
   @Argument private List<String> noDashArguments = new ArrayList<>();
-
-  @Nullable
-  @Option(
-      name = "--command-args-file",
-      usage =
-          "Serialize the command, args, and environment for running the target to this file, for consumption by the python wrapper.",
-      hidden = true)
-  private String commandArgsFile;
 
   @Option(name = "--", handler = ConsumeAllOptionsHandler.class)
   private List<String> withDashArguments = new ArrayList<>();

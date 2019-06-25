@@ -112,9 +112,9 @@ public class MainIntegrationTest {
         "  verify-caches  Verify contents of internal Buck in-memory caches.",
         "",
         "Options:",
-        " --flagfile FILE : File to read command line arguments from.",
-        " --help (-h)     : Shows this screen and exits.",
-        " --version (-V)  : Show version number.",
+        " --flagfile FILE         : File to read command line arguments from.",
+        " --help (-h)             : Shows this screen and exits.",
+        " --version (-V)          : Show version number.",
         "",
         "");
   }

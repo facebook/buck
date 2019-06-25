@@ -14,6 +14,7 @@
 
 from __future__ import print_function
 
+import contextlib
 import errno
 import glob
 import json
@@ -29,6 +30,7 @@ import textwrap
 import time
 import traceback
 import uuid
+from collections import namedtuple
 from subprocess import CalledProcessError, check_output
 
 from ng import NailgunConnection, NailgunException
@@ -42,6 +44,10 @@ BUCKD_STARTUP_TIMEOUT_MILLIS = 10000
 GC_MAX_PAUSE_TARGET = 15000
 
 JAVA_MAX_HEAP_SIZE_MB = 1000
+
+# Files that are used to invoke programs after running buck. Used for buck run, and
+# to automatically invoke buck fix scripts
+PostRunFiles = namedtuple("PostRunFiles", ["command_args_file", "fix_spec_file"])
 
 
 class MovableTemporaryFile(object):
@@ -384,13 +390,31 @@ class BuckTool(object):
         except ValueError:
             return args
 
-    def _add_args(self, argv, args):
+    def _handle_buck_fix_args(self, argv, post_run_files):
+        additional_args = [
+            "--command-args-file",
+            post_run_files.command_args_file,
+            "--fix-spec-file",
+            post_run_files.fix_spec_file,
+        ]
+        insert_idx = 1
+        # Cover the case where someone runs `buck --isolation_prefix foo`, which would
+        # make the first arg `--config`, not a subcommand
+        if len(argv) and argv[0].startswith("--"):
+            insert_idx = 0
+
+        ret = argv[:insert_idx] + additional_args + argv[insert_idx:]
+        return ret
+
+    def _add_args(self, argv, args, post_run_files):
         """
         Add new arguments to the end of arguments string
         But before optional arguments to test runner ("--")
         """
         if len(args) == 0:
-            return self._handle_isolation_args(argv)
+            return self._handle_buck_fix_args(
+                self._handle_isolation_args(argv), post_run_files
+            )
 
         try:
             pos = argv.index("--")
@@ -398,9 +422,11 @@ class BuckTool(object):
             # "--" not found, just add to the end of the list
             pos = len(argv)
 
-        return self._handle_isolation_args(argv[:pos] + args + argv[pos:])
+        argv = self._handle_buck_fix_args(
+            self._handle_isolation_args(argv[:pos] + args + argv[pos:]), post_run_files
+        )
 
-    def _add_args_from_env(self, argv):
+    def _add_args_from_env(self, argv, post_run_files):
         """
         Implicitly add command line arguments based on environmental variables. This is a bad
         practice and should be considered for infrastructure / debugging purposes only
@@ -412,9 +438,9 @@ class BuckTool(object):
         if os.environ.get("BUCK_CACHE_READONLY") == "1":
             args.append("-c")
             args.append("cache.http_mode=readonly")
-        return self._add_args(argv, args)
+        return self._add_args(argv, args, post_run_files)
 
-    def _run_with_nailgun(self, java_path, argv, env):
+    def _run_with_nailgun(self, java_path, argv, env, post_run_files):
         """
         Run the command using nailgun.  If the daemon is busy, block until it becomes free.
         """
@@ -430,7 +456,7 @@ class BuckTool(object):
                     env["BUCK_PYTHON_SPACE_INIT_TIME"] = str(now - self._init_timestamp)
                     exit_code = c.send_command(
                         "com.facebook.buck.cli.MainWithNailgun",
-                        self._add_args_from_env(argv),
+                        self._add_args_from_env(argv, post_run_files),
                         env=env,
                         cwd=self._buck_project.root,
                     )
@@ -475,7 +501,7 @@ class BuckTool(object):
 
         return exit_code
 
-    def _run_without_nailgun(self, java_path, argv, env):
+    def _run_without_nailgun(self, java_path, argv, env, post_run_files):
         """
         Run the command by directly invoking `java` (rather than by sending a command via nailgun)
         """
@@ -492,7 +518,7 @@ class BuckTool(object):
         )
         command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
         command.append("com.facebook.buck.cli.MainWithoutNailgun")
-        command.extend(self._add_args_from_env(argv))
+        command.extend(self._add_args_from_env(argv, post_run_files))
         now = int(round(time.time() * 1000))
         env["BUCK_PYTHON_SPACE_INIT_TIME"] = str(now - self._init_timestamp)
         with Tracing("buck", args={"command": command}):
@@ -529,25 +555,35 @@ class BuckTool(object):
                     )
 
             argv = argv[1:]
-            if len(argv) == 0 or argv[0] != "run":
-                return run_fn(java_path, argv, env)
-            else:
-                with tempfile.NamedTemporaryFile(dir=self._tmp_dir) as argsfile:
-                    # Splice in location of command file to run outside buckd
-                    argv = [argv[0]] + ["--command-args-file", argsfile.name] + argv[1:]
-                    exit_code = run_fn(java_path, argv, env)
-                    if exit_code != 0 or os.path.getsize(argsfile.name) == 0:
-                        # Build failed, so there's nothing to run.  Exit normally.
-                        return exit_code
-                    cmd = json.load(argsfile)
-                    path = cmd["path"].encode("utf8")
-                    argv = [arg.encode("utf8") for arg in cmd["argv"]]
-                    envp = {
-                        k.encode("utf8"): v.encode("utf8")
-                        for k, v in cmd["envp"].iteritems()
-                    }
-                    cwd = cmd["cwd"].encode("utf8")
-                    raise ExecuteTarget(path, argv, envp, cwd)
+
+            # The argsfile can go in the project tmpdir as we read it back immediately,
+            # the fix spec file needs to be somewhere else, as we cleanup the tmpdir
+            # before we run the actual fix script, and we need to make sure that the
+            # build details are not deleted before that.
+            with MovableTemporaryFile(
+                dir=self._tmp_dir
+            ) as argsfile, MovableTemporaryFile() as fix_spec_file:
+                argsfile.close()
+                fix_spec_file.close()
+                # Splice in location of command file to run outside buckd
+                post_run_files = PostRunFiles(
+                    command_args_file=argsfile.name, fix_spec_file=fix_spec_file.name
+                )
+                exit_code = run_fn(java_path, argv, env, post_run_files)
+                if exit_code != 0 or os.path.getsize(argsfile.name) == 0:
+                    # No file was requested to be run by the daemon. Exit normally.
+                    return exit_code
+
+                with open(argsfile.name, "r") as reopened_argsfile:
+                    cmd = json.load(reopened_argsfile)
+                path = cmd["path"].encode("utf8")
+                argv = [arg.encode("utf8") for arg in cmd["argv"]]
+                envp = {
+                    k.encode("utf8"): v.encode("utf8")
+                    for k, v in cmd["envp"].iteritems()
+                }
+                cwd = cmd["cwd"].encode("utf8")
+                raise ExecuteTarget(path, argv, envp, cwd)
 
     def launch_buck(self, build_id, java_path, argv):
         with Tracing("BuckTool.launch_buck"):

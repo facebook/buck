@@ -177,6 +177,20 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       forbids = {GlobalCliOptions.CONFIG_LONG_ARG, GlobalCliOptions.CONFIG_FILE_LONG_ARG})
   private boolean reuseCurrentConfig = false;
 
+  @Nullable
+  @Option(
+      name = GlobalCliOptions.COMMAND_ARGS_FILE_LONG_ARG,
+      usage = GlobalCliOptions.COMMAND_ARGS_FILE_HELP,
+      hidden = true)
+  protected String commandArgsFile;
+
+  @Nullable
+  @Option(
+      name = GlobalCliOptions.FIX_SPEC_FILE_LONG_ARG,
+      usage = GlobalCliOptions.FIX_SPEC_FILE_HELP,
+      hidden = true)
+  protected String fixSpecFile;
+
   /** @return {code true} if the {@code [cache]} in {@code .buckconfig} should be ignored. */
   public boolean isNoCache() {
     return noCache;

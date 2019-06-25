@@ -22,6 +22,7 @@ import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.parser.ParsingContext;
+import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.google.common.base.Strings;
@@ -34,6 +35,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
+import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommands;
@@ -53,6 +55,20 @@ public abstract class AbstractContainerCommand extends CommandWithPluginManager 
       usage = "File to read command line arguments from.")
   @SuppressWarnings("PMD.UnusedPrivateField")
   private String[] files;
+
+  @Nullable
+  @Option(
+      name = GlobalCliOptions.COMMAND_ARGS_FILE_LONG_ARG,
+      usage = GlobalCliOptions.COMMAND_ARGS_FILE_HELP,
+      hidden = true)
+  protected String commandArgsFile;
+
+  @Nullable
+  @Option(
+      name = GlobalCliOptions.FIX_SPEC_FILE_LONG_ARG,
+      usage = GlobalCliOptions.FIX_SPEC_FILE_HELP,
+      hidden = true)
+  protected String fixSpecFile;
 
   protected String getSubcommandsFieldName() {
     return "subcommand";
