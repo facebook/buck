@@ -276,4 +276,208 @@ public class FixEndToEndTest {
     assertThat(result.getStderr(), Matchers.containsString("manually_invoked: True"));
     assertThat(result.getStderr(), Matchers.containsString("user entered foobar"));
   }
+
+  @Test
+  public void doesNotRunFixScriptAutomaticallyByDefault(
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace) throws Exception {
+    workspace.addBuckConfigLocalOptions(
+        ImmutableMap.of(
+            "fix",
+            ImmutableMap.of(
+                "fix_script",
+                fixPyCommand(),
+                "fix_script_contact",
+                "buck@example.com",
+                "fix_script_message",
+                "Running {command}; contact {contact}")));
+    ProcessResult result = buckCommand(workspace, test, "build", "//:foo");
+
+    result.assertExitCode(ExitCode.PARSE_ERROR);
+    assertThat(
+        result.getStderr(),
+        Matchers.not(
+            Matchers.containsString(
+                "Running `buck fix`. Invoke this manually with `buck fix --build-id ")));
+  }
+
+  @Test
+  public void shouldNotRunScriptAutomaticallyOnCommandFailureIfNotEnabled(
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace) throws Exception {
+
+    workspace.addBuckConfigLocalOptions(
+        ImmutableMap.of(
+            "fix",
+            ImmutableMap.of(
+                "fix_script",
+                fixPyCommand(),
+                "fix_script_contact",
+                "buck@example.com",
+                "fix_script_message",
+                "Running {command}; contact {contact}",
+                "autofix_enabled",
+                "NEVER",
+                "autofix_commands",
+                "build")));
+
+    ProcessResult result = buckCommand(workspace, test, "build", "//:foo");
+
+    result.assertExitCode(ExitCode.PARSE_ERROR);
+    assertThat(
+        result.getStderr(),
+        Matchers.not(
+            Matchers.containsString(
+                "Running `buck fix`. Invoke this manually with `buck fix --build-id ")));
+  }
+
+  @Test
+  public void shouldNotRunScriptAutomaticallyOnCommandFailureIfNotEnabledForCommand(
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace) throws Exception {
+
+    workspace.addBuckConfigLocalOptions(
+        ImmutableMap.of(
+            "fix",
+            ImmutableMap.of(
+                "fix_script",
+                fixPyCommand(),
+                "fix_script_contact",
+                "buck@example.com",
+                "fix_script_message",
+                "Running {command}; contact {contact}",
+                "autofix_enabled",
+                "ALWAYS",
+                "autofix_commands",
+                "test")));
+    ProcessResult result = buckCommand(workspace, test, "build", "//:foo");
+
+    result.assertExitCode(ExitCode.PARSE_ERROR);
+    assertThat(
+        result.getStderr(),
+        Matchers.not(
+            Matchers.containsString(
+                "Running `buck fix`. Invoke this manually with `buck fix --build-id ")));
+  }
+
+  @Test
+  public void shouldPrintErrorWhenRunAutomaticallyIfFixIsMisconfigured(
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace) throws Exception {
+
+    workspace.addBuckConfigLocalOptions(
+        ImmutableMap.of(
+            "fix",
+            ImmutableMap.of(
+                "fix_script",
+                fixPyCommand(),
+                "fix_script_message",
+                "Running {command}; contact {contact}",
+                "autofix_enabled",
+                "ALWAYS",
+                "autofix_commands",
+                "build")));
+    ProcessResult result = buckCommand(workspace, test, "build", "//:foo");
+
+    result.assertExitCode(ExitCode.PARSE_ERROR);
+    assertThat(
+        result.getStderr(),
+        Matchers.containsString(
+            "Error running auto-fix: `buck fix` requires a contact for any configured scripts"));
+  }
+
+  @Test
+  public void shouldRunScriptAutomaticallyOnCommandFailureIfEnabledForCommandAndTty(
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace) throws Exception {
+
+    workspace.addBuckConfigLocalOptions(
+        ImmutableMap.of(
+            "fix",
+            ImmutableMap.of(
+                "fix_script",
+                fixPyCommand(),
+                "fix_script_contact",
+                "buck@example.com",
+                "fix_script_message",
+                "Running {command}; contact {contact}",
+                "autofix_enabled",
+                "INTERACTIVE",
+                "autofix_commands",
+                "build"),
+            "color",
+            ImmutableMap.of("ui", "always")));
+
+    ProcessResult result = buckCommand(workspace, test, "build", "//:foo");
+
+    result.assertExitCode(ExitCode.PARSE_ERROR);
+    assertThat(
+        result.getStderr(),
+        Matchers.containsString(
+            "Running `buck fix`. Invoke this manually with `buck fix --build-id "));
+    assertThat(result.getStderr(), Matchers.containsString("command: build"));
+    assertThat(result.getStderr(), Matchers.containsString("exit_code: 5"));
+    assertThat(result.getStderr(), Matchers.matchesPattern(JASABI_REGEX));
+    assertThat(result.getStderr(), Matchers.containsString("manually_invoked: False"));
+  }
+
+  @Test
+  public void shouldRunScriptAutomaticallyOnCommandFailureIfEnabledForCommand(
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace) throws Exception {
+
+    workspace.addBuckConfigLocalOptions(
+        ImmutableMap.of(
+            "fix",
+            ImmutableMap.of(
+                "fix_script",
+                fixPyCommand(),
+                "fix_script_contact",
+                "buck@example.com",
+                "fix_script_message",
+                "Running {command}; contact {contact}",
+                "autofix_enabled",
+                "ALWAYS",
+                "autofix_commands",
+                "build")));
+    ProcessResult result = buckCommand(workspace, test, "build", "//:foo");
+
+    result.assertExitCode(ExitCode.PARSE_ERROR);
+    assertThat(
+        result.getStderr(),
+        Matchers.containsString(
+            "Running `buck fix`. Invoke this manually with `buck fix --build-id "));
+    assertThat(result.getStderr(), Matchers.containsString("command: build"));
+    assertThat(result.getStderr(), Matchers.containsString("exit_code: 5"));
+    assertThat(result.getStderr(), Matchers.matchesPattern(JASABI_REGEX));
+    assertThat(result.getStderr(), Matchers.containsString("manually_invoked: False"));
+  }
+
+  @Test
+  public void shouldAutomaticallyRunInteractivelyAfterCommandFails(
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace) throws Exception {
+    workspace.addBuckConfigLocalOptions(
+        ImmutableMap.of(
+            "fix",
+            ImmutableMap.of(
+                "fix_script",
+                fixPyCommand() + " --wait",
+                "fix_script_contact",
+                "buck@example.com",
+                "fix_script_message",
+                "Running {command}; contact {contact}",
+                "autofix_enabled",
+                "ALWAYS",
+                "autofix_commands",
+                "build,test")));
+    ProcessResult result =
+        workspace.runBuckCommand(
+            false,
+            ImmutableMap.copyOf(test.getVariableMap()),
+            Optional.of("foobar"),
+            test.getTemplateSet(),
+            "build",
+            "//:foo");
+
+    result.assertExitCode(ExitCode.PARSE_ERROR);
+    assertThat(result.getStderr(), Matchers.containsString("command: build"));
+    assertThat(result.getStderr(), Matchers.containsString("exit_code: 5"));
+    assertThat(result.getStderr(), Matchers.matchesPattern(JASABI_REGEX));
+    assertThat(result.getStderr(), Matchers.containsString("manually_invoked: False"));
+    assertThat(result.getStderr(), Matchers.containsString("user entered foobar"));
+  }
 }

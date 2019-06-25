@@ -154,6 +154,7 @@ import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.support.cli.config.BuckConfigWriter;
 import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.support.exceptions.handler.ExceptionHandlerRegistryFactory;
+import com.facebook.buck.support.fix.FixBuckConfig;
 import com.facebook.buck.support.log.LogBuckConfig;
 import com.facebook.buck.support.state.BuckGlobalState;
 import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager;
@@ -1413,6 +1414,11 @@ public final class MainRunner {
                     parserAndCaches.getVersionedTargetGraphCache().getCacheStats()));
           }
         } finally {
+          if (exitCode != ExitCode.SUCCESS) {
+            handleAutoFix(
+                filesystem, console, clientEnvironment, command, buckConfig, buildId, exitCode);
+          }
+
           // signal nailgun that we are not interested in client disconnect events anymore
           context.ifPresent(c -> c.removeAllClientListeners());
 
@@ -1501,6 +1507,46 @@ public final class MainRunner {
       }
     }
     return false;
+  }
+
+  private void handleAutoFix(
+      ProjectFilesystem filesystem,
+      Console console,
+      ImmutableMap<String, String> environment,
+      BuckCommand command,
+      BuckConfig buckConfig,
+      BuildId buildId,
+      ExitCode exitCode) {
+    if (!(command.subcommand instanceof AbstractCommand)) {
+      return;
+    }
+    AbstractCommand subcommand = (AbstractCommand) command.subcommand;
+    FixBuckConfig config = buckConfig.getView(FixBuckConfig.class);
+
+    if (!config.shouldRunAutofix(
+        console.getAnsi().isAnsiTerminal(), command.getDeclaredSubCommandName())) {
+      LOG.info("Auto fixing is not enabled for command %s", command.getDeclaredSubCommandName());
+      return;
+    }
+
+    // Only log here so that we still return with the correct top level exit code
+    try {
+      FixCommandHandler fixCommandHandler =
+          new FixCommandHandler(
+              filesystem,
+              console,
+              environment,
+              config,
+              subcommand.getCommandArgsFile(),
+              subcommand.getFixSpecFile());
+
+      fixCommandHandler.runWithBuildIdWithExitCode(buildId, exitCode, false);
+    } catch (IOException e) {
+      console.printErrorText(
+          "Failed to write fix script information to %s", subcommand.getCommandArgsFile());
+    } catch (FixCommandHandler.FixCommandHandlerException e) {
+      console.printErrorText("Error running auto-fix: %s", e.getMessage());
+    }
   }
 
   private void warnAboutConfigFileOverrides(Path root, CliConfig cliConfig) throws IOException {

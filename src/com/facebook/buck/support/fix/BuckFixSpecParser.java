@@ -23,6 +23,7 @@ import com.facebook.buck.util.types.Either;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 /**
  * Creates a BuckFixSpec to pass to helper scripts from matching {@link
@@ -69,7 +70,7 @@ public class BuckFixSpecParser {
       BuildLogHelper helper, FixBuckConfig fixConfig, boolean manuallyInvoked) throws IOException {
     Optional<BuildLogEntry> entry = helper.getBuildLogs().stream().findFirst();
     return entry
-        .map(e -> specFromBuildLogEntry(fixConfig, e, manuallyInvoked))
+        .map(e -> specFromBuildLogEntry(fixConfig, e, OptionalInt.empty(), manuallyInvoked))
         .orElse(Either.ofRight(FixSpecFailure.MISSING));
   }
 
@@ -98,17 +99,62 @@ public class BuckFixSpecParser {
             .filter(e -> e.getBuildId().map(id -> id.equals(buildId)).orElse(false))
             .findFirst();
     return entry
-        .map(e -> specFromBuildLogEntry(fixConfig, e, manuallyInvoked))
+        .map(e -> specFromBuildLogEntry(fixConfig, e, OptionalInt.empty(), manuallyInvoked))
+        .orElse(Either.ofRight(FixSpecFailure.MISSING));
+  }
+
+  /**
+   * Tries to construct a {@link com.facebook.buck.support.fix.BuckFixSpec} from a specific
+   * invocation of buck
+   *
+   * <p>A spec will not be returned if the log could not be found, or if required fields were not
+   * able to be found in the logs (e.g. if command args are missing, a useful spec will not be able
+   * to be constructed)
+   *
+   * <p>Exit code is passed in, as there may not be enough information in the log yet (if this is
+   * called before the command has terminated) to otherwise construct a valid spec
+   *
+   * @param helper The helper used to find all build logs
+   * @param fixConfig The configuration for this invocation of fix
+   * @param buildId The build id to look for
+   * @param exitCode The exit code for the command
+   * @param manuallyInvoked Whether or not this spec will be used in a command that was manually
+   *     invoked
+   * @return A {@link com.facebook.buck.support.fix.BuckFixSpec} constructed from the build logs
+   * @throws IOException There was a problem reading the logs on disk
+   */
+  public static Either<BuckFixSpec, FixSpecFailure> parseFromBuildIdWithExitCode(
+      BuildLogHelper helper,
+      FixBuckConfig fixConfig,
+      BuildId buildId,
+      ExitCode exitCode,
+      boolean manuallyInvoked)
+      throws IOException {
+
+    Optional<BuildLogEntry> entry =
+        helper.getBuildLogs().stream()
+            .filter(e -> e.getBuildId().map(id -> id.equals(buildId)).orElse(false))
+            .findFirst();
+    return entry
+        .map(
+            e ->
+                specFromBuildLogEntry(
+                    fixConfig, e, OptionalInt.of(exitCode.getCode()), manuallyInvoked))
         .orElse(Either.ofRight(FixSpecFailure.MISSING));
   }
 
   private static Either<BuckFixSpec, FixSpecFailure> specFromBuildLogEntry(
-      FixBuckConfig fixConfig, BuildLogEntry buildLogEntry, boolean manuallyInvoked) {
+      FixBuckConfig fixConfig,
+      BuildLogEntry buildLogEntry,
+      OptionalInt exitCodeOverride,
+      boolean manuallyInvoked) {
     if (!buildLogEntry.getBuildId().isPresent()) {
       return Either.ofRight(FixSpecFailure.MISSING_BUILD_ID);
     }
 
-    if (!buildLogEntry.getExitCode().isPresent()) {
+    OptionalInt maybeExitCode =
+        exitCodeOverride.isPresent() ? exitCodeOverride : buildLogEntry.getExitCode();
+    if (!maybeExitCode.isPresent()) {
       return Either.ofRight(FixSpecFailure.MISSING_EXIT_CODE);
     }
 
@@ -123,7 +169,7 @@ public class BuckFixSpecParser {
     }
 
     BuildId buildId = buildLogEntry.getBuildId().get();
-    int exitCode = buildLogEntry.getExitCode().orElse(ExitCode.FATAL_GENERIC.getCode());
+    int exitCode = maybeExitCode.getAsInt();
     List<String> commandArgs = buildLogEntry.getCommandArgs().get();
     List<String> expandedCommandArgs = buildLogEntry.getExpandedCommandArgs().get();
 

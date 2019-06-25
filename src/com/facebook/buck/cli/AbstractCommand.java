@@ -200,6 +200,16 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     return reuseCurrentConfig;
   }
 
+  @Nullable
+  public String getCommandArgsFile() {
+    return commandArgsFile;
+  }
+
+  @Nullable
+  public String getFixSpecFile() {
+    return fixSpecFile;
+  }
+
   public Optional<Path> getEventsOutputPath() {
     if (eventsOutputPath == null) {
       return Optional.empty();

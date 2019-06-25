@@ -25,6 +25,7 @@ import com.facebook.buck.support.fix.BuckRunSpec;
 import com.facebook.buck.support.fix.FixBuckConfig;
 import com.facebook.buck.support.fix.ImmutableBuckRunSpec;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
@@ -99,9 +100,27 @@ public class FixCommandHandler {
     }
   }
 
+  /**
+   * Print the user-configured message that should be printed whenever `buck fix` is run.
+   *
+   * <p>This is often something like "Now running {command}. Contact {contact} with any problems"
+   */
   private void printFixScriptMessage(Console console, ImmutableList<String> fixScript) {
     String message =
         fixConfig.getInterpolatedFixScriptMessage(fixScript, fixConfig.getFixScriptContact().get());
+    console.getStdErr().getRawStream().println(console.getAnsi().asWarningText(message));
+  }
+
+  /**
+   * Print instructions telling users how to manually invoke buck fix with the correct build id
+   *
+   * <p>This is only printed when buck fix is run automatically. Otherwise users are already running
+   * `buck fix` and should know how to run `buck fix`.
+   */
+  private void printManualInvocationInstructions(Console console, BuildId buildId) {
+    String message =
+        String.format(
+            "Running `buck fix`. Invoke this manually with `buck fix --build-id %s`", buildId);
     console.getStdErr().getRawStream().println(console.getAnsi().asWarningText(message));
   }
 
@@ -110,6 +129,20 @@ public class FixCommandHandler {
     BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
     Either<BuckFixSpec, BuckFixSpecParser.FixSpecFailure> fixSpec =
         BuckFixSpecParser.parseFromBuildId(buildLogHelper, fixConfig, buildId, manuallyInvoked);
+    if (fixSpec.isRight()) {
+      throw new FixCommandHandlerException(
+          "Error fetching logs for build %s: %s", buildId, fixSpec.getRight().humanReadableError());
+    }
+
+    run(fixSpec.getLeft());
+  }
+
+  void runWithBuildIdWithExitCode(BuildId buildId, ExitCode exitCode, boolean manuallyInvoked)
+      throws FixCommandHandlerException, IOException {
+    BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
+    Either<BuckFixSpec, BuckFixSpecParser.FixSpecFailure> fixSpec =
+        BuckFixSpecParser.parseFromBuildIdWithExitCode(
+            buildLogHelper, fixConfig, buildId, exitCode, manuallyInvoked);
     if (fixSpec.isRight()) {
       throw new FixCommandHandlerException(
           "Error fetching logs for build %s: %s", buildId, fixSpec.getRight().humanReadableError());
@@ -143,6 +176,12 @@ public class FixCommandHandler {
         fixConfig.getInterpolatedFixScript(fixConfig.getFixScript().get(), repositoryRoot, fixPath);
 
     BuckRunSpec runSpec = new ImmutableBuckRunSpec(fixScript, environment, repositoryRoot, true);
+
+    // If the fix command was invoked automatically, make sure to tell users how they can
+    // run buck fix on this specific build id manually with the `buck fix` command
+    if (!fixSpec.getManuallyInvoked()) {
+      printManualInvocationInstructions(console, fixSpec.getBuildId());
+    }
 
     if (fixConfig.shouldPrintFixScriptMessage()) {
       printFixScriptMessage(console, fixScript);
