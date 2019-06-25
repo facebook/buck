@@ -87,6 +87,12 @@ public abstract class AbstractFixBuckConfig implements ConfigView<BuckConfig> {
     return !getFixScriptMessage().isEmpty();
   }
 
+  /** Determine whether to use the legacy script, or the new fix script system */
+  @Value.Lazy
+  public boolean shouldUseLegacyFixScript() {
+    return !getFixScript().isPresent();
+  }
+
   /**
    * Gets the full script to invoke in `buck fix`.
    *

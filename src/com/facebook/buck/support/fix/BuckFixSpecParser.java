@@ -65,7 +65,7 @@ public class BuckFixSpecParser {
    *     found or constructed
    * @throws IOException There was a problem reading the logs on disk
    */
-  static Either<BuckFixSpec, FixSpecFailure> parseLastCommand(
+  public static Either<BuckFixSpec, FixSpecFailure> parseLastCommand(
       BuildLogHelper helper, FixBuckConfig fixConfig, boolean manuallyInvoked) throws IOException {
     Optional<BuildLogEntry> entry = helper.getBuildLogs().stream().findFirst();
     return entry
@@ -89,7 +89,7 @@ public class BuckFixSpecParser {
    *     found or constructed
    * @throws IOException There was a problem reading the logs on disk
    */
-  static Either<BuckFixSpec, FixSpecFailure> parseFromBuildId(
+  public static Either<BuckFixSpec, FixSpecFailure> parseFromBuildId(
       BuildLogHelper helper, FixBuckConfig fixConfig, BuildId buildId, boolean manuallyInvoked)
       throws IOException {
 
