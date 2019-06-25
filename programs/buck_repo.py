@@ -24,11 +24,12 @@ from buck_tool import BuckTool, platform_path
 from subprocutils import which
 from tracing import Tracing
 
+
 # If you're looking for JAVA_CLASSPATHS, they're now defined in the programs/classpaths file.
 
 RESOURCES = {
     "android_agent_path": "assets/android/agent.apk",
-    "fix_script": "programs/fixes/source_only_abi/autofix_source_only_abi_warnings.py",
+    "legacy_fix_script": "programs/fixes/source_only_abi/autofix_source_only_abi_warnings.py",
     "buck_server": "bin/buck",
     "buck_build_type_info": "config/build_type/LOCAL_ANT/type.txt",
     "dx": "third-party/java/dx/etc/dx",

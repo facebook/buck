@@ -16,12 +16,13 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.support.fix.FixBuckConfig;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.google.common.collect.ImmutableList;
 import java.util.EnumSet;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -34,13 +35,19 @@ public class FixCommand extends AbstractCommand {
 
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
-    String scriptPath = System.getProperty("buck.fix_script");
+    Optional<ImmutableList<String>> scriptPath =
+        params.getBuckConfig().getView(FixBuckConfig.class).getLegacyFixScript();
+
+    if (!scriptPath.isPresent()) {
+      throw new IllegalStateException(
+          "`buck fix` requires the buck.legacy_fix_script java system property to be set by the wrapper script");
+    }
 
     ProcessExecutor processExecutor =
         new DefaultProcessExecutor(getExecutionContext().getConsole());
     ProcessExecutorParams processParams =
         ProcessExecutorParams.builder()
-            .addCommand(Objects.requireNonNull(scriptPath))
+            .addAllCommand(scriptPath.get())
             .setEnvironment(params.getEnvironment())
             .setDirectory(params.getCell().getFilesystem().getRootPath())
             .build();

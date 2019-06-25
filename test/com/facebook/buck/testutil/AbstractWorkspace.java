@@ -404,7 +404,7 @@ public abstract class AbstractWorkspace {
     while (!contentQueue.isEmpty()) {
       Path contentPath = contentQueue.remove();
       if (Files.isDirectory(contentPath)) {
-        Files.createDirectory(destPath.resolve(templatePath.relativize(contentPath).toString()));
+        Files.createDirectories(destPath.resolve(templatePath.relativize(contentPath).toString()));
         addDirectoryContentToQueue(provider, contentPath, contentQueue);
       } else {
         copyTemplateContentsToDestPath(provider, templatePath, contentPath);
