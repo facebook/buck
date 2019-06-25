@@ -32,7 +32,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.watchman.WatchmanWatcher.CursorType;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -53,46 +52,29 @@ public class ParserConfigTest {
 
   @Test
   public void testGetAllowEmptyGlobs() throws IOException {
-    assertTrue(FakeBuckConfig.builder().build().getView(ParserConfig.class).getAllowEmptyGlobs());
-    Reader reader = new StringReader(Joiner.on('\n').join("[build]", "allow_empty_globs = false"));
-    ParserConfig config =
-        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
-            .getView(ParserConfig.class);
+    assertTrue(getDefaultConfig().getAllowEmptyGlobs());
+    ParserConfig config = parseConfig("[build]\nallow_empty_globs = false");
     assertFalse(config.getAllowEmptyGlobs());
   }
 
   @Test
   public void testGetGlobHandler() throws IOException {
-    assertThat(
-        FakeBuckConfig.builder().build().getView(ParserConfig.class).getGlobHandler(),
-        equalTo(ParserConfig.GlobHandler.PYTHON));
+    assertThat(getDefaultConfig().getGlobHandler(), equalTo(ParserConfig.GlobHandler.PYTHON));
 
     for (ParserConfig.GlobHandler handler : ParserConfig.GlobHandler.values()) {
-      Reader reader =
-          new StringReader(Joiner.on('\n').join("[project]", "glob_handler = " + handler));
-      ParserConfig config =
-          BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
-              .getView(ParserConfig.class);
+      ParserConfig config = parseConfig("[project]\nglob_handler = " + handler);
       assertThat(config.getGlobHandler(), equalTo(handler));
     }
   }
 
   @Test
   public void testGetWatchCells() throws IOException {
-    assertTrue(
-        "watch_cells defaults to true",
-        FakeBuckConfig.builder().build().getView(ParserConfig.class).getWatchCells());
+    assertTrue("watch_cells defaults to true", getDefaultConfig().getWatchCells());
 
-    Reader reader = new StringReader(Joiner.on('\n').join("[project]", "watch_cells = false"));
-    ParserConfig config =
-        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
-            .getView(ParserConfig.class);
+    ParserConfig config = parseConfig("[project]\nwatch_cells = false");
     assertFalse(config.getWatchCells());
 
-    reader = new StringReader(Joiner.on('\n').join("[project]", "watch_cells = true"));
-    config =
-        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
-            .getView(ParserConfig.class);
+    config = parseConfig("[project]\nwatch_cells = true");
     assertTrue(config.getWatchCells());
   }
 
@@ -101,25 +83,15 @@ public class ParserConfigTest {
     assertEquals(
         "watchman_cursor defaults to clock_id",
         CursorType.CLOCK_ID,
-        FakeBuckConfig.builder().build().getView(ParserConfig.class).getWatchmanCursor());
+        getDefaultConfig().getWatchmanCursor());
 
-    Reader reader = new StringReader(Joiner.on('\n').join("[project]", "watchman_cursor = named"));
-    ParserConfig config =
-        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
-            .getView(ParserConfig.class);
+    ParserConfig config = parseConfig("[project]\nwatchman_cursor = named");
     assertEquals(CursorType.NAMED, config.getWatchmanCursor());
 
-    reader = new StringReader(Joiner.on('\n').join("[project]", "watchman_cursor = clock_id"));
-    config =
-        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
-            .getView(ParserConfig.class);
+    config = parseConfig("[project]\nwatchman_cursor = clock_id");
     assertEquals(CursorType.CLOCK_ID, config.getWatchmanCursor());
 
-    reader =
-        new StringReader(Joiner.on('\n').join("[project]", "watchman_cursor = some_trash_value"));
-    config =
-        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
-            .getView(ParserConfig.class);
+    config = parseConfig("[project]\nwatchman_cursor = some_trash_value");
 
     thrown.expect(HumanReadableException.class);
     config.getWatchmanCursor();
@@ -184,25 +156,15 @@ public class ParserConfigTest {
 
   @Test
   public void testGetBuildFileImportWhitelist() throws IOException {
-    assertTrue(
-        FakeBuckConfig.builder()
-            .build()
-            .getView(ParserConfig.class)
-            .getBuildFileImportWhitelist()
-            .isEmpty());
+    assertTrue(getDefaultConfig().getBuildFileImportWhitelist().isEmpty());
 
-    Reader reader =
-        new StringReader(
-            Joiner.on('\n').join("[project]", "build_file_import_whitelist = os, foo"));
-    ParserConfig config =
-        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
-            .getView(ParserConfig.class);
+    ParserConfig config = parseConfig("[project]\nbuild_file_import_whitelist = os, foo");
     assertEquals(ImmutableList.of("os", "foo"), config.getBuildFileImportWhitelist());
   }
 
   @Test
   public void whenParserPythonPathIsNotSetDefaultIsUsed() {
-    ParserConfig parserConfig = FakeBuckConfig.builder().build().getView(ParserConfig.class);
+    ParserConfig parserConfig = getDefaultConfig();
     assertEquals(
         "Should return an empty optional",
         "<not set>",
@@ -245,5 +207,15 @@ public class ParserConfigTest {
             ImplicitInclude.fromConfigurationString("//foo/bar:includes.bzl::get_name::get_value"));
 
     assertEquals(expected, actual);
+  }
+
+  private ParserConfig getDefaultConfig() {
+    return FakeBuckConfig.builder().build().getView(ParserConfig.class);
+  }
+
+  private ParserConfig parseConfig(String configString) throws IOException {
+    Reader reader = new StringReader(configString);
+    return BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
+        .getView(ParserConfig.class);
   }
 }
