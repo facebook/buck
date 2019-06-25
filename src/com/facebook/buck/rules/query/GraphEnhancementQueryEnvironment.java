@@ -29,6 +29,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.jvm.core.HasClasspathDeps;
 import com.facebook.buck.query.AttrFilterFunction;
+import com.facebook.buck.query.AttrRegexFilterFunction;
 import com.facebook.buck.query.DepsFunction;
 import com.facebook.buck.query.FilterFunction;
 import com.facebook.buck.query.InputsFunction;
@@ -251,6 +252,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
       QUERY_FUNCTIONS =
           ImmutableList.of(
               new AttrFilterFunction(),
+              new AttrRegexFilterFunction(),
               new ClasspathFunction(),
               new DepsFunction<>(),
               new DepsFunction.FirstOrderDepsFunction<>(),

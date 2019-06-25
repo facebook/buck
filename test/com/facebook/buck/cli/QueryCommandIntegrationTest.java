@@ -948,6 +948,28 @@ public class QueryCommandIntegrationTest {
   }
 
   @Test
+  public void testRegexFilterAttrTests() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand("query", "attrregexfilter(tests, '.*-tests', '//example/...')");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                "//example/app:seven\n//example:four\n//example:one\n//example:six\n")));
+
+    result =
+        workspace.runBuckCommand(
+            "query", "attrregexfilter(tests, '(three|four)-tests', '//example/...')");
+    result.assertSuccess();
+    assertThat(result.getStdout(), is(equalToIgnoringPlatformNewlines("//example:four\n")));
+  }
+
+  @Test
   public void testBuildFileFunction() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
