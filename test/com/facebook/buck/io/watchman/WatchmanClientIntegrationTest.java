@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.watchman;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -63,12 +64,15 @@ public class WatchmanClientIntegrationTest {
   private ListeningProcessExecutor.LaunchedProcess watchmanProcess;
 
   private void startWatchman() throws IOException, InterruptedException {
-    Optional<Path> watchmanExe =
-        new ExecutableFinder()
-            .getOptionalExecutable(WatchmanFactory.WATCHMAN, EnvVariablesProvider.getSystemEnv());
-
-    if (!isSupportedPlatform() || !watchmanExe.isPresent()) {
-      return;
+    Path watchmanExe;
+    try {
+      watchmanExe =
+          new ExecutableFinder()
+              .getExecutable(WatchmanFactory.WATCHMAN, EnvVariablesProvider.getSystemEnv());
+    } catch (HumanReadableException e) {
+      WatchmanNotFoundException exception = new WatchmanNotFoundException();
+      exception.initCause(e);
+      throw exception;
     }
 
     Path watchmanCfgFile = watchmanBaseDir.getRoot().resolve("config.json");
@@ -91,7 +95,7 @@ public class WatchmanClientIntegrationTest {
     ProcessExecutorParams params =
         ProcessExecutorParams.builder()
             .addCommand(
-                watchmanExe.get().toString(),
+                watchmanExe.toString(),
                 "--foreground",
                 "--log-level=2",
                 "--sockname=" + watchmanSockFile,
@@ -135,8 +139,12 @@ public class WatchmanClientIntegrationTest {
 
   @Before
   public void setUp() throws IOException, InterruptedException {
-    startWatchman();
-    Assume.assumeTrue(watchmanProcess != null);
+    Assume.assumeTrue("Platform should be supported", isSupportedPlatform());
+    try {
+      startWatchman();
+    } catch (WatchmanNotFoundException e) {
+      Assume.assumeNoException(e);
+    }
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "watchman", tmp);
     workspace.setUp();
   }
