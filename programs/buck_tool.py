@@ -174,6 +174,20 @@ class CommandLineArgs:
         )
 
 
+class ExitCode(object):
+    """Python equivalent of com.facebook.buck.util.ExitCode"""
+
+    SUCCESS = 0
+    COMMANDLINE_ERROR = 3
+    FATAL_GENERIC = 10
+    FATAL_BOOTSTRAP = 11
+    FATAL_IO = 13
+    FATAL_DISK_FULL = 14
+    FIX_FAILED = 16
+    SIGNAL_INTERRUPT = 130
+    SIGNAL_PIPE = 141
+
+
 class BuckToolException(Exception):
     pass
 
@@ -203,6 +217,9 @@ class ExecuteTarget(ExitCodeCallable):
         self._cwd = cwd
 
     def __call__(self):
+        if self.exit_code != ExitCode.SUCCESS:
+            return self.exit_code
+
         # Restore default handling of SIGPIPE.  See https://bugs.python.org/issue1652.
         if os.name != "nt":
             signal.signal(signal.SIGPIPE, signal.SIG_DFL)
@@ -213,6 +230,62 @@ class ExecuteTarget(ExitCodeCallable):
             child = subprocess.Popen(args, env=self._envp, cwd=self._cwd)
             child.wait()
             sys.exit(child.returncode)
+
+
+class ExecuteFixScript(ExitCodeCallable):
+    """
+    Callable that tries to execute a "fix" script, returning a different error
+    if the fix script fails
+    """
+
+    def __init__(self, exit_code, fix_spec_file, path, argv, envp, cwd):
+        super(ExecuteFixScript, self).__init__(exit_code)
+        self._fix_spec_file = fix_spec_file
+        self._path = path
+        self._argv = argv
+        self._envp = envp
+        self._cwd = cwd
+
+    @contextlib.contextmanager
+    def _disable_signal_handlers(self):
+        if os.name == "nt":
+            yield
+        else:
+            original_signal = signal.getsignal(signal.SIGINT)
+            try:
+                signal.signal(signal.SIGINT, signal.SIG_IGN)
+                yield
+            finally:
+                signal.signal(signal.SIGINT, original_signal)
+
+    def __call__(self):
+        exit_code = self.exit_code
+
+        with self._fix_spec_file:
+            extra_kwargs = {}
+            if os.name != "nt":
+                # Restore default handling of SIGPIPE.  See https://bugs.python.org/issue1652.
+                extra_kwargs["preexec_fn"] = lambda: signal.signal(
+                    signal.SIGPIPE, signal.SIG_DFL
+                )
+
+            # Do not respond to ctrl-c while this is running. Users will expect this to go
+            # to the fix script. Make sure we restore the signal handler afterward
+            # We could have done this with tcsetpgrp and the like, but it also leads to
+            # weird behavior with ctrl-z when the processes are in different pgroups
+            # (to set the foreground job) and both processes don't suspend.
+            with self._disable_signal_handlers():
+                args = [self._path]
+                args.extend(self._argv[1:])
+                proc = subprocess.Popen(
+                    args, env=self._envp, cwd=self._cwd, **extra_kwargs
+                )
+                proc.wait()
+
+            # If the script failed, return a different code to indicate that
+            if proc.returncode != ExitCode.SUCCESS:
+                exit_code = ExitCode.FIX_FAILED
+            return exit_code
 
 
 class BuckStatusReporter(object):
@@ -581,12 +654,12 @@ class BuckTool(object):
             ) as argsfile, MovableTemporaryFile() as fix_spec_file:
                 argsfile.close()
                 fix_spec_file.close()
-                # Splice in location of command file to run outside buckd
+
                 post_run_files = PostRunFiles(
                     command_args_file=argsfile.name, fix_spec_file=fix_spec_file.name
                 )
                 exit_code = run_fn(java_path, argv, env, post_run_files)
-                if exit_code != 0 or os.path.getsize(argsfile.name) == 0:
+                if os.path.getsize(argsfile.name) == 0:
                     # No file was requested to be run by the daemon. Exit normally.
                     return ExitCodeCallable(exit_code)
 
@@ -599,7 +672,12 @@ class BuckTool(object):
                     for k, v in cmd["envp"].iteritems()
                 }
                 cwd = cmd["cwd"].encode("utf8")
-                return ExecuteTarget(exit_code, path, argv, envp, cwd)
+                if cmd["is_fix_script"]:
+                    return ExecuteFixScript(
+                        exit_code, fix_spec_file.move(), path, argv, envp, cwd
+                    )
+                else:
+                    return ExecuteTarget(exit_code, path, argv, envp, cwd)
 
     def launch_buck(self, build_id, java_path, argv):
         with Tracing("BuckTool.launch_buck"):

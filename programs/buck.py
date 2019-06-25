@@ -36,25 +36,13 @@ from buck_tool import (
     BuckDaemonErrorException,
     BuckStatusReporter,
     ExecuteTarget,
+    ExitCode,
     install_signal_handlers,
 )
 from java_lookup import get_java_path
 from java_version import get_java_major_version
 from subprocutils import propagate_failure
 from tracing import Tracing
-
-
-class ExitCode(object):
-    """Python equivalent of com.facebook.buck.util.ExitCode"""
-
-    SUCCESS = 0
-    COMMANDLINE_ERROR = 3
-    FATAL_GENERIC = 10
-    FATAL_BOOTSTRAP = 11
-    FATAL_IO = 13
-    FATAL_DISK_FULL = 14
-    SIGNAL_INTERRUPT = 130
-    SIGNAL_PIPE = 141
 
 
 if sys.version_info < (2, 7):

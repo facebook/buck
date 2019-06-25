@@ -181,7 +181,8 @@ public final class RunCommand extends AbstractCommand {
                       .putAll(params.getEnvironment())
                       .putAll(executable.getEnvironment(resolver))
                       .build(),
-              "cwd", params.getCell().getFilesystem().getRootPath());
+              "cwd", params.getCell().getFilesystem().getRootPath(),
+              "is_fix_script", false);
       Files.write(Paths.get(commandArgsFile), ObjectMappers.WRITER.writeValueAsBytes(cmd));
       return ExitCode.SUCCESS;
     }
