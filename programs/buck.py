@@ -251,17 +251,17 @@ def main(argv, reporter):
 if __name__ == "__main__":
     exit_code = ExitCode.SUCCESS
     reporter = BuckStatusReporter(sys.argv)
-    fn_exec = None
+    exit_code_callable = None
     exception = None
     exc_type = None
     exc_traceback = None
     try:
         setup_logging()
-        exit_code = main(sys.argv, reporter)
-    except ExecuteTarget as e:
-        # this is raised once 'buck run' has the binary
-        # it can get here only if exit_code of corresponding buck build is 0
-        fn_exec = e.execve
+        exit_code_callable = main(sys.argv, reporter)
+        # Grab the original exit code here for logging. If this callable does something
+        # more advanced (like exec) we want to make sure that at least the original
+        # code is logged
+        exit_code = exit_code_callable.exit_code
     except NoBuckConfigFoundException as e:
         exception = e
         # buck is started outside project root
@@ -308,7 +308,7 @@ if __name__ == "__main__":
         )
 
     # execute 'buck run' target
-    if fn_exec is not None:
-        fn_exec()
+    if exit_code_callable is not None:
+        exit_code = exit_code_callable()
 
     propagate_failure(exit_code)

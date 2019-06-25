@@ -182,20 +182,35 @@ class BuckDaemonErrorException(BuckToolException):
     pass
 
 
-class ExecuteTarget(Exception):
-    def __init__(self, path, argv, envp, cwd):
+class ExitCodeCallable(object):
+    """ Simple callable class that just returns a given exit code """
+
+    def __init__(self, exit_code):
+        self.exit_code = exit_code
+
+    def __call__(self):
+        return self.exit_code
+
+
+class ExecuteTarget(ExitCodeCallable):
+    """ Callable that executes a given target after the build finishes """
+
+    def __init__(self, exit_code, path, argv, envp, cwd):
+        super(ExecuteTarget, self).__init__(exit_code)
         self._path = path
         self._argv = argv
         self._envp = envp
         self._cwd = cwd
 
-    def execve(self):
+    def __call__(self):
         # Restore default handling of SIGPIPE.  See https://bugs.python.org/issue1652.
         if os.name != "nt":
             signal.signal(signal.SIGPIPE, signal.SIG_DFL)
             os.execvpe(self._path, self._argv, self._envp)
         else:
-            child = subprocess.Popen(self._argv, env=self._envp, cwd=self._cwd)
+            args = [self._path]
+            args.extend(self._argv[1:])
+            child = subprocess.Popen(args, env=self._envp, cwd=self._cwd)
             child.wait()
             sys.exit(child.returncode)
 
@@ -528,8 +543,9 @@ class BuckTool(object):
 
     def _execute_command_and_maybe_run_target(self, run_fn, java_path, env, argv):
         """
-        Run a buck command using the specified `run_fn`.  If the command is "run", get the path,
-        args, etc. from the daemon, and raise an exception that tells __main__ to run that binary
+        Run a buck command using the specified `run_fn`.
+        If the command writes out to --command-args-file, return a callable that
+        executes the program in the --command-args-file
         """
         with Tracing("buck", args={"command": sys.argv[1:]}):
             if os.name == "nt":
@@ -572,7 +588,7 @@ class BuckTool(object):
                 exit_code = run_fn(java_path, argv, env, post_run_files)
                 if exit_code != 0 or os.path.getsize(argsfile.name) == 0:
                     # No file was requested to be run by the daemon. Exit normally.
-                    return exit_code
+                    return ExitCodeCallable(exit_code)
 
                 with open(argsfile.name, "r") as reopened_argsfile:
                     cmd = json.load(reopened_argsfile)
@@ -583,7 +599,7 @@ class BuckTool(object):
                     for k, v in cmd["envp"].iteritems()
                 }
                 cwd = cmd["cwd"].encode("utf8")
-                raise ExecuteTarget(path, argv, envp, cwd)
+                return ExecuteTarget(exit_code, path, argv, envp, cwd)
 
     def launch_buck(self, build_id, java_path, argv):
         with Tracing("BuckTool.launch_buck"):
