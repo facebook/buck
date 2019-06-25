@@ -22,6 +22,7 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
 import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
+import com.android.ddmlib.SyncException;
 import com.android.ddmlib.TimeoutException;
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.agent.util.AgentUtil;
@@ -692,7 +693,46 @@ public class RealAndroidDevice implements AndroidDevice {
     if (rapidInstallMode.isPresent()) {
       doRapidInstall(rapidInstallMode.get(), filesType, installPaths);
     } else {
-      doMultiInstall(filesType, installPaths);
+      try {
+        doMultiInstall(filesType, installPaths);
+      } catch (Exception e) {
+        doMultiInstallViaADB(installPaths);
+      }
+    }
+  }
+
+  private void doMultiInstallViaADB(Map<Path, Path> installPaths) throws Exception {
+    // Directly utilize adb push to transfer files
+    for (Map.Entry<Path, Path> entry : installPaths.entrySet()) {
+      Path destination = entry.getKey();
+      Path source = entry.getValue();
+      try {
+        device.pushFile(source.toString(), destination.toString());
+
+      } catch (SyncException e) {
+        SyncException.SyncError errCode = e.getErrorCode();
+        String message = errCode.getMessage();
+        switch (errCode) {
+          case LOCAL_IS_DIRECTORY:
+          case NO_LOCAL_FILE:
+          case FILE_READ_ERROR:
+            throw new SyncException(
+                errCode, message.substring(0, message.length() - 1) + ": " + source);
+          case REMOTE_IS_FILE:
+          case REMOTE_PATH_LENGTH:
+          case REMOTE_PATH_ENCODING:
+            throw new SyncException(
+                errCode, message.substring(0, message.length() - 1) + ": " + destination);
+          case CANCELED:
+          case TRANSFER_PROTOCOL_ERROR:
+          case NO_REMOTE_OBJECT:
+          case TARGET_IS_FILE:
+          case NO_DIR_TARGET:
+          case FILE_WRITE_ERROR:
+          case BUFFER_OVERRUN:
+            throw e;
+        }
+      }
     }
   }
 
@@ -748,6 +788,83 @@ public class RealAndroidDevice implements AndroidDevice {
 
     for (Path targetFileName : installPaths.keySet()) {
       chmod644(targetFileName);
+    }
+  }
+
+  private class BuckInitiatedInstallReceiver extends CollectingOutputReceiver {
+    /*
+    The buck-initiated protocol:
+
+    Buck will invoke the agent with a port, and the agent will begin listening on the port.
+    The agent will generate a random session key of AgentUtil.TEXT_SECRET_KEY_SIZE hex characters.
+    The agent will send the session key to stdout, followed by a newline.
+    Buck will connect to the port.
+    Recent versions of ADB on Linux will not properly forward data that Buck sends immediately,
+    so the agent will accept the connection, then print "z1" (followed by a newline) to stdout
+    to confirm that the connection has been initiated.
+    Buck will send the session key to the agent, *without* a trailing newline.
+    At this point, the connection is authenticated and can be used for multi-file transfer.
+
+    Note that the secret key is meant to protect against a very specific attack:
+    a malicious Android app on the device quickly connecting to the agent
+    and sending infected files for installation.
+     */
+
+    private final Closer closer;
+    private final String filesType;
+    private final Map<Path, Path> installPaths;
+    private boolean startedPayload;
+    private boolean wrotePayload;
+    @Nullable private OutputStream outToDevice;
+    private Optional<Exception> error;
+
+    BuckInitiatedInstallReceiver(Closer closer, String filesType, Map<Path, Path> installPaths) {
+      this.closer = closer;
+      this.filesType = filesType;
+      this.installPaths = installPaths;
+      this.startedPayload = false;
+      this.wrotePayload = false;
+      this.error = Optional.empty();
+    }
+
+    @Override
+    public void addOutput(byte[] data, int offset, int length) {
+      super.addOutput(data, offset, length);
+      // On exceptions, we want to still collect the full output of the command (so we can get its
+      // error code and possibly error message), so we just record that there was an error and only
+      // send further output to the base receiver.
+      if (error.isPresent()) {
+        return;
+      }
+      try {
+        if (!startedPayload && getOutput().length() >= AgentUtil.TEXT_SECRET_KEY_SIZE) {
+          LOG.verbose("Got key: %s", getOutput().split("[\\r\\n]", 1)[0]);
+          startedPayload = true;
+          Socket clientSocket = new Socket("127.0.0.1", agentPort); // NOPMD
+          closer.register(clientSocket);
+          LOG.verbose("Connected");
+          outToDevice = clientSocket.getOutputStream();
+          closer.register(outToDevice);
+          // Need to wait for client to acknowledge that we've connected.
+        }
+        if (!wrotePayload && getOutput().contains("z1")) {
+          if (outToDevice == null) {
+            throw new NullPointerException("outToDevice was null when protocol says it cannot be");
+          }
+          LOG.verbose("Got z1");
+          wrotePayload = true;
+          outToDevice.write(getOutput().substring(0, AgentUtil.TEXT_SECRET_KEY_SIZE).getBytes());
+          LOG.verbose("Wrote key");
+          multiInstallFilesToStream(outToDevice, filesType, installPaths);
+          LOG.verbose("Wrote files");
+        }
+      } catch (IOException e) {
+        error = Optional.of(e);
+      }
+    }
+
+    public Optional<Exception> getError() {
+      return error;
     }
   }
 
@@ -938,83 +1055,6 @@ public class RealAndroidDevice implements AndroidDevice {
     @Nullable
     public String getErrorMessage() {
       return errorMessage;
-    }
-  }
-
-  private class BuckInitiatedInstallReceiver extends CollectingOutputReceiver {
-    /*
-    The buck-initiated protocol:
-
-    Buck will invoke the agent with a port, and the agent will begin listening on the port.
-    The agent will generate a random session key of AgentUtil.TEXT_SECRET_KEY_SIZE hex characters.
-    The agent will send the session key to stdout, followed by a newline.
-    Buck will connect to the port.
-    Recent versions of ADB on Linux will not properly forward data that Buck sends immediately,
-    so the agent will accept the connection, then print "z1" (followed by a newline) to stdout
-    to confirm that the connection has been initiated.
-    Buck will send the session key to the agent, *without* a trailing newline.
-    At this point, the connection is authenticated and can be used for multi-file transfer.
-
-    Note that the secret key is meant to protect against a very specific attack:
-    a malicious Android app on the device quickly connecting to the agent
-    and sending infected files for installation.
-     */
-
-    private final Closer closer;
-    private final String filesType;
-    private final Map<Path, Path> installPaths;
-    private boolean startedPayload;
-    private boolean wrotePayload;
-    @Nullable private OutputStream outToDevice;
-    private Optional<Exception> error;
-
-    BuckInitiatedInstallReceiver(Closer closer, String filesType, Map<Path, Path> installPaths) {
-      this.closer = closer;
-      this.filesType = filesType;
-      this.installPaths = installPaths;
-      this.startedPayload = false;
-      this.wrotePayload = false;
-      this.error = Optional.empty();
-    }
-
-    @Override
-    public void addOutput(byte[] data, int offset, int length) {
-      super.addOutput(data, offset, length);
-      // On exceptions, we want to still collect the full output of the command (so we can get its
-      // error code and possibly error message), so we just record that there was an error and only
-      // send further output to the base receiver.
-      if (error.isPresent()) {
-        return;
-      }
-      try {
-        if (!startedPayload && getOutput().length() >= AgentUtil.TEXT_SECRET_KEY_SIZE) {
-          LOG.verbose("Got key: %s", getOutput().split("[\\r\\n]", 1)[0]);
-          startedPayload = true;
-          Socket clientSocket = new Socket("127.0.0.1", agentPort); // NOPMD
-          closer.register(clientSocket);
-          LOG.verbose("Connected");
-          outToDevice = clientSocket.getOutputStream();
-          closer.register(outToDevice);
-          // Need to wait for client to acknowledge that we've connected.
-        }
-        if (!wrotePayload && getOutput().contains("z1")) {
-          if (outToDevice == null) {
-            throw new NullPointerException("outToDevice was null when protocol says it cannot be");
-          }
-          LOG.verbose("Got z1");
-          wrotePayload = true;
-          outToDevice.write(getOutput().substring(0, AgentUtil.TEXT_SECRET_KEY_SIZE).getBytes());
-          LOG.verbose("Wrote key");
-          multiInstallFilesToStream(outToDevice, filesType, installPaths);
-          LOG.verbose("Wrote files");
-        }
-      } catch (IOException e) {
-        error = Optional.of(e);
-      }
-    }
-
-    public Optional<Exception> getError() {
-      return error;
     }
   }
 
