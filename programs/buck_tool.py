@@ -44,6 +44,65 @@ GC_MAX_PAUSE_TARGET = 15000
 JAVA_MAX_HEAP_SIZE_MB = 1000
 
 
+class MovableTemporaryFile(object):
+    def __init__(self, *args, **kwargs):
+        self.file = None
+        self._temp_file = None
+        self._should_delete = True
+        self._named_temporary_args = args
+        self._named_temporary_kwargs = kwargs
+
+    @property
+    def name(self):
+        if self.file:
+            return self.file.name
+        else:
+            raise AttributeError(
+                "`file` is not set. You cannot call name on a moved file"
+            )
+
+    def close(self):
+        if self.file:
+            self.file.close()
+
+    def move(self):
+        new_wrapper = MovableTemporaryFile(
+            self._named_temporary_args, self._named_temporary_kwargs
+        )
+        new_wrapper.file = self.file
+        new_wrapper._temp_file = self._temp_file
+        self.file = None
+        self._temp_file = None
+        return new_wrapper
+
+    def __enter__(self):
+        if not self._temp_file:
+            # Due to a bug in python (https://bugs.python.org/issue14243), we need to
+            # be able to close() the temporary file without deleting it. So, set
+            # delete=False, and cleanup manually on __exit__() rather than using
+            # NamedTemproaryFile's built in delete logic
+            self._temp_file = tempfile.NamedTemporaryFile(
+                *self._named_temporary_args,
+                delete=False,
+                **self._named_temporary_kwargs
+            )
+            self.file = self._temp_file.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self._temp_file:
+            self._temp_file.__exit__(exc_type, exc_value, traceback)
+        if self.file:
+            try:
+                os.remove(self.file.name)
+            except OSError as e:
+                # It's possible this fails because of a race with another buck
+                # instance has removed the entire resource_path, so ignore
+                # 'file not found' errors.
+                if e.errno != errno.ENOENT:
+                    raise
+
+
 class Resource(object):
     """Describes a resource used by this driver.
 
