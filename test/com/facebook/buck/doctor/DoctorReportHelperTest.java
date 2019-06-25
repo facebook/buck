@@ -146,6 +146,7 @@ public class DoctorReportHelperTest {
             Paths.get("test"),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             OptionalInt.empty(),
             OptionalInt.empty(),
             Optional.empty(),

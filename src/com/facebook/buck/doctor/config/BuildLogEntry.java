@@ -37,6 +37,9 @@ public interface BuildLogEntry {
   Optional<List<String>> getCommandArgs();
 
   @Value.Parameter
+  Optional<List<String>> getExpandedCommandArgs();
+
+  @Value.Parameter
   OptionalInt getExitCode();
 
   @Value.Parameter

@@ -67,7 +67,7 @@ public class BuildLogHelper {
       BuildLogEntry entry = newBuildLogEntry(logFile);
       if (entry.getCommandArgs().isPresent()
           && entry.getCommandArgs().get().size() > 0
-          && !entry.getCommandArgs().get().get(0).matches("^(rage|doctor|server|launch)$")) {
+          && !entry.getCommandArgs().get().get(0).matches("^(rage|doctor|server|launch|fix)$")) {
         logEntries.add(newBuildLogEntry(logFile));
       }
     }
@@ -79,7 +79,7 @@ public class BuildLogHelper {
   private BuildLogEntry newBuildLogEntry(Path logFile) throws IOException {
 
     Optional<Path> machineReadableLogFile =
-        Optional.of(logFile.getParent().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME))
+        Optional.of(logFile.resolveSibling(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME))
             .filter(path -> projectFilesystem.isFile(path));
 
     Optional<Integer> exitCode =
@@ -96,6 +96,8 @@ public class BuildLogHelper {
 
     Optional<List<String>> commandArgs =
         invocationInfo.flatMap(iInfo -> Optional.ofNullable(iInfo.getUnexpandedCommandArgs()));
+    Optional<List<String>> expandedCommandArgs =
+        invocationInfo.flatMap(iInfo -> Optional.ofNullable(iInfo.getCommandArgs()));
 
     Optional<BuildId> buildId =
         machineReadableLogFile.map(
@@ -140,6 +142,7 @@ public class BuildLogHelper {
         logFile,
         buildId,
         commandArgs,
+        expandedCommandArgs,
         exitCode.map(OptionalInt::of).orElseGet(OptionalInt::empty),
         buildTimeMs,
         ruleKeyLoggerFile,

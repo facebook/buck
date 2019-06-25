@@ -20,6 +20,7 @@ import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -36,6 +37,8 @@ public abstract class AbstractFixBuckConfig implements ConfigView<BuckConfig> {
   private static final String FIX_SCRIPT_FIELD = "fix_script";
   private static final String FIX_SCRIPT_CONTACT_FIELD = "fix_script_contact";
   private static final String FIX_SCRIPT_MESSAGE_FIELD = "fix_script_message";
+  // Use for testing because changing system properties can get messy.
+  private static final String LEGACY_FIX_SCRIPT = "legacy_fix_script";
 
   private static final String DEFAULT_FIX_SCRIPT_MESSAGE =
       String.format(
@@ -55,6 +58,11 @@ public abstract class AbstractFixBuckConfig implements ConfigView<BuckConfig> {
   /** Get the previous script that JASABI fixes */
   @Value.Lazy
   public Optional<ImmutableList<String>> getLegacyFixScript() {
+    Optional<ImmutableList<String>> fromConfig =
+        getDelegate().getOptionalListWithoutComments(FIX_SECTION, LEGACY_FIX_SCRIPT, ' ');
+    if (fromConfig.isPresent()) {
+      return fromConfig;
+    }
     return Optional.ofNullable(System.getProperty("buck.legacy_fix_script"))
         .map(path -> ImmutableList.copyOf(path.split("\\s+")));
   }
@@ -121,5 +129,12 @@ public abstract class AbstractFixBuckConfig implements ConfigView<BuckConfig> {
         .add("command", Joiner.on(" ").join(interpolatedFixScript))
         .add("contact", fixScriptContact)
         .render();
+  }
+
+  /** Get a mapping of short names to Paths for buck provided fix scripts */
+  public ImmutableMap<String, ImmutableList<String>> getBuckProvidedScripts() {
+    return getLegacyFixScript()
+        .map(fixScript -> ImmutableMap.of("jasabi_fix", fixScript))
+        .orElse(ImmutableMap.of());
   }
 }
