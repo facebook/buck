@@ -53,7 +53,6 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.VersionRoot;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -207,16 +206,17 @@ public class HaskellGhciDescription
     // Topologically sort the body nodes, so that they're ready to add to the link line.
     ImmutableSet<BuildTarget> bodyTargets =
         RichStream.from(body).map(NativeLinkableGroup::getBuildTarget).toImmutableSet();
-    ImmutableList<? extends NativeLinkableGroup> topoSortedBody =
+    ImmutableList<NativeLinkableGroup> topoSortedBody =
         NativeLinkableGroups.getTopoSortedNativeLinkables(
             body,
             nativeLinkable ->
-                FluentIterable.concat(
-                        nativeLinkable.getNativeLinkableExportedDepsForPlatform(
-                            cxxPlatform, graphBuilder),
-                        nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform, graphBuilder))
-                    .filter(l -> bodyTargets.contains(l.getBuildTarget()))
-                    .iterator());
+                RichStream.from(
+                        Iterables.concat(
+                            nativeLinkable.getNativeLinkableExportedDepsForPlatform(
+                                cxxPlatform, graphBuilder),
+                            nativeLinkable.getNativeLinkableDepsForPlatform(
+                                cxxPlatform, graphBuilder)))
+                    .filter(l -> bodyTargets.contains(l.getBuildTarget())));
 
     // Add the link inputs for all omnibus nodes.
     for (NativeLinkableGroup nativeLinkableGroup : topoSortedBody) {
@@ -259,7 +259,7 @@ public class HaskellGhciDescription
     }
 
     // Link in omnibus deps dynamically.
-    ImmutableList<? extends NativeLinkableGroup> depLinkables =
+    ImmutableList<NativeLinkableGroup> depLinkables =
         NativeLinkableGroups.getNativeLinkables(
             cxxPlatform, graphBuilder, deps, LinkableDepType.SHARED);
     for (NativeLinkableGroup linkable : depLinkables) {

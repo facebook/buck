@@ -24,12 +24,12 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.graph.GraphTraversable;
+import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TopologicalSort;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -42,6 +42,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class NativeLinkableGroups {
 
@@ -89,11 +90,32 @@ public class NativeLinkableGroups {
   }
 
   /** @return the nodes found from traversing the given roots in topologically sorted order. */
-  public static ImmutableList<? extends NativeLinkableGroup> getTopoSortedNativeLinkables(
+  public static ImmutableList<NativeLinkableGroup> getTopoSortedNativeLinkables(
       Iterable<? extends NativeLinkableGroup> roots,
-      GraphTraversable<NativeLinkableGroup> traversable) {
+      Function<? super NativeLinkableGroup, Stream<? extends NativeLinkableGroup>> depsFn) {
+    MutableDirectedGraph<NativeLinkableGroup> graph = new MutableDirectedGraph<>();
+    AbstractBreadthFirstTraversal<NativeLinkableGroup> visitor =
+        new AbstractBreadthFirstTraversal<NativeLinkableGroup>(roots) {
+          @Override
+          public ImmutableSet<NativeLinkableGroup> visit(NativeLinkableGroup nativeLinkableGroup) {
+            graph.addNode(nativeLinkableGroup);
+
+            // Process all the traversable deps.
+            ImmutableSet.Builder<NativeLinkableGroup> deps = ImmutableSet.builder();
+            depsFn
+                .apply(nativeLinkableGroup)
+                .forEach(
+                    dep -> {
+                      graph.addEdge(nativeLinkableGroup, dep);
+                      deps.add(dep);
+                    });
+            return deps.build();
+          }
+        };
+    visitor.start();
+
     // Topologically sort the rules.
-    return TopologicalSort.sort(roots, traversable).reverse();
+    return TopologicalSort.sort(graph).reverse();
   }
 
   /**
@@ -144,27 +166,24 @@ public class NativeLinkableGroups {
    * @param linkStyle how dependencies should be linked, if their preferred_linkage is {@code
    *     NativeLinkable.Linkage.ANY}.
    */
-  public static ImmutableList<? extends NativeLinkableGroup> getNativeLinkables(
+  public static ImmutableList<NativeLinkableGroup> getNativeLinkables(
       CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder,
       Iterable<? extends NativeLinkableGroup> inputs,
-      LinkableDepType linkStyle,
+      Linker.LinkableDepType linkStyle,
       Predicate<? super NativeLinkableGroup> traverse) {
     return getTopoSortedNativeLinkables(
         inputs,
         nativeLinkable ->
-            FluentIterable.from(
-                    getDepsForLink(cxxPlatform, graphBuilder, nativeLinkable, linkStyle))
-                .transform(NativeLinkableGroup.class::cast)
-                .filter(traverse::test)
-                .iterator());
+            RichStream.from(getDepsForLink(cxxPlatform, graphBuilder, nativeLinkable, linkStyle))
+                .filter(traverse));
   }
 
-  public static ImmutableList<? extends NativeLinkableGroup> getNativeLinkables(
+  public static ImmutableList<NativeLinkableGroup> getNativeLinkables(
       CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder,
       Iterable<? extends NativeLinkableGroup> inputs,
-      LinkableDepType linkStyle) {
+      Linker.LinkableDepType linkStyle) {
     return getNativeLinkables(cxxPlatform, graphBuilder, inputs, linkStyle, x -> true);
   }
 
@@ -217,7 +236,7 @@ public class NativeLinkableGroups {
     // Get the topologically sorted native linkables.
     ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
         getNativeLinkableRoots(inputs, passthrough);
-    ImmutableList<? extends NativeLinkableGroup> nativeLinkableGroups =
+    ImmutableList<NativeLinkableGroup> nativeLinkableGroups =
         getNativeLinkables(cxxPlatform, graphBuilder, roots.values(), depType);
     ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
     for (NativeLinkableGroup nativeLinkableGroup : nativeLinkableGroups) {
