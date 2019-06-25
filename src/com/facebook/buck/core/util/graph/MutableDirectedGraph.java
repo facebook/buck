@@ -20,7 +20,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
@@ -28,7 +27,6 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
@@ -70,7 +68,7 @@ public final class MutableDirectedGraph<T> implements TraversableGraph<T> {
 
   /** Creates a new graph with no nodes or edges. */
   public MutableDirectedGraph() {
-    this(new LinkedHashSet<>(), LinkedHashMultimap.create(), LinkedHashMultimap.create());
+    this(new HashSet<T>(), HashMultimap.create(), HashMultimap.create());
   }
 
   public static <T> MutableDirectedGraph<T> createConcurrent() {
