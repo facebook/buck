@@ -49,6 +49,7 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.fs.XzStep;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
@@ -57,6 +58,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class AndroidInstrumentationApkDescription
@@ -118,12 +120,6 @@ public class AndroidInstrumentationApkDescription
     apkUnderTestTransitiveClasspathDeps.stream()
         .map(BuildRule::getBuildTarget)
         .forEach(buildTargetsToExclude::add);
-
-    ImmutableSet<JavaLibrary> rulesToExcludeFromDex =
-        ImmutableSet.<JavaLibrary>builder()
-            .addAll(apkUnderTest.getRulesToExcludeFromDex().get())
-            .addAll(apkUnderTestTransitiveClasspathDeps)
-            .build();
 
     APKModule rootAPKModule = APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true);
     AndroidPackageableCollection.ResourceDetails resourceDetails =
@@ -252,7 +248,8 @@ public class AndroidInstrumentationApkDescription
             args.getDexTool(),
             /* postFilterResourcesCommands */ Optional.empty(),
             nonPreDexedDexBuildableArgs,
-            () -> rulesToExcludeFromDex,
+            createRulesToExcludeFromDexSupplier(
+                apkUnderTest.getRulesToExcludeFromDex(), apkUnderTestTransitiveClasspathDeps),
             false);
 
     AndroidGraphEnhancementResult enhancementResult = graphEnhancer.createAdditionalBuildables();
@@ -271,6 +268,17 @@ public class AndroidInstrumentationApkDescription
         filesInfo.getNativeFilesInfo(),
         filesInfo.getResourceFilesInfo(),
         filesInfo.getExopackageInfo());
+  }
+
+  private static Supplier<ImmutableSet<JavaLibrary>> createRulesToExcludeFromDexSupplier(
+      Supplier<ImmutableSet<JavaLibrary>> apkUnderTestRulesToExcludeFromDex,
+      ImmutableSet<JavaLibrary> apkUnderTestTransitiveClasspathDeps) {
+    return Suppliers.memoize(
+        () ->
+            ImmutableSet.<JavaLibrary>builder()
+                .addAll(apkUnderTestRulesToExcludeFromDex.get())
+                .addAll(apkUnderTestTransitiveClasspathDeps)
+                .build());
   }
 
   @Override
