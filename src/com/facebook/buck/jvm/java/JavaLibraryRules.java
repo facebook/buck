@@ -22,6 +22,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
@@ -72,15 +73,15 @@ public class JavaLibraryRules {
     // Allow the transitive walk to find NativeLinkables through the BuildRuleParams deps of a
     // JavaLibrary or CalculateAbi object. The deps may be either one depending if we're compiling
     // against ABI rules or full rules
+    ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
+        NativeLinkableGroups.getNativeLinkableRoots(
+            deps,
+            r ->
+                r instanceof JavaLibrary
+                    ? Optional.of(((JavaLibrary) r).getDepsForTransitiveClasspathEntries())
+                    : r instanceof CalculateAbi ? Optional.of(r.getBuildDeps()) : Optional.empty());
     return NativeLinkableGroups.getTransitiveSharedLibraries(
-        cxxPlatform,
-        graphBuilder,
-        deps,
-        r ->
-            r instanceof JavaLibrary
-                ? Optional.of(((JavaLibrary) r).getDepsForTransitiveClasspathEntries())
-                : r instanceof CalculateAbi ? Optional.of(r.getBuildDeps()) : Optional.empty(),
-        true);
+        cxxPlatform, graphBuilder, true, roots);
   }
 
   public static ImmutableSortedSet<BuildRule> getAbiRules(

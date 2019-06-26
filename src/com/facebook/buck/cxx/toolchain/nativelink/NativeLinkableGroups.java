@@ -247,18 +247,13 @@ public class NativeLinkableGroups {
    *     static linkage.
    * @return a mapping of library name to the library {@link SourcePath}.
    */
-  public static <T> ImmutableSortedMap<String, SourcePath> getTransitiveSharedLibraries(
+  public static ImmutableSortedMap<String, SourcePath> getTransitiveSharedLibraries(
       CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder,
-      Iterable<? extends T> inputs,
-      Function<? super T, Optional<Iterable<? extends T>>> passthrough,
-      boolean alwaysIncludeRoots) {
-
-    ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
-        getNativeLinkableRoots(inputs, passthrough);
+      boolean alwaysIncludeRoots,
+      ImmutableMap<BuildTarget, NativeLinkableGroup> roots) {
     ImmutableMap<BuildTarget, NativeLinkableGroup> nativeLinkables =
         getTransitiveNativeLinkables(cxxPlatform, graphBuilder, roots.values());
-
     SharedLibrariesBuilder builder = new SharedLibrariesBuilder();
     nativeLinkables.entrySet().stream()
         .filter(

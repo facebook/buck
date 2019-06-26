@@ -1608,9 +1608,10 @@ public class CxxDescriptionEnhancer {
     Path symlinkTreeRoot =
         getSharedLibrarySymlinkTreePath(filesystem, baseBuildTarget, cxxPlatform.getFlavor());
 
+    ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
+        NativeLinkableGroups.getNativeLinkableRoots(deps, passthrough);
     ImmutableSortedMap<String, SourcePath> libraries =
-        NativeLinkableGroups.getTransitiveSharedLibraries(
-            cxxPlatform, graphBuilder, deps, passthrough, false);
+        NativeLinkableGroups.getTransitiveSharedLibraries(cxxPlatform, graphBuilder, false, roots);
 
     ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();
     for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {
@@ -1671,9 +1672,10 @@ public class CxxDescriptionEnhancer {
         getBinaryWithSharedLibrariesSymlinkTreePath(
             filesystem, baseBuildTarget, cxxPlatform.getFlavor());
 
+    ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
+        NativeLinkableGroups.getNativeLinkableRoots(deps, n -> Optional.empty());
     ImmutableSortedMap<String, SourcePath> libraries =
-        NativeLinkableGroups.getTransitiveSharedLibraries(
-            cxxPlatform, graphBuilder, deps, n -> Optional.empty(), false);
+        NativeLinkableGroups.getTransitiveSharedLibraries(cxxPlatform, graphBuilder, false, roots);
 
     ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();
     for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {

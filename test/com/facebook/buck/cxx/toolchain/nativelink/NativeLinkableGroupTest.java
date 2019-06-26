@@ -19,6 +19,7 @@ package com.facebook.buck.cxx.toolchain.nativelink;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -257,13 +258,11 @@ public class NativeLinkableGroupTest {
             NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().build(),
             ImmutableMap.of("liba.so", FakeSourcePath.of("liba.so")));
+    ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
+        NativeLinkableGroups.getNativeLinkableRoots(ImmutableList.of(a), r -> Optional.empty());
     ImmutableSortedMap<String, SourcePath> sharedLibs =
         NativeLinkableGroups.getTransitiveSharedLibraries(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            new TestActionGraphBuilder(),
-            ImmutableList.of(a),
-            r -> Optional.empty(),
-            true);
+            CxxPlatformUtils.DEFAULT_PLATFORM, new TestActionGraphBuilder(), true, roots);
     assertThat(
         sharedLibs,
         Matchers.equalTo(
@@ -339,12 +338,10 @@ public class NativeLinkableGroupTest {
             NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().build(),
             ImmutableMap.of("liba.so", FakeSourcePath.of("liba2.so")));
+    ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
+        NativeLinkableGroups.getNativeLinkableRoots(ImmutableList.of(a, b), n -> Optional.empty());
     NativeLinkableGroups.getTransitiveSharedLibraries(
-        CxxPlatformUtils.DEFAULT_PLATFORM,
-        new TestActionGraphBuilder(),
-        ImmutableList.of(a, b),
-        n -> Optional.empty(),
-        true);
+        CxxPlatformUtils.DEFAULT_PLATFORM, new TestActionGraphBuilder(), true, roots);
   }
 
   @Test
@@ -366,13 +363,11 @@ public class NativeLinkableGroupTest {
             NativeLinkableGroup.Linkage.ANY,
             NativeLinkableInput.builder().build(),
             ImmutableMap.of("libc.so", path));
+    ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
+        NativeLinkableGroups.getNativeLinkableRoots(ImmutableList.of(a, b), n -> Optional.empty());
     ImmutableSortedMap<String, SourcePath> sharedLibs =
         NativeLinkableGroups.getTransitiveSharedLibraries(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            new TestActionGraphBuilder(),
-            ImmutableList.of(a, b),
-            n -> Optional.empty(),
-            true);
+            CxxPlatformUtils.DEFAULT_PLATFORM, new TestActionGraphBuilder(), true, roots);
     assertThat(
         sharedLibs, Matchers.equalTo(ImmutableSortedMap.<String, SourcePath>of("libc.so", path)));
   }
@@ -438,13 +433,11 @@ public class NativeLinkableGroupTest {
             Linkage.STATIC,
             NativeLinkableInput.builder().build(),
             ImmutableMap.of("liba.so", FakeSourcePath.of("liba.so")));
+    ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
+        NativeLinkableGroups.getNativeLinkableRoots(ImmutableList.of(a), r -> Optional.empty());
     ImmutableSortedMap<String, SourcePath> sharedLibs =
         NativeLinkableGroups.getTransitiveSharedLibraries(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            new TestActionGraphBuilder(),
-            ImmutableList.of(a),
-            r -> Optional.empty(),
-            true);
+            CxxPlatformUtils.DEFAULT_PLATFORM, new TestActionGraphBuilder(), true, roots);
     assertThat(
         sharedLibs,
         Matchers.equalTo(
