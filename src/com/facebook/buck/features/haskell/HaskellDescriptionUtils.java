@@ -47,7 +47,6 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups.SharedLibrariesBuilder;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.file.WriteFile;
@@ -522,27 +521,31 @@ public class HaskellDescriptionUtils {
     // Build up a map of all transitive shared libraries the the monolithic omnibus library depends
     // on (basically, stuff we couldn't statically link in).  At this point, this should *not* be
     // pulling in any excluded deps.
-    SharedLibrariesBuilder sharedLibsBuilder = new SharedLibrariesBuilder();
     ImmutableMap<BuildTarget, NativeLinkableGroup> transitiveDeps =
         NativeLinkableGroups.getTransitiveNativeLinkables(
             platform.getCxxPlatform(), graphBuilder, omnibusSpec.getDeps().values());
+    NativeLinkables.SharedLibrariesBuilder sharedLibsBuilder =
+        new NativeLinkables.SharedLibrariesBuilder();
     transitiveDeps.values().stream()
+        .map(g -> g.getNativeLinkable(platform.getCxxPlatform()))
         // Skip statically linked libraries.
-        .filter(l -> l.getPreferredLinkage(platform.getCxxPlatform()) != Linkage.STATIC)
-        .forEach(l -> sharedLibsBuilder.add(platform.getCxxPlatform(), l, graphBuilder));
+        .filter(l -> l.getPreferredLinkage() != Linkage.STATIC)
+        .forEach(l -> sharedLibsBuilder.add(l, graphBuilder));
     ImmutableSortedMap<String, SourcePath> sharedLibs = sharedLibsBuilder.build();
 
     // Build up a set of all transitive preload libs, which are the ones that have been "excluded"
     // from the omnibus link.  These are the ones we need to LD_PRELOAD.
-    SharedLibrariesBuilder preloadLibsBuilder = new SharedLibrariesBuilder();
+    NativeLinkables.SharedLibrariesBuilder preloadLibsBuilder =
+        new NativeLinkables.SharedLibrariesBuilder();
     omnibusSpec.getExcludedTransitiveDeps().values().stream()
+        .map(g -> g.getNativeLinkable(platform.getCxxPlatform()))
         // Don't include shared libs for static libraries -- except for preload roots, which we
         // always link dynamically.
         .filter(
             l ->
-                l.getPreferredLinkage(platform.getCxxPlatform()) != Linkage.STATIC
+                l.getPreferredLinkage() != Linkage.STATIC
                     || omnibusSpec.getExcludedRoots().containsKey(l.getBuildTarget()))
-        .forEach(l -> preloadLibsBuilder.add(platform.getCxxPlatform(), l, graphBuilder));
+        .forEach(l -> preloadLibsBuilder.add(l, graphBuilder));
     ImmutableSortedMap<String, SourcePath> preloadLibs = preloadLibsBuilder.build();
 
     HaskellSources srcs = HaskellSources.from(buildTarget, graphBuilder, platform, "srcs", argSrcs);

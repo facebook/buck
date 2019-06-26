@@ -16,12 +16,9 @@
 
 package com.facebook.buck.cxx.toolchain.nativelink;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.graph.TopologicalSort;
@@ -32,11 +29,9 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -235,45 +230,5 @@ public class NativeLinkableGroups {
     visitor.start();
 
     return ImmutableMap.copyOf(nativeLinkables);
-  }
-
-  /**
-   * Builds a map of shared library names to paths from {@link NativeLinkableGroup}s, throwing a
-   * useful error on duplicates.
-   */
-  public static class SharedLibrariesBuilder {
-
-    private final Map<String, SourcePath> libraries = new LinkedHashMap<>();
-
-    /** Adds libraries from the given {@link NativeLinkableGroup}. */
-    public SharedLibrariesBuilder add(
-        CxxPlatform cxxPlatform, NativeLinkableGroup linkable, ActionGraphBuilder graphBuilder) {
-      ImmutableMap<String, SourcePath> libs =
-          linkable.getSharedLibraries(cxxPlatform, graphBuilder);
-      for (Map.Entry<String, SourcePath> lib : libs.entrySet()) {
-        SourcePath prev = libraries.put(lib.getKey(), lib.getValue());
-        if (prev != null && !prev.equals(lib.getValue())) {
-          String libTargetString;
-          String prevTargetString;
-          if ((prev instanceof BuildTargetSourcePath)
-              && (lib.getValue() instanceof BuildTargetSourcePath)) {
-            libTargetString = ((BuildTargetSourcePath) lib.getValue()).getTarget().toString();
-            prevTargetString = ((BuildTargetSourcePath) prev).getTarget().toString();
-          } else {
-            libTargetString = lib.getValue().toString();
-            prevTargetString = prev.toString();
-          }
-          throw new HumanReadableException(
-              "Two libraries in the dependencies have the same output filename: %s\n"
-                  + "Those libraries are %s and %s",
-              lib.getKey(), libTargetString, prevTargetString);
-        }
-      }
-      return this;
-    }
-
-    public ImmutableSortedMap<String, SourcePath> build() {
-      return ImmutableSortedMap.copyOf(libraries);
-    }
   }
 }
