@@ -53,7 +53,6 @@ import java.util.stream.Collectors;
  * push more things on to the classpath when using it.
  */
 public class FileClassPathRunner {
-  public static final String MIN_JAVA_VERSION_PROPERTY = "buck.min_java_version";
   public static final String CLASSPATH_FILE_PROPERTY = "buck.classpath_file";
   public static final String TESTRUNNER_CLASSES_PROPERTY = "buck.testrunner_classes";
 
@@ -65,14 +64,6 @@ public class FileClassPathRunner {
     // We must have the name of the class to delegate to added.
     if (args.length < 1) {
       System.exit(-1);
-    }
-
-    int minJavaVersion = Integer.valueOf(readRequiredProperty(MIN_JAVA_VERSION_PROPERTY));
-    if (JavaVersion.getMajorVersion() < minJavaVersion) {
-      throw new UnsupportedOperationException(
-          String.format(
-              "Code under test requires at least Java %d, but Java %d was launched",
-              minJavaVersion, JavaVersion.getMajorVersion()));
     }
 
     ClassLoader classLoader;

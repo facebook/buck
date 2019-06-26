@@ -138,11 +138,6 @@ abstract class AbstractJUnitJvmArgs {
       Supplier<Path> classpathArgfile,
       Verbosity verbosity,
       long defaultTestTimeoutMillis) {
-    args.add(
-        String.format(
-            "-D%s=%s",
-            FileClassPathRunner.MIN_JAVA_VERSION_PROPERTY, String.valueOf(getTargetJavaVersion())));
-
     if (!shouldUseClasspathArgfile()) {
       args.add(
           String.format(

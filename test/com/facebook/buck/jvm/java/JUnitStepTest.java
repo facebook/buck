@@ -99,7 +99,6 @@ public class JUnitStepTest {
     MoreAsserts.assertListEquals(
         ImmutableList.of(
             "/foo/bar/custom/java",
-            "-Dbuck.min_java_version=" + javaVersion,
             "-Dbuck.testrunner_classes=" + testRunnerClasspath,
             "-Dbuck.classpath_file=" + classpathFile,
             buildIdArg,
@@ -180,7 +179,6 @@ public class JUnitStepTest {
     MoreAsserts.assertListEquals(
         ImmutableList.of(
             "/foo/bar/custom/java",
-            "-Dbuck.min_java_version=" + javaVersion,
             buildIdArg,
             modulePathArg,
             "-Dapple.awt.UIElement=true",
@@ -292,7 +290,6 @@ public class JUnitStepTest {
     MoreAsserts.assertListEquals(
         ImmutableList.of(
             "/foo/bar/custom/java",
-            "-Dbuck.min_java_version=" + javaVersion,
             "-Dbuck.testrunner_classes=" + testRunnerClasspath,
             "-Dbuck.classpath_file=" + classpathFile,
             buildIdArg,
