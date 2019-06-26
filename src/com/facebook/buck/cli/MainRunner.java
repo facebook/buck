@@ -1587,17 +1587,21 @@ public final class MainRunner {
     }
   }
 
+  private boolean isRemoteExecutionAutoEnabled(
+      BuckCommand command, BuckConfig config, String username) {
+    BuildCommand subcommand = (BuildCommand) command.getSubcommand().get();
+    return config
+        .getView(RemoteExecutionConfig.class)
+        .isRemoteExecutionAutoEnabled(username, subcommand.getArguments());
+  }
+
   private boolean isRemoteExecutionBuild(BuckCommand command, BuckConfig config, String username) {
     if (!command.getSubcommand().isPresent()
         || !(command.getSubcommand().get() instanceof BuildCommand)) {
       return false;
     }
 
-    BuildCommand subcommand = (BuildCommand) command.getSubcommand().get();
-    boolean remoteExecutionAutoEnabled =
-        config
-            .getView(RemoteExecutionConfig.class)
-            .isRemoteExecutionAutoEnabled(username, subcommand.getArguments());
+    boolean remoteExecutionAutoEnabled = isRemoteExecutionAutoEnabled(command, config, username);
 
     ModernBuildRuleStrategyConfig strategyConfig =
         config.getView(ModernBuildRuleConfig.class).getDefaultStrategyConfig();
@@ -1608,6 +1612,7 @@ public final class MainRunner {
     return strategyConfig.getBuildStrategy(remoteExecutionAutoEnabled)
         == ModernBuildRuleBuildStrategy.REMOTE;
   }
+
 
   private ImmutableList<AdditionalConsoleLineProvider> createAdditionalConsoleLinesProviders(
       Optional<RemoteExecutionEventListener> remoteExecutionListener,
