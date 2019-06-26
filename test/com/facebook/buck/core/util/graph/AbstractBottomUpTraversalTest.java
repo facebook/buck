@@ -17,10 +17,13 @@
 package com.facebook.buck.core.util.graph;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableSet;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.Test;
 
@@ -97,27 +100,25 @@ public class AbstractBottomUpTraversalTest {
 
     DirectedAcyclicGraph<String> immutableGraph = new DirectedAcyclicGraph<String>(mutableGraph);
 
-    List<String> visitedNodes = new LinkedList<>();
+    Map<String, Integer> visitedNodes = new HashMap<>();
     AbstractBottomUpTraversal<String, RuntimeException> traversal =
         new AbstractBottomUpTraversal<String, RuntimeException>(immutableGraph) {
 
           @Override
           public void visit(String node) {
-            visitedNodes.add(node);
+            visitedNodes.put(node, visitedNodes.size());
           }
         };
     traversal.traverse();
 
+    assertTrue(visitedNodes.get("A") < visitedNodes.get("V"));
+    assertTrue(visitedNodes.get("W") < visitedNodes.get("V"));
+    assertTrue(visitedNodes.get("X") < visitedNodes.get("W"));
+    assertTrue(visitedNodes.get("Y") < visitedNodes.get("X"));
+    assertTrue(visitedNodes.get("Z") < visitedNodes.get("Y"));
     assertEquals(
-        "Z and A have no depdencies, so they should be visited first.",
-        ImmutableSet.of("Z", "A"),
-        ImmutableSet.copyOf(visitedNodes.subList(0, 2)));
-    assertEquals("Y", visitedNodes.get(2));
-    assertEquals("X", visitedNodes.get(3));
-    assertEquals("W", visitedNodes.get(4));
-    assertEquals(
-        "V should be visited last, after all of its dependencies.", "V", visitedNodes.get(5));
+        "V should be visited last, after all of its dependencies.", 5, (int) visitedNodes.get("V"));
 
-    assertEquals(nodes, ImmutableSet.copyOf(visitedNodes));
+    assertEquals(nodes, visitedNodes.keySet());
   }
 }
