@@ -169,7 +169,7 @@ public class CoercedTypeCache {
     for (Map.Entry<String, Set<Method>> entry : foundSetters.entrySet()) {
       if (entry.getValue().size() == 1) {
         ParamInfo paramInfo =
-            new ParamInfo(typeCoercerFactory, Iterables.getOnlyElement(entry.getValue()));
+            ReflectionParamInfo.of(typeCoercerFactory, Iterables.getOnlyElement(entry.getValue()));
         allInfo.put(paramInfo.getName(), paramInfo);
         continue;
       }
@@ -196,7 +196,7 @@ public class CoercedTypeCache {
                     + "and non-Optional. Don't know how to coerce.",
                 coercableType.getName(), entry.getKey()));
       }
-      ParamInfo paramInfo = new ParamInfo(typeCoercerFactory, takesOptional);
+      ParamInfo paramInfo = ReflectionParamInfo.of(typeCoercerFactory, takesOptional);
       allInfo.put(paramInfo.getName(), paramInfo);
     }
     return allInfo.build();

@@ -1,11 +1,13 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 INTERFACE_SRCS = [
+    "AbstractParamInfo.java",
     "CoerceFailedException.java",
     "CoercedTypeCache.java",
     "ConstructorArgMarshaller.java",
     "ParamInfo.java",
     "ParamInfoException.java",
+    "ReflectionParamInfo.java",
     "TypeCoercer.java",
     "TypeCoercerFactory.java",
 ]

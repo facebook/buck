@@ -160,9 +160,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
 
       coercer =
           typeCoercerFactory.typeCoercerForParameterizedType(
-              "ListWithSelects",
-              SelectorList.class,
-              argumentInfo.getSetter().getGenericParameterTypes());
+              "ListWithSelects", SelectorList.class, argumentInfo.getGenericParameterTypes());
     } else {
       coercer = argumentInfo.getTypeCoercer();
     }
