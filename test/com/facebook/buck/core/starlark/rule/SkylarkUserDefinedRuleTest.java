@@ -128,6 +128,9 @@ public class SkylarkUserDefinedRuleTest {
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
     assertEquals("@foo//bar:extension.bzl:baz_rule", rule.getName());
+    assertEquals(
+        Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), rule.getLabel());
+    assertEquals("baz_rule", rule.getExportedName());
   }
 
   @Test

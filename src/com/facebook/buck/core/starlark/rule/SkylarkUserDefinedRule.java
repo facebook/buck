@@ -54,6 +54,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
 
   private boolean isExported = false;
   @Nullable private String name = null;
+  @Nullable private Label label = null;
+  @Nullable private String exportedName = null;
   private final BaseFunction implementation;
   private final ImmutableMap<String, Attribute<?>> attrs;
   private final ImmutableMap<String, ParamInfo> params;
@@ -263,9 +265,29 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   /** Ensure that we only get our name after this function has been exported */
   @Override
   public String getName() {
-    Preconditions.checkNotNull(
+    return Preconditions.checkNotNull(
         name, "Tried to get name before function has been assigned to a variable and exported");
-    return name;
+  }
+
+  /**
+   * Get the string representation of the label of extension file. Only may be called after calling
+   * {@link #export(Label, String)}
+   *
+   * @return
+   */
+  public Label getLabel() {
+    return Preconditions.checkNotNull(
+        label, "Tried to get label before function has been assigned to a variable and exported");
+  }
+
+  /**
+   * Get the exported name of the function within an extension file. Only may be called after
+   * calling {@link #export(Label, String)}
+   */
+  public String getExportedName() {
+    return Preconditions.checkNotNull(
+        exportedName,
+        "Tried to get exported name before function has been assigned to a variable and exported");
   }
 
   @Override
@@ -276,6 +298,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   @Override
   public void export(Label extensionLabel, String exportedName) {
     this.name = UserDefinedRuleNames.getIdentifier(extensionLabel, exportedName);
+    this.label = extensionLabel;
+    this.exportedName = exportedName;
     this.isExported = true;
   }
 
