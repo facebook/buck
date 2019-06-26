@@ -272,7 +272,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   }
 
   /** The attributes that this function accepts */
-  ImmutableMap<String, Attribute<?>> getAttrs() {
+  public ImmutableMap<String, Attribute<?>> getAttrs() {
     return attrs;
   }
 

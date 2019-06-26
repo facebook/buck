@@ -1,0 +1,10 @@
+java_library(
+    name = "coercer",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/starlark/rule/attr:attr",
+        "//src/com/facebook/buck/rules/coercer:interface",
+    ],
+)

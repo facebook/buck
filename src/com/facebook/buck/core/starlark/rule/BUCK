@@ -1,7 +1,10 @@
-java_library(
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
     name = "rule",
     srcs = glob(["*.java"]),
     exported_deps = [
+        "//src/com/facebook/buck/core/starlark/coercer:coercer",
         "//src/com/facebook/buck/core/starlark/rule/attr:attr",
         "//third-party/java/bazel:bazel",
     ],
