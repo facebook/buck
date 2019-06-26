@@ -157,6 +157,11 @@ public interface NativeLinkableGroup {
     return ImmutableList.of();
   }
 
+  default boolean forceLinkWholeForHaskellOmnibus() {
+    throw new IllegalStateException(
+        String.format("Unexpected rule type in omnibus link %s(%s)", getClass(), getBuildTarget()));
+  }
+
   enum Linkage {
     ANY,
     STATIC,

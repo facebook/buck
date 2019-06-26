@@ -517,4 +517,10 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return postExportedLinkerFlags.apply(cxxPlatform, graphBuilder);
   }
+
+  @Override
+  public boolean forceLinkWholeForHaskellOmnibus() {
+    // We link C/C++ libraries whole...
+    return true;
+  }
 }

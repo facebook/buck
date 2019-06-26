@@ -19,9 +19,11 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -33,12 +35,9 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.cxx.CxxLibraryGroup;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
-import com.facebook.buck.cxx.PrebuiltCxxLibrary;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
@@ -182,42 +181,29 @@ public class HaskellGhciDescription
 
     // Add the link inputs for all omnibus nodes.
     for (NativeLinkableGroup nativeLinkableGroup : topoSortedBody) {
+      try {
+        boolean forceLinkWhole = nativeLinkableGroup.forceLinkWholeForHaskellOmnibus();
 
-      // We link C/C++ libraries whole...
-      if (nativeLinkableGroup instanceof CxxLibraryGroup) {
+        TargetConfiguration targetConfiguration = baseTarget.getTargetConfiguration();
+        LinkableDepType linkStyle = LinkableDepType.STATIC_PIC;
         NativeLinkableGroup.Linkage link = nativeLinkableGroup.getPreferredLinkage(cxxPlatform);
-        nativeLinkableInputs.add(
+
+        NativeLinkableInput linkableInput =
             nativeLinkableGroup.getNativeLinkableInput(
                 cxxPlatform,
-                NativeLinkableGroups.getLinkStyle(link, Linker.LinkableDepType.STATIC_PIC),
-                true,
+                NativeLinkableGroups.getLinkStyle(link, linkStyle),
+                forceLinkWhole,
                 graphBuilder,
-                baseTarget.getTargetConfiguration()));
-        LOG.verbose(
-            "%s: linking C/C++ library %s whole into omnibus",
-            baseTarget, nativeLinkableGroup.getBuildTarget());
-        continue;
-      }
+                targetConfiguration);
+        nativeLinkableInputs.add(linkableInput);
 
-      // Link prebuilt C/C++ libraries statically.
-      if (nativeLinkableGroup instanceof PrebuiltCxxLibrary) {
-        nativeLinkableInputs.add(
-            NativeLinkableGroups.getNativeLinkableInput(
-                cxxPlatform,
-                Linker.LinkableDepType.STATIC_PIC,
-                nativeLinkableGroup,
-                graphBuilder,
-                baseTarget.getTargetConfiguration()));
         LOG.verbose(
-            "%s: linking prebuilt C/C++ library %s into omnibus",
-            baseTarget, nativeLinkableGroup.getBuildTarget());
-        continue;
+            "%s: linking C/C++ library %s into omnibus (forced_link_whole=%s)",
+            baseTarget, nativeLinkableGroup.getBuildTarget(), forceLinkWhole);
+      } catch (RuntimeException e) {
+        throw new BuckUncheckedExecutionException(
+            e, "When creating omnibus rule for %s.", baseTarget);
       }
-
-      throw new IllegalStateException(
-          String.format(
-              "%s: unexpected rule type in omnibus link %s(%s)",
-              baseTarget, nativeLinkableGroup.getClass(), nativeLinkableGroup.getBuildTarget()));
     }
 
     // Link in omnibus deps dynamically.

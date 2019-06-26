@@ -46,6 +46,12 @@ public abstract class PrebuiltCxxLibrary extends NoopBuildRuleWithDeclaredAndExt
   public abstract ImmutableList<Arg> getExportedPostLinkerFlags(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
+  @Override
+  public boolean forceLinkWholeForHaskellOmnibus() {
+    // Link prebuilt C/C++ libraries statically.
+    return false;
+  }
+
   abstract Optional<SourcePath> getStaticLibrary(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
