@@ -24,6 +24,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -33,6 +34,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -80,8 +82,10 @@ public class JavaLibraryRules {
                 r instanceof JavaLibrary
                     ? Optional.of(((JavaLibrary) r).getDepsForTransitiveClasspathEntries())
                     : r instanceof CalculateAbi ? Optional.of(r.getBuildDeps()) : Optional.empty());
-    return NativeLinkableGroups.getTransitiveSharedLibraries(
-        cxxPlatform, graphBuilder, true, roots);
+    return NativeLinkables.getTransitiveSharedLibraries(
+        graphBuilder,
+        Iterables.transform(roots.values(), g -> g.getNativeLinkable(cxxPlatform)),
+        true);
   }
 
   public static ImmutableSortedSet<BuildRule> getAbiRules(

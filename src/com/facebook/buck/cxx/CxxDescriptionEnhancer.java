@@ -57,6 +57,7 @@ import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.json.JsonConcatenate;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
@@ -89,6 +90,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
@@ -1611,7 +1613,10 @@ public class CxxDescriptionEnhancer {
     ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
         NativeLinkableGroups.getNativeLinkableRoots(deps, passthrough);
     ImmutableSortedMap<String, SourcePath> libraries =
-        NativeLinkableGroups.getTransitiveSharedLibraries(cxxPlatform, graphBuilder, false, roots);
+        NativeLinkables.getTransitiveSharedLibraries(
+            graphBuilder,
+            Iterables.transform(roots.values(), g -> g.getNativeLinkable(cxxPlatform)),
+            false);
 
     ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();
     for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {
@@ -1675,7 +1680,10 @@ public class CxxDescriptionEnhancer {
     ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
         NativeLinkableGroups.getNativeLinkableRoots(deps, n -> Optional.empty());
     ImmutableSortedMap<String, SourcePath> libraries =
-        NativeLinkableGroups.getTransitiveSharedLibraries(cxxPlatform, graphBuilder, false, roots);
+        NativeLinkables.getTransitiveSharedLibraries(
+            graphBuilder,
+            Iterables.transform(roots.values(), g -> g.getNativeLinkable(cxxPlatform)),
+            false);
 
     ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();
     for (Map.Entry<String, SourcePath> ent : libraries.entrySet()) {

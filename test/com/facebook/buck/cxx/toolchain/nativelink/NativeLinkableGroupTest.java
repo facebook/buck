@@ -40,6 +40,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
@@ -261,8 +262,11 @@ public class NativeLinkableGroupTest {
     ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
         NativeLinkableGroups.getNativeLinkableRoots(ImmutableList.of(a), r -> Optional.empty());
     ImmutableSortedMap<String, SourcePath> sharedLibs =
-        NativeLinkableGroups.getTransitiveSharedLibraries(
-            CxxPlatformUtils.DEFAULT_PLATFORM, new TestActionGraphBuilder(), true, roots);
+        NativeLinkables.getTransitiveSharedLibraries(
+            new TestActionGraphBuilder(),
+            Iterables.transform(
+                roots.values(), g -> g.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM)),
+            true);
     assertThat(
         sharedLibs,
         Matchers.equalTo(
@@ -340,8 +344,11 @@ public class NativeLinkableGroupTest {
             ImmutableMap.of("liba.so", FakeSourcePath.of("liba2.so")));
     ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
         NativeLinkableGroups.getNativeLinkableRoots(ImmutableList.of(a, b), n -> Optional.empty());
-    NativeLinkableGroups.getTransitiveSharedLibraries(
-        CxxPlatformUtils.DEFAULT_PLATFORM, new TestActionGraphBuilder(), true, roots);
+    NativeLinkables.getTransitiveSharedLibraries(
+        new TestActionGraphBuilder(),
+        Iterables.transform(
+            roots.values(), g -> g.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM)),
+        true);
   }
 
   @Test
@@ -366,8 +373,11 @@ public class NativeLinkableGroupTest {
     ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
         NativeLinkableGroups.getNativeLinkableRoots(ImmutableList.of(a, b), n -> Optional.empty());
     ImmutableSortedMap<String, SourcePath> sharedLibs =
-        NativeLinkableGroups.getTransitiveSharedLibraries(
-            CxxPlatformUtils.DEFAULT_PLATFORM, new TestActionGraphBuilder(), true, roots);
+        NativeLinkables.getTransitiveSharedLibraries(
+            new TestActionGraphBuilder(),
+            Iterables.transform(
+                roots.values(), g -> g.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM)),
+            true);
     assertThat(
         sharedLibs, Matchers.equalTo(ImmutableSortedMap.<String, SourcePath>of("libc.so", path)));
   }
@@ -436,8 +446,11 @@ public class NativeLinkableGroupTest {
     ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
         NativeLinkableGroups.getNativeLinkableRoots(ImmutableList.of(a), r -> Optional.empty());
     ImmutableSortedMap<String, SourcePath> sharedLibs =
-        NativeLinkableGroups.getTransitiveSharedLibraries(
-            CxxPlatformUtils.DEFAULT_PLATFORM, new TestActionGraphBuilder(), true, roots);
+        NativeLinkables.getTransitiveSharedLibraries(
+            new TestActionGraphBuilder(),
+            Iterables.transform(
+                roots.values(), g -> g.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM)),
+            true);
     assertThat(
         sharedLibs,
         Matchers.equalTo(
