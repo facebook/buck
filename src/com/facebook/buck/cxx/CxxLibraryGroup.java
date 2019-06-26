@@ -38,6 +38,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableCacheKey;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
@@ -94,6 +95,8 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final boolean supportsOmnibusLinking;
 
   private final CxxLibraryDescriptionDelegate delegate;
+
+  private final PlatformLockedNativeLinkableGroup.Cache linkableCache;
 
   /**
    * Whether Native Linkable dependencies should be propagated for the purpose of computing objects
@@ -152,6 +155,7 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.supportsOmnibusLinking = supportsOmnibusLinking;
     this.delegate = delegate;
     this.transitiveCxxPreprocessorInputCache = new TransitiveCxxPreprocessorInputCache(this);
+    this.linkableCache = NativeLinkableGroup.getNativeLinkableCache(this);
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
@@ -522,5 +526,10 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
   public boolean forceLinkWholeForHaskellOmnibus() {
     // We link C/C++ libraries whole...
     return true;
+  }
+
+  @Override
+  public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+    return linkableCache;
   }
 }

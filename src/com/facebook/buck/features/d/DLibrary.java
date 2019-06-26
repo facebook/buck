@@ -29,6 +29,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -39,6 +40,8 @@ public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements N
 
   private final ActionGraphBuilder graphBuilder;
   private final DIncludes includes;
+  private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
+      NativeLinkableGroup.getNativeLinkableCache(this);
 
   public DLibrary(
       BuildTarget buildTarget,
@@ -49,6 +52,11 @@ public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements N
     super(buildTarget, projectFilesystem, params);
     this.graphBuilder = graphBuilder;
     this.includes = includes;
+  }
+
+  @Override
+  public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+    return linkableCache;
   }
 
   @Override

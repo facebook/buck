@@ -51,6 +51,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -87,6 +88,8 @@ public class CxxLinkableEnhancerTest {
 
     private final NativeLinkableInput staticInput;
     private final NativeLinkableInput sharedInput;
+    private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
+        NativeLinkableGroup.getNativeLinkableCache(this);
 
     public FakeNativeLinkableGroup(
         BuildTarget buildTarget,
@@ -129,6 +132,11 @@ public class CxxLinkableEnhancerTest {
     public ImmutableMap<String, SourcePath> getSharedLibraries(
         CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
       return ImmutableMap.of();
+    }
+
+    @Override
+    public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+      return linkableCache;
     }
   }
 

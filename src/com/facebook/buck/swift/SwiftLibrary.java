@@ -43,6 +43,7 @@ import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -67,6 +68,8 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
       new TransitiveCxxPreprocessorInputCache(this);
+  private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
+      NativeLinkableGroup.getNativeLinkableCache(this);
 
   private final ActionGraphBuilder graphBuilder;
 
@@ -104,6 +107,11 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
     return !supportedPlatformsRegex.isPresent()
         || supportedPlatformsRegex.get().matcher(cxxPlatform.getFlavor().toString()).find();
+  }
+
+  @Override
+  public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+    return linkableCache;
   }
 
   @Override

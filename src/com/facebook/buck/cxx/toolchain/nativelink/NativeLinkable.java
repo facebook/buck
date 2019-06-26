@@ -39,7 +39,7 @@ public interface NativeLinkable {
   Iterable<? extends NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver);
 
   /** @return All native linkable exported dependencies that might be required by this linkable. */
-  Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(BuildRuleResolver ruleResolver);
+  Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(ActionGraphBuilder graphBuilder);
 
   /**
    * Return input that *dependents* should put on their link line when linking against this

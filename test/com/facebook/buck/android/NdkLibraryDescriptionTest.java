@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -43,10 +44,17 @@ public class NdkLibraryDescriptionTest {
       implements NativeLinkableGroup {
 
     private final SourcePath input;
+    private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
+        NativeLinkableGroup.getNativeLinkableCache(this);
 
     public FakeNativeLinkableGroup(String target, SourcePath input, BuildRule... deps) {
       super(target, deps);
       this.input = input;
+    }
+
+    @Override
+    public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+      return linkableCache;
     }
 
     @Override

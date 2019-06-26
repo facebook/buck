@@ -54,6 +54,8 @@ public class NativeLinkableGroupTest {
     private final NativeLinkableGroup.Linkage preferredLinkage;
     private final NativeLinkableInput nativeLinkableInput;
     private final ImmutableMap<String, SourcePath> sharedLibraries;
+    private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
+        NativeLinkableGroup.getNativeLinkableCache(this);
 
     FakeNativeLinkableGroup(
         String target,
@@ -69,6 +71,11 @@ public class NativeLinkableGroupTest {
       this.preferredLinkage = preferredLinkage;
       this.nativeLinkableInput = nativeLinkableInput;
       this.sharedLibraries = sharedLibraries;
+    }
+
+    @Override
+    public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+      return linkableCache;
     }
 
     @Override

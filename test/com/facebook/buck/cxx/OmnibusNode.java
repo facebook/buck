@@ -26,6 +26,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -36,6 +37,8 @@ class OmnibusNode implements NativeLinkableGroup {
   private final Iterable<? extends NativeLinkableGroup> deps;
   private final Iterable<? extends NativeLinkableGroup> exportedDeps;
   private final Linkage linkage;
+  private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
+      NativeLinkableGroup.getNativeLinkableCache(this);
 
   public OmnibusNode(
       String target,
@@ -66,6 +69,11 @@ class OmnibusNode implements NativeLinkableGroup {
   @Override
   public BuildTarget getBuildTarget() {
     return target;
+  }
+
+  @Override
+  public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+    return linkableCache;
   }
 
   @Override

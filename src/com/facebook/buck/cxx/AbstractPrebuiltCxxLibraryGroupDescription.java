@@ -41,6 +41,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -346,6 +347,8 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
 
   public abstract static class CustomPrebuiltCxxLibrary
       extends NoopBuildRuleWithDeclaredAndExtraDeps implements AbstractCxxLibraryGroup {
+    private PlatformLockedNativeLinkableGroup.Cache linkableCache =
+        NativeLinkableGroup.getNativeLinkableCache(this);
 
     public CustomPrebuiltCxxLibrary(
         BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
@@ -356,6 +359,11 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
     public boolean isPrebuiltSOForHaskellOmnibus(
         CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
       return true;
+    }
+
+    @Override
+    public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+      return linkableCache;
     }
   }
 

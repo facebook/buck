@@ -162,6 +162,16 @@ public interface NativeLinkableGroup {
         String.format("Unexpected rule type in omnibus link %s(%s)", getClass(), getBuildTarget()));
   }
 
+  default NativeLinkable getNativeLinkable(CxxPlatform cxxPlatform) {
+    return getNativeLinkableCompatibilityCache().get(cxxPlatform);
+  }
+
+  PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache();
+
+  static PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCache(NativeLinkableGroup group) {
+    return new PlatformLockedNativeLinkableGroup.Cache(group);
+  }
+
   enum Linkage {
     ANY,
     STATIC,

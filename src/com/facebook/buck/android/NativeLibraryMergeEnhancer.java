@@ -49,6 +49,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -633,6 +634,8 @@ class NativeLibraryMergeEnhancer {
     private final BuildTarget buildTarget;
     private final boolean canUseOriginal;
     private final CellPathResolver cellPathResolver;
+    private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
+        NativeLinkableGroup.getNativeLinkableCache(this);
     // Note: update constructBuildTarget whenever updating new fields.
 
     MergedLibNativeLinkableGroup(
@@ -793,6 +796,11 @@ class NativeLibraryMergeEnhancer {
 
     private BuildTarget getBuildTargetForPlatform(CxxPlatform cxxPlatform) {
       return getBuildTarget().withAppendedFlavors(cxxPlatform.getFlavor());
+    }
+
+    @Override
+    public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+      return linkableCache;
     }
 
     @Override

@@ -24,7 +24,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 
 public abstract class RustLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements RustLinkable, NativeLinkableGroup {
-
   public RustLibrary(
       BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
     super(buildTarget, projectFilesystem, params);
