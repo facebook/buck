@@ -43,6 +43,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -53,9 +54,11 @@ import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -65,6 +68,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -228,17 +232,22 @@ public class RustCompileUtils {
     // it's either an executable, or a native library that C/C++ can link with. Rust DYLIBs
     // also need all dependencies available.
     if (crateType.needAllDeps()) {
-      ImmutableList<Arg> nativeArgs =
-          NativeLinkableGroups.getTransitiveNativeLinkableInput(
-                  cxxPlatform,
-                  graphBuilder,
-                  target.getTargetConfiguration(),
-                  ruledeps,
-                  depType,
+      // Get the topologically sorted native linkables.
+      ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
+          NativeLinkableGroups.getNativeLinkableRoots(
+              ruledeps,
+              (Function<? super BuildRule, Optional<Iterable<? extends BuildRule>>>)
                   r ->
                       r instanceof RustLinkable
                           ? Optional.of(((RustLinkable) r).getRustLinakbleDeps(rustPlatform))
-                          : Optional.empty())
+                          : Optional.empty());
+
+      ImmutableList<Arg> nativeArgs =
+          NativeLinkables.getTransitiveNativeLinkableInput(
+                  graphBuilder,
+                  target.getTargetConfiguration(),
+                  Iterables.transform(roots.values(), g -> g.getNativeLinkable(cxxPlatform)),
+                  depType)
               .getArgs();
 
       // Add necessary rpaths if we're dynamically linking with things

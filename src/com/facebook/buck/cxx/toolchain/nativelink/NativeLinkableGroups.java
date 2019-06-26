@@ -204,33 +204,6 @@ public class NativeLinkableGroups {
         cxxPlatform, getLinkStyle(link, linkStyle), graphBuilder, targetConfiguration);
   }
 
-  /**
-   * Collect up and merge all {@link NativeLinkableInput} objects from transitively traversing all
-   * unbroken dependency chains of {@link NativeLinkableGroup} objects found via the passed in
-   * {@link BuildRule} roots.
-   */
-  public static <T> NativeLinkableInput getTransitiveNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      ActionGraphBuilder graphBuilder,
-      TargetConfiguration targetConfiguration,
-      Iterable<? extends T> inputs,
-      Linker.LinkableDepType depType,
-      Function<? super T, Optional<Iterable<? extends T>>> passthrough) {
-
-    // Get the topologically sorted native linkables.
-    ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
-        getNativeLinkableRoots(inputs, passthrough);
-    ImmutableList<? extends NativeLinkableGroup> nativeLinkableGroups =
-        getNativeLinkables(cxxPlatform, graphBuilder, roots.values(), depType);
-    ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
-    for (NativeLinkableGroup nativeLinkableGroup : nativeLinkableGroups) {
-      nativeLinkableInputs.add(
-          getNativeLinkableInput(
-              cxxPlatform, depType, nativeLinkableGroup, graphBuilder, targetConfiguration));
-    }
-    return NativeLinkableInput.concat(nativeLinkableInputs.build());
-  }
-
   public static ImmutableMap<BuildTarget, NativeLinkableGroup> getTransitiveNativeLinkables(
       CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder,

@@ -51,6 +51,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -65,12 +66,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import org.junit.Test;
 
 public class CxxLinkableEnhancerTest {
@@ -490,14 +493,19 @@ public class CxxLinkableEnhancerTest {
 
     // Now grab all input via traversing deps and verify that the middle rule prevents pulling
     // in the bottom input.
+    // Get the topologically sorted native linkables.
+    ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
+        NativeLinkableGroups.getNativeLinkableRoots(
+            ImmutableList.of(top),
+            (Function<? super BuildRule, Optional<Iterable<? extends BuildRule>>>)
+                r -> Optional.empty());
+
     NativeLinkableInput totalInput =
-        NativeLinkableGroups.getTransitiveNativeLinkableInput(
-            cxxPlatform,
+        NativeLinkables.getTransitiveNativeLinkableInput(
             graphBuilder,
             EmptyTargetConfiguration.INSTANCE,
-            ImmutableList.of(top),
-            Linker.LinkableDepType.STATIC,
-            r -> Optional.empty());
+            Iterables.transform(roots.values(), g -> g.getNativeLinkable(cxxPlatform)),
+            LinkableDepType.STATIC);
     assertThat(
         Arg.stringify(bottomInput.getArgs(), graphBuilder.getSourcePathResolver()),
         hasItem(sentinel));
