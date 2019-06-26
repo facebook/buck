@@ -20,6 +20,7 @@ import build.bazel.remote.execution.v2.Command.EnvironmentVariable;
 import build.bazel.remote.execution.v2.OutputFile.Builder;
 import build.bazel.remote.execution.v2.Platform;
 import build.bazel.remote.execution.v2.Platform.Property;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.google.common.collect.ImmutableList;
@@ -31,6 +32,8 @@ import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -492,6 +495,15 @@ public class GrpcProtocol implements Protocol {
   @Override
   public HashFunction getHashFunction() {
     return HASHER;
+  }
+
+  @Override
+  public MessageDigest getMessageDigest() {
+    try {
+      return MessageDigest.getInstance("SHA-1");
+    } catch (NoSuchAlgorithmException e) {
+      throw new BuckUncheckedExecutionException("SHA-1 Digest verification not available");
+    }
   }
 
   private static build.bazel.remote.execution.v2.DirectoryNode get(DirectoryNode directoryNode) {

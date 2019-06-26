@@ -24,6 +24,7 @@ import com.google.common.hash.HashFunction;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.security.MessageDigest;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -163,4 +164,6 @@ public interface Protocol {
   Digest computeDigest(byte[] data);
 
   HashFunction getHashFunction();
+
+  MessageDigest getMessageDigest();
 }
