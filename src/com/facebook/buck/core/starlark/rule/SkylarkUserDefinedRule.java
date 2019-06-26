@@ -15,9 +15,11 @@
  */
 package com.facebook.buck.core.starlark.rule;
 
+import com.facebook.buck.core.starlark.coercer.SkylarkParamInfo;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
+import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -54,6 +56,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   @Nullable private String name = null;
   private final BaseFunction implementation;
   private final ImmutableMap<String, Attribute<?>> attrs;
+  private final ImmutableMap<String, ParamInfo> params;
 
   private SkylarkUserDefinedRule(
       FunctionSignature.WithValues<Object, SkylarkType> signature,
@@ -67,6 +70,11 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     super("<incomplete rule>", signature, location);
     this.implementation = implementation;
     this.attrs = attrs;
+    this.params =
+        getAttrs().entrySet().stream()
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    Map.Entry::getKey, e -> new SkylarkParamInfo(e.getKey(), e.getValue())));
   }
 
   @Override
@@ -279,6 +287,11 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   /** The implementation function used during the analysis phase */
   BaseFunction getImplementation() {
     return implementation;
+  }
+
+  /** Get ParamInfo objects for all of the {@link Attribute}s provided to this instance */
+  public ImmutableMap<String, ParamInfo> getAllParamInfo() {
+    return params;
   }
 
   private static class MandatoryComparator implements Comparator<Map.Entry<String, Attribute<?>>> {

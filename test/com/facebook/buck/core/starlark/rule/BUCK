@@ -5,6 +5,7 @@ standard_java_test(
     deps = [
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/starlark/coercer:coercer",
         "//src/com/facebook/buck/core/starlark/rule:rule",
         "//src/com/facebook/buck/core/starlark/rule/attr:attr",
         "//src/com/facebook/buck/core/starlark/rule/attr/impl:impl",
