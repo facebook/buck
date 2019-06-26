@@ -26,6 +26,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -365,15 +366,15 @@ public class JavaTestIntegrationTest {
             .addAll((Iterable<String>) spec.get("required_paths"))
             .build();
     // The runtime classpath of the test should all be present in the required paths
-    assertEquals(
+    MoreAsserts.assertContainsOne(
         requiredPaths,
-        ImmutableSortedSet.of(
-            workspace
-                .getPath(Paths.get("buck-out/gen/lib__transitive_lib__output/transitive_lib.jar"))
-                .toString(),
-            workspace
-                .getPath(
-                    Paths.get("buck-out/gen/lib__mid_test#testsjar__output/mid_test#testsjar.jar"))
-                .toString()));
+        workspace
+            .getPath(Paths.get("buck-out/gen/lib__transitive_lib__output/transitive_lib.jar"))
+            .toString());
+    MoreAsserts.assertContainsOne(
+        requiredPaths,
+        workspace
+            .getPath(Paths.get("buck-out/gen/lib__mid_test#testsjar__output/mid_test#testsjar.jar"))
+            .toString());
   }
 }

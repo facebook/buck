@@ -437,6 +437,7 @@ java_test(
         "//src/com/facebook/buck/jvm/java/classes:classes",
         "//src/com/facebook/buck/jvm/java/javax:javax",
         "//src/com/facebook/buck/jvm/java/runner:runner",
+        "//src/com/facebook/buck/jvm/java/version:version",
         "//src/com/facebook/buck/jvm/kotlin:kotlin",
         "//src/com/facebook/buck/jvm/scala:scala",
         "//src/com/facebook/buck/log:log",

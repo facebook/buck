@@ -341,7 +341,6 @@
   <target name="compile-testrunner" depends="checkversion">
     <mkdir dir="${testrunner.classes.dir}" />
     <javac srcdir="${src.dir}"
-           includes="com/facebook/buck/log/AppendableLogRecord.java,com/facebook/buck/testrunner/**,com/facebook/buck/util/concurrent/MoreExecutors.java,com/facebook/buck/jvm/java/runner/**"
            destdir="${testrunner.classes.dir}"
            classpathref="testrunner.classpath"
            debug="on"
@@ -350,6 +349,11 @@
            target="8"
            bootclasspath="third-party/java/jdk/jdk8-rt-stub.jar"
            >
+      <include name="com/facebook/buck/log/AppendableLogRecord.java" />
+      <include name="com/facebook/buck/testrunner/**" />
+      <include name="com/facebook/buck/util/concurrent/MoreExecutors.java" />
+      <include name="com/facebook/buck/jvm/java/runner/**" />
+      <include name="com/facebook/buck/jvm/java/version/JavaVersion.java" />
       <compilerarg value="-Xlint:rawtypes" />
       <compilerarg value="-Xlint:unchecked" />
       <compilerarg value="-Werror" />

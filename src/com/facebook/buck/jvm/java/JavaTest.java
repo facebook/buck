@@ -47,6 +47,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
@@ -63,6 +64,7 @@ import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.ZipFileTraversal;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -129,6 +131,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final TestType testType;
 
+  private final int targetJavaVersion;
+
   private final Optional<Long> testRuleTimeoutMs;
 
   private final Optional<Long> testCaseTimeoutMs;
@@ -142,6 +146,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private static final Logger LOG = Logger.get(JavaTest.class);
 
   @Nullable private ImmutableList<JUnitStep> junits;
+
+  @Nullable private JUnitStep externalJunitStep;
 
   private final boolean runTestSeparately;
 
@@ -158,6 +164,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Set<String> labels,
       Set<String> contacts,
       TestType testType,
+      String targetLevel,
       Tool javaRuntimeLauncher,
       List<Arg> vmArgs,
       Map<String, String> nativeLibsEnvironment,
@@ -178,6 +185,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.labels = ImmutableSet.copyOf(labels);
     this.contacts = ImmutableSet.copyOf(contacts);
     this.testType = testType;
+    this.targetJavaVersion = JavaVersion.getMajorVersionFromString(targetLevel);
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.testCaseTimeoutMs = testCaseTimeoutMs;
     this.env = env;
@@ -232,6 +240,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     TestSelectorList testSelectorList = options.getTestSelectorList();
     JUnitJvmArgs args =
         JUnitJvmArgs.builder()
+            .setTargetJavaVersion(targetJavaVersion)
             .setTestType(testType)
             .setDirectoryForTestResults(outDir)
             .setClasspathFile(getClassPathFile())
@@ -644,7 +653,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext, TestRunningOptions options, BuildContext buildContext) {
-    JUnitStep jUnitStep =
+    externalJunitStep =
         getJUnitStep(
             executionContext,
             buildContext.getSourcePathResolver(),
@@ -656,12 +665,18 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .setCwd(getProjectFilesystem().getRootPath())
         .setTarget(getBuildTarget())
         .setType("junit")
-        .setCommand(jUnitStep.getShellCommandInternal(executionContext))
-        .setEnv(jUnitStep.getEnvironmentVariables(executionContext))
+        .setCommand(externalJunitStep.getShellCommandInternal(executionContext))
+        .setEnv(externalJunitStep.getEnvironmentVariables(executionContext))
         .setLabels(getLabels())
         .setContacts(getContacts())
-        .setRequiredPaths(getRuntimeClasspath(buildContext))
+        .addAllRequiredPaths(getRuntimeClasspath(buildContext))
+        .addRequiredPaths(externalJunitStep.getClasspathArgfile())
         .build();
+  }
+
+  @Override
+  public void onPreTest(BuildContext buildContext) throws IOException {
+    Preconditions.checkNotNull(externalJunitStep).ensureClasspathArgfile();
   }
 
   @Override
