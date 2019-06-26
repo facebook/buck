@@ -53,6 +53,7 @@ public class RemoteExecutionClientsFactory {
             remoteExecutionConfig.getRemotePort(),
             remoteExecutionConfig.getCasHost(),
             remoteExecutionConfig.getCasPort(),
+            remoteExecutionConfig.getCasDeadline(),
             remoteExecutionConfig.getInsecure(),
             remoteExecutionConfig.getCasInsecure(),
             remoteExecutionConfig.getCertFile(),

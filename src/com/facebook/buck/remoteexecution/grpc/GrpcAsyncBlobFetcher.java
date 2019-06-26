@@ -40,6 +40,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.security.MessageDigest;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /** GRPC implementation of the AsyncBlobFetcher. */
 public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
@@ -49,6 +50,7 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
   private final ContentAddressableStorageFutureStub storageStub;
   private final BuckEventBus buckEventBus;
   private final Protocol protocol;
+  private final int casDeadline;
 
   public GrpcAsyncBlobFetcher(
       String instanceName,
@@ -56,12 +58,14 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
       ByteStreamStub byteStreamStub,
       BuckEventBus buckEventBus,
       RemoteExecutionMetadata metadata,
-      Protocol protocol) {
+      Protocol protocol,
+      int casDeadline) {
     this.instanceName = instanceName;
     this.storageStub = storageStub;
     this.byteStreamStub = GrpcHeaderHandler.wrapStubToSendMetadata(byteStreamStub, metadata);
     this.buckEventBus = buckEventBus;
     this.protocol = protocol;
+    this.casDeadline = casDeadline;
   }
 
   @Override
@@ -84,7 +88,7 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
         CasBlobDownloadEvent.sendEvent(buckEventBus, 1, digest.getSize()),
         Futures.transform(
             GrpcRemoteExecutionClients.readByteStream(
-                instanceName, digest, byteStreamStub, data::concat),
+                instanceName, digest, byteStreamStub, data::concat, casDeadline),
             ignored -> data.get(),
             MoreExecutors.directExecutor()));
   }
@@ -101,7 +105,8 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
               for (ByteBuffer d : byteString.asReadOnlyByteBufferList()) {
                 channel.write(d);
               }
-            }));
+            },
+            casDeadline));
   }
 
   @Override
@@ -120,7 +125,9 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
     }
 
     ListenableFuture<BatchReadBlobsResponse> response =
-        storageStub.batchReadBlobs(requestBuilder.build());
+        storageStub
+            .withDeadlineAfter(casDeadline, TimeUnit.SECONDS)
+            .batchReadBlobs(requestBuilder.build());
     return closeScopeWhenFutureCompletes(
         scope,
         Futures.transform(

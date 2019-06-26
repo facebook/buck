@@ -49,6 +49,7 @@ public class GrpcContentAddressableStorageClient implements ContentAddressedStor
   public GrpcContentAddressableStorageClient(
       ContentAddressableStorageFutureStub storageStub,
       ByteStreamStub byteStreamStub,
+      int casDeadline,
       String instanceName,
       Protocol protocol,
       BuckEventBus buckEventBus,
@@ -63,7 +64,13 @@ public class GrpcContentAddressableStorageClient implements ContentAddressedStor
 
     this.fetcher =
         new GrpcAsyncBlobFetcher(
-            instanceName, storageStub, byteStreamStub, buckEventBus, metadata, protocol);
+            instanceName,
+            storageStub,
+            byteStreamStub,
+            buckEventBus,
+            metadata,
+            protocol,
+            casDeadline);
     this.outputsMaterializer =
         new OutputsMaterializer(
             SIZE_LIMIT,
