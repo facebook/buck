@@ -16,6 +16,11 @@
 
 package com.facebook.buck.remoteexecution.grpc;
 
+import build.bazel.remote.execution.v2.BatchReadBlobsRequest;
+import build.bazel.remote.execution.v2.BatchReadBlobsResponse;
+import build.bazel.remote.execution.v2.ContentAddressableStorageGrpc.ContentAddressableStorageFutureStub;
+import build.bazel.remote.execution.v2.Digest;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
 import com.facebook.buck.remoteexecution.event.CasBlobDownloadEvent;
@@ -23,28 +28,40 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.util.Scope;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
+import io.grpc.Status;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
+import java.security.MessageDigest;
+import java.util.List;
 
 /** GRPC implementation of the AsyncBlobFetcher. */
 public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
 
   private final String instanceName;
   private final ByteStreamStub byteStreamStub;
+  private final ContentAddressableStorageFutureStub storageStub;
   private final BuckEventBus buckEventBus;
+  private final Protocol protocol;
 
   public GrpcAsyncBlobFetcher(
       String instanceName,
+      ContentAddressableStorageFutureStub storageStub,
       ByteStreamStub byteStreamStub,
       BuckEventBus buckEventBus,
-      RemoteExecutionMetadata metadata) {
+      RemoteExecutionMetadata metadata,
+      Protocol protocol) {
     this.instanceName = instanceName;
+    this.storageStub = storageStub;
     this.byteStreamStub = GrpcHeaderHandler.wrapStubToSendMetadata(byteStreamStub, metadata);
     this.buckEventBus = buckEventBus;
+    this.protocol = protocol;
   }
 
   @Override
@@ -87,9 +104,79 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
             }));
   }
 
+  @Override
+  public ListenableFuture<Void> batchFetchBlobs(
+      ImmutableMultimap<Protocol.Digest, WritableByteChannel> requests) {
+    Scope scope =
+        CasBlobDownloadEvent.sendEvent(
+            buckEventBus,
+            requests.keySet().size(),
+            requests.keySet().stream().mapToLong(Protocol.Digest::getSize).sum());
+    BatchReadBlobsRequest.Builder requestBuilder = BatchReadBlobsRequest.newBuilder();
+    requestBuilder.setInstanceName(instanceName);
+    for (Protocol.Digest digest : requests.keySet()) {
+      requestBuilder.addDigests(
+          Digest.newBuilder().setHash(digest.getHash()).setSizeBytes(digest.getSize()).build());
+    }
+
+    ListenableFuture<BatchReadBlobsResponse> response =
+        storageStub.batchReadBlobs(requestBuilder.build());
+    return closeScopeWhenFutureCompletes(
+        scope,
+        Futures.transform(
+            response,
+            blobs -> {
+              try {
+                Preconditions.checkNotNull(blobs, "Invalid response from CAS server.");
+                List<BatchReadBlobsResponse.Response> responses = blobs.getResponsesList();
+
+                Preconditions.checkState(
+                    responses.size() == requests.keySet().size(),
+                    "Invalid response size from CAS server. Expected: %s Got: %s",
+                    requests.keySet().size(),
+                    responses.size());
+
+                for (BatchReadBlobsResponse.Response batchResponse : responses) {
+                  Protocol.Digest digest = new GrpcProtocol.GrpcDigest(batchResponse.getDigest());
+                  // TODO(rajy): We should treat these as individual errors
+                  Preconditions.checkState(
+                      Status.fromCodeValue(batchResponse.getStatus().getCode()).isOk()
+                          && requests.containsKey(digest),
+                      "Invalid batchResponse from CAS server. For digest: %s",
+                      digest);
+                  MessageDigest messageDigest = protocol.getMessageDigest();
+                  for (ByteBuffer dataByteBuffer :
+                      batchResponse.getData().asReadOnlyByteBufferList()) {
+                    messageDigest.update(dataByteBuffer.duplicate());
+                    for (WritableByteChannel channel : requests.get(digest)) {
+                      // Reset buffer position for each channel that's written to
+                      channel.write(dataByteBuffer.duplicate());
+                    }
+                  }
+                  String receivedHash = HashCode.fromBytes(messageDigest.digest()).toString();
+                  if (digest.getSize() != batchResponse.getData().size()
+                      || !digest.getHash().equals(receivedHash)) {
+                    throw new BuckUncheckedExecutionException(
+                        "Digest of received bytes: "
+                            + receivedHash
+                            + ":"
+                            + batchResponse.getData().size()
+                            + " doesn't match expected digest: "
+                            + digest);
+                  }
+                }
+              } catch (Exception e) {
+                throw new BuckUncheckedExecutionException(
+                    e, "When materializing digests: %s.", requests.keySet());
+              }
+              return null;
+            },
+            MoreExecutors.directExecutor()));
+  }
+
   private <T> ListenableFuture<T> closeScopeWhenFutureCompletes(
       Scope scope, ListenableFuture<T> future) {
-    future.addListener(() -> scope.close(), MoreExecutors.directExecutor());
+    future.addListener(scope::close, MoreExecutors.directExecutor());
     return future;
   }
 }

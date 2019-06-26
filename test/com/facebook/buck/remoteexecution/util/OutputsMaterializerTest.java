@@ -31,6 +31,7 @@ import com.facebook.buck.remoteexecution.util.OutputsCollector.Delegate;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -54,11 +55,14 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 import org.junit.Test;
 
 public class OutputsMaterializerTest {
+
+  private final int SIZE_LIMIT = 5;
 
   @Test
   public void testMaterializeFiles() throws IOException, ExecutionException, InterruptedException {
@@ -86,11 +90,13 @@ public class OutputsMaterializerTest {
     OutputFile outputFile3 = protocol.newOutputFile(path3, digest3, true);
     OutputFile outputFile4 = protocol.newOutputFile(path4, digest4, false);
 
+    ExecutorService service = Executors.newSingleThreadExecutor();
+
     AsyncBlobFetcher fetcher =
         new SimpleSingleThreadedBlobFetcher(
             ImmutableMap.of(digest1, data1, digest2, data2, digest3, data3, digest4, data4));
 
-    new OutputsMaterializer(fetcher, protocol)
+    new OutputsMaterializer(SIZE_LIMIT, service, fetcher, protocol)
         .materialize(
             ImmutableList.of(),
             ImmutableList.of(outputFile1, outputFile2, outputFile3, outputFile4),
@@ -141,6 +147,8 @@ public class OutputsMaterializerTest {
             rootDir,
             protocol);
 
+    ExecutorService service = Executors.newSingleThreadExecutor();
+
     AsyncBlobFetcher fetcher =
         new SimpleSingleThreadedBlobFetcher(
             collectedOutputs.requiredData.stream()
@@ -155,7 +163,7 @@ public class OutputsMaterializerTest {
                           }
                         })));
 
-    new OutputsMaterializer(fetcher, protocol)
+    new OutputsMaterializer(SIZE_LIMIT, service, fetcher, protocol)
         .materialize(
             collectedOutputs.outputDirectories, collectedOutputs.outputFiles, recordingMaterializer)
         .get();
@@ -365,6 +373,22 @@ public class OutputsMaterializerTest {
               throw new RuntimeException(e);
             }
           });
+    }
+
+    @Override
+    public ListenableFuture<Void> batchFetchBlobs(
+        ImmutableMultimap<Digest, WritableByteChannel> requests) throws IOException {
+      for (Digest digest : requests.keySet()) {
+        try {
+          ByteBuffer b = fetch(digest).get();
+          for (WritableByteChannel channel : requests.get(digest)) {
+            channel.write(b.duplicate());
+          }
+        } catch (InterruptedException | ExecutionException e) {
+          throw new RuntimeException(e);
+        }
+      }
+      return Futures.immediateFuture(null);
     }
   }
 }

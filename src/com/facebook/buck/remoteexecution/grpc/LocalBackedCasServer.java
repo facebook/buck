@@ -16,6 +16,8 @@
 
 package com.facebook.buck.remoteexecution.grpc;
 
+import build.bazel.remote.execution.v2.BatchReadBlobsRequest;
+import build.bazel.remote.execution.v2.BatchReadBlobsResponse;
 import build.bazel.remote.execution.v2.BatchUpdateBlobsRequest;
 import build.bazel.remote.execution.v2.BatchUpdateBlobsResponse;
 import build.bazel.remote.execution.v2.BatchUpdateBlobsResponse.Response;
@@ -24,6 +26,7 @@ import build.bazel.remote.execution.v2.FindMissingBlobsRequest;
 import build.bazel.remote.execution.v2.FindMissingBlobsResponse;
 import build.bazel.remote.execution.v2.GetTreeRequest;
 import build.bazel.remote.execution.v2.GetTreeResponse;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.remoteexecution.CasBlobUploader.UploadResult;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcDigest;
@@ -31,17 +34,21 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Directory;
 import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
 import com.google.common.collect.ImmutableList;
+import com.google.protobuf.ByteString;
 import com.google.rpc.Status.Builder;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /** A simple CAS server backed by a {@link LocalContentAddressedStorage}. */
 class LocalBackedCasServer extends ContentAddressableStorageImplBase {
+  private static final Logger LOG = Logger.get(LocalBackedCasServer.class);
+
   private final LocalContentAddressedStorage storage;
 
   LocalBackedCasServer(LocalContentAddressedStorage storage) {
@@ -65,6 +72,28 @@ class LocalBackedCasServer extends ContentAddressableStorageImplBase {
     } catch (Exception e) {
       e.printStackTrace();
       responseObserver.onError(e);
+    }
+  }
+
+  @Override
+  public void batchReadBlobs(
+      BatchReadBlobsRequest request, StreamObserver<BatchReadBlobsResponse> responseObserver) {
+    try {
+      BatchReadBlobsResponse.Builder responseBuilder = BatchReadBlobsResponse.newBuilder();
+      for (build.bazel.remote.execution.v2.Digest digest : request.getDigestsList()) {
+        InputStream dataStream = storage.getData(new GrpcDigest(digest));
+        responseBuilder.addResponses(
+            BatchReadBlobsResponse.Response.newBuilder()
+                .setDigest(digest)
+                .setData(ByteString.readFrom(dataStream))
+                .build());
+      }
+
+      responseObserver.onNext(responseBuilder.build());
+      responseObserver.onCompleted();
+    } catch (Exception e) {
+      LOG.error(e);
+      responseObserver.onError(new StatusRuntimeException(Status.fromThrowable(e)));
     }
   }
 
