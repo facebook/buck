@@ -20,11 +20,14 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 import java.util.Optional;
 
 public abstract class PrebuiltCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
@@ -45,4 +48,23 @@ public abstract class PrebuiltCxxLibrary extends NoopBuildRuleWithDeclaredAndExt
 
   abstract Optional<SourcePath> getStaticPicLibrary(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
+
+  @Override
+  public boolean supportsOmnibusLinkingForHaskell(CxxPlatform cxxPlatform) {
+    // TODO(agallagher): This should use supportsOmnibusLinking.
+    return true;
+  }
+
+  @Override
+  public boolean isPrebuiltSOForHaskellOmnibus(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    ImmutableMap<String, SourcePath> sharedLibraries =
+        getSharedLibraries(cxxPlatform, graphBuilder);
+    for (Map.Entry<String, SourcePath> ent : sharedLibraries.entrySet()) {
+      if (!(ent.getValue() instanceof PathSourcePath)) {
+        return false;
+      }
+    }
+    return true;
+  }
 }

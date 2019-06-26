@@ -28,7 +28,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
@@ -37,7 +36,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxLibraryGroup;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.PrebuiltCxxLibrary;
-import com.facebook.buck.cxx.PrebuiltCxxLibraryGroupDescription;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -64,7 +62,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -86,33 +83,6 @@ public class HaskellGhciDescription
   @Override
   public Class<HaskellGhciDescriptionArg> getConstructorArgType() {
     return HaskellGhciDescriptionArg.class;
-  }
-
-  /** Whether the nativeLinkable should be linked shared or othewise */
-  public static boolean isPrebuiltSO(
-      NativeLinkableGroup nativeLinkableGroup,
-      CxxPlatform cxxPlatform,
-      ActionGraphBuilder graphBuilder) {
-
-    if (nativeLinkableGroup
-        instanceof PrebuiltCxxLibraryGroupDescription.CustomPrebuiltCxxLibrary) {
-      return true;
-    }
-
-    if (!(nativeLinkableGroup instanceof PrebuiltCxxLibrary)) {
-      return false;
-    }
-
-    ImmutableMap<String, SourcePath> sharedLibraries =
-        nativeLinkableGroup.getSharedLibraries(cxxPlatform, graphBuilder);
-
-    for (Map.Entry<String, SourcePath> ent : sharedLibraries.entrySet()) {
-      if (!(ent.getValue() instanceof PathSourcePath)) {
-        return false;
-      }
-    }
-
-    return true;
   }
 
   /**
@@ -156,11 +126,7 @@ public class HaskellGhciDescription
         }
 
         // We cannot include prebuilt SOs in omnibus.
-        //
-        // TODO(agallagher): We should also use `NativeLinkable.supportsOmnibusLinking()` to
-        // determine if we can include the library, but this will need likely need to be updated for
-        // a multi-pass walk first.
-        if (isPrebuiltSO(nativeLinkableGroup, cxxPlatform, graphBuilder)) {
+        if (nativeLinkableGroup.isPrebuiltSOForHaskellOmnibus(cxxPlatform, graphBuilder)) {
           builder.putDeps(nativeLinkableGroup.getBuildTarget(), nativeLinkableGroup);
           LOG.verbose(
               "%s: skipping prebuilt SO %s", baseTarget, nativeLinkableGroup.getBuildTarget());
@@ -168,11 +134,7 @@ public class HaskellGhciDescription
         }
 
         // Include C/C++ libs capable of static linking in omnibus.
-        //
-        // TODO(agallagher): This should probably be *any* `NativeLinkable` that supports omnibus
-        // linking.
-        if (nativeLinkableGroup instanceof CxxLibraryGroup
-            || nativeLinkableGroup instanceof PrebuiltCxxLibrary) {
+        if (nativeLinkableGroup.supportsOmnibusLinkingForHaskell(cxxPlatform)) {
           builder.putBody(nativeLinkableGroup.getBuildTarget(), nativeLinkableGroup);
           LOG.verbose(
               "%s: including C/C++ library %s", baseTarget, nativeLinkableGroup.getBuildTarget());

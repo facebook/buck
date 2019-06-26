@@ -351,6 +351,12 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
         BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
       super(buildTarget, projectFilesystem, params);
     }
+
+    @Override
+    public boolean isPrebuiltSOForHaskellOmnibus(
+        CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+      return true;
+    }
   }
 
   @BuckStyleImmutable

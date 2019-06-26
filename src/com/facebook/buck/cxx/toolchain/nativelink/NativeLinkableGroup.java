@@ -120,6 +120,24 @@ public interface NativeLinkableGroup {
     return true;
   }
 
+  // TODO(agallagher): We should also use `NativeLinkable.supportsOmnibusLinking()` to
+  // determine if we can include the library, but this will need likely need to be updated for
+  // a multi-pass walk first.
+  /** Whether the nativeLinkable should be linked shared or otherwise for haskell omnibus. */
+  @SuppressWarnings("unused")
+  default boolean isPrebuiltSOForHaskellOmnibus(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return false;
+  }
+
+  /** @return whether this {@link NativeLinkableGroup} supports omnibus linking for haskell. */
+  // TODO(agallagher): This should probably be *any* `NativeLinkable` that supports omnibus
+  // linking.
+  @SuppressWarnings("unused")
+  default boolean supportsOmnibusLinkingForHaskell(CxxPlatform cxxPlatform) {
+    return false;
+  }
+
   enum Linkage {
     ANY,
     STATIC,

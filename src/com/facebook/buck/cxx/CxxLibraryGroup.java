@@ -486,6 +486,12 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public boolean supportsOmnibusLinkingForHaskell(CxxPlatform cxxPlatform) {
+    // TODO(agallagher): This should use supportsOmnibusLinking.
+    return true;
+  }
+
+  @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     // We export all declared deps as runtime deps, to setup a transitive runtime dep chain which
     // will pull in runtime deps (e.g. other binaries) or transitive C/C++ libraries.  Since the
