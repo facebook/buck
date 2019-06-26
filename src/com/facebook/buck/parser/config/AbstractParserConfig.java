@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.parser;
+package com.facebook.buck.parser.config;
 
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
@@ -37,7 +37,7 @@ import org.immutables.value.Value;
 
 @Value.Immutable(builder = false, copy = false)
 @BuckStyleImmutable
-abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
+public abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
 
   public static final boolean DEFAULT_ALLOW_EMPTY_GLOBS = true;
   public static final String DEFAULT_BUILD_FILE_NAME = "BUCK";

@@ -44,6 +44,7 @@ import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.TargetSpecResolver.FlavorEnhancer;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecResolver;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;

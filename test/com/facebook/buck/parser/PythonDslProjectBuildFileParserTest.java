@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser;
 
-import static com.facebook.buck.parser.ParserConfig.DEFAULT_BUILD_FILE_NAME;
+import static com.facebook.buck.parser.config.AbstractParserConfig.DEFAULT_BUILD_FILE_NAME;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -31,6 +31,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.watchman.WatchmanDiagnosticEvent;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;

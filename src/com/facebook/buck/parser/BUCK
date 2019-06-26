@@ -8,6 +8,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
         "//src/com/facebook/buck/core/rules/configsetting:configsetting",
         "//src/com/facebook/buck/parser/api:api",
+        "//src/com/facebook/buck/parser/config:config",
         "//src/com/facebook/buck/parser/implicit:implicit",
     ],
     tests = [

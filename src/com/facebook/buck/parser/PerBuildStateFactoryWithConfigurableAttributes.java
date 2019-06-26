@@ -47,6 +47,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.manifestservice.ManifestService;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;

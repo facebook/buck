@@ -36,7 +36,7 @@ import com.facebook.buck.io.watchman.WatchmanCursor;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.parser.DaemonicParserState;
-import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
