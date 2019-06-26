@@ -57,7 +57,7 @@ public class TopologicalSortTest {
     return new DirectedAcyclicGraph<>(graph);
   }
 
-  public void assertTopologicallySorted(ImmutableList<String> sorted) {
+  public void assertTopologicallySorted(ImmutableList<? extends String> sorted) {
     assertOrdering(sorted, "B", "A");
     assertOrdering(sorted, "C", "A");
     assertOrdering(sorted, "D", "B");
@@ -78,7 +78,12 @@ public class TopologicalSortTest {
   @Test
   public void sortsSnowflakes() {
     DirectedAcyclicGraph<String> graph = makeGraph();
-    ImmutableList<String> sorted = TopologicalSort.snowflakeSort(graph, Ordering.natural());
+    ImmutableList<? extends String> sorted =
+        TopologicalSort.snowflakeSort(
+            graph.getNodesWithNoIncomingEdges(),
+            s -> graph.getOutgoingNodesFor(s).iterator(),
+            Ordering.natural());
+
     assertEquals(graph.getNodes(), ImmutableSet.copyOf(sorted));
     assertTopologicallySorted(sorted);
 
@@ -88,7 +93,16 @@ public class TopologicalSortTest {
     assertOrdering(sorted, "C", "D");
   }
 
-  private <T> void assertOrdering(List<T> list, T before, T after) {
+  @Test
+  public void sortsTraversable() {
+    DirectedAcyclicGraph<String> graph = makeGraph();
+    ImmutableList<? extends String> sorted =
+        TopologicalSort.sort(
+            graph.getNodesWithNoIncomingEdges(), s -> graph.getOutgoingNodesFor(s).iterator());
+    assertTopologicallySorted(sorted);
+  }
+
+  private <T> void assertOrdering(List<? extends T> list, T before, T after) {
     assertTrue(
         String.format("Expected %s to be before %s in %s", before, after, list),
         list.indexOf(before) < list.indexOf(after));

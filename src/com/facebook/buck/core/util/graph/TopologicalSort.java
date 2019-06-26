@@ -18,6 +18,7 @@ package com.facebook.buck.core.util.graph;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Queues;
 import java.util.Comparator;
@@ -35,7 +36,17 @@ public class TopologicalSort {
 
   private TopologicalSort() {}
 
-  // TODO(agallagher): delete this.
+  /** Returns a topologically sorted list of the nodes in the graph. */
+  public static <T> ImmutableList<T> sort(TraversableGraph<T> graph) {
+    return sortImpl(graph, LinkedHashSet::new);
+  }
+
+  /** Returns a topologically sorted list of all nodes in the graph. */
+  public static <T> ImmutableList<? extends T> sort(
+      Iterable<? extends T> roots, GraphTraversable<T> traversable) {
+    return sortTraversableImpl(roots, traversable, LinkedHashSet::new);
+  }
+
   /**
    * This special form of topological sort returns items with each "level" sorted. The algorithm is
    * basically this: identify all the leaves of the graph, sort them, add them to the list, remove
@@ -47,17 +58,42 @@ public class TopologicalSort {
    *     been ordering link lines, and so this preserves that legacy behavior until code that
    *     depends on it is fixed.
    */
+  // TODO(agallagher): delete this.
   @Deprecated
-  public static <T> ImmutableList<T> snowflakeSort(
-      TraversableGraph<T> graph, Comparator<T> comparator) {
-    return sortImpl(graph, () -> new TreeSet<>(comparator));
+  public static <T> ImmutableList<? extends T> snowflakeSort(
+      Iterable<? extends T> roots, GraphTraversable<T> traversable, Comparator<T> comparator) {
+    return sortTraversableImpl(roots, traversable, () -> new TreeSet<>(comparator));
   }
 
-  /** Returns a topologically sorted list of the nodes in the graph. */
-  public static <T> ImmutableList<T> sort(TraversableGraph<T> graph) {
-    return sortImpl(graph, LinkedHashSet::new);
+  private static <T> ImmutableList<? extends T> sortTraversableImpl(
+      Iterable<? extends T> roots,
+      GraphTraversable<T> traversable,
+      Supplier<Set<T>> levelSetFactory) {
+    MutableDirectedGraph<T> graph = new MutableDirectedGraph<>();
+    AbstractBreadthFirstTraversal<T> visitor =
+        new AbstractBreadthFirstTraversal<T>(roots) {
+          @Override
+          public ImmutableSet<T> visit(T node) {
+            graph.addNode(node);
+
+            // Process all the traversable deps.
+            ImmutableSet.Builder<T> deps = ImmutableSet.builder();
+            traversable
+                .findChildren(node)
+                .forEachRemaining(
+                    dep -> {
+                      graph.addEdge(node, dep);
+                      deps.add(dep);
+                    });
+            return deps.build();
+          }
+        };
+    visitor.start();
+    return sortImpl(graph, levelSetFactory);
   }
 
+  // TODO(cjhopman): The implementations here aren't great and should be improved and migrated to
+  // GraphTraversables (probably).
   private static <T> ImmutableList<T> sortImpl(
       TraversableGraph<T> graph, Supplier<Set<T>> levelSetFactory) {
     // AtomicInteger is used to decrement the integer value in-place.

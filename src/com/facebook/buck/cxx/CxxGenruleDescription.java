@@ -561,7 +561,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
     private NativeLinkableInput getNativeLinkableInput(
         ActionGraphBuilder graphBuilder, Iterable<BuildRule> rules, Optional<Pattern> filter) {
-      ImmutableList<NativeLinkableGroup> nativeLinkableGroups =
+      ImmutableList<? extends NativeLinkableGroup> nativeLinkableGroups =
           NativeLinkableGroups.getNativeLinkables(
               cxxPlatform,
               graphBuilder,
