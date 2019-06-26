@@ -506,11 +506,13 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
         .map(BuildRule::getBuildTarget);
   }
 
+  @Override
   public Iterable<? extends Arg> getExportedLinkerFlags(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return exportedLinkerFlags.apply(cxxPlatform, graphBuilder);
   }
 
+  @Override
   public Iterable<? extends Arg> getExportedPostLinkerFlags(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return postExportedLinkerFlags.apply(cxxPlatform, graphBuilder);

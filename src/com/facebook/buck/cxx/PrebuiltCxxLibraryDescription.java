@@ -507,18 +507,22 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public ImmutableList<Arg> getExportedLinkerArgs(
+      public ImmutableList<Arg> getExportedLinkerFlags(
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         return PrebuiltCxxLibraryDescription.this.getExportedLinkerArgs(
             cxxPlatform, args, buildTarget, cellRoots, graphBuilder);
       }
 
       @Override
-      public ImmutableList<String> getExportedPostLinkerFlags(CxxPlatform cxxPlatform) {
+      public ImmutableList<Arg> getExportedPostLinkerFlags(
+          CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         return CxxFlags.getFlagsWithPlatformMacroExpansion(
-            args.getExportedPostLinkerFlags(),
-            args.getExportedPostPlatformLinkerFlags(),
-            cxxPlatform);
+                args.getExportedPostLinkerFlags(),
+                args.getExportedPostPlatformLinkerFlags(),
+                cxxPlatform)
+            .stream()
+            .map(s -> (Arg) StringArg.from(s))
+            .collect(ImmutableList.toImmutableList());
       }
 
       private String getSoname(CxxPlatform cxxPlatform) {
@@ -677,7 +681,7 @@ public class PrebuiltCxxLibraryDescription
         // Build the library path and linker arguments that we pass through the
         // {@link NativeLinkable} interface for linking.
         ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
-        linkerArgsBuilder.addAll(getExportedLinkerArgs(cxxPlatform, graphBuilder));
+        linkerArgsBuilder.addAll(getExportedLinkerFlags(cxxPlatform, graphBuilder));
 
         if (!args.isHeaderOnly()) {
           if (type == Linker.LinkableDepType.SHARED) {
@@ -718,7 +722,7 @@ public class PrebuiltCxxLibraryDescription
         }
 
         // Add any post exported flags, if any.
-        linkerArgsBuilder.addAll(StringArg.from(getExportedPostLinkerFlags(cxxPlatform)));
+        linkerArgsBuilder.addAll(getExportedPostLinkerFlags(cxxPlatform, graphBuilder));
 
         ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
 
@@ -829,7 +833,7 @@ public class PrebuiltCxxLibraryDescription
                   ActionGraphBuilder graphBuilder,
                   SourcePathResolver pathResolver) {
                 return NativeLinkableInput.builder()
-                    .addAllArgs(getExportedLinkerArgs(cxxPlatform, graphBuilder))
+                    .addAllArgs(getExportedLinkerFlags(cxxPlatform, graphBuilder))
                     .addAllArgs(
                         cxxPlatform
                             .getLd()
@@ -838,7 +842,7 @@ public class PrebuiltCxxLibraryDescription
                                 SourcePathArg.of(
                                     getStaticPicLibrary(cxxPlatform, graphBuilder).get()),
                                 pathResolver))
-                    .addAllArgs(StringArg.from(getExportedPostLinkerFlags(cxxPlatform)))
+                    .addAllArgs(getExportedPostLinkerFlags(cxxPlatform, graphBuilder))
                     .build();
               }
 

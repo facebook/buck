@@ -38,10 +38,13 @@ public abstract class PrebuiltCxxLibrary extends NoopBuildRuleWithDeclaredAndExt
     super(buildTarget, projectFilesystem, params);
   }
 
-  public abstract ImmutableList<Arg> getExportedLinkerArgs(
+  @Override
+  public abstract ImmutableList<Arg> getExportedLinkerFlags(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
-  public abstract ImmutableList<String> getExportedPostLinkerFlags(CxxPlatform cxxPlatform);
+  @Override
+  public abstract ImmutableList<Arg> getExportedPostLinkerFlags(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
   abstract Optional<SourcePath> getStaticLibrary(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
