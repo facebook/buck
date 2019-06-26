@@ -166,6 +166,14 @@ public interface NativeLinkableGroup {
     return getNativeLinkableCompatibilityCache().get(cxxPlatform);
   }
 
+  /** Return a string representing the type of this rule. */
+  default String getRuleType() {
+    if (this instanceof BuildRule) {
+      return ((BuildRule) this).getType();
+    }
+    throw new UnsupportedOperationException();
+  }
+
   PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache();
 
   static PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCache(NativeLinkableGroup group) {

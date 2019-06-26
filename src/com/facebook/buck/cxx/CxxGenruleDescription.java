@@ -85,7 +85,6 @@ import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.VersionPropagator;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -569,14 +568,12 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
               depType,
               !filter.isPresent()
                   ? x -> true
-                  : input -> {
-                    Preconditions.checkArgument(input instanceof BuildRule);
-                    BuildRule rule = (BuildRule) input;
-                    return filter
-                        .get()
-                        .matcher(String.format("%s(%s)", rule.getType(), rule.getBuildTarget()))
-                        .find();
-                  });
+                  : input ->
+                      filter
+                          .get()
+                          .matcher(
+                              String.format("%s(%s)", input.getRuleType(), input.getBuildTarget()))
+                          .find());
       ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
       for (NativeLinkableGroup nativeLinkableGroup : nativeLinkableGroups) {
         nativeLinkableInputs.add(
