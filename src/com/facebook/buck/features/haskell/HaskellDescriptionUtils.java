@@ -43,11 +43,13 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups.SharedLibrariesBuilder;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -285,16 +287,16 @@ public class HaskellDescriptionUtils {
     // We pass in the linker inputs and all native linkable deps by prefixing with `-optl` so that
     // the args go straight to the linker, and preserve their order.
     linkerArgsBuilder.addAll(linkerInputs);
-    for (NativeLinkableGroup nativeLinkableGroup :
-        NativeLinkableGroups.getNativeLinkables(
-            platform.getCxxPlatform(), graphBuilder, deps, depType)) {
-      NativeLinkableGroup.Linkage link =
-          nativeLinkableGroup.getPreferredLinkage(platform.getCxxPlatform());
+    for (NativeLinkable nativeLinkable :
+        NativeLinkables.getNativeLinkables(
+            graphBuilder,
+            Iterables.transform(deps, g -> g.getNativeLinkable(platform.getCxxPlatform())),
+            depType)) {
+      NativeLinkableGroup.Linkage link = nativeLinkable.getPreferredLinkage();
       NativeLinkableInput input =
-          nativeLinkableGroup.getNativeLinkableInput(
-              platform.getCxxPlatform(),
+          nativeLinkable.getNativeLinkableInput(
               NativeLinkableGroups.getLinkStyle(link, depType),
-              linkWholeDeps.contains(nativeLinkableGroup.getBuildTarget()),
+              linkWholeDeps.contains(nativeLinkable.getBuildTarget()),
               graphBuilder,
               target.getTargetConfiguration());
       linkerArgsBuilder.addAll(input.getArgs());

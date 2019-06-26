@@ -39,9 +39,11 @@ import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -207,17 +209,15 @@ public class HaskellGhciDescription
     }
 
     // Link in omnibus deps dynamically.
-    ImmutableList<? extends NativeLinkableGroup> depLinkables =
-        NativeLinkableGroups.getNativeLinkables(
-            cxxPlatform, graphBuilder, deps, LinkableDepType.SHARED);
-    for (NativeLinkableGroup linkable : depLinkables) {
+    ImmutableList<? extends NativeLinkable> depLinkables =
+        NativeLinkables.getNativeLinkables(
+            graphBuilder,
+            Iterables.transform(deps, g -> g.getNativeLinkable(cxxPlatform)),
+            LinkableDepType.SHARED);
+    for (NativeLinkable linkable : depLinkables) {
       nativeLinkableInputs.add(
-          NativeLinkableGroups.getNativeLinkableInput(
-              cxxPlatform,
-              LinkableDepType.SHARED,
-              linkable,
-              graphBuilder,
-              baseTarget.getTargetConfiguration()));
+          NativeLinkables.getNativeLinkableInput(
+              LinkableDepType.SHARED, linkable, graphBuilder, baseTarget.getTargetConfiguration()));
     }
 
     return NativeLinkableInput.concat(nativeLinkableInputs);
