@@ -125,7 +125,7 @@ public class NativeLinkableGroups {
     visitor.start();
 
     // Topologically sort the rules.
-    ImmutableList<BuildTarget> ordered = TopologicalSort.sort(graph).reverse();
+    ImmutableList<BuildTarget> ordered = TopologicalSort.snowflakeSort(graph).reverse();
     return ordered.stream().map(nativeLinkables::get).collect(ImmutableList.toImmutableList());
   }
 

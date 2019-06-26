@@ -22,18 +22,43 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Queues;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 public class TopologicalSort {
 
   private TopologicalSort() {}
 
-  public static <T extends Comparable<?>> ImmutableList<T> sort(TraversableGraph<T> graph) {
+  // TODO(agallagher): delete this.
+  /**
+   * This special form of topological sort returns items with each "level" sorted. The algorithm is
+   * basically this: identify all the leaves of the graph, sort them, add them to the list, remove
+   * them from the graph and proceed.
+   *
+   * @deprecated This is silly. You should just use the normal sort. This is here because c/c++ link
+   *     command lines are sensitive to argument order, but aren't strict about it being correct.
+   *     Since they aren't strict, code has evolved to depend on the specific order that Buck has
+   *     been ordering link lines, and so this preserves that legacy behavior until code that
+   *     depends on it is fixed.
+   */
+  @Deprecated
+  public static <T extends Comparable<?>> ImmutableList<T> snowflakeSort(
+      TraversableGraph<T> graph) {
+    return sortImpl(graph, TreeSet::new);
+  }
 
+  /** Returns a topologically sorted list of the nodes in the graph. */
+  public static <T> ImmutableList<T> sort(TraversableGraph<T> graph) {
+    return sortImpl(graph, LinkedHashSet::new);
+  }
+
+  private static <T> ImmutableList<T> sortImpl(
+      TraversableGraph<T> graph, Supplier<Set<T>> levelSetFactory) {
     // AtomicInteger is used to decrement the integer value in-place.
     Map<T, AtomicInteger> effectiveOutDegreesOfExplorableNodes = new HashMap<>();
     Queue<T> nextLevel = Queues.newArrayDeque(graph.getNodesWithNoOutgoingEdges());
@@ -44,7 +69,7 @@ public class TopologicalSort {
       Queue<T> toExplore = nextLevel;
       nextLevel = Queues.newArrayDeque();
 
-      Set<T> level = new TreeSet<>();
+      Set<T> level = levelSetFactory.get();
 
       while (!toExplore.isEmpty()) {
         T node = toExplore.remove();
