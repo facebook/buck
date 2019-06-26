@@ -50,9 +50,10 @@ import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
@@ -560,11 +561,12 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
     private NativeLinkableInput getNativeLinkableInput(
         ActionGraphBuilder graphBuilder, Iterable<BuildRule> rules, Optional<Pattern> filter) {
-      ImmutableList<? extends NativeLinkableGroup> nativeLinkableGroups =
-          NativeLinkableGroups.getNativeLinkables(
-              cxxPlatform,
+      ImmutableList<? extends NativeLinkable> nativeLinkables =
+          NativeLinkables.getNativeLinkables(
               graphBuilder,
-              FluentIterable.from(rules).filter(NativeLinkableGroup.class),
+              FluentIterable.from(rules)
+                  .filter(NativeLinkableGroup.class)
+                  .transform(g -> g.getNativeLinkable(cxxPlatform)),
               depType,
               !filter.isPresent()
                   ? x -> true
@@ -575,14 +577,10 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
                               String.format("%s(%s)", input.getRuleType(), input.getBuildTarget()))
                           .find());
       ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
-      for (NativeLinkableGroup nativeLinkableGroup : nativeLinkableGroups) {
+      for (NativeLinkable nativeLinkable : nativeLinkables) {
         nativeLinkableInputs.add(
-            NativeLinkableGroups.getNativeLinkableInput(
-                cxxPlatform,
-                depType,
-                nativeLinkableGroup,
-                graphBuilder,
-                buildTarget.getTargetConfiguration()));
+            NativeLinkables.getNativeLinkableInput(
+                depType, nativeLinkable, graphBuilder, buildTarget.getTargetConfiguration()));
       }
       return NativeLinkableInput.concat(nativeLinkableInputs.build());
     }

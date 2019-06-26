@@ -35,9 +35,11 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -315,28 +317,26 @@ public class Omnibus {
     argsBuilder.addAll(input.getArgs());
 
     // Grab a topologically sorted mapping of all the root's deps.
-    ImmutableList<? extends NativeLinkableGroup> deps =
-        NativeLinkableGroups.getNativeLinkables(
-            cxxPlatform,
+    ImmutableList<? extends NativeLinkable> deps =
+        NativeLinkables.getNativeLinkables(
             graphBuilder,
-            root.getNativeLinkTargetDeps(cxxPlatform, graphBuilder),
+            root.getNativeLinkableTargetDeps(cxxPlatform, graphBuilder),
             Linker.LinkableDepType.SHARED);
 
     // Now process the dependencies in topological order, to assemble the link line.
     boolean alreadyAddedOmnibusToArgs = false;
-    for (NativeLinkableGroup nativeLinkableGroup : deps) {
-      BuildTarget linkableTarget = nativeLinkableGroup.getBuildTarget();
+    for (NativeLinkable nativeLinkable : deps) {
+      BuildTarget linkableTarget = nativeLinkable.getBuildTarget();
       Linker.LinkableDepType linkStyle =
           NativeLinkableGroups.getLinkStyle(
-              nativeLinkableGroup.getPreferredLinkage(cxxPlatform), Linker.LinkableDepType.SHARED);
+              nativeLinkable.getPreferredLinkage(), Linker.LinkableDepType.SHARED);
 
       // If this dep needs to be linked statically, then we always link it directly.
       if (linkStyle != Linker.LinkableDepType.SHARED) {
         Preconditions.checkState(linkStyle == Linker.LinkableDepType.STATIC_PIC);
         argsBuilder.addAll(
-            nativeLinkableGroup
-                .getNativeLinkableInput(
-                    cxxPlatform, linkStyle, graphBuilder, target.getTargetConfiguration())
+            nativeLinkable
+                .getNativeLinkableInput(linkStyle, graphBuilder, target.getTargetConfiguration())
                 .getArgs());
         continue;
       }
@@ -364,9 +364,8 @@ public class Omnibus {
       // normally.
       Preconditions.checkState(spec.getExcluded().containsKey(linkableTarget));
       argsBuilder.addAll(
-          nativeLinkableGroup
-              .getNativeLinkableInput(
-                  cxxPlatform, linkStyle, graphBuilder, target.getTargetConfiguration())
+          nativeLinkable
+              .getNativeLinkableInput(linkStyle, graphBuilder, target.getTargetConfiguration())
               .getArgs());
     }
 
@@ -587,15 +586,16 @@ public class Omnibus {
 
     // We process all excluded omnibus deps last, and just add their components as if this were a
     // normal shared link.
-    ImmutableList<? extends NativeLinkableGroup> deps =
-        NativeLinkableGroups.getNativeLinkables(
-            cxxPlatform, graphBuilder, spec.getDeps().values(), Linker.LinkableDepType.SHARED);
-    for (NativeLinkableGroup nativeLinkableGroup : deps) {
+    ImmutableList<? extends NativeLinkable> deps =
+        NativeLinkables.getNativeLinkables(
+            graphBuilder,
+            Iterables.transform(spec.getDeps().values(), g -> g.getNativeLinkable(cxxPlatform)),
+            Linker.LinkableDepType.SHARED);
+    for (NativeLinkable nativeLinkable : deps) {
       NativeLinkableInput input =
-          NativeLinkableGroups.getNativeLinkableInput(
-              cxxPlatform,
+          NativeLinkables.getNativeLinkableInput(
               Linker.LinkableDepType.SHARED,
-              nativeLinkableGroup,
+              nativeLinkable,
               graphBuilder,
               buildTarget.getTargetConfiguration());
       argsBuilder.addAll(input.getArgs());

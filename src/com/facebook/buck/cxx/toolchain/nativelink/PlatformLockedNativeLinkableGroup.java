@@ -122,4 +122,9 @@ public class PlatformLockedNativeLinkableGroup implements NativeLinkable {
   public Iterable<? extends Arg> getExportedPostLinkerFlags(ActionGraphBuilder graphBuilder) {
     return underlyingGroup.getExportedPostLinkerFlags(cxxPlatform, graphBuilder);
   }
+
+  @Override
+  public String getRuleType() {
+    return underlyingGroup.getRuleType();
+  }
 }

@@ -88,4 +88,6 @@ public interface NativeLinkable {
    *     linker flags.
    */
   Iterable<? extends Arg> getExportedPostLinkerFlags(ActionGraphBuilder graphBuilder);
+
+  String getRuleType();
 }
