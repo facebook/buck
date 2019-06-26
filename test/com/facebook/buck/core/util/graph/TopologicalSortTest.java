@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Ordering;
 import java.util.List;
 import org.junit.Test;
 
@@ -77,7 +78,7 @@ public class TopologicalSortTest {
   @Test
   public void sortsSnowflakes() {
     DirectedAcyclicGraph<String> graph = makeGraph();
-    ImmutableList<String> sorted = TopologicalSort.snowflakeSort(graph);
+    ImmutableList<String> sorted = TopologicalSort.snowflakeSort(graph, Ordering.natural());
     assertEquals(graph.getNodes(), ImmutableSet.copyOf(sorted));
     assertTopologicallySorted(sorted);
 

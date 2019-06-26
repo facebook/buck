@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Queues;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -47,9 +48,9 @@ public class TopologicalSort {
    *     depends on it is fixed.
    */
   @Deprecated
-  public static <T extends Comparable<?>> ImmutableList<T> snowflakeSort(
-      TraversableGraph<T> graph) {
-    return sortImpl(graph, TreeSet::new);
+  public static <T> ImmutableList<T> snowflakeSort(
+      TraversableGraph<T> graph, Comparator<T> comparator) {
+    return sortImpl(graph, () -> new TreeSet<>(comparator));
   }
 
   /** Returns a topologically sorted list of the nodes in the graph. */
