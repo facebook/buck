@@ -126,9 +126,9 @@ public final class Main {
       }
       log.format("Upload URL: %s\n", url);
       if (compressionEnabled) {
-        log.format("Uploading compressed trace...");
+        log.format("Uploading compressed trace...\n");
       } else {
-        log.format("Uploading trace...");
+        log.format("Uploading trace...\n");
       }
 
       if (traceFileKind.equals("build_log")) {
@@ -156,14 +156,17 @@ public final class Main {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode root = objectMapper.readTree(response.body().byteStream());
 
-        if (root.get("success").asBoolean()) {
-          log.format("Success!\nFind it at %s\n", root.get("content").get("uri").asText());
-          return 0;
-        } else {
-          log.format("Failed!\nMessage: %s\n", root.get("error").asText());
+        if (root.has("error")) {
+          log.format("Failed!\n%s\n", root.toString());
           return 1;
+        } else if (root.has("uri")) {
+          log.format("Success!\nFind it at %s\n", root.get("uri").asText());
+        } else {
+          log.format("Success!\n");
         }
+        return 0;
       }
+
     } catch (Exception e) {
       log.format("\nFailed to upload trace; %s\n", e.getMessage());
       e.printStackTrace(log);

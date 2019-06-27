@@ -24,7 +24,6 @@ import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.versioncontrol.FullVersionControlStats;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -82,7 +81,7 @@ public class BuildReportUploaderTest {
       httpResponse.setCharacterEncoding("utf-8");
 
       // this is an example json of what the real endpoint should return.
-      String jsonResponse = "{ \"success\": true, \"content\":{\"field\":\"value\"}}";
+      String jsonResponse = "{ \"uri\": \"a.test.uri.com\"}";
 
       DataOutputStream out = new DataOutputStream(httpResponse.getOutputStream());
       out.writeBytes(jsonResponse);
@@ -106,12 +105,9 @@ public class BuildReportUploaderTest {
       UploadResponse response =
           new BuildReportUploader(testEndpointURI.toURL(), timeoutMs).uploadReport(reportToSend);
 
-      Optional<String> errorMessage = response.getErrorMessage();
+      Optional<String> uri = response.uri();
 
-      assertFalse(errorMessage.isPresent());
-
-      assertEquals(Optional.of(ImmutableMap.of("field", "value")), response.getContent());
-      assertEquals(Optional.of(true), response.getSuccess());
+      assertEquals("a.test.uri.com", uri.get());
     }
   }
 }

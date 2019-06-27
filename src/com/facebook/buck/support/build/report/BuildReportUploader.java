@@ -21,6 +21,7 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.versioncontrol.FullVersionControlStats;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
@@ -129,6 +130,7 @@ public class BuildReportUploader {
 
   static UploadResponse handleResponse(Response httpResponse) throws IOException {
     if (!httpResponse.isSuccessful()) {
+      LOG.warn("Failed to upload build report, error: " + httpResponse.message());
       throw new BuckUncheckedExecutionException(
           "Failed to upload build report, response was unsuccessful");
     }
@@ -139,8 +141,13 @@ public class BuildReportUploader {
           "Failed to upload build report, response body was empty");
     }
 
-    String body = responseBody.string();
-    return ObjectMappers.readValue(body, UploadResponse.class);
+    JsonNode root = ObjectMappers.READER.readTree(responseBody.string());
+    if (root.has("error")) {
+      String serverException = root.toString();
+      LOG.warn("Build Report Endpoint error: " + serverException);
+      throw new BuckUncheckedExecutionException("Build Report Endpoint error: " + serverException);
+    }
+    return ObjectMappers.READER.treeToValue(root, UploadResponse.class);
   }
 
   /**
