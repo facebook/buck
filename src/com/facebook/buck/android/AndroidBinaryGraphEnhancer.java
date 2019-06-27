@@ -257,8 +257,7 @@ public class AndroidBinaryGraphEnhancer {
         new AndroidBinaryResourcesGraphEnhancer(
             originalBuildTarget,
             projectFilesystem,
-            toolchainProvider.getByName(
-                AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
+            androidPlatformTarget,
             graphBuilder,
             originalBuildTarget,
             ExopackageMode.enabledForResources(exopackageModes),

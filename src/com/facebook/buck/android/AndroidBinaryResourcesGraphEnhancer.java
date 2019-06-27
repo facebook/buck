@@ -521,7 +521,7 @@ class AndroidBinaryResourcesGraphEnhancer {
                     InternalFlavor.of("aapt2_compile_" + index), flavor),
                 projectFilesystem,
                 graphBuilder,
-                androidPlatformTarget,
+                androidPlatformTarget.getAapt2Executable().get(),
                 resDir);
         graphBuilder.addToIndex(compileRule);
         compileListBuilder.add(compileRule);

@@ -172,7 +172,7 @@ public class AndroidPrebuiltAarDescription
           buildTarget,
           projectFilesystem,
           graphBuilder,
-          androidPlatformTarget,
+          androidPlatformTarget.getAapt2Executable().get(),
           unzipAar.getResDirectory());
     }
 

@@ -59,6 +59,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.AbstractMap;
+import java.util.Map.Entry;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -145,7 +146,11 @@ public class AndroidResourceDescription
               .getToolchainProvider()
               .getByName(AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
       return new Aapt2Compile(
-          buildTarget, projectFilesystem, graphBuilder, androidPlatformTarget, resDir.get());
+          buildTarget,
+          projectFilesystem,
+          graphBuilder,
+          androidPlatformTarget.getAapt2Executable().get(),
+          resDir.get());
     }
 
     params =
@@ -217,7 +222,7 @@ public class AndroidResourceDescription
             RichStream.from(symlinkAttribute.get().getRight().entrySet())
                 .map(e -> new AbstractMap.SimpleEntry<>(Paths.get(e.getKey()), e.getValue()))
                 .filter(e -> isPossibleResourcePath(e.getKey()))
-                .collect(ImmutableMap.toImmutableMap(e -> e.getKey(), e -> e.getValue()));
+                .collect(ImmutableMap.toImmutableMap(Entry::getKey, Entry::getValue));
       }
     }
     Path symlinkTreeRoot =

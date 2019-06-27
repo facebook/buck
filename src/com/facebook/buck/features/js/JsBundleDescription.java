@@ -266,7 +266,7 @@ public class JsBundleDescription
       ToolchainProvider toolchainProvider,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
+      ActionGraphBuilder graphBuilder,
       JsBundle jsBundle,
       String rDotJavaPackage) {
     if (buildTarget.getFlavors().contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
@@ -276,8 +276,8 @@ public class JsBundleDescription
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
-          ruleFinder,
-          androidPlatformTarget,
+          graphBuilder,
+          androidPlatformTarget.getAapt2Executable().get(),
           jsBundle.getSourcePathToResources());
     }
 
@@ -289,7 +289,7 @@ public class JsBundleDescription
         buildTarget,
         projectFilesystem,
         params,
-        ruleFinder,
+        graphBuilder,
         ImmutableSortedSet.of(), // deps
         jsBundle.getSourcePathToResources(),
         ImmutableSortedMap.of(), // resSrcs

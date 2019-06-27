@@ -47,11 +47,7 @@ public class AndroidPlatformTargetProducer {
   static final Pattern PLATFORM_TARGET_PATTERN =
       Pattern.compile("(?:Google Inc\\.:Google APIs:|android-)(.+)");
 
-  /**
-   * @param platformId for the platform, such as "Google Inc.:Google APIs:16"
-   * @param aaptOverride
-   * @param aapt2Override
-   */
+  /** @param platformId for the platform, such as "Google Inc.:Google APIs:16" */
   public static AndroidPlatformTarget getTargetForId(
       ProjectFilesystem filesystem,
       String platformId,
@@ -236,7 +232,7 @@ public class AndroidPlatformTargetProducer {
 
       if (addonsParentDir.isDirectory()) {
         String[] addonsApiDirs =
-            addonsParentDir.list((dir, name1) -> apiDirPattern.matcher(name1).matches());
+            addonsParentDir.list((dir, name) -> apiDirPattern.matcher(name).matches());
         Arrays.sort(
             addonsApiDirs,
             new Comparator<String>() {
