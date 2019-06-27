@@ -1270,10 +1270,12 @@ public final class MainRunner {
               && !(command.subcommand instanceof DistBuildCommand)) {
             AbstractCommand subcommand = (AbstractCommand) command.subcommand;
             if (!commandMode.equals(CommandMode.TEST)) {
+              boolean shouldPreGenerate = !subcommand.isSourceControlStatsGatheringEnabled();
               vcStatsGenerator.generateStatsAsync(
-                  subcommand.isSourceControlStatsGatheringEnabled(),
-                  diskIoExecutorService.get(),
-                  buildEventBus);
+                  false,
+                  shouldPreGenerate,
+                  buildEventBus,
+                  listeningDecorator(diskIoExecutorService.get()));
             }
           }
           NetworkInfo.generateActiveNetworkAsync(diskIoExecutorService.get(), buildEventBus);
