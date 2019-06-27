@@ -208,6 +208,7 @@ import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.timing.NanosAdjustedClock;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.versioncontrol.DelegatingVersionControlCmdLineInterface;
+import com.facebook.buck.util.versioncontrol.FullVersionControlStats;
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
@@ -220,6 +221,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.sun.jna.Pointer;
@@ -974,11 +977,6 @@ public final class MainRunner {
           ) {
         BuckConfigWriter.writeConfig(filesystem.getRootPath(), invocationInfo, buckConfig);
 
-        if (command.getSubcommand().isPresent()
-            && command.getSubcommand().get() instanceof BuildCommand) {
-          BuildReportUpload.runBuildReportUpload(managerScope, buckConfig, buildId);
-        }
-
         CommonThreadFactoryState commonThreadFactoryState =
             GlobalStateManager.singleton().getThreadToCommandRegister();
 
@@ -1256,6 +1254,10 @@ public final class MainRunner {
               .ifPresent(event -> buildEventBus.post(DaemonEvent.newDaemonInstance(event)));
 
 
+          ListenableFuture<Optional<FullVersionControlStats>> vcStatsFuture =
+              Futures.immediateFuture(Optional.empty());
+          boolean shouldUploadBuildReport = BuildReportUpload.shouldUploadBuildReport(buckConfig);
+
           VersionControlBuckConfig vcBuckConfig = new VersionControlBuckConfig(buckConfig);
           VersionControlStatsGenerator vcStatsGenerator =
               new VersionControlStatsGenerator(
@@ -1265,19 +1267,29 @@ public final class MainRunner {
                       vcBuckConfig.getHgCmd(),
                       buckConfig.getEnvironment()),
                   vcBuckConfig.getPregeneratedVersionControlStats());
-          if (vcBuckConfig.shouldGenerateStatistics()
+          if ((vcBuckConfig.shouldGenerateStatistics() || shouldUploadBuildReport)
               && command.subcommand instanceof AbstractCommand
               && !(command.subcommand instanceof DistBuildCommand)) {
             AbstractCommand subcommand = (AbstractCommand) command.subcommand;
             if (!commandMode.equals(CommandMode.TEST)) {
+
               boolean shouldPreGenerate = !subcommand.isSourceControlStatsGatheringEnabled();
-              vcStatsGenerator.generateStatsAsync(
-                  false,
-                  shouldPreGenerate,
-                  buildEventBus,
-                  listeningDecorator(diskIoExecutorService.get()));
+              vcStatsFuture =
+                  vcStatsGenerator.generateStatsAsync(
+                      shouldUploadBuildReport,
+                      shouldPreGenerate,
+                      buildEventBus,
+                      listeningDecorator(diskIoExecutorService.get()));
             }
           }
+
+          if (command.getSubcommand().isPresent()
+              && command.getSubcommand().get() instanceof BuildCommand
+              && shouldUploadBuildReport) {
+            BuildReportUpload.runBuildReportUpload(
+                managerScope, vcStatsFuture, buckConfig, buildId);
+          }
+
           NetworkInfo.generateActiveNetworkAsync(diskIoExecutorService.get(), buildEventBus);
 
           ImmutableList<String> remainingArgs =

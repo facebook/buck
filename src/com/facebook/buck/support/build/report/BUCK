@@ -15,6 +15,8 @@ java_immutables_library(
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/json:json",
+        "//src/com/facebook/buck/util/versioncontrol:value_types",
+        "//src/com/facebook/buck/util/versioncontrol:versioncontrol_generator",
         "//third-party/java/guava:guava",
         "//third-party/java/okhttp:okhttp",
     ],
