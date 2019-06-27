@@ -26,13 +26,11 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.FileNode;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Tree;
-import com.facebook.buck.util.CloseableWrapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.MoreFiles;
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -53,7 +51,6 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Consumer;
-import javax.annotation.Nullable;
 
 /** Used for materialzing outputs from the CAS. */
 public class OutputsMaterializer {
@@ -250,26 +247,12 @@ public class OutputsMaterializer {
           WritableByteChannel channel =
               large.materializer.getOutputChannel(large.path, large.isExecutable);
           ListenableFuture<Void> fetchToStream = fetcher.fetchToStream(large.digest, channel);
-          Futures.addCallback(
-              fetchToStream,
-              new FutureCallback<Void>() {
-                @Override
-                public void onSuccess(@Nullable Void result) {
-                  try (CloseableWrapper<?> ignore = closeableWrapper(channel)) {
-                    large.future.set(null);
-                  }
-                }
-
-                @Override
-                public void onFailure(Throwable t) {
-                  try (CloseableWrapper<?> ignore = closeableWrapper(channel)) {
-                    large.future.setException(t);
-                  }
-                }
-              },
-              MoreExecutors.directExecutor());
-          // Wait for the stream to finish downloading before picking up more work
-          fetchToStream.get();
+          try {
+            // Wait for the stream to finish downloading before picking up more work
+            fetchToStream.get();
+          } finally {
+            tryCloseChannel(channel);
+          }
         } else {
           LOG.debug("Starting batch request for: " + pending.size() + " items, size: " + size);
           // Download batches of small objects
@@ -283,13 +266,13 @@ public class OutputsMaterializer {
           ImmutableMultimap<Digest, WritableByteChannel> batch = digestMap.build();
           try {
             fetcher.batchFetchBlobs(batch).get();
-            pending.forEach(materialization -> materialization.future.set(null));
           } finally {
             for (WritableByteChannel channel : batch.values()) {
               tryCloseChannel(channel);
             }
           }
         }
+        pending.forEach(materialization -> materialization.future.set(null));
         LOG.debug("Finished materializing: " + pending.size() + " requests, size: " + size);
 
       } catch (Exception e) {
@@ -308,13 +291,5 @@ public class OutputsMaterializer {
     } catch (IOException e) {
       throw new UncheckedExecutionException(e);
     }
-  }
-
-  private CloseableWrapper<?> closeableWrapper(WritableByteChannel channel) {
-    return CloseableWrapper.of(
-        channel,
-        c -> {
-          tryCloseChannel(c);
-        });
   }
 }

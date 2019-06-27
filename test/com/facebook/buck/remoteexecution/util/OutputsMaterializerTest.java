@@ -78,7 +78,7 @@ public class OutputsMaterializerTest {
     ByteString data1 = ByteString.copyFromUtf8("data1");
     ByteString data2 = ByteString.copyFromUtf8("data2");
     ByteString data3 = ByteString.copyFromUtf8("data3");
-    ByteString data4 = ByteString.copyFromUtf8("data4");
+    ByteString data4 = ByteString.copyFromUtf8("data456"); // Force size to be larger than limit
 
     Digest digest1 = protocol.computeDigest(data1.toByteArray());
     Digest digest2 = protocol.computeDigest(data2.toByteArray());
