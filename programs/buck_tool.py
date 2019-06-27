@@ -703,7 +703,7 @@ class BuckTool(object):
 
                 if self._command_line.is_version():
                     print("buck version {}".format(buck_version_uid))
-                    return 0
+                    return ExitCodeCallable(ExitCode.SUCCESS)
 
                 use_buckd = self._use_buckd
                 if not use_buckd:
