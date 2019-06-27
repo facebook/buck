@@ -50,7 +50,8 @@ public class CommandsEndToEndTest {
             new String[] {"perf", "--help"},
             new String[] {"perf", "rk", "--help"},
             new String[] {"run", "--help"},
-            new String[] {"test", "--help"});
+            new String[] {"test", "--help"},
+            new String[] {"kill"});
 
     for (String[] command : commands) {
       workspace

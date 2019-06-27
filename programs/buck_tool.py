@@ -766,7 +766,7 @@ class BuckTool(object):
 
                 self._unpack_modules()
 
-                exit_code = self._execute_command_and_maybe_run_target(
+                exit_code_callable = self._execute_command_and_maybe_run_target(
                     run_fn, java_path, env, argv
                 )
 
@@ -774,9 +774,11 @@ class BuckTool(object):
                 # 128 + N, where N is the signal. However Python's subprocess
                 # call returns them as negative numbers. Buck binary protocol
                 # uses shell's convention, so convert
-                if exit_code < 0:
-                    exit_code = 128 + (-1 * exit_code)
-                return exit_code
+                if exit_code_callable.exit_code < 0:
+                    exit_code_callable.exit_code = 128 + (
+                        -1 * exit_code_callable.exit_code
+                    )
+                return exit_code_callable
 
 
     def launch_buckd(self, java_path, jvm_args, buck_version_uid=None):

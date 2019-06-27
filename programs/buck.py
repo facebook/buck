@@ -37,6 +37,7 @@ from buck_tool import (
     BuckStatusReporter,
     ExecuteTarget,
     ExitCode,
+    ExitCodeCallable,
     install_signal_handlers,
 )
 from java_lookup import get_java_path
@@ -68,7 +69,7 @@ def killall_buck(reporter):
         message = "killall is not implemented on: " + os.name
         logging.error(message)
         reporter.status_message = message
-        return ExitCode.COMMANDLINE_ERROR
+        return ExitCodeCallable(ExitCode.COMMANDLINE_ERROR)
 
     for line in os.popen("jps -l"):
         split = line.split()
@@ -86,7 +87,7 @@ def killall_buck(reporter):
 
         os.kill(pid, signal.SIGTERM)
         # TODO(buck_team) clean .buckd directories
-    return ExitCode.SUCCESS
+    return ExitCodeCallable(ExitCode.SUCCESS)
 
 
 def _get_java_version(java_path):
@@ -228,7 +229,7 @@ def main(argv, reporter):
                     # isolation prefix argument, shut down the buckd process
                     if has_kill_argument():
                         buck_repo.kill_buckd()
-                        return ExitCode.SUCCESS
+                        return ExitCodeCallable(ExitCode.SUCCESS)
                     return buck_repo.launch_buck(build_id, java_path, argv)
     finally:
         if tracing_dir:
