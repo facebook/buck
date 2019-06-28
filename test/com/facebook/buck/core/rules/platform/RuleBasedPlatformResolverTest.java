@@ -73,7 +73,7 @@ public class RuleBasedPlatformResolverTest {
             return new ConstraintValueRule(constraintValue, "value", constraintSetting);
           }
           if (buildTarget.getUnconfiguredBuildTargetView().equals(constraintSetting)) {
-            return new ConstraintSettingRule(constraintValue, "value", Optional.empty());
+            return new ConstraintSettingRule(constraintSetting, "value", Optional.empty());
           }
           throw new IllegalArgumentException("Invalid build target: " + buildTarget);
         };
