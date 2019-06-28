@@ -64,7 +64,9 @@ class TargetCompatibilityChecker {
     for (UnconfiguredBuildTargetView compatiblePlatformTarget :
         argWithTargetCompatible.getTargetCompatiblePlatforms()) {
       ConstraintBasedPlatform compatiblePlatform =
-          (ConstraintBasedPlatform) platformResolver.getPlatform(compatiblePlatformTarget);
+          (ConstraintBasedPlatform)
+              platformResolver.getPlatform(
+                  ConfigurationBuildTargets.convert(compatiblePlatformTarget));
 
       if (platform.matchesAll(compatiblePlatform.getConstraintValues())) {
         return true;

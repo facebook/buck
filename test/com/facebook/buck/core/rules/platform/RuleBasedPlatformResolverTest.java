@@ -21,8 +21,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.collect.ImmutableSortedSet;
@@ -49,14 +47,14 @@ public class RuleBasedPlatformResolverTest {
     thrown.expectMessage(
         "//constraint:setting is used as a target platform, but not declared using `platform` rule");
 
-    resolver.getPlatform(constraint.getUnconfiguredBuildTargetView());
+    resolver.getPlatform(constraint);
   }
 
   @Test
   public void requestingPlatformForPlatformRuleCreatesPlatform() {
 
-    UnconfiguredBuildTargetView platformTarget =
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//platform:platform");
+    BuildTarget platformTarget =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//platform:platform");
     BuildTarget constraintValue =
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:value");
     BuildTarget constraintSetting =
@@ -64,9 +62,9 @@ public class RuleBasedPlatformResolverTest {
 
     ConfigurationRuleResolver configurationRuleResolver =
         buildTarget -> {
-          if (buildTarget.getUnconfiguredBuildTargetView().equals(platformTarget)) {
+          if (buildTarget.equals(platformTarget)) {
             return PlatformRule.of(
-                platformTarget,
+                platformTarget.getUnconfiguredBuildTargetView(),
                 "platform",
                 ImmutableSortedSet.of(constraintValue),
                 ImmutableSortedSet.of());

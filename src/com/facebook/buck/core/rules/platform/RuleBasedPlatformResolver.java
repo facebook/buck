@@ -17,8 +17,6 @@ package com.facebook.buck.core.rules.platform;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.ConfigurationBuildTargets;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
@@ -43,7 +41,7 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
   }
 
   @Override
-  public Platform getPlatform(UnconfiguredBuildTargetView buildTarget) {
+  public Platform getPlatform(BuildTarget buildTarget) {
     GraphTraversable<BuildTarget> traversable =
         target -> {
           PlatformRule platformRule = getPlatformRule(target);
@@ -56,9 +54,7 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
     ImmutableSet<BuildTarget> platformTargets;
     try {
       platformTargets =
-          ImmutableSet.copyOf(
-              platformTraversal.traverse(
-                  ImmutableList.of(ConfigurationBuildTargets.convert(buildTarget))));
+          ImmutableSet.copyOf(platformTraversal.traverse(ImmutableList.of(buildTarget)));
     } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
       throw new HumanReadableException(e.getMessage());
     }
@@ -70,7 +66,8 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
             .map(constraintResolver::getConstraintValue)
             .collect(ImmutableSet.toImmutableSet());
 
-    return new ConstraintBasedPlatform(buildTarget, constraintValues);
+    return new ConstraintBasedPlatform(
+        buildTarget.getUnconfiguredBuildTargetView(), constraintValues);
   }
 
   private PlatformRule getPlatformRule(BuildTarget buildTarget) {
