@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -37,6 +38,22 @@ public class KnownRuleTypesProvider {
                 }
               });
 
+  private final LoadingCache<Cell, KnownRuleTypes> typesCache =
+      CacheBuilder.newBuilder()
+          .build(
+              new CacheLoader<Cell, KnownRuleTypes>() {
+                @Override
+                public KnownRuleTypes load(Cell cell) {
+                  if (cell.getBuckConfig()
+                      .getView(ParserConfig.class)
+                      .getEnableUserDefinedRules()) {
+                    return new HybridKnownRuleTypes(getNativeRuleTypes(cell));
+                  } else {
+                    return getNativeRuleTypes(cell);
+                  }
+                }
+              });
+
   private final KnownNativeRuleTypesFactory knownNativeRuleTypesFactory;
 
   public KnownRuleTypesProvider(KnownNativeRuleTypesFactory knownNativeRuleTypesFactory) {
@@ -45,7 +62,12 @@ public class KnownRuleTypesProvider {
 
   /** Returns {@link KnownRuleTypes} for a given {@link Cell}. */
   public KnownRuleTypes get(Cell cell) {
-    return getNativeRuleTypes(cell);
+    try {
+      return typesCache.getUnchecked(cell);
+    } catch (UncheckedExecutionException e) {
+      Throwables.throwIfUnchecked(e.getCause());
+      throw e;
+    }
   }
 
   /** Get details for just rules implemented in Buck itself, rather than user defined rules */
