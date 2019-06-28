@@ -44,11 +44,19 @@ public class FakeSkylarkUserDefinedRuleFactory {
   public static SkylarkUserDefinedRule createSimpleRule()
       throws EvalException, LabelSyntaxException {
     return createSingleArgRule(
-        "baz", new ImmutableStringAttribute("default", "", false, ImmutableList.of()));
+        "some_rule", "baz", new ImmutableStringAttribute("default", "", false, ImmutableList.of()));
   }
 
   /** Create a single argument rule with the given argument name and attr to back it */
-  public static SkylarkUserDefinedRule createSingleArgRule(String attrName, Attribute<?> attr)
+  public static SkylarkUserDefinedRule createSingleArgRule(
+      String exportedName, String attrName, Attribute<?> attr)
+      throws EvalException, LabelSyntaxException {
+
+    return createSingleArgRuleWithLabel(exportedName, attrName, attr, "//foo:bar.bzl");
+  }
+
+  public static SkylarkUserDefinedRule createSingleArgRuleWithLabel(
+      String exportedName, String attrName, Attribute<?> attr, String label)
       throws EvalException, LabelSyntaxException {
     FunctionSignature signature = FunctionSignature.of(1, 0, 0, false, false, "ctx");
     BaseFunction implementation =
@@ -61,7 +69,8 @@ public class FakeSkylarkUserDefinedRuleFactory {
     SkylarkUserDefinedRule ret =
         SkylarkUserDefinedRule.of(
             Location.BUILTIN, implementation, IMPLICIT_ATTRIBUTES, ImmutableMap.of(attrName, attr));
-    ret.export(Label.parseAbsolute("//foo:bar.bzl", ImmutableMap.of()), "_impl");
+    ret.export(Label.parseAbsolute(label, ImmutableMap.of()), exportedName);
+
     return ret;
   }
 }

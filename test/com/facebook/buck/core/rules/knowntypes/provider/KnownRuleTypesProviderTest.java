@@ -28,8 +28,13 @@ import com.facebook.buck.core.rules.knowntypes.HybridKnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
+import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
+import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
+import com.facebook.buck.skylark.function.FakeSkylarkUserDefinedRuleFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
+import com.google.devtools.build.lib.syntax.EvalException;
 import org.junit.Test;
 
 public class KnownRuleTypesProviderTest {
@@ -67,15 +72,24 @@ public class KnownRuleTypesProviderTest {
   }
 
   @Test
-  public void returnsHybridKnownRuleTypesIfUserDefinedRulesEnabled() {
+  public void returnsHybridKnownRuleTypesIfUserDefinedRulesEnabled()
+      throws LabelSyntaxException, EvalException {
     KnownRuleTypesProvider provider = new KnownRuleTypesProvider(new TestFactory());
     Cell cell = createCell(true);
+    SkylarkUserDefinedRule rule = FakeSkylarkUserDefinedRuleFactory.createSimpleRule();
 
     KnownRuleTypes knownRuleTypes = provider.get(cell);
     KnownNativeRuleTypes knownNativeRuleTypes = provider.getNativeRuleTypes(cell);
+    KnownUserDefinedRuleTypes knownUserDefinedRuleTypes = provider.getUserDefinedRuleTypes(cell);
+    knownUserDefinedRuleTypes.addRule(rule);
 
     assertNotNull(knownRuleTypes.getRuleType("fake"));
     assertTrue(knownRuleTypes instanceof HybridKnownRuleTypes);
     assertSame(knownRuleTypes.getRuleType("fake"), knownNativeRuleTypes.getRuleType("fake"));
+
+    assertNotNull(knownRuleTypes.getRuleType(rule.getName()));
+    assertSame(
+        knownRuleTypes.getRuleType(rule.getName()),
+        knownUserDefinedRuleTypes.getRuleType(rule.getName()));
   }
 }

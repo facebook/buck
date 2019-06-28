@@ -21,13 +21,13 @@ import com.facebook.buck.core.rules.knowntypes.HybridKnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
+import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import javax.annotation.Nonnull;
 
 /** Lazily constructs {@link KnownRuleTypes} for {@link Cell}s. */
 public class KnownRuleTypesProvider {
@@ -37,8 +37,18 @@ public class KnownRuleTypesProvider {
           .build(
               new CacheLoader<Cell, KnownNativeRuleTypes>() {
                 @Override
-                public KnownNativeRuleTypes load(@Nonnull Cell cell) {
+                public KnownNativeRuleTypes load(Cell cell) {
                   return knownNativeRuleTypesFactory.create(cell);
+                }
+              });
+
+  private final LoadingCache<Cell, KnownUserDefinedRuleTypes> userDefinedTypesCache =
+      CacheBuilder.newBuilder()
+          .build(
+              new CacheLoader<Cell, KnownUserDefinedRuleTypes>() {
+                @Override
+                public KnownUserDefinedRuleTypes load(Cell cell) {
+                  return new KnownUserDefinedRuleTypes();
                 }
               });
 
@@ -51,7 +61,8 @@ public class KnownRuleTypesProvider {
                   if (cell.getBuckConfig()
                       .getView(ParserConfig.class)
                       .getEnableUserDefinedRules()) {
-                    return new HybridKnownRuleTypes(getNativeRuleTypes(cell));
+                    return new HybridKnownRuleTypes(
+                        getNativeRuleTypes(cell), getUserDefinedRuleTypes(cell));
                   } else {
                     return getNativeRuleTypes(cell);
                   }
@@ -78,6 +89,16 @@ public class KnownRuleTypesProvider {
   public KnownNativeRuleTypes getNativeRuleTypes(Cell cell) {
     try {
       return nativeTypesCache.getUnchecked(cell);
+    } catch (UncheckedExecutionException e) {
+      Throwables.throwIfUnchecked(e.getCause());
+      throw e;
+    }
+  }
+
+  /** Get details for rules defined by users in extension files */
+  public KnownUserDefinedRuleTypes getUserDefinedRuleTypes(Cell cell) {
+    try {
+      return userDefinedTypesCache.getUnchecked(cell);
     } catch (UncheckedExecutionException e) {
       Throwables.throwIfUnchecked(e.getCause());
       throw e;

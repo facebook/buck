@@ -18,13 +18,16 @@ package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
 
 /** Provides access to rule types and descriptions for both native and user defined rules. */
 public class HybridKnownRuleTypes implements KnownRuleTypes {
   private final KnownRuleTypes nativeRuleTypes;
+  private final KnownRuleTypes userDefinedRuleTypes;
 
-  public HybridKnownRuleTypes(KnownRuleTypes nativeRuleTypes) {
+  public HybridKnownRuleTypes(KnownRuleTypes nativeRuleTypes, KnownRuleTypes userDefinedRuleTypes) {
     this.nativeRuleTypes = nativeRuleTypes;
+    this.userDefinedRuleTypes = userDefinedRuleTypes;
   }
 
   /**
@@ -37,7 +40,11 @@ public class HybridKnownRuleTypes implements KnownRuleTypes {
    */
   @Override
   public RuleType getRuleType(String name) {
-    return nativeRuleTypes.getRuleType(name);
+    if (UserDefinedRuleNames.isUserDefinedRuleIdentifier(name)) {
+      return userDefinedRuleTypes.getRuleType(name);
+    } else {
+      return nativeRuleTypes.getRuleType(name);
+    }
   }
 
   /**
@@ -48,6 +55,10 @@ public class HybridKnownRuleTypes implements KnownRuleTypes {
    */
   @Override
   public BaseDescription<?> getDescription(RuleType ruleType) {
-    return nativeRuleTypes.getDescription(ruleType);
+    if (UserDefinedRuleNames.isUserDefinedRuleIdentifier(ruleType.getName())) {
+      return userDefinedRuleTypes.getDescription(ruleType);
+    } else {
+      return nativeRuleTypes.getDescription(ruleType);
+    }
   }
 }

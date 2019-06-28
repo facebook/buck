@@ -15,9 +15,15 @@
  */
 package com.facebook.buck.core.starlark.knowntypes;
 
+import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.model.AbstractRuleType;
+import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
+import com.facebook.buck.core.starlark.rule.SkylarkDescription;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.base.Preconditions;
 import com.google.devtools.build.lib.cmdline.Label;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
@@ -27,10 +33,12 @@ import javax.annotation.Nullable;
  * is currently global per cell, however in the future we may handle invoking the parse pipeline
  * multiple times concurrently differently.
  */
-public class KnownUserDefinedRuleTypes {
+public class KnownUserDefinedRuleTypes implements KnownRuleTypes {
   /** Maps an extension label to a map of rule names -> rule that defined in the parser */
   private final ConcurrentHashMap<Label, ConcurrentHashMap<String, SkylarkUserDefinedRule>>
       extensionToRules = new ConcurrentHashMap<>();
+
+  private final SkylarkDescription description = new SkylarkDescription();
 
   /**
    * Adds a rule to the internal cache
@@ -70,5 +78,16 @@ public class KnownUserDefinedRuleTypes {
   /** Invalidates all rules found in a specific extension file */
   public void invalidateExtension(Label extension) {
     extensionToRules.remove(extension);
+  }
+
+  @Override
+  public RuleType getRuleType(String name) {
+    SkylarkUserDefinedRule rule = Preconditions.checkNotNull(getRule(name));
+    return RuleType.of(rule.getName(), AbstractRuleType.Kind.BUILD);
+  }
+
+  @Override
+  public BaseDescription<?> getDescription(RuleType ruleType) {
+    return description;
   }
 }

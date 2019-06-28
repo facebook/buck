@@ -15,16 +15,26 @@
  */
 package com.facebook.buck.core.starlark.knowntypes;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.model.AbstractRuleType;
+import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.starlark.rule.SkylarkDescription;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.skylark.function.FakeSkylarkUserDefinedRuleFactory;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.syntax.EvalException;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class KnownUserDefinedRuleTypesTest {
+
+  @Rule public ExpectedException expectedThrown = ExpectedException.none();
 
   @Test
   public void setsValueProperly() throws LabelSyntaxException, EvalException {
@@ -80,5 +90,39 @@ public class KnownUserDefinedRuleTypesTest {
     KnownUserDefinedRuleTypes knownRules = new KnownUserDefinedRuleTypes();
 
     assertNull(knownRules.getRule("//foo"));
+  }
+
+  @Test
+  public void returnsCorrectRuleType() throws LabelSyntaxException, EvalException {
+    KnownUserDefinedRuleTypes knownRules = new KnownUserDefinedRuleTypes();
+    SkylarkUserDefinedRule rule = FakeSkylarkUserDefinedRuleFactory.createSimpleRule();
+    RuleType expected = RuleType.of(rule.getName(), AbstractRuleType.Kind.BUILD);
+
+    knownRules.addRule(rule);
+
+    RuleType ruleType = knownRules.getRuleType(rule.getName());
+
+    assertEquals(expected, ruleType);
+  }
+
+  @Test
+  public void errorsWhenTryingToGetRuleTypeForNonStoredType() {
+    KnownUserDefinedRuleTypes knownRules = new KnownUserDefinedRuleTypes();
+
+    expectedThrown.expect(NullPointerException.class);
+    knownRules.getRuleType("//foo:bar.bzl:");
+  }
+
+  @Test
+  public void returnsCorrectDescription() throws LabelSyntaxException, EvalException {
+    KnownUserDefinedRuleTypes knownRules = new KnownUserDefinedRuleTypes();
+    SkylarkUserDefinedRule rule = FakeSkylarkUserDefinedRuleFactory.createSimpleRule();
+    knownRules.addRule(rule);
+
+    RuleType ruleType = knownRules.getRuleType(rule.getName());
+
+    BaseDescription<?> ret = knownRules.getDescription(ruleType);
+    assertTrue(ret instanceof SkylarkDescription);
+    assertSame(ret, knownRules.getDescription(ruleType));
   }
 }

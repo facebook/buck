@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.RuleType;
 
 /** Provides access to rule types and descriptions for both native and user defined rules. */
 public interface KnownRuleTypes {
+
   /**
    * Get a {@link RuleType} for either a native or user defined rule, depending on the identifier.
    *
@@ -34,7 +35,7 @@ public interface KnownRuleTypes {
   /**
    * Get the Description class for a given {@link RuleType}
    *
-   * @param ruleType
+   * @param ruleType The type of the rule from {@link #getRuleType(String)}
    * @return The {@link BaseDescription} to use for the given {@link RuleType}
    */
   BaseDescription<?> getDescription(RuleType ruleType);

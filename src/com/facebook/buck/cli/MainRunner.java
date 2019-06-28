@@ -809,6 +809,8 @@ public final class MainRunner {
           createTargetConfigurationSupplier(
               command, buckConfig, buildTargetFactory, rootCellCellPathResolver);
 
+      // NOTE: This new KnownUserDefinedRuleTypes is only used if BuckGlobals need to be invalidated
+      // Otherwise, everything should use the KnownUserDefinedRuleTypes object from BuckGlobals
       KnownRuleTypesProvider knownRuleTypesProvider =
           new KnownRuleTypesProvider(
               knownRuleTypesFactoryFactory.create(
