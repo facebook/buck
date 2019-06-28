@@ -18,6 +18,8 @@ package com.facebook.buck.core.rules.platform;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -73,8 +75,7 @@ public class DefaultTargetPlatformResolverTest {
 
     UnconfiguredBuildTargetView platformTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//platform:platform");
-    UnconfiguredBuildTargetView constraintValue =
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:value");
+    BuildTarget constraintValue = BuildTargetFactory.newInstance("//constraint:value");
     UnconfiguredBuildTargetView constraintSetting =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:setting");
 
@@ -84,11 +85,14 @@ public class DefaultTargetPlatformResolverTest {
             return PlatformRule.of(
                 platformTarget,
                 "platform",
-                ImmutableSortedSet.of(constraintValue),
+                ImmutableSortedSet.of(constraintValue.getUnconfiguredBuildTargetView()),
                 ImmutableSortedSet.of());
           }
-          if (buildTarget.getUnconfiguredBuildTargetView().equals(constraintValue)) {
-            return new ConstraintValueRule(constraintValue, "value", constraintSetting);
+          if (buildTarget
+              .getUnconfiguredBuildTargetView()
+              .equals(constraintValue.getUnconfiguredBuildTargetView())) {
+            return new ConstraintValueRule(
+                constraintValue.getUnconfiguredBuildTargetView(), "value", constraintSetting);
           }
           if (buildTarget.getUnconfiguredBuildTargetView().equals(constraintSetting)) {
             return new ConstraintSettingRule(constraintValue, "value", Optional.empty());
@@ -114,7 +118,8 @@ public class DefaultTargetPlatformResolverTest {
     assertEquals("//platform:platform", platform.toString());
     assertEquals(1, platform.getConstraintValues().size());
     assertEquals(
-        constraintValue, Iterables.getOnlyElement(platform.getConstraintValues()).getBuildTarget());
+        constraintValue.getUnconfiguredBuildTargetView(),
+        Iterables.getOnlyElement(platform.getConstraintValues()).getBuildTarget());
   }
 
   @Test

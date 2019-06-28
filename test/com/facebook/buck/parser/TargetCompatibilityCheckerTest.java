@@ -73,9 +73,7 @@ public class TargetCompatibilityCheckerTest {
             buildTarget -> {
               if (buildTarget.getUnconfiguredBuildTargetView().equals(cs1.getBuildTarget())) {
                 return new ConstraintSettingRule(
-                    buildTarget.getUnconfiguredBuildTargetView(),
-                    buildTarget.getShortName(),
-                    Optional.empty());
+                    buildTarget, buildTarget.getShortName(), Optional.empty());
               } else {
                 return new ConstraintValueRule(
                     buildTarget.getUnconfiguredBuildTargetView(),

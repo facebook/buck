@@ -94,9 +94,7 @@ public class RuleBasedConstraintResolverTest {
             buildTarget -> {
               if (buildTarget.equals(constraintSettingTarget)) {
                 return new ConstraintSettingRule(
-                    buildTarget.getUnconfiguredBuildTargetView(),
-                    buildTarget.getShortName(),
-                    Optional.empty());
+                    buildTarget, buildTarget.getShortName(), Optional.empty());
               } else {
                 return new ConstraintValueRule(
                     buildTarget.getUnconfiguredBuildTargetView(),

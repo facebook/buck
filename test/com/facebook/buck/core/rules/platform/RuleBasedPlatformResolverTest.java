@@ -18,6 +18,9 @@ package com.facebook.buck.core.rules.platform;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
@@ -36,8 +39,7 @@ public class RuleBasedPlatformResolverTest {
   @Test
   public void requestingPlatformForWrongTypeThrowsException() {
 
-    UnconfiguredBuildTargetView constraint =
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:setting");
+    BuildTarget constraint = BuildTargetFactory.newInstance("//constraint:setting");
     RuleBasedPlatformResolver resolver =
         new RuleBasedPlatformResolver(
             target -> new ConstraintSettingRule(constraint, "setting", Optional.empty()),
@@ -47,7 +49,7 @@ public class RuleBasedPlatformResolverTest {
     thrown.expectMessage(
         "//constraint:setting is used as a target platform, but not declared using `platform` rule");
 
-    resolver.getPlatform(constraint);
+    resolver.getPlatform(constraint.getUnconfiguredBuildTargetView());
   }
 
   @Test
@@ -57,8 +59,8 @@ public class RuleBasedPlatformResolverTest {
         UnconfiguredBuildTargetFactoryForTests.newInstance("//platform:platform");
     UnconfiguredBuildTargetView constraintValue =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:value");
-    UnconfiguredBuildTargetView constraintSetting =
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:setting");
+    BuildTarget constraintSetting =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
 
     ConfigurationRuleResolver configurationRuleResolver =
         buildTarget -> {
@@ -70,9 +72,10 @@ public class RuleBasedPlatformResolverTest {
                 ImmutableSortedSet.of());
           }
           if (buildTarget.getUnconfiguredBuildTargetView().equals(constraintValue)) {
-            return new ConstraintValueRule(constraintValue, "value", constraintSetting);
+            return new ConstraintValueRule(
+                constraintValue, "value", constraintSetting.getUnconfiguredBuildTargetView());
           }
-          if (buildTarget.getUnconfiguredBuildTargetView().equals(constraintSetting)) {
+          if (buildTarget.equals(constraintSetting)) {
             return new ConstraintSettingRule(constraintSetting, "value", Optional.empty());
           }
           throw new IllegalArgumentException("Invalid build target: " + buildTarget);

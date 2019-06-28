@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
@@ -77,7 +78,9 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
                           "%s is used as constraint_setting, but has wrong type",
                           buildTarget);
                       Optional<UnconfiguredBuildTargetView> constraintDetectorTarget =
-                          ((ConstraintSettingRule) configurationRule).getHostConstraintDetector();
+                          ((ConstraintSettingRule) configurationRule)
+                              .getHostConstraintDetector()
+                              .map(BuildTarget::getUnconfiguredBuildTargetView);
 
                       return ConstraintSetting.of(
                           buildTarget,

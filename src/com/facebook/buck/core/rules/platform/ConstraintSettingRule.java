@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import java.util.Optional;
@@ -23,14 +24,12 @@ import java.util.Optional;
 /** A configuration rule that represents {@code config_setting} target. */
 public class ConstraintSettingRule implements ConfigurationRule {
 
-  private final UnconfiguredBuildTargetView buildTarget;
+  private final BuildTarget buildTarget;
   private final String name;
-  private final Optional<UnconfiguredBuildTargetView> hostConstraintDetector;
+  private final Optional<BuildTarget> hostConstraintDetector;
 
   public ConstraintSettingRule(
-      UnconfiguredBuildTargetView buildTarget,
-      String name,
-      Optional<UnconfiguredBuildTargetView> hostConstraintDetector) {
+      BuildTarget buildTarget, String name, Optional<BuildTarget> hostConstraintDetector) {
     this.buildTarget = buildTarget;
     this.name = name;
     this.hostConstraintDetector = hostConstraintDetector;
@@ -38,14 +37,14 @@ public class ConstraintSettingRule implements ConfigurationRule {
 
   @Override
   public UnconfiguredBuildTargetView getBuildTarget() {
-    return buildTarget;
+    return buildTarget.getUnconfiguredBuildTargetView();
   }
 
   public String getName() {
     return name;
   }
 
-  public Optional<UnconfiguredBuildTargetView> getHostConstraintDetector() {
+  public Optional<BuildTarget> getHostConstraintDetector() {
     return hostConstraintDetector;
   }
 }
