@@ -18,7 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.PlatformResolver;
@@ -184,8 +184,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
         new SameThreadConfigurationRuleResolver(
             target ->
                 nonResolvingTargetNodeParsePipeline.getNode(
-                    cellManager.getCell(target),
-                    target.configure(EmptyTargetConfiguration.INSTANCE)));
+                    cellManager.getCell(target), ConfigurationBuildTargets.convert(target)));
 
     SelectableResolver selectableResolver =
         new ConfigurationRuleSelectableResolver(configurationRuleResolver);
