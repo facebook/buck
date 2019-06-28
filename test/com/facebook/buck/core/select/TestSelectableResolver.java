@@ -17,7 +17,6 @@
 package com.facebook.buck.core.select;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
@@ -30,10 +29,7 @@ public class TestSelectableResolver implements SelectableResolver {
   public TestSelectableResolver(List<Selectable> selectables) {
     this.selectables =
         selectables.stream()
-            .collect(
-                ImmutableMap.toImmutableMap(
-                    selectable -> ConfigurationBuildTargets.convert(selectable.getBuildTarget()),
-                    Functions.identity()));
+            .collect(ImmutableMap.toImmutableMap(Selectable::getBuildTarget, Functions.identity()));
   }
 
   public TestSelectableResolver() {
