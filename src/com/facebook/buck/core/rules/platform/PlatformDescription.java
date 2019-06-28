@@ -16,6 +16,8 @@
 
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
@@ -53,7 +55,11 @@ public class PlatformDescription implements ConfigurationRuleDescription<Platfor
       ConfigurationRuleResolver configurationRuleResolver,
       UnconfiguredBuildTargetView buildTarget,
       PlatformArg arg) {
-    return PlatformRule.of(buildTarget, arg.getName(), arg.getConstraintValues(), arg.getDeps());
+    return PlatformRule.of(
+        buildTarget,
+        arg.getName(),
+        ConfigurationBuildTargets.convert(arg.getConstraintValues()),
+        ConfigurationBuildTargets.convert(arg.getDeps()));
   }
 
   @BuckStyleImmutable
@@ -81,10 +87,10 @@ public class PlatformDescription implements ConfigurationRuleDescription<Platfor
 
     @Value.NaturalOrder
     @Value.Parameter
-    ImmutableSortedSet<UnconfiguredBuildTargetView> getConstrainValues();
+    ImmutableSortedSet<BuildTarget> getConstrainValues();
 
     @Value.Parameter
     @Value.NaturalOrder
-    ImmutableSortedSet<UnconfiguredBuildTargetView> getDeps();
+    ImmutableSortedSet<BuildTarget> getDeps();
   }
 }

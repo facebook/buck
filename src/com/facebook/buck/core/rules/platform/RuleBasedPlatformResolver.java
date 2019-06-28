@@ -16,6 +16,7 @@
 package com.facebook.buck.core.rules.platform;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
@@ -43,19 +44,21 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
 
   @Override
   public Platform getPlatform(UnconfiguredBuildTargetView buildTarget) {
-    GraphTraversable<UnconfiguredBuildTargetView> traversable =
+    GraphTraversable<BuildTarget> traversable =
         target -> {
           PlatformRule platformRule = getPlatformRule(target);
           return platformRule.getDeps().iterator();
         };
 
-    AcyclicDepthFirstPostOrderTraversal<UnconfiguredBuildTargetView> platformTraversal =
+    AcyclicDepthFirstPostOrderTraversal<BuildTarget> platformTraversal =
         new AcyclicDepthFirstPostOrderTraversal<>(traversable);
 
-    ImmutableSet<UnconfiguredBuildTargetView> platformTargets;
+    ImmutableSet<BuildTarget> platformTargets;
     try {
       platformTargets =
-          ImmutableSet.copyOf(platformTraversal.traverse(ImmutableList.of(buildTarget)));
+          ImmutableSet.copyOf(
+              platformTraversal.traverse(
+                  ImmutableList.of(ConfigurationBuildTargets.convert(buildTarget))));
     } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
       throw new HumanReadableException(e.getMessage());
     }
@@ -64,15 +67,15 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
         platformTargets.stream()
             .map(this::getPlatformRule)
             .flatMap(rule -> rule.getConstrainValues().stream())
+            .map(BuildTarget::getUnconfiguredBuildTargetView)
             .map(constraintResolver::getConstraintValue)
             .collect(ImmutableSet.toImmutableSet());
 
     return new ConstraintBasedPlatform(buildTarget, constraintValues);
   }
 
-  private PlatformRule getPlatformRule(UnconfiguredBuildTargetView buildTarget) {
-    ConfigurationRule configurationRule =
-        configurationRuleResolver.getRule(ConfigurationBuildTargets.convert(buildTarget));
+  private PlatformRule getPlatformRule(BuildTarget buildTarget) {
+    ConfigurationRule configurationRule = configurationRuleResolver.getRule(buildTarget);
     if (!(configurationRule instanceof PlatformRule)) {
       throw new HumanReadableException(
           "%s is used as a target platform, but not declared using `platform` rule",
