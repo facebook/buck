@@ -193,14 +193,13 @@ public class DefaultDefectReporter implements DefectReporter {
             .readTimeout(timeout, TimeUnit.MILLISECONDS)
             .writeTimeout(timeout, TimeUnit.MILLISECONDS)
             .build();
-    HttpService httpService =
+
+    try (HttpService httpService =
         new RetryingHttpService(
             buckEventBus,
             new LoadBalancedService(slb, httpClient, buckEventBus),
             "buck_defect_reporter_http_retries",
-            doctorConfig.getReportMaxUploadRetries());
-
-    try {
+            doctorConfig.getReportMaxUploadRetries())) {
       Request.Builder requestBuilder = new Request.Builder();
       requestBuilder.addHeader(
           REQUEST_PROTOCOL_VERSION, doctorConfig.getProtocolVersion().name().toLowerCase());
@@ -256,8 +255,6 @@ public class DefaultDefectReporter implements DefectReporter {
       }
     } catch (IOException e) {
       throw new IOException(String.format("Failed uploading report because [%s].", e.getMessage()));
-    } finally {
-      httpService.close();
     }
   }
 }
