@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.HostConstraintDetector;
 import com.facebook.buck.core.model.platform.ProvidesHostConstraintDetector;
@@ -25,18 +26,18 @@ import com.facebook.buck.core.rules.config.ConfigurationRule;
 public class CpuConstraintDetectorRule
     implements ConfigurationRule, ProvidesHostConstraintDetector {
 
-  private final UnconfiguredBuildTargetView buildTarget;
+  private final BuildTarget buildTarget;
   private final CpuConstraintDetector cpuConstraintDetector;
 
   public CpuConstraintDetectorRule(
-      UnconfiguredBuildTargetView buildTarget, CpuConstraintDetector cpuConstraintDetector) {
+      BuildTarget buildTarget, CpuConstraintDetector cpuConstraintDetector) {
     this.buildTarget = buildTarget;
     this.cpuConstraintDetector = cpuConstraintDetector;
   }
 
   @Override
   public UnconfiguredBuildTargetView getBuildTarget() {
-    return buildTarget;
+    return buildTarget.getUnconfiguredBuildTargetView();
   }
 
   @Override
