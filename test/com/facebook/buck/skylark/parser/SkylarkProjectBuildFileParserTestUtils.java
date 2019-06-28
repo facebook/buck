@@ -18,7 +18,7 @@ package com.facebook.buck.skylark.parser;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.LabelCache;

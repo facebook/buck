@@ -14,9 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.core.rules.knowntypes;
+package com.facebook.buck.core.rules.knowntypes.provider;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.rules.knowntypes.HybridKnownRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypesFactory;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;

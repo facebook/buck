@@ -39,6 +39,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/rules/config:config",
         "//src/com/facebook/buck/core/rules/config/impl:impl",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
+        "//src/com/facebook/buck/core/rules/knowntypes/provider:provider",
         "//src/com/facebook/buck/core/rules/platform:platform",
         "//src/com/facebook/buck/core/select:select",
         "//src/com/facebook/buck/core/select/impl:impl",

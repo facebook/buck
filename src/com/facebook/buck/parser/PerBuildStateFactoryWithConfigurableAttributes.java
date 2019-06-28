@@ -31,7 +31,7 @@ import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.impl.ConfigurationRuleSelectableResolver;
 import com.facebook.buck.core.rules.config.impl.SameThreadConfigurationRuleResolver;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.platform.CachingPlatformResolver;
 import com.facebook.buck.core.rules.platform.DefaultTargetPlatformResolver;
 import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;

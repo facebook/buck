@@ -20,6 +20,7 @@ java_library(
     ],
     deps = [
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
+        "//src/com/facebook/buck/core/rules/knowntypes/provider:provider",
         "//src/com/facebook/buck/util/environment:environment",
         "//third-party/java/nailgun:nailgun",
     ],
@@ -56,6 +57,7 @@ java_library(
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/config/impl:impl",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
+        "//src/com/facebook/buck/core/rules/knowntypes/provider:provider",
         "//src/com/facebook/buck/core/util/graph:graph",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/counters:counters",
@@ -351,6 +353,7 @@ java_test(
         "//src/com/facebook/buck/core/rules/config/impl:impl",
         "//src/com/facebook/buck/core/rules/configsetting:configsetting",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
+        "//src/com/facebook/buck/core/rules/knowntypes/provider:provider",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/core/util/graph:graph",
         "//src/com/facebook/buck/core/util/immutables:immutables",
