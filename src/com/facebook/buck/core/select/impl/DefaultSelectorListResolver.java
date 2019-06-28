@@ -114,7 +114,9 @@ public class DefaultSelectorListResolver implements SelectorListResolver {
       return;
     }
 
-    Selectable selectable = selectableResolver.getSelectable(selectorKey.getBuildTarget());
+    Selectable selectable =
+        selectableResolver.getSelectable(
+            selectorKey.getBuildTarget().getUnconfiguredBuildTargetView());
 
     if (selectable.matches(configurationContext)) {
       updateConditions(matchingConditions, selectable, value);
