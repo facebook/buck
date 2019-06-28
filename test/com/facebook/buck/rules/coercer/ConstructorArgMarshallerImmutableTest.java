@@ -36,6 +36,7 @@ import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.platform.DummyConfigurationRule;
 import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
+import com.facebook.buck.core.select.NonCopyingSelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.TestSelectable;
@@ -673,15 +674,13 @@ public class ConstructorArgMarshallerImmutableTest {
   public void populateWithConfiguringAttributesCopiesValuesToImmutable() throws Exception {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
-    SelectableConfigurationContext selectableConfigurationContext =
-        new SelectableConfigurationContext() {};
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     DtoWithString dto =
         marshaller.populateWithConfiguringAttributes(
             createCellRoots(filesystem),
             filesystem,
             selectorListResolver,
-            selectableConfigurationContext,
+            NonCopyingSelectableConfigurationContext.INSTANCE,
             TARGET,
             builder(DtoWithString.class),
             declaredDeps,
@@ -694,15 +693,13 @@ public class ConstructorArgMarshallerImmutableTest {
   public void populateWithConfiguringAttributesCollectsDeclaredDeps() throws Exception {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
-    SelectableConfigurationContext selectableConfigurationContext =
-        new SelectableConfigurationContext() {};
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     BuildTarget dep = BuildTargetFactory.newInstance("//a/b:c");
     marshaller.populateWithConfiguringAttributes(
         createCellRoots(filesystem),
         filesystem,
         selectorListResolver,
-        selectableConfigurationContext,
+        NonCopyingSelectableConfigurationContext.INSTANCE,
         TARGET,
         builder(DtoWithDepsAndNotDeps.class),
         declaredDeps,
@@ -714,14 +711,12 @@ public class ConstructorArgMarshallerImmutableTest {
   public void populateWithConfiguringAttributesSkipsMissingValues() throws Exception {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
-    SelectableConfigurationContext selectableConfigurationContext =
-        new SelectableConfigurationContext() {};
     DtoWithOptionalSetOfStrings dto =
         marshaller.populateWithConfiguringAttributes(
             createCellRoots(filesystem),
             filesystem,
             selectorListResolver,
-            selectableConfigurationContext,
+            NonCopyingSelectableConfigurationContext.INSTANCE,
             TARGET,
             builder(DtoWithOptionalSetOfStrings.class),
             ImmutableSet.builder(),

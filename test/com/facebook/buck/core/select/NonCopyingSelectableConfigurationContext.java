@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright 2019-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,15 +13,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.core.select;
 
 import com.facebook.buck.core.model.TargetConfiguration;
 
-/**
- * Contains context that can be accessed by {@link Selectable} to get information about the current
- * configuration.
- */
-public interface SelectableConfigurationContext {
-  SelectableConfigurationContext withTargetConfiguration(TargetConfiguration targetConfiguration);
+public class NonCopyingSelectableConfigurationContext implements SelectableConfigurationContext {
+
+  public static final NonCopyingSelectableConfigurationContext INSTANCE =
+      new NonCopyingSelectableConfigurationContext();
+
+  private NonCopyingSelectableConfigurationContext() {}
+
+  @Override
+  public SelectableConfigurationContext withTargetConfiguration(
+      TargetConfiguration targetConfiguration) {
+    return this;
+  }
 }
