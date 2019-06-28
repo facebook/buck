@@ -26,7 +26,7 @@ public class TestKnownRuleTypesProvider {
 
   public static KnownRuleTypesProvider create(PluginManager pluginManager) {
     return new KnownRuleTypesProvider(
-        new DefaultKnownRuleTypesFactory(
+        new DefaultKnownNativeRuleTypesFactory(
             new DefaultProcessExecutor(new TestConsole()),
             pluginManager,
             new TestSandboxExecutionStrategyFactory(),

@@ -45,7 +45,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.pf4j.PluginManager;
 
-public class KnownRuleTypesTest {
+public class KnownNativeRuleTypesTest {
 
   @ClassRule public static TemporaryFolder folder = new TemporaryFolder();
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
@@ -60,7 +60,7 @@ public class KnownRuleTypesTest {
             new KnownRuleTestDescription("Bar"),
             new KnownRuleTestDescription("Raz"));
 
-    KnownRuleTypes.of(buildDescriptions, ImmutableList.of());
+    KnownNativeRuleTypes.of(buildDescriptions, ImmutableList.of());
   }
 
   @Test
@@ -81,7 +81,7 @@ public class KnownRuleTypesTest {
             TestRuleKeyConfigurationFactory.create(),
             () -> EmptyTargetConfiguration.INSTANCE);
 
-    KnownRuleTypes knownRuleTypes1 =
+    KnownNativeRuleTypes knownRuleTypes1 =
         TestKnownRuleTypesFactory.create(
             buckConfig, toolchainProvider, KnownRuleTypesTestUtil.createExecutor(temporaryFolder));
 
@@ -101,7 +101,7 @@ public class KnownRuleTypesTest {
             TestRuleKeyConfigurationFactory.create(),
             () -> EmptyTargetConfiguration.INSTANCE);
 
-    KnownRuleTypes knownRuleTypes2 =
+    KnownNativeRuleTypes knownRuleTypes2 =
         TestKnownRuleTypesFactory.create(
             buckConfig, toolchainProvider, KnownRuleTypesTestUtil.createExecutor(temporaryFolder));
 

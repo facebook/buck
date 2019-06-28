@@ -18,9 +18,9 @@ package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.core.cell.Cell;
 
-/** A factory to create {@link KnownRuleTypes}. */
-public interface KnownRuleTypesFactory {
+/** A factory to create {@link KnownNativeRuleTypes}. */
+public interface KnownNativeRuleTypesFactory {
 
-  /** Creates {@link KnownRuleTypes} for a given {@link Cell} */
-  KnownRuleTypes create(Cell cell);
+  /** Creates {@link KnownNativeRuleTypes} for a given {@link Cell} */
+  KnownNativeRuleTypes create(Cell cell);
 }

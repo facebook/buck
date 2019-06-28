@@ -24,7 +24,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -60,7 +60,7 @@ public class ModernBuildRuleIntegrationTest {
             sandboxExecutionStrategyFactory,
             knownConfigurationDescriptions) ->
             cell ->
-                KnownRuleTypes.of(
+                KnownNativeRuleTypes.of(
                     ImmutableList.of(new TemporaryWritingDescription()),
                     knownConfigurationDescriptions));
     workspace.setUp();

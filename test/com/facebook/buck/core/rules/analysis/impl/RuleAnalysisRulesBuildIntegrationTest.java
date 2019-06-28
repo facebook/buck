@@ -17,7 +17,7 @@ package com.facebook.buck.core.rules.analysis.impl;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -45,7 +45,8 @@ public class RuleAnalysisRulesBuildIntegrationTest {
             sandboxExecutionStrategyFactory,
             knownConfigurationDescriptions) ->
             cell ->
-                KnownRuleTypes.of(ImmutableList.of(new FakeRuleDescription()), ImmutableList.of()));
+                KnownNativeRuleTypes.of(
+                    ImmutableList.of(new FakeRuleDescription()), ImmutableList.of()));
 
     Path resultPath = workspace.buildAndReturnOutput("//:bar");
 

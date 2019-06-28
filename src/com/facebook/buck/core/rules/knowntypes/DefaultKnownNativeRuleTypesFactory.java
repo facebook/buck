@@ -25,18 +25,18 @@ import com.google.common.collect.ImmutableList;
 import org.pf4j.PluginManager;
 
 /**
- * An implementation of {@link KnownRuleTypesFactory} that creates a list of {@link
+ * An implementation of {@link KnownNativeRuleTypesFactory} that creates a list of {@link
  * com.facebook.buck.core.rules.DescriptionWithTargetGraph} for a given cell and merges it with a
  * list of configuration rule descriptions.
  */
-public class DefaultKnownRuleTypesFactory implements KnownRuleTypesFactory {
+public class DefaultKnownNativeRuleTypesFactory implements KnownNativeRuleTypesFactory {
 
   private final ProcessExecutor executor;
   private final PluginManager pluginManager;
   private final SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory;
   private final ImmutableList<ConfigurationRuleDescription<?>> knownConfigurationDescriptions;
 
-  public DefaultKnownRuleTypesFactory(
+  public DefaultKnownNativeRuleTypesFactory(
       ProcessExecutor executor,
       PluginManager pluginManager,
       SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory,
@@ -48,7 +48,7 @@ public class DefaultKnownRuleTypesFactory implements KnownRuleTypesFactory {
   }
 
   @Override
-  public KnownRuleTypes create(Cell cell) {
+  public KnownNativeRuleTypes create(Cell cell) {
     ImmutableList<Description<?>> knownBuildRuleDescriptions =
         KnownBuildRuleDescriptionsFactory.createBuildDescriptions(
             cell.getBuckConfig(),
@@ -56,6 +56,6 @@ public class DefaultKnownRuleTypesFactory implements KnownRuleTypesFactory {
             cell.getToolchainProvider(),
             pluginManager,
             sandboxExecutionStrategyFactory);
-    return KnownRuleTypes.of(knownBuildRuleDescriptions, knownConfigurationDescriptions);
+    return KnownNativeRuleTypes.of(knownBuildRuleDescriptions, knownConfigurationDescriptions);
   }
 }

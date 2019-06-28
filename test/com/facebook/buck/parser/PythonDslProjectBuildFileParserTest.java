@@ -24,9 +24,9 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationDescriptionsFactory;
-import com.facebook.buck.core.rules.knowntypes.DefaultKnownRuleTypesFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesFactory;
+import com.facebook.buck.core.rules.knowntypes.DefaultKnownNativeRuleTypesFactory;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypesFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
@@ -68,7 +68,7 @@ import org.pf4j.PluginManager;
 public class PythonDslProjectBuildFileParserTest {
 
   private Cell cell;
-  private KnownRuleTypes knownRuleTypes;
+  private KnownNativeRuleTypes knownNativeRuleTypes;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -76,13 +76,13 @@ public class PythonDslProjectBuildFileParserTest {
   public void createCell() {
     cell = new TestCellBuilder().build();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
-    KnownRuleTypesFactory knownTypesFactory =
-        new DefaultKnownRuleTypesFactory(
+    KnownNativeRuleTypesFactory knownTypesFactory =
+        new DefaultKnownNativeRuleTypesFactory(
             new DefaultProcessExecutor(new TestConsole()),
             pluginManager,
             new TestSandboxExecutionStrategyFactory(),
             PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager));
-    knownRuleTypes = knownTypesFactory.create(cell);
+    knownNativeRuleTypes = knownTypesFactory.create(cell);
   }
 
   private static FakeProcess fakeProcessWithJsonOutput(
@@ -112,7 +112,7 @@ public class PythonDslProjectBuildFileParserTest {
   public void whenSubprocessReturnsSuccessThenProjectBuildFileParserClosesCleanly()
       throws IOException, BuildFileParseException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), knownRuleTypes);
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownNativeRuleTypes);
     try (PythonDslProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccess()) {
       buildFileParser.initIfNeeded();
@@ -124,7 +124,7 @@ public class PythonDslProjectBuildFileParserTest {
   public void whenSubprocessReturnsFailureThenProjectBuildFileParserThrowsOnClose()
       throws IOException, BuildFileParseException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), knownRuleTypes);
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownNativeRuleTypes);
     try (PythonDslProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsError()) {
       buildFileParser.initIfNeeded();
@@ -139,7 +139,7 @@ public class PythonDslProjectBuildFileParserTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), knownRuleTypes);
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownNativeRuleTypes);
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.doNotCare());
     List<ConsoleEvent> consoleEvents = new ArrayList<>();
     class EventListener {
@@ -166,7 +166,7 @@ public class PythonDslProjectBuildFileParserTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), knownRuleTypes);
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownNativeRuleTypes);
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.doNotCare());
     List<ConsoleEvent> consoleEvents = new ArrayList<>();
     List<WatchmanDiagnosticEvent> watchmanDiagnosticEvents = new ArrayList<>();
@@ -206,7 +206,7 @@ public class PythonDslProjectBuildFileParserTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), knownRuleTypes);
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownNativeRuleTypes);
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.doNotCare());
     List<WatchmanDiagnosticEvent> watchmanDiagnosticEvents = new ArrayList<>();
     class EventListener {
@@ -236,7 +236,7 @@ public class PythonDslProjectBuildFileParserTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), knownRuleTypes);
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownNativeRuleTypes);
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.doNotCare());
     List<ConsoleEvent> consoleEvents = new ArrayList<>();
     class EventListener {
@@ -266,7 +266,7 @@ public class PythonDslProjectBuildFileParserTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), knownRuleTypes);
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownNativeRuleTypes);
     String expectedPath = cell.getRoot().resolve("foo/BUCK").toString();
     thrown.expect(BuildFileParseException.class);
     thrown.expectMessage(
@@ -310,7 +310,7 @@ public class PythonDslProjectBuildFileParserTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), knownRuleTypes);
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownNativeRuleTypes);
     String expectedPath = cell.getRoot().resolve("foo/BUCK").toString();
     thrown.expect(BuildFileParseException.class);
     thrown.expectMessage(
@@ -352,7 +352,7 @@ public class PythonDslProjectBuildFileParserTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), knownRuleTypes);
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownNativeRuleTypes);
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.doNotCare());
     List<ConsoleEvent> consoleEvents = new ArrayList<>();
     class EventListener {
@@ -416,7 +416,7 @@ public class PythonDslProjectBuildFileParserTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
-        new TestProjectBuildFileParserFactory(cell.getRoot(), knownRuleTypes);
+        new TestProjectBuildFileParserFactory(cell.getRoot(), knownNativeRuleTypes);
     String expectedPath = cell.getRoot().resolve("foo/BUCK").toString();
     thrown.expect(BuildFileParseException.class);
     thrown.expectMessage(
@@ -469,9 +469,9 @@ public class PythonDslProjectBuildFileParserTest {
    */
   private static class TestProjectBuildFileParserFactory {
     private final Path projectRoot;
-    private final KnownRuleTypes ruleTypes;
+    private final KnownNativeRuleTypes ruleTypes;
 
-    public TestProjectBuildFileParserFactory(Path projectRoot, KnownRuleTypes ruleTypes) {
+    public TestProjectBuildFileParserFactory(Path projectRoot, KnownNativeRuleTypes ruleTypes) {
       this.projectRoot = projectRoot;
       this.ruleTypes = ruleTypes;
     }

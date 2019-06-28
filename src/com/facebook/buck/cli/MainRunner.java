@@ -59,7 +59,7 @@ import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationDescriptionsFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesFactory;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.core.toolchain.impl.DefaultToolchainProviderFactory;
@@ -373,7 +373,7 @@ public final class MainRunner {
 
   public interface KnownRuleTypesFactoryFactory {
 
-    KnownRuleTypesFactory create(
+    KnownNativeRuleTypesFactory create(
         ProcessExecutor executor,
         PluginManager pluginManager,
         SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory,

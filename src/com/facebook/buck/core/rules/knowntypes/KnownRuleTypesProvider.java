@@ -24,27 +24,27 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import javax.annotation.Nonnull;
 
-/** Lazily constructs {@link KnownRuleTypes} for {@link Cell}s. */
+/** Lazily constructs {@link KnownNativeRuleTypes} for {@link Cell}s. */
 public class KnownRuleTypesProvider {
 
-  private final LoadingCache<Cell, KnownRuleTypes> typesCache =
+  private final LoadingCache<Cell, KnownNativeRuleTypes> typesCache =
       CacheBuilder.newBuilder()
           .build(
-              new CacheLoader<Cell, KnownRuleTypes>() {
+              new CacheLoader<Cell, KnownNativeRuleTypes>() {
                 @Override
-                public KnownRuleTypes load(@Nonnull Cell cell) {
-                  return knownRuleTypesFactory.create(cell);
+                public KnownNativeRuleTypes load(@Nonnull Cell cell) {
+                  return knownNativeRuleTypesFactory.create(cell);
                 }
               });
 
-  private final KnownRuleTypesFactory knownRuleTypesFactory;
+  private final KnownNativeRuleTypesFactory knownNativeRuleTypesFactory;
 
-  public KnownRuleTypesProvider(KnownRuleTypesFactory knownRuleTypesFactory) {
-    this.knownRuleTypesFactory = knownRuleTypesFactory;
+  public KnownRuleTypesProvider(KnownNativeRuleTypesFactory knownNativeRuleTypesFactory) {
+    this.knownNativeRuleTypesFactory = knownNativeRuleTypesFactory;
   }
 
-  /** Returns {@link KnownRuleTypes} for a given {@link Cell}. */
-  public KnownRuleTypes get(Cell cell) {
+  /** Returns {@link KnownNativeRuleTypes} for a given {@link Cell}. */
+  public KnownNativeRuleTypes get(Cell cell) {
     try {
       return typesCache.getUnchecked(cell);
     } catch (UncheckedExecutionException e) {

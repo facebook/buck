@@ -22,7 +22,7 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.function.BuckPyFunction;
@@ -55,7 +55,7 @@ public class DefaultRawTargetNodeFactory implements RawTargetNodeFactory<Map<Str
       Path buildFile,
       UnconfiguredBuildTargetView target,
       Map<String, Object> rawAttributes) {
-    KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
+    KnownNativeRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
     RuleType ruleType = parseRuleTypeFromRawRule(knownRuleTypes, rawAttributes);
 
     // Because of the way that the parser works, we know this can never return null.
@@ -86,7 +86,7 @@ public class DefaultRawTargetNodeFactory implements RawTargetNodeFactory<Map<Str
   }
 
   private static RuleType parseRuleTypeFromRawRule(
-      KnownRuleTypes knownRuleTypes, Map<String, Object> attributes) {
+      KnownNativeRuleTypes knownRuleTypes, Map<String, Object> attributes) {
     String type =
         (String) Objects.requireNonNull(attributes.get(BuckPyFunction.TYPE_PROPERTY_NAME));
     return knownRuleTypes.getRuleType(type);

@@ -34,7 +34,7 @@ import org.immutables.value.Value;
 /** Provides access to rule types. */
 @Value.Immutable(builder = false, copy = false)
 @BuckStyleImmutable
-public abstract class AbstractKnownRuleTypes {
+public abstract class AbstractKnownNativeRuleTypes {
 
   @Value.Parameter
   public abstract ImmutableList<Description<?>> getKnownBuildDescriptions();
