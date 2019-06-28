@@ -17,8 +17,6 @@
 package com.facebook.buck.core.rules.platform;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.ConfigurationBuildTargets;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
@@ -44,61 +42,52 @@ import java.util.Optional;
 public class RuleBasedConstraintResolver implements ConstraintResolver {
   private final ConfigurationRuleResolver configurationRuleResolver;
 
-  private final LoadingCache<UnconfiguredBuildTargetView, HostConstraintDetector>
-      constraintDetectorCache =
-          CacheBuilder.newBuilder()
-              .build(
-                  new CacheLoader<UnconfiguredBuildTargetView, HostConstraintDetector>() {
-                    @Override
-                    public HostConstraintDetector load(UnconfiguredBuildTargetView buildTarget) {
-                      ConfigurationRule configurationRule =
-                          configurationRuleResolver.getRule(
-                              ConfigurationBuildTargets.convert(buildTarget));
-                      Preconditions.checkState(
-                          configurationRule instanceof ProvidesHostConstraintDetector,
-                          "%s is used as host_constraint_detector, but has wrong type",
-                          buildTarget);
-                      return ((ProvidesHostConstraintDetector) configurationRule)
-                          .getHostConstraintDetector();
-                    }
-                  });
-
-  private final LoadingCache<UnconfiguredBuildTargetView, ConstraintSetting>
-      constraintSettingCache =
-          CacheBuilder.newBuilder()
-              .build(
-                  new CacheLoader<UnconfiguredBuildTargetView, ConstraintSetting>() {
-                    @Override
-                    public ConstraintSetting load(UnconfiguredBuildTargetView buildTarget) {
-                      BuildTarget configurationBuildTarget =
-                          ConfigurationBuildTargets.convert(buildTarget);
-                      ConfigurationRule configurationRule =
-                          configurationRuleResolver.getRule(configurationBuildTarget);
-                      Preconditions.checkState(
-                          configurationRule instanceof ConstraintSettingRule,
-                          "%s is used as constraint_setting, but has wrong type",
-                          buildTarget);
-                      Optional<UnconfiguredBuildTargetView> constraintDetectorTarget =
-                          ((ConstraintSettingRule) configurationRule)
-                              .getHostConstraintDetector()
-                              .map(BuildTarget::getUnconfiguredBuildTargetView);
-
-                      return ConstraintSetting.of(
-                          configurationBuildTarget,
-                          constraintDetectorTarget.map(constraintDetectorCache::getUnchecked));
-                    }
-                  });
-
-  private final LoadingCache<UnconfiguredBuildTargetView, ConstraintValue> constraintValueCache =
+  private final LoadingCache<BuildTarget, HostConstraintDetector> constraintDetectorCache =
       CacheBuilder.newBuilder()
           .build(
-              new CacheLoader<UnconfiguredBuildTargetView, ConstraintValue>() {
+              new CacheLoader<BuildTarget, HostConstraintDetector>() {
                 @Override
-                public ConstraintValue load(UnconfiguredBuildTargetView buildTarget) {
-                  BuildTarget configurationBuildTarget =
-                      ConfigurationBuildTargets.convert(buildTarget);
+                public HostConstraintDetector load(BuildTarget buildTarget) {
                   ConfigurationRule configurationRule =
-                      configurationRuleResolver.getRule(configurationBuildTarget);
+                      configurationRuleResolver.getRule(buildTarget);
+                  Preconditions.checkState(
+                      configurationRule instanceof ProvidesHostConstraintDetector,
+                      "%s is used as host_constraint_detector, but has wrong type",
+                      buildTarget);
+                  return ((ProvidesHostConstraintDetector) configurationRule)
+                      .getHostConstraintDetector();
+                }
+              });
+
+  private final LoadingCache<BuildTarget, ConstraintSetting> constraintSettingCache =
+      CacheBuilder.newBuilder()
+          .build(
+              new CacheLoader<BuildTarget, ConstraintSetting>() {
+                @Override
+                public ConstraintSetting load(BuildTarget buildTarget) {
+                  ConfigurationRule configurationRule =
+                      configurationRuleResolver.getRule(buildTarget);
+                  Preconditions.checkState(
+                      configurationRule instanceof ConstraintSettingRule,
+                      "%s is used as constraint_setting, but has wrong type",
+                      buildTarget);
+                  Optional<BuildTarget> constraintDetectorTarget =
+                      ((ConstraintSettingRule) configurationRule).getHostConstraintDetector();
+
+                  return ConstraintSetting.of(
+                      buildTarget,
+                      constraintDetectorTarget.map(constraintDetectorCache::getUnchecked));
+                }
+              });
+
+  private final LoadingCache<BuildTarget, ConstraintValue> constraintValueCache =
+      CacheBuilder.newBuilder()
+          .build(
+              new CacheLoader<BuildTarget, ConstraintValue>() {
+                @Override
+                public ConstraintValue load(BuildTarget buildTarget) {
+                  ConfigurationRule configurationRule =
+                      configurationRuleResolver.getRule(buildTarget);
                   Preconditions.checkState(
                       configurationRule instanceof ConstraintValueRule,
                       "%s is used as constraint_value, but has wrong type",
@@ -107,11 +96,8 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
                   ConstraintValueRule constraintValueRule = (ConstraintValueRule) configurationRule;
 
                   return ConstraintValue.of(
-                      configurationBuildTarget,
-                      getConstraintSetting(
-                          constraintValueRule
-                              .getConstraintSetting()
-                              .getUnconfiguredBuildTargetView()));
+                      buildTarget,
+                      getConstraintSetting(constraintValueRule.getConstraintSetting()));
                 }
               });
 
@@ -120,7 +106,7 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
   }
 
   @Override
-  public ConstraintSetting getConstraintSetting(UnconfiguredBuildTargetView buildTarget) {
+  public ConstraintSetting getConstraintSetting(BuildTarget buildTarget) {
     try {
       return constraintSettingCache.getUnchecked(buildTarget);
     } catch (UncheckedExecutionException e) {
@@ -130,7 +116,7 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
   }
 
   @Override
-  public ConstraintValue getConstraintValue(UnconfiguredBuildTargetView buildTarget) {
+  public ConstraintValue getConstraintValue(BuildTarget buildTarget) {
     try {
       return constraintValueCache.getUnchecked(buildTarget);
     } catch (UncheckedExecutionException e) {

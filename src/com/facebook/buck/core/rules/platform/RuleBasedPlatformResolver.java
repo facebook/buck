@@ -67,7 +67,6 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
         platformTargets.stream()
             .map(this::getPlatformRule)
             .flatMap(rule -> rule.getConstrainValues().stream())
-            .map(BuildTarget::getUnconfiguredBuildTargetView)
             .map(constraintResolver::getConstraintValue)
             .collect(ImmutableSet.toImmutableSet());
 

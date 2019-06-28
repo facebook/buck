@@ -17,6 +17,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.description.arg.HasTargetCompatibleWith;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.Platform;
@@ -48,6 +49,7 @@ class TargetCompatibilityChecker {
         platform.matchesAll(
             argWithTargetCompatible.getTargetCompatibleWith().stream()
                 .map(BuildTarget::getUnconfiguredBuildTargetView)
+                .map(ConfigurationBuildTargets::convert)
                 .map(constraintResolver::getConstraintValue)
                 .collect(Collectors.toList()));
 
