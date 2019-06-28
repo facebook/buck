@@ -64,7 +64,7 @@ public class RuleBasedPlatformResolverTest {
         buildTarget -> {
           if (buildTarget.equals(platformTarget)) {
             return PlatformRule.of(
-                platformTarget.getUnconfiguredBuildTargetView(),
+                platformTarget,
                 "platform",
                 ImmutableSortedSet.of(constraintValue),
                 ImmutableSortedSet.of());

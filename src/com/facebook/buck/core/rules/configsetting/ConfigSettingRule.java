@@ -17,7 +17,6 @@
 package com.facebook.buck.core.rules.configsetting;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.select.ProvidesSelectable;
 import com.facebook.buck.core.select.Selectable;
@@ -40,8 +39,8 @@ public class ConfigSettingRule implements ConfigurationRule, ProvidesSelectable 
   }
 
   @Override
-  public UnconfiguredBuildTargetView getBuildTarget() {
-    return buildTarget.getUnconfiguredBuildTargetView();
+  public BuildTarget getBuildTarget() {
+    return buildTarget;
   }
 
   @Override

@@ -23,8 +23,6 @@ import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
@@ -73,8 +71,8 @@ public class DefaultTargetPlatformResolverTest {
   public void returnCorrectPlatformForDefaultTargetConfiguration() {
     Platform emptyTargetConfigurationPlatform = EmptyPlatform.INSTANCE;
 
-    UnconfiguredBuildTargetView platformTarget =
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//platform:platform");
+    BuildTarget platformTarget =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//platform:platform");
     BuildTarget constraintValue =
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:value");
     BuildTarget constraintSetting =
@@ -82,7 +80,7 @@ public class DefaultTargetPlatformResolverTest {
 
     ConfigurationRuleResolver configurationRuleResolver =
         buildTarget -> {
-          if (buildTarget.getUnconfiguredBuildTargetView().equals(platformTarget)) {
+          if (buildTarget.equals(platformTarget)) {
             return PlatformRule.of(
                 platformTarget,
                 "platform",
@@ -113,7 +111,8 @@ public class DefaultTargetPlatformResolverTest {
     ConstraintBasedPlatform platform =
         (ConstraintBasedPlatform)
             targetPlatformResolver.getTargetPlatform(
-                ImmutableDefaultTargetConfiguration.of(platformTarget));
+                ImmutableDefaultTargetConfiguration.of(
+                    platformTarget.getUnconfiguredBuildTargetView()));
 
     assertEquals("//platform:platform", platform.toString());
     assertEquals(1, platform.getConstraintValues().size());

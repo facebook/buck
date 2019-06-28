@@ -56,7 +56,7 @@ public class PlatformDescription implements ConfigurationRuleDescription<Platfor
       UnconfiguredBuildTargetView buildTarget,
       PlatformArg arg) {
     return PlatformRule.of(
-        buildTarget,
+        ConfigurationBuildTargets.convert(buildTarget),
         arg.getName(),
         ConfigurationBuildTargets.convert(arg.getConstraintValues()),
         ConfigurationBuildTargets.convert(arg.getDeps()));
@@ -80,7 +80,7 @@ public class PlatformDescription implements ConfigurationRuleDescription<Platfor
   interface AbstractPlatformRule extends ConfigurationRule {
     @Value.Parameter
     @Override
-    UnconfiguredBuildTargetView getBuildTarget();
+    BuildTarget getBuildTarget();
 
     @Value.Parameter
     String getName();

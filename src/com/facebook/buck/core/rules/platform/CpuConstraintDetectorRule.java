@@ -16,7 +16,6 @@
 package com.facebook.buck.core.rules.platform;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.HostConstraintDetector;
 import com.facebook.buck.core.model.platform.ProvidesHostConstraintDetector;
 import com.facebook.buck.core.model.platform.impl.CpuConstraintDetector;
@@ -36,8 +35,8 @@ public class CpuConstraintDetectorRule
   }
 
   @Override
-  public UnconfiguredBuildTargetView getBuildTarget() {
-    return buildTarget.getUnconfiguredBuildTargetView();
+  public BuildTarget getBuildTarget() {
+    return buildTarget;
   }
 
   @Override

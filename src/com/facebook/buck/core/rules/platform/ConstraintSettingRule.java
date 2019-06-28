@@ -17,7 +17,6 @@
 package com.facebook.buck.core.rules.platform;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import java.util.Optional;
 
@@ -36,8 +35,8 @@ public class ConstraintSettingRule implements ConfigurationRule {
   }
 
   @Override
-  public UnconfiguredBuildTargetView getBuildTarget() {
-    return buildTarget.getUnconfiguredBuildTargetView();
+  public BuildTarget getBuildTarget() {
+    return buildTarget;
   }
 
   public String getName() {
