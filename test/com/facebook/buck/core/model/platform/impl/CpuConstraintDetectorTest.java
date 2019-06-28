@@ -19,7 +19,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.util.environment.Architecture;
@@ -35,7 +34,7 @@ public class CpuConstraintDetectorTest {
     assertTrue(
         cpuConstraintDetector.matchesHost(
             ConstraintValue.of(
-                UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:x86_64"),
+                BuildTargetFactory.newInstance("//constraint:x86_64"),
                 ConstraintSetting.of(
                     BuildTargetFactory.newInstance("//constraint:cpu"),
                     Optional.of(cpuConstraintDetector)))));
@@ -48,7 +47,7 @@ public class CpuConstraintDetectorTest {
     assertFalse(
         cpuConstraintDetector.matchesHost(
             ConstraintValue.of(
-                UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:i386"),
+                BuildTargetFactory.newInstance("//constraint:i386"),
                 ConstraintSetting.of(
                     BuildTargetFactory.newInstance("//constraint:cpu"),
                     Optional.of(cpuConstraintDetector)))));

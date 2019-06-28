@@ -84,8 +84,8 @@ public class RuleBasedConstraintResolverTest {
   public void testGettingConstraintsReturnCorrectObject() {
     BuildTarget constraintSettingTarget =
         ConfigurationBuildTargetFactoryForTests.newInstance("//:setting");
-    UnconfiguredBuildTargetView constraintValueTarget =
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//:value");
+    BuildTarget constraintValueTarget =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//:value");
 
     RuleBasedConstraintResolver ruleBasedConstraintResolver =
         new RuleBasedConstraintResolver(
@@ -100,7 +100,8 @@ public class RuleBasedConstraintResolverTest {
             });
 
     ConstraintValue constraintValue =
-        ruleBasedConstraintResolver.getConstraintValue(constraintValueTarget);
+        ruleBasedConstraintResolver.getConstraintValue(
+            constraintValueTarget.getUnconfiguredBuildTargetView());
     ConstraintSetting constraintSetting =
         ruleBasedConstraintResolver.getConstraintSetting(
             constraintSettingTarget.getUnconfiguredBuildTargetView());

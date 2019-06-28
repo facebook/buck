@@ -90,7 +90,6 @@ public class RuleBasedPlatformResolverTest {
     assertEquals("//platform:platform", platform.toString());
     assertEquals(1, platform.getConstraintValues().size());
     assertEquals(
-        constraintValue.getUnconfiguredBuildTargetView(),
-        Iterables.getOnlyElement(platform.getConstraintValues()).getBuildTarget());
+        constraintValue, Iterables.getOnlyElement(platform.getConstraintValues()).getBuildTarget());
   }
 }

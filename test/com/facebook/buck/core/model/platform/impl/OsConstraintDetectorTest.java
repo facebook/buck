@@ -19,7 +19,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.util.environment.Platform;
@@ -35,7 +34,7 @@ public class OsConstraintDetectorTest {
     assertTrue(
         osConstraintDetector.matchesHost(
             ConstraintValue.of(
-                UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:osx"),
+                BuildTargetFactory.newInstance("//constraint:osx"),
                 ConstraintSetting.of(
                     BuildTargetFactory.newInstance("//constraint:os"),
                     Optional.of(osConstraintDetector)))));
@@ -48,7 +47,7 @@ public class OsConstraintDetectorTest {
     assertFalse(
         osConstraintDetector.matchesHost(
             ConstraintValue.of(
-                UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:osx"),
+                BuildTargetFactory.newInstance("//constraint:osx"),
                 ConstraintSetting.of(
                     BuildTargetFactory.newInstance("//constraint:os"),
                     Optional.of(osConstraintDetector)))));

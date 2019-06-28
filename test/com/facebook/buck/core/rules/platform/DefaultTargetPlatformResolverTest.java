@@ -19,7 +19,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
@@ -76,7 +75,8 @@ public class DefaultTargetPlatformResolverTest {
 
     UnconfiguredBuildTargetView platformTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//platform:platform");
-    BuildTarget constraintValue = BuildTargetFactory.newInstance("//constraint:value");
+    BuildTarget constraintValue =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:value");
     BuildTarget constraintSetting =
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
 
@@ -118,8 +118,7 @@ public class DefaultTargetPlatformResolverTest {
     assertEquals("//platform:platform", platform.toString());
     assertEquals(1, platform.getConstraintValues().size());
     assertEquals(
-        constraintValue.getUnconfiguredBuildTargetView(),
-        Iterables.getOnlyElement(platform.getConstraintValues()).getBuildTarget());
+        constraintValue, Iterables.getOnlyElement(platform.getConstraintValues()).getBuildTarget());
   }
 
   @Test

@@ -179,10 +179,11 @@ public class GraphEngineFactory {
 
               @Override
               public ConstraintValue getConstraintValue(UnconfiguredBuildTargetView buildTarget) {
+                BuildTarget configurationBuildTarget =
+                    ConfigurationBuildTargets.convert(buildTarget);
                 return ConstraintValue.of(
-                    buildTarget,
-                    ConstraintSetting.of(
-                        ConfigurationBuildTargets.convert(buildTarget), Optional.empty()));
+                    configurationBuildTarget,
+                    ConstraintSetting.of(configurationBuildTarget, Optional.empty()));
               }
             },
             // TODO: replace with TargetPlatformResolver

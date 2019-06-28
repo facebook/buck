@@ -20,7 +20,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.HostConstraintDetector;
@@ -35,8 +34,7 @@ public class HostPlatformTest {
   public void testMatchesAllReturnsTrueWithConstraintWithoutDetector() {
     ConstraintSetting cs1 =
         ConstraintSetting.of(BuildTargetFactory.newInstance("//cs:cs1"), Optional.empty());
-    ConstraintValue cs1v1 =
-        ConstraintValue.of(UnconfiguredBuildTargetFactoryForTests.newInstance("//cs:cs1v1"), cs1);
+    ConstraintValue cs1v1 = ConstraintValue.of(BuildTargetFactory.newInstance("//cs:cs1v1"), cs1);
 
     assertFalse(HostPlatform.INSTANCE.matchesAll(Collections.singleton(cs1v1)));
   }
@@ -46,8 +44,7 @@ public class HostPlatformTest {
     ConstraintSetting cs1 =
         ConstraintSetting.of(
             BuildTargetFactory.newInstance("//cs:cs1"), Optional.of(value -> true));
-    ConstraintValue cs1v1 =
-        ConstraintValue.of(UnconfiguredBuildTargetFactoryForTests.newInstance("//cs:cs1v1"), cs1);
+    ConstraintValue cs1v1 = ConstraintValue.of(BuildTargetFactory.newInstance("//cs:cs1v1"), cs1);
 
     assertTrue(HostPlatform.INSTANCE.matchesAll(Collections.singleton(cs1v1)));
   }
@@ -58,14 +55,12 @@ public class HostPlatformTest {
 
     ConstraintSetting cs1 =
         ConstraintSetting.of(BuildTargetFactory.newInstance("//cs:cs1"), Optional.of(detector));
-    ConstraintValue cs1v1 =
-        ConstraintValue.of(UnconfiguredBuildTargetFactoryForTests.newInstance("//cs:host"), cs1);
+    ConstraintValue cs1v1 = ConstraintValue.of(BuildTargetFactory.newInstance("//cs:host"), cs1);
 
     ConstraintSetting cs2 =
         ConstraintSetting.of(BuildTargetFactory.newInstance("//cs:cs2"), Optional.of(detector));
     ConstraintValue cs2v1 =
-        ConstraintValue.of(
-            UnconfiguredBuildTargetFactoryForTests.newInstance("//cs:non-host"), cs2);
+        ConstraintValue.of(BuildTargetFactory.newInstance("//cs:non-host"), cs2);
 
     assertFalse(HostPlatform.INSTANCE.matchesAll(Arrays.asList(cs1v1, cs2v1)));
   }
