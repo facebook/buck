@@ -17,6 +17,9 @@ package com.facebook.buck.core.rules.platform;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
@@ -56,8 +59,7 @@ public class RuleBasedConstraintResolverTest {
 
   @Test
   public void testGettingConstraintValueThrowsWithWrongConstraintSettingRuleType() {
-    UnconfiguredBuildTargetView constraintSettingTarget =
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//:setting");
+    BuildTarget constraintSettingTarget = BuildTargetFactory.newInstance("//:setting");
     UnconfiguredBuildTargetView constraintValueTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//:value");
 
@@ -68,7 +70,9 @@ public class RuleBasedConstraintResolverTest {
                 return DummyConfigurationRule.of(buildTarget);
               } else {
                 return new ConstraintValueRule(
-                    buildTarget, buildTarget.getShortName(), constraintSettingTarget);
+                    buildTarget.getUnconfiguredBuildTargetView(),
+                    buildTarget.getShortName(),
+                    constraintSettingTarget.getUnconfiguredBuildTargetView());
               }
             });
 
@@ -80,8 +84,8 @@ public class RuleBasedConstraintResolverTest {
 
   @Test
   public void testGettingConstraintsReturnCorrectObject() {
-    UnconfiguredBuildTargetView constraintSettingTarget =
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//:setting");
+    BuildTarget constraintSettingTarget =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//:setting");
     UnconfiguredBuildTargetView constraintValueTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//:value");
 
@@ -90,20 +94,27 @@ public class RuleBasedConstraintResolverTest {
             buildTarget -> {
               if (buildTarget.equals(constraintSettingTarget)) {
                 return new ConstraintSettingRule(
-                    buildTarget, buildTarget.getShortName(), Optional.empty());
+                    buildTarget.getUnconfiguredBuildTargetView(),
+                    buildTarget.getShortName(),
+                    Optional.empty());
               } else {
                 return new ConstraintValueRule(
-                    buildTarget, buildTarget.getShortName(), constraintSettingTarget);
+                    buildTarget.getUnconfiguredBuildTargetView(),
+                    buildTarget.getShortName(),
+                    constraintSettingTarget.getUnconfiguredBuildTargetView());
               }
             });
 
     ConstraintValue constraintValue =
         ruleBasedConstraintResolver.getConstraintValue(constraintValueTarget);
     ConstraintSetting constraintSetting =
-        ruleBasedConstraintResolver.getConstraintSetting(constraintSettingTarget);
+        ruleBasedConstraintResolver.getConstraintSetting(
+            constraintSettingTarget.getUnconfiguredBuildTargetView());
 
     assertEquals(constraintSetting, constraintValue.getConstraintSetting());
-    assertEquals(constraintSettingTarget, constraintSetting.getBuildTarget());
+    assertEquals(
+        constraintSettingTarget.getUnconfiguredBuildTargetView(),
+        constraintSetting.getBuildTarget());
     assertEquals(constraintValueTarget, constraintValue.getBuildTarget());
   }
 }

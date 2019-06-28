@@ -16,6 +16,7 @@
 package com.facebook.buck.core.rules.platform;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintValue;
@@ -70,7 +71,8 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
   }
 
   private PlatformRule getPlatformRule(UnconfiguredBuildTargetView buildTarget) {
-    ConfigurationRule configurationRule = configurationRuleResolver.getRule(buildTarget);
+    ConfigurationRule configurationRule =
+        configurationRuleResolver.getRule(ConfigurationBuildTargets.convert(buildTarget));
     if (!(configurationRule instanceof PlatformRule)) {
       throw new HumanReadableException(
           "%s is used as a target platform, but not declared using `platform` rule",

@@ -80,17 +80,17 @@ public class DefaultTargetPlatformResolverTest {
 
     ConfigurationRuleResolver configurationRuleResolver =
         buildTarget -> {
-          if (buildTarget.equals(platformTarget)) {
+          if (buildTarget.getUnconfiguredBuildTargetView().equals(platformTarget)) {
             return PlatformRule.of(
                 platformTarget,
                 "platform",
                 ImmutableSortedSet.of(constraintValue),
                 ImmutableSortedSet.of());
           }
-          if (buildTarget.equals(constraintValue)) {
+          if (buildTarget.getUnconfiguredBuildTargetView().equals(constraintValue)) {
             return new ConstraintValueRule(constraintValue, "value", constraintSetting);
           }
-          if (buildTarget.equals(constraintSetting)) {
+          if (buildTarget.getUnconfiguredBuildTargetView().equals(constraintSetting)) {
             return new ConstraintSettingRule(constraintValue, "value", Optional.empty());
           }
           throw new IllegalArgumentException("Invalid build target: " + buildTarget);

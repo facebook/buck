@@ -71,12 +71,16 @@ public class TargetCompatibilityCheckerTest {
     constraintResolver =
         new RuleBasedConstraintResolver(
             buildTarget -> {
-              if (buildTarget.equals(cs1.getBuildTarget())) {
+              if (buildTarget.getUnconfiguredBuildTargetView().equals(cs1.getBuildTarget())) {
                 return new ConstraintSettingRule(
-                    buildTarget, buildTarget.getShortName(), Optional.empty());
+                    buildTarget.getUnconfiguredBuildTargetView(),
+                    buildTarget.getShortName(),
+                    Optional.empty());
               } else {
                 return new ConstraintValueRule(
-                    buildTarget, buildTarget.getShortName(), cs1.getBuildTarget());
+                    buildTarget.getUnconfiguredBuildTargetView(),
+                    buildTarget.getShortName(),
+                    cs1.getBuildTarget());
               }
             });
     compatiblePlatform =

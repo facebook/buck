@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
@@ -50,7 +51,8 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
                     @Override
                     public HostConstraintDetector load(UnconfiguredBuildTargetView buildTarget) {
                       ConfigurationRule configurationRule =
-                          configurationRuleResolver.getRule(buildTarget);
+                          configurationRuleResolver.getRule(
+                              ConfigurationBuildTargets.convert(buildTarget));
                       Preconditions.checkState(
                           configurationRule instanceof ProvidesHostConstraintDetector,
                           "%s is used as host_constraint_detector, but has wrong type",
@@ -68,7 +70,8 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
                     @Override
                     public ConstraintSetting load(UnconfiguredBuildTargetView buildTarget) {
                       ConfigurationRule configurationRule =
-                          configurationRuleResolver.getRule(buildTarget);
+                          configurationRuleResolver.getRule(
+                              ConfigurationBuildTargets.convert(buildTarget));
                       Preconditions.checkState(
                           configurationRule instanceof ConstraintSettingRule,
                           "%s is used as constraint_setting, but has wrong type",
@@ -89,7 +92,8 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
                 @Override
                 public ConstraintValue load(UnconfiguredBuildTargetView buildTarget) {
                   ConfigurationRule configurationRule =
-                      configurationRuleResolver.getRule(buildTarget);
+                      configurationRuleResolver.getRule(
+                          ConfigurationBuildTargets.convert(buildTarget));
                   Preconditions.checkState(
                       configurationRule instanceof ConstraintValueRule,
                       "%s is used as constraint_value, but has wrong type",
