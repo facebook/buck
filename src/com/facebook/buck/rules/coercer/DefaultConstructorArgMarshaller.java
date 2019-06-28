@@ -25,11 +25,9 @@ import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.syntax.ListWithSelects;
-import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
-import java.util.function.Function;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
@@ -57,20 +55,19 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       Map<String, ?> instance)
       throws ParamInfoException {
-    Pair<Object, Function<Object, T>> dtoAndBuild =
-        CoercedTypeCache.instantiateSkeleton(dtoClass, buildTarget);
-    ImmutableMap<String, ParamInfo> allParamInfo =
-        CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dtoClass);
+    ConstructorArgBuilder<T> dtoAndBuild =
+        CoercedTypeCache.instantiateSkeleton(typeCoercerFactory, dtoClass, buildTarget);
+    ImmutableMap<String, ParamInfo> allParamInfo = dtoAndBuild.getParamInfos();
     for (ParamInfo info : allParamInfo.values()) {
       info.setFromParams(
           cellRoots,
           filesystem,
           buildTarget,
           buildTarget.getTargetConfiguration(),
-          dtoAndBuild.getFirst(),
+          dtoAndBuild.getBuilder(),
           instance);
     }
-    T dto = dtoAndBuild.getSecond().apply(dtoAndBuild.getFirst());
+    T dto = dtoAndBuild.build();
     collectDeclaredDeps(cellRoots, allParamInfo.get("deps"), declaredDeps, dto);
     return dto;
   }
@@ -104,10 +101,9 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableMap<String, ?> attributes)
       throws CoerceFailedException {
-    Pair<Object, Function<Object, T>> dtoAndBuild =
-        CoercedTypeCache.instantiateSkeleton(dtoClass, buildTarget);
-    ImmutableMap<String, ParamInfo> allParamInfo =
-        CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dtoClass);
+    ConstructorArgBuilder<T> dtoAndBuild =
+        CoercedTypeCache.instantiateSkeleton(typeCoercerFactory, dtoClass, buildTarget);
+    ImmutableMap<String, ParamInfo> allParamInfo = dtoAndBuild.getParamInfos();
     for (ParamInfo info : allParamInfo.values()) {
       Object attribute = attributes.get(info.getName());
       if (attribute == null) {
@@ -129,10 +125,10 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
               info.getName(),
               attributeWithSelectableValue);
       if (configuredAttributeValue != null) {
-        info.setCoercedValue(dtoAndBuild.getFirst(), configuredAttributeValue);
+        info.setCoercedValue(dtoAndBuild.getBuilder(), configuredAttributeValue);
       }
     }
-    T dto = dtoAndBuild.getSecond().apply(dtoAndBuild.getFirst());
+    T dto = dtoAndBuild.build();
     collectDeclaredDeps(cellPathResolver, allParamInfo.get("deps"), declaredDeps, dto);
     return dto;
   }

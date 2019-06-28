@@ -5,6 +5,7 @@ INTERFACE_SRCS = [
     "CoerceFailedException.java",
     "CoercedTypeCache.java",
     "ConstructorArgMarshaller.java",
+    "ConstructorArgBuilder.java",
     "ParamInfo.java",
     "ParamInfoException.java",
     "ReflectionParamInfo.java",
@@ -12,7 +13,7 @@ INTERFACE_SRCS = [
     "TypeCoercerFactory.java",
 ]
 
-java_library(
+java_immutables_library(
     name = "interface",
     srcs = INTERFACE_SRCS,
     exported_deps = [

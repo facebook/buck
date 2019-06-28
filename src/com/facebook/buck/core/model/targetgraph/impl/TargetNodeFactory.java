@@ -35,6 +35,7 @@ import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.PathTypeCoercer.PathExistenceVerificationMode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -117,11 +118,12 @@ public class TargetNodeFactory implements NodeCopier {
         ImmutableSortedSet.naturalOrder();
     ImmutableSet.Builder<Path> pathsBuilder = ImmutableSet.builder();
 
+    ImmutableMap<String, ParamInfo> paramInfos =
+        CoercedTypeCache.INSTANCE.getAllParamInfo(
+            typeCoercerFactory, description.getConstructorArgType());
+
     // Scan the input to find possible BuildTargetPaths, necessary for loading dependent rules.
-    for (ParamInfo info :
-        CoercedTypeCache.INSTANCE
-            .getAllParamInfo(typeCoercerFactory, description.getConstructorArgType())
-            .values()) {
+    for (ParamInfo info : paramInfos.values()) {
       if (info.isDep()
           && info.isInput()
           && info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)
