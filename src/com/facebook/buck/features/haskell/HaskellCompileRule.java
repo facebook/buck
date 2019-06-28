@@ -72,10 +72,6 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @AddToRuleKey private final Tool compiler;
 
-  private final HaskellVersion haskellVersion;
-
-  private final boolean useArgsfile;
-
   @AddToRuleKey private final HaskellCompilerFlags flags;
 
   private final HaskellPlatform platform;
@@ -97,8 +93,6 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Tool compiler,
-      HaskellVersion haskellVersion,
-      boolean useArgsfile,
       HaskellCompilerFlags flags,
       HaskellPlatform platform,
       Linker.LinkableDepType depType,
@@ -109,8 +103,6 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       Preprocessor preprocessor) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.compiler = compiler;
-    this.haskellVersion = haskellVersion;
-    this.useArgsfile = useArgsfile;
     this.flags = flags;
     this.platform = platform;
     this.depType = depType;
@@ -127,8 +119,6 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       BuildRuleParams baseParams,
       SourcePathRuleFinder ruleFinder,
       Tool compiler,
-      HaskellVersion haskellVersion,
-      boolean useArgsfile,
       HaskellCompilerFlags flags,
       HaskellPlatform platform,
       Linker.LinkableDepType depType,
@@ -150,8 +140,6 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         projectFilesystem,
         baseParams.withDeclaredDeps(declaredDeps).withoutExtraDeps(),
         compiler,
-        haskellVersion,
-        useArgsfile,
         flags,
         platform,
         depType,
@@ -189,7 +177,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   private Iterable<String> getPackageNameArgs() {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     if (packageInfo.isPresent()) {
-      if (haskellVersion.getMajorVersion() >= 8) {
+      if (platform.getHaskellVersion().getMajorVersion() >= 8) {
         builder.add("-package-name", packageInfo.get().getName());
       } else {
         builder.add(
@@ -254,7 +242,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         .add("-i")
         .addAll(flags.getPackageFlags(platform, resolver));
 
-    if (useArgsfile) {
+    if (platform.shouldUseArgsfile()) {
       builder.add("@" + getArgsfile());
     } else {
       builder.addAll(getSourceArguments(resolver));
@@ -356,7 +344,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @Override
   public boolean isCacheable() {
-    return haskellVersion.getMajorVersion() >= 8;
+    return platform.getHaskellVersion().getMajorVersion() >= 8;
   }
 
   @Override

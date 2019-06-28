@@ -172,8 +172,6 @@ public class HaskellDescriptionUtils {
         baseParams,
         graphBuilder,
         platform.getCompiler().resolve(graphBuilder, target.getTargetConfiguration()),
-        platform.getHaskellVersion(),
-        platform.shouldUseArgsfile(),
         compilerFlags,
         platform,
         depType,
