@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.model.platform.impl;
 
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
 import com.google.common.collect.ImmutableSet;
@@ -24,11 +24,11 @@ import java.util.Collection;
 
 /** An implementation of a {@link Platform} that has a fixed set of constraints. */
 public class ConstraintBasedPlatform implements Platform {
-  private final UnconfiguredBuildTargetView buildTarget;
+  private final BuildTarget buildTarget;
   private final ImmutableSet<ConstraintValue> constraintValues;
 
   public ConstraintBasedPlatform(
-      UnconfiguredBuildTargetView buildTarget, ImmutableSet<ConstraintValue> constraintValues) {
+      BuildTarget buildTarget, ImmutableSet<ConstraintValue> constraintValues) {
     this.buildTarget = buildTarget;
     this.constraintValues = constraintValues;
   }
@@ -48,7 +48,7 @@ public class ConstraintBasedPlatform implements Platform {
   }
 
   /** @return the build target of the {@code platform} rule where this platform is declared. */
-  public UnconfiguredBuildTargetView getBuildTarget() {
+  public BuildTarget getBuildTarget() {
     return buildTarget;
   }
 

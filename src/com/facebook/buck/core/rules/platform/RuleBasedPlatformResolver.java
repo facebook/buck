@@ -66,8 +66,7 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
             .map(constraintResolver::getConstraintValue)
             .collect(ImmutableSet.toImmutableSet());
 
-    return new ConstraintBasedPlatform(
-        buildTarget.getUnconfiguredBuildTargetView(), constraintValues);
+    return new ConstraintBasedPlatform(buildTarget, constraintValues);
   }
 
   private PlatformRule getPlatformRule(BuildTarget buildTarget) {

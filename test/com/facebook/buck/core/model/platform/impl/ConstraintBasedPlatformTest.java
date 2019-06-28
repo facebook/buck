@@ -19,9 +19,8 @@ package com.facebook.buck.core.model.platform.impl;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.google.common.collect.ImmutableSet;
@@ -32,8 +31,7 @@ import org.junit.Test;
 
 public class ConstraintBasedPlatformTest {
 
-  private final UnconfiguredBuildTargetView buildTarget =
-      UnconfiguredBuildTargetFactoryForTests.newInstance("//platform:platform");
+  private final BuildTarget buildTarget = BuildTargetFactory.newInstance("//platform:platform");
 
   private final ConstraintSetting cs1 =
       ConstraintSetting.of(BuildTargetFactory.newInstance("//cs:cs1"), Optional.empty());

@@ -22,7 +22,6 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
@@ -67,8 +66,7 @@ public class TargetCompatibilityCheckerTest {
   public void setUp() {
     platform =
         new ConstraintBasedPlatform(
-            UnconfiguredBuildTargetFactoryForTests.newInstance("//platform:platform"),
-            ImmutableSet.of(cs1v1));
+            BuildTargetFactory.newInstance("//platform:platform"), ImmutableSet.of(cs1v1));
     constraintResolver =
         new RuleBasedConstraintResolver(
             buildTarget -> {
@@ -82,12 +80,10 @@ public class TargetCompatibilityCheckerTest {
             });
     compatiblePlatform =
         new ConstraintBasedPlatform(
-            UnconfiguredBuildTargetFactoryForTests.newInstance("//platforms:p1"),
-            ImmutableSet.of(cs1v1));
+            BuildTargetFactory.newInstance("//platforms:p1"), ImmutableSet.of(cs1v1));
     nonCompatiblePlatform =
         new ConstraintBasedPlatform(
-            UnconfiguredBuildTargetFactoryForTests.newInstance("//platforms:p2"),
-            ImmutableSet.of(cs1v2));
+            BuildTargetFactory.newInstance("//platforms:p2"), ImmutableSet.of(cs1v2));
     platformResolver =
         buildTarget -> {
           if (buildTarget.toString().equals(compatiblePlatform.toString())) {
