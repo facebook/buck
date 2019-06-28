@@ -175,7 +175,7 @@ public class HaskellDescriptionUtils {
         platform.getHaskellVersion(),
         platform.shouldUseArgsfile(),
         compilerFlags,
-        cxxPlatform,
+        platform,
         depType,
         hsProfile,
         main,

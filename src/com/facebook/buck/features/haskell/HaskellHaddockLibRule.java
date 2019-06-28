@@ -322,7 +322,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
         cmdArgs.add(s);
       }
 
-      cmdArgs.addAll(compilerFlags.getPackageFlags(resolver));
+      cmdArgs.addAll(compilerFlags.getPackageFlags(platform, resolver));
       cmdArgs.addAll(linkerFlags);
       cmdArgs.addAll(getPreprocessorFlags(resolver));
       // Tell GHC where to place build files for TemplateHaskell

@@ -34,7 +34,6 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxToolFlags;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -79,7 +78,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @AddToRuleKey private final HaskellCompilerFlags flags;
 
-  private final CxxPlatform cxxPlatform;
+  private final HaskellPlatform platform;
 
   @AddToRuleKey private final Linker.LinkableDepType depType;
 
@@ -101,7 +100,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       HaskellVersion haskellVersion,
       boolean useArgsfile,
       HaskellCompilerFlags flags,
-      CxxPlatform cxxPlatform,
+      HaskellPlatform platform,
       Linker.LinkableDepType depType,
       boolean hsProfile,
       Optional<String> main,
@@ -113,7 +112,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     this.haskellVersion = haskellVersion;
     this.useArgsfile = useArgsfile;
     this.flags = flags;
-    this.cxxPlatform = cxxPlatform;
+    this.platform = platform;
     this.depType = depType;
     this.hsProfile = hsProfile;
     this.main = main;
@@ -131,7 +130,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       HaskellVersion haskellVersion,
       boolean useArgsfile,
       HaskellCompilerFlags flags,
-      CxxPlatform cxxPlatform,
+      HaskellPlatform platform,
       Linker.LinkableDepType depType,
       boolean hsProfile,
       Optional<String> main,
@@ -154,7 +153,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         haskellVersion,
         useArgsfile,
         flags,
-        cxxPlatform,
+        platform,
         depType,
         hsProfile,
         main,
@@ -207,7 +206,8 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
             .toToolFlags(
                 resolver,
                 PathShortener.identity(),
-                CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver),
+                CxxDescriptionEnhancer.frameworkPathToSearchPath(
+                    platform.getCxxPlatform(), resolver),
                 preprocessor,
                 /* pch */ Optional.empty());
     return MoreIterables.zipAndConcat(
@@ -252,7 +252,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         .add("-hidir", getProjectFilesystem().resolve(getInterfaceDir()).toString())
         .add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString())
         .add("-i")
-        .addAll(flags.getPackageFlags(resolver));
+        .addAll(flags.getPackageFlags(platform, resolver));
 
     if (useArgsfile) {
       builder.add("@" + getArgsfile());

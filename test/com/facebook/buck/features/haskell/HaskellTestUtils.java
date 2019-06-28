@@ -46,6 +46,7 @@ class HaskellTestUtils {
           .setHaskellVersion(HaskellVersion.of(8))
           .setShouldCacheLinks(true)
           .setShouldUseArgsfile(false)
+          .setSupportExposePackage(false)
           .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
           .setGhciScriptTemplate(
               () -> {
