@@ -78,8 +78,7 @@ public abstract class AbstractValueVisitorTest {
       new FakeProjectFilesystem(absoluteRoot.resolve(Paths.get("project/other")));
   private static final TargetConfiguration TARGET_CONFIGURATION =
       ImmutableDefaultTargetConfiguration.of(
-          UnconfiguredBuildTargetFactoryForTests.newInstance(
-              otherFilesystem.getRootPath(), "//platform:platform"));
+          BuildTargetFactory.newInstance(otherFilesystem.getRootPath(), "//platform:platform"));
   protected static final BuildTarget someBuildTarget =
       UnconfiguredBuildTargetFactoryForTests.newInstance(
               otherFilesystem.getRootPath(), "other//some:target#flavor1,flavor2")

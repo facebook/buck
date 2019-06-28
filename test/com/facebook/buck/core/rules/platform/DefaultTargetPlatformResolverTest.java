@@ -111,8 +111,7 @@ public class DefaultTargetPlatformResolverTest {
     ConstraintBasedPlatform platform =
         (ConstraintBasedPlatform)
             targetPlatformResolver.getTargetPlatform(
-                ImmutableDefaultTargetConfiguration.of(
-                    platformTarget.getUnconfiguredBuildTargetView()));
+                ImmutableDefaultTargetConfiguration.of(platformTarget));
 
     assertEquals("//platform:platform", platform.toString());
     assertEquals(1, platform.getConstraintValues().size());

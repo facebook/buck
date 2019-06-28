@@ -37,8 +37,8 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.file.FastPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.modern.impl.BuildTargetTypeInfo;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
-import com.facebook.buck.rules.modern.impl.UnconfiguredBuildTargetTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ExcludedValueTypeInfo;
 import com.facebook.buck.util.RichStream;
@@ -436,7 +436,7 @@ public class Serializer {
         stream.writeInt(TARGET_CONFIGURATION_TYPE_HOST);
       } else if (value instanceof DefaultTargetConfiguration) {
         stream.writeInt(TARGET_CONFIGURATION_TYPE_DEFAULT);
-        UnconfiguredBuildTargetTypeInfo.INSTANCE.visit(
+        BuildTargetTypeInfo.INSTANCE.visit(
             ((DefaultTargetConfiguration) value).getTargetPlatform(), this);
       } else if (value instanceof ConfigurationForConfigurationTargets) {
         stream.writeInt(TARGET_CONFIGURATION_TYPE_CONFIGURATION);

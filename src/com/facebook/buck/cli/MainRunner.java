@@ -44,6 +44,8 @@ import com.facebook.buck.core.graph.transformation.executor.factory.DepsAwareExe
 import com.facebook.buck.core.graph.transformation.executor.factory.DepsAwareExecutorType;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -1499,13 +1501,15 @@ public final class MainRunner {
           buckConfig.getView(BuildBuckConfig.class).getHostPlatform();
       TargetConfiguration hostTargetConfiguration =
           hostPlatformFromConfig
+              .map(ConfigurationBuildTargets::convert)
               .<TargetConfiguration>map(ImmutableDefaultTargetConfiguration::of)
               .orElse(HostTargetConfiguration.INSTANCE);
       return () -> hostTargetConfiguration;
     }
-    UnconfiguredBuildTargetView targetPlatform =
-        unconfiguredBuildTargetFactory.create(
-            cellPathResolver, Iterables.getOnlyElement(command.getTargetPlatforms()));
+    BuildTarget targetPlatform =
+        ConfigurationBuildTargets.convert(
+            unconfiguredBuildTargetFactory.create(
+                cellPathResolver, Iterables.getOnlyElement(command.getTargetPlatforms())));
     return () -> ImmutableDefaultTargetConfiguration.of(targetPlatform);
   }
 

@@ -16,6 +16,8 @@
 package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -54,8 +56,7 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
     ObjectMapper objectMapper = ObjectMappers.createWithEmptyBeansPermitted();
     SimpleModule targetConfigurationModule = new SimpleModule();
     targetConfigurationModule.addSerializer(
-        UnconfiguredBuildTargetView.class,
-        new UnconfiguredBuildTargetSimpleSerializer(UnconfiguredBuildTargetView.class));
+        BuildTarget.class, new BuildTargetSimpleSerializer(BuildTarget.class));
     objectMapper.registerModule(targetConfigurationModule);
 
     objectReader = objectMapper.reader();
@@ -100,8 +101,9 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
     JsonNode targetPlatformNode =
         Preconditions.checkNotNull(
             node.get("targetPlatform"), "Cannot find targetPlatform in %s", rawValue);
-    UnconfiguredBuildTargetView platform =
-        buildTargetProvider.apply(targetPlatformNode.textValue());
+    BuildTarget platform =
+        ConfigurationBuildTargets.convert(
+            buildTargetProvider.apply(targetPlatformNode.textValue()));
     return ImmutableDefaultTargetConfiguration.of(platform);
   }
 }
