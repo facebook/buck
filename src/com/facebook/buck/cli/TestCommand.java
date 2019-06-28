@@ -486,7 +486,7 @@ public class TestCommand extends BuildCommand {
           targetGraphCreationResult =
               params
                   .getParser()
-                  .buildTargetGraphWithoutConfigurationTargets(
+                  .buildTargetGraphWithoutTopLevelConfigurationTargets(
                       parsingContext,
                       ImmutableList.of(
                           ImmutableTargetNodePredicateSpec.of(
@@ -503,7 +503,7 @@ public class TestCommand extends BuildCommand {
           targetGraphCreationResult =
               params
                   .getParser()
-                  .buildTargetGraphWithoutConfigurationTargets(
+                  .buildTargetGraphWithoutTopLevelConfigurationTargets(
                       parsingContext,
                       parseArgumentsAsTargetNodeSpecs(
                           params.getCell(), params.getBuckConfig(), getArguments()),

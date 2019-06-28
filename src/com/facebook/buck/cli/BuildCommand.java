@@ -716,7 +716,7 @@ public class BuildCommand extends AbstractCommand {
     try {
       return params
           .getParser()
-          .buildTargetGraphWithoutConfigurationTargets(
+          .buildTargetGraphWithoutTopLevelConfigurationTargets(
               createParsingContext(params.getCell(), executor)
                   .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                   .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode()),

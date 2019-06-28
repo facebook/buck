@@ -82,7 +82,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
       TargetGraphCreationResult unversionedTargetGraphCreationResult =
           params
               .getParser()
-              .buildTargetGraphWithoutConfigurationTargets(
+              .buildTargetGraphWithoutTopLevelConfigurationTargets(
                   createParsingContext(params.getCell(), pool.getListeningExecutorService())
                       .withApplyDefaultFlavorsMode(
                           params

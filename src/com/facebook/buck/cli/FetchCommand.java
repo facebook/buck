@@ -80,7 +80,7 @@ public class FetchCommand extends BuildCommand {
         TargetGraphCreationResult result =
             params
                 .getParser()
-                .buildTargetGraphWithoutConfigurationTargets(
+                .buildTargetGraphWithoutTopLevelConfigurationTargets(
                     createParsingContext(params.getCell(), pool.getListeningExecutorService())
                         .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),

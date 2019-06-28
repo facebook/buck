@@ -637,7 +637,7 @@ public class TargetsCommand extends AbstractCommand {
       TargetGraphCreationResult completeTargetGraphAndBuildTargets =
           params
               .getParser()
-              .buildTargetGraphWithConfigurationTargets(
+              .buildTargetGraphWithTopLevelConfigurationTargets(
                   parsingContext,
                   ImmutableList.of(
                       ImmutableTargetNodePredicateSpec.of(
@@ -656,7 +656,7 @@ public class TargetsCommand extends AbstractCommand {
       return filterTargetGraphCreationResultByType(
           params
               .getParser()
-              .buildTargetGraphWithConfigurationTargets(
+              .buildTargetGraphWithTopLevelConfigurationTargets(
                   parsingContext.withApplyDefaultFlavorsMode(
                       ParserConfig.ApplyDefaultFlavorsMode.DISABLED),
                   parseArgumentsAsTargetNodeSpecs(
@@ -759,7 +759,7 @@ public class TargetsCommand extends AbstractCommand {
           new ImmutableTargetGraphCreationResult(
               params
                   .getParser()
-                  .buildTargetGraphWithConfigurationTargets(
+                  .buildTargetGraphWithTopLevelConfigurationTargets(
                       parsingContext,
                       ImmutableList.of(
                           ImmutableTargetNodePredicateSpec.of(
@@ -772,7 +772,7 @@ public class TargetsCommand extends AbstractCommand {
       targetGraphCreationResult =
           params
               .getParser()
-              .buildTargetGraphWithConfigurationTargets(
+              .buildTargetGraphWithTopLevelConfigurationTargets(
                   parsingContext,
                   parseArgumentsAsTargetNodeSpecs(
                       params.getCell(), params.getBuckConfig(), arguments),

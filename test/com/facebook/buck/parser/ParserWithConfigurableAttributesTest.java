@@ -2158,7 +2158,7 @@ public class ParserWithConfigurableAttributesTest {
 
     ImmutableSet<BuildTarget> result =
         parser
-            .buildTargetGraphWithConfigurationTargets(
+            .buildTargetGraphWithTopLevelConfigurationTargets(
                 ParsingContext.builder(cell, executorService)
                     .setApplyDefaultFlavorsMode(ApplyDefaultFlavorsMode.SINGLE)
                     .build(),
@@ -2205,7 +2205,7 @@ public class ParserWithConfigurableAttributesTest {
 
     ImmutableSet<BuildTarget> result =
         parser
-            .buildTargetGraphWithConfigurationTargets(
+            .buildTargetGraphWithTopLevelConfigurationTargets(
                 ParsingContext.builder(cell, executorService)
                     .setApplyDefaultFlavorsMode(ApplyDefaultFlavorsMode.SINGLE)
                     .build(),
@@ -2256,7 +2256,7 @@ public class ParserWithConfigurableAttributesTest {
 
     ImmutableSet<BuildTarget> result =
         parser
-            .buildTargetGraphWithConfigurationTargets(
+            .buildTargetGraphWithTopLevelConfigurationTargets(
                 ParsingContext.builder(cell, executorService)
                     .setApplyDefaultFlavorsMode(ApplyDefaultFlavorsMode.SINGLE)
                     .build(),
@@ -2300,7 +2300,7 @@ public class ParserWithConfigurableAttributesTest {
 
     ParsingContext parsingContext = ParsingContext.builder(cell, executorService).build();
 
-    parser.buildTargetGraphWithConfigurationTargets(
+    parser.buildTargetGraphWithTopLevelConfigurationTargets(
         parsingContext,
         ImmutableList.of(
             BuildTargetSpec.from(
@@ -2316,7 +2316,7 @@ public class ParserWithConfigurableAttributesTest {
 
     // The value should be cached, so no bytes are read when re-computing.
     events.clear();
-    parser.buildTargetGraphWithConfigurationTargets(
+    parser.buildTargetGraphWithTopLevelConfigurationTargets(
         parsingContext,
         ImmutableList.of(
             BuildTargetSpec.from(
@@ -2605,7 +2605,7 @@ public class ParserWithConfigurableAttributesTest {
       throws BuildFileParseException, IOException, InterruptedException {
     return FluentIterable.from(
             parser
-                .buildTargetGraphWithConfigurationTargets(
+                .buildTargetGraphWithTopLevelConfigurationTargets(
                     parsingContext,
                     ImmutableList.of(
                         ImmutableTargetNodePredicateSpec.of(

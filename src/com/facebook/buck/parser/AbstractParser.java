@@ -286,7 +286,7 @@ abstract class AbstractParser implements Parser {
   }
 
   @Override
-  public synchronized TargetGraphCreationResult buildTargetGraphWithoutConfigurationTargets(
+  public synchronized TargetGraphCreationResult buildTargetGraphWithoutTopLevelConfigurationTargets(
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       TargetConfiguration targetConfiguration)
@@ -296,7 +296,7 @@ abstract class AbstractParser implements Parser {
   }
 
   @Override
-  public synchronized TargetGraphCreationResult buildTargetGraphWithConfigurationTargets(
+  public synchronized TargetGraphCreationResult buildTargetGraphWithTopLevelConfigurationTargets(
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       TargetConfiguration targetConfiguration)
