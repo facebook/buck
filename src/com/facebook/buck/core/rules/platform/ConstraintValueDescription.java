@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
@@ -50,7 +51,10 @@ public class ConstraintValueDescription
       ConfigurationRuleResolver configurationRuleResolver,
       UnconfiguredBuildTargetView buildTarget,
       ConstraintValueArg arg) {
-    return new ConstraintValueRule(buildTarget, arg.getName(), arg.getConstraintSetting());
+    return new ConstraintValueRule(
+        ConfigurationBuildTargets.convert(buildTarget),
+        arg.getName(),
+        ConfigurationBuildTargets.convert(arg.getConstraintSetting()));
   }
 
   @BuckStyleImmutable

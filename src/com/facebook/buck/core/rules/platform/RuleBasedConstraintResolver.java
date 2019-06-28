@@ -107,7 +107,10 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
 
                   return ConstraintValue.of(
                       buildTarget,
-                      getConstraintSetting(constraintValueRule.getConstraintSetting()));
+                      getConstraintSetting(
+                          constraintValueRule
+                              .getConstraintSetting()
+                              .getUnconfiguredBuildTargetView()));
                 }
               });
 

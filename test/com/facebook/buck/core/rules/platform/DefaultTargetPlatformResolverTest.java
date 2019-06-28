@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -76,8 +77,8 @@ public class DefaultTargetPlatformResolverTest {
     UnconfiguredBuildTargetView platformTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//platform:platform");
     BuildTarget constraintValue = BuildTargetFactory.newInstance("//constraint:value");
-    UnconfiguredBuildTargetView constraintSetting =
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:setting");
+    BuildTarget constraintSetting =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
 
     ConfigurationRuleResolver configurationRuleResolver =
         buildTarget -> {
@@ -91,10 +92,9 @@ public class DefaultTargetPlatformResolverTest {
           if (buildTarget
               .getUnconfiguredBuildTargetView()
               .equals(constraintValue.getUnconfiguredBuildTargetView())) {
-            return new ConstraintValueRule(
-                constraintValue.getUnconfiguredBuildTargetView(), "value", constraintSetting);
+            return new ConstraintValueRule(constraintValue, "value", constraintSetting);
           }
-          if (buildTarget.getUnconfiguredBuildTargetView().equals(constraintSetting)) {
+          if (buildTarget.equals(constraintSetting)) {
             return new ConstraintSettingRule(constraintValue, "value", Optional.empty());
           }
           throw new IllegalArgumentException("Invalid build target: " + buildTarget);

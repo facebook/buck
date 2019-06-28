@@ -70,9 +70,7 @@ public class RuleBasedConstraintResolverTest {
                 return DummyConfigurationRule.of(buildTarget);
               } else {
                 return new ConstraintValueRule(
-                    buildTarget.getUnconfiguredBuildTargetView(),
-                    buildTarget.getShortName(),
-                    constraintSettingTarget.getUnconfiguredBuildTargetView());
+                    buildTarget, buildTarget.getShortName(), constraintSettingTarget);
               }
             });
 
@@ -97,9 +95,7 @@ public class RuleBasedConstraintResolverTest {
                     buildTarget, buildTarget.getShortName(), Optional.empty());
               } else {
                 return new ConstraintValueRule(
-                    buildTarget.getUnconfiguredBuildTargetView(),
-                    buildTarget.getShortName(),
-                    constraintSettingTarget.getUnconfiguredBuildTargetView());
+                    buildTarget, buildTarget.getShortName(), constraintSettingTarget);
               }
             });
 

@@ -77,9 +77,7 @@ public class TargetCompatibilityCheckerTest {
                     buildTarget, buildTarget.getShortName(), Optional.empty());
               } else {
                 return new ConstraintValueRule(
-                    buildTarget.getUnconfiguredBuildTargetView(),
-                    buildTarget.getShortName(),
-                    cs1.getBuildTarget().getUnconfiguredBuildTargetView());
+                    buildTarget, buildTarget.getShortName(), cs1.getBuildTarget());
               }
             });
     compatiblePlatform =

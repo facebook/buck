@@ -57,8 +57,8 @@ public class RuleBasedPlatformResolverTest {
 
     UnconfiguredBuildTargetView platformTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//platform:platform");
-    UnconfiguredBuildTargetView constraintValue =
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:value");
+    BuildTarget constraintValue =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:value");
     BuildTarget constraintSetting =
         ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
 
@@ -68,12 +68,11 @@ public class RuleBasedPlatformResolverTest {
             return PlatformRule.of(
                 platformTarget,
                 "platform",
-                ImmutableSortedSet.of(constraintValue),
+                ImmutableSortedSet.of(constraintValue.getUnconfiguredBuildTargetView()),
                 ImmutableSortedSet.of());
           }
-          if (buildTarget.getUnconfiguredBuildTargetView().equals(constraintValue)) {
-            return new ConstraintValueRule(
-                constraintValue, "value", constraintSetting.getUnconfiguredBuildTargetView());
+          if (buildTarget.equals(constraintValue)) {
+            return new ConstraintValueRule(constraintValue, "value", constraintSetting);
           }
           if (buildTarget.equals(constraintSetting)) {
             return new ConstraintSettingRule(constraintSetting, "value", Optional.empty());
@@ -91,6 +90,7 @@ public class RuleBasedPlatformResolverTest {
     assertEquals("//platform:platform", platform.toString());
     assertEquals(1, platform.getConstraintValues().size());
     assertEquals(
-        constraintValue, Iterables.getOnlyElement(platform.getConstraintValues()).getBuildTarget());
+        constraintValue.getUnconfiguredBuildTargetView(),
+        Iterables.getOnlyElement(platform.getConstraintValues()).getBuildTarget());
   }
 }
