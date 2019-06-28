@@ -330,6 +330,10 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
       cmdArgs.add("-hidir", getProjectFilesystem().resolve(getInterfaceDir()).toString());
       cmdArgs.add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString());
 
+      String thisUnitId = String.format("%s-%s", packageInfo.getName(), packageInfo.getVersion());
+
+      cmdArgs.add("-this-unit-id", thisUnitId);
+
       ImmutableList.Builder<String> builder = ImmutableList.builder();
 
       builder
