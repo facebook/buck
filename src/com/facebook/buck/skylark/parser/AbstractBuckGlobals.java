@@ -17,6 +17,7 @@
 package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
 import com.facebook.buck.skylark.function.SkylarkProviderFunction;
@@ -61,6 +62,8 @@ abstract class AbstractBuckGlobals {
   }
 
   abstract LoadingCache<String, Label> getLabelCache();
+
+  abstract KnownUserDefinedRuleTypes getKnownUserDefinedRuleTypes();
 
   /** Always disable implicit native imports in skylark rules, they should utilize native.foo */
   @Lazy

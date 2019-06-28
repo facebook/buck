@@ -18,6 +18,7 @@ package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -271,6 +272,7 @@ public class HostInfoTest {
             .setRuleFunctionFactory(ruleFunctionFactory)
             .setEnableUserDefinedRules(options.getEnableUserDefinedRules())
             .setLabelCache(LabelCache.newLabelCache())
+            .setKnownUserDefinedRuleTypes(new KnownUserDefinedRuleTypes())
             .build(),
         eventHandler,
         NativeGlobber::create);

@@ -104,7 +104,7 @@ public class SkylarkProjectBuildFileParserTest {
   private SkylarkProjectBuildFileParser createParserWithOptions(
       EventHandler eventHandler, ProjectBuildFileParserOptions options) {
     return SkylarkProjectBuildFileParserTestUtils.createParserWithOptions(
-        skylarkFilesystem, eventHandler, options);
+        skylarkFilesystem, eventHandler, options, knownRuleTypesProvider, cell);
   }
 
   private SkylarkProjectBuildFileParser createParser(EventHandler eventHandler) {
@@ -1018,6 +1018,7 @@ public class SkylarkProjectBuildFileParserTest {
                 .setRuleFunctionFactory(new RuleFunctionFactory(new DefaultTypeCoercerFactory()))
                 .setEnableUserDefinedRules(options.getEnableUserDefinedRules())
                 .setLabelCache(LabelCache.newLabelCache())
+                .setKnownUserDefinedRuleTypes(knownRuleTypesProvider.getUserDefinedRuleTypes(cell))
                 .build(),
             new PrintingEventHandler(EnumSet.allOf(EventKind.class)),
             NativeGlobber::create);

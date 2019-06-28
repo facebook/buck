@@ -17,6 +17,8 @@ package com.facebook.buck.skylark.parser;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.Cell;
@@ -24,6 +26,8 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
+import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
+import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
@@ -75,7 +79,9 @@ public class SkylarkUserDefinedRulesParserTest {
         eventHandler,
         SkylarkProjectBuildFileParserTestUtils.getDefaultParserOptions(cell, knownRuleTypesProvider)
             .setEnableUserDefinedRules(true)
-            .build());
+            .build(),
+        knownRuleTypesProvider,
+        cell);
   }
 
   private Map<String, Object> getSingleRule(Path buildFile)
@@ -363,5 +369,82 @@ public class SkylarkUserDefinedRulesParserTest {
     BuildFileManifest rules = parser.getBuildFileManifest(buildFile);
 
     assertEquals(expected, rules.getTargets());
+  }
+
+  @Test
+  public void clearsKnownUserDefinedRuleTypesWhenExtensionChanges()
+      throws IOException, InterruptedException {
+    setupWorkspace("basic_rule");
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
+    String replacement =
+        workspace.getFileContents(projectFilesystem.resolve("subdir").resolve("new_defs.bzl"));
+
+    parser = createParser(eventCollector);
+
+    String rule1Identifier = "//subdir:defs.bzl:some_rule";
+    String rule2Identifier = "//subdir:defs.bzl:some_other_rule";
+
+    KnownUserDefinedRuleTypes knownUserDefinedRuleTypes =
+        knownRuleTypesProvider.getUserDefinedRuleTypes(cell);
+
+    assertNull(knownUserDefinedRuleTypes.getRule(rule1Identifier));
+    assertNull(knownUserDefinedRuleTypes.getRule(rule2Identifier));
+
+    BuildFileManifest rules = parser.getBuildFileManifest(buildFile);
+    assertEquals(2, rules.getTargets().size());
+
+    SkylarkUserDefinedRule rule1 = knownUserDefinedRuleTypes.getRule(rule1Identifier);
+    SkylarkUserDefinedRule rule2 = knownUserDefinedRuleTypes.getRule(rule2Identifier);
+
+    assertNotNull(rule1);
+    assertNotNull(rule2);
+    assertEquals(rule1Identifier, rule1.getName());
+    assertEquals(rule2Identifier, rule2.getName());
+
+    // write 'new_defs.bzl' (which doesn't have `some_other_rule`) to 'defs.bzl' so that
+    // we properly test invalidation logic when defs.bzl changes
+    workspace.writeContentsToPath(
+        replacement, projectFilesystem.resolve("subdir").resolve("defs.bzl"));
+    parser = createParser(eventCollector);
+    rules = parser.getBuildFileManifest(buildFile);
+    assertEquals(2, rules.getTargets().size());
+
+    rule1 = knownUserDefinedRuleTypes.getRule(rule1Identifier);
+    rule2 = knownUserDefinedRuleTypes.getRule(rule2Identifier);
+
+    assertNotNull(rule1);
+    assertNull(rule2);
+    assertEquals(rule1Identifier, rule1.getName());
+  }
+
+  @Test
+  public void addsKnownUserDefinedRuleTypesWhenRuleIsExported()
+      throws IOException, InterruptedException {
+    setupWorkspace("basic_rule");
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
+    parser = createParser(eventCollector);
+
+    String rule1Identifier = "//subdir:defs.bzl:some_rule";
+    String rule2Identifier = "//subdir:defs.bzl:some_other_rule";
+
+    KnownUserDefinedRuleTypes knownUserDefinedRuleTypes =
+        knownRuleTypesProvider.getUserDefinedRuleTypes(cell);
+    assertNull(knownUserDefinedRuleTypes.getRule(rule1Identifier));
+    assertNull(knownUserDefinedRuleTypes.getRule(rule2Identifier));
+
+    BuildFileManifest rules = parser.getBuildFileManifest(buildFile);
+    assertEquals(2, rules.getTargets().size());
+
+    SkylarkUserDefinedRule rule1 = knownUserDefinedRuleTypes.getRule(rule1Identifier);
+    SkylarkUserDefinedRule rule2 = knownUserDefinedRuleTypes.getRule(rule2Identifier);
+
+    assertNotNull(rule1);
+    assertNotNull(rule2);
+    assertEquals(rule1Identifier, rule1.getName());
+    assertEquals(rule2Identifier, rule2.getName());
+    assertEquals(Integer.class, rule1.getAllParamInfo().get("attr1").getResultClass());
+    assertEquals(Integer.class, rule2.getAllParamInfo().get("attr2").getResultClass());
   }
 }

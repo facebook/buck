@@ -91,7 +91,9 @@ public class SkylarkProjectBuildFileParserTestUtils {
   static SkylarkProjectBuildFileParser createParserWithOptions(
       SkylarkFilesystem skylarkFilesystem,
       EventHandler eventHandler,
-      ProjectBuildFileParserOptions options) {
+      ProjectBuildFileParserOptions options,
+      KnownRuleTypesProvider knownRuleTypesProvider,
+      Cell cell) {
     return SkylarkProjectBuildFileParser.using(
         options,
         BuckEventBusForTests.newInstance(),
@@ -102,6 +104,7 @@ public class SkylarkProjectBuildFileParserTestUtils {
             .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
             .setEnableUserDefinedRules(options.getEnableUserDefinedRules())
             .setLabelCache(LabelCache.newLabelCache())
+            .setKnownUserDefinedRuleTypes(knownRuleTypesProvider.getUserDefinedRuleTypes(cell))
             .build(),
         eventHandler,
         NativeGlobber::create);

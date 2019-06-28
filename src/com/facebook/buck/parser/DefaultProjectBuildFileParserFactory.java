@@ -23,6 +23,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.exceptions.config.ErrorHandlingBuckConfig;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
+import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -245,6 +246,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
                       newSkylarkParser(
                           cell,
                           typeCoercerFactory,
+                          knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
                           eventBus,
                           buildFileParserOptions,
                           parserConfig.getSkylarkGlobHandler()),
@@ -260,6 +262,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
                   newSkylarkParser(
                       cell,
                       typeCoercerFactory,
+                      knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
                       eventBus,
                       buildFileParserOptions,
                       parserConfig.getSkylarkGlobHandler()),
@@ -310,6 +313,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   private static SkylarkProjectBuildFileParser newSkylarkParser(
       Cell cell,
       TypeCoercerFactory typeCoercerFactory,
+      KnownUserDefinedRuleTypes knownUserDefinedRuleTypes,
       BuckEventBus eventBus,
       ProjectBuildFileParserOptions buildFileParserOptions,
       SkylarkGlobHandler skylarkGlobHandler) {
@@ -327,6 +331,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             .setDescriptions(buildFileParserOptions.getDescriptions())
             .setRuleFunctionFactory(new RuleFunctionFactory(typeCoercerFactory))
             .setLabelCache(LabelCache.newLabelCache())
+            .setKnownUserDefinedRuleTypes(knownUserDefinedRuleTypes)
             .build();
 
     HumanReadableExceptionAugmentor augmentor;
