@@ -70,9 +70,10 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
                   new CacheLoader<UnconfiguredBuildTargetView, ConstraintSetting>() {
                     @Override
                     public ConstraintSetting load(UnconfiguredBuildTargetView buildTarget) {
+                      BuildTarget configurationBuildTarget =
+                          ConfigurationBuildTargets.convert(buildTarget);
                       ConfigurationRule configurationRule =
-                          configurationRuleResolver.getRule(
-                              ConfigurationBuildTargets.convert(buildTarget));
+                          configurationRuleResolver.getRule(configurationBuildTarget);
                       Preconditions.checkState(
                           configurationRule instanceof ConstraintSettingRule,
                           "%s is used as constraint_setting, but has wrong type",
@@ -83,7 +84,7 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
                               .map(BuildTarget::getUnconfiguredBuildTargetView);
 
                       return ConstraintSetting.of(
-                          buildTarget,
+                          configurationBuildTarget,
                           constraintDetectorTarget.map(constraintDetectorCache::getUnchecked));
                     }
                   });

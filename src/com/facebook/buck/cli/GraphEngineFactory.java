@@ -26,6 +26,7 @@ import com.facebook.buck.core.graph.transformation.impl.DefaultGraphTransformati
 import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
@@ -172,13 +173,16 @@ public class GraphEngineFactory {
               @Override
               public ConstraintSetting getConstraintSetting(
                   UnconfiguredBuildTargetView buildTarget) {
-                return ConstraintSetting.of(buildTarget, Optional.empty());
+                return ConstraintSetting.of(
+                    ConfigurationBuildTargets.convert(buildTarget), Optional.empty());
               }
 
               @Override
               public ConstraintValue getConstraintValue(UnconfiguredBuildTargetView buildTarget) {
                 return ConstraintValue.of(
-                    buildTarget, ConstraintSetting.of(buildTarget, Optional.empty()));
+                    buildTarget,
+                    ConstraintSetting.of(
+                        ConfigurationBuildTargets.convert(buildTarget), Optional.empty()));
               }
             },
             // TODO: replace with TargetPlatformResolver
