@@ -23,6 +23,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -54,7 +56,7 @@ public class AndroidPlatformTargetProducer {
       AndroidBuildToolsLocation androidBuildToolsLocation,
       AndroidSdkLocation androidSdkLocation,
       Optional<Supplier<Tool>> aaptOverride,
-      Optional<Supplier<Tool>> aapt2Override) {
+      Optional<ToolProvider> aapt2Override) {
 
     Matcher platformMatcher = PLATFORM_TARGET_PATTERN.matcher(platformId);
     if (platformMatcher.matches()) {
@@ -86,7 +88,7 @@ public class AndroidPlatformTargetProducer {
       AndroidBuildToolsLocation androidBuildToolsLocation,
       AndroidSdkLocation androidSdkLocation,
       Optional<Supplier<Tool>> aaptOverride,
-      Optional<Supplier<Tool>> aapt2Override) {
+      Optional<ToolProvider> aapt2Override) {
     return getTargetForId(
         filesystem,
         AndroidPlatformTarget.DEFAULT_ANDROID_PLATFORM_TARGET,
@@ -103,7 +105,7 @@ public class AndroidPlatformTargetProducer {
         AndroidSdkLocation androidSdkLocation,
         String apiLevel,
         Optional<Supplier<Tool>> aaptOverride,
-        Optional<Supplier<Tool>> aapt2Override);
+        Optional<ToolProvider> aapt2Override);
   }
 
   /**
@@ -120,7 +122,7 @@ public class AndroidPlatformTargetProducer {
       String platformDirectoryPath,
       Set<Path> additionalJarPaths,
       Optional<Supplier<Tool>> aaptOverride,
-      Optional<Supplier<Tool>> aapt2Override) {
+      Optional<ToolProvider> aapt2Override) {
     Path androidSdkDir = androidSdkLocation.getSdkRootPath();
     if (!androidSdkDir.isAbsolute()) {
       throw new HumanReadableException(
@@ -190,7 +192,7 @@ public class AndroidPlatformTargetProducer {
                     "aapt" + binaryExtension,
                     version)),
         aapt2Override.orElse(
-            () ->
+            new ConstantToolProvider(
                 VersionedTool.of(
                     PathSourcePath.of(
                         filesystem,
@@ -198,7 +200,7 @@ public class AndroidPlatformTargetProducer {
                             .resolve(androidBuildToolsLocation.getAapt2Path())
                             .toAbsolutePath()),
                     "aapt2" + binaryExtension,
-                    version)),
+                    version))),
         androidSdkDir.resolve("platform-tools/adb" + binaryExtension).toAbsolutePath(),
         androidSdkDir.resolve(buildToolsBinDir).resolve("aidl" + binaryExtension).toAbsolutePath(),
         zipAlignExecutable,
@@ -223,7 +225,7 @@ public class AndroidPlatformTargetProducer {
         AndroidSdkLocation androidSdkLocation,
         String apiLevel,
         Optional<Supplier<Tool>> aaptOverride,
-        Optional<Supplier<Tool>> aapt2Override) {
+        Optional<ToolProvider> aapt2Override) {
       // TODO(natthu): Use Paths instead of Strings everywhere in this file.
       Path androidSdkDir = androidSdkLocation.getSdkRootPath();
       File addonsParentDir = androidSdkDir.resolve("add-ons").toFile();
@@ -295,7 +297,7 @@ public class AndroidPlatformTargetProducer {
         AndroidSdkLocation androidSdkLocation,
         String apiLevel,
         Optional<Supplier<Tool>> aaptOverride,
-        Optional<Supplier<Tool>> aapt2Override) {
+        Optional<ToolProvider> aapt2Override) {
       return createFromDefaultDirectoryStructure(
           filesystem,
           "android-" + apiLevel,

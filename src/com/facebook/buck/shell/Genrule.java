@@ -25,6 +25,7 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -36,6 +37,8 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -263,12 +266,17 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
               "AAPT",
               String.join(" ", target.getAaptExecutable().get().getCommandPrefix(pathResolver)));
           environmentVariablesBuilder.put(
-              "AAPT2",
-              String.join(" ", target.getAapt2Executable().get().getCommandPrefix(pathResolver)));
+              "AAPT2", String.join(" ", getAapt2Tool(target).getCommandPrefix(pathResolver)));
         });
 
     // TODO(t5302074): This shouldn't be necessary. Speculatively disabling.
     environmentVariablesBuilder.put("NO_BUCKD", "1");
+  }
+
+  private Tool getAapt2Tool(AndroidPlatformTarget androidPlatformTarget) {
+    ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
+    TargetConfiguration targetConfiguration = getBuildTarget().getTargetConfiguration();
+    return aapt2ToolProvider.resolve(buildRuleResolver, targetConfiguration);
   }
 
   @VisibleForTesting

@@ -44,6 +44,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -569,7 +570,7 @@ public class GenruleTest {
             Paths.get(""),
             Collections.emptyList(),
             () -> new SimpleTool("aapt"),
-            () -> new SimpleTool("aapt2"),
+            new ConstantToolProvider(new SimpleTool("aapt2")),
             Paths.get(""),
             Paths.get(""),
             Paths.get("zipalign"),

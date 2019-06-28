@@ -287,6 +287,12 @@ public class AndroidInstrumentationApkDescription
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
+    toolchainProvider
+        .getByNameIfPresent(AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class)
+        .ifPresent(
+            androidPlatformTarget ->
+                androidPlatformTarget.addParseTimeDeps(
+                    targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration()));
   }
 
   @BuckStyleImmutable

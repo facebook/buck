@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
@@ -29,6 +28,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -65,7 +65,8 @@ public class Aapt2Link extends AbstractBuildRule {
   @AddToRuleKey private final int packageIdOffset;
   @AddToRuleKey private final ImmutableList<SourcePath> dependencyResourceApks;
 
-  private final AndroidPlatformTarget androidPlatformTarget;
+  private final Tool aapt2Tool;
+  private final Path androidJar;
   private final Supplier<ImmutableSortedSet<BuildRule>> buildDepsSupplier;
 
   private static final int BASE_PACKAGE_ID = 0x7f;
@@ -85,9 +86,9 @@ public class Aapt2Link extends AbstractBuildRule {
       boolean noVersionTransitions,
       boolean noAutoAddOverlay,
       boolean useProtoFormat,
-      AndroidPlatformTarget androidPlatformTarget) {
+      Tool aapt2Tool,
+      Path androidJar) {
     super(buildTarget, projectFilesystem);
-    this.androidPlatformTarget = androidPlatformTarget;
     this.compileRules = compileRules;
     this.manifest = manifest;
     this.manifestEntries = manifestEntries;
@@ -98,6 +99,8 @@ public class Aapt2Link extends AbstractBuildRule {
     this.noVersionTransitions = noVersionTransitions;
     this.noAutoAddOverlay = noAutoAddOverlay;
     this.useProtoFormat = useProtoFormat;
+    this.androidJar = androidJar;
+    this.aapt2Tool = aapt2Tool;
     this.buildDepsSupplier =
         MoreSuppliers.memoize(
             () ->
@@ -254,8 +257,7 @@ public class Aapt2Link extends AbstractBuildRule {
     @Override
     protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
-      builder.addAll(
-          androidPlatformTarget.getAapt2Executable().get().getCommandPrefix(pathResolver));
+      builder.addAll(aapt2Tool.getCommandPrefix(pathResolver));
 
       builder.add("link");
       if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
@@ -290,7 +292,7 @@ public class Aapt2Link extends AbstractBuildRule {
       builder.add("-o", pf.resolve(getResourceApkPath()).toString());
       builder.add("--proguard", pf.resolve(getProguardConfigPath()).toString());
       builder.add("--manifest", pf.resolve(getFinalManifestPath()).toString());
-      builder.add("-I", pf.resolve(androidPlatformTarget.getAndroidJar()).toString());
+      builder.add("-I", pf.resolve(androidJar).toString());
       for (Path resourceApk : compiledResourceApkPaths) {
         builder.add("-I", pf.resolve(resourceApk).toString());
       }

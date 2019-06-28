@@ -226,7 +226,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     /**
      * This functionality only exists to get around the lack of extensibility in our current build
      * rule / build file apis. It may go away at some point. Also, make sure that you understand
-     * what {@link BuildRule.isCacheable} does with respect to caching if you decide to use this
+     * what {@link BuildRule#isCacheable} does with respect to caching if you decide to use this
      * attribute
      */
     Optional<Boolean> getCacheable();

@@ -18,8 +18,10 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.MiniAapt;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -36,6 +38,8 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -44,6 +48,7 @@ import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -64,7 +69,9 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 public class AndroidResourceDescription
-    implements DescriptionWithTargetGraph<AndroidResourceDescriptionArg>, Flavored {
+    implements DescriptionWithTargetGraph<AndroidResourceDescriptionArg>,
+        Flavored,
+        ImplicitDepsInferringDescription<AndroidResourceDescriptionArg> {
 
   private static final ImmutableSet<String> NON_ASSET_FILENAMES =
       ImmutableSet.of(
@@ -83,7 +90,11 @@ public class AndroidResourceDescription
 
   public static final Flavor AAPT2_COMPILE_FLAVOR = InternalFlavor.of("aapt2_compile");
 
-  public AndroidResourceDescription(AndroidBuckConfig androidBuckConfig) {
+  private final ToolchainProvider toolchainProvider;
+
+  public AndroidResourceDescription(
+      ToolchainProvider toolchainProvider, AndroidBuckConfig androidBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.androidBuckConfig = androidBuckConfig;
   }
 
@@ -145,11 +156,12 @@ public class AndroidResourceDescription
           context
               .getToolchainProvider()
               .getByName(AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+      ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
           graphBuilder,
-          androidPlatformTarget.getAapt2Executable().get(),
+          aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
           resDir.get());
     }
 
@@ -391,6 +403,21 @@ public class AndroidResourceDescription
     }
 
     return false;
+  }
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      AndroidResourceDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    toolchainProvider
+        .getByNameIfPresent(AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class)
+        .ifPresent(
+            androidPlatformTarget ->
+                androidPlatformTarget.addParseTimeDeps(
+                    targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration()));
   }
 
   @BuckStyleImmutable

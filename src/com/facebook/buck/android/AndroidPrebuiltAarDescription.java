@@ -33,6 +33,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
@@ -167,12 +168,13 @@ public class AndroidPrebuiltAarDescription
       AndroidPlatformTarget androidPlatformTarget =
           toolchainProvider.getByName(
               AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+      ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
 
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
           graphBuilder,
-          androidPlatformTarget.getAapt2Executable().get(),
+          aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
           unzipAar.getResDirectory());
     }
 
@@ -226,6 +228,12 @@ public class AndroidPrebuiltAarDescription
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
+    toolchainProvider
+        .getByNameIfPresent(AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class)
+        .ifPresent(
+            androidPlatformTarget ->
+                androidPlatformTarget.addParseTimeDeps(
+                    targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration()));
   }
 
   @BuckStyleImmutable

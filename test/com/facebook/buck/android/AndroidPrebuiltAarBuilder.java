@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -46,6 +47,8 @@ public class AndroidPrebuiltAarBuilder
   public static ToolchainProvider createToolchainProviderForAndroidPrebuiltAar() {
     return new ToolchainProviderBuilder()
         .withToolchain(JavaToolchain.DEFAULT_NAME, JavaCompilationConstants.DEFAULT_JAVA_TOOLCHAIN)
+        .withToolchain(
+            AndroidPlatformTarget.DEFAULT_NAME, AndroidTestUtils.createAndroidPlatformTarget())
         .build();
   }
 

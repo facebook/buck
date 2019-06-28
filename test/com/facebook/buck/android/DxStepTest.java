@@ -24,6 +24,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.cli.VerbosityParser;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
@@ -65,7 +66,7 @@ public class DxStepTest {
             Paths.get(""),
             Collections.emptyList(),
             () -> new SimpleTool(""),
-            () -> new SimpleTool(""),
+            new ConstantToolProvider(new SimpleTool("")),
             Paths.get(""),
             Paths.get(""),
             Paths.get(""),

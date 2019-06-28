@@ -35,6 +35,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -100,7 +101,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
             Paths.get(""),
             Collections.emptyList(),
             () -> new SimpleTool(""),
-            () -> new SimpleTool(""),
+            new ConstantToolProvider(new SimpleTool("")),
             Paths.get(""),
             Paths.get(""),
             Paths.get(""),

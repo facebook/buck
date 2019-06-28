@@ -21,6 +21,7 @@ import static com.facebook.buck.android.AndroidBinaryResourcesGraphEnhancer.PACK
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.android.exopackage.ExopackageMode;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
@@ -32,6 +33,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -56,6 +58,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.immutables.value.Value;
@@ -239,31 +242,30 @@ public class AndroidBinaryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
-    javaOptions
-        .get()
-        .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
+    TargetConfiguration targetConfiguration = buildTarget.getTargetConfiguration();
+    javaOptions.get().addParseTimeDeps(targetGraphOnlyDepsBuilder, targetConfiguration);
 
-    Optionals.addIfPresent(
-        proGuardConfig.getProguardTarget(buildTarget.getTargetConfiguration()), extraDepsBuilder);
+    Optionals.addIfPresent(proGuardConfig.getProguardTarget(targetConfiguration), extraDepsBuilder);
 
     if (constructorArg.getRedex()) {
       // If specified, this option may point to either a BuildTarget or a file.
-      Optional<BuildTarget> redexTarget =
-          androidBuckConfig.getRedexTarget(buildTarget.getTargetConfiguration());
+      Optional<BuildTarget> redexTarget = androidBuckConfig.getRedexTarget(targetConfiguration);
       redexTarget.ifPresent(extraDepsBuilder::add);
     }
     // TODO(cjhopman): we could filter this by the abis that this binary supports.
     toolchainProvider
         .getByNameIfPresent(NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class)
+        .map(NdkCxxPlatformsProvider::getNdkCxxPlatforms).map(Map::values)
+        .orElse(ImmutableList.of()).stream()
+        .map(platform -> platform.getParseTimeDeps(targetConfiguration))
+        .forEach(extraDepsBuilder::addAll);
+
+    toolchainProvider
+        .getByNameIfPresent(AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class)
         .ifPresent(
-            ndkCxxPlatformsProvider ->
-                ndkCxxPlatformsProvider
-                    .getNdkCxxPlatforms()
-                    .values()
-                    .forEach(
-                        platform ->
-                            extraDepsBuilder.addAll(
-                                platform.getParseTimeDeps(buildTarget.getTargetConfiguration()))));
+            androidPlatformTarget ->
+                androidPlatformTarget.addParseTimeDeps(
+                    targetGraphOnlyDepsBuilder, targetConfiguration));
   }
 
   @BuckStyleImmutable
