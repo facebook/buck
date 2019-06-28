@@ -18,6 +18,7 @@ package com.facebook.buck.core.rules.platform;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
@@ -50,6 +51,20 @@ public class DefaultTargetPlatformResolverTest {
     assertEquals(
         emptyTargetConfigurationPlatform,
         targetPlatformResolver.getTargetPlatform(EmptyTargetConfiguration.INSTANCE));
+  }
+
+  @Test
+  public void returnCorrectPlatformForConfigurationForConfigurationTargets() {
+    Platform emptyTargetConfigurationPlatform = EmptyPlatform.INSTANCE;
+    DefaultTargetPlatformResolver targetPlatformResolver =
+        new DefaultTargetPlatformResolver(
+            new RuleBasedTargetPlatformResolver(
+                new RuleBasedPlatformResolver(target -> null, new ThrowingConstraintResolver())),
+            emptyTargetConfigurationPlatform);
+
+    assertEquals(
+        emptyTargetConfigurationPlatform,
+        targetPlatformResolver.getTargetPlatform(ConfigurationForConfigurationTargets.INSTANCE));
   }
 
   @Test

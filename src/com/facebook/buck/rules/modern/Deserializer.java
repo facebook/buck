@@ -18,6 +18,7 @@ package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -444,6 +445,8 @@ public class Deserializer {
           UnconfiguredBuildTargetView targetPlatform =
               UnconfiguredBuildTargetTypeInfo.INSTANCE.createNotNull(this);
           return ImmutableDefaultTargetConfiguration.of(targetPlatform);
+        case Serializer.TARGET_CONFIGURATION_TYPE_CONFIGURATION:
+          return ConfigurationForConfigurationTargets.INSTANCE;
         default:
           throw new IllegalStateException("Cannot create target configuration for type " + type);
       }

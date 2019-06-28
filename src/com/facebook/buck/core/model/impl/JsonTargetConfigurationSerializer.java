@@ -16,6 +16,7 @@
 package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
@@ -38,6 +39,10 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
   private static final ImmutableMap<String, Boolean>
       HOST_TARGET_CONFIGURATION_ATTRIBUTES_FOR_SERIALIZATION =
           ImmutableMap.of("hostPlatform", true);
+
+  private static final ImmutableMap<String, Boolean>
+      TARGET_CONFIGURATION_FOR_CONFIGURATION_ATTRIBUTES_FOR_SERIALIZATION =
+          ImmutableMap.of("configuration", true);
 
   private final ObjectWriter objectWriter;
   private final ObjectReader objectReader;
@@ -63,6 +68,9 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
       if (targetConfiguration instanceof HostTargetConfiguration) {
         return objectWriter.writeValueAsString(
             HOST_TARGET_CONFIGURATION_ATTRIBUTES_FOR_SERIALIZATION);
+      } else if (targetConfiguration instanceof ConfigurationForConfigurationTargets) {
+        return objectWriter.writeValueAsString(
+            TARGET_CONFIGURATION_FOR_CONFIGURATION_ATTRIBUTES_FOR_SERIALIZATION);
       } else {
         return objectWriter.writeValueAsString(targetConfiguration);
       }
@@ -82,6 +90,9 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
     }
     if (node.size() == 0) {
       return EmptyTargetConfiguration.INSTANCE;
+    }
+    if (node.has("configuration")) {
+      return ConfigurationForConfigurationTargets.INSTANCE;
     }
     if (node.has("hostPlatform")) {
       return HostTargetConfiguration.INSTANCE;

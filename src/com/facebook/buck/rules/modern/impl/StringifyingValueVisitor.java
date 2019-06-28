@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
@@ -224,6 +225,8 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
       append(
           "configuration<targetPlatform(%s)>",
           ((DefaultTargetConfiguration) value).getTargetPlatform().getFullyQualifiedName());
+    } else if (value instanceof ConfigurationForConfigurationTargets) {
+      append("configuration<configurationTarget>");
     } else {
       throw new IllegalArgumentException("Cannot visit target configuration: " + value);
     }

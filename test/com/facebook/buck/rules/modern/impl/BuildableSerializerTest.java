@@ -271,6 +271,12 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
 
   @Test
   @Override
+  public void buildTargetWithConfigurationForConfigurationTargets() throws IOException {
+    test(new WithBuildTargetWithConfigurationForConfigurationTargets());
+  }
+
+  @Test
+  @Override
   public void buildTargetWithHostConfiguration() throws IOException {
     test(new WithBuildTargetWithHostConfiguration());
   }

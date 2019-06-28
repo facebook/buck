@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
@@ -168,6 +169,8 @@ public abstract class AbstractValueVisitor<E extends Exception> implements Value
     } else if (value instanceof DefaultTargetConfiguration) {
       visitSimple(Serializer.TARGET_CONFIGURATION_TYPE_DEFAULT);
       visitSimple(((DefaultTargetConfiguration) value).getTargetPlatform().getFullyQualifiedName());
+    } else if (value instanceof ConfigurationForConfigurationTargets) {
+      visitSimple(Serializer.TARGET_CONFIGURATION_TYPE_CONFIGURATION);
     } else {
       throw new IllegalArgumentException("Cannot visit target configuration: " + value);
     }

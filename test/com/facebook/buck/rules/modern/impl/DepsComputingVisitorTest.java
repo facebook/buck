@@ -251,6 +251,12 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
 
   @Test
   @Override
+  public void buildTargetWithConfigurationForConfigurationTargets() {
+    apply(new WithBuildTargetWithConfigurationForConfigurationTargets());
+  }
+
+  @Test
+  @Override
   public void buildTargetWithHostConfiguration() {
     apply(new WithBuildTargetWithHostConfiguration());
   }
