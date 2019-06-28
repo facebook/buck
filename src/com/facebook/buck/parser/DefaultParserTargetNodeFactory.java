@@ -24,7 +24,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -110,7 +110,7 @@ public class DefaultParserTargetNodeFactory
       BuildTarget target,
       Map<String, Object> rawNode,
       Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope) {
-    KnownNativeRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
+    KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
     RuleType buildRuleType = parseBuildRuleTypeFromRawRule(knownRuleTypes, rawNode);
 
     // Because of the way that the parser works, we know this can never return null.
@@ -202,7 +202,7 @@ public class DefaultParserTargetNodeFactory
   }
 
   private static RuleType parseBuildRuleTypeFromRawRule(
-      KnownNativeRuleTypes knownRuleTypes, Map<String, Object> map) {
+      KnownRuleTypes knownRuleTypes, Map<String, Object> map) {
     String type = (String) Objects.requireNonNull(map.get(BuckPyFunction.TYPE_PROPERTY_NAME));
     return knownRuleTypes.getRuleType(type);
   }

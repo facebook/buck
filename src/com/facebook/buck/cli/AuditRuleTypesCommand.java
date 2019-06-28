@@ -36,7 +36,7 @@ public class AuditRuleTypesCommand extends AbstractCommand {
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     collectAndDumpBuildRuleTypesInformation(
         params.getConsole(),
-        params.getKnownRuleTypesProvider().get(params.getCell()),
+        params.getKnownRuleTypesProvider().getNativeRuleTypes(params.getCell()),
         generateJsonOutput);
     return ExitCode.SUCCESS;
   }
@@ -65,7 +65,7 @@ public class AuditRuleTypesCommand extends AbstractCommand {
 
   private static Collection<String> collectBuildRuleTypes(
       KnownNativeRuleTypes knownNativeRuleTypes) {
-    return ImmutableSortedSet.copyOf(knownNativeRuleTypes.getTypesByName().keySet());
+    return ImmutableSortedSet.copyOf(knownNativeRuleTypes.getNativeTypesByName().keySet());
   }
 
   private static void dumpBuildRuleTypesInJsonFormat(

@@ -49,7 +49,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
@@ -791,8 +791,7 @@ public class TargetsCommand extends AbstractCommand {
         ImmutableSet.builder();
     for (String name : types) {
       try {
-        KnownNativeRuleTypes knownRuleTypes =
-            params.getKnownRuleTypesProvider().get(params.getCell());
+        KnownRuleTypes knownRuleTypes = params.getKnownRuleTypesProvider().get(params.getCell());
         RuleType type = knownRuleTypes.getRuleType(name);
         BaseDescription<?> description = knownRuleTypes.getDescription(type);
         descriptionClassesBuilder.add((Class<? extends BaseDescription<?>>) description.getClass());

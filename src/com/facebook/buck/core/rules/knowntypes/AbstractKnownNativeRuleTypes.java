@@ -34,7 +34,7 @@ import org.immutables.value.Value;
 /** Provides access to rule types. */
 @Value.Immutable(builder = false, copy = false)
 @BuckStyleImmutable
-public abstract class AbstractKnownNativeRuleTypes {
+public abstract class AbstractKnownNativeRuleTypes implements KnownRuleTypes {
 
   @Value.Parameter
   public abstract ImmutableList<Description<?>> getKnownBuildDescriptions();
@@ -44,7 +44,7 @@ public abstract class AbstractKnownNativeRuleTypes {
       getKnownConfigurationDescriptions();
 
   @Value.Lazy
-  public ImmutableMap<String, RuleType> getTypesByName() {
+  public ImmutableMap<String, RuleType> getNativeTypesByName() {
     return getDescriptions().stream()
         .map(DescriptionCache::getRuleType)
         .collect(ImmutableMap.toImmutableMap(RuleType::getName, t -> t));
@@ -54,8 +54,9 @@ public abstract class AbstractKnownNativeRuleTypes {
    * @param name user-facing name of a rule, e.g. "java_library"
    * @return {@link RuleType} that corresponds to the provided name.
    */
+  @Override
   public RuleType getRuleType(String name) {
-    RuleType type = getTypesByName().get(name);
+    RuleType type = getNativeTypesByName().get(name);
     if (type == null) {
       throw new HumanReadableException("Unable to find rule type: %s", name);
     }
@@ -79,6 +80,7 @@ public abstract class AbstractKnownNativeRuleTypes {
   }
 
   /** @return a description by its {@link RuleType}. */
+  @Override
   public BaseDescription<?> getDescription(RuleType ruleType) {
     return Preconditions.checkNotNull(
         getDescriptionsByRule().get(ruleType), "Cannot find a description for type %s", ruleType);

@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -37,7 +37,7 @@ public class AuditRuleTypeCommand extends AbstractCommand {
 
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) {
-    KnownNativeRuleTypes knownRuleTypes = params.getKnownRuleTypesProvider().get(params.getCell());
+    KnownRuleTypes knownRuleTypes = params.getKnownRuleTypesProvider().get(params.getCell());
     RuleType buildRuleType = knownRuleTypes.getRuleType(ruleName);
     BaseDescription<?> description = knownRuleTypes.getDescription(buildRuleType);
     printPythonFunction(params.getConsole(), description, params.getTypeCoercerFactory());

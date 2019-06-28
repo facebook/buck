@@ -24,10 +24,10 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import javax.annotation.Nonnull;
 
-/** Lazily constructs {@link KnownNativeRuleTypes} for {@link Cell}s. */
+/** Lazily constructs {@link KnownRuleTypes} for {@link Cell}s. */
 public class KnownRuleTypesProvider {
 
-  private final LoadingCache<Cell, KnownNativeRuleTypes> typesCache =
+  private final LoadingCache<Cell, KnownNativeRuleTypes> nativeTypesCache =
       CacheBuilder.newBuilder()
           .build(
               new CacheLoader<Cell, KnownNativeRuleTypes>() {
@@ -43,10 +43,15 @@ public class KnownRuleTypesProvider {
     this.knownNativeRuleTypesFactory = knownNativeRuleTypesFactory;
   }
 
-  /** Returns {@link KnownNativeRuleTypes} for a given {@link Cell}. */
-  public KnownNativeRuleTypes get(Cell cell) {
+  /** Returns {@link KnownRuleTypes} for a given {@link Cell}. */
+  public KnownRuleTypes get(Cell cell) {
+    return getNativeRuleTypes(cell);
+  }
+
+  /** Get details for just rules implemented in Buck itself, rather than user defined rules */
+  public KnownNativeRuleTypes getNativeRuleTypes(Cell cell) {
     try {
-      return typesCache.getUnchecked(cell);
+      return nativeTypesCache.getUnchecked(cell);
     } catch (UncheckedExecutionException e) {
       Throwables.throwIfUnchecked(e.getCause());
       throw e;

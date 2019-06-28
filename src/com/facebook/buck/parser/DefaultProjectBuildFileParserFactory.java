@@ -164,7 +164,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             .setIgnorePaths(cell.getFilesystem().getIgnorePaths())
             .setBuildFileName(cell.getBuckConfigView(ParserConfig.class).getBuildFileName())
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
-            .setDescriptions(knownRuleTypesProvider.get(cell).getDescriptions())
+            .setDescriptions(knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions())
             .setUseWatchmanGlob(useWatchmanGlob)
             .setWatchmanGlobStatResults(watchmanGlobStatResults)
             .setWatchmanUseGlobGenerator(watchmanUseGlobGenerator)

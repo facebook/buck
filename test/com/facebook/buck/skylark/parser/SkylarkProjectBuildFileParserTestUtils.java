@@ -83,7 +83,7 @@ public class SkylarkProjectBuildFileParserTestUtils {
         .setIgnorePaths(ImmutableSet.of())
         .setBuildFileName("BUCK")
         .setRawConfig(ImmutableMap.of("dummy_section", ImmutableMap.of("dummy_key", "dummy_value")))
-        .setDescriptions(knownRuleTypesProvider.get(cell).getDescriptions())
+        .setDescriptions(knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions())
         .setBuildFileImportWhitelist(ImmutableList.of())
         .setPythonInterpreter("skylark");
   }
