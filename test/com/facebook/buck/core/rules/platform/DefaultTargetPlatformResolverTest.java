@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.util.Optional;
@@ -131,6 +132,12 @@ public class DefaultTargetPlatformResolverTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("Cannot determine target platform for configuration:");
 
-    targetPlatformResolver.getTargetPlatform(new TargetConfiguration() {});
+    targetPlatformResolver.getTargetPlatform(
+        new TargetConfiguration() {
+          @Override
+          public ImmutableSet<BuildTarget> getConfigurationTargets() {
+            return ImmutableSet.of();
+          }
+        });
   }
 }

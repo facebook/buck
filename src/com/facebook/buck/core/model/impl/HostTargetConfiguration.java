@@ -15,7 +15,10 @@
  */
 package com.facebook.buck.core.model.impl;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
 
 /** Target configuration for the host platform. */
@@ -34,5 +37,11 @@ public class HostTargetConfiguration implements TargetConfiguration {
   @Override
   public boolean equals(Object obj) {
     return obj instanceof HostTargetConfiguration;
+  }
+
+  @JsonIgnore
+  @Override
+  public ImmutableSet<BuildTarget> getConfigurationTargets() {
+    return ImmutableSet.of();
   }
 }

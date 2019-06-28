@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.core.model;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Special configuration that is used together with {@link UnconfiguredBuildTarget} that represent
  * configuration targets in order to form {@link BuildTarget}.
@@ -35,5 +37,10 @@ public class ConfigurationForConfigurationTargets implements TargetConfiguration
   @Override
   public boolean equals(Object obj) {
     return obj instanceof ConfigurationForConfigurationTargets;
+  }
+
+  @Override
+  public ImmutableSet<BuildTarget> getConfigurationTargets() {
+    return ImmutableSet.of();
   }
 }
