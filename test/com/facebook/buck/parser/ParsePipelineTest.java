@@ -444,6 +444,7 @@ public class ParsePipelineTest {
       ParserTargetNodeFactory<RawTargetNode> rawTargetNodeToTargetNodeFactory =
           new NonResolvingRawTargetNodeToTargetNodeFactory(
               DefaultParserTargetNodeFactory.createForParser(
+                  coercerFactory,
                   knownRuleTypesProvider,
                   constructorArgMarshaller,
                   buildFileTrees,

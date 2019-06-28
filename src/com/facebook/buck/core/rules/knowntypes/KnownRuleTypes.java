@@ -17,7 +17,10 @@
 package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 
 /** Provides access to rule types and descriptions for both native and user defined rules. */
 public interface KnownRuleTypes {
@@ -39,4 +42,14 @@ public interface KnownRuleTypes {
    * @return The {@link BaseDescription} to use for the given {@link RuleType}
    */
   BaseDescription<?> getDescription(RuleType ruleType);
+
+  /**
+   * Get a builder that helps create constructor args for descriptions. This with get either a
+   * reflection based builder, or a skylark builder, depending on {@code RuleType}
+   */
+  <T> ConstructorArgBuilder<T> getConstructorArgBuilder(
+      TypeCoercerFactory typeCoercerFactory,
+      RuleType ruleType,
+      Class<T> dtoClass,
+      BuildTarget buildTarget);
 }

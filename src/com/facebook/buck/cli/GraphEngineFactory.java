@@ -147,6 +147,7 @@ public class GraphEngineFactory {
 
     RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
         new RawTargetNodeToTargetNodeFactory(
+            params.getTypeCoercerFactory(),
             params.getKnownRuleTypesProvider(),
             new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
             new TargetNodeFactory(params.getTypeCoercerFactory()),

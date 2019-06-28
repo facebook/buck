@@ -68,7 +68,7 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder {
    * 'Build' the {@link SkylarkDescriptionArg}. After this has been called, {@link
    * #setPostCoercionValue(String, Object)} may not be called.
    */
-  void build() {
+  public void build() {
     attrValuesAreMutable = false;
   }
 
@@ -76,7 +76,7 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder {
    * Get the {@link SkylarkDescriptionArg} that has information about parameters and the user's
    * implementation function
    */
-  SkylarkUserDefinedRule getRule() {
+  public SkylarkUserDefinedRule getRule() {
     return rule;
   }
 }

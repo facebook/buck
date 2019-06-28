@@ -51,23 +51,22 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
-      Class<T> dtoClass,
+      ConstructorArgBuilder<T> constructorArgBuilder,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       Map<String, ?> instance)
       throws ParamInfoException {
-    ConstructorArgBuilder<T> dtoAndBuild =
-        CoercedTypeCache.instantiateSkeleton(typeCoercerFactory, dtoClass, buildTarget);
-    ImmutableMap<String, ParamInfo> allParamInfo = dtoAndBuild.getParamInfos();
+
+    ImmutableMap<String, ParamInfo> allParamInfo = constructorArgBuilder.getParamInfos();
     for (ParamInfo info : allParamInfo.values()) {
       info.setFromParams(
           cellRoots,
           filesystem,
           buildTarget,
           buildTarget.getTargetConfiguration(),
-          dtoAndBuild.getBuilder(),
+          constructorArgBuilder.getBuilder(),
           instance);
     }
-    T dto = dtoAndBuild.build();
+    T dto = constructorArgBuilder.build();
     collectDeclaredDeps(cellRoots, allParamInfo.get("deps"), declaredDeps, dto);
     return dto;
   }
@@ -97,13 +96,12 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       SelectorListResolver selectorListResolver,
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
-      Class<T> dtoClass,
+      ConstructorArgBuilder<T> constructorArgBuilder,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableMap<String, ?> attributes)
       throws CoerceFailedException {
-    ConstructorArgBuilder<T> dtoAndBuild =
-        CoercedTypeCache.instantiateSkeleton(typeCoercerFactory, dtoClass, buildTarget);
-    ImmutableMap<String, ParamInfo> allParamInfo = dtoAndBuild.getParamInfos();
+
+    ImmutableMap<String, ParamInfo> allParamInfo = constructorArgBuilder.getParamInfos();
     for (ParamInfo info : allParamInfo.values()) {
       Object attribute = attributes.get(info.getName());
       if (attribute == null) {
@@ -125,10 +123,10 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
               info.getName(),
               attributeWithSelectableValue);
       if (configuredAttributeValue != null) {
-        info.setCoercedValue(dtoAndBuild.getBuilder(), configuredAttributeValue);
+        info.setCoercedValue(constructorArgBuilder.getBuilder(), configuredAttributeValue);
       }
     }
-    T dto = dtoAndBuild.build();
+    T dto = constructorArgBuilder.build();
     collectDeclaredDeps(cellPathResolver, allParamInfo.get("deps"), declaredDeps, dto);
     return dto;
   }

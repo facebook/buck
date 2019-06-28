@@ -29,11 +29,13 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.AllExistingProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
+import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -53,12 +55,24 @@ public class GenruleDescriptionTest {
 
   @Test
   public void testImplicitDepsAreAddedCorrectly() throws Exception {
+    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+
     GenruleDescription genruleDescription =
         new GenruleDescription(
             new ToolchainProviderBuilder().build(),
             FakeBuckConfig.builder().build(),
             new NoSandboxExecutionStrategy());
+    KnownNativeRuleTypes knownRuleTypes =
+        KnownNativeRuleTypes.of(ImmutableList.of(genruleDescription), ImmutableList.of());
+
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
+    ConstructorArgBuilder<GenruleDescriptionArg> builder =
+        knownRuleTypes.getConstructorArgBuilder(
+            typeCoercerFactory,
+            knownRuleTypes.getRuleType("genrule"),
+            genruleDescription.getConstructorArgType(),
+            buildTarget);
+
     Map<String, Object> instance =
         ImmutableMap.of(
             "name",
@@ -70,8 +84,7 @@ public class GenruleDescriptionTest {
             "cmd",
             "$(exe //bin:executable) $(location :arg)");
     ProjectFilesystem projectFilesystem = new AllExistingProjectFilesystem();
-    ConstructorArgMarshaller marshaller =
-        new DefaultConstructorArgMarshaller(new DefaultTypeCoercerFactory());
+    ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller(typeCoercerFactory);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> visibilityPatterns = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> withinViewPatterns = ImmutableSet.builder();
@@ -80,7 +93,7 @@ public class GenruleDescriptionTest {
             createCellRoots(projectFilesystem),
             projectFilesystem,
             buildTarget,
-            GenruleDescriptionArg.class,
+            builder,
             declaredDeps,
             instance);
     TargetNode<GenruleDescriptionArg> targetNode =

@@ -53,6 +53,7 @@ public class RawTargetNodeToRawTargetNodeWithDepsComputationTest {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
         new RawTargetNodeToTargetNodeFactory(
+            typeCoercerFactory,
             TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager()),
             new DefaultConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory),

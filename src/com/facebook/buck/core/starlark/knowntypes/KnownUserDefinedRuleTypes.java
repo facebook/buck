@@ -17,14 +17,20 @@ package com.facebook.buck.core.starlark.knowntypes;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.model.AbstractRuleType;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.starlark.rule.SkylarkDescription;
+import com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
+import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
+import com.facebook.buck.rules.coercer.ImmutableConstructorArgBuilder;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.devtools.build.lib.cmdline.Label;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 
@@ -89,5 +95,24 @@ public class KnownUserDefinedRuleTypes implements KnownRuleTypes {
   @Override
   public BaseDescription<?> getDescription(RuleType ruleType) {
     return description;
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public <T> ConstructorArgBuilder<T> getConstructorArgBuilder(
+      TypeCoercerFactory typeCoercerFactory,
+      RuleType ruleType,
+      Class<T> dtoClass,
+      BuildTarget buildTarget) {
+    Preconditions.checkArgument(dtoClass.isAssignableFrom(SkylarkDescriptionArg.class));
+    SkylarkUserDefinedRule rule = Objects.requireNonNull(getRule(ruleType.getName()));
+    return new ImmutableConstructorArgBuilder<T>(
+        new SkylarkDescriptionArg(rule),
+        rule.getAllParamInfo(),
+        args -> {
+          ((SkylarkDescriptionArg) args).build();
+          // Terrible cast here, but java doesn't have useful generic type constraints
+          return (T) args;
+        });
   }
 }

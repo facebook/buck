@@ -142,6 +142,7 @@ standard_java_test(
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
         "//src/com/facebook/buck/core/util/graph:graph",

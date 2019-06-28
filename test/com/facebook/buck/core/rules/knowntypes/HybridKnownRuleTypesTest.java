@@ -19,11 +19,17 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.model.AbstractRuleType;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.starlark.coercer.SkylarkDescriptionArgBuilder;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.core.starlark.rule.SkylarkDescription;
+import com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
+import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.skylark.function.FakeSkylarkUserDefinedRuleFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
@@ -92,5 +98,38 @@ public class HybridKnownRuleTypesTest {
     assertEquals(
         SkylarkDescription.class,
         knownTypes.getDescription(knownTypes.getRuleType("//foo:bar.bzl:baz_rule")).getClass());
+  }
+
+  @Test
+  public void returnsSkylarkDescriptionArgBuilderForUserDefinedRule() {
+    KnownRuleTypes knownTypes = new HybridKnownRuleTypes(nativeRuleTypes, userDefinedRuleTypes);
+    RuleType ruleType = knownTypes.getRuleType("//foo:bar.bzl:baz_rule");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    DefaultTypeCoercerFactory factory = new DefaultTypeCoercerFactory();
+
+    ConstructorArgBuilder<SkylarkDescriptionArg> builder =
+        knownTypes.getConstructorArgBuilder(factory, ruleType, SkylarkDescriptionArg.class, target);
+    ((SkylarkDescriptionArgBuilder) builder.getBuilder()).setPostCoercionValue("baz", "value");
+
+    // Ensure that we can cast back properly
+    SkylarkDescriptionArg built = builder.build();
+
+    assertEquals("value", built.getPostCoercionValue("baz"));
+  }
+
+  @Test
+  public void returnsImmutableDescriptionArgBuilderForNativeRule() {
+    KnownRuleTypes knownTypes = new HybridKnownRuleTypes(nativeRuleTypes, userDefinedRuleTypes);
+    RuleType ruleType = knownTypes.getRuleType("known_rule_test");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    DefaultTypeCoercerFactory factory = new DefaultTypeCoercerFactory();
+
+    ConstructorArgBuilder<KnownRuleTestDescriptionArg> builder =
+        knownTypes.getConstructorArgBuilder(
+            factory, ruleType, KnownRuleTestDescriptionArg.class, target);
+
+    ((KnownRuleTestDescriptionArg.Builder) builder.getBuilder()).setName("that_rule");
+    KnownRuleTestDescriptionArg ret = builder.build();
+    assertEquals("that_rule", ret.getName());
   }
 }

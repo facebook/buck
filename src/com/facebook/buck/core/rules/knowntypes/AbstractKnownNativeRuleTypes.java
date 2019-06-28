@@ -20,9 +20,13 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.rules.coercer.CoercedTypeCache;
+import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -84,6 +88,15 @@ public abstract class AbstractKnownNativeRuleTypes implements KnownRuleTypes {
   public BaseDescription<?> getDescription(RuleType ruleType) {
     return Preconditions.checkNotNull(
         getDescriptionsByRule().get(ruleType), "Cannot find a description for type %s", ruleType);
+  }
+
+  @Override
+  public <T> ConstructorArgBuilder<T> getConstructorArgBuilder(
+      TypeCoercerFactory typeCoercerFactory,
+      RuleType ruleType,
+      Class<T> dtoClass,
+      BuildTarget buildTarget) {
+    return CoercedTypeCache.instantiateSkeleton(typeCoercerFactory, dtoClass, buildTarget);
   }
 
   // Verify that there are no duplicate rule types being defined.

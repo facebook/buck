@@ -19,7 +19,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
@@ -28,12 +30,17 @@ import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
+import com.facebook.buck.core.rules.actions.ActionCreationException;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.platform.ConstraintSettingRule;
 import com.facebook.buck.core.rules.platform.ConstraintValueRule;
 import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
+import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -45,6 +52,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 import org.junit.Before;
 import org.junit.Test;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class TargetCompatibilityCheckerTest {
 
@@ -213,15 +221,47 @@ public class TargetCompatibilityCheckerTest {
 
   private Object createTargetNodeArg(Map<String, Object> rawNode) throws Exception {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    ConstructorArgMarshaller marshaller =
-        new DefaultConstructorArgMarshaller(new DefaultTypeCoercerFactory());
+    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller(typeCoercerFactory);
+    KnownNativeRuleTypes knownRuleTypes =
+        KnownNativeRuleTypes.of(ImmutableList.of(new TestRuleDescription()), ImmutableList.of());
+
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(projectFilesystem, "//:target");
+
+    ConstructorArgBuilder<TestDescriptionArg> builder =
+        knownRuleTypes.getConstructorArgBuilder(
+            typeCoercerFactory,
+            knownRuleTypes.getRuleType("test_rule"),
+            TestDescriptionArg.class,
+            buildTarget);
+
     return marshaller.populate(
         TestCellPathResolver.get(projectFilesystem),
         projectFilesystem,
-        BuildTargetFactory.newInstance(projectFilesystem, "//:target"),
-        TestDescriptionArg.class,
+        buildTarget,
+        builder,
         ImmutableSet.builder(),
         ImmutableMap.<String, Object>builder().putAll(rawNode).put("name", "target").build());
+  }
+
+  static class TestRuleDescription implements RuleDescription<AbstractTestDescriptionArg> {
+
+    @Override
+    public boolean producesCacheableSubgraph() {
+      return false;
+    }
+
+    @Override
+    public ProviderInfoCollection ruleImpl(
+        RuleAnalysisContext context, BuildTarget target, AbstractTestDescriptionArg args)
+        throws ActionCreationException {
+      throw new NotImplementedException();
+    }
+
+    @Override
+    public Class<AbstractTestDescriptionArg> getConstructorArgType() {
+      return AbstractTestDescriptionArg.class;
+    }
   }
 
   @BuckStyleImmutable

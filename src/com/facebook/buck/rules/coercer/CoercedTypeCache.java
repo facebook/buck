@@ -67,7 +67,7 @@ public class CoercedTypeCache {
       Method buildMethod = builder.getClass().getMethod("build");
       return new ImmutableConstructorArgBuilder<T>(
           builder,
-          CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dtoType),
+          INSTANCE.getAllParamInfo(typeCoercerFactory, dtoType),
           x -> {
             try {
               return (T) buildMethod.invoke(x);

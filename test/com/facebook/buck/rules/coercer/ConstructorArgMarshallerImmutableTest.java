@@ -25,11 +25,15 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.platform.DummyConfigurationRule;
 import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
@@ -46,6 +50,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.DefaultSelectableConfigurationContext;
 import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
 import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -71,6 +76,7 @@ public class ConstructorArgMarshallerImmutableTest {
   private Path basePath;
   private ConstructorArgMarshaller marshaller;
   private ProjectFilesystem filesystem;
+  private KnownRuleTypes knownRuleTypes;
 
   @Rule public ExpectedException expected = ExpectedException.none();
 
@@ -79,16 +85,29 @@ public class ConstructorArgMarshallerImmutableTest {
     basePath = Paths.get("example", "path");
     marshaller = new DefaultConstructorArgMarshaller(new DefaultTypeCoercerFactory());
     filesystem = new FakeProjectFilesystem();
+    knownRuleTypes = KnownNativeRuleTypes.of(ImmutableList.of(), ImmutableList.of());
+  }
+
+  RuleType ruleType(Class<?> dtoClass) {
+    return RuleType.of(
+        CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, dtoClass.getName()),
+        AbstractRuleType.Kind.BUILD);
+  }
+
+  <T> ConstructorArgBuilder<T> builder(Class<T> dtoClass) {
+    return knownRuleTypes.getConstructorArgBuilder(
+        new DefaultTypeCoercerFactory(), ruleType(dtoClass), dtoClass, TARGET);
   }
 
   @Test
   public void shouldPopulateAStringValue() throws Exception {
+
     DtoWithString built =
         marshaller.populate(
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithString.class,
+            builder(DtoWithString.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("string", "cheese"));
 
@@ -102,7 +121,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithBoolean.class,
+            builder(DtoWithBoolean.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of(
                 "booleanOne", true,
@@ -119,7 +138,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithBuildTargets.class,
+            builder(DtoWithBuildTargets.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of(
                 "target", "//cake:walk",
@@ -139,7 +158,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithLong.class,
+            builder(DtoWithLong.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("number", 42L));
 
@@ -153,7 +172,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithPath.class,
+            builder(DtoWithPath.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("path", "Fish.java"));
 
@@ -169,7 +188,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithSourcePaths.class,
+            builder(DtoWithSourcePaths.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of(
                 "filePath", "cheese.txt",
@@ -192,7 +211,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithImmutableSortedSet.class,
+            builder(DtoWithImmutableSortedSet.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of(
                 "stuff", ImmutableList.of("//please/go:here", ":there")));
@@ -207,7 +226,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithSetOfPaths.class,
+            builder(DtoWithSetOfPaths.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("paths", ImmutableList.of("one", "two")));
 
@@ -223,7 +242,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithListOfStrings.class,
+            builder(DtoWithListOfStrings.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("list", ImmutableList.of("alpha", "beta")));
 
@@ -248,7 +267,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithDepsAndNotDeps.class,
+            builder(DtoWithDepsAndNotDeps.class),
             declaredDeps,
             args);
 
@@ -268,7 +287,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithFakeDeps.class,
+            builder(DtoWithFakeDeps.class),
             declaredDeps,
             args);
 
@@ -283,7 +302,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithCollections.class,
+            builder(DtoWithCollections.class),
             ImmutableSet.builder(),
             ImmutableMap.of());
 
@@ -308,7 +327,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithOptionalSetOfStrings.class,
+            builder(DtoWithOptionalSetOfStrings.class),
             ImmutableSet.builder(),
             args);
 
@@ -327,7 +346,7 @@ public class ConstructorArgMarshallerImmutableTest {
         createCellRoots(filesystem),
         filesystem,
         TARGET,
-        DtoWithBoolean.class,
+        builder(DtoWithBoolean.class),
         ImmutableSet.builder(),
         ImmutableMap.of());
   }
@@ -342,7 +361,7 @@ public class ConstructorArgMarshallerImmutableTest {
         createCellRoots(filesystem),
         filesystem,
         TARGET,
-        DtoWithCheck.class,
+        builder(DtoWithCheck.class),
         ImmutableSet.builder(),
         ImmutableMap.of("string", "secrets"));
   }
@@ -354,7 +373,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithCheck.class,
+            builder(DtoWithCheck.class),
             ImmutableSet.builder(),
             ImmutableMap.of("string", "not secrets"));
     assertEquals("not secrets", built.getString());
@@ -366,7 +385,7 @@ public class ConstructorArgMarshallerImmutableTest {
         createCellRoots(filesystem),
         filesystem,
         TARGET,
-        DtoWithString.class,
+        builder(DtoWithString.class),
         ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("string", ImmutableList.of("a", "b")));
   }
@@ -377,7 +396,7 @@ public class ConstructorArgMarshallerImmutableTest {
         createCellRoots(filesystem),
         filesystem,
         TARGET,
-        DtoWithSetOfStrings.class,
+        builder(DtoWithSetOfStrings.class),
         ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("strings", "isn't going to happen"));
   }
@@ -388,7 +407,7 @@ public class ConstructorArgMarshallerImmutableTest {
         createCellRoots(filesystem),
         filesystem,
         TARGET,
-        DtoWithSetOfStrings.class,
+        builder(DtoWithSetOfStrings.class),
         ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("strings", ImmutableSet.of(true, false)));
   }
@@ -400,7 +419,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithPath.class,
+            builder(DtoWithPath.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("path", "./bar/././fish.txt"));
 
@@ -414,7 +433,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithBuildTargetList.class,
+            builder(DtoWithBuildTargetList.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of(
                 "single", "//com/example:cheese",
@@ -451,7 +470,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithVariousTypes.class,
+            builder(DtoWithVariousTypes.class),
             ImmutableSet.builder(),
             args);
 
@@ -477,7 +496,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithOptionalValues.class,
+            builder(DtoWithOptionalValues.class),
             ImmutableSet.builder(),
             args);
 
@@ -498,7 +517,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithDefaultValues.class,
+            builder(DtoWithDefaultValues.class),
             ImmutableSet.builder(),
             args);
 
@@ -521,7 +540,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithDefaultValues.class,
+            builder(DtoWithDefaultValues.class),
             ImmutableSet.builder(),
             args);
 
@@ -538,7 +557,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithSetOfSourcePaths.class,
+            builder(DtoWithSetOfSourcePaths.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of(
                 "srcs", ImmutableList.of("main.py", "lib/__init__.py", "lib/manifest.py")));
@@ -562,7 +581,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithDerivedAndOrdinaryMethods.class,
+            builder(DtoWithDerivedAndOrdinaryMethods.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("string", "tamarins"));
     assertEquals("tamarins", built.getString());
@@ -577,7 +596,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            DtoWithDerivedAndOrdinaryMethods.class,
+            builder(DtoWithDerivedAndOrdinaryMethods.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of(
                 "string", "tamarins",
@@ -593,7 +612,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            InheritsFromHasDefaultMethod.class,
+            builder(InheritsFromHasDefaultMethod.class),
             ImmutableSet.builder(),
             ImmutableMap.of());
     assertEquals("foo", built.getString());
@@ -606,7 +625,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             TARGET,
-            InheritsFromHasDefaultMethod.class,
+            builder(InheritsFromHasDefaultMethod.class),
             ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("string", "bar"));
     assertEquals("bar", built.getString());
@@ -642,7 +661,7 @@ public class ConstructorArgMarshallerImmutableTest {
             selectorListResolver,
             selectableConfigurationContext,
             TARGET,
-            DtoWithString.class,
+            builder(DtoWithString.class),
             declaredDeps,
             ImmutableMap.<String, Object>of("string", selectorList));
 
@@ -664,7 +683,7 @@ public class ConstructorArgMarshallerImmutableTest {
             selectorListResolver,
             selectableConfigurationContext,
             TARGET,
-            DtoWithString.class,
+            builder(DtoWithString.class),
             declaredDeps,
             ImmutableMap.<String, Object>of("string", "value"));
     assertEquals("value", dto.getString());
@@ -685,7 +704,7 @@ public class ConstructorArgMarshallerImmutableTest {
         selectorListResolver,
         selectableConfigurationContext,
         TARGET,
-        DtoWithDepsAndNotDeps.class,
+        builder(DtoWithDepsAndNotDeps.class),
         declaredDeps,
         ImmutableMap.<String, Object>of("deps", ImmutableList.of("//a/b:c")));
     assertEquals(ImmutableSet.of(dep), declaredDeps.build());
@@ -704,7 +723,7 @@ public class ConstructorArgMarshallerImmutableTest {
             selectorListResolver,
             selectableConfigurationContext,
             TARGET,
-            DtoWithOptionalSetOfStrings.class,
+            builder(DtoWithOptionalSetOfStrings.class),
             ImmutableSet.builder(),
             ImmutableMap.of());
     assertFalse(dto.getStrings().isPresent());

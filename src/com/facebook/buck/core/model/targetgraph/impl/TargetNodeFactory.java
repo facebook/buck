@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
@@ -118,9 +119,14 @@ public class TargetNodeFactory implements NodeCopier {
         ImmutableSortedSet.naturalOrder();
     ImmutableSet.Builder<Path> pathsBuilder = ImmutableSet.builder();
 
-    ImmutableMap<String, ParamInfo> paramInfos =
-        CoercedTypeCache.INSTANCE.getAllParamInfo(
-            typeCoercerFactory, description.getConstructorArgType());
+    ImmutableMap<String, ParamInfo> paramInfos;
+    if (constructorArg instanceof SkylarkDescriptionArg) {
+      paramInfos = ((SkylarkDescriptionArg) constructorArg).getRule().getAllParamInfo();
+    } else {
+      paramInfos =
+          CoercedTypeCache.INSTANCE.getAllParamInfo(
+              typeCoercerFactory, description.getConstructorArgType());
+    }
 
     // Scan the input to find possible BuildTargetPaths, necessary for loading dependent rules.
     for (ParamInfo info : paramInfos.values()) {

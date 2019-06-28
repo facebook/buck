@@ -159,6 +159,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
     ParserTargetNodeFactory<RawTargetNode> nonResolvingRawTargetNodeToTargetNodeFactory =
         new NonResolvingRawTargetNodeToTargetNodeFactory(
             DefaultParserTargetNodeFactory.createForParser(
+                typeCoercerFactory,
                 knownRuleTypesProvider,
                 marshaller,
                 daemonicParserState.getBuildFileTrees(),
@@ -202,6 +203,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
 
     RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
         new RawTargetNodeToTargetNodeFactory(
+            typeCoercerFactory,
             knownRuleTypesProvider,
             marshaller,
             targetNodeFactory,

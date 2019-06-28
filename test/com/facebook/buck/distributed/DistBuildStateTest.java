@@ -438,6 +438,7 @@ public class DistBuildStateTest {
         TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager());
     ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
+            typeCoercerFactory,
             knownRuleTypesProvider,
             new DefaultConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(

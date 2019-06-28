@@ -90,6 +90,7 @@ public class AsyncJobStateFactory {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
+            typeCoercerFactory,
             params.getKnownRuleTypesProvider(),
             new DefaultConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(

@@ -20,11 +20,13 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorListResolver;
@@ -32,7 +34,9 @@ import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
+import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -41,6 +45,7 @@ import java.util.function.Function;
 /** Creates {@link TargetNode} from {@link RawTargetNode}. */
 public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory<RawTargetNode> {
 
+  private final TypeCoercerFactory typeCoercerFactory;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final ConstructorArgMarshaller marshaller;
   private final TargetNodeFactory targetNodeFactory;
@@ -51,6 +56,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
   private final TargetPlatformResolver targetPlatformResolver;
 
   public RawTargetNodeToTargetNodeFactory(
+      TypeCoercerFactory typeCoercerFactory,
       KnownRuleTypesProvider knownRuleTypesProvider,
       ConstructorArgMarshaller marshaller,
       TargetNodeFactory targetNodeFactory,
@@ -59,6 +65,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
       SelectorListResolver selectorListResolver,
       ConstraintResolver constraintResolver,
       TargetPlatformResolver targetPlatformResolver) {
+    this.typeCoercerFactory = typeCoercerFactory;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.marshaller = marshaller;
     this.targetNodeFactory = targetNodeFactory;
@@ -77,8 +84,9 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
       RawTargetNode rawTargetNode,
       Function<PerfEventId, Scope> perfEventScope) {
 
-    BaseDescription<?> description =
-        knownRuleTypesProvider.get(cell).getDescription(rawTargetNode.getRuleType());
+    KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
+    RuleType ruleType = rawTargetNode.getRuleType();
+    BaseDescription<?> description = knownRuleTypes.getDescription(ruleType);
     Cell targetCell = cell.getCell(target);
 
     SelectableConfigurationContext configurationContext =
@@ -91,6 +99,9 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
     Object constructorArg;
     try (SimplePerfEvent.Scope scope =
         perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg.convertRawAttributes"))) {
+      ConstructorArgBuilder<?> builder =
+          knownRuleTypes.getConstructorArgBuilder(
+              typeCoercerFactory, ruleType, description.getConstructorArgType(), target);
       constructorArg =
           marshaller.populateWithConfiguringAttributes(
               targetCell.getCellPathResolver(),
@@ -98,7 +109,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
               selectorListResolver,
               configurationContext,
               target,
-              description.getConstructorArgType(),
+              builder,
               declaredDeps,
               rawTargetNode.getAttributes());
     } catch (CoerceFailedException e) {
