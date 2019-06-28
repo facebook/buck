@@ -15,8 +15,7 @@
  */
 package com.facebook.buck.core.rules.platform;
 
-import com.facebook.buck.core.model.ConfigurationBuildTargets;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.impl.OsConstraintDetector;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
@@ -31,10 +30,9 @@ public class OsConstraintDetectorDescription
   @Override
   public ConfigurationRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
-      UnconfiguredBuildTargetView buildTarget,
+      BuildTarget buildTarget,
       OsConstraintDetectorArg arg) {
-    return new OsConstraintDetectorRule(
-        ConfigurationBuildTargets.convert(buildTarget), new OsConstraintDetector());
+    return new OsConstraintDetectorRule(buildTarget, new OsConstraintDetector());
   }
 
   @Override

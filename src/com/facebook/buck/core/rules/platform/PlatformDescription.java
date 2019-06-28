@@ -53,10 +53,10 @@ public class PlatformDescription implements ConfigurationRuleDescription<Platfor
   @Override
   public ConfigurationRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
-      UnconfiguredBuildTargetView buildTarget,
+      BuildTarget buildTarget,
       PlatformArg arg) {
     return PlatformRule.of(
-        ConfigurationBuildTargets.convert(buildTarget),
+        buildTarget,
         arg.getName(),
         ConfigurationBuildTargets.convert(arg.getConstraintValues()),
         ConfigurationBuildTargets.convert(arg.getDeps()));

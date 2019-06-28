@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
@@ -49,12 +50,10 @@ public class ConstraintValueDescription
   @Override
   public ConfigurationRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
-      UnconfiguredBuildTargetView buildTarget,
+      BuildTarget buildTarget,
       ConstraintValueArg arg) {
     return new ConstraintValueRule(
-        ConfigurationBuildTargets.convert(buildTarget),
-        arg.getName(),
-        ConfigurationBuildTargets.convert(arg.getConstraintSetting()));
+        buildTarget, arg.getName(), ConfigurationBuildTargets.convert(arg.getConstraintSetting()));
   }
 
   @BuckStyleImmutable
