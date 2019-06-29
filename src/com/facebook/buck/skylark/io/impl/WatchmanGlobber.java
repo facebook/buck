@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -42,6 +43,49 @@ import java.util.stream.Collectors;
  * </ul>
  */
 public class WatchmanGlobber {
+
+  /**
+   * Watchman options to use when globbing.
+   *
+   * @see WatchmanGlobber#run(Collection, Collection, EnumSet)
+   */
+  public enum Option {
+    /**
+     * Do not return directories which match include patterns.
+     *
+     * <p>Symlinks referring to directories are still returned unless {@link
+     * Option#EXCLUDE_SYMLINKS} is also specified.
+     *
+     * <p>This option corresponds to a <a
+     * href="https://facebook.github.io/watchman/docs/expr/type.html">{@code type} expression</a>
+     * which excludes directories.
+     */
+    EXCLUDE_DIRECTORIES,
+    /**
+     * Do not return symbolic links which match include patterns.
+     *
+     * <p>Without this option, symbolic links are returned, regardless of their target.
+     *
+     * <p>This option corresponds to a <a
+     * href="https://facebook.github.io/watchman/docs/expr/type.html">{@code type} expression</a>
+     * which excludes symbolic links.
+     */
+    EXCLUDE_SYMLINKS,
+    /**
+     * Match path components exactly, even on case-insensitive file systems.
+     *
+     * <p>By default, whether or not patterns ignore case depends on <a
+     * href="https://facebook.github.io/watchman/docs/cmd/query.html#case-sensitivity">Watchman's
+     * default behavior</a>.
+     *
+     * <p>This option affects both include patterns and exclude patterns.
+     *
+     * <p>This option corresponds to the query's <a
+     * href="https://facebook.github.io/watchman/docs/cmd/query.html#case-sensitivity">{@code
+     * case_sensitive} option</a> to {@code true}.
+     */
+    FORCE_CASE_SENSITIVE,
+  }
 
   private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(10);
   private static final ImmutableList<String> FIELDS_TO_INCLUDE = ImmutableList.of("name");
@@ -69,12 +113,34 @@ public class WatchmanGlobber {
    * @param excludeDirectories Whether directories should be excluded from the resulting set.
    * @return The set of paths resolved using include patterns minus paths excluded by exclude
    *     patterns.
+   * @see WatchmanGlobber#run(Collection, Collection, EnumSet)
    */
   public Optional<ImmutableSet<String>> run(
       Collection<String> include, Collection<String> exclude, boolean excludeDirectories)
       throws IOException, InterruptedException {
-    ImmutableMap<String, ?> watchmanQuery =
-        createWatchmanQuery(include, exclude, excludeDirectories);
+    return run(
+        include,
+        exclude,
+        excludeDirectories ? EnumSet.of(Option.EXCLUDE_DIRECTORIES) : EnumSet.noneOf(Option.class));
+  }
+
+  public Optional<ImmutableSet<String>> run(
+      Collection<String> include, Collection<String> exclude, Option option)
+      throws IOException, InterruptedException {
+    return run(include, exclude, EnumSet.of(option));
+  }
+
+  /**
+   * @param include File patterns that should be included in the resulting set.
+   * @param exclude File patterns that should be excluded from the resulting set.
+   * @param options Customizations for matching behavior.
+   * @return The set of paths resolved using include patterns minus paths excluded by exclude
+   *     patterns.
+   */
+  public Optional<ImmutableSet<String>> run(
+      Collection<String> include, Collection<String> exclude, EnumSet<Option> options)
+      throws IOException, InterruptedException {
+    ImmutableMap<String, ?> watchmanQuery = createWatchmanQuery(include, exclude, options);
 
     return watchmanClient
         .queryWithTimeout(TIMEOUT_NANOS, "query", watchmanWatchRoot, watchmanQuery)
@@ -92,18 +158,21 @@ public class WatchmanGlobber {
    * <p>The implementation should ideally match the one in glob_watchman.py.
    */
   private ImmutableMap<String, ?> createWatchmanQuery(
-      Collection<String> include, Collection<String> exclude, boolean excludeDirectories) {
+      Collection<String> include, Collection<String> exclude, EnumSet<Option> options) {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
     builder.putAll(
         ImmutableMap.of(
             "relative_root",
             basePath,
             "expression",
-            toMatchExpressions(exclude, excludeDirectories),
+            toMatchExpressions(exclude, options),
             "glob",
             include,
             "fields",
             FIELDS_TO_INCLUDE));
+    if (options.contains(Option.FORCE_CASE_SENSITIVE)) {
+      builder.put("case_sensitive", true);
+    }
 
     // Sync cookies cause a massive overhead when issuing thousands of
     // glob queries.  Only enable them (by not setting sync_timeout to 0)
@@ -119,9 +188,9 @@ public class WatchmanGlobber {
 
   /** Returns an expression for every matched include file should match in order to be returned. */
   private static ImmutableList<Object> toMatchExpressions(
-      Collection<String> exclude, boolean excludeDirectories) {
+      Collection<String> exclude, EnumSet<Option> options) {
     ImmutableList.Builder<Object> matchExpressions = ImmutableList.builder();
-    matchExpressions.add("allof", toTypeExpression(excludeDirectories));
+    matchExpressions.add("allof", toTypeExpression(options));
     if (!exclude.isEmpty()) {
       matchExpressions.add(toExcludeExpression(exclude));
     }
@@ -129,14 +198,14 @@ public class WatchmanGlobber {
   }
 
   /** Returns an expression for matching types of files to return. */
-  private static ImmutableList<Object> toTypeExpression(boolean excludeDirectories) {
+  private static ImmutableList<Object> toTypeExpression(EnumSet<Option> options) {
     ImmutableList.Builder<Object> typeExpressionBuilder =
-        ImmutableList.builder()
-            .add("anyof")
-            .add(ImmutableList.of("type", "f"))
-            .add(ImmutableList.of("type", "l"));
-    if (!excludeDirectories) {
+        ImmutableList.builder().add("anyof").add(ImmutableList.of("type", "f"));
+    if (!options.contains(Option.EXCLUDE_DIRECTORIES)) {
       typeExpressionBuilder.add(ImmutableList.of("type", "d"));
+    }
+    if (!options.contains(Option.EXCLUDE_SYMLINKS)) {
+      typeExpressionBuilder.add(ImmutableList.of("type", "l"));
     }
     return typeExpressionBuilder.build();
   }

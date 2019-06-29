@@ -30,6 +30,7 @@ import com.facebook.buck.io.watchman.StubWatchmanClient;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanFactory;
+import com.facebook.buck.testutil.AssumePath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.timing.FakeClock;
@@ -111,6 +112,161 @@ public class WatchmanGlobberTest {
     assertThat(
         globber.run(Collections.singleton("some_dir"), Collections.emptySet(), true),
         equalTo(Optional.of(ImmutableSet.of())));
+  }
+
+  @Test
+  public void testMatchingSymbolicLinkIsReturnedWhenSymlinksAreNotExcluded() throws Exception {
+    FileSystemUtils.ensureSymbolicLink(root.getChild("broken-symlink"), "does-not-exist");
+    tmp.newFolder("directory");
+    FileSystemUtils.ensureSymbolicLink(root.getChild("symlink-to-directory"), "directory");
+    tmp.newFile("regular-file");
+    FileSystemUtils.ensureSymbolicLink(root.getChild("symlink-to-regular-file"), "regular-file");
+
+    assertThat(
+        globber.run(
+            Collections.singleton("symlink-to-regular-file"), Collections.emptySet(), false),
+        equalTo(Optional.of(ImmutableSet.of("symlink-to-regular-file"))));
+    assertThat(
+        globber.run(Collections.singleton("symlink-to-directory"), Collections.emptySet(), false),
+        equalTo(Optional.of(ImmutableSet.of("symlink-to-directory"))));
+    assertThat(
+        globber.run(Collections.singleton("broken-symlink"), Collections.emptySet(), false),
+        equalTo(Optional.of(ImmutableSet.of("broken-symlink"))));
+    assertThat(
+        globber.run(Collections.singleton("*"), Collections.emptySet(), false),
+        equalTo(
+            Optional.of(
+                ImmutableSet.of(
+                    "broken-symlink",
+                    "directory",
+                    "regular-file",
+                    "symlink-to-directory",
+                    "symlink-to-regular-file"))));
+  }
+
+  @Test
+  public void testMatchingSymbolicLinkToDirectoryIsReturnedWhenDirectoriesAreExcluded()
+      throws Exception {
+    tmp.newFolder("directory");
+    FileSystemUtils.ensureSymbolicLink(root.getChild("symlink-to-directory"), "directory");
+
+    assertThat(
+        globber.run(Collections.singleton("symlink-to-directory"), Collections.emptySet(), true),
+        equalTo(Optional.of(ImmutableSet.of("symlink-to-directory"))));
+    assertThat(
+        globber.run(Collections.singleton("*"), Collections.emptySet(), true),
+        equalTo(Optional.of(ImmutableSet.of("symlink-to-directory"))));
+  }
+
+  @Test
+  public void testMatchingIsCaseInsensitiveByDefault() throws Exception {
+    AssumePath.assumeNamesAreCaseInsensitive(tmp.getRoot());
+
+    tmp.newFolder("directory");
+    tmp.newFile("directory/file");
+
+    // HACK: Watchman's case sensitivity rules are strange without **/.
+    assertThat(
+        globber.run(Collections.singleton("**/DIRECTORY"), Collections.emptySet(), false),
+        equalTo(Optional.of(ImmutableSet.of("directory"))));
+    assertThat(
+        globber.run(Collections.singleton("**/DIRECTORY/FILE"), Collections.emptySet(), false),
+        equalTo(Optional.of(ImmutableSet.of("directory/file"))));
+  }
+
+  @Test
+  public void testMatchingIsCaseSensitiveIfForced() throws Exception {
+    AssumePath.assumeNamesAreCaseInsensitive(tmp.getRoot());
+
+    tmp.newFolder("directory");
+    tmp.newFile("directory/file");
+
+    // HACK: Watchman's case sensitivity rules are strange without **/.
+    assertThat(
+        globber.run(
+            Collections.singleton("**/DIRECTORY"),
+            Collections.emptySet(),
+            WatchmanGlobber.Option.FORCE_CASE_SENSITIVE),
+        equalTo(Optional.of(ImmutableSet.of())));
+    assertThat(
+        globber.run(
+            Collections.singleton("**/DIRECTORY/FILE"),
+            Collections.emptySet(),
+            WatchmanGlobber.Option.FORCE_CASE_SENSITIVE),
+        equalTo(Optional.of(ImmutableSet.of())));
+    assertThat(
+        globber.run(
+            Collections.singleton("**/directory/FILE"),
+            Collections.emptySet(),
+            WatchmanGlobber.Option.FORCE_CASE_SENSITIVE),
+        equalTo(Optional.of(ImmutableSet.of())));
+    assertThat(
+        globber.run(
+            Collections.singleton("**/DIRECTORY/file"),
+            Collections.emptySet(),
+            WatchmanGlobber.Option.FORCE_CASE_SENSITIVE),
+        equalTo(Optional.of(ImmutableSet.of())));
+    assertThat(
+        globber.run(
+            Collections.singleton("**/directory/file"),
+            Collections.emptySet(),
+            WatchmanGlobber.Option.FORCE_CASE_SENSITIVE),
+        equalTo(Optional.of(ImmutableSet.of("directory/file"))));
+  }
+
+  @Test
+  public void testExcludingIsCaseInsensitiveByDefault() throws Exception {
+    AssumePath.assumeNamesAreCaseInsensitive(tmp.getRoot());
+
+    tmp.newFile("file");
+    assertThat(
+        globber.run(Collections.singleton("file"), Collections.singleton("FILE"), false),
+        equalTo(Optional.of(ImmutableSet.of())));
+  }
+
+  @Test
+  public void testExcludingIsCaseSensitiveIfForced() throws Exception {
+    tmp.newFile("file");
+    assertThat(
+        globber.run(
+            Collections.singleton("file"),
+            Collections.singleton("FILE"),
+            WatchmanGlobber.Option.FORCE_CASE_SENSITIVE),
+        equalTo(Optional.of(ImmutableSet.of("file"))));
+  }
+
+  @Test
+  public void testMatchingSymbolicLinkIsNotReturnedWhenSymlinksAreExcluded() throws Exception {
+    FileSystemUtils.ensureSymbolicLink(root.getChild("broken-symlink"), "does-not-exist");
+    tmp.newFolder("directory");
+    FileSystemUtils.ensureSymbolicLink(root.getChild("symlink-to-directory"), "directory");
+    tmp.newFile("regular-file");
+    FileSystemUtils.ensureSymbolicLink(root.getChild("symlink-to-regular-file"), "regular-file");
+
+    assertThat(
+        globber.run(
+            Collections.singleton("symlink-to-regular-file"),
+            Collections.emptySet(),
+            WatchmanGlobber.Option.EXCLUDE_SYMLINKS),
+        equalTo(Optional.of(ImmutableSet.of())));
+    assertThat(
+        globber.run(
+            Collections.singleton("symlink-to-directory"),
+            Collections.emptySet(),
+            WatchmanGlobber.Option.EXCLUDE_SYMLINKS),
+        equalTo(Optional.of(ImmutableSet.of())));
+    assertThat(
+        globber.run(
+            Collections.singleton("broken-symlink"),
+            Collections.emptySet(),
+            WatchmanGlobber.Option.EXCLUDE_SYMLINKS),
+        equalTo(Optional.of(ImmutableSet.of())));
+    assertThat(
+        globber.run(
+            Collections.singleton("*"),
+            Collections.emptySet(),
+            WatchmanGlobber.Option.EXCLUDE_SYMLINKS),
+        equalTo(Optional.of(ImmutableSet.of("directory", "regular-file"))));
   }
 
   @Test
