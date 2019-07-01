@@ -406,23 +406,11 @@ public class NativeLinkableGroupTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 graphBuilder,
                 ImmutableList.of(a),
-                Linker.LinkableDepType.STATIC,
-                n -> true)
+                Linker.LinkableDepType.STATIC)
             .stream()
             .map(NativeLinkableGroup::getBuildTarget)
             .collect(Collectors.toSet()),
         Matchers.equalTo(ImmutableSet.of(a.getBuildTarget(), b.getBuildTarget())));
-    assertThat(
-        NativeLinkableGroups.getNativeLinkables(
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                graphBuilder,
-                ImmutableList.of(a),
-                Linker.LinkableDepType.STATIC,
-                a::equals)
-            .stream()
-            .map(NativeLinkableGroup::getBuildTarget)
-            .collect(Collectors.toSet()),
-        Matchers.equalTo(ImmutableSet.of(a.getBuildTarget())));
   }
 
   @Test

@@ -25,7 +25,6 @@ import com.facebook.buck.core.util.graph.TopologicalSort;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -36,7 +35,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 public class NativeLinkableGroups {
 
@@ -145,24 +143,11 @@ public class NativeLinkableGroups {
       CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder,
       Iterable<? extends NativeLinkableGroup> inputs,
-      LinkableDepType linkStyle,
-      Predicate<? super NativeLinkableGroup> traverse) {
+      LinkableDepType linkStyle) {
     return getTopoSortedNativeLinkables(
         inputs,
         nativeLinkable ->
-            FluentIterable.from(
-                    getDepsForLink(cxxPlatform, graphBuilder, nativeLinkable, linkStyle))
-                .transform(NativeLinkableGroup.class::cast)
-                .filter(traverse::test)
-                .iterator());
-  }
-
-  public static ImmutableList<? extends NativeLinkableGroup> getNativeLinkables(
-      CxxPlatform cxxPlatform,
-      ActionGraphBuilder graphBuilder,
-      Iterable<? extends NativeLinkableGroup> inputs,
-      LinkableDepType linkStyle) {
-    return getNativeLinkables(cxxPlatform, graphBuilder, inputs, linkStyle, x -> true);
+            getDepsForLink(cxxPlatform, graphBuilder, nativeLinkable, linkStyle).iterator());
   }
 
   public static Linker.LinkableDepType getLinkStyle(
