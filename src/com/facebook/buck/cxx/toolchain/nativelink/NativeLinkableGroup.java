@@ -75,6 +75,7 @@ public interface NativeLinkableGroup {
    * Return input that *dependents* should put on their link line when linking against this
    * linkable.
    */
+  @Deprecated
   NativeLinkableInput getNativeLinkableInput(
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
@@ -99,6 +100,7 @@ public interface NativeLinkableGroup {
    * are themselves instances of NativeLinkTargetGroup.
    */
   @SuppressWarnings("unused")
+  @Deprecated
   default Optional<NativeLinkTargetGroup> getNativeLinkTarget(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     if (this instanceof NativeLinkTargetGroup) {
@@ -118,6 +120,7 @@ public interface NativeLinkableGroup {
 
   /** @return whether this {@link NativeLinkableGroup} supports omnibus linking. */
   @SuppressWarnings("unused")
+  @Deprecated
   default boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
     return true;
   }
@@ -127,6 +130,7 @@ public interface NativeLinkableGroup {
   // a multi-pass walk first.
   /** Whether the nativeLinkable should be linked shared or otherwise for haskell omnibus. */
   @SuppressWarnings("unused")
+  @Deprecated
   default boolean isPrebuiltSOForHaskellOmnibus(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return false;
@@ -136,6 +140,7 @@ public interface NativeLinkableGroup {
   // TODO(agallagher): This should probably be *any* `NativeLinkable` that supports omnibus
   // linking.
   @SuppressWarnings("unused")
+  @Deprecated
   default boolean supportsOmnibusLinkingForHaskell(CxxPlatform cxxPlatform) {
     return false;
   }
@@ -157,6 +162,7 @@ public interface NativeLinkableGroup {
     return ImmutableList.of();
   }
 
+  @Deprecated
   default boolean forceLinkWholeForHaskellOmnibus() {
     throw new IllegalStateException(
         String.format("Unexpected rule type in omnibus link %s(%s)", getClass(), getBuildTarget()));
@@ -170,11 +176,13 @@ public interface NativeLinkableGroup {
    * Indicates whether this linkable should be included in both the test binary and the host binary
    * for Apple tests.
    */
+  @Deprecated
   default boolean shouldBeLinkedInAppleTestAndHost() {
     return false;
   }
 
   /** Return a string representing the type of this rule. */
+  @Deprecated
   default String getRuleType() {
     if (this instanceof BuildRule) {
       return ((BuildRule) this).getType();
