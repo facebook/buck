@@ -19,6 +19,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -49,7 +50,9 @@ public class PlatformLockedNativeLinkTargetGroup implements NativeLinkTarget {
   @Override
   public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
       ActionGraphBuilder graphBuilder) {
-    return underlyingGroup.getNativeLinkableTargetDeps(cxxPlatform, graphBuilder);
+    return Iterables.transform(
+        underlyingGroup.getNativeLinkTargetDeps(cxxPlatform, graphBuilder),
+        g -> g.getNativeLinkable(cxxPlatform));
   }
 
   @Override

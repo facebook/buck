@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -35,15 +34,14 @@ public interface NativeLinkTargetGroup {
 
   NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform);
 
-  /** @return the {@link NativeLinkableGroup} dependencies used to link this target. */
+  /**
+   * @return the {@link NativeLinkableGroup} dependencies used to link this target.
+   * @deprecated Convert to a {@link NativeLinkTarget} and use {@link
+   *     NativeLinkTarget#getNativeLinkTargetDeps(ActionGraphBuilder)} instead.
+   */
+  @Deprecated
   Iterable<? extends NativeLinkableGroup> getNativeLinkTargetDeps(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
-
-  default Iterable<? extends NativeLinkable> getNativeLinkableTargetDeps(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    return Iterables.transform(
-        getNativeLinkTargetDeps(cxxPlatform, graphBuilder), g -> g.getNativeLinkable(cxxPlatform));
-  }
 
   /** @return the {@link NativeLinkableInput} used to link this target. */
   NativeLinkableInput getNativeLinkTargetInput(

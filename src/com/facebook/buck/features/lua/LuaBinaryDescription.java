@@ -456,9 +456,7 @@ public class LuaBinaryDescription
         builder.putModules(extension.getModule(cxxPlatform), extension.getExtension(cxxPlatform));
         nativeLinkableRoots.putAll(
             Maps.uniqueIndex(
-                Iterables.transform(
-                    extension.getNativeLinkTargetDeps(cxxPlatform, graphBuilder),
-                    g -> g.getNativeLinkable(cxxPlatform)),
+                extension.getTargetForPlatform(cxxPlatform).getNativeLinkTargetDeps(graphBuilder),
                 NativeLinkable::getBuildTarget));
       }
 
@@ -484,12 +482,11 @@ public class LuaBinaryDescription
             MoreMaps.transformKeys(components.getNativeLibraries(), Object::toString));
         nativeLinkableRoots.putAll(
             Maps.uniqueIndex(
-                Iterables.transform(
-                    entry
-                        .getValue()
-                        .getNativeLinkTarget(pythonPlatform)
-                        .getNativeLinkTargetDeps(cxxPlatform, graphBuilder),
-                    g -> g.getNativeLinkable(cxxPlatform)),
+                entry
+                    .getValue()
+                    .getNativeLinkTarget(pythonPlatform)
+                    .getTargetForPlatform(cxxPlatform)
+                    .getNativeLinkTargetDeps(graphBuilder),
                 NativeLinkable::getBuildTarget));
       }
 
