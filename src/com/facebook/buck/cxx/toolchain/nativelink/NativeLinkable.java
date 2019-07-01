@@ -23,6 +23,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.rules.args.Arg;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
@@ -78,16 +79,26 @@ public interface NativeLinkable {
   ImmutableMap<String, SourcePath> getSharedLibraries(ActionGraphBuilder graphBuilder);
 
   /** @return whether this {@link NativeLinkable} supports omnibus linking. */
-  boolean supportsOmnibusLinking();
+  default boolean supportsOmnibusLinking() {
+    return true;
+  }
 
   /** @return exported linker flags. These should be added to link lines of dependents. */
-  Iterable<? extends Arg> getExportedLinkerFlags(ActionGraphBuilder graphBuilder);
+  @SuppressWarnings("unused")
+  default Iterable<? extends Arg> getExportedLinkerFlags(ActionGraphBuilder graphBuilder) {
+    return ImmutableList.of();
+  }
 
   /**
    * @return exported post-linker flags. This should be added to lines of dependents after other
    *     linker flags.
    */
-  Iterable<? extends Arg> getExportedPostLinkerFlags(ActionGraphBuilder graphBuilder);
+  @SuppressWarnings("unused")
+  default Iterable<? extends Arg> getExportedPostLinkerFlags(ActionGraphBuilder graphBuilder) {
+    return ImmutableList.of();
+  }
 
-  String getRuleType();
+  default String getRuleType() {
+    throw new UnsupportedOperationException();
+  }
 }
