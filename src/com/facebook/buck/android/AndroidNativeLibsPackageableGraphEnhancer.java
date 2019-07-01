@@ -58,7 +58,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
-import org.immutables.value.Value;
 
 public class AndroidNativeLibsPackageableGraphEnhancer {
 
@@ -108,7 +107,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     this.apkModuleGraph = apkModuleGraph;
   }
 
-  @Value.Immutable(prehash = false, builder = true, copy = false)
   @BuckStyleValue
   interface AndroidNativeLibsGraphEnhancementResult {
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> getCopyNativeLibraries();
@@ -158,10 +156,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
   public AndroidNativeLibsGraphEnhancementResult enhance(
       AndroidPackageableCollection packageableCollection) {
-    @SuppressWarnings("PMD.PrematureDeclaration")
-    ImmutableAndroidNativeLibsGraphEnhancementResult.Builder resultBuilder =
-        ImmutableAndroidNativeLibsGraphEnhancementResult.builder();
-
     ImmutableMultimap<APKModule, NativeLinkableGroup> nativeLinkables =
         packageableCollection.getNativeLinkables();
     ImmutableMultimap<APKModule, NativeLinkableGroup> nativeLinkablesAssets =
@@ -182,6 +176,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       }
     }
 
+    ImmutableSortedMap<String, String> sonameMapping = null;
+    ImmutableSortedMap<String, ImmutableSortedSet<String>> sharedObjectTargets = null;
     if (nativeLibraryMergeMap.isPresent()
         && !nativeLibraryMergeMap.get().isEmpty()
         && !nativePlatforms.isEmpty()) {
@@ -200,8 +196,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               nativeLinkablesAssets);
       nativeLinkables = enhancement.getMergedLinkables();
       nativeLinkablesAssets = enhancement.getMergedLinkablesAssets();
-      resultBuilder.setSonameMergeMap(enhancement.getSonameMapping());
-      resultBuilder.setSharedObjectTargets(enhancement.getSharedObjectTargets());
+      sonameMapping = enhancement.getSonameMapping();
+      sharedObjectTargets = enhancement.getSharedObjectTargets();
     }
 
     // Iterate over all the {@link AndroidNativeLinkable}s from the collector and grab the shared
@@ -282,10 +278,10 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     ImmutableMap<StripLinkable, StrippedObjectDescription> strippedLibsAssetsMap =
         generateStripRules(nativePlatforms, nativeLinkableLibsAssets);
 
-    resultBuilder.setUnstrippedLibraries(
+    ImmutableSortedSet<SourcePath> unstrippedLibraries =
         RichStream.from(nativeLinkableLibs.values())
             .concat(nativeLinkableLibsAssets.values().stream())
-            .toImmutableSortedSet(Ordering.natural()));
+            .toImmutableSortedSet(Ordering.natural());
 
     for (APKModule module : apkModules) {
       ImmutableMap<StripLinkable, StrippedObjectDescription> filteredStrippedLibsMap =
@@ -321,12 +317,16 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               nativeLibsAssetsDirectories));
       hasCopyNativeLibraries = true;
     }
-    return resultBuilder
-        .setCopyNativeLibraries(
-            hasCopyNativeLibraries
-                ? Optional.of(moduleMappedCopyNativeLibriesBuilder.build())
-                : Optional.empty())
-        .build();
+
+    Optional<ImmutableMap<APKModule, CopyNativeLibraries>> copyNativeLibraries =
+        hasCopyNativeLibraries
+            ? Optional.of(moduleMappedCopyNativeLibriesBuilder.build())
+            : Optional.empty();
+    return new ImmutableAndroidNativeLibsGraphEnhancementResult(
+        copyNativeLibraries,
+        Optional.of(unstrippedLibraries),
+        Optional.ofNullable(sonameMapping),
+        Optional.ofNullable(sharedObjectTargets));
   }
 
   private void addCxxRuntimeLinkables(
