@@ -114,6 +114,11 @@ public final class SwiftRuntimeNativeLinkableGroup implements NativeLinkableGrou
     return ImmutableMap.of();
   }
 
+  @Override
+  public boolean shouldBeLinkedInAppleTestAndHost() {
+    return true;
+  }
+
   public static void populateLinkerArguments(
       ImmutableList.Builder<Arg> argsBuilder,
       SwiftPlatform swiftPlatform,

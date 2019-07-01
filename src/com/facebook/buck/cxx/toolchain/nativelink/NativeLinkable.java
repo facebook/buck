@@ -102,6 +102,8 @@ public interface NativeLinkable {
     throw new UnsupportedOperationException();
   }
 
+  boolean shouldBeLinkedInAppleTestAndHost();
+
   @SuppressWarnings("unused")
   default boolean isPrebuiltSOForHaskellOmnibus(ActionGraphBuilder graphBuilder) {
     return false;

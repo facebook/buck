@@ -17,16 +17,10 @@
 package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -95,39 +89,5 @@ public class NativeLinkableGroups {
         throw new IllegalStateException();
     }
     return linkStyle;
-  }
-
-  public static ImmutableMap<BuildTarget, NativeLinkableGroup> getTransitiveNativeLinkables(
-      CxxPlatform cxxPlatform,
-      ActionGraphBuilder graphBuilder,
-      Iterable<? extends NativeLinkableGroup> inputs) {
-
-    Map<BuildTarget, NativeLinkableGroup> nativeLinkables = new HashMap<>();
-    for (NativeLinkableGroup nativeLinkableGroup : inputs) {
-      nativeLinkables.put(nativeLinkableGroup.getBuildTarget(), nativeLinkableGroup);
-    }
-
-    AbstractBreadthFirstTraversal<BuildTarget> visitor =
-        new AbstractBreadthFirstTraversal<BuildTarget>(nativeLinkables.keySet()) {
-          @Override
-          public Iterable<BuildTarget> visit(BuildTarget target) {
-            NativeLinkableGroup nativeLinkableGroup =
-                Objects.requireNonNull(nativeLinkables.get(target));
-            ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
-            for (NativeLinkableGroup dep :
-                Iterables.concat(
-                    nativeLinkableGroup.getNativeLinkableDepsForPlatform(cxxPlatform, graphBuilder),
-                    nativeLinkableGroup.getNativeLinkableExportedDepsForPlatform(
-                        cxxPlatform, graphBuilder))) {
-              BuildTarget depTarget = dep.getBuildTarget();
-              deps.add(depTarget);
-              nativeLinkables.put(depTarget, dep);
-            }
-            return deps.build();
-          }
-        };
-    visitor.start();
-
-    return ImmutableMap.copyOf(nativeLinkables);
   }
 }

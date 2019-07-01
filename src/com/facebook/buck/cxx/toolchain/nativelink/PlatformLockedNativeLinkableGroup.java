@@ -130,6 +130,11 @@ public class PlatformLockedNativeLinkableGroup implements NativeLinkable {
   }
 
   @Override
+  public boolean shouldBeLinkedInAppleTestAndHost() {
+    return underlyingGroup.shouldBeLinkedInAppleTestAndHost();
+  }
+
+  @Override
   public boolean isPrebuiltSOForHaskellOmnibus(ActionGraphBuilder graphBuilder) {
     return underlyingGroup.isPrebuiltSOForHaskellOmnibus(cxxPlatform, graphBuilder);
   }

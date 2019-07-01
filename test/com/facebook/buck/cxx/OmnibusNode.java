@@ -105,4 +105,9 @@ class OmnibusNode implements NativeLinkable {
     return ImmutableMap.of(
         getBuildTarget().toString(), FakeSourcePath.of(getBuildTarget().toString()));
   }
+
+  @Override
+  public boolean shouldBeLinkedInAppleTestAndHost() {
+    return false;
+  }
 }

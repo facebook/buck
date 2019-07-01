@@ -166,6 +166,14 @@ public interface NativeLinkableGroup {
     return getNativeLinkableCompatibilityCache().get(cxxPlatform);
   }
 
+  /**
+   * Indicates whether this linkable should be included in both the test binary and the host binary
+   * for Apple tests.
+   */
+  default boolean shouldBeLinkedInAppleTestAndHost() {
+    return false;
+  }
+
   /** Return a string representing the type of this rule. */
   default String getRuleType() {
     if (this instanceof BuildRule) {
