@@ -23,6 +23,7 @@ import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 
@@ -60,6 +61,14 @@ public class PlatformDescription implements ConfigurationRuleDescription<Platfor
         arg.getName(),
         ConfigurationBuildTargets.convert(arg.getConstraintValues()),
         ConfigurationBuildTargets.convert(arg.getDeps()));
+  }
+
+  @Override
+  public ImmutableSet<BuildTarget> getConfigurationDeps(PlatformArg arg) {
+    return ImmutableSet.<BuildTarget>builder()
+        .addAll(ConfigurationBuildTargets.convert(arg.getConstraintValues()))
+        .addAll(ConfigurationBuildTargets.convert(arg.getDeps()))
+        .build();
   }
 
   @BuckStyleImmutable

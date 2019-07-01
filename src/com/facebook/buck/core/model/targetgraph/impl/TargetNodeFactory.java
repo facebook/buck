@@ -160,6 +160,16 @@ public class TargetNodeFactory implements NodeCopier {
                   buildTarget.getUnflavoredBuildTarget(), constructorArg));
     }
 
+    ImmutableSet<BuildTarget> configurationDepsFromArg =
+        description.getConfigurationDeps(constructorArg);
+    if (!configurationDepsFromArg.isEmpty()) {
+      configurationDeps =
+          ImmutableSortedSet.<BuildTarget>naturalOrder()
+              .addAll(configurationDeps)
+              .addAll(configurationDepsFromArg)
+              .build();
+    }
+
     ImmutableSet<Path> paths = pathsBuilder.build();
     pathsChecker.checkPaths(filesystem, buildTarget, paths);
 

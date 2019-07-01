@@ -16,9 +16,18 @@
 
 package com.facebook.buck.core.description;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.google.common.collect.ImmutableSet;
+
 /** Description common to both build and config rule types. */
 public interface BaseDescription<T> {
 
   /** The type of the constructor argument that is used by this description to create a rule */
   Class<T> getConstructorArgType();
+
+  /** @return a set of configuration targets declared in a given constructor argument. */
+  @SuppressWarnings("unused")
+  default ImmutableSet<BuildTarget> getConfigurationDeps(T arg) {
+    return ImmutableSet.of();
+  }
 }
