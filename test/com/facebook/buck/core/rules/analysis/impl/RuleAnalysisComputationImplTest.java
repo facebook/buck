@@ -41,6 +41,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -96,6 +97,7 @@ public class RuleAnalysisComputationImplTest {
             projectFilesystem,
             buildTarget,
             ImmutableSet.of(),
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             cellPathResolver);
@@ -163,6 +165,7 @@ public class RuleAnalysisComputationImplTest {
             projectFilesystem,
             buildTarget,
             ImmutableSet.of(buildTarget2),
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             cellPathResolver);
@@ -173,6 +176,7 @@ public class RuleAnalysisComputationImplTest {
             projectFilesystem,
             buildTarget2,
             ImmutableSet.of(),
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             cellPathResolver);

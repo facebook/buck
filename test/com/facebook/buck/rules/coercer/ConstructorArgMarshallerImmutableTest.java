@@ -654,6 +654,7 @@ public class ConstructorArgMarshallerImmutableTest {
             EmptyTargetConfiguration.INSTANCE,
             configuration -> EmptyPlatform.INSTANCE);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
+    ImmutableSet.Builder<BuildTarget> configurationDeps = ImmutableSet.builder();
 
     DtoWithString dto =
         marshaller.populateWithConfiguringAttributes(
@@ -664,10 +665,12 @@ public class ConstructorArgMarshallerImmutableTest {
             TARGET,
             builder(DtoWithString.class),
             declaredDeps,
+            configurationDeps,
             ImmutableMap.<String, Object>of("string", selectorList));
 
     assertEquals("string2string4", dto.getString());
     assertTrue(declaredDeps.build().isEmpty());
+    assertEquals(ImmutableSet.of(selectableTarget), configurationDeps.build());
   }
 
   @Test
@@ -684,6 +687,7 @@ public class ConstructorArgMarshallerImmutableTest {
             TARGET,
             builder(DtoWithString.class),
             declaredDeps,
+            ImmutableSet.builder(),
             ImmutableMap.<String, Object>of("string", "value"));
     assertEquals("value", dto.getString());
     assertTrue(declaredDeps.build().isEmpty());
@@ -703,6 +707,7 @@ public class ConstructorArgMarshallerImmutableTest {
         TARGET,
         builder(DtoWithDepsAndNotDeps.class),
         declaredDeps,
+        ImmutableSet.builder(),
         ImmutableMap.<String, Object>of("deps", ImmutableList.of("//a/b:c")));
     assertEquals(ImmutableSet.of(dep), declaredDeps.build());
   }
@@ -719,6 +724,7 @@ public class ConstructorArgMarshallerImmutableTest {
             NonCopyingSelectableConfigurationContext.INSTANCE,
             TARGET,
             builder(DtoWithOptionalSetOfStrings.class),
+            ImmutableSet.builder(),
             ImmutableSet.builder(),
             ImmutableMap.of());
     assertFalse(dto.getStrings().isPresent());

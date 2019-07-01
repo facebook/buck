@@ -158,6 +158,7 @@ public abstract class AbstractNodeBuilder<
               filesystem,
               target,
               getDepsFromArg(populatedArg),
+              ImmutableSortedSet.of(),
               ImmutableSet.of(
                   VisibilityPatternParser.parse(null, VisibilityPatternParser.VISIBILITY_PUBLIC)),
               ImmutableSet.of(),

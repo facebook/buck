@@ -38,6 +38,7 @@ import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Function;
@@ -96,6 +97,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
             target.getTargetConfiguration(),
             targetPlatformResolver);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
+    ImmutableSortedSet.Builder<BuildTarget> configurationDeps = ImmutableSortedSet.naturalOrder();
     Object constructorArg;
     try (SimplePerfEvent.Scope scope =
         perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg.convertRawAttributes"))) {
@@ -111,10 +113,13 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
               target,
               builder,
               declaredDeps,
+              configurationDeps,
               rawTargetNode.getAttributes());
     } catch (CoerceFailedException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }
+
+    configurationDeps.addAll(target.getTargetConfiguration().getConfigurationTargets());
 
     TargetNode<?> targetNode =
         targetNodeFactory.createFromObject(
@@ -123,6 +128,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
             targetCell.getFilesystem(),
             target,
             declaredDeps.build(),
+            configurationDeps.build(),
             rawTargetNode.getVisibilityPatterns(),
             rawTargetNode.getWithinViewPatterns(),
             targetCell.getCellPathResolver());

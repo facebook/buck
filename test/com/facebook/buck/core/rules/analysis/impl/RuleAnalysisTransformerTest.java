@@ -40,6 +40,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
 
 public class RuleAnalysisTransformerTest {
@@ -73,6 +74,7 @@ public class RuleAnalysisTransformerTest {
             projectFilesystem,
             buildTarget,
             ImmutableSet.of(),
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             cellPathResolver);
@@ -114,6 +116,7 @@ public class RuleAnalysisTransformerTest {
             projectFilesystem,
             buildTarget1,
             ImmutableSet.of(buildTarget2, buildTarget3),
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             cellPathResolver);
@@ -124,6 +127,7 @@ public class RuleAnalysisTransformerTest {
             projectFilesystem,
             buildTarget2,
             ImmutableSet.of(),
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             cellPathResolver);
@@ -134,6 +138,7 @@ public class RuleAnalysisTransformerTest {
             projectFilesystem,
             buildTarget3,
             ImmutableSet.of(),
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             cellPathResolver);
@@ -185,6 +190,7 @@ public class RuleAnalysisTransformerTest {
             projectFilesystem,
             buildTarget,
             ImmutableSet.of(),
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             cellPathResolver);
@@ -254,6 +260,7 @@ public class RuleAnalysisTransformerTest {
             projectFilesystem,
             buildTarget,
             ImmutableSet.of(),
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             cellPathResolver);
@@ -264,6 +271,7 @@ public class RuleAnalysisTransformerTest {
             projectFilesystem,
             buildTarget2,
             ImmutableSet.of(),
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             cellPathResolver);

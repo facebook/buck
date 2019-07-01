@@ -72,10 +72,14 @@ public class ParallelActionGraphFactory implements ActionGraphFactoryDelegate {
     new AbstractBottomUpTraversal<TargetNode<?>, RuntimeException>(targetGraph) {
       @Override
       public void visit(TargetNode<?> node) {
+        if (!node.getRuleType().isBuildRule()) {
+          return;
+        }
         // If we're loading this node from cache, we don't need to wait on our children, as the
         // entire subgraph will be loaded from cache.
         List<ListenableFuture<BuildRule>> depFutures =
             targetGraph.getOutgoingNodesFor(node).stream()
+                .filter(dep -> dep.getRuleType().isBuildRule())
                 .map(dep -> Objects.requireNonNull(futures.get(dep.getBuildTarget())))
                 .collect(ImmutableList.toImmutableList());
         futures.put(

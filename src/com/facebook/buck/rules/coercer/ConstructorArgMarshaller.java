@@ -85,6 +85,7 @@ public interface ConstructorArgMarshaller {
       BuildTarget buildTarget,
       ConstructorArgBuilder<T> constructorArgBuilder,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
+      ImmutableSet.Builder<BuildTarget> configurationDeps,
       ImmutableMap<String, ?> attributes)
       throws CoerceFailedException;
 }

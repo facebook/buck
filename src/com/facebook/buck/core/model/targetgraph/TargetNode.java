@@ -71,6 +71,14 @@ public interface TargetNode<T>
    */
   ImmutableSortedSet<BuildTarget> getTargetGraphOnlyDeps();
 
+  /**
+   * Provides a set of configuration targets that were used during the construction of this node.
+   *
+   * <p>For example, this set would include configuration targets specified as keys in {@code
+   * select} statements.
+   */
+  ImmutableSortedSet<BuildTarget> getConfigurationDeps();
+
   CellPathResolver getCellNames();
 
   ImmutableSet<VisibilityPattern> getVisibilityPatterns();

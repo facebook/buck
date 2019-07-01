@@ -21,6 +21,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
+import com.facebook.buck.core.select.Selector;
+import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -98,6 +100,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       BuildTarget buildTarget,
       ConstructorArgBuilder<T> constructorArgBuilder,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
+      ImmutableSet.Builder<BuildTarget> configurationDeps,
       ImmutableMap<String, ?> attributes)
       throws CoerceFailedException {
 
@@ -120,6 +123,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
               configurationContext,
               selectorListResolver,
               buildTarget,
+              configurationDeps,
               info.getName(),
               attributeWithSelectableValue);
       if (configuredAttributeValue != null) {
@@ -168,6 +172,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       SelectableConfigurationContext configurationContext,
       SelectorListResolver selectorListResolver,
       BuildTarget buildTarget,
+      ImmutableSet.Builder<BuildTarget> configurationDeps,
       String attributeName,
       Object rawAttributeValue) {
     T value;
@@ -176,9 +181,20 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       value =
           selectorListResolver.resolveList(
               configurationContext, buildTarget, attributeName, selectorList);
+      addSelectorListConfigurationDepsToBuilder(configurationDeps, selectorList);
     } else {
       value = (T) rawAttributeValue;
     }
     return value;
+  }
+
+  private <T> void addSelectorListConfigurationDepsToBuilder(
+      ImmutableSet.Builder<BuildTarget> configurationDeps, SelectorList<T> selectorList) {
+    for (Selector<T> selector : selectorList.getSelectors()) {
+      selector.getConditions().keySet().stream()
+          .filter(selectorKey -> !selectorKey.isReserved())
+          .map(SelectorKey::getBuildTarget)
+          .forEach(configurationDeps::add);
+    }
   }
 }

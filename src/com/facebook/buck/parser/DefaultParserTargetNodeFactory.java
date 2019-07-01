@@ -40,6 +40,7 @@ import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
@@ -204,6 +205,7 @@ public class DefaultParserTargetNodeFactory
               cell.getFilesystem(),
               target,
               declaredDeps,
+              ImmutableSortedSet.of(),
               visibilityPatterns,
               withinViewPatterns,
               cell.getCellPathResolver());

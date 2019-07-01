@@ -155,6 +155,28 @@ public class TargetNodeTest {
     }
   }
 
+  @Test
+  public void configurationDepsAreCopiedToTargetNode() {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ExampleDescription description = new ExampleDescription();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
+    BuildTarget configurationBuildTarget = BuildTargetFactory.newInstance("//config:bar");
+    TargetNode<?> targetNode =
+        new TargetNodeFactory(new DefaultTypeCoercerFactory())
+            .createFromObject(
+                description,
+                createPopulatedConstructorArg(buildTarget, ImmutableMap.of("name", "bar")),
+                filesystem,
+                buildTarget,
+                ImmutableSet.of(),
+                ImmutableSortedSet.of(configurationBuildTarget),
+                ImmutableSet.of(),
+                ImmutableSet.of(),
+                createCellRoots(filesystem));
+
+    assertEquals(ImmutableSet.of(configurationBuildTarget), targetNode.getConfigurationDeps());
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractExampleDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
@@ -226,6 +248,7 @@ public class TargetNodeTest {
             filesystem,
             buildTarget,
             declaredDeps,
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             createCellRoots(filesystem));
