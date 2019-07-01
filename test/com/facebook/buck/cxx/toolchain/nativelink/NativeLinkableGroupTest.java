@@ -34,15 +34,12 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
-import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -114,126 +111,6 @@ public class NativeLinkableGroupTest {
   }
 
   @Test
-  public void regularDepsUsingSharedLinkageAreNotTransitive() {
-    FakeNativeLinkableGroup b =
-        new FakeNativeLinkableGroup(
-            "//:b",
-            ImmutableList.of(),
-            ImmutableList.of(),
-            NativeLinkableGroup.Linkage.ANY,
-            NativeLinkableInput.builder().addAllArgs(StringArg.from("b")).build(),
-            ImmutableMap.of());
-    FakeNativeLinkableGroup a =
-        new FakeNativeLinkableGroup(
-            "//:a",
-            ImmutableList.of(b),
-            ImmutableList.of(),
-            NativeLinkableGroup.Linkage.ANY,
-            NativeLinkableInput.builder().addAllArgs(StringArg.from("a")).build(),
-            ImmutableMap.of());
-    assertThat(
-        NativeLinkableGroups.getNativeLinkables(
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                new TestActionGraphBuilder(),
-                ImmutableList.of(a),
-                Linker.LinkableDepType.SHARED)
-            .stream()
-            .map(NativeLinkableGroup::getBuildTarget)
-            .collect(Collectors.toSet()),
-        Matchers.not(Matchers.hasItem(b.getBuildTarget())));
-  }
-
-  @Test
-  public void exportedDepsUsingSharedLinkageAreTransitive() {
-    FakeNativeLinkableGroup b =
-        new FakeNativeLinkableGroup(
-            "//:b",
-            ImmutableList.of(),
-            ImmutableList.of(),
-            NativeLinkableGroup.Linkage.ANY,
-            NativeLinkableInput.builder().addAllArgs(StringArg.from("b")).build(),
-            ImmutableMap.of());
-    FakeNativeLinkableGroup a =
-        new FakeNativeLinkableGroup(
-            "//:a",
-            ImmutableList.of(),
-            ImmutableList.of(b),
-            NativeLinkableGroup.Linkage.ANY,
-            NativeLinkableInput.builder().addAllArgs(StringArg.from("a")).build(),
-            ImmutableMap.of());
-    assertThat(
-        NativeLinkableGroups.getNativeLinkables(
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                new TestActionGraphBuilder(),
-                ImmutableList.of(a),
-                Linker.LinkableDepType.SHARED)
-            .stream()
-            .map(NativeLinkableGroup::getBuildTarget)
-            .collect(Collectors.toSet()),
-        Matchers.hasItem(b.getBuildTarget()));
-  }
-
-  @Test
-  public void regularDepsFromStaticLibsUsingSharedLinkageAreTransitive() {
-    FakeNativeLinkableGroup b =
-        new FakeNativeLinkableGroup(
-            "//:b",
-            ImmutableList.of(),
-            ImmutableList.of(),
-            NativeLinkableGroup.Linkage.ANY,
-            NativeLinkableInput.builder().addAllArgs(StringArg.from("b")).build(),
-            ImmutableMap.of());
-    FakeNativeLinkableGroup a =
-        new FakeNativeLinkableGroup(
-            "//:a",
-            ImmutableList.of(b),
-            ImmutableList.of(),
-            NativeLinkableGroup.Linkage.STATIC,
-            NativeLinkableInput.builder().addAllArgs(StringArg.from("a")).build(),
-            ImmutableMap.of());
-    assertThat(
-        NativeLinkableGroups.getNativeLinkables(
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                new TestActionGraphBuilder(),
-                ImmutableList.of(a),
-                Linker.LinkableDepType.SHARED)
-            .stream()
-            .map(NativeLinkableGroup::getBuildTarget)
-            .collect(Collectors.toSet()),
-        Matchers.hasItem(b.getBuildTarget()));
-  }
-
-  @Test
-  public void regularDepsUsingStaticLinkageAreTransitive() {
-    FakeNativeLinkableGroup b =
-        new FakeNativeLinkableGroup(
-            "//:b",
-            ImmutableList.of(),
-            ImmutableList.of(),
-            NativeLinkableGroup.Linkage.ANY,
-            NativeLinkableInput.builder().addAllArgs(StringArg.from("b")).build(),
-            ImmutableMap.of());
-    FakeNativeLinkableGroup a =
-        new FakeNativeLinkableGroup(
-            "//:a",
-            ImmutableList.of(b),
-            ImmutableList.of(),
-            NativeLinkableGroup.Linkage.ANY,
-            NativeLinkableInput.builder().addAllArgs(StringArg.from("a")).build(),
-            ImmutableMap.of());
-    assertThat(
-        NativeLinkableGroups.getNativeLinkables(
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                new TestActionGraphBuilder(),
-                ImmutableList.of(a),
-                Linker.LinkableDepType.STATIC)
-            .stream()
-            .map(NativeLinkableGroup::getBuildTarget)
-            .collect(Collectors.toSet()),
-        Matchers.hasItem(b.getBuildTarget()));
-  }
-
-  @Test
   public void gatherTransitiveSharedLibraries() {
     FakeNativeLinkableGroup c =
         new FakeNativeLinkableGroup(
@@ -273,39 +150,6 @@ public class NativeLinkableGroupTest {
             ImmutableSortedMap.<String, SourcePath>of(
                 "liba.so", FakeSourcePath.of("liba.so"),
                 "libc.so", FakeSourcePath.of("libc.so"))));
-  }
-
-  @Test
-  public void nonNativeLinkableDepsAreIgnored() {
-    FakeNativeLinkableGroup c =
-        new FakeNativeLinkableGroup(
-            "//:c",
-            ImmutableList.of(),
-            ImmutableList.of(),
-            NativeLinkableGroup.Linkage.ANY,
-            NativeLinkableInput.builder().addAllArgs(StringArg.from("c")).build(),
-            ImmutableMap.of());
-    FakeBuildRule b = new FakeBuildRule("//:b", c);
-    FakeNativeLinkableGroup a =
-        new FakeNativeLinkableGroup(
-            "//:a",
-            ImmutableList.of(),
-            ImmutableList.of(),
-            NativeLinkableGroup.Linkage.ANY,
-            NativeLinkableInput.builder().addAllArgs(StringArg.from("a")).build(),
-            ImmutableMap.of(),
-            b);
-    assertThat(a.getBuildDeps(), Matchers.hasItem(b));
-    assertThat(
-        NativeLinkableGroups.getNativeLinkables(
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                new TestActionGraphBuilder(),
-                ImmutableList.of(a),
-                Linker.LinkableDepType.STATIC)
-            .stream()
-            .map(NativeLinkableGroup::getBuildTarget)
-            .collect(Collectors.toSet()),
-        Matchers.not(Matchers.hasItem(c.getBuildTarget())));
   }
 
   @Test
@@ -380,37 +224,6 @@ public class NativeLinkableGroupTest {
             true);
     assertThat(
         sharedLibs, Matchers.equalTo(ImmutableSortedMap.<String, SourcePath>of("libc.so", path)));
-  }
-
-  @Test
-  public void traversePredicate() {
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    FakeNativeLinkableGroup b =
-        new FakeNativeLinkableGroup(
-            "//:b",
-            ImmutableList.of(),
-            ImmutableList.of(),
-            NativeLinkableGroup.Linkage.ANY,
-            NativeLinkableInput.builder().build(),
-            ImmutableMap.of());
-    FakeNativeLinkableGroup a =
-        new FakeNativeLinkableGroup(
-            "//:a",
-            ImmutableList.<NativeLinkableGroup>of(b),
-            ImmutableList.of(),
-            NativeLinkableGroup.Linkage.ANY,
-            NativeLinkableInput.builder().build(),
-            ImmutableMap.of());
-    assertThat(
-        NativeLinkableGroups.getNativeLinkables(
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                graphBuilder,
-                ImmutableList.of(a),
-                Linker.LinkableDepType.STATIC)
-            .stream()
-            .map(NativeLinkableGroup::getBuildTarget)
-            .collect(Collectors.toSet()),
-        Matchers.equalTo(ImmutableSet.of(a.getBuildTarget(), b.getBuildTarget())));
   }
 
   @Test

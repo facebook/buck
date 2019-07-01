@@ -17,19 +17,13 @@
 package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.graph.GraphTraversable;
-import com.facebook.buck.core.util.graph.TopologicalSort;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -81,75 +75,6 @@ public class NativeLinkableGroups {
     return nativeLinkables.build();
   }
 
-  /** @return the nodes found from traversing the given roots in topologically sorted order. */
-  public static ImmutableList<? extends NativeLinkableGroup> getTopoSortedNativeLinkables(
-      Iterable<? extends NativeLinkableGroup> roots,
-      GraphTraversable<NativeLinkableGroup> traversable) {
-    // Topologically sort the rules.
-    return TopologicalSort.snowflakeSort(
-            roots, traversable, Comparator.comparing(NativeLinkableGroup::getBuildTarget))
-        .reverse();
-  }
-
-  /**
-   * @return the first-order dependencies to consider when linking the given {@link
-   *     NativeLinkableGroup}.
-   */
-  private static Iterable<? extends NativeLinkableGroup> getDepsForLink(
-      CxxPlatform cxxPlatform,
-      ActionGraphBuilder graphBuilder,
-      NativeLinkableGroup nativeLinkableGroup,
-      LinkableDepType linkStyle) {
-
-    // We always traverse a rule's exported native linkables.
-    Iterable<? extends NativeLinkableGroup> nativeLinkableDeps =
-        nativeLinkableGroup.getNativeLinkableExportedDepsForPlatform(cxxPlatform, graphBuilder);
-
-    boolean shouldTraverse;
-    switch (nativeLinkableGroup.getPreferredLinkage(cxxPlatform)) {
-      case ANY:
-        shouldTraverse = linkStyle != Linker.LinkableDepType.SHARED;
-        break;
-      case SHARED:
-        shouldTraverse = false;
-        break;
-        // $CASES-OMITTED$
-      default:
-        shouldTraverse = true;
-        break;
-    }
-
-    // If we're linking this dependency statically, we also need to traverse its deps.
-    if (shouldTraverse) {
-      nativeLinkableDeps =
-          Iterables.concat(
-              nativeLinkableDeps,
-              nativeLinkableGroup.getNativeLinkableDepsForPlatform(cxxPlatform, graphBuilder));
-    }
-
-    return nativeLinkableDeps;
-  }
-
-  /**
-   * Extract from the dependency graph all the libraries which must be considered for linking.
-   *
-   * <p>Traversal proceeds depending on whether each dependency is to be statically or dynamically
-   * linked.
-   *
-   * @param linkStyle how dependencies should be linked, if their preferred_linkage is {@code
-   *     NativeLinkable.Linkage.ANY}.
-   */
-  public static ImmutableList<? extends NativeLinkableGroup> getNativeLinkables(
-      CxxPlatform cxxPlatform,
-      ActionGraphBuilder graphBuilder,
-      Iterable<? extends NativeLinkableGroup> inputs,
-      LinkableDepType linkStyle) {
-    return getTopoSortedNativeLinkables(
-        inputs,
-        nativeLinkable ->
-            getDepsForLink(cxxPlatform, graphBuilder, nativeLinkable, linkStyle).iterator());
-  }
-
   public static Linker.LinkableDepType getLinkStyle(
       NativeLinkableGroup.Linkage preferredLinkage, Linker.LinkableDepType requestedLinkStyle) {
     Linker.LinkableDepType linkStyle;
@@ -170,17 +95,6 @@ public class NativeLinkableGroups {
         throw new IllegalStateException();
     }
     return linkStyle;
-  }
-
-  public static NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType linkStyle,
-      NativeLinkableGroup nativeLinkableGroup,
-      ActionGraphBuilder graphBuilder,
-      TargetConfiguration targetConfiguration) {
-    NativeLinkableGroup.Linkage link = nativeLinkableGroup.getPreferredLinkage(cxxPlatform);
-    return nativeLinkableGroup.getNativeLinkableInput(
-        cxxPlatform, getLinkStyle(link, linkStyle), graphBuilder, targetConfiguration);
   }
 
   public static ImmutableMap<BuildTarget, NativeLinkableGroup> getTransitiveNativeLinkables(
