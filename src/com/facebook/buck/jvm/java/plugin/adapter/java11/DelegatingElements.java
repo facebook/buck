@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2019-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -20,10 +20,12 @@ import com.facebook.buck.util.liteinfersupport.Nullable;
 import java.io.Writer;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.ModuleElement;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -45,8 +47,30 @@ class DelegatingElements implements Elements {
 
   @Override
   @Nullable
+  public PackageElement getPackageElement(ModuleElement module, CharSequence name) {
+    return inner.getPackageElement(module, name);
+  }
+
+  @Override
+  public Set<? extends PackageElement> getAllPackageElements(CharSequence name) {
+    return inner.getAllPackageElements(name);
+  }
+
+  @Override
+  @Nullable
   public TypeElement getTypeElement(CharSequence name) {
     return inner.getTypeElement(name);
+  }
+
+  @Override
+  @Nullable
+  public ModuleElement getModuleElement(CharSequence name) {
+    return inner.getModuleElement(name);
+  }
+
+  @Override
+  public Set<? extends ModuleElement> getAllModuleElements() {
+    return inner.getAllModuleElements();
   }
 
   @Override
@@ -104,7 +128,6 @@ class DelegatingElements implements Elements {
 
   @Override
   public void printElements(Writer w, Element... elements) {
-
     inner.printElements(w, elements);
   }
 

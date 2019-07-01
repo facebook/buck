@@ -5,6 +5,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/jvm/java/version:version",
         "//src/com/facebook/buck/util/liteinfersupport:liteinfersupport",
 
         # Don't add deps that aren't already in the bootstrapper; any dependencies
