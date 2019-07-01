@@ -188,48 +188,110 @@ for_statement ::= 'for' simple_expression_list 'in' expression_list ':' suite
 
 suite ::= simple_statement | INDENT statement+ DEDENT
 
-expression ::= or_expression [ 'if' or_expression 'else' expression ]
+expression ::= or_expression [ 'if' or_expression 'else' expression ] {
+  methods = [
+    getStringValue
+  ]
+}
 
-or_expression ::= and_expression ( 'or' and_expression )*
+or_expression ::= and_expression ( 'or' and_expression )* {
+  methods = [
+    getStringValue
+  ]
+}
 
-and_expression ::= not_expression ( 'and' not_expression )*
+and_expression ::= not_expression ( 'and' not_expression )* {
+  methods = [
+    getStringValue
+  ]
+}
+not_expression ::= 'not' not_expression | comparison_expression {
+  methods = [
+    getStringValue
+  ]
+}
 
-not_expression ::= 'not' not_expression | comparison_expression
+comparison_expression ::= simple_expression [comparison_op simple_expression] {
+  methods = [
+    getStringValue
+  ]
+}
 
-comparison_expression ::= simple_expression [comparison_op simple_expression]
 comparison_op ::=  '<' | '>' | '==' | '>=' | '<=' | '<>' | '!=' | 'in' | 'not' 'in'
 
-simple_expression ::= xor_expression ('|' xor_expression)*
+simple_expression ::= xor_expression ('|' xor_expression)* {
+  methods = [
+    getStringValue
+  ]
+}
 
-xor_expression ::= bitwise_and_expression ('^' bitwise_and_expression)*
+xor_expression ::= bitwise_and_expression ('^' bitwise_and_expression)* {
+  methods = [
+    getStringValue
+  ]
+}
 
-bitwise_and_expression ::= shift_expression ('&' shift_expression)*
+bitwise_and_expression ::= shift_expression ('&' shift_expression)* {
+  methods = [
+    getStringValue
+  ]
+}
 
-shift_expression ::= arithmetic_expression (shift_op arithmetic_expression)*
+shift_expression ::= arithmetic_expression (shift_op arithmetic_expression)* {
+  methods = [
+    getStringValue
+  ]
+}
+
 shift_op ::= '<<' | '>>'
 
-arithmetic_expression ::= term_expression (arithmetic_op term_expression)*
+arithmetic_expression ::= term_expression (arithmetic_op term_expression)* {
+  methods = [
+    getStringValue
+  ]
+}
 arithmetic_op ::= '+' | '-'
 
-term_expression ::= factor_expression (term_op factor_expression)*
+term_expression ::= factor_expression (term_op factor_expression)* {
+  methods = [
+    getStringValue
+  ]
+}
 term_op ::= '*' | '/' | '%' | '//'
 
-factor_expression ::= factor_unary_op factor_expression | power_expression
+factor_expression ::= factor_unary_op factor_expression | power_expression {
+  methods = [
+    getStringValue
+  ]
+}
 factor_unary_op ::= '+' | '-' | '~'
 
-power_expression ::= atomic_expression expression_trailer* [ '**' factor_expression]
+power_expression ::= atomic_expression expression_trailer* [ '**' factor_expression] {
+  methods = [
+    getStringValue
+  ]
+}
 
 atomic_expression ::= '(' expression_list_or_comprehension ')'
                     | '[' list_maker ']'
                     | '{' dict_maker '}'
-                    | identifier | BOOLEAN | integer | NONE | string
+                    | identifier | BOOLEAN | integer | NONE | string {
+  methods = [
+    getStringValue
+  ]
+}
 
 list_maker ::= expression_list_or_comprehension
 
 expression_list_or_comprehension ::= [expression ( comprehension_for | (',' expression)* [','] )]
 
 expression_trailer ::= function_trailer | subscript_trailer | dot_trailer
-function_trailer ::= '(' [argument (',' argument)* ','?] ')'
+function_trailer ::= '(' [argument (',' argument)* ','?] ')' {
+  methods = [
+    getName
+    getNamedArgument
+  ]
+}
 subscript_trailer ::= '[' subscript_list ']'
 dot_trailer ::= '.' identifier
 

@@ -23,13 +23,12 @@ import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionTrailer;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
-import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
-import java.util.List;
+import java.util.Optional;
 import org.jetbrains.annotations.Nullable;
 
 public final class BuckBuildUtil {
@@ -112,32 +111,18 @@ public final class BuckBuildUtil {
             PsiTreeUtil.findChildOfType(child, BuckFunctionTrailer.class);
         // Find rule "project_config"
         if (functionTrailer != null) {
-          return getPropertyValue(functionTrailer, SRC_TARGET_PROPERTY_NAME);
+          return getPropertyStringValue(functionTrailer, SRC_TARGET_PROPERTY_NAME);
         }
       }
     }
     return null;
   }
 
-  /**
-   * Get the value of a property in a specific buck rule body. TODO(#7908675): We should use Buck's
-   * own classes for it.
-   */
-  public static String getPropertyValue(BuckFunctionTrailer argumentList, String name) {
-    if (argumentList == null) {
-      return null;
-    }
-    List<BuckArgument> arguments = argumentList.getArgumentList();
-    for (BuckArgument arg : arguments) {
-      PsiElement lvalue = arg.getIdentifier();
-      if (lvalue != null) {
-        PsiElement propertyName = lvalue.getFirstChild();
-        if (propertyName != null && propertyName.getText().equals(name)) {
-          BuckExpression expression = arg.getExpression();
-          return BuckPsiUtils.getStringValueFromExpression(expression);
-        }
-      }
-    }
-    return null;
+  /** Get the value of a named property in a specific buck rule body. */
+  public static String getPropertyStringValue(BuckFunctionTrailer functionTrailer, String name) {
+    return Optional.ofNullable(functionTrailer.getNamedArgument(name))
+        .map(BuckArgument::getExpression)
+        .map(BuckExpression::getStringValue)
+        .orElse(null);
   }
 }
