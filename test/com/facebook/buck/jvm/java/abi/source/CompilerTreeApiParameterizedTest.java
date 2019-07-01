@@ -49,8 +49,8 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
     return implementation == TREES;
   }
 
-  @Override
-  protected void withClasspath(Map<String, String> fileNamesToContents) throws IOException {
+  protected void withClasspathForJavacOnly(Map<String, String> fileNamesToContents)
+      throws IOException {
     if (testingTrees()) {
       return;
     }
