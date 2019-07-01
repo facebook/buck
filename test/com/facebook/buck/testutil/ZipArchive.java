@@ -99,8 +99,11 @@ public class ZipArchive implements AutoCloseable {
         new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-            // Skip the leading "/" from the path.
-            contents.add(dir.toString().substring(1));
+            // Skip leading and trailing slashes. Java 8 returns trailing slashes, whereas Java 11
+            // does not. Both return leading slashes.
+            String dirName = dir.toString().substring(1);
+            dirName = dirName.endsWith("/") ? dirName.substring(0, dirName.length() - 1) : dirName;
+            contents.add(dirName);
             return FileVisitResult.CONTINUE;
           }
         });
