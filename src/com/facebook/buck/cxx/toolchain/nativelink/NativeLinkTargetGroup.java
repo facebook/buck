@@ -32,6 +32,15 @@ public interface NativeLinkTargetGroup {
     return new PlatformLockedNativeLinkTargetGroup(this, cxxPlatform);
   }
 
+  /** @return the {@link NativeLinkableInput} used to link this target. */
+  NativeLinkableInput getNativeLinkTargetInput(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder, SourcePathResolver pathResolver);
+
+  /**
+   * @deprecated Convert to a {@link NativeLinkTarget} and use {@link
+   *     NativeLinkTarget#getNativeLinkTargetMode()} instead.
+   */
+  @Deprecated
   NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform);
 
   /**
@@ -43,10 +52,11 @@ public interface NativeLinkTargetGroup {
   Iterable<? extends NativeLinkableGroup> getNativeLinkTargetDeps(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
-  /** @return the {@link NativeLinkableInput} used to link this target. */
-  NativeLinkableInput getNativeLinkTargetInput(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder, SourcePathResolver pathResolver);
-
-  /** @return an explicit {@link Path} to use for the output location. */
+  /**
+   * @return an explicit {@link Path} to use for the output location.
+   * @deprecated Convert to a {@link NativeLinkTarget} and use {@link
+   *     NativeLinkTarget#getNativeLinkTargetMode()} instead.
+   */
+  @Deprecated
   Optional<Path> getNativeLinkTargetOutputPath();
 }
