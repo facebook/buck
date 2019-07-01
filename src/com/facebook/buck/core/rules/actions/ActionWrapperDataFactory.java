@@ -16,6 +16,7 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.ArtifactDeclarationException;
 import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.artifact.BuildArtifactFactory;
 import com.facebook.buck.core.model.BuildTarget;
@@ -63,8 +64,9 @@ public class ActionWrapperDataFactory extends BuildArtifactFactory {
    * @param output the output {@link Path} relative to the package path for the current rule that
    *     the {@link Action}s are being created for
    * @return a {@link Artifact} for the given path
+   * @throws ArtifactDeclarationException if the provided output path is invalid
    */
-  public Artifact declareArtifact(Path output) {
+  public Artifact declareArtifact(Path output) throws ArtifactDeclarationException {
     return createDeclaredArtifact(output);
   }
 

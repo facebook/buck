@@ -18,6 +18,7 @@ package com.facebook.buck.core.artifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.io.file.MorePaths;
 import java.nio.file.Path;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -39,7 +40,23 @@ class ArtifactImpl extends AbstractArtifact
   private final Path packagePath;
   private final Path outputPath;
 
-  static DeclaredArtifact of(BuildTarget target, Path packagePath, Path outputPath) {
+  static DeclaredArtifact of(BuildTarget target, Path packagePath, Path outputPath)
+      throws ArtifactDeclarationException {
+
+    if (outputPath.isAbsolute()) {
+      throw new ArtifactDeclarationException(
+          ArtifactDeclarationException.Reason.ABSOLUTE_PATH, target, outputPath);
+    }
+    Path normalizedOuptutPath = outputPath.normalize();
+    if (MorePaths.isEmpty(normalizedOuptutPath)) {
+      throw new ArtifactDeclarationException(
+          ArtifactDeclarationException.Reason.EMPTY_PATH, target, outputPath);
+    }
+    if (!normalizedOuptutPath.equals(outputPath)) {
+      throw new ArtifactDeclarationException(
+          ArtifactDeclarationException.Reason.PATH_TRAVERSAL, target, outputPath);
+    }
+
     return new ArtifactImpl(target, packagePath, outputPath);
   }
 

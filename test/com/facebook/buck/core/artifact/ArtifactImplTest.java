@@ -26,9 +26,13 @@ import com.facebook.buck.core.rules.analysis.action.ImmutableActionAnalysisDataK
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class ArtifactImplTest {
+
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void artifactTransitionsToBuildArtifact() {
@@ -47,5 +51,41 @@ public class ArtifactImplTest {
     assertEquals(
         ExplicitBuildTargetSourcePath.of(target, packagePath.resolve(path)),
         materialized.getSourcePath());
+  }
+
+  @Test
+  public void rejectsEmptyPath() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path packagePath = Paths.get("my/foo__");
+
+    expectedException.expect(ArtifactDeclarationException.class);
+    ArtifactImpl.of(target, packagePath, Paths.get(""));
+  }
+
+  @Test
+  public void rejectsEmptyPathAfterPathTraversal() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path packagePath = Paths.get("my/foo__");
+
+    expectedException.expect(ArtifactDeclarationException.class);
+    ArtifactImpl.of(target, packagePath, Paths.get("foo/.."));
+  }
+
+  @Test
+  public void rejectsUpwardPathTraversal() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path packagePath = Paths.get("my/foo__");
+
+    expectedException.expect(ArtifactDeclarationException.class);
+    ArtifactImpl.of(target, packagePath, Paths.get("foo/../../bar"));
+  }
+
+  @Test
+  public void rejectsAbsolutePath() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path packagePath = Paths.get("my/foo__");
+
+    expectedException.expect(ArtifactDeclarationException.class);
+    ArtifactImpl.of(target, packagePath, Paths.get("").toAbsolutePath());
   }
 }

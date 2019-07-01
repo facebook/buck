@@ -40,8 +40,10 @@ public class BuildArtifactFactory {
    * @param output the output {@link Path} relative to the package path for the current rule that
    *     the {@link com.facebook.buck.core.rules.actions.Action}s are being created for
    * @return a {@link DeclaredArtifact} for the given path
+   * @throws ArtifactDeclarationException if the provided output path is invalid in some way
    */
-  protected DeclaredArtifact createDeclaredArtifact(Path output) {
+  protected DeclaredArtifact createDeclaredArtifact(Path output)
+      throws ArtifactDeclarationException {
     return ArtifactImpl.of(target, packagePath, output);
   }
 
