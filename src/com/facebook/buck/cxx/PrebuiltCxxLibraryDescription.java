@@ -250,7 +250,9 @@ public class PrebuiltCxxLibraryDescription
         ImmutableList.of(),
         Linker.LinkableDepType.SHARED,
         CxxLinkOptions.of(),
-        FluentIterable.from(params.getBuildDeps()).filter(NativeLinkableGroup.class),
+        FluentIterable.from(params.getBuildDeps())
+            .filter(NativeLinkableGroup.class)
+            .transform(g -> g.getNativeLinkable(cxxPlatform)),
         Optional.empty(),
         Optional.empty(),
         ImmutableSet.of(),

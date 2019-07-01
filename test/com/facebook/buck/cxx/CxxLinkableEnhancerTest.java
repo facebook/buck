@@ -48,6 +48,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -82,7 +83,7 @@ public class CxxLinkableEnhancerTest {
   private static final ImmutableList<Arg> DEFAULT_INPUTS =
       SourcePathArg.from(
           FakeSourcePath.of("a.o"), FakeSourcePath.of("b.o"), FakeSourcePath.of("c.o"));
-  private static final ImmutableSortedSet<NativeLinkableGroup> EMPTY_DEPS = ImmutableSortedSet.of();
+  private static final ImmutableSortedSet<NativeLinkable> EMPTY_DEPS = ImmutableSortedSet.of();
   private static final CxxPlatform CXX_PLATFORM =
       CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
@@ -245,7 +246,7 @@ public class CxxLinkableEnhancerTest {
             ImmutableList.of(),
             Linker.LinkableDepType.STATIC,
             CxxLinkOptions.of(),
-            ImmutableList.<NativeLinkableGroup>of(nativeLinkable),
+            ImmutableList.of(nativeLinkable.getNativeLinkable(CXX_PLATFORM)),
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
@@ -384,7 +385,7 @@ public class CxxLinkableEnhancerTest {
             ImmutableList.of(),
             Linker.LinkableDepType.STATIC,
             CxxLinkOptions.of(),
-            ImmutableList.<NativeLinkableGroup>of(nativeLinkable),
+            ImmutableList.of(nativeLinkable.getNativeLinkable(CXX_PLATFORM)),
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
@@ -412,7 +413,7 @@ public class CxxLinkableEnhancerTest {
             ImmutableList.of(),
             Linker.LinkableDepType.SHARED,
             CxxLinkOptions.of(),
-            ImmutableList.<NativeLinkableGroup>of(nativeLinkable),
+            ImmutableList.of(nativeLinkable.getNativeLinkable(CXX_PLATFORM)),
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),

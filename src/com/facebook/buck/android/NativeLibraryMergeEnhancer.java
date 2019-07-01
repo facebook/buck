@@ -47,6 +47,7 @@ import com.facebook.buck.cxx.toolchain.elf.ElfSection;
 import com.facebook.buck.cxx.toolchain.elf.ElfSymbolTable;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
@@ -966,6 +967,7 @@ class NativeLibraryMergeEnhancer {
       }
 
       String soname = getSoname(cxxPlatform);
+      NativeLinkable linkable = getNativeLinkable(cxxPlatform);
       BuildRule rule =
           graphBuilder.computeIfAbsent(
               getBuildTargetForPlatform(cxxPlatform),
@@ -985,8 +987,8 @@ class NativeLibraryMergeEnhancer {
                       Linker.LinkableDepType.SHARED,
                       CxxLinkOptions.of(),
                       Iterables.concat(
-                          getNativeLinkableDepsForPlatform(cxxPlatform, graphBuilder),
-                          getNativeLinkableExportedDepsForPlatform(cxxPlatform, graphBuilder)),
+                          linkable.getNativeLinkableDeps(graphBuilder),
+                          linkable.getNativeLinkableExportedDeps(graphBuilder)),
                       Optional.empty(),
                       Optional.empty(),
                       ImmutableSet.of(),

@@ -34,6 +34,7 @@ import com.facebook.buck.cxx.toolchain.linker.HasLinkerMap;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.ExtraOutputsDeriver;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -81,7 +82,7 @@ public class CxxLinkableEnhancer {
       BuildTarget target,
       Path output,
       Linker.LinkableDepType depType,
-      Iterable<? extends NativeLinkableGroup> nativeLinkableDeps,
+      Iterable<? extends NativeLinkable> nativeLinkableDeps,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       ImmutableSet<BuildTarget> blacklist,
       ImmutableSet<BuildTarget> linkWholeDeps,
@@ -237,7 +238,7 @@ public class CxxLinkableEnhancer {
       Linker.LinkType linkType,
       Optional<String> soname,
       Linker.LinkableDepType depType,
-      Iterable<? extends NativeLinkableGroup> nativeLinkableDeps,
+      Iterable<? extends NativeLinkable> nativeLinkableDeps,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
       ImmutableSet<BuildTarget> linkWholeDeps,
@@ -256,11 +257,7 @@ public class CxxLinkableEnhancer {
             .getParallelizer()
             .maybeParallelizeTransform(
                 Collections2.filter(
-                    NativeLinkables.getNativeLinkables(
-                        graphBuilder,
-                        Iterables.transform(
-                            nativeLinkableDeps, g -> g.getNativeLinkable(cxxPlatform)),
-                        depType),
+                    NativeLinkables.getNativeLinkables(graphBuilder, nativeLinkableDeps, depType),
                     linkable -> !blacklist.contains(linkable.getBuildTarget())),
                 nativeLinkable -> {
                   Linkage link = nativeLinkable.getPreferredLinkage();
@@ -350,7 +347,7 @@ public class CxxLinkableEnhancer {
       ImmutableList<String> extraOutputNames,
       Linker.LinkableDepType depType,
       CxxLinkOptions linkOptions,
-      Iterable<? extends NativeLinkableGroup> nativeLinkableDeps,
+      Iterable<? extends NativeLinkable> nativeLinkableDeps,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,

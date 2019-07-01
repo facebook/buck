@@ -43,6 +43,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker.LinkType;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -595,10 +596,11 @@ public class CxxLibraryFactory {
     ImmutableList<NativeLinkableGroup> delegateNativeLinkableGroups =
         delegate.flatMap(d -> d.getNativeLinkableExportedDeps()).orElse(ImmutableList.of());
 
-    ImmutableList<NativeLinkableGroup> allNativeLinkableGroups =
+    ImmutableList<NativeLinkable> allNativeLinkables =
         RichStream.from(deps)
             .filter(NativeLinkableGroup.class)
             .concat(RichStream.from(delegateNativeLinkableGroups))
+            .map(g -> g.getNativeLinkable(cxxPlatform))
             .toImmutableList();
 
     CxxLinkOptions linkOptions =
@@ -618,7 +620,7 @@ public class CxxLibraryFactory {
         args.getLinkerExtraOutputs(),
         linkableDepType,
         linkOptions,
-        allNativeLinkableGroups,
+        allNativeLinkables,
         cxxRuntimeType,
         bundleLoader,
         blacklist,

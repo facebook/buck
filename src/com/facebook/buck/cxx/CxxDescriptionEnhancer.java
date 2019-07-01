@@ -798,7 +798,10 @@ public class CxxDescriptionEnhancer {
                         thinIndexTarget,
                         indexOutput,
                         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
-                        RichStream.from(deps).filter(NativeLinkableGroup.class).toImmutableList(),
+                        RichStream.from(deps)
+                            .filter(NativeLinkableGroup.class)
+                            .map(g -> g.getNativeLinkable(cxxPlatform))
+                            .toImmutableList(),
                         args.getCxxRuntimeType(),
                         ImmutableSet.of(),
                         args.getLinkDepsQueryWhole()
@@ -907,7 +910,10 @@ public class CxxDescriptionEnhancer {
                             args.getThinLto(),
                             args.getFatLto()
                             ),
-                        RichStream.from(deps).filter(NativeLinkableGroup.class).toImmutableList(),
+                        RichStream.from(deps)
+                            .filter(NativeLinkableGroup.class)
+                            .map(g -> g.getNativeLinkable(cxxPlatform))
+                            .toImmutableList(),
                         args.getCxxRuntimeType(),
                         Optional.empty(),
                         ImmutableSet.of(),
@@ -1411,7 +1417,10 @@ public class CxxDescriptionEnhancer {
                         linkerExtraOutputs,
                         linkStyle,
                         linkOptions,
-                        RichStream.from(deps).filter(NativeLinkableGroup.class).toImmutableList(),
+                        RichStream.from(deps)
+                            .filter(NativeLinkableGroup.class)
+                            .map(g -> g.getNativeLinkable(cxxPlatform))
+                            .toImmutableList(),
                         cxxRuntimeType,
                         Optional.empty(),
                         ImmutableSet.of(),

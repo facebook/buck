@@ -328,7 +328,10 @@ public class CxxPythonExtensionDescription
         args.getLinkerExtraOutputs(),
         Linker.LinkableDepType.SHARED,
         CxxLinkOptions.of(),
-        RichStream.from(deps).filter(NativeLinkableGroup.class).toImmutableList(),
+        RichStream.from(deps)
+            .filter(NativeLinkableGroup.class)
+            .map(g -> g.getNativeLinkable(cxxPlatform))
+            .toImmutableList(),
         args.getCxxRuntimeType(),
         Optional.empty(),
         ImmutableSet.of(),

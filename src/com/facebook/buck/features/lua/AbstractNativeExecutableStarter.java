@@ -263,7 +263,9 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                     ImmutableList.of(),
                     Linker.LinkableDepType.SHARED,
                     CxxLinkOptions.of(),
-                    getNativeStarterDeps(),
+                    Iterables.transform(
+                        getNativeStarterDeps(),
+                        g -> g.getNativeLinkable(getLuaPlatform().getCxxPlatform())),
                     Optional.empty(),
                     Optional.empty(),
                     ImmutableSet.of(),

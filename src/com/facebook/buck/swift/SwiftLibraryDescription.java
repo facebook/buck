@@ -393,6 +393,7 @@ public class SwiftLibraryDescription
             RichStream.from(params.getBuildDeps())
                 .filter(NativeLinkableGroup.class)
                 .concat(RichStream.of(swiftRuntimeLinkable))
+                .map(g -> g.getNativeLinkable(cxxPlatform))
                 .collect(ImmutableSet.toImmutableSet()),
             Optional.empty(),
             Optional.empty(),
