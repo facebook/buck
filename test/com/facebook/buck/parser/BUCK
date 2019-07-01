@@ -213,6 +213,7 @@ java_test(
         "//src/com/facebook/buck/core/plugin/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/config/impl:impl",
+        "//src/com/facebook/buck/core/rules/config/registry:registry",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
         "//src/com/facebook/buck/core/rules/knowntypes/provider:provider",
         "//src/com/facebook/buck/core/select/impl:impl",

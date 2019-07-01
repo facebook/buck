@@ -31,6 +31,8 @@ import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.impl.ConfigurationRuleSelectableResolver;
 import com.facebook.buck.core.rules.config.impl.SameThreadConfigurationRuleResolver;
+import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
+import com.facebook.buck.core.rules.config.registry.ImmutableConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.platform.CachingPlatformResolver;
 import com.facebook.buck.core.rules.platform.DefaultTargetPlatformResolver;
@@ -201,6 +203,13 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
         new DefaultTargetPlatformResolver(
             new RuleBasedTargetPlatformResolver(platformResolver), defaultPlatform);
 
+    ConfigurationRuleRegistry configurationRuleRegistry =
+        new ImmutableConfigurationRuleRegistry(
+            configurationRuleResolver,
+            constraintResolver,
+            platformResolver,
+            targetPlatformResolver);
+
     RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
         new RawTargetNodeToTargetNodeFactory(
             typeCoercerFactory,
@@ -250,11 +259,9 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
         buildFileRawNodeParsePipeline,
         targetNodeParsePipeline,
         parsingContext,
-        constraintResolver,
         selectorListResolver,
         selectorListFactory,
-        targetPlatformResolver,
-        platformResolver);
+        configurationRuleRegistry);
   }
 
   @SuppressWarnings("PMD.AvoidThreadGroup")

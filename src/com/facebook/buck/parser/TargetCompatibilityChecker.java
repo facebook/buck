@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
+import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import java.util.stream.Collectors;
 
 /**
@@ -36,14 +37,14 @@ class TargetCompatibilityChecker {
    *     platform.
    */
   public static boolean targetNodeArgMatchesPlatform(
-      ConstraintResolver constraintResolver,
-      PlatformResolver platformResolver,
+      ConfigurationRuleRegistry configurationRuleRegistry,
       Object targetNodeArg,
       Platform platform) {
     if (!(targetNodeArg instanceof HasTargetCompatibleWith)) {
       return true;
     }
     HasTargetCompatibleWith argWithTargetCompatible = (HasTargetCompatibleWith) targetNodeArg;
+    ConstraintResolver constraintResolver = configurationRuleRegistry.getConstraintResolver();
 
     boolean matchesConstraints =
         platform.matchesAll(
@@ -61,6 +62,7 @@ class TargetCompatibilityChecker {
       return true;
     }
 
+    PlatformResolver platformResolver = configurationRuleRegistry.getPlatformResolver();
     for (UnconfiguredBuildTargetView compatiblePlatformTarget :
         argWithTargetCompatible.getTargetCompatiblePlatforms()) {
       ConstraintBasedPlatform compatiblePlatform =
