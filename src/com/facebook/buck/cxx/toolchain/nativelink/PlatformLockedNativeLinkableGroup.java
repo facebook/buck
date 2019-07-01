@@ -69,8 +69,9 @@ public class PlatformLockedNativeLinkableGroup implements NativeLinkable {
 
   @Override
   public Optional<NativeLinkTarget> getNativeLinkTarget(ActionGraphBuilder graphBuilder) {
-    // TODO(cjhopman): implement this.
-    throw new RuntimeException();
+    return underlyingGroup
+        .getNativeLinkTarget(cxxPlatform, graphBuilder)
+        .map(g -> g.getTargetForPlatform(cxxPlatform));
   }
 
   @Override

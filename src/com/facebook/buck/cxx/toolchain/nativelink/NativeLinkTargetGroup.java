@@ -29,6 +29,10 @@ public interface NativeLinkTargetGroup {
 
   BuildTarget getBuildTarget();
 
+  default NativeLinkTarget getTargetForPlatform(CxxPlatform cxxPlatform) {
+    return new PlatformLockedNativeLinkTargetGroup(this, cxxPlatform);
+  }
+
   NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform);
 
   /** @return the {@link NativeLinkableGroup} dependencies used to link this target. */
