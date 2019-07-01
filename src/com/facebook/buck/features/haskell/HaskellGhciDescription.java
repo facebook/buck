@@ -41,7 +41,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -59,6 +58,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -95,10 +95,9 @@ public class HaskellGhciDescription
    */
   public static HaskellGhciOmnibusSpec getOmnibusSpec(
       BuildTarget baseTarget,
-      CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder,
-      ImmutableMap<BuildTarget, ? extends NativeLinkableGroup> omnibusRoots,
-      ImmutableMap<BuildTarget, ? extends NativeLinkableGroup> excludedRoots) {
+      ImmutableList<? extends NativeLinkable> omnibusRoots,
+      ImmutableList<? extends NativeLinkable> excludedRoots) {
 
     LOG.verbose("%s: omnibus roots: %s", baseTarget, omnibusRoots);
     LOG.verbose("%s: excluded roots: %s", baseTarget, excludedRoots);
@@ -106,43 +105,40 @@ public class HaskellGhciDescription
     HaskellGhciOmnibusSpec.Builder builder = HaskellGhciOmnibusSpec.builder();
 
     // Calculate excluded roots/deps, and add them to the link.
-    ImmutableMap<BuildTarget, NativeLinkableGroup> transitiveExcludedLinkables =
-        NativeLinkableGroups.getTransitiveNativeLinkables(
-            cxxPlatform, graphBuilder, excludedRoots.values());
-    builder.setExcludedRoots(excludedRoots);
-    builder.setExcludedTransitiveDeps(transitiveExcludedLinkables);
+    ImmutableList<? extends NativeLinkable> transitiveExcludedLinkables =
+        NativeLinkables.getTransitiveNativeLinkables(graphBuilder, excludedRoots);
+    builder.setExcludedRoots(Iterables.transform(excludedRoots, r -> r.getBuildTarget()));
+    ImmutableMap<BuildTarget, ? extends NativeLinkable> mappedExcludedLinkables =
+        Maps.uniqueIndex(transitiveExcludedLinkables, r -> r.getBuildTarget());
+    builder.setExcludedTransitiveDeps(mappedExcludedLinkables);
 
     // Calculate the body and first-order deps of omnibus.
-    new AbstractBreadthFirstTraversal<NativeLinkableGroup>(omnibusRoots.values()) {
+    new AbstractBreadthFirstTraversal<NativeLinkable>(omnibusRoots) {
       @Override
-      public Iterable<? extends NativeLinkableGroup> visit(
-          NativeLinkableGroup nativeLinkableGroup) {
+      public Iterable<? extends NativeLinkable> visit(NativeLinkable nativeLinkable) {
 
         // Excluded linkables can't be included in omnibus.
-        if (transitiveExcludedLinkables.containsKey(nativeLinkableGroup.getBuildTarget())) {
+        if (mappedExcludedLinkables.containsKey(nativeLinkable.getBuildTarget())) {
           LOG.verbose(
-              "%s: skipping excluded linkable %s",
-              baseTarget, nativeLinkableGroup.getBuildTarget());
+              "%s: skipping excluded linkable %s", baseTarget, nativeLinkable.getBuildTarget());
           return ImmutableSet.of();
         }
 
         // We cannot include prebuilt SOs in omnibus.
-        if (nativeLinkableGroup.isPrebuiltSOForHaskellOmnibus(cxxPlatform, graphBuilder)) {
-          builder.putDeps(nativeLinkableGroup.getBuildTarget(), nativeLinkableGroup);
-          LOG.verbose(
-              "%s: skipping prebuilt SO %s", baseTarget, nativeLinkableGroup.getBuildTarget());
+        if (nativeLinkable.isPrebuiltSOForHaskellOmnibus(graphBuilder)) {
+          builder.addDeps(nativeLinkable);
+          LOG.verbose("%s: skipping prebuilt SO %s", baseTarget, nativeLinkable.getBuildTarget());
           return ImmutableSet.of();
         }
 
         // Include C/C++ libs capable of static linking in omnibus.
-        if (nativeLinkableGroup.supportsOmnibusLinkingForHaskell(cxxPlatform)) {
-          builder.putBody(nativeLinkableGroup.getBuildTarget(), nativeLinkableGroup);
+        if (nativeLinkable.supportsOmnibusLinkingForHaskell()) {
+          builder.addBody(nativeLinkable);
           LOG.verbose(
-              "%s: including C/C++ library %s", baseTarget, nativeLinkableGroup.getBuildTarget());
+              "%s: including C/C++ library %s", baseTarget, nativeLinkable.getBuildTarget());
           return Iterables.concat(
-              nativeLinkableGroup.getNativeLinkableDepsForPlatform(cxxPlatform, graphBuilder),
-              nativeLinkableGroup.getNativeLinkableExportedDepsForPlatform(
-                  cxxPlatform, graphBuilder));
+              nativeLinkable.getNativeLinkableDeps(graphBuilder),
+              nativeLinkable.getNativeLinkableExportedDeps(graphBuilder));
         }
 
         // Unexpected node.  Can this actually happen?
@@ -160,40 +156,37 @@ public class HaskellGhciDescription
 
   private static NativeLinkableInput getOmnibusNativeLinkableInput(
       BuildTarget baseTarget,
-      CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder,
-      Iterable<NativeLinkableGroup> body,
-      Iterable<NativeLinkableGroup> deps) {
+      Iterable<NativeLinkable> body,
+      Iterable<NativeLinkable> deps) {
 
     List<NativeLinkableInput> nativeLinkableInputs = new ArrayList<>();
 
     // Topologically sort the body nodes, so that they're ready to add to the link line.
     ImmutableSet<BuildTarget> bodyTargets =
-        RichStream.from(body).map(NativeLinkableGroup::getBuildTarget).toImmutableSet();
-    ImmutableList<? extends NativeLinkableGroup> topoSortedBody =
-        NativeLinkableGroups.getTopoSortedNativeLinkables(
+        RichStream.from(body).map(NativeLinkable::getBuildTarget).toImmutableSet();
+    ImmutableList<? extends NativeLinkable> topoSortedBody =
+        NativeLinkables.getTopoSortedNativeLinkables(
             body,
             nativeLinkable ->
                 FluentIterable.concat(
-                        nativeLinkable.getNativeLinkableExportedDepsForPlatform(
-                            cxxPlatform, graphBuilder),
-                        nativeLinkable.getNativeLinkableDepsForPlatform(cxxPlatform, graphBuilder))
+                        nativeLinkable.getNativeLinkableExportedDeps(graphBuilder),
+                        nativeLinkable.getNativeLinkableDeps(graphBuilder))
                     .filter(l -> bodyTargets.contains(l.getBuildTarget()))
                     .iterator());
 
     // Add the link inputs for all omnibus nodes.
-    for (NativeLinkableGroup nativeLinkableGroup : topoSortedBody) {
+    for (NativeLinkable nativeLinkable : topoSortedBody) {
       try {
-        boolean forceLinkWhole = nativeLinkableGroup.forceLinkWholeForHaskellOmnibus();
+        boolean forceLinkWhole = nativeLinkable.forceLinkWholeForHaskellOmnibus();
 
         TargetConfiguration targetConfiguration = baseTarget.getTargetConfiguration();
         LinkableDepType linkStyle = LinkableDepType.STATIC_PIC;
-        NativeLinkableGroup.Linkage link = nativeLinkableGroup.getPreferredLinkage(cxxPlatform);
+        NativeLinkableGroup.Linkage link = nativeLinkable.getPreferredLinkage();
 
         NativeLinkableInput linkableInput =
-            nativeLinkableGroup.getNativeLinkableInput(
-                cxxPlatform,
-                NativeLinkableGroups.getLinkStyle(link, linkStyle),
+            nativeLinkable.getNativeLinkableInput(
+                NativeLinkables.getLinkStyle(link, linkStyle),
                 forceLinkWhole,
                 graphBuilder,
                 targetConfiguration);
@@ -201,7 +194,7 @@ public class HaskellGhciDescription
 
         LOG.verbose(
             "%s: linking C/C++ library %s into omnibus (forced_link_whole=%s)",
-            baseTarget, nativeLinkableGroup.getBuildTarget(), forceLinkWhole);
+            baseTarget, nativeLinkable.getBuildTarget(), forceLinkWhole);
       } catch (RuntimeException e) {
         throw new BuckUncheckedExecutionException(
             e, "When creating omnibus rule for %s.", baseTarget);
@@ -210,10 +203,7 @@ public class HaskellGhciDescription
 
     // Link in omnibus deps dynamically.
     ImmutableList<? extends NativeLinkable> depLinkables =
-        NativeLinkables.getNativeLinkables(
-            graphBuilder,
-            Iterables.transform(deps, g -> g.getNativeLinkable(cxxPlatform)),
-            LinkableDepType.SHARED);
+        NativeLinkables.getNativeLinkables(graphBuilder, deps, LinkableDepType.SHARED);
     for (NativeLinkable linkable : depLinkables) {
       nativeLinkableInputs.add(
           NativeLinkables.getNativeLinkableInput(
@@ -239,8 +229,8 @@ public class HaskellGhciDescription
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       CxxBuckConfig cxxBuckConfig,
-      Iterable<NativeLinkableGroup> body,
-      Iterable<NativeLinkableGroup> deps,
+      Iterable<NativeLinkable> body,
+      Iterable<NativeLinkable> deps,
       ImmutableList<Arg> extraLdFlags) {
     return graphBuilder.computeIfAbsent(
         baseTarget.withShortName(baseTarget.getShortName() + ".omnibus-shared-object"),
@@ -248,8 +238,7 @@ public class HaskellGhciDescription
           ImmutableList.Builder<Arg> linkFlagsBuilder = ImmutableList.builder();
           linkFlagsBuilder.addAll(extraLdFlags);
           linkFlagsBuilder.addAll(
-              getOmnibusNativeLinkableInput(baseTarget, cxxPlatform, graphBuilder, body, deps)
-                  .getArgs());
+              getOmnibusNativeLinkableInput(baseTarget, graphBuilder, body, deps).getArgs());
 
           // ----------------------------------------------------------------
           // Add to graphBuilder
@@ -345,16 +334,16 @@ public class HaskellGhciDescription
   interface AbstractHaskellGhciOmnibusSpec {
 
     // All native nodes which are to be statically linked into the giant combined shared library.
-    ImmutableMap<BuildTarget, NativeLinkableGroup> getBody();
+    ImmutableSet<NativeLinkable> getBody();
 
     // The subset of excluded nodes which are first-order deps of any root or body nodes.
-    ImmutableMap<BuildTarget, NativeLinkableGroup> getDeps();
+    ImmutableSet<NativeLinkable> getDeps();
 
     // Native root nodes which are to be excluded from omnibus linking.
-    ImmutableMap<BuildTarget, NativeLinkableGroup> getExcludedRoots();
+    ImmutableSet<BuildTarget> getExcludedRoots();
 
     // Transitive native nodes which are to be excluded from omnibus linking.
-    ImmutableMap<BuildTarget, NativeLinkableGroup> getExcludedTransitiveDeps();
+    ImmutableMap<BuildTarget, NativeLinkable> getExcludedTransitiveDeps();
   }
 
   @BuckStyleImmutable

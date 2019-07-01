@@ -101,4 +101,18 @@ public interface NativeLinkable {
   default String getRuleType() {
     throw new UnsupportedOperationException();
   }
+
+  @SuppressWarnings("unused")
+  default boolean isPrebuiltSOForHaskellOmnibus(ActionGraphBuilder graphBuilder) {
+    return false;
+  }
+
+  default boolean supportsOmnibusLinkingForHaskell() {
+    return false;
+  }
+
+  default boolean forceLinkWholeForHaskellOmnibus() {
+    throw new IllegalStateException(
+        String.format("Unexpected rule type in omnibus link %s(%s)", getClass(), getBuildTarget()));
+  }
 }

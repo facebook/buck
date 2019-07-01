@@ -58,9 +58,9 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.RichStream;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -471,21 +471,27 @@ public class HaskellDescriptionUtils {
     HaskellGhciOmnibusSpec omnibusSpec =
         HaskellGhciDescription.getOmnibusSpec(
             buildTarget,
-            platform.getCxxPlatform(),
             graphBuilder,
-            NativeLinkableGroups.getNativeLinkableRoots(
-                RichStream.from(deps).filter(NativeLinkableGroup.class).toImmutableList(),
-                n ->
-                    n instanceof HaskellLibrary || n instanceof PrebuiltHaskellLibrary
-                        ? Optional.of(
-                            n.getNativeLinkableExportedDepsForPlatform(
-                                platform.getCxxPlatform(), graphBuilder))
-                        : Optional.empty()),
+            FluentIterable.from(
+                    NativeLinkableGroups.getNativeLinkableRoots(
+                            RichStream.from(deps)
+                                .filter(NativeLinkableGroup.class)
+                                .toImmutableList(),
+                            n ->
+                                n instanceof HaskellLibrary || n instanceof PrebuiltHaskellLibrary
+                                    ? Optional.of(
+                                        n.getNativeLinkableExportedDepsForPlatform(
+                                            platform.getCxxPlatform(), graphBuilder))
+                                    : Optional.empty())
+                        .values())
+                .transform(g -> g.getNativeLinkable(platform.getCxxPlatform()))
+                .toList(),
             // The preloaded deps form our excluded roots, which we need to keep them separate from
             // the omnibus library so that they can be `LD_PRELOAD`ed early.
-            RichStream.from(preloadDeps)
+            FluentIterable.from(preloadDeps)
                 .filter(NativeLinkableGroup.class)
-                .collect(ImmutableMap.toImmutableMap(NativeLinkableGroup::getBuildTarget, l -> l)));
+                .transform(g -> g.getNativeLinkable(platform.getCxxPlatform()))
+                .toList());
 
     // Add an -rpath to the omnibus for shared library dependencies
     Path symlinkRelDir = HaskellGhciDescription.getSoLibsRelDir(buildTarget);
@@ -512,20 +518,18 @@ public class HaskellDescriptionUtils {
             graphBuilder,
             platform.getCxxPlatform(),
             cxxBuckConfig,
-            omnibusSpec.getBody().values(),
-            omnibusSpec.getDeps().values(),
+            omnibusSpec.getBody(),
+            omnibusSpec.getDeps(),
             extraLinkFlags.build());
 
     // Build up a map of all transitive shared libraries the the monolithic omnibus library depends
     // on (basically, stuff we couldn't statically link in).  At this point, this should *not* be
     // pulling in any excluded deps.
-    ImmutableMap<BuildTarget, NativeLinkableGroup> transitiveDeps =
-        NativeLinkableGroups.getTransitiveNativeLinkables(
-            platform.getCxxPlatform(), graphBuilder, omnibusSpec.getDeps().values());
+    ImmutableList<? extends NativeLinkable> transitiveDeps =
+        NativeLinkables.getTransitiveNativeLinkables(graphBuilder, omnibusSpec.getDeps());
     NativeLinkables.SharedLibrariesBuilder sharedLibsBuilder =
         new NativeLinkables.SharedLibrariesBuilder();
-    transitiveDeps.values().stream()
-        .map(g -> g.getNativeLinkable(platform.getCxxPlatform()))
+    transitiveDeps.stream()
         // Skip statically linked libraries.
         .filter(l -> l.getPreferredLinkage() != Linkage.STATIC)
         .forEach(l -> sharedLibsBuilder.add(l, graphBuilder));
@@ -536,13 +540,12 @@ public class HaskellDescriptionUtils {
     NativeLinkables.SharedLibrariesBuilder preloadLibsBuilder =
         new NativeLinkables.SharedLibrariesBuilder();
     omnibusSpec.getExcludedTransitiveDeps().values().stream()
-        .map(g -> g.getNativeLinkable(platform.getCxxPlatform()))
         // Don't include shared libs for static libraries -- except for preload roots, which we
         // always link dynamically.
         .filter(
             l ->
                 l.getPreferredLinkage() != Linkage.STATIC
-                    || omnibusSpec.getExcludedRoots().containsKey(l.getBuildTarget()))
+                    || omnibusSpec.getExcludedRoots().contains(l.getBuildTarget()))
         .forEach(l -> preloadLibsBuilder.add(l, graphBuilder));
     ImmutableSortedMap<String, SourcePath> preloadLibs = preloadLibsBuilder.build();
 

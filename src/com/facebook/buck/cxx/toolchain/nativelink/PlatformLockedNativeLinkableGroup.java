@@ -128,4 +128,19 @@ public class PlatformLockedNativeLinkableGroup implements NativeLinkable {
   public String getRuleType() {
     return underlyingGroup.getRuleType();
   }
+
+  @Override
+  public boolean isPrebuiltSOForHaskellOmnibus(ActionGraphBuilder graphBuilder) {
+    return underlyingGroup.isPrebuiltSOForHaskellOmnibus(cxxPlatform, graphBuilder);
+  }
+
+  @Override
+  public boolean supportsOmnibusLinkingForHaskell() {
+    return underlyingGroup.supportsOmnibusLinkingForHaskell(cxxPlatform);
+  }
+
+  @Override
+  public boolean forceLinkWholeForHaskellOmnibus() {
+    return underlyingGroup.forceLinkWholeForHaskellOmnibus();
+  }
 }
