@@ -1099,6 +1099,12 @@ class BuckTool(object):
             if self.get_buck_compiled_java_version() >= 9:
                 unsupported_args = set(
                     [
+                        # `-verbose:gc` and `-XX:+PrintGCDetails` are technically supported, but log
+                        # to stdout, which is problematic when Buck's output needs to be
+                        # programmatically parsed. So we disallow them. `-Xlog:gc:/path/to/gc.log`
+                        # should be used in Java 11 instead.
+                        "-verbose:gc",
+                        "-XX:+PrintGCDetails",
                         "-XX:+PrintGCDateStamps",
                         "-XX:+PrintGCTimeStamps",
                         "-XX:+UseParNewGC",
@@ -1108,10 +1114,19 @@ class BuckTool(object):
                 for arg in java_args:
                     if arg in unsupported_args:
                         logging.warning(
-                            "Warning: Removing JVM arg %s, which is not supported in Java %d.",
+                            "Warning: Removing JVM arg `%s`, which is not supported in Java %d.",
                             arg,
                             self.get_buck_compiled_java_version(),
                         )
+                    elif arg.startswith("-Xloggc"):
+                        logging.warning(
+                            "Warning: JVM arg `-Xloggc` is deprecated in Java %d. Replacing with `-Xlog:gc`.",
+                            self.get_buck_compiled_java_version(),
+                        )
+                        # Though the JVM will make this replacement itself, it stupidly logs the
+                        # deprecation warning to stdout, which will break programmatic parsing of
+                        # Buck's output.
+                        stripped_args.append(arg.replace("-Xloggc", "-Xlog:gc"))
                     else:
                         stripped_args.append(arg)
                 java_args = stripped_args
