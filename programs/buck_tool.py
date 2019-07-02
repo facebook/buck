@@ -510,7 +510,7 @@ class BuckTool(object):
             # "--" not found, just add to the end of the list
             pos = len(argv)
 
-        argv = self._handle_buck_fix_args(
+        return self._handle_buck_fix_args(
             self._handle_isolation_args(argv[:pos] + args + argv[pos:]), post_run_files
         )
 
