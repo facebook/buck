@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.step;
+package com.facebook.buck.step.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -40,6 +40,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.environment.Platform;

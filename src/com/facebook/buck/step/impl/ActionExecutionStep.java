@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.step;
+package com.facebook.buck.step.impl;
 
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
@@ -21,6 +21,8 @@ import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
 import java.io.IOException;
 
 /**

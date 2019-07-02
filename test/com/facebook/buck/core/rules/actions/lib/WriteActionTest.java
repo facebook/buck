@@ -24,7 +24,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.step.TestActionExecutionRunner;
+import com.facebook.buck.step.impl.TestActionExecutionRunner;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;

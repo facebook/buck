@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.step;
+package com.facebook.buck.step.impl;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
@@ -32,6 +32,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
