@@ -42,6 +42,7 @@ java_test(
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/targetgraph/impl:testutil",
         "//test/com/facebook/buck/core/rules/actions:testutil",
+        "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
         "//third-party/java/guava:guava",

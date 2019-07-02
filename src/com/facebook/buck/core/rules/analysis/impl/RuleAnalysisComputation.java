@@ -30,6 +30,7 @@ import com.facebook.buck.core.rules.analysis.RuleAnalysisException;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
+import com.facebook.buck.event.BuckEventBus;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -48,9 +49,11 @@ public class RuleAnalysisComputation
     implements GraphComputation<RuleAnalysisKey, RuleAnalysisResult> {
 
   private final TargetGraph targetGraph;
+  private final BuckEventBus eventBus;
 
-  public RuleAnalysisComputation(TargetGraph targetGraph) {
+  public RuleAnalysisComputation(TargetGraph targetGraph, BuckEventBus eventBus) {
     this.targetGraph = targetGraph;
+    this.eventBus = eventBus;
   }
 
   @Override
@@ -90,7 +93,8 @@ public class RuleAnalysisComputation
             ImmutableMap.copyOf(
                 Maps.transformValues(
                     env.getDeps(RuleAnalysisKey.IDENTIFIER), RuleAnalysisResult::getProviderInfos)),
-            targetNode.getFilesystem());
+            targetNode.getFilesystem(),
+            eventBus);
 
     ProviderInfoCollection providers =
         ruleDescription.ruleImpl(

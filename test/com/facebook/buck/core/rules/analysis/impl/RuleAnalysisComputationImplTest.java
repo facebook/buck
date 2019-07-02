@@ -36,6 +36,8 @@ import com.facebook.buck.core.rules.analysis.cache.RuleAnalysisCache;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -54,6 +56,7 @@ public class RuleAnalysisComputationImplTest {
   private final CellPathResolver cellPathResolver = TestCellPathResolver.get(projectFilesystem);
   private final TargetNodeFactory targetNodeFactory =
       new TargetNodeFactory(new DefaultTypeCoercerFactory());
+  private final BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
   @Before
   public void setUp() {
@@ -108,7 +111,7 @@ public class RuleAnalysisComputationImplTest {
     TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
 
     RuleAnalysisComputationImpl ruleAnalysisComputation =
-        RuleAnalysisComputationImpl.of(targetGraph, depsAwareExecutor, cache);
+        RuleAnalysisComputationImpl.of(targetGraph, depsAwareExecutor, cache, eventBus);
 
     RuleAnalysisResult ruleAnalysisResult =
         ruleAnalysisComputation.computeUnchecked(ImmutableRuleAnalysisKey.of(buildTarget));
@@ -190,7 +193,7 @@ public class RuleAnalysisComputationImplTest {
     TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
 
     RuleAnalysisComputationImpl ruleAnalysisComputation =
-        RuleAnalysisComputationImpl.of(targetGraph, depsAwareExecutor, cache);
+        RuleAnalysisComputationImpl.of(targetGraph, depsAwareExecutor, cache, eventBus);
 
     RuleAnalysisResult ruleAnalysisResult =
         ruleAnalysisComputation.computeUnchecked(ImmutableRuleAnalysisKey.of(buildTarget));

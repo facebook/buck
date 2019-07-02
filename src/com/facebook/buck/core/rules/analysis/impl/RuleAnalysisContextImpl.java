@@ -22,6 +22,7 @@ import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataRegistry;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
@@ -40,13 +41,16 @@ class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisData
   private final Map<ActionAnalysisData.ID, ActionAnalysisData> actionAnalysisDataRegistry =
       new HashMap<>();
   private final ActionRegistry actionRegistry;
+  private final BuckEventBus eventBus;
 
   RuleAnalysisContextImpl(
       BuildTarget buildTarget,
       ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> depProviders,
-      ProjectFilesystem filesystem) {
+      ProjectFilesystem filesystem,
+      BuckEventBus eventBus) {
     this.buildTarget = buildTarget;
     this.depProviders = depProviders;
+    this.eventBus = eventBus;
     this.actionRegistry = new ActionRegistry(buildTarget, this, filesystem);
   }
 
@@ -58,6 +62,11 @@ class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisData
   @Override
   public ActionRegistry actionFactory() {
     return actionRegistry;
+  }
+
+  @Override
+  public BuckEventBus getEventBus() {
+    return eventBus;
   }
 
   @Override

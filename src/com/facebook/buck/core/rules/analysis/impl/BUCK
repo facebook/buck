@@ -10,6 +10,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/rules/analysis:analysis",
         "//src/com/facebook/buck/core/rules/analysis/cache:cache",
         "//src/com/facebook/buck/core/rules/analysis/computation:computation",
+        "//src/com/facebook/buck/event:interfaces",
     ],
     tests = [
         "//test/com/facebook/buck/core/rules/analysis/impl:impl",

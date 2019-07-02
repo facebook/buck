@@ -109,7 +109,7 @@ public class ActionGraphFactory {
             RuleAnalysisCache ruleAnalysisCache = new RuleAnalysisCacheImpl();
             RuleAnalysisComputation ruleAnalysisComputation =
                 RuleAnalysisComputationImpl.of(
-                    targetGraph, depsAwareExecutor.get(), ruleAnalysisCache);
+                    targetGraph, depsAwareExecutor.get(), ruleAnalysisCache, eventBus);
             return new RuleAnalysisCompatibleDelegatingActionGraphBuilder(
                 transformer, builderConstructor, ruleAnalysisComputation);
           };

@@ -35,6 +35,8 @@ import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData.ID;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.base.VerifyException;
@@ -54,18 +56,19 @@ public class RuleAnalysisContextImplTest {
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
   private final ProjectFilesystem fakeFilesystem = new FakeProjectFilesystem();
+  private final BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
   @Test
   public void getDepsReturnCorrectDeps() {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> deps = ImmutableMap.of();
-    assertSame(deps, new RuleAnalysisContextImpl(target, deps, fakeFilesystem).deps());
+    assertSame(deps, new RuleAnalysisContextImpl(target, deps, fakeFilesystem, eventBus).deps());
 
     deps =
         ImmutableMap.of(
             ImmutableRuleAnalysisKey.of(BuildTargetFactory.newInstance("//my:foo")),
             ProviderInfoCollectionImpl.builder().build());
-    assertSame(deps, new RuleAnalysisContextImpl(target, deps, fakeFilesystem).deps());
+    assertSame(deps, new RuleAnalysisContextImpl(target, deps, fakeFilesystem, eventBus).deps());
   }
 
   @Test
@@ -73,7 +76,7 @@ public class RuleAnalysisContextImplTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:foo");
 
     RuleAnalysisContextImpl context =
-        new RuleAnalysisContextImpl(buildTarget, ImmutableMap.of(), fakeFilesystem);
+        new RuleAnalysisContextImpl(buildTarget, ImmutableMap.of(), fakeFilesystem, eventBus);
 
     ActionAnalysisData actionAnalysisData1 =
         new ActionAnalysisData() {
@@ -118,7 +121,7 @@ public class RuleAnalysisContextImplTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:target");
 
     RuleAnalysisContextImpl context =
-        new RuleAnalysisContextImpl(buildTarget, ImmutableMap.of(), fakeFilesystem);
+        new RuleAnalysisContextImpl(buildTarget, ImmutableMap.of(), fakeFilesystem, eventBus);
 
     ActionAnalysisDataKey key =
         new ActionAnalysisDataKey() {
@@ -149,7 +152,7 @@ public class RuleAnalysisContextImplTest {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
 
     RuleAnalysisContextImpl context =
-        new RuleAnalysisContextImpl(target, ImmutableMap.of(), fakeFilesystem);
+        new RuleAnalysisContextImpl(target, ImmutableMap.of(), fakeFilesystem, eventBus);
 
     ImmutableSet<Artifact> inputs = ImmutableSet.of();
     ImmutableSet<Artifact> outputs =

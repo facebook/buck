@@ -17,6 +17,7 @@ package com.facebook.buck.core.rules.analysis;
 
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
+import com.facebook.buck.event.BuckEventBus;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -50,6 +51,9 @@ public interface RuleAnalysisContext {
    *     com.facebook.buck.core.rules.actions.Action}s
    */
   ActionRegistry actionFactory();
+
+  /** @return an {@link BuckEventBus} for sending stats and printing */
+  BuckEventBus getEventBus();
 
   // TODO(bobyf): Fill as needed. This will probably contain most of {@link
   // BuildRuleCreationContext}

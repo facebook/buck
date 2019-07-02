@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.cache.RuleAnalysisCache;
+import com.facebook.buck.event.BuckEventBus;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Set;
@@ -54,8 +55,9 @@ public class RuleAnalysisComputationImpl
   public static RuleAnalysisComputationImpl of(
       TargetGraph targetGraph,
       DepsAwareExecutor<? super ComputeResult, ?> depsAwareExecutor,
-      RuleAnalysisCache cache) {
-    RuleAnalysisComputation transformer = new RuleAnalysisComputation(targetGraph);
+      RuleAnalysisCache cache,
+      BuckEventBus eventBus) {
+    RuleAnalysisComputation transformer = new RuleAnalysisComputation(targetGraph, eventBus);
     GraphTransformationEngine engine =
         new DefaultGraphTransformationEngine(
             ImmutableList.of(new GraphComputationStage<>(transformer, cache)),
