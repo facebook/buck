@@ -151,6 +151,7 @@ import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.build.report.BuildReportUpload;
+import com.facebook.buck.support.build.report.BuildReportUtils;
 import com.facebook.buck.support.cli.args.BuckArgsMethods;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.support.cli.config.BuckConfigWriter;
@@ -1260,7 +1261,7 @@ public final class MainRunner {
 
           ListenableFuture<Optional<FullVersionControlStats>> vcStatsFuture =
               Futures.immediateFuture(Optional.empty());
-          boolean shouldUploadBuildReport = BuildReportUpload.shouldUploadBuildReport(buckConfig);
+          boolean shouldUploadBuildReport = BuildReportUtils.shouldUploadBuildReport(buckConfig);
 
           VersionControlBuckConfig vcBuckConfig = new VersionControlBuckConfig(buckConfig);
           VersionControlStatsGenerator vcStatsGenerator =

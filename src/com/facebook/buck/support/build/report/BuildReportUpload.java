@@ -74,28 +74,6 @@ public class BuildReportUpload {
     buildReportUpload.uploadInBackground(buckConfig.getConfig(), vcStatsFuture);
   }
 
-  /**
-   * if build report is not enabled or the endpoint url is not configured then we should not upload
-   * a build report and returns false.
-   */
-  public static boolean shouldUploadBuildReport(BuckConfig buckConfig) {
-    BuildReportConfig buildReportConfig = buckConfig.getView(BuildReportConfig.class);
-
-    if (!buildReportConfig.getEnabled()) {
-      LOG.info("Build report is not enabled");
-      return false;
-    }
-
-    Optional<URL> endpointUrl = buildReportConfig.getEndpointUrl();
-
-    if (!endpointUrl.isPresent()) {
-      LOG.error("Build report is enabled but its endpoint url is not configured");
-      return false;
-    }
-
-    return true;
-  }
-
   /** Schedules background task to upload the report */
   private void uploadInBackground(
       Config config, ListenableFuture<Optional<FullVersionControlStats>> vcStatsFuture) {
