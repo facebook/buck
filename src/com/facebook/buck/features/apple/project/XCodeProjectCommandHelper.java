@@ -829,7 +829,8 @@ public class XCodeProjectCommandHelper {
                               ? Collections.emptyIterator()
                               : targetGraph.getOutgoingNodesFor(node).iterator())
                   .traverse(ImmutableList.of(root))) {
-            if (!traversedTargets.contains(targetNode.getBuildTarget())) {
+            if (!traversedTargets.contains(targetNode.getBuildTarget())
+                && targetNode.getRuleType().isBuildRule()) {
               graphBuilder.requireRule(targetNode.getBuildTarget());
               currentTargets.add(targetNode.getBuildTarget());
             }
