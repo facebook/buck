@@ -313,6 +313,23 @@ class MultitenantQueryTest {
                 env.evaluateQuery("testsof(//java/com/example:D)")
         )
     }
+
+    @Test fun getRulesInBasePath() {
+        val env = loadIndex("diamond_dependency_graph.json", 0)
+        val rules = env.getRulesInBasePath(FsAgnosticPath.of("java/com/example"))
+        val ruleMap =
+            rules.map { rule -> rule.targetNode.buildTarget.fullyQualifiedName to rule }.toMap()
+        assertEquals(setOf("//java/com/example:A", "//java/com/example:B", "//java/com/example:C",
+            "//java/com/example:D"), ruleMap.keys)
+        assertEquals(ruleMap.getValue("//java/com/example:A").targetNode.ruleType.name,
+            "java_library")
+        assertEquals(ruleMap.getValue("//java/com/example:B").targetNode.ruleType.name,
+            "java_library")
+        assertEquals(ruleMap.getValue("//java/com/example:C").targetNode.ruleType.name,
+            "cxx_library")
+        assertEquals(ruleMap.getValue("//java/com/example:D").targetNode.ruleType.name,
+            "java_library")
+    }
 }
 
 private fun asOutput(vararg target: String): Set<UnconfiguredBuildTarget> {
