@@ -19,6 +19,8 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
+import com.facebook.buck.android.packageable.ImmutableNativeLinkableEnhancementResult;
+import com.facebook.buck.android.packageable.NativeLinkableEnhancementResult;
 import com.facebook.buck.android.relinker.NativeRelinker;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
@@ -36,6 +38,8 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.RichStream;
@@ -57,6 +61,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
 
 public class AndroidNativeLibsPackageableGraphEnhancer {
@@ -120,50 +125,71 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
   // Populates an immutable map builder with all given linkables set to the given cpu type.
   // Returns true iff linkables is not empty.
-  private void populateMapWithLinkables(
-      ImmutableMultimap<APKModule, NativeLinkableGroup> linkables,
+  private void getNativeLinkableMetadata(
+      ImmutableMultimap<APKModule, NativeLinkable> linkables,
       ImmutableMap.Builder<AndroidLinkableMetadata, SourcePath> builder,
-      Map<AndroidLinkableMetadata, NativeLinkableGroup> nativeLinkableMap,
-      TargetCpuType targetCpuType,
-      NdkCxxPlatform platform)
+      BiConsumer<AndroidLinkableMetadata, BuildTarget> duplicateReporter,
+      TargetCpuType targetCpuType)
       throws HumanReadableException {
-
-    for (Map.Entry<APKModule, NativeLinkableGroup> linkableEntry : linkables.entries()) {
-      NativeLinkableGroup nativeLinkableGroup = linkableEntry.getValue();
-      if (nativeLinkableGroup.getPreferredLinkage(platform.getCxxPlatform())
-          != NativeLinkableGroup.Linkage.STATIC) {
-        ImmutableMap<String, SourcePath> solibs =
-            nativeLinkableGroup.getSharedLibraries(platform.getCxxPlatform(), graphBuilder);
-        for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
-          AndroidLinkableMetadata metadata =
-              AndroidLinkableMetadata.builder()
-                  .setSoName(entry.getKey())
-                  .setTargetCpuType(targetCpuType)
-                  .setApkModule(linkableEntry.getKey())
-                  .build();
-          builder.put(metadata, entry.getValue());
-          if (nativeLinkableMap.containsKey(metadata)) {
-            throw new HumanReadableException(
-                "Two libraries in the dependencies have the same output filename: %s:\n"
-                    + "Those libraries are  %s and %s",
-                metadata.getSoName(), nativeLinkableGroup, nativeLinkableMap.get(metadata));
-          }
-          nativeLinkableMap.put(metadata, nativeLinkableGroup);
-        }
+    for (Map.Entry<APKModule, NativeLinkable> linkableEntry : linkables.entries()) {
+      NativeLinkable nativeLinkable = linkableEntry.getValue();
+      if (nativeLinkable.getPreferredLinkage() != NativeLinkableGroup.Linkage.STATIC) {
+        getSharedLibrariesAndMetadata(
+            targetCpuType,
+            nativeLinkable,
+            linkableEntry.getKey(),
+            (metadata, libraryPath) -> {
+              builder.put(metadata, libraryPath);
+              duplicateReporter.accept(metadata, nativeLinkable.getBuildTarget());
+            });
       }
+    }
+  }
+
+  private void getSharedLibrariesAndMetadata(
+      TargetCpuType targetCpuType,
+      NativeLinkable nativeLinkable,
+      APKModule apkModule,
+      BiConsumer<AndroidLinkableMetadata, SourcePath> consumer) {
+    ImmutableMap<String, SourcePath> solibs = nativeLinkable.getSharedLibraries(graphBuilder);
+    for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
+      AndroidLinkableMetadata metadata =
+          AndroidLinkableMetadata.builder()
+              .setSoName(entry.getKey())
+              .setTargetCpuType(targetCpuType)
+              .setApkModule(apkModule)
+              .build();
+      consumer.accept(metadata, entry.getValue());
     }
   }
 
   public AndroidNativeLibsGraphEnhancementResult enhance(
       AndroidPackageableCollection packageableCollection) {
-    ImmutableMultimap<APKModule, NativeLinkableGroup> nativeLinkables =
+    ImmutableMultimap<APKModule, NativeLinkableGroup> nativeLinkableGroups =
         packageableCollection.getNativeLinkables();
-    ImmutableMultimap<APKModule, NativeLinkableGroup> nativeLinkablesAssets =
+    ImmutableMultimap<APKModule, NativeLinkableGroup> nativeLinkableGroupsAssets =
         packageableCollection.getNativeLinkablesAssets();
+
+    // TODO(cjhopman): The linkables handling is much more complex and we probably should split it
+    // out into its own function.
+    boolean hasLinkables =
+        !(nativeLinkableGroups.isEmpty() && nativeLinkableGroupsAssets.isEmpty());
+    boolean hasNativeLibDirs =
+        !(packageableCollection.getNativeLibsDirectories().isEmpty()
+            && packageableCollection.getNativeLibAssetsDirectories().isEmpty());
+    boolean hasNativeCode = hasLinkables || hasNativeLibDirs;
+
+    if (!hasNativeCode) {
+      return new ImmutableAndroidNativeLibsGraphEnhancementResult(
+          Optional.empty(),
+          Optional.of(ImmutableSortedSet.of()),
+          Optional.empty(),
+          Optional.empty());
+    }
 
     ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms = ImmutableMap.of();
 
-    if (!nativeLinkables.isEmpty() || !nativeLinkablesAssets.isEmpty()) {
+    if (hasLinkables) {
       NdkCxxPlatformsProvider ndkCxxPlatformsProvider =
           toolchainProvider.getByName(
               NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class);
@@ -176,12 +202,30 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       }
     }
 
+    Iterable<TargetCpuType> filteredLinkablePlatforms =
+        hasLinkables ? getFilteredPlatforms(nativePlatforms, cpuFilters) : ImmutableList.of();
+
+    ImmutableMap.Builder<TargetCpuType, NativeLinkableEnhancementResult> nativeLinkablesBuilder =
+        ImmutableMap.builder();
+
+    for (TargetCpuType cpuType : filteredLinkablePlatforms) {
+      nativeLinkablesBuilder.put(
+          cpuType,
+          expandLinkableGroups(
+              nativePlatforms.get(cpuType).getCxxPlatform(),
+              nativeLinkableGroups,
+              nativeLinkableGroupsAssets));
+    }
+
+    ImmutableMap<TargetCpuType, NativeLinkableEnhancementResult> nativeLinkables =
+        nativeLinkablesBuilder.build();
+
     ImmutableSortedMap<String, String> sonameMapping = null;
     ImmutableSortedMap<String, ImmutableSortedSet<String>> sharedObjectTargets = null;
     if (nativeLibraryMergeMap.isPresent()
         && !nativeLibraryMergeMap.get().isEmpty()
         && !nativePlatforms.isEmpty()) {
-      NativeLibraryMergeEnhancementResult enhancement =
+      NativeLibraryMergeEnhancer.NativeLibraryMergeEnhancementResult enhancement =
           NativeLibraryMergeEnhancer.enhance(
               cellPathResolver,
               cxxBuckConfig,
@@ -192,10 +236,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               nativeLibraryMergeMap.get(),
               nativeLibraryMergeGlue,
               nativeLibraryMergeLocalizedSymbols,
-              nativeLinkables,
-              nativeLinkablesAssets);
+              nativeLinkables);
       nativeLinkables = enhancement.getMergedLinkables();
-      nativeLinkablesAssets = enhancement.getMergedLinkablesAssets();
       sonameMapping = enhancement.getSonameMapping();
       sharedObjectTargets = enhancement.getSharedObjectTargets();
     }
@@ -222,27 +264,35 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     ImmutableMap.Builder<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsAssetsBuilder =
         ImmutableMap.builder();
 
-    Map<AndroidLinkableMetadata, NativeLinkableGroup> nativeLinkableLibsMap = new HashMap<>();
-    Map<AndroidLinkableMetadata, NativeLinkableGroup> nativeLinkableLibsAssetsMap = new HashMap<>();
+    BiConsumer<AndroidLinkableMetadata, BuildTarget> duplicateReporter =
+        new BiConsumer<AndroidLinkableMetadata, BuildTarget>() {
+          Map<AndroidLinkableMetadata, BuildTarget> nativeLinkableLibsMap = new HashMap<>();
 
-    if (!nativeLinkables.isEmpty() || !nativeLinkablesAssets.isEmpty()) {
-      for (TargetCpuType targetCpuType : getFilteredPlatforms(nativePlatforms, cpuFilters)) {
-        NdkCxxPlatform platform = nativePlatforms.get(targetCpuType);
-        // Populate nativeLinkableLibs and nativeLinkableLibsAssets with the appropriate entries.
-        populateMapWithLinkables(
-            nativeLinkables,
-            nativeLinkableLibsBuilder,
-            nativeLinkableLibsMap,
-            targetCpuType,
-            platform);
-        populateMapWithLinkables(
-            nativeLinkablesAssets,
-            nativeLinkableLibsAssetsBuilder,
-            nativeLinkableLibsAssetsMap,
-            targetCpuType,
-            platform);
-      }
+          @Override
+          public void accept(AndroidLinkableMetadata metadata, BuildTarget buildTarget) {
+            BuildTarget existing = nativeLinkableLibsMap.putIfAbsent(metadata, buildTarget);
+            if (existing != null && existing != buildTarget) {
+              throw new HumanReadableException(
+                  "Two libraries in the dependencies have the same output filename: %s:\n"
+                      + "Those libraries are  %s and %s",
+                  metadata.getSoName(), buildTarget, existing);
+            }
+          }
+        };
+
+    for (TargetCpuType targetCpuType : filteredLinkablePlatforms) {
+      getNativeLinkableMetadata(
+          nativeLinkables.get(targetCpuType).getNativeLinkables(),
+          nativeLinkableLibsBuilder,
+          duplicateReporter,
+          targetCpuType);
+      getNativeLinkableMetadata(
+          nativeLinkables.get(targetCpuType).getNativeLinkableAssets(),
+          nativeLinkableLibsAssetsBuilder,
+          duplicateReporter,
+          targetCpuType);
     }
+
     // Adds a cxxruntime linkable to the nativeLinkableLibsBuilder for every platform that needs it.
     ImmutableMap<AndroidLinkableMetadata, SourcePath> nativeLinkableLibsAssets =
         nativeLinkableLibsAssetsBuilder.build();
@@ -327,6 +377,26 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         Optional.of(unstrippedLibraries),
         Optional.ofNullable(sonameMapping),
         Optional.ofNullable(sharedObjectTargets));
+  }
+
+  private NativeLinkableEnhancementResult expandLinkableGroups(
+      CxxPlatform cxxPlatform,
+      ImmutableMultimap<APKModule, NativeLinkableGroup> nativeLinkableGroups,
+      ImmutableMultimap<APKModule, NativeLinkableGroup> nativeLinkableGroupssAssets) {
+
+    ImmutableMultimap.Builder<APKModule, NativeLinkable> linkablesBuilder =
+        ImmutableMultimap.builder();
+    ImmutableMultimap.Builder<APKModule, NativeLinkable> linkableAssetsBuilder =
+        ImmutableMultimap.builder();
+
+    nativeLinkableGroups.forEach(
+        (module, group) -> linkablesBuilder.put(module, group.getNativeLinkable(cxxPlatform)));
+
+    nativeLinkableGroupssAssets.forEach(
+        (module, group) -> linkableAssetsBuilder.put(module, group.getNativeLinkable(cxxPlatform)));
+
+    return new ImmutableNativeLinkableEnhancementResult(
+        linkablesBuilder.build(), linkableAssetsBuilder.build());
   }
 
   private void addCxxRuntimeLinkables(
