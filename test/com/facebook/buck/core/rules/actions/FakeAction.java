@@ -16,19 +16,20 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
 import com.facebook.buck.util.function.TriFunction;
 import com.google.common.collect.ImmutableSet;
 
-public class FakeAction extends AbstractAction<FakeActionConstructorArgs> {
+public class FakeAction extends AbstractAction {
+
+  private final FakeActionExecuteLambda executeFunction;
 
   public FakeAction(
-      BuildTarget owner,
+      ActionRegistry actionRegistry,
       ImmutableSet<Artifact> inputs,
       ImmutableSet<Artifact> outputs,
-      FakeActionConstructorArgs executeFunction) {
-    super(owner, inputs, outputs, executeFunction);
+      FakeActionExecuteLambda executeFunction) {
+    super(actionRegistry, inputs, outputs);
+    this.executeFunction = executeFunction;
   }
 
   @Override
@@ -38,7 +39,7 @@ public class FakeAction extends AbstractAction<FakeActionConstructorArgs> {
 
   @Override
   public ActionExecutionResult execute(ActionExecutionContext executionContext) {
-    return params.apply(inputs, outputs, executionContext);
+    return executeFunction.apply(inputs, outputs, executionContext);
   }
 
   @Override
@@ -46,21 +47,15 @@ public class FakeAction extends AbstractAction<FakeActionConstructorArgs> {
     return false;
   }
 
-  public TriFunction<
-          ImmutableSet<Artifact>,
-          ImmutableSet<Artifact>,
-          ActionExecutionContext,
-          ActionExecutionResult>
-      getExecuteFunction() {
-    return params;
+  public FakeActionExecuteLambda getExecuteFunction() {
+    return executeFunction;
   }
 
   @FunctionalInterface
-  public interface FakeActionConstructorArgs
-      extends AbstractAction.ActionConstructorParams,
-          TriFunction<
-              ImmutableSet<Artifact>,
-              ImmutableSet<Artifact>,
-              ActionExecutionContext,
-              ActionExecutionResult> {}
+  public interface FakeActionExecuteLambda
+      extends TriFunction<
+          ImmutableSet<Artifact>,
+          ImmutableSet<Artifact>,
+          ActionExecutionContext,
+          ActionExecutionResult> {}
 }

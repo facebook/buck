@@ -32,10 +32,9 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
+import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.ActionWrapperData;
-import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory;
 import com.facebook.buck.core.rules.actions.FakeAction;
-import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
 import com.facebook.buck.core.rules.actions.FakeActionAnalysisRegistry;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
@@ -105,20 +104,21 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
 
     FakeActionAnalysisRegistry actionAnalysisRegistry = new FakeActionAnalysisRegistry();
 
-    FakeActionConstructorArgs depActionFunction =
+    FakeAction.FakeActionExecuteLambda depActionFunction =
         (ins, outs, ctx) -> ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
 
-    ActionWrapperDataFactory actionWrapperDataFactory =
-        new ActionWrapperDataFactory(depTarget, actionAnalysisRegistry, filesystem);
-    Artifact depArtifact = actionWrapperDataFactory.declareArtifact(Paths.get("bar.output"));
-    actionWrapperDataFactory.createActionAnalysisData(
-        FakeAction.class, ImmutableSet.of(), ImmutableSet.of(depArtifact), depActionFunction);
+    ActionRegistry actionRegistry =
+        new ActionRegistry(depTarget, actionAnalysisRegistry, filesystem);
+    Artifact depArtifact = actionRegistry.declareArtifact(Paths.get("bar.output"));
+
+    new FakeAction(
+        actionRegistry, ImmutableSet.of(), ImmutableSet.of(depArtifact), depActionFunction);
 
     Path outpath = Paths.get("foo.output");
     Path packagePath = BuildPaths.getGenDir(filesystem, buildTarget);
 
     AtomicBoolean functionCalled = new AtomicBoolean();
-    FakeActionConstructorArgs actionFunction =
+    FakeAction.FakeActionExecuteLambda actionFunction =
         (ins, outs, ctx) -> {
           assertEquals(ImmutableSet.of(depArtifact), ins);
           assertEquals(
@@ -133,11 +133,11 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
           return ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
         };
 
-    actionWrapperDataFactory =
-        new ActionWrapperDataFactory(buildTarget, actionAnalysisRegistry, filesystem);
-    Artifact artifact = actionWrapperDataFactory.declareArtifact(outpath);
-    actionWrapperDataFactory.createActionAnalysisData(
-        FakeAction.class, ImmutableSet.of(depArtifact), ImmutableSet.of(artifact), actionFunction);
+    actionRegistry = new ActionRegistry(buildTarget, actionAnalysisRegistry, filesystem);
+    Artifact artifact = actionRegistry.declareArtifact(outpath);
+
+    new FakeAction(
+        actionRegistry, ImmutableSet.of(depArtifact), ImmutableSet.of(artifact), actionFunction);
 
     ProviderInfoCollection providerInfoCollection =
         ProviderInfoCollectionImpl.builder()

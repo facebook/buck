@@ -31,9 +31,8 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory;
+import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.FakeAction;
-import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
 import com.facebook.buck.core.rules.actions.FakeActionAnalysisRegistry;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
@@ -158,20 +157,16 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
 
                   FakeActionAnalysisRegistry actionAnalysisRegistry =
                       new FakeActionAnalysisRegistry();
-                  ActionWrapperDataFactory actionWrapperDataFactory =
-                      new ActionWrapperDataFactory(
-                          target, actionAnalysisRegistry, projectFilesystem);
-                  Artifact artifact = actionWrapperDataFactory.declareArtifact(Paths.get("foo"));
+                  ActionRegistry actionRegistry =
+                      new ActionRegistry(target, actionAnalysisRegistry, projectFilesystem);
+                  Artifact artifact = actionRegistry.declareArtifact(Paths.get("foo"));
 
-                  FakeActionConstructorArgs actionFunction =
+                  FakeAction.FakeActionExecuteLambda actionFunction =
                       (ignored, ignored2, ignored3) ->
                           ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
 
-                  actionWrapperDataFactory.createActionAnalysisData(
-                      FakeAction.class,
-                      ImmutableSet.of(),
-                      ImmutableSet.of(artifact),
-                      actionFunction);
+                  new FakeAction(
+                      actionRegistry, ImmutableSet.of(), ImmutableSet.of(artifact), actionFunction);
                   ActionAnalysisData actionAnalysisData =
                       Iterables.getOnlyElement(actionAnalysisRegistry.getRegistered().entrySet())
                           .getValue();

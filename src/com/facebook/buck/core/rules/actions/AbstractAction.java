@@ -19,39 +19,32 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.BoundArtifact;
 import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.actions.AbstractAction.ActionConstructorParams;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.util.Objects;
 
-/**
- * Base implementation of an {@link Action}
- *
- * @param <T> the constructor parameters provided for creating the {@link Action}
- */
-public abstract class AbstractAction<T extends ActionConstructorParams> implements Action {
+/** Base implementation of an {@link Action} */
+public abstract class AbstractAction implements Action {
 
   protected final BuildTarget owner;
   protected final ImmutableSet<Artifact> inputs;
   protected final ImmutableSet<Artifact> outputs;
-  protected final T params;
 
   /**
-   * @param owner the {@link BuildTarget} that resulted in the creation of this {@link Action}
+   * @param registry the {@link ActionRegistry} to registry this action for.
    * @param inputs the input {@link Artifact} for this {@link Action}. They can be either outputs of
    *     other {@link Action}s or be source files
    * @param outputs the outputs for this {@link Action}
-   * @param params the {@link ActionConstructorParams} for this action. This is here mainly to
-   *     enforce the type signature of the implementations.
    */
   protected AbstractAction(
-      BuildTarget owner, ImmutableSet<Artifact> inputs, ImmutableSet<Artifact> outputs, T params) {
-    this.owner = owner;
+      ActionRegistry registry, ImmutableSet<Artifact> inputs, ImmutableSet<Artifact> outputs) {
     this.inputs = inputs;
     this.outputs = outputs;
-    this.params = params;
+    this.owner = registry.getOwner();
+
+    registry.registerActionAnalysisDataForAction(this);
   }
 
   @Override
@@ -90,10 +83,4 @@ public abstract class AbstractAction<T extends ActionConstructorParams> implemen
         .map(ExplicitBuildTargetSourcePath::getTarget)
         .collect(ImmutableSet.toImmutableSet());
   }
-
-  /**
-   * The additional constructor parameters that are passed to the constructor of the {@link Action}
-   * being created
-   */
-  public interface ActionConstructorParams {}
 }

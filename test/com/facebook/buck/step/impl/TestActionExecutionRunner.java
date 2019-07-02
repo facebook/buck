@@ -24,7 +24,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.AbstractAction;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
-import com.facebook.buck.core.rules.actions.ActionFactoryForTests;
+import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -37,7 +37,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -48,7 +47,7 @@ import java.util.Optional;
  */
 public class TestActionExecutionRunner {
   private final ProjectFilesystem projectFilesystem;
-  private final ActionFactoryForTests actionFactory;
+  private final ActionRegistryForTests actionFactory;
   private final ProjectFilesystemFactory projectFilesystemFactory;
 
   public TestActionExecutionRunner(
@@ -57,7 +56,7 @@ public class TestActionExecutionRunner {
       BuildTarget buildTarget) {
     this.projectFilesystemFactory = projectFilesystemFactory;
     this.projectFilesystem = projectFilesystem;
-    this.actionFactory = new ActionFactoryForTests(buildTarget);
+    this.actionFactory = new ActionRegistryForTests(buildTarget);
   }
 
   public TestActionExecutionRunner(ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
@@ -78,14 +77,8 @@ public class TestActionExecutionRunner {
   }
 
   @SuppressWarnings("unchecked")
-  public <T extends AbstractAction<U>, U extends AbstractAction.ActionConstructorParams>
-      ExecutionDetails<T> runAction(
-          Class<T> clazz,
-          ImmutableSet<Artifact> inputs,
-          ImmutableSet<Artifact> outputs,
-          U actionFunction)
-          throws ActionCreationException, IOException {
-    T action = actionFactory.createAction(clazz, inputs, outputs, actionFunction);
+  public <T extends AbstractAction> ExecutionDetails<T> runAction(T action)
+      throws ActionCreationException, IOException {
 
     ActionExecutionStep step =
         new ActionExecutionStep(action, false, new ArtifactFilesystem(projectFilesystem));

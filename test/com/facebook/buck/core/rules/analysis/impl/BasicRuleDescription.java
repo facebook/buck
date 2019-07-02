@@ -22,7 +22,6 @@ import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.actions.FakeAction;
-import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionFailure;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
@@ -52,7 +51,7 @@ public class BasicRuleDescription implements RuleDescription<BasicRuleDescriptio
 
     Artifact artifact = context.actionFactory().declareArtifact(Paths.get("output"));
 
-    FakeActionConstructorArgs actionExecution =
+    FakeAction.FakeActionExecuteLambda actionExecution =
         (inputs, outputs, ctx) -> {
           Artifact output = Iterables.getOnlyElement(outputs);
           try (OutputStream outputStream = ctx.getArtifactFilesystem().getOutputStream(output)) {
@@ -85,10 +84,8 @@ public class BasicRuleDescription implements RuleDescription<BasicRuleDescriptio
           .ifPresent(info -> inputsBuilder.addAll(info.defaultOutputs()));
     }
 
-    context
-        .actionFactory()
-        .createActionAnalysisData(
-            FakeAction.class, inputsBuilder.build(), ImmutableSet.of(artifact), actionExecution);
+    new FakeAction(
+        context.actionFactory(), inputsBuilder.build(), ImmutableSet.of(artifact), actionExecution);
     return ProviderInfoCollectionImpl.builder()
         .put(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableSet.of(artifact)))
         .build();

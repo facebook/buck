@@ -27,9 +27,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
-import com.facebook.buck.core.rules.actions.ActionFactoryForTests;
+import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.actions.FakeAction;
-import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.event.BuckEventBus;
@@ -63,7 +62,7 @@ public class ActionExecutionStepTest {
 
     Path output = Paths.get("somepath");
 
-    FakeActionConstructorArgs actionFunction =
+    FakeAction.FakeActionExecuteLambda actionFunction =
         (inputs, outputs, ctx) -> {
           assertEquals(ImmutableSet.of(), inputs);
           assertThat(outputs, Matchers.hasSize(1));
@@ -78,11 +77,14 @@ public class ActionExecutionStepTest {
           return ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.of("my std err"));
         };
 
-    ActionFactoryForTests actionFactoryForTests = new ActionFactoryForTests(buildTarget);
+    ActionRegistryForTests actionFactoryForTests = new ActionRegistryForTests(buildTarget);
     Artifact declaredArtifact = actionFactoryForTests.declareArtifact(output);
     FakeAction action =
-        actionFactoryForTests.createFakeAction(
-            ImmutableSet.of(), ImmutableSet.of(declaredArtifact), actionFunction);
+        new FakeAction(
+            actionFactoryForTests,
+            ImmutableSet.of(),
+            ImmutableSet.of(declaredArtifact),
+            actionFunction);
 
     ActionExecutionStep step =
         new ActionExecutionStep(action, false, new ArtifactFilesystem(projectFilesystem));

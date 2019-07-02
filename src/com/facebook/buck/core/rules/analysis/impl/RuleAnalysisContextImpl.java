@@ -16,7 +16,7 @@
 package com.facebook.buck.core.rules.analysis.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory;
+import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
@@ -37,8 +37,9 @@ class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisData
 
   private final BuildTarget buildTarget;
   private final ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> depProviders;
-  private final Map<ActionAnalysisData.ID, ActionAnalysisData> actionRegistry = new HashMap<>();
-  private final ActionWrapperDataFactory actionWrapperDataFactory;
+  private final Map<ActionAnalysisData.ID, ActionAnalysisData> actionAnalysisDataRegistry =
+      new HashMap<>();
+  private final ActionRegistry actionRegistry;
 
   RuleAnalysisContextImpl(
       BuildTarget buildTarget,
@@ -46,7 +47,7 @@ class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisData
       ProjectFilesystem filesystem) {
     this.buildTarget = buildTarget;
     this.depProviders = depProviders;
-    this.actionWrapperDataFactory = new ActionWrapperDataFactory(buildTarget, this, filesystem);
+    this.actionRegistry = new ActionRegistry(buildTarget, this, filesystem);
   }
 
   @Override
@@ -55,8 +56,8 @@ class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisData
   }
 
   @Override
-  public ActionWrapperDataFactory actionFactory() {
-    return actionWrapperDataFactory;
+  public ActionRegistry actionFactory() {
+    return actionRegistry;
   }
 
   @Override
@@ -64,7 +65,8 @@ class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisData
     Preconditions.checkState(actionAnalysisData.getKey().getBuildTarget().equals(buildTarget));
 
     ActionAnalysisData prev =
-        actionRegistry.putIfAbsent(actionAnalysisData.getKey().getID(), actionAnalysisData);
+        actionAnalysisDataRegistry.putIfAbsent(
+            actionAnalysisData.getKey().getID(), actionAnalysisData);
     Verify.verify(
         prev == null,
         "Action of key %s was already registered with %s",
@@ -73,6 +75,6 @@ class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisData
   }
 
   public Map<ActionAnalysisData.ID, ActionAnalysisData> getRegisteredActionData() {
-    return actionRegistry;
+    return actionAnalysisDataRegistry;
   }
 }

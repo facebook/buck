@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.rules.analysis;
 
-import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory;
+import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.google.common.collect.ImmutableMap;
 
@@ -49,7 +49,7 @@ public interface RuleAnalysisContext {
    * @return the factory for creating and registering {@link
    *     com.facebook.buck.core.rules.actions.Action}s
    */
-  ActionWrapperDataFactory actionFactory();
+  ActionRegistry actionFactory();
 
   // TODO(bobyf): Fill as needed. This will probably contain most of {@link
   // BuildRuleCreationContext}

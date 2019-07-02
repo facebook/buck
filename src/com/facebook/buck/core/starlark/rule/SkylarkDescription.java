@@ -19,7 +19,6 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
-import com.facebook.buck.core.rules.actions.lib.ImmutableWriteActionArgs;
 import com.facebook.buck.core.rules.actions.lib.WriteAction;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisException;
@@ -63,13 +62,12 @@ public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg
 
       Artifact outputArtifact = context.actionFactory().declareArtifact(Paths.get("output"));
 
-      context
-          .actionFactory()
-          .createActionAnalysisData(
-              WriteAction.class,
-              ImmutableSet.of(),
-              ImmutableSet.of(outputArtifact),
-              new ImmutableWriteActionArgs("some output", false));
+      new WriteAction(
+          context.actionFactory(),
+          ImmutableSet.of(),
+          ImmutableSet.of(outputArtifact),
+          "some output",
+          false);
 
       ImmutableDefaultInfo defaultInfo =
           new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of(outputArtifact));

@@ -35,7 +35,7 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
-import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory;
+import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.rules.actions.FakeActionAnalysisRegistry;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
@@ -150,11 +150,12 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
 
     Path output = Paths.get("foo.output");
 
-    ActionWrapperDataFactory actionWrapperDataFactory =
-        new ActionWrapperDataFactory(target, fakeActionAnalysisRegistry, fakeFilesystem);
-    Artifact artifact = actionWrapperDataFactory.declareArtifact(output);
-    actionWrapperDataFactory.createActionAnalysisData(
-        FakeAction.class,
+    ActionRegistry actionRegistry =
+        new ActionRegistry(target, fakeActionAnalysisRegistry, fakeFilesystem);
+    Artifact artifact = actionRegistry.declareArtifact(output);
+
+    new FakeAction(
+        actionRegistry,
         ImmutableSet.of(),
         ImmutableSet.of(artifact),
         (ins, outs, ctx) -> ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty()));

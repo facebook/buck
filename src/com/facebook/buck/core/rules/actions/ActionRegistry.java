@@ -20,29 +20,24 @@ import com.facebook.buck.core.artifact.ArtifactDeclarationException;
 import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.artifact.BuildArtifactFactory;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.actions.AbstractAction.ActionConstructorParams;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData.ID;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataRegistry;
 import com.facebook.buck.core.rules.analysis.action.ImmutableActionAnalysisDataKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import java.lang.reflect.Constructor;
 import java.nio.file.Path;
 
 /**
- * The factory for creating {@link ActionWrapperData}.
+ * The registry for {@link Action}s, which creates its corresponding {@link ActionWrapperData}.
  *
  * <p>This helps to hide and enforce the relationship between {@link ActionAnalysisDataKey}, {@link
  * ActionAnalysisData}, {@link Action}, and {@link BuildArtifact}.
  *
- * <p>There is one factory per {@link BuildTarget}, such that all {@link Action}s created by this
- * factory are considered to be associated with the build target.
+ * <p>There is one registry per {@link BuildTarget}, such that all {@link Action}s registered by
+ * this are considered to be associated with the build target.
  */
-public class ActionWrapperDataFactory extends BuildArtifactFactory {
+public class ActionRegistry extends BuildArtifactFactory {
 
   private final ActionAnalysisDataRegistry actionRegistry;
 
@@ -52,7 +47,7 @@ public class ActionWrapperDataFactory extends BuildArtifactFactory {
    *     registered to
    * @param filesystem the {@link ProjectFilesystem} to use for generating paths
    */
-  public ActionWrapperDataFactory(
+  public ActionRegistry(
       BuildTarget buildTarget,
       ActionAnalysisDataRegistry actionRegistry,
       ProjectFilesystem filesystem) {
@@ -71,60 +66,37 @@ public class ActionWrapperDataFactory extends BuildArtifactFactory {
   }
 
   /**
-   * Creates the {@link ActionWrapperData} and its related {@link Action} from a set of {@link
-   * Artifact}s. The created {@link ActionWrapperData} is registered to the {@link
-   * ActionAnalysisDataRegistry}.
+   * Creates the {@link ActionWrapperData} from its {@link Action} and registers the {@link
+   * ActionWrapperData} to the {@link ActionAnalysisDataRegistry}.
    *
    * <p>This will materialize the declared {@link Artifact}s and bind them to the action. These
    * {@link Artifact}s that can be passed via {@link
    * com.google.devtools.build.lib.packages.Provider}s to be consumed.
    *
-   * @param <T> the concrete type of the {@link Action}
-   * @param actionClazz
-   * @param inputs the inputs to the {@link Action}
-   * @param outputs the declared outputs of the {@link Action}
-   * @param args the arguments for construction the {@link Action}
+   * @param action the {@link Action} to create an {@link ActionWrapperData} for and registers it
    */
-  @SuppressWarnings("unchecked")
-  public <T extends AbstractAction<U>, U extends ActionConstructorParams>
-      void createActionAnalysisData(
-          Class<T> actionClazz,
-          ImmutableSet<Artifact> inputs,
-          ImmutableSet<Artifact> outputs,
-          U args)
-          throws ActionCreationException {
+  void registerActionAnalysisDataForAction(Action action) throws ActionCreationException {
 
     // require all inputs to be bound for now. We could change this.
-    for (Artifact input : inputs) {
+    for (Artifact input : action.getInputs()) {
       if (!input.isBound()) {
         throw new ActionCreationException(
-            actionClazz,
-            target,
-            inputs,
-            outputs,
-            args,
-            "Input Artifact %s should be bound to an Action, but is actually not",
-            input);
+            action, "Input Artifact %s should be bound to an Action, but is actually not", input);
       }
     }
 
     ActionAnalysisDataKey key = ImmutableActionAnalysisDataKey.of(target, new ID() {});
-    ImmutableSet<Artifact> materializedOutputs =
-        ImmutableSet.copyOf(
-            Iterables.transform(outputs, artifact -> bindtoBuildArtifact(key, artifact)));
+    action.getOutputs().forEach(artifact -> bindtoBuildArtifact(key, artifact));
 
-    try {
-      // TODO(bobyf): we can probably do some stuff here with annotation processing to generate
-      // typed creation instead of reflection
-      Constructor<?>[] constructors = actionClazz.getConstructors();
-      Preconditions.checkArgument(
-          constructors.length == 1,
-          "Action classes must be public, and have exactly one public constructor");
-      T action = (T) constructors[0].newInstance(target, inputs, materializedOutputs, args);
-      ActionWrapperData actionAnalysisData = ImmutableActionWrapperData.of(key, action);
-      actionRegistry.registerAction(actionAnalysisData);
-    } catch (Exception e) {
-      throw new ActionCreationException(e, actionClazz, target, inputs, outputs, args);
-    }
+    ActionWrapperData actionAnalysisData = ImmutableActionWrapperData.of(key, action);
+    actionRegistry.registerAction(actionAnalysisData);
+  }
+
+  /**
+   * @return the {@link BuildTarget} responsible for all the {@link Action}s registered to this
+   *     factory.
+   */
+  BuildTarget getOwner() {
+    return target;
   }
 }
