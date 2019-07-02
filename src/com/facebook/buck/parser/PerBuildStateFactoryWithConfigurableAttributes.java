@@ -18,27 +18,15 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.model.platform.ConstraintResolver;
-import com.facebook.buck.core.model.platform.Platform;
-import com.facebook.buck.core.model.platform.PlatformResolver;
-import com.facebook.buck.core.model.platform.TargetPlatformResolver;
-import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
-import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.impl.ConfigurationRuleSelectableResolver;
-import com.facebook.buck.core.rules.config.impl.SameThreadConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
-import com.facebook.buck.core.rules.config.registry.ImmutableConfigurationRuleRegistry;
+import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
-import com.facebook.buck.core.rules.platform.CachingPlatformResolver;
-import com.facebook.buck.core.rules.platform.DefaultTargetPlatformResolver;
-import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
-import com.facebook.buck.core.rules.platform.RuleBasedPlatformResolver;
-import com.facebook.buck.core.rules.platform.RuleBasedTargetPlatformResolver;
 import com.facebook.buck.core.select.SelectableResolver;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
@@ -182,33 +170,16 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             enableSpeculativeParsing,
             nonResolvingRawTargetNodeToTargetNodeFactory);
 
-    ConfigurationRuleResolver configurationRuleResolver =
-        new SameThreadConfigurationRuleResolver(
+    ConfigurationRuleRegistry configurationRuleRegistry =
+        ConfigurationRuleRegistryFactory.createRegistry(
             target ->
                 nonResolvingTargetNodeParsePipeline.getNode(cellManager.getCell(target), target));
 
     SelectableResolver selectableResolver =
-        new ConfigurationRuleSelectableResolver(configurationRuleResolver);
+        new ConfigurationRuleSelectableResolver(
+            configurationRuleRegistry.getConfigurationRuleResolver());
 
     SelectorListResolver selectorListResolver = new DefaultSelectorListResolver(selectableResolver);
-
-    ConstraintResolver constraintResolver =
-        new RuleBasedConstraintResolver(configurationRuleResolver);
-
-    Platform defaultPlatform = EmptyPlatform.INSTANCE;
-    PlatformResolver platformResolver =
-        new CachingPlatformResolver(
-            new RuleBasedPlatformResolver(configurationRuleResolver, constraintResolver));
-    TargetPlatformResolver targetPlatformResolver =
-        new DefaultTargetPlatformResolver(
-            new RuleBasedTargetPlatformResolver(platformResolver), defaultPlatform);
-
-    ConfigurationRuleRegistry configurationRuleRegistry =
-        new ImmutableConfigurationRuleRegistry(
-            configurationRuleResolver,
-            constraintResolver,
-            platformResolver,
-            targetPlatformResolver);
 
     RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
         new RawTargetNodeToTargetNodeFactory(
@@ -219,8 +190,8 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             packageBoundaryChecker,
             symlinkCheckers,
             selectorListResolver,
-            constraintResolver,
-            targetPlatformResolver);
+            configurationRuleRegistry.getConstraintResolver(),
+            configurationRuleRegistry.getTargetPlatformResolver());
 
     ListeningExecutorService configuredPipelineExecutor =
         MoreExecutors.listeningDecorator(
