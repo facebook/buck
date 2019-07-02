@@ -190,6 +190,7 @@ standard_java_test(
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/support/bgtasks:bgtasks",
+        "//src/com/facebook/buck/support/build/report:report",
         "//src/com/facebook/buck/swift:swift",
         "//src/com/facebook/buck/test:test",
         "//src/com/facebook/buck/test/config:config",

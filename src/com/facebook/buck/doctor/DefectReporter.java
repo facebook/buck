@@ -83,6 +83,6 @@ public interface DefectReporter {
 
     Optional<FileChangesIgnoredReport> getFileChangesIgnoredReport();
 
-    UserLocalConfiguration getUserLocalConfiguration();
+    Optional<UserLocalConfiguration> getUserLocalConfiguration();
   }
 }

@@ -2074,7 +2074,8 @@ public final class MainRunner {
               invocationInfo,
               MostExecutors.newSingleThreadExecutor(
                   new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
-              managerScope));
+              managerScope,
+              Optional.empty()));
     }
 
     eventListenersBuilder.add(
