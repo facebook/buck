@@ -37,16 +37,24 @@ import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedExceptio
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class DefectReporterTest {
+
+  ProjectFilesystem filesystem;
+  DoctorConfig config;
+  Clock clock;
+  DefectReporter reporter;
+  DefectReport.Builder defectReportBuilder;
 
   private static final BuildEnvironmentDescription TEST_ENV_DESCRIPTION =
       BuildEnvironmentDescription.builder()
@@ -63,46 +71,15 @@ public class DefectReporterTest {
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
-  @Test
-  public void testAttachesPaths() throws Exception {
-    UserLocalConfiguration userLocalConfiguration =
-        new ImmutableUserLocalConfiguration(
-            true,
-            ImmutableMap.of(
-                Paths.get(".buckconfig.local"),
-                "data",
-                temporaryFolder.newFile("experiments"),
-                "[foo]\nbar = baz"),
-            ImmutableMap.of("config_key", "config_value"));
-
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    DoctorConfig config = new ImmutableDoctorConfig(FakeBuckConfig.builder().build());
-    Clock clock = new DefaultClock();
-    DefectReporter reporter =
+  @Before
+  public void setUp() throws IOException {
+    filesystem = TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
+    config = new ImmutableDoctorConfig(FakeBuckConfig.builder().build());
+    clock = new DefaultClock();
+    reporter =
         new DefaultDefectReporter(
             filesystem, config, BuckEventBusForTests.newInstance(clock), clock);
 
-    Path fileToBeIncluded = Paths.get("FileToBeIncluded.txt");
-    filesystem.touch(fileToBeIncluded);
-    String fileToBeIncludedContent = "testcontentbehere";
-    filesystem.writeContentsToPath(fileToBeIncludedContent, fileToBeIncluded);
-
-    DefectSubmitResult defectSubmitResult =
-        reporter.submitReport(
-            DefectReport.builder()
-                .setBuildEnvironmentDescription(TEST_ENV_DESCRIPTION)
-                .setIncludedPaths(fileToBeIncluded)
-                .setUserLocalConfiguration(userLocalConfiguration)
-                .build());
-
-    Path reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation().get());
-    ZipInspector inspector = new ZipInspector(reportPath);
-    inspector.assertFileContents(fileToBeIncluded, fileToBeIncludedContent);
-  }
-
-  @Test
-  public void testAttachesReport() throws Exception {
     UserLocalConfiguration testUserLocalConfiguration =
         new ImmutableUserLocalConfiguration(
             true,
@@ -113,20 +90,31 @@ public class DefectReporterTest {
                 "[foo]\nbar = baz\n"),
             ImmutableMap.of("config_key", "config_value"));
 
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    DoctorConfig config = new ImmutableDoctorConfig(FakeBuckConfig.builder().build());
-    Clock clock = new DefaultClock();
-    DefectReporter reporter =
-        new DefaultDefectReporter(
-            filesystem, config, BuckEventBusForTests.newInstance(clock), clock);
+    defectReportBuilder =
+        DefectReport.builder()
+            .setBuildEnvironmentDescription(TEST_ENV_DESCRIPTION)
+            .setUserLocalConfiguration(testUserLocalConfiguration);
+  }
+
+  @Test
+  public void testAttachesPaths() throws Exception {
+
+    Path fileToBeIncluded = Paths.get("FileToBeIncluded.txt");
+    filesystem.touch(fileToBeIncluded);
+    String fileToBeIncludedContent = "testcontentbehere";
+    filesystem.writeContentsToPath(fileToBeIncludedContent, fileToBeIncluded);
 
     DefectSubmitResult defectSubmitResult =
-        reporter.submitReport(
-            DefectReport.builder()
-                .setBuildEnvironmentDescription(TEST_ENV_DESCRIPTION)
-                .setUserLocalConfiguration(testUserLocalConfiguration)
-                .build());
+        reporter.submitReport(defectReportBuilder.setIncludedPaths(fileToBeIncluded).build());
+
+    Path reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation().get());
+    ZipInspector inspector = new ZipInspector(reportPath);
+    inspector.assertFileContents(fileToBeIncluded, fileToBeIncludedContent);
+  }
+
+  @Test
+  public void testAttachesReport() throws Exception {
+    DefectSubmitResult defectSubmitResult = reporter.submitReport(defectReportBuilder.build());
 
     Path reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation().get());
     try (ZipFile zipFile = new ZipFile(reportPath.toFile())) {
@@ -164,21 +152,10 @@ public class DefectReporterTest {
 
   @Test
   public void testSourceControlExceptionAllowsGeneratingReport() throws Exception {
-    UserLocalConfiguration testUserLocalConfiguration =
-        new ImmutableUserLocalConfiguration(true, ImmutableMap.of(), ImmutableMap.of());
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    DoctorConfig config = new ImmutableDoctorConfig(FakeBuckConfig.builder().build());
-    Clock clock = new DefaultClock();
-    DefectReporter reporter =
-        new DefaultDefectReporter(
-            filesystem, config, BuckEventBusForTests.newInstance(clock), clock);
 
     DefectSubmitResult defectSubmitResult =
         reporter.submitReport(
-            DefectReport.builder()
-                .setBuildEnvironmentDescription(TEST_ENV_DESCRIPTION)
-                .setUserLocalConfiguration(testUserLocalConfiguration)
+            defectReportBuilder
                 .setSourceControlInfo(
                     new ImmutableSourceControlInfo(
                         "commitid",
