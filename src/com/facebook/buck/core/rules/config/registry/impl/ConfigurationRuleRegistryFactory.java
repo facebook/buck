@@ -26,8 +26,10 @@ import com.facebook.buck.core.rules.config.impl.SameThreadConfigurationRuleResol
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.config.registry.ImmutableConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.platform.CachingPlatformResolver;
+import com.facebook.buck.core.rules.platform.CombinedPlatformResolver;
 import com.facebook.buck.core.rules.platform.DefaultTargetPlatformResolver;
 import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
+import com.facebook.buck.core.rules.platform.RuleBasedMultiPlatformResolver;
 import com.facebook.buck.core.rules.platform.RuleBasedPlatformResolver;
 import com.facebook.buck.core.rules.platform.RuleBasedTargetPlatformResolver;
 import java.util.function.Function;
@@ -45,9 +47,15 @@ public class ConfigurationRuleRegistryFactory {
     ConstraintResolver constraintResolver =
         new RuleBasedConstraintResolver(configurationRuleResolver);
 
+    RuleBasedPlatformResolver ruleBasedPlatformResolver =
+        new RuleBasedPlatformResolver(configurationRuleResolver, constraintResolver);
     PlatformResolver platformResolver =
         new CachingPlatformResolver(
-            new RuleBasedPlatformResolver(configurationRuleResolver, constraintResolver));
+            new CombinedPlatformResolver(
+                configurationRuleResolver,
+                ruleBasedPlatformResolver,
+                new RuleBasedMultiPlatformResolver(
+                    configurationRuleResolver, ruleBasedPlatformResolver)));
     TargetPlatformResolver targetPlatformResolver =
         new DefaultTargetPlatformResolver(
             new RuleBasedTargetPlatformResolver(platformResolver), EmptyPlatform.INSTANCE);
