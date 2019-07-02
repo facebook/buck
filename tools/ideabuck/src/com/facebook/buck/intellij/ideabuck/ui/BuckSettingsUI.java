@@ -91,6 +91,7 @@ public class BuckSettingsUI extends JPanel {
   private TextFieldWithBrowseButton buildifierPathField;
   private TextFieldWithBrowseButton buildozerPathField;
   private JBTextField customizedInstallSettingField;
+  private JCheckBox autoFormatOnSave;
   private JCheckBox showDebug;
   private JCheckBox runAfterInstall;
   private JCheckBox multiInstallMode;
@@ -322,6 +323,7 @@ public class BuckSettingsUI extends JPanel {
   }
 
   private JPanel initUISettingsSection() {
+    autoFormatOnSave = new JCheckBox("Auto-format build files on save (using buildifier)");
     showDebug = new JCheckBox("Show debug in tool window");
 
     JPanel panel = new JPanel(new GridBagLayout());
@@ -333,6 +335,9 @@ public class BuckSettingsUI extends JPanel {
     constraints.weightx = 1;
 
     constraints.gridy = 0;
+    panel.add(autoFormatOnSave, constraints);
+
+    constraints.gridy = 1;
     panel.add(showDebug, constraints);
     return panel;
   }
@@ -625,6 +630,7 @@ public class BuckSettingsUI extends JPanel {
             buildozerPathField.getText().trim(),
             buckExecutableSettingsProvider.getBuildozerExecutableOverride().orElse(""))
         || buckProjectSettingsProvider.isRunAfterInstall() != runAfterInstall.isSelected()
+        || buckProjectSettingsProvider.isAutoFormatOnSave() != autoFormatOnSave.isSelected()
         || buckProjectSettingsProvider.isShowDebugWindow() != showDebug.isSelected()
         || buckProjectSettingsProvider.isMultiInstallMode() != multiInstallMode.isSelected()
         || buckProjectSettingsProvider.isUninstallBeforeInstalling()
@@ -645,6 +651,7 @@ public class BuckSettingsUI extends JPanel {
         textToOptional(buildifierPathField.getText()));
     buckExecutableSettingsProvider.setBuildozerExecutableOverride(
         textToOptional(buildozerPathField.getText()));
+    buckProjectSettingsProvider.setAutoFormatOnSave(autoFormatOnSave.isSelected());
     buckProjectSettingsProvider.setShowDebugWindow(showDebug.isSelected());
     buckProjectSettingsProvider.setRunAfterInstall(runAfterInstall.isSelected());
     buckProjectSettingsProvider.setMultiInstallMode(multiInstallMode.isSelected());
@@ -663,6 +670,7 @@ public class BuckSettingsUI extends JPanel {
         buckExecutableSettingsProvider.getBuildifierExecutableOverride().orElse(""));
     buildozerPathField.setText(
         buckExecutableSettingsProvider.getBuildozerExecutableOverride().orElse(""));
+    autoFormatOnSave.setSelected(buckProjectSettingsProvider.isAutoFormatOnSave());
     showDebug.setSelected(buckProjectSettingsProvider.isShowDebugWindow());
     runAfterInstall.setSelected(buckProjectSettingsProvider.isRunAfterInstall());
     multiInstallMode.setSelected(buckProjectSettingsProvider.isMultiInstallMode());

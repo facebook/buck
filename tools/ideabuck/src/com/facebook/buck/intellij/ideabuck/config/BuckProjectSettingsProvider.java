@@ -162,6 +162,14 @@ public class BuckProjectSettingsProvider
     return buckExecutableSettingsProvider.resolveAdbExecutable();
   }
 
+  public boolean isAutoFormatOnSave() {
+    return state.autoFormatOnSave;
+  }
+
+  public void setAutoFormatOnSave(boolean autoFormatOnSave) {
+    state.autoFormatOnSave = autoFormatOnSave;
+  }
+
   public boolean isShowDebugWindow() {
     return state.showDebug;
   }
@@ -248,6 +256,9 @@ public class BuckProjectSettingsProvider
      * @deprecated Moved to {@link BuckExecutableSettingsProvider.State#adbExecutable}.
      */
     @Nullable public String adbExecutable = null;
+
+    /** Enable autoformatting of Buck files on save. */
+    public boolean autoFormatOnSave = false;
 
     /** Enable the debug window for the plugin. */
     public boolean showDebug = false;

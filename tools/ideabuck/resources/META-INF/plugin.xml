@@ -13,6 +13,7 @@
 <h3>3.7.6</h3>
 <ul>
   <li>Use <code>buildifier</code> for the "Reformat Code" action</li>
+  <li>Support auto-formatting build files on save</li>
 </ul>
 <h3>3.7.5</h3>
 <ul>
@@ -461,6 +462,10 @@
     <component>
       <implementation-class>
         com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider
+      </implementation-class>
+    </component>
+    <component>
+      <implementation-class>com.facebook.buck.intellij.ideabuck.format.BuildifierAutoFormatter
       </implementation-class>
     </component>
 
