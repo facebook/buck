@@ -41,8 +41,11 @@ public interface BuildEngineAction {
    */
   ImmutableSet<BuildTarget> getDependencies();
 
-  /** @return the set of outputs this {@link BuildEngineAction} builds */
-  ImmutableSet<SourcePath> getOutputs();
+  /**
+   * @return the set of outputs this {@link BuildEngineAction} builds. This is here for legacy as
+   *     BuildRules deal with {@link SourcePath}
+   */
+  ImmutableSet<SourcePath> getSourcePathOutputs();
 
   /**
    * Whether this {@link BuildEngineAction} can be cached.
@@ -55,7 +58,7 @@ public interface BuildEngineAction {
   /**
    * Executes this {@link BuildEngineAction}, called by the {@link
    * com.facebook.buck.core.build.engine.BuildEngine} to materialize the outputs declared in {@link
-   * #getOutputs()}
+   * #getSourcePathOutputs()}
    */
   void execute(
       ExecutionContext executionContext,

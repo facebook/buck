@@ -140,12 +140,12 @@ public abstract class AbstractBuildRule implements BuildRule {
   }
 
   @Override
-  public ImmutableSet<SourcePath> getOutputs() {
+  public ImmutableSet<SourcePath> getSourcePathOutputs() {
     @Nullable SourcePath output = getSourcePathToOutput();
     if (output == null) {
       return ImmutableSet.of();
     }
-    return ImmutableSet.of(getSourcePathToOutput());
+    return ImmutableSet.of(output);
   }
 
   @Override
