@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.support.build.report;
 
-import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.versioncontrol.FullVersionControlStats;
@@ -38,6 +37,4 @@ public interface FullBuildReport {
 
   @JsonProperty
   Optional<FullVersionControlStats> versionControlStats();
-
-  BuildId getBuildId();
 }

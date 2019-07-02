@@ -41,13 +41,12 @@ public class BuildReportUpload {
   private static final int VERSION_CONTROL_STATS_GENERATION_TIMEOUT = 3;
 
   private final TaskManagerCommandScope managerScope;
-  private final URL endpointURL;
-  private final long timeout;
+  private final BuildReportUploader buildReportUploader;
 
-  BuildReportUpload(TaskManagerCommandScope managerScope, URL endpointURL, long timeout) {
-    this.endpointURL = endpointURL;
-    this.timeout = timeout;
+  BuildReportUpload(
+      TaskManagerCommandScope managerScope, URL endpointURL, long timeout, BuildId buildId) {
     this.managerScope = managerScope;
+    this.buildReportUploader = new BuildReportUploader(endpointURL, timeout, buildId);
   }
 
   /**
@@ -69,9 +68,10 @@ public class BuildReportUpload {
     URL endpointUrl = buildReportConfig.getEndpointUrl().get();
 
     BuildReportUpload buildReportUpload =
-        new BuildReportUpload(managerScope, endpointUrl, buildReportConfig.getEndpointTimeoutMs());
+        new BuildReportUpload(
+            managerScope, endpointUrl, buildReportConfig.getEndpointTimeoutMs(), buildId);
 
-    buildReportUpload.uploadInBackground(buckConfig.getConfig(), buildId, vcStatsFuture);
+    buildReportUpload.uploadInBackground(buckConfig.getConfig(), vcStatsFuture);
   }
 
   /**
@@ -98,12 +98,9 @@ public class BuildReportUpload {
 
   /** Schedules background task to upload the report */
   private void uploadInBackground(
-      Config config,
-      BuildId buildId,
-      ListenableFuture<Optional<FullVersionControlStats>> vcStatsFuture) {
+      Config config, ListenableFuture<Optional<FullVersionControlStats>> vcStatsFuture) {
     BuildReportUploadActionArgs args =
-        new ImmutableBuildReportUploadActionArgs(
-            config, endpointURL, timeout, buildId, vcStatsFuture);
+        new ImmutableBuildReportUploadActionArgs(config, buildReportUploader, vcStatsFuture);
 
     BackgroundTask<BuildReportUploadActionArgs> task =
         ImmutableBackgroundTask.of("BuildReportUpload", new BuildReportUploadAction(), args);
@@ -115,10 +112,6 @@ public class BuildReportUpload {
   static class BuildReportUploadAction implements TaskAction<BuildReportUploadActionArgs> {
     @Override
     public void run(BuildReportUploadActionArgs args) {
-
-      BuildReportUploader buildReportUploader =
-          new BuildReportUploader(args.getUploadURL(), args.getTimeout());
-
       Optional<FullVersionControlStats> vcStats = Optional.empty();
       try {
         vcStats =
@@ -136,10 +129,9 @@ public class BuildReportUpload {
         LOG.warn("Uploading build report without version control stats");
       }
 
-      FullBuildReport buildReport =
-          new ImmutableFullBuildReport(args.getConfig(), vcStats, args.getBuildId());
+      FullBuildReport buildReport = new ImmutableFullBuildReport(args.getConfig(), vcStats);
       try {
-        buildReportUploader.uploadReport(buildReport);
+        args.getBuildReportUploader().uploadReport(buildReport);
       } catch (IOException e) {
         LOG.error(e);
       }
@@ -152,11 +144,7 @@ public class BuildReportUpload {
 
     abstract Config getConfig();
 
-    abstract URL getUploadURL();
-
-    abstract long getTimeout();
-
-    abstract BuildId getBuildId();
+    abstract BuildReportUploader getBuildReportUploader();
 
     abstract ListenableFuture<Optional<FullVersionControlStats>> getVcStatsFuture();
   }

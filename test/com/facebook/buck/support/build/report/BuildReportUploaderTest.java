@@ -92,8 +92,7 @@ public class BuildReportUploaderTest {
   public void uploadReportToTestServer() throws Exception {
 
     FullBuildReport reportToSend =
-        new ImmutableFullBuildReport(
-            buckConfig.getConfig(), Optional.of(versionControlStats), buildId);
+        new ImmutableFullBuildReport(buckConfig.getConfig(), Optional.of(versionControlStats));
 
     try (HttpdForTests httpd = HttpdForTests.httpdForOkHttpTests()) {
       httpd.addHandler(new BuildReportHandler());
@@ -103,7 +102,8 @@ public class BuildReportUploaderTest {
       long timeoutMs = buckConfig.getView(BuildReportConfig.class).getEndpointTimeoutMs();
 
       UploadResponse response =
-          new BuildReportUploader(testEndpointURI.toURL(), timeoutMs).uploadReport(reportToSend);
+          new BuildReportUploader(testEndpointURI.toURL(), timeoutMs, buildId)
+              .uploadReport(reportToSend);
 
       Optional<String> uri = response.uri();
 
