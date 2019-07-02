@@ -16,9 +16,15 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.BoundArtifact;
+import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.AbstractAction.ActionConstructorParams;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import java.util.Objects;
 
 /**
  * Base implementation of an {@link Action}
@@ -61,6 +67,28 @@ public abstract class AbstractAction<T extends ActionConstructorParams> implemen
   @Override
   public final ImmutableSet<Artifact> getOutputs() {
     return outputs;
+  }
+
+  @Override
+  public ImmutableSet<SourcePath> getSourcePathOutputs() {
+    return ImmutableSet.copyOf(
+        Iterables.transform(getOutputs(), artifact -> artifact.asBound().getSourcePath()));
+  }
+
+  @Override
+  public BuildTarget getBuildTarget() {
+    return getOwner();
+  }
+
+  @Override
+  public ImmutableSet<BuildTarget> getDependencies() {
+    return getInputs().stream()
+        .map(Artifact::asBound)
+        .map(BoundArtifact::asBuildArtifact)
+        .filter(Objects::nonNull)
+        .map(BuildArtifact::getSourcePath)
+        .map(ExplicitBuildTargetSourcePath::getTarget)
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   /**

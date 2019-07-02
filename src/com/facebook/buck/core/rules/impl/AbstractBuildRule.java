@@ -16,18 +16,12 @@
 
 package com.facebook.buck.core.rules.impl;
 
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
-import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepFailedException;
-import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.Collections2;
@@ -146,16 +140,5 @@ public abstract class AbstractBuildRule implements BuildRule {
       return ImmutableSet.of();
     }
     return ImmutableSet.of(output);
-  }
-
-  @Override
-  public void execute(
-      ExecutionContext executionContext,
-      BuildContext buildContext,
-      BuildableContext buildableContext)
-      throws StepFailedException, InterruptedException {
-    for (Step step : getBuildSteps(buildContext, buildableContext)) {
-      StepRunner.runStep(executionContext, step);
-    }
   }
 }
