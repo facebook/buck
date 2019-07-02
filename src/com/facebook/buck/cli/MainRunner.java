@@ -71,6 +71,8 @@ import com.facebook.buck.counters.CounterBuckConfig;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
 import com.facebook.buck.distributed.DistBuildConfig;
+import com.facebook.buck.doctor.DefaultDefectReporter;
+import com.facebook.buck.doctor.config.ImmutableDoctorConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.BuckInitializationDurationEvent;
@@ -150,8 +152,10 @@ import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
+import com.facebook.buck.support.build.report.BuildReportConfig;
 import com.facebook.buck.support.build.report.BuildReportUpload;
 import com.facebook.buck.support.build.report.BuildReportUtils;
+import com.facebook.buck.support.build.report.RuleKeyLogFileUploader;
 import com.facebook.buck.support.cli.args.BuckArgsMethods;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.support.cli.config.BuckConfigWriter;
@@ -1213,6 +1217,7 @@ public final class MainRunner {
                   rootCell.getBuckConfig(),
                   webServer,
                   clock,
+                  executionEnvironment,
                   counterRegistry,
                   commandEventListeners,
                   remoteExecutionListener.isPresent()
@@ -2015,6 +2020,7 @@ public final class MainRunner {
       BuckConfig buckConfig,
       Optional<WebServer> webServer,
       Clock clock,
+      ExecutionEnvironment executionEnvironment,
       CounterRegistry counterRegistry,
       Iterable<BuckEventListener> commandSpecificEventListeners,
       Optional<RemoteExecutionStatsProvider> reStatsProvider,
@@ -2069,6 +2075,11 @@ public final class MainRunner {
             invocationInfo.getBuildId(),
             managerScope));
     if (logBuckConfig.isRuleKeyLoggerEnabled()) {
+
+      Optional<RuleKeyLogFileUploader> keyLogFileUploader =
+          createRuleKeyLogFileUploader(
+              buckConfig, projectFilesystem, buckEventBus, clock, executionEnvironment, buildId);
+
       eventListenersBuilder.add(
           new RuleKeyLoggerListener(
               projectFilesystem,
@@ -2076,7 +2087,7 @@ public final class MainRunner {
               MostExecutors.newSingleThreadExecutor(
                   new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
               managerScope,
-              Optional.empty()));
+              keyLogFileUploader));
     }
 
     eventListenersBuilder.add(
@@ -2124,6 +2135,32 @@ public final class MainRunner {
         executionEnvironment,
         new ArtifactCacheBuckConfig(buckConfig).getArtifactCacheModesRaw(),
         environmentExtraData.build());
+  }
+
+  private Optional<RuleKeyLogFileUploader> createRuleKeyLogFileUploader(
+      BuckConfig buckConfig,
+      ProjectFilesystem projectFilesystem,
+      BuckEventBus buckEventBus,
+      Clock clock,
+      ExecutionEnvironment executionEnvironment,
+      BuildId buildId) {
+    if (BuildReportUtils.shouldUploadBuildReport(buckConfig)) {
+      BuildReportConfig buildReportConfig = buckConfig.getView(BuildReportConfig.class);
+      return Optional.of(
+          new RuleKeyLogFileUploader(
+              new DefaultDefectReporter(
+                  projectFilesystem,
+                  buckConfig.getView(ImmutableDoctorConfig.class),
+                  buckEventBus,
+                  clock),
+              getBuildEnvironmentDescription(
+                  executionEnvironment,
+                  buckConfig),
+              buildReportConfig.getEndpointUrl().get(),
+              buildReportConfig.getEndpointTimeoutMs(),
+              buildId));
+    }
+    return Optional.empty();
   }
 
   private AbstractConsoleEventBusListener createConsoleEventListener(
