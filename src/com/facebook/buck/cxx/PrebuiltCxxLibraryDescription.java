@@ -52,6 +52,7 @@ import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableCacheKey;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -677,17 +678,19 @@ public class PrebuiltCxxLibraryDescription
           return NativeLinkableInput.of();
         }
 
+        NativeLinkable linkable = getNativeLinkable(cxxPlatform);
+
         Linker.LinkableDepType type = key.getType();
         boolean forceLinkWhole = key.getForceLinkWhole();
 
         // Build the library path and linker arguments that we pass through the
         // {@link NativeLinkable} interface for linking.
         ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
-        linkerArgsBuilder.addAll(getExportedLinkerFlags(cxxPlatform, graphBuilder));
+        linkerArgsBuilder.addAll(linkable.getExportedLinkerFlags(graphBuilder));
 
         if (!args.isHeaderOnly()) {
           if (type == Linker.LinkableDepType.SHARED) {
-            Preconditions.checkState(getPreferredLinkage(cxxPlatform) != Linkage.STATIC);
+            Preconditions.checkState(linkable.getPreferredLinkage() != Linkage.STATIC);
             SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform, true, graphBuilder);
             if (args.getLinkWithoutSoname()) {
               if (!(sharedLibrary instanceof PathSourcePath)) {
@@ -700,7 +703,7 @@ public class PrebuiltCxxLibraryDescription
                   SourcePathArg.of(requireSharedLibrary(cxxPlatform, true, graphBuilder)));
             }
           } else {
-            Preconditions.checkState(getPreferredLinkage(cxxPlatform) != Linkage.SHARED);
+            Preconditions.checkState(linkable.getPreferredLinkage() != Linkage.SHARED);
             Optional<SourcePath> staticLibraryPath =
                 type == Linker.LinkableDepType.STATIC_PIC
                     ? getStaticPicLibrary(cxxPlatform, graphBuilder)
@@ -724,7 +727,7 @@ public class PrebuiltCxxLibraryDescription
         }
 
         // Add any post exported flags, if any.
-        linkerArgsBuilder.addAll(getExportedPostLinkerFlags(cxxPlatform, graphBuilder));
+        linkerArgsBuilder.addAll(linkable.getExportedPostLinkerFlags(graphBuilder));
 
         ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
 
@@ -834,8 +837,9 @@ public class PrebuiltCxxLibraryDescription
                   CxxPlatform cxxPlatform,
                   ActionGraphBuilder graphBuilder,
                   SourcePathResolver pathResolver) {
+                NativeLinkable linkable = getNativeLinkable(cxxPlatform);
                 return NativeLinkableInput.builder()
-                    .addAllArgs(getExportedLinkerFlags(cxxPlatform, graphBuilder))
+                    .addAllArgs(linkable.getExportedLinkerFlags(graphBuilder))
                     .addAllArgs(
                         cxxPlatform
                             .getLd()
@@ -844,7 +848,7 @@ public class PrebuiltCxxLibraryDescription
                                 SourcePathArg.of(
                                     getStaticPicLibrary(cxxPlatform, graphBuilder).get()),
                                 pathResolver))
-                    .addAllArgs(getExportedPostLinkerFlags(cxxPlatform, graphBuilder))
+                    .addAllArgs(linkable.getExportedPostLinkerFlags(graphBuilder))
                     .build();
               }
 

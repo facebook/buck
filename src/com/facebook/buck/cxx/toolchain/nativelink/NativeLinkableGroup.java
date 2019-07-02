@@ -148,6 +148,7 @@ public interface NativeLinkableGroup {
 
   /** @return exported linker flags. These should be added to link lines of dependents. */
   @SuppressWarnings("unused")
+  @Deprecated
   default Iterable<? extends Arg> getExportedLinkerFlags(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return ImmutableList.of();
@@ -158,6 +159,7 @@ public interface NativeLinkableGroup {
    *     linker flags.
    */
   @SuppressWarnings("unused")
+  @Deprecated
   default Iterable<? extends Arg> getExportedPostLinkerFlags(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return ImmutableList.of();
