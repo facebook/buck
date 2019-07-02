@@ -271,6 +271,7 @@ public class DefaultDefectReporter implements DefectReporter {
         .setReportSubmitMessage(json.getMessage())
         .setReportSubmitLocation(json.getRageUrl())
         .setRequestProtocol(DoctorProtocolVersion.JSON)
+        .setReportId(json.getReportId())
         .build();
   }
 }
