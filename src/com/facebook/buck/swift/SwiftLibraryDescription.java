@@ -57,6 +57,7 @@ import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -357,8 +358,9 @@ public class SwiftLibraryDescription
         CxxDescriptionEnhancer.getSharedLibraryPath(
             projectFilesystem, buildTarget, sharedLibrarySoname);
 
-    SwiftRuntimeNativeLinkableGroup swiftRuntimeLinkable =
-        new SwiftRuntimeNativeLinkableGroup(swiftPlatform, buildTarget.getTargetConfiguration());
+    NativeLinkable swiftRuntimeLinkable =
+        new SwiftRuntimeNativeLinkableGroup(swiftPlatform, buildTarget.getTargetConfiguration())
+            .getNativeLinkable(cxxPlatform);
 
     BuildTarget requiredBuildTarget =
         buildTarget
@@ -371,7 +373,6 @@ public class SwiftLibraryDescription
         NativeLinkableInput.builder()
             .from(
                 swiftRuntimeLinkable.getNativeLinkableInput(
-                    cxxPlatform,
                     Linker.LinkableDepType.SHARED,
                     graphBuilder,
                     buildTarget.getTargetConfiguration()))
@@ -392,8 +393,8 @@ public class SwiftLibraryDescription
             CxxLinkOptions.of(),
             RichStream.from(params.getBuildDeps())
                 .filter(NativeLinkableGroup.class)
-                .concat(RichStream.of(swiftRuntimeLinkable))
                 .map(g -> g.getNativeLinkable(cxxPlatform))
+                .concat(RichStream.of(swiftRuntimeLinkable))
                 .collect(ImmutableSet.toImmutableSet()),
             Optional.empty(),
             Optional.empty(),

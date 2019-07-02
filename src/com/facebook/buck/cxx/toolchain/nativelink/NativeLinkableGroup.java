@@ -87,6 +87,7 @@ public interface NativeLinkableGroup {
    * Return input that *dependents* should put on their link line when linking against this
    * linkable.
    */
+  @Deprecated
   default NativeLinkableInput getNativeLinkableInput(
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
