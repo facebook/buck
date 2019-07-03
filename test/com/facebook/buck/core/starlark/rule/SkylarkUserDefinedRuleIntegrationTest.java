@@ -42,4 +42,15 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     assertThat(
         failureRes.getStderr(), Matchers.containsString("Expected to be called with name 'bar'"));
   }
+
+  @Test
+  public void implementationFunctionHasAccessToAttrs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "implementation_has_correct_attrs_in_ctx", tmp);
+
+    workspace.setUp();
+
+    workspace.runBuckBuild("//foo:").assertSuccess();
+  }
 }

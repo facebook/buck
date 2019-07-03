@@ -17,19 +17,34 @@ package com.facebook.buck.core.starlark.rule;
 
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import java.util.Map;
 
 /** The context passed to user defined rules' implementation functions */
 public class SkylarkRuleContext implements SkylarkRuleContextApi {
 
   private final Label label;
+  private final SkylarkRuleContextAttr attr;
 
-  public SkylarkRuleContext(Label label) {
+  /**
+   * Create a {@link SkylarkRuleContext} to be used in users' implementation functions
+   *
+   * @param label the label of the new rule being evaluated
+   * @param methodName the name of the implementation method in the extension file
+   * @param methodParameters a mapping of field names to values for a given rule
+   */
+  public SkylarkRuleContext(Label label, String methodName, Map<String, Object> methodParameters) {
     this.label = label;
+    this.attr = new SkylarkRuleContextAttr(methodName, methodParameters);
   }
 
   @Override
   public void repr(SkylarkPrinter printer) {
     printer.append("<ctx>");
+  }
+
+  @Override
+  public SkylarkRuleContextAttr getAttr() {
+    return attr;
   }
 
   @Override

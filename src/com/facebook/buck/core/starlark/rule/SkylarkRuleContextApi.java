@@ -22,6 +22,12 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
 /** The `ctx` variable that is passed to user implementation functions */
 interface SkylarkRuleContextApi extends SkylarkValue {
   @SkylarkCallable(
+      name = "attr",
+      doc = "Struct of parameters that were provided when the user instantiated this rule",
+      structField = true)
+  SkylarkRuleContextAttr getAttr();
+
+  @SkylarkCallable(
       name = "label",
       doc = "The label for the target that is currently being created",
       structField = true)

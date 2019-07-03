@@ -79,4 +79,8 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder {
   public SkylarkUserDefinedRule getRule() {
     return rule;
   }
+
+  Map<String, Object> getCoercedAttrValues() {
+    return java.util.Collections.unmodifiableMap(coercedAttrValues);
+  }
 }

@@ -56,7 +56,9 @@ public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg
     try (Mutability mutability = Mutability.create("analysing target")) {
       SkylarkRuleContext ctx =
           new SkylarkRuleContext(
-              Label.parseAbsolute(target.getFullyQualifiedName(), ImmutableMap.of()));
+              Label.parseAbsolute(target.getFullyQualifiedName(), ImmutableMap.of()),
+              args.getRule().getExportedName(),
+              args.getCoercedAttrValues());
       Environment env = Environment.builder(mutability).useDefaultSemantics().build();
       args.getRule().getImplementation().call(ImmutableList.of(ctx), ImmutableMap.of(), null, env);
 
