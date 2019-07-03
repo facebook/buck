@@ -24,6 +24,10 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ImmutableActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.cmdline.Label;
+import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
+import com.google.devtools.build.lib.syntax.Printer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Rule;
@@ -89,5 +93,23 @@ public class ArtifactImplTest {
 
     expectedException.expect(ArtifactDeclarationException.class);
     ArtifactImpl.of(target, genDir, packagePath, Paths.get("").toAbsolutePath());
+  }
+
+  @Test
+  public void skylarkFunctionsWork() throws LabelSyntaxException {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path packagePath = Paths.get("my/foo__");
+
+    ArtifactImpl artifact =
+        (ArtifactImpl) ArtifactImpl.of(target, genDir, packagePath, Paths.get("bar/baz.cpp"));
+
+    String expectedShortPath = Paths.get("my", "foo__", "bar", "baz.cpp").toString();
+
+    assertEquals("baz.cpp", artifact.getBasename());
+    assertEquals("cpp", artifact.getExtension());
+    assertEquals(Label.parseAbsolute("//my:foo", ImmutableMap.of()), artifact.getOwner());
+    assertEquals(expectedShortPath, artifact.getShortPath());
+    assertFalse(artifact.isSource());
+    assertEquals(String.format("<generated file '%s'>", expectedShortPath), Printer.repr(artifact));
   }
 }

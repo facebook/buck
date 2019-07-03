@@ -19,8 +19,13 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.io.file.MorePaths;
+import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.cmdline.Label;
+import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
+import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
@@ -122,5 +127,41 @@ class ArtifactImpl extends AbstractArtifact
   @Override
   public @Nullable SourceArtifactImpl asSource() {
     return null;
+  }
+
+  @Override
+  public String getBasename() {
+    return outputPath.getFileName().toString();
+  }
+
+  @Override
+  public String getExtension() {
+    return MorePaths.getFileExtension(outputPath);
+  }
+
+  @Override
+  public Optional<Label> getOwnerTyped() {
+    try {
+      return Optional.of(Label.parseAbsolute(target.getFullyQualifiedName(), ImmutableMap.of()));
+    } catch (LabelSyntaxException e) {
+      return Optional.empty();
+    }
+  }
+
+  @Override
+  public String getShortPath() {
+    return basePath.resolve(outputPath).toString();
+  }
+
+  @Override
+  public boolean isSource() {
+    return false;
+  }
+
+  @Override
+  public void repr(SkylarkPrinter printer) {
+    printer.append("<generated file '");
+    printer.append(getShortPath());
+    printer.append("'>");
   }
 }

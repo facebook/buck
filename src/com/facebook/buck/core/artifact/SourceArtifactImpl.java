@@ -16,6 +16,10 @@
 package com.facebook.buck.core.artifact;
 
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.io.file.MorePaths;
+import com.google.devtools.build.lib.cmdline.Label;
+import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import java.util.Optional;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
@@ -44,5 +48,42 @@ public abstract class SourceArtifactImpl extends AbstractArtifact
   @Override
   public BuildArtifact asBuildArtifact() {
     return null;
+  }
+
+  @Value.Lazy
+  @Override
+  public String getBasename() {
+    return getSourcePath().getRelativePath().getFileName().toString();
+  }
+
+  @Value.Lazy
+  @Override
+  public String getExtension() {
+    return MorePaths.getFileExtension(getSourcePath().getRelativePath().getFileName());
+  }
+
+  @Value.Lazy
+  @Override
+  public Optional<Label> getOwnerTyped() {
+    return Optional.empty();
+  }
+
+  @Value.Lazy
+  @Override
+  public boolean isSource() {
+    return true;
+  }
+
+  @Value.Lazy
+  @Override
+  public String getShortPath() {
+    return getSourcePath().getRelativePath().toString();
+  }
+
+  @Override
+  public void repr(SkylarkPrinter printer) {
+    printer.append("<source file '");
+    printer.append(getShortPath());
+    printer.append("'>");
   }
 }
