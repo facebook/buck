@@ -564,6 +564,10 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
                 getName(), getMode(), String.format("Got bad result of type %s", resultType)));
         return;
       case MISS:
+      case MISS_IN_SLA:
+      case MISS_ONLY_IN_MEMCACHE:
+      case MISS_OUT_SLA:
+      case MISS_UNKNOWN:
         LOG.verbose("Artifact did not exist.");
         builder.setCacheResult(CacheResult.miss());
         return;
