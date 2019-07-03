@@ -53,4 +53,15 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
     workspace.runBuckBuild("//foo:").assertSuccess();
   }
+
+  @Test
+  public void printsProperly() throws IOException {
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "print_works_in_impl", tmp);
+
+    workspace.setUp();
+
+    workspace.runBuckBuild("//foo:prints").assertSuccess();
+  }
 }

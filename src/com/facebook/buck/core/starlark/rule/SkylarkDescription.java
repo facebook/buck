@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
+import com.google.devtools.build.lib.events.NullEventHandler;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Mutability;
@@ -59,7 +60,13 @@ public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg
               Label.parseAbsolute(target.getFullyQualifiedName(), ImmutableMap.of()),
               args.getRule().getExportedName(),
               args.getCoercedAttrValues());
-      Environment env = Environment.builder(mutability).useDefaultSemantics().build();
+      // TODO: Pass some extra information in ruleImpl so that we can properly log/write out when
+      //       print() is called
+      Environment env =
+          Environment.builder(mutability)
+              .useDefaultSemantics()
+              .setEventHandler(NullEventHandler.INSTANCE)
+              .build();
       args.getRule().getImplementation().call(ImmutableList.of(ctx), ImmutableMap.of(), null, env);
 
       Artifact outputArtifact = context.actionFactory().declareArtifact(Paths.get("output"));
