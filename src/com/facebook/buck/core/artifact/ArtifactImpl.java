@@ -37,10 +37,11 @@ class ArtifactImpl extends AbstractArtifact
   private @Nullable ExplicitBuildTargetSourcePath sourcePath;
 
   private final BuildTarget target;
-  private final Path packagePath;
+  private final Path genDir;
+  private final Path basePath;
   private final Path outputPath;
 
-  static DeclaredArtifact of(BuildTarget target, Path packagePath, Path outputPath)
+  static DeclaredArtifact of(BuildTarget target, Path genDir, Path packagePath, Path outputPath)
       throws ArtifactDeclarationException {
 
     if (outputPath.isAbsolute()) {
@@ -57,7 +58,7 @@ class ArtifactImpl extends AbstractArtifact
           ArtifactDeclarationException.Reason.PATH_TRAVERSAL, target, outputPath);
     }
 
-    return new ArtifactImpl(target, packagePath, outputPath);
+    return new ArtifactImpl(target, genDir, packagePath, outputPath);
   }
 
   /** @return the {@link BuildTarget} of the rule that creates this {@link Artifact} */
@@ -70,7 +71,7 @@ class ArtifactImpl extends AbstractArtifact
    *     buck-out/gen folder generated using the {@link BuildTarget}.
    */
   Path getPackagePath() {
-    return packagePath;
+    return genDir.resolve(basePath);
   }
 
   /** @return the output path relative to the {@link #getPackagePath()} */
@@ -111,9 +112,10 @@ class ArtifactImpl extends AbstractArtifact
     return Objects.requireNonNull(sourcePath);
   }
 
-  private ArtifactImpl(BuildTarget target, Path packagePath, Path outputPath) {
+  private ArtifactImpl(BuildTarget target, Path genDir, Path packagePath, Path outputPath) {
     this.target = target;
-    this.packagePath = packagePath;
+    this.genDir = genDir;
+    this.basePath = packagePath;
     this.outputPath = outputPath;
   }
 

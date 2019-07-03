@@ -29,11 +29,13 @@ import java.nio.file.Path;
 public class BuildArtifactFactory {
 
   protected final BuildTarget target;
-  private final Path packagePath;
+  private final Path basePath;
+  private final Path genDir;
 
   protected BuildArtifactFactory(BuildTarget target, ProjectFilesystem filesystem) {
     this.target = target;
-    this.packagePath = BuildPaths.getGenDir(filesystem, target);
+    this.genDir = filesystem.getBuckPaths().getGenDir();
+    this.basePath = BuildPaths.getBaseDir(target);
   }
 
   /**
@@ -44,7 +46,7 @@ public class BuildArtifactFactory {
    */
   protected DeclaredArtifact createDeclaredArtifact(Path output)
       throws ArtifactDeclarationException {
-    return ArtifactImpl.of(target, packagePath, output);
+    return ArtifactImpl.of(target, genDir, basePath, output);
   }
 
   /**

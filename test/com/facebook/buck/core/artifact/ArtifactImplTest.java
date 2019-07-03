@@ -34,12 +34,14 @@ public class ArtifactImplTest {
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
+  private final Path genDir = Paths.get("buck-out/gen");
+
   @Test
   public void artifactTransitionsToBuildArtifact() {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     Path packagePath = Paths.get("my/foo__");
     Path path = Paths.get("bar");
-    DeclaredArtifact artifact = ArtifactImpl.of(target, packagePath, path);
+    DeclaredArtifact artifact = ArtifactImpl.of(target, genDir, packagePath, path);
     assertFalse(artifact.isBound());
 
     ImmutableActionAnalysisDataKey key =
@@ -49,7 +51,7 @@ public class ArtifactImplTest {
     assertTrue(materialized.isBound());
     assertEquals(key, materialized.getActionDataKey());
     assertEquals(
-        ExplicitBuildTargetSourcePath.of(target, packagePath.resolve(path)),
+        ExplicitBuildTargetSourcePath.of(target, genDir.resolve(packagePath).resolve(path)),
         materialized.getSourcePath());
   }
 
@@ -59,7 +61,7 @@ public class ArtifactImplTest {
     Path packagePath = Paths.get("my/foo__");
 
     expectedException.expect(ArtifactDeclarationException.class);
-    ArtifactImpl.of(target, packagePath, Paths.get(""));
+    ArtifactImpl.of(target, genDir, packagePath, Paths.get(""));
   }
 
   @Test
@@ -68,7 +70,7 @@ public class ArtifactImplTest {
     Path packagePath = Paths.get("my/foo__");
 
     expectedException.expect(ArtifactDeclarationException.class);
-    ArtifactImpl.of(target, packagePath, Paths.get("foo/.."));
+    ArtifactImpl.of(target, genDir, packagePath, Paths.get("foo/.."));
   }
 
   @Test
@@ -77,7 +79,7 @@ public class ArtifactImplTest {
     Path packagePath = Paths.get("my/foo__");
 
     expectedException.expect(ArtifactDeclarationException.class);
-    ArtifactImpl.of(target, packagePath, Paths.get("foo/../../bar"));
+    ArtifactImpl.of(target, genDir, packagePath, Paths.get("foo/../../bar"));
   }
 
   @Test
@@ -86,6 +88,6 @@ public class ArtifactImplTest {
     Path packagePath = Paths.get("my/foo__");
 
     expectedException.expect(ArtifactDeclarationException.class);
-    ArtifactImpl.of(target, packagePath, Paths.get("").toAbsolutePath());
+    ArtifactImpl.of(target, genDir, packagePath, Paths.get("").toAbsolutePath());
   }
 }
