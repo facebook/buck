@@ -21,6 +21,7 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.util.CloseableWrapper;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -124,9 +125,25 @@ public class ConcurrentProjectBuildFileParser implements ProjectBuildFileParser 
   @Override
   public void close() throws BuildFileParseException, InterruptedException, IOException {
     // not synchronized, should only be used once parsing is done
+    @Nullable Throwable error = null;
     for (ProjectBuildFileParser parser : parsers) {
-      parser.close();
+      try {
+        parser.close();
+      } catch (Throwable t) {
+        if (error == null) {
+          error = t;
+        } else {
+          error.addSuppressed(t);
+        }
+      }
     }
     parsers.clear();
+
+    if (error != null) {
+      Throwables.propagateIfPossible(error, BuildFileParseException.class);
+      Throwables.propagateIfPossible(error, InterruptedException.class);
+      Throwables.propagateIfPossible(error, IOException.class);
+      throw new RuntimeException(error); // should never happen
+    }
   }
 }
