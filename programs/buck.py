@@ -69,7 +69,7 @@ def killall_buck(reporter):
         message = "killall is not implemented on: " + os.name
         logging.error(message)
         reporter.status_message = message
-        return ExitCodeCallable(ExitCode.COMMANDLINE_ERROR)
+        return ExitCode.COMMANDLINE_ERROR
 
     for line in os.popen("jps -l"):
         split = line.split()
@@ -87,7 +87,7 @@ def killall_buck(reporter):
 
         os.kill(pid, signal.SIGTERM)
         # TODO(buck_team) clean .buckd directories
-    return ExitCodeCallable(ExitCode.SUCCESS)
+    return ExitCode.SUCCESS
 
 
 def _get_java_version(java_path):
@@ -196,9 +196,17 @@ def main(argv, reporter):
 
             return BuckRepo(THIS_DIR, p, reporter)
 
-    # If 'killall' is the second argument, shut down all the buckd processes
-    if argv[1:] == ["killall"]:
-        return killall_buck(reporter)
+    def kill_buck(reporter):
+        buck_repo = get_repo(BuckProject.from_current_dir())
+        buck_repo.kill_buckd()
+        return ExitCode.SUCCESS
+
+    # Execute wrapper specific commands
+    wrapper_specific_commands = [("kill", kill_buck), ("killall", killall_buck)]
+    if "--help" not in argv:
+        for command_str, command_fcn in wrapper_specific_commands:
+            if len(argv) > 0 and argv[1] == command_str:
+                return ExitCodeCallable(command_fcn(reporter))
 
     install_signal_handlers()
     try:
@@ -214,22 +222,6 @@ def main(argv, reporter):
                         java_version_status_queue, java_path, required_java_version
                     )
 
-                    def has_kill_argument():
-                        if argv[1:] == ["kill"]:
-                            return True
-                        if (
-                            len(argv) > 3
-                            and argv[3:] == ["kill"]
-                            and argv[1] == "--isolation_prefix"
-                        ):
-                            return True
-                        return False
-
-                    # If 'kill' is the second argument, or immediately follows the
-                    # isolation prefix argument, shut down the buckd process
-                    if has_kill_argument():
-                        buck_repo.kill_buckd()
-                        return ExitCodeCallable(ExitCode.SUCCESS)
                     return buck_repo.launch_buck(build_id, java_path, argv)
     finally:
         if tracing_dir:
