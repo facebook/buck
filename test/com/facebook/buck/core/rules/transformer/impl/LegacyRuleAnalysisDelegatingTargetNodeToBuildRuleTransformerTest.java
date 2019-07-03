@@ -16,6 +16,7 @@
 package com.facebook.buck.core.rules.transformer.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -44,6 +45,7 @@ import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisComputation
 import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisComputation;
 import com.facebook.buck.core.rules.analysis.impl.ImmutableFakeRuleAnalysisResultImpl;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
@@ -203,5 +205,79 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
     assertEquals(ImmutableSet.of(), rule.getBuildDeps());
 
     assertThat(rule, Matchers.instanceOf(RuleAnalysisLegacyBuildRuleView.class));
+  }
+
+  @Test
+  public void transformCreatesNoopRuleWhenNewRuleHasNoActions() throws ActionCreationException {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+
+    TargetNodeFactory nodeCopier = new TargetNodeFactory(new DefaultTypeCoercerFactory());
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
+    RuleDescription<?> description =
+        new RuleDescription() {
+          @Override
+          public ProviderInfoCollection ruleImpl(
+              RuleAnalysisContext context, BuildTarget target, Object args) {
+            return ProviderInfoCollectionImpl.builder().build();
+          }
+
+          @Override
+          public Class<FakeTargetNodeArg> getConstructorArgType() {
+            return FakeTargetNodeArg.class;
+          }
+        };
+
+    TargetNode<?> targetNode =
+        nodeCopier.createFromObject(
+            description,
+            FakeTargetNodeArg.builder().setName("name").build(),
+            projectFilesystem,
+            target,
+            ImmutableSet.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
+            DefaultCellPathResolver.of(Paths.get(""), ImmutableMap.of()));
+
+    ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
+    ActionGraphBuilder actionGraphBuilder = new TestActionGraphBuilder();
+    TargetGraph targetGraph = TargetGraph.EMPTY;
+
+    AtomicBoolean ruleAnalysisCalled = new AtomicBoolean();
+    RuleAnalysisComputation ruleAnalysisComputation =
+        new FakeRuleAnalysisComputation(
+            ruleAnalysisKey -> {
+              ruleAnalysisCalled.set(true);
+              assertSame(target, ruleAnalysisKey.getBuildTarget());
+              return ImmutableFakeRuleAnalysisResultImpl.of(
+                  target, ProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
+            });
+
+    TargetNodeToBuildRuleTransformer delegate =
+        new TargetNodeToBuildRuleTransformer() {
+          @Override
+          public <T> BuildRule transform(
+              ToolchainProvider tool,
+              TargetGraph targetGraph,
+              ActionGraphBuilder graphBuilder,
+              TargetNode<T> node) {
+            fail();
+            return null;
+          }
+        };
+
+    LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer transformer =
+        new LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer(
+            ruleAnalysisComputation, delegate);
+    BuildRule rule =
+        transformer.transform(toolchainProvider, targetGraph, actionGraphBuilder, targetNode);
+
+    assertTrue(ruleAnalysisCalled.get());
+    assertSame(target, rule.getBuildTarget());
+    assertNull(rule.getSourcePathToOutput());
+    assertEquals(ImmutableSet.of(), rule.getBuildDeps());
+
+    assertThat(rule, Matchers.instanceOf(NoopBuildRule.class));
   }
 }
