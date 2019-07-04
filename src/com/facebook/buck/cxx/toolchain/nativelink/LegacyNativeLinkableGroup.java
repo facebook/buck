@@ -18,6 +18,7 @@ package com.facebook.buck.cxx.toolchain.nativelink;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -31,6 +32,29 @@ import java.util.Optional;
  * just refer back to this.
  */
 public interface LegacyNativeLinkableGroup extends NativeLinkableGroup {
+
+  /**
+   * @return All native linkable dependencies that are required by this linkable on a specific
+   *     platform.
+   */
+  @SuppressWarnings("unused")
+  @Deprecated
+  default Iterable<? extends NativeLinkableGroup> getNativeLinkableDepsForPlatform(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+    return getNativeLinkableDeps(ruleResolver);
+  }
+
+  /**
+   * @return All native linkable exported dependencies that are required by this linkable on a
+   *     specific platform.
+   */
+  @SuppressWarnings("unused")
+  @Deprecated
+  default Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDepsForPlatform(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return getNativeLinkableExportedDeps(graphBuilder);
+  }
+
   /**
    * Return input that *dependents* should put on their link line when linking against this
    * linkable.

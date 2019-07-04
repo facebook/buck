@@ -35,6 +35,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -165,9 +166,11 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setExportedDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
                 .build(graphBuilder);
     assertThat(
-        lib.getNativeLinkableExportedDepsForPlatform(
-            CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),
-        Matchers.contains(dep));
+        FluentIterable.from(
+                lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM)
+                    .getNativeLinkableExportedDeps(graphBuilder))
+            .transform(d -> d.getBuildTarget()),
+        Matchers.contains(dep.getBuildTarget()));
   }
 
   @Test
@@ -285,12 +288,13 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         Matchers.equalTo(NativeLinkableInput.of()));
 
     assertThat(
-        lib.getNativeLinkableExportedDepsForPlatform(
-            CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),
+        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM)
+            .getNativeLinkableExportedDeps(graphBuilder),
         Matchers.emptyIterable());
 
     assertThat(
-        lib.getNativeLinkableDepsForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),
+        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM)
+            .getNativeLinkableDeps(graphBuilder),
         Matchers.emptyIterable());
 
     assertThat(
