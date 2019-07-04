@@ -16,11 +16,15 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.module.BuckModuleHashStrategy;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
+import java.util.Objects;
 
 public class RuleKeyFieldLoader {
 
@@ -30,17 +34,10 @@ public class RuleKeyFieldLoader {
     this.ruleKeyConfiguration = ruleKeyConfiguration;
   }
 
-  void setFields(AbstractRuleKeyBuilder<?> builder, BuildRule buildRule, RuleKeyType ruleKeyType) {
+  private void setFields(AbstractRuleKeyBuilder<?> builder, BuildRule buildRule) {
     // "." is not a valid first character for a field name, nor a valid character for rule attribute
     // name and so the following fields will never collide with other stuff.
-    builder.setReflectively(".cache_key_seed", ruleKeyConfiguration.getSeed());
-    builder.setReflectively(".target_name", buildRule.getBuildTarget().getFullyQualifiedName());
     builder.setReflectively(".build_rule_type", buildRule.getType());
-    builder.setReflectively(".buck_core_key", ruleKeyConfiguration.getCoreKey());
-    builder.setReflectively(".rule_key_type", ruleKeyType);
-    builder.setReflectively(
-        ".input_rule_key_file_size_limit",
-        ruleKeyConfiguration.getBuildInputRuleKeyFileSizeLimit());
 
     BuckModuleHashStrategy hashStrategy = ruleKeyConfiguration.getBuckModuleHashStrategy();
     Class<?> buildRuleClass = buildRule.getClass();
@@ -53,11 +50,48 @@ public class RuleKeyFieldLoader {
     Path buckOutPath = buildRule.getProjectFilesystem().getBuckPaths().getConfiguredBuckOut();
     builder.setReflectively(".out", buckOutPath.toString());
 
+    AlterRuleKeys.amendKey(builder, buildRule);
+  }
+
+  private void setFields(AbstractRuleKeyBuilder<?> builder, Action action) {
+    builder.setReflectively(".short_name", action.getShortName());
+    builder.setReflectively(".inputs", action.getInputs());
+    builder.setReflectively(
+        ".outputs",
+        Iterables.transform(
+            action.getOutputs(),
+            output ->
+                Objects.requireNonNull(output.asBound().asBuildArtifact())
+                    .getSourcePath()
+                    .hashCode()));
+
+    AlterRuleKeys.amendKey(builder, action);
+  }
+
+  void setFields(
+      AbstractRuleKeyBuilder<?> builder, BuildEngineAction action, RuleKeyType ruleKeyType) {
+    // "." is not a valid first character for a field name, nor a valid character for rule attribute
+    // name and so the following fields will never collide with other stuff.
+    builder.setReflectively(".cache_key_seed", ruleKeyConfiguration.getSeed());
+    builder.setReflectively(".target_name", action.getBuildTarget().getFullyQualifiedName());
+    builder.setReflectively(".buck_core_key", ruleKeyConfiguration.getCoreKey());
+    builder.setReflectively(".rule_key_type", ruleKeyType);
+
+    builder.setReflectively(
+        ".input_rule_key_file_size_limit",
+        ruleKeyConfiguration.getBuildInputRuleKeyFileSizeLimit());
+
     // We used to require build rules to piggyback on the `RuleKeyAppendable` type to add in
     // additional details, but have since switched to using a method in the build rule class, so
     // error out if we see the `RuleKeyAppendable` being used improperly.
     Preconditions.checkArgument(!(builder instanceof RuleKeyAppendable));
 
-    AlterRuleKeys.amendKey(builder, buildRule);
+    if (action instanceof BuildRule) {
+      setFields(builder, (BuildRule) action);
+    } else if (action instanceof Action) {
+      setFields(builder, (Action) action);
+    } else {
+      throw new IllegalStateException();
+    }
   }
 }
