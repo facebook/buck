@@ -47,7 +47,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.features.python.CxxPythonExtensionDescription.Type;
 import com.facebook.buck.features.python.toolchain.PythonEnvironment;
@@ -330,7 +329,9 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtension rule = builder.build(graphBuilder);
     NativeLinkTargetGroup nativeLinkTargetGroup = rule.getNativeLinkTarget(PY2);
     assertThat(
-        nativeLinkTargetGroup.getNativeLinkTargetMode(CxxPlatformUtils.DEFAULT_PLATFORM),
+        nativeLinkTargetGroup
+            .getTargetForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
+            .getNativeLinkTargetMode(),
         Matchers.equalTo(NativeLinkTargetMode.library()));
   }
 
@@ -350,10 +351,12 @@ public class CxxPythonExtensionDescriptionTest {
         builder.setDeps(ImmutableSortedSet.of(dep.getBuildTarget())).build(graphBuilder);
     NativeLinkTargetGroup nativeLinkTargetGroup = rule.getNativeLinkTarget(PY2);
     assertThat(
-        ImmutableList.copyOf(
-            nativeLinkTargetGroup.getNativeLinkTargetDeps(
-                CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)),
-        Matchers.<NativeLinkableGroup>hasItem(dep));
+        FluentIterable.from(
+                nativeLinkTargetGroup
+                    .getTargetForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
+                    .getNativeLinkTargetDeps(graphBuilder))
+            .transform(d -> d.getBuildTarget()),
+        Matchers.hasItem(dep.getBuildTarget()));
   }
 
   @Test
@@ -374,10 +377,12 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtension rule = builder.build(graphBuilder, filesystem, targetGraph);
     NativeLinkTargetGroup nativeLinkTargetGroup = rule.getNativeLinkTarget(platform);
     assertThat(
-        ImmutableList.copyOf(
-            nativeLinkTargetGroup.getNativeLinkTargetDeps(
-                CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)),
-        Matchers.hasItem((NativeLinkableGroup) graphBuilder.getRule(PYTHON2_DEP_TARGET)));
+        FluentIterable.from(
+                nativeLinkTargetGroup
+                    .getTargetForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
+                    .getNativeLinkTargetDeps(graphBuilder))
+            .transform(d -> d.getBuildTarget()),
+        Matchers.hasItem(PYTHON2_DEP_TARGET));
   }
 
   @Test
@@ -423,16 +428,20 @@ public class CxxPythonExtensionDescriptionTest {
             .build(graphBuilder);
     NativeLinkTargetGroup py2NativeLinkTargetGroup = rule.getNativeLinkTarget(PY2);
     assertThat(
-        ImmutableList.copyOf(
-            py2NativeLinkTargetGroup.getNativeLinkTargetDeps(
-                CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)),
-        Matchers.<NativeLinkableGroup>hasItem(dep));
+        FluentIterable.from(
+                py2NativeLinkTargetGroup
+                    .getTargetForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
+                    .getNativeLinkTargetDeps(graphBuilder))
+            .transform(d -> d.getBuildTarget()),
+        Matchers.hasItem(dep.getBuildTarget()));
     NativeLinkTargetGroup py3NativeLinkTargetGroup = rule.getNativeLinkTarget(PY3);
     assertThat(
-        ImmutableList.copyOf(
-            py3NativeLinkTargetGroup.getNativeLinkTargetDeps(
-                CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)),
-        Matchers.not(Matchers.<NativeLinkableGroup>hasItem(dep)));
+        FluentIterable.from(
+                py3NativeLinkTargetGroup
+                    .getTargetForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
+                    .getNativeLinkTargetDeps(graphBuilder))
+            .transform(d -> d.getBuildTarget()),
+        Matchers.not(Matchers.hasItem(dep.getBuildTarget())));
   }
 
   @Test

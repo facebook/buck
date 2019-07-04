@@ -779,7 +779,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertThat(
         rule.getNativeLinkTarget(CXX_PLATFORM, graphBuilder)
             .get()
-            .getNativeLinkTargetMode(CXX_PLATFORM),
+            .getTargetForPlatform(CXX_PLATFORM)
+            .getNativeLinkTargetMode(),
         Matchers.equalTo(NativeLinkTargetMode.library("libsoname.so")));
   }
 
@@ -805,11 +806,13 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) ruleBuilder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
-        ImmutableList.copyOf(
-            rule.getNativeLinkTarget(CXX_PLATFORM, graphBuilder)
-                .get()
-                .getNativeLinkTargetDeps(CXX_PLATFORM, graphBuilder)),
-        Matchers.hasItems(dep, exportedDep));
+        FluentIterable.from(
+                rule.getNativeLinkTarget(CXX_PLATFORM, graphBuilder)
+                    .get()
+                    .getTargetForPlatform(CXX_PLATFORM)
+                    .getNativeLinkTargetDeps(graphBuilder))
+            .transform(d -> d.getBuildTarget()),
+        Matchers.hasItems(dep.getBuildTarget(), exportedDep.getBuildTarget()));
   }
 
   @Test
