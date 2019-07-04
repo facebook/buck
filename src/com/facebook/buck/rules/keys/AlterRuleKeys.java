@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.log.Logger;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.LoadingCache;
@@ -31,8 +31,8 @@ public final class AlterRuleKeys {
   private static final ConcurrentHashMap<Class<?>, String> pseudoNameCache =
       new ConcurrentHashMap<>();
 
-  public static void amendKey(AbstractRuleKeyBuilder<?> sink, BuildRule rule) {
-    amendKey(sink, (Object) rule);
+  public static void amendKey(AbstractRuleKeyBuilder<?> sink, BuildEngineAction action) {
+    amendKey(sink, (Object) action);
   }
 
   public static void amendKey(AbstractRuleKeyBuilder<?> sink, AddsToRuleKey appendable) {
