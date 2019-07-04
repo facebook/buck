@@ -90,9 +90,9 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
   }
 
   @Override
-  public RuleKey build(BuildRule buildRule) {
+  public RuleKey build(BuildEngineAction action) {
     try {
-      return ruleKeyCache.get(buildRule, this::calculateBuildRuleKey).getRuleKey();
+      return ruleKeyCache.get(action, this::calculateBuildRuleKey).getRuleKey();
     } catch (RuntimeException e) {
       propagateIfSizeLimitException(e);
       throw e;

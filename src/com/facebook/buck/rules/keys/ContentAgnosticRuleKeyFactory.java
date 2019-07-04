@@ -87,8 +87,8 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
   }
 
   @Override
-  public RuleKey build(BuildRule buildRule) {
-    return ruleKeyCache.get(buildRule, this::calculateBuildRuleKey);
+  public RuleKey build(BuildEngineAction action) {
+    return ruleKeyCache.get(action, this::calculateBuildRuleKey);
   }
 
   private RuleKey buildAppendableKey(AddsToRuleKey appendable) {

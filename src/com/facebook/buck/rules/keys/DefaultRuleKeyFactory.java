@@ -108,16 +108,16 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
 
   @Nullable
   @Override
-  public RuleKey getFromCache(BuildRule buildRule) {
-    return ruleKeyCache.get(buildRule);
+  public RuleKey getFromCache(BuildEngineAction action) {
+    return ruleKeyCache.get(action);
   }
 
   @Override
-  public RuleKey build(BuildRule buildRule) {
+  public RuleKey build(BuildEngineAction action) {
     return ruleKeyCache.get(
-        buildRule,
-        action ->
-            newPopulatedBuilder(action, RuleKeyBuilder.createDefaultHasher(ruleKeyLogger))
+        action,
+        rule ->
+            newPopulatedBuilder(rule, RuleKeyBuilder.createDefaultHasher(ruleKeyLogger))
                 .buildResult(RuleKey::new));
   }
 
@@ -131,10 +131,10 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
 
   @Override
   public <DIAG_KEY> RuleKeyDiagnostics.Result<RuleKey, DIAG_KEY> buildForDiagnostics(
-      BuildRule buildRule, RuleKeyHasher<DIAG_KEY> hasher) {
+      BuildEngineAction action, RuleKeyHasher<DIAG_KEY> hasher) {
     return RuleKeyDiagnostics.Result.of(
-        build(buildRule), // real rule key
-        newPopulatedBuilder(buildRule, hasher).buildResult(Function.identity()));
+        build(action), // real rule key
+        newPopulatedBuilder(action, hasher).buildResult(Function.identity()));
   }
 
   @Override

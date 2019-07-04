@@ -16,10 +16,10 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.google.common.collect.ImmutableList;
@@ -43,11 +43,11 @@ public class FakeRuleKeyFactory
   }
 
   @Override
-  public RuleKey build(BuildRule buildRule) {
-    if (oversized.contains(buildRule.getBuildTarget())) {
+  public RuleKey build(BuildEngineAction action) {
+    if (oversized.contains(action.getBuildTarget())) {
       throw new SizeLimiter.SizeLimitException();
     }
-    return ruleKeys.get(buildRule.getBuildTarget());
+    return ruleKeys.get(action.getBuildTarget());
   }
 
   @Override
@@ -63,7 +63,7 @@ public class FakeRuleKeyFactory
 
   @Override
   public <DIAG_KEY> RuleKeyDiagnostics.Result<RuleKey, DIAG_KEY> buildForDiagnostics(
-      BuildRule rule, RuleKeyHasher<DIAG_KEY> hasher) {
+      BuildEngineAction action, RuleKeyHasher<DIAG_KEY> hasher) {
     throw new UnsupportedOperationException();
   }
 
