@@ -566,7 +566,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
               graphBuilder,
               FluentIterable.from(rules)
                   .filter(NativeLinkableGroup.class)
-                  .transform(g -> g.getNativeLinkable(cxxPlatform)),
+                  .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
               depType,
               !filter.isPresent()
                   ? x -> true

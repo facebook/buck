@@ -360,7 +360,7 @@ public class SwiftLibraryDescription
 
     NativeLinkable swiftRuntimeLinkable =
         new SwiftRuntimeNativeLinkableGroup(swiftPlatform, buildTarget.getTargetConfiguration())
-            .getNativeLinkable(cxxPlatform);
+            .getNativeLinkable(cxxPlatform, graphBuilder);
 
     BuildTarget requiredBuildTarget =
         buildTarget
@@ -393,7 +393,7 @@ public class SwiftLibraryDescription
             CxxLinkOptions.of(),
             RichStream.from(params.getBuildDeps())
                 .filter(NativeLinkableGroup.class)
-                .map(g -> g.getNativeLinkable(cxxPlatform))
+                .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
                 .concat(RichStream.of(swiftRuntimeLinkable))
                 .collect(ImmutableSet.toImmutableSet()),
             Optional.empty(),

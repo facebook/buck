@@ -52,7 +52,7 @@ public class PlatformLockedNativeLinkTargetGroup implements NativeLinkTarget {
       ActionGraphBuilder graphBuilder) {
     return Iterables.transform(
         underlyingGroup.getNativeLinkTargetDeps(cxxPlatform, graphBuilder),
-        g -> g.getNativeLinkable(cxxPlatform));
+        g -> g.getNativeLinkable(cxxPlatform, graphBuilder));
   }
 
   @Override

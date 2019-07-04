@@ -18,7 +18,6 @@ package com.facebook.buck.cxx.toolchain.nativelink;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -75,10 +74,10 @@ public class PlatformLockedNativeLinkableGroup implements NativeLinkable {
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
+  public Iterable<? extends NativeLinkable> getNativeLinkableDeps(ActionGraphBuilder graphBuilder) {
     return Iterables.transform(
-        underlyingGroup.getNativeLinkableDepsForPlatform(cxxPlatform, ruleResolver),
-        g -> g.getNativeLinkable(cxxPlatform));
+        underlyingGroup.getNativeLinkableDepsForPlatform(cxxPlatform, graphBuilder),
+        g -> g.getNativeLinkable(cxxPlatform, graphBuilder));
   }
 
   @Override
@@ -86,7 +85,7 @@ public class PlatformLockedNativeLinkableGroup implements NativeLinkable {
       ActionGraphBuilder graphBuilder) {
     return Iterables.transform(
         underlyingGroup.getNativeLinkableExportedDepsForPlatform(cxxPlatform, graphBuilder),
-        g -> g.getNativeLinkable(cxxPlatform));
+        g -> g.getNativeLinkable(cxxPlatform, graphBuilder));
   }
 
   @Override

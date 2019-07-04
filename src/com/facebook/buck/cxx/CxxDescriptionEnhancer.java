@@ -800,7 +800,7 @@ public class CxxDescriptionEnhancer {
                         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
                         RichStream.from(deps)
                             .filter(NativeLinkableGroup.class)
-                            .map(g -> g.getNativeLinkable(cxxPlatform))
+                            .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
                             .toImmutableList(),
                         args.getCxxRuntimeType(),
                         ImmutableSet.of(),
@@ -912,7 +912,7 @@ public class CxxDescriptionEnhancer {
                             ),
                         RichStream.from(deps)
                             .filter(NativeLinkableGroup.class)
-                            .map(g -> g.getNativeLinkable(cxxPlatform))
+                            .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
                             .toImmutableList(),
                         args.getCxxRuntimeType(),
                         Optional.empty(),
@@ -1419,7 +1419,7 @@ public class CxxDescriptionEnhancer {
                         linkOptions,
                         RichStream.from(deps)
                             .filter(NativeLinkableGroup.class)
-                            .map(g -> g.getNativeLinkable(cxxPlatform))
+                            .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
                             .toImmutableList(),
                         cxxRuntimeType,
                         Optional.empty(),
@@ -1624,7 +1624,8 @@ public class CxxDescriptionEnhancer {
     ImmutableSortedMap<String, SourcePath> libraries =
         NativeLinkables.getTransitiveSharedLibraries(
             graphBuilder,
-            Iterables.transform(roots.values(), g -> g.getNativeLinkable(cxxPlatform)),
+            Iterables.transform(
+                roots.values(), g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
             false);
 
     ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();
@@ -1691,7 +1692,8 @@ public class CxxDescriptionEnhancer {
     ImmutableSortedMap<String, SourcePath> libraries =
         NativeLinkables.getTransitiveSharedLibraries(
             graphBuilder,
-            Iterables.transform(roots.values(), g -> g.getNativeLinkable(cxxPlatform)),
+            Iterables.transform(
+                roots.values(), g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
             false);
 
     ImmutableMap.Builder<Path, SourcePath> links = ImmutableMap.builder();

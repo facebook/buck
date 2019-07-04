@@ -89,7 +89,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setStaticLibs(ImmutableList.of(path))
                 .build(graphBuilder);
     assertThat(
-        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM)
+        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getNativeLinkableInput(
                 Linker.LinkableDepType.STATIC, graphBuilder, EmptyTargetConfiguration.INSTANCE),
         Matchers.equalTo(
@@ -113,7 +113,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setStaticPicLibs(ImmutableList.of(path))
                 .build(graphBuilder);
     assertThat(
-        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM)
+        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getNativeLinkableInput(
                 Linker.LinkableDepType.STATIC_PIC, graphBuilder, EmptyTargetConfiguration.INSTANCE),
         Matchers.equalTo(
@@ -140,7 +140,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setSharedLibs(ImmutableMap.of("lib1.so", lib1, "lib2.so", lib2))
                 .build(graphBuilder);
     assertThat(
-        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM)
+        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getNativeLinkableInput(
                 Linker.LinkableDepType.SHARED, graphBuilder, EmptyTargetConfiguration.INSTANCE),
         Matchers.equalTo(
@@ -167,7 +167,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .build(graphBuilder);
     assertThat(
         FluentIterable.from(
-                lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM)
+                lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
                     .getNativeLinkableExportedDeps(graphBuilder))
             .transform(d -> d.getBuildTarget()),
         Matchers.contains(dep.getBuildTarget()));
@@ -187,7 +187,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setProvidedSharedLibs(ImmutableMap.of("lib2.so", lib2))
                 .build(graphBuilder);
     assertThat(
-        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM)
+        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getNativeLinkableInput(
                 Linker.LinkableDepType.SHARED, graphBuilder, EmptyTargetConfiguration.INSTANCE),
         Matchers.equalTo(
@@ -195,7 +195,8 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .addArgs(SourcePathArg.of(lib1), SourcePathArg.of(lib2))
                 .build()));
     assertThat(
-        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM).getSharedLibraries(graphBuilder),
+        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .getSharedLibraries(graphBuilder),
         Matchers.equalTo(ImmutableMap.of("lib1.so", lib1)));
   }
 
@@ -210,7 +211,8 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setStaticLink(ImmutableList.of("-something"))
                 .build(graphBuilder);
     assertThat(
-        any.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM).getPreferredLinkage(),
+        any.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .getPreferredLinkage(),
         Matchers.equalTo(NativeLinkableGroup.Linkage.ANY));
 
     NativeLinkableGroup staticOnly =
@@ -219,7 +221,9 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setStaticLink(ImmutableList.of("-something"))
                 .build(graphBuilder);
     assertThat(
-        staticOnly.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM).getPreferredLinkage(),
+        staticOnly
+            .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .getPreferredLinkage(),
         Matchers.equalTo(NativeLinkableGroup.Linkage.STATIC));
 
     NativeLinkableGroup sharedOnly =
@@ -228,7 +232,9 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setSharedLink(ImmutableList.of("-something"))
                 .build(graphBuilder);
     assertThat(
-        sharedOnly.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM).getPreferredLinkage(),
+        sharedOnly
+            .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .getPreferredLinkage(),
         Matchers.equalTo(NativeLinkableGroup.Linkage.SHARED));
   }
 
@@ -250,7 +256,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
     NativeLinkableGroup library = (NativeLinkableGroup) builder.build(graphBuilder);
     NativeLinkableInput input =
         library
-            .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM)
+            .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getNativeLinkableInput(
                 Linker.LinkableDepType.STATIC, graphBuilder, EmptyTargetConfiguration.INSTANCE);
     SourcePath lib = cxxGenrule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
@@ -282,23 +288,24 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
     NativeLinkableGroup lib = (NativeLinkableGroup) buildRule;
 
     assertThat(
-        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM)
+        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getNativeLinkableInput(
                 Linker.LinkableDepType.SHARED, graphBuilder, EmptyTargetConfiguration.INSTANCE),
         Matchers.equalTo(NativeLinkableInput.of()));
 
     assertThat(
-        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM)
+        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getNativeLinkableExportedDeps(graphBuilder),
         Matchers.emptyIterable());
 
     assertThat(
-        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM)
+        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getNativeLinkableDeps(graphBuilder),
         Matchers.emptyIterable());
 
     assertThat(
-        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM).getSharedLibraries(graphBuilder),
+        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .getSharedLibraries(graphBuilder),
         Matchers.anEmptyMap());
 
     CxxPreprocessorDep cxxPreprocessorDep = (CxxPreprocessorDep) buildRule;

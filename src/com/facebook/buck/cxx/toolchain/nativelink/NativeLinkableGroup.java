@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -42,7 +43,7 @@ public interface NativeLinkableGroup {
   Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
       BuildRuleResolver ruleResolver);
 
-  NativeLinkable getNativeLinkable(CxxPlatform cxxPlatform);
+  NativeLinkable getNativeLinkable(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
   enum Linkage {
     ANY,

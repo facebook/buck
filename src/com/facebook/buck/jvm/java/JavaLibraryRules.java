@@ -84,7 +84,7 @@ public class JavaLibraryRules {
                     : r instanceof CalculateAbi ? Optional.of(r.getBuildDeps()) : Optional.empty());
     return NativeLinkables.getTransitiveSharedLibraries(
         graphBuilder,
-        Iterables.transform(roots.values(), g -> g.getNativeLinkable(cxxPlatform)),
+        Iterables.transform(roots.values(), g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
         true);
   }
 

@@ -230,7 +230,7 @@ public class PythonUtil {
                 packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder)) {
               if (dep instanceof NativeLinkableGroup) {
                 NativeLinkable linkable =
-                    ((NativeLinkableGroup) dep).getNativeLinkable(cxxPlatform);
+                    ((NativeLinkableGroup) dep).getNativeLinkable(cxxPlatform, graphBuilder);
                 nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
                 omnibusRoots.addExcludedRoot(linkable);
               }
@@ -238,7 +238,8 @@ public class PythonUtil {
           }
           deps = packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
         } else if (rule instanceof NativeLinkableGroup) {
-          NativeLinkable linkable = ((NativeLinkableGroup) rule).getNativeLinkable(cxxPlatform);
+          NativeLinkable linkable =
+              ((NativeLinkableGroup) rule).getNativeLinkable(cxxPlatform, graphBuilder);
           nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
           omnibusRoots.addPotentialRoot(linkable);
         }
@@ -347,7 +348,7 @@ public class PythonUtil {
             .filter(NativeLinkableGroup.class)) {
       builder.addAll(
           nativeLinkableGroup
-              .getNativeLinkable(cxxPlatform)
+              .getNativeLinkable(cxxPlatform, graphBuilder)
               .getSharedLibraries(graphBuilder)
               .keySet());
     }

@@ -287,7 +287,8 @@ public class HaskellDescriptionUtils {
     for (NativeLinkable nativeLinkable :
         NativeLinkables.getNativeLinkables(
             graphBuilder,
-            Iterables.transform(deps, g -> g.getNativeLinkable(platform.getCxxPlatform())),
+            Iterables.transform(
+                deps, g -> g.getNativeLinkable(platform.getCxxPlatform(), graphBuilder)),
             depType)) {
       NativeLinkableGroup.Linkage link = nativeLinkable.getPreferredLinkage();
       NativeLinkableInput input =
@@ -486,7 +487,7 @@ public class HaskellDescriptionUtils {
                                 // function on the Haskell groups.
                                 ImmutableSet<? extends NativeLinkable> platformDeps =
                                     ImmutableSet.copyOf(
-                                        n.getNativeLinkable(platform.getCxxPlatform())
+                                        n.getNativeLinkable(platform.getCxxPlatform(), graphBuilder)
                                             .getNativeLinkableExportedDeps(graphBuilder));
 
                                 Iterable<? extends NativeLinkableGroup> allDeps =
@@ -497,19 +498,20 @@ public class HaskellDescriptionUtils {
                                         allDeps,
                                         g ->
                                             platformDeps.contains(
-                                                g.getNativeLinkable(platform.getCxxPlatform()))));
+                                                g.getNativeLinkable(
+                                                    platform.getCxxPlatform(), graphBuilder))));
                               } else {
                                 return Optional.empty();
                               }
                             })
                         .values())
-                .transform(g -> g.getNativeLinkable(platform.getCxxPlatform()))
+                .transform(g -> g.getNativeLinkable(platform.getCxxPlatform(), graphBuilder))
                 .toList(),
             // The preloaded deps form our excluded roots, which we need to keep them separate from
             // the omnibus library so that they can be `LD_PRELOAD`ed early.
             FluentIterable.from(preloadDeps)
                 .filter(NativeLinkableGroup.class)
-                .transform(g -> g.getNativeLinkable(platform.getCxxPlatform()))
+                .transform(g -> g.getNativeLinkable(platform.getCxxPlatform(), graphBuilder))
                 .toList());
 
     // Add an -rpath to the omnibus for shared library dependencies

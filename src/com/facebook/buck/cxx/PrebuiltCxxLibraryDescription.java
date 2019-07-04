@@ -254,7 +254,7 @@ public class PrebuiltCxxLibraryDescription
         CxxLinkOptions.of(),
         FluentIterable.from(params.getBuildDeps())
             .filter(NativeLinkableGroup.class)
-            .transform(g -> g.getNativeLinkable(cxxPlatform)),
+            .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
         Optional.empty(),
         Optional.empty(),
         ImmutableSet.of(),
@@ -679,7 +679,7 @@ public class PrebuiltCxxLibraryDescription
           return NativeLinkableInput.of();
         }
 
-        NativeLinkable linkable = getNativeLinkable(cxxPlatform);
+        NativeLinkable linkable = getNativeLinkable(cxxPlatform, graphBuilder);
 
         Linker.LinkableDepType type = key.getType();
         boolean forceLinkWhole = key.getForceLinkWhole();
@@ -838,7 +838,7 @@ public class PrebuiltCxxLibraryDescription
                   CxxPlatform cxxPlatform,
                   ActionGraphBuilder graphBuilder,
                   SourcePathResolver pathResolver) {
-                NativeLinkable linkable = getNativeLinkable(cxxPlatform);
+                NativeLinkable linkable = getNativeLinkable(cxxPlatform, graphBuilder);
                 return NativeLinkableInput.builder()
                     .addAllArgs(linkable.getExportedLinkerFlags(graphBuilder))
                     .addAllArgs(

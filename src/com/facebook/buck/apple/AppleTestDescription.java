@@ -600,7 +600,8 @@ public class AppleTestDescription
       ImmutableSet<BuildTarget> blacklistables =
           NativeLinkables.getTransitiveNativeLinkables(
                   graphBuilder,
-                  Iterables.transform(roots.values(), g -> g.getNativeLinkable(platform)))
+                  Iterables.transform(
+                      roots.values(), g -> g.getNativeLinkable(platform, graphBuilder)))
               .stream()
               .filter(x -> !x.shouldBeLinkedInAppleTestAndHost())
               .map(x -> x.getBuildTarget())

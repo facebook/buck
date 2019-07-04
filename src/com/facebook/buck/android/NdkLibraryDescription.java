@@ -267,7 +267,8 @@ public class NdkLibraryDescription
           NativeLinkables.getTransitiveNativeLinkableInput(
               graphBuilder,
               targetConfiguration,
-              Iterables.transform(roots.values(), g -> g.getNativeLinkable(cxxPlatform)),
+              Iterables.transform(
+                  roots.values(), g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
               Linker.LinkableDepType.SHARED);
 
       // We add any dependencies from the native linkable input to this rule, even though

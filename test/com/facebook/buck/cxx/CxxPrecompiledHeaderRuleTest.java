@@ -449,7 +449,8 @@ public class CxxPrecompiledHeaderRuleTest {
             Linker.LinkableDepType.STATIC,
             CxxLinkOptions.of(),
             Iterables.transform(
-                nativeLinkableGroupDeps, g -> g.getNativeLinkable(platformSupportingPch)),
+                nativeLinkableGroupDeps,
+                g -> g.getNativeLinkable(platformSupportingPch, graphBuilder)),
             Optional.empty(), // cxxRuntimeType,
             Optional.empty(), // bundleLoader,
             ImmutableSet.of(), // blacklist,

@@ -176,7 +176,8 @@ public interface LegacyNativeLinkableGroup extends NativeLinkableGroup {
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
   @Override
-  default NativeLinkable getNativeLinkable(CxxPlatform cxxPlatform) {
+  default NativeLinkable getNativeLinkable(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return getNativeLinkableCompatibilityCache().get(cxxPlatform);
   }
 

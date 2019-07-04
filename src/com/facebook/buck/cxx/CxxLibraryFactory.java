@@ -600,7 +600,7 @@ public class CxxLibraryFactory {
         RichStream.from(deps)
             .filter(NativeLinkableGroup.class)
             .concat(RichStream.from(delegateNativeLinkableGroups))
-            .map(g -> g.getNativeLinkable(cxxPlatform))
+            .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
             .toImmutableList();
 
     CxxLinkOptions linkOptions =

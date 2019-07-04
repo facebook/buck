@@ -247,7 +247,7 @@ public class CxxLinkableEnhancerTest {
             ImmutableList.of(),
             Linker.LinkableDepType.STATIC,
             CxxLinkOptions.of(),
-            ImmutableList.of(nativeLinkable.getNativeLinkable(CXX_PLATFORM)),
+            ImmutableList.of(nativeLinkable.getNativeLinkable(CXX_PLATFORM, graphBuilder)),
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
@@ -386,7 +386,7 @@ public class CxxLinkableEnhancerTest {
             ImmutableList.of(),
             Linker.LinkableDepType.STATIC,
             CxxLinkOptions.of(),
-            ImmutableList.of(nativeLinkable.getNativeLinkable(CXX_PLATFORM)),
+            ImmutableList.of(nativeLinkable.getNativeLinkable(CXX_PLATFORM, graphBuilder)),
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
@@ -414,7 +414,7 @@ public class CxxLinkableEnhancerTest {
             ImmutableList.of(),
             Linker.LinkableDepType.SHARED,
             CxxLinkOptions.of(),
-            ImmutableList.of(nativeLinkable.getNativeLinkable(CXX_PLATFORM)),
+            ImmutableList.of(nativeLinkable.getNativeLinkable(CXX_PLATFORM, graphBuilder)),
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of(),
@@ -506,7 +506,8 @@ public class CxxLinkableEnhancerTest {
         NativeLinkables.getTransitiveNativeLinkableInput(
             graphBuilder,
             EmptyTargetConfiguration.INSTANCE,
-            Iterables.transform(roots.values(), g -> g.getNativeLinkable(cxxPlatform)),
+            Iterables.transform(
+                roots.values(), g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
             LinkableDepType.STATIC);
     assertThat(
         Arg.stringify(bottomInput.getArgs(), graphBuilder.getSourcePathResolver()),

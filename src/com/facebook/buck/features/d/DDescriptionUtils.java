@@ -151,7 +151,7 @@ abstract class DDescriptionUtils {
         CxxLinkOptions.of(),
         FluentIterable.from(params.getBuildDeps())
             .filter(NativeLinkableGroup.class)
-            .transform(g -> g.getNativeLinkable(cxxPlatform)),
+            .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
         /* cxxRuntimeType */ Optional.empty(),
         /* bundleLoader */ Optional.empty(),
         ImmutableSet.of(),

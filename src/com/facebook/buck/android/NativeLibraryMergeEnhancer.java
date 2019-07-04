@@ -33,7 +33,6 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
@@ -197,7 +196,8 @@ class NativeLibraryMergeEnhancer {
                   + buildTarget
                   + " is not linkable.");
         }
-        glueLinkable = Optional.of(((NativeLinkableGroup) rule).getNativeLinkable(cxxPlatform));
+        glueLinkable =
+            Optional.of(((NativeLinkableGroup) rule).getNativeLinkable(cxxPlatform, graphBuilder));
       }
 
       Set<MergedLibNativeLinkable> mergedLinkables =
@@ -836,8 +836,8 @@ class NativeLibraryMergeEnhancer {
 
     @Override
     public Iterable<? extends NativeLinkable> getNativeLinkableDeps(
-        BuildRuleResolver ruleResolver) {
-      return getMappedDeps(x -> x.getNativeLinkableDeps(ruleResolver));
+        ActionGraphBuilder graphBuilder) {
+      return getMappedDeps(x -> x.getNativeLinkableDeps(graphBuilder));
     }
 
     @Override

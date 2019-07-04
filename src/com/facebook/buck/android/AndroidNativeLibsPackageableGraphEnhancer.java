@@ -390,10 +390,12 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         ImmutableMultimap.builder();
 
     nativeLinkableGroups.forEach(
-        (module, group) -> linkablesBuilder.put(module, group.getNativeLinkable(cxxPlatform)));
+        (module, group) ->
+            linkablesBuilder.put(module, group.getNativeLinkable(cxxPlatform, graphBuilder)));
 
     nativeLinkableGroupssAssets.forEach(
-        (module, group) -> linkableAssetsBuilder.put(module, group.getNativeLinkable(cxxPlatform)));
+        (module, group) ->
+            linkableAssetsBuilder.put(module, group.getNativeLinkable(cxxPlatform, graphBuilder)));
 
     return new ImmutableNativeLinkableEnhancementResult(
         linkablesBuilder.build(), linkableAssetsBuilder.build());

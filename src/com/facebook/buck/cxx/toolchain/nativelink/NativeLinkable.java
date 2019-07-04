@@ -18,7 +18,6 @@ package com.facebook.buck.cxx.toolchain.nativelink;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -37,7 +36,7 @@ public interface NativeLinkable {
   BuildTarget getBuildTarget();
 
   /** @return All native linkable dependencies that might be required by this linkable. */
-  Iterable<? extends NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver);
+  Iterable<? extends NativeLinkable> getNativeLinkableDeps(ActionGraphBuilder graphBuilder);
 
   /** @return All native linkable exported dependencies that might be required by this linkable. */
   Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(ActionGraphBuilder graphBuilder);

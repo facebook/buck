@@ -246,7 +246,8 @@ public class RustCompileUtils {
           NativeLinkables.getTransitiveNativeLinkableInput(
                   graphBuilder,
                   target.getTargetConfiguration(),
-                  Iterables.transform(roots.values(), g -> g.getNativeLinkable(cxxPlatform)),
+                  Iterables.transform(
+                      roots.values(), g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
                   depType)
               .getArgs();
 

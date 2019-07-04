@@ -19,7 +19,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -71,7 +70,7 @@ class OmnibusNode implements NativeLinkable {
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
+  public Iterable<? extends NativeLinkable> getNativeLinkableDeps(ActionGraphBuilder graphBuilder) {
     return deps;
   }
 

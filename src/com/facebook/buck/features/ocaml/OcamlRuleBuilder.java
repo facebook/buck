@@ -188,7 +188,8 @@ public class OcamlRuleBuilder {
     return NativeLinkables.getTransitiveNativeLinkableInput(
         graphBuilder,
         targetConfiguration,
-        Iterables.transform(roots.values(), g -> g.getNativeLinkable(platform.getCxxPlatform())),
+        Iterables.transform(
+            roots.values(), g -> g.getNativeLinkable(platform.getCxxPlatform(), graphBuilder)),
         Linker.LinkableDepType.STATIC);
   }
 

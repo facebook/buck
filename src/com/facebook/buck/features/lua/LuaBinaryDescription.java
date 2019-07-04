@@ -319,7 +319,7 @@ public class LuaBinaryDescription
             for (BuildRule dep : deps) {
               if (dep instanceof NativeLinkableGroup) {
                 NativeLinkable linkable =
-                    ((NativeLinkableGroup) dep).getNativeLinkable(cxxPlatform);
+                    ((NativeLinkableGroup) dep).getNativeLinkable(cxxPlatform, graphBuilder);
                 nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
                 omnibusRoots.addExcludedRoot(linkable);
               }
@@ -344,7 +344,7 @@ public class LuaBinaryDescription
             for (BuildRule dep : deps) {
               if (dep instanceof NativeLinkableGroup) {
                 NativeLinkable linkable =
-                    ((NativeLinkableGroup) dep).getNativeLinkable(cxxPlatform);
+                    ((NativeLinkableGroup) dep).getNativeLinkable(cxxPlatform, graphBuilder);
                 nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
                 omnibusRoots.addExcludedRoot(linkable);
               }
@@ -355,7 +355,8 @@ public class LuaBinaryDescription
           luaExtensions.put(extension.getBuildTarget(), extension);
           omnibusRoots.addIncludedRoot(extension.getTargetForPlatform(cxxPlatform));
         } else if (rule instanceof NativeLinkableGroup) {
-          NativeLinkable linkable = ((NativeLinkableGroup) rule).getNativeLinkable(cxxPlatform);
+          NativeLinkable linkable =
+              ((NativeLinkableGroup) rule).getNativeLinkable(cxxPlatform, graphBuilder);
           nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
           omnibusRoots.addPotentialRoot(linkable);
         }
@@ -467,7 +468,7 @@ public class LuaBinaryDescription
             Maps.uniqueIndex(
                 Iterables.transform(
                     executableStarter.getNativeStarterDeps(),
-                    g -> g.getNativeLinkable(cxxPlatform)),
+                    g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
                 NativeLinkable::getBuildTarget));
       }
 

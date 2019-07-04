@@ -279,7 +279,8 @@ abstract class GoDescriptors {
         NativeLinkables.getTransitiveNativeLinkableInput(
             graphBuilder,
             targetConfiguration,
-            Iterables.transform(roots.values(), g -> g.getNativeLinkable(cxxPlatform)),
+            Iterables.transform(
+                roots.values(), g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
             linkStyle);
 
     // skip setting any arg if no linkable inputs are present

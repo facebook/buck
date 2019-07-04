@@ -331,7 +331,7 @@ public class CxxPythonExtensionDescription
         CxxLinkOptions.of(),
         RichStream.from(deps)
             .filter(NativeLinkableGroup.class)
-            .map(g -> g.getNativeLinkable(cxxPlatform))
+            .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
             .toImmutableList(),
         args.getCxxRuntimeType(),
         Optional.empty(),
