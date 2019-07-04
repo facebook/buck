@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * NativeLinkableGroup}.
  */
 public class PlatformLockedNativeLinkableGroup implements NativeLinkable {
-  private final NativeLinkableGroup underlyingGroup;
+  private final LegacyNativeLinkableGroup underlyingGroup;
   private final CxxPlatform cxxPlatform;
 
   /**
@@ -42,10 +42,10 @@ public class PlatformLockedNativeLinkableGroup implements NativeLinkable {
    * ton of times.
    */
   public static class Cache {
-    private final NativeLinkableGroup underlyingGroup;
+    private final LegacyNativeLinkableGroup underlyingGroup;
     private final Map<CxxPlatform, NativeLinkable> cache;
 
-    Cache(NativeLinkableGroup group) {
+    Cache(LegacyNativeLinkableGroup group) {
       this.underlyingGroup = group;
       this.cache = new ConcurrentHashMap<>();
     }
@@ -57,7 +57,7 @@ public class PlatformLockedNativeLinkableGroup implements NativeLinkable {
   }
 
   public PlatformLockedNativeLinkableGroup(
-      NativeLinkableGroup underlyingGroup, CxxPlatform cxxPlatform) {
+      LegacyNativeLinkableGroup underlyingGroup, CxxPlatform cxxPlatform) {
     this.underlyingGroup = underlyingGroup;
     this.cxxPlatform = cxxPlatform;
   }

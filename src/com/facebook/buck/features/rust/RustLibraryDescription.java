@@ -44,6 +44,7 @@ import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
@@ -212,7 +213,7 @@ public class RustLibraryDescription
     // Common case - we're being invoked to satisfy some other rule's dependency.
     return new RustLibrary(buildTarget, projectFilesystem, params) {
       private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
-          NativeLinkableGroup.getNativeLinkableCache(this);
+          LegacyNativeLinkableGroup.getNativeLinkableCache(this);
       // RustLinkable
       @Override
       public Arg getLinkerArg(

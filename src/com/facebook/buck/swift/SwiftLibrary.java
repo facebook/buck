@@ -41,6 +41,7 @@ import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
@@ -64,12 +65,12 @@ import java.util.stream.Stream;
  * interfaces to make it consumable by C/C native linkable rules.
  */
 class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements HasRuntimeDeps, NativeLinkableGroup, CxxPreprocessorDep {
+    implements HasRuntimeDeps, LegacyNativeLinkableGroup, CxxPreprocessorDep {
 
   private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
       new TransitiveCxxPreprocessorInputCache(this);
   private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
-      NativeLinkableGroup.getNativeLinkableCache(this);
+      LegacyNativeLinkableGroup.getNativeLinkableCache(this);
 
   private final ActionGraphBuilder graphBuilder;
 

@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
@@ -41,7 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /** Pseudo linkable for representing Swift runtime library's linker arguments. */
-public final class SwiftRuntimeNativeLinkableGroup implements NativeLinkableGroup {
+public final class SwiftRuntimeNativeLinkableGroup implements LegacyNativeLinkableGroup {
 
   private static final String SWIFT_RUNTIME = "_swift_runtime";
 
@@ -53,7 +54,7 @@ public final class SwiftRuntimeNativeLinkableGroup implements NativeLinkableGrou
   private final BuildTarget buildTarget;
 
   private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
-      NativeLinkableGroup.getNativeLinkableCache(this);
+      LegacyNativeLinkableGroup.getNativeLinkableCache(this);
 
   public SwiftRuntimeNativeLinkableGroup(
       SwiftPlatform swiftPlatform, TargetConfiguration targetConfiguration) {

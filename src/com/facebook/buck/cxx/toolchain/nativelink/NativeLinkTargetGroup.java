@@ -20,43 +20,15 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import java.nio.file.Path;
-import java.util.Optional;
 
 /** Represents a target of a native link. */
 public interface NativeLinkTargetGroup {
 
   BuildTarget getBuildTarget();
 
-  default NativeLinkTarget getTargetForPlatform(CxxPlatform cxxPlatform) {
-    return new PlatformLockedNativeLinkTargetGroup(this, cxxPlatform);
-  }
+  NativeLinkTarget getTargetForPlatform(CxxPlatform cxxPlatform);
 
   /** @return the {@link NativeLinkableInput} used to link this target. */
   NativeLinkableInput getNativeLinkTargetInput(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder, SourcePathResolver pathResolver);
-
-  /**
-   * @deprecated Convert to a {@link NativeLinkTarget} and use {@link
-   *     NativeLinkTarget#getNativeLinkTargetMode()} instead.
-   */
-  @Deprecated
-  NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform);
-
-  /**
-   * @return the {@link NativeLinkableGroup} dependencies used to link this target.
-   * @deprecated Convert to a {@link NativeLinkTarget} and use {@link
-   *     NativeLinkTarget#getNativeLinkTargetDeps(ActionGraphBuilder)} instead.
-   */
-  @Deprecated
-  Iterable<? extends NativeLinkableGroup> getNativeLinkTargetDeps(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
-
-  /**
-   * @return an explicit {@link Path} to use for the output location.
-   * @deprecated Convert to a {@link NativeLinkTarget} and use {@link
-   *     NativeLinkTarget#getNativeLinkTargetMode()} instead.
-   */
-  @Deprecated
-  Optional<Path> getNativeLinkTargetOutputPath();
 }

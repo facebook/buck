@@ -33,7 +33,8 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkTargetGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableCacheKey;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
@@ -69,7 +70,10 @@ import java.util.stream.Stream;
  * interfaces to make it consumable by C/C++ preprocessing and native linkable rules.
  */
 public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements AbstractCxxLibraryGroup, HasRuntimeDeps, NativeTestable, NativeLinkTargetGroup {
+    implements AbstractCxxLibraryGroup,
+        HasRuntimeDeps,
+        NativeTestable,
+        LegacyNativeLinkTargetGroup {
 
   private static final Logger LOG = Logger.get(CxxLibraryGroup.class);
 
@@ -155,7 +159,7 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.supportsOmnibusLinking = supportsOmnibusLinking;
     this.delegate = delegate;
     this.transitiveCxxPreprocessorInputCache = new TransitiveCxxPreprocessorInputCache(this);
-    this.linkableCache = NativeLinkableGroup.getNativeLinkableCache(this);
+    this.linkableCache = LegacyNativeLinkableGroup.getNativeLinkableCache(this);
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {

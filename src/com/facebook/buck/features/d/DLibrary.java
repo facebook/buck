@@ -27,6 +27,7 @@ import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
@@ -36,12 +37,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements NativeLinkableGroup {
+/** A {@link NativeLinkableGroup} for d libraries. */
+public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
+    implements LegacyNativeLinkableGroup {
 
   private final ActionGraphBuilder graphBuilder;
   private final DIncludes includes;
   private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
-      NativeLinkableGroup.getNativeLinkableCache(this);
+      LegacyNativeLinkableGroup.getNativeLinkableCache(this);
 
   public DLibrary(
       BuildTarget buildTarget,

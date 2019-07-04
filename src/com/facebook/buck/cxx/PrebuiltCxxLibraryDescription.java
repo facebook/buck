@@ -50,6 +50,7 @@ import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -813,7 +814,7 @@ public class PrebuiltCxxLibraryDescription
           return Optional.empty();
         }
         return Optional.of(
-            new NativeLinkTargetGroup() {
+            new LegacyNativeLinkTargetGroup() {
               @Override
               public BuildTarget getBuildTarget() {
                 return buildTarget;

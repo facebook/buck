@@ -17,17 +17,12 @@
 package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.rules.args.Arg;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.util.Optional;
 
 /**
  * Interface for {@link BuildRule} objects (e.g. C++ libraries) which can contribute to the
@@ -71,45 +66,6 @@ public interface NativeLinkableGroup {
   Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
       BuildRuleResolver ruleResolver);
 
-  /**
-   * Return input that *dependents* should put on their link line when linking against this
-   * linkable.
-   */
-  @Deprecated
-  NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type,
-      boolean forceLinkWhole,
-      ActionGraphBuilder graphBuilder,
-      TargetConfiguration targetConfiguration);
-
-  /**
-   * Return input that *dependents* should put on their link line when linking against this
-   * linkable.
-   */
-  @Deprecated
-  default NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type,
-      ActionGraphBuilder graphBuilder,
-      TargetConfiguration targetConfiguration) {
-    return getNativeLinkableInput(cxxPlatform, type, false, graphBuilder, targetConfiguration);
-  }
-
-  /**
-   * Optionally returns a {@link NativeLinkTargetGroup}. Most implementations of NativeLinkableGroup
-   * are themselves instances of NativeLinkTargetGroup.
-   */
-  @SuppressWarnings("unused")
-  @Deprecated
-  default Optional<NativeLinkTargetGroup> getNativeLinkTarget(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    if (this instanceof NativeLinkTargetGroup) {
-      return Optional.of((NativeLinkTargetGroup) this);
-    }
-    return Optional.empty();
-  }
-
   Linkage getPreferredLinkage(CxxPlatform cxxPlatform);
 
   /**
@@ -119,85 +75,7 @@ public interface NativeLinkableGroup {
   ImmutableMap<String, SourcePath> getSharedLibraries(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
-  /** @return whether this {@link NativeLinkableGroup} supports omnibus linking. */
-  @SuppressWarnings("unused")
-  @Deprecated
-  default boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
-    return true;
-  }
-
-  // TODO(agallagher): We should also use `NativeLinkable.supportsOmnibusLinking()` to
-  // determine if we can include the library, but this will need likely need to be updated for
-  // a multi-pass walk first.
-  /** Whether the nativeLinkable should be linked shared or otherwise for haskell omnibus. */
-  @SuppressWarnings("unused")
-  @Deprecated
-  default boolean isPrebuiltSOForHaskellOmnibus(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    return false;
-  }
-
-  /** @return whether this {@link NativeLinkableGroup} supports omnibus linking for haskell. */
-  // TODO(agallagher): This should probably be *any* `NativeLinkable` that supports omnibus
-  // linking.
-  @SuppressWarnings("unused")
-  @Deprecated
-  default boolean supportsOmnibusLinkingForHaskell(CxxPlatform cxxPlatform) {
-    return false;
-  }
-
-  /** @return exported linker flags. These should be added to link lines of dependents. */
-  @SuppressWarnings("unused")
-  @Deprecated
-  default Iterable<? extends Arg> getExportedLinkerFlags(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    return ImmutableList.of();
-  }
-
-  /**
-   * @return exported post-linker flags. This should be added to lines of dependents after other
-   *     linker flags.
-   */
-  @SuppressWarnings("unused")
-  @Deprecated
-  default Iterable<? extends Arg> getExportedPostLinkerFlags(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    return ImmutableList.of();
-  }
-
-  @Deprecated
-  default boolean forceLinkWholeForHaskellOmnibus() {
-    throw new IllegalStateException(
-        String.format("Unexpected rule type in omnibus link %s(%s)", getClass(), getBuildTarget()));
-  }
-
-  default NativeLinkable getNativeLinkable(CxxPlatform cxxPlatform) {
-    return getNativeLinkableCompatibilityCache().get(cxxPlatform);
-  }
-
-  /**
-   * Indicates whether this linkable should be included in both the test binary and the host binary
-   * for Apple tests.
-   */
-  @Deprecated
-  default boolean shouldBeLinkedInAppleTestAndHost() {
-    return false;
-  }
-
-  /** Return a string representing the type of this rule. */
-  @Deprecated
-  default String getRuleType() {
-    if (this instanceof BuildRule) {
-      return ((BuildRule) this).getType();
-    }
-    throw new UnsupportedOperationException();
-  }
-
-  PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache();
-
-  static PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCache(NativeLinkableGroup group) {
-    return new PlatformLockedNativeLinkableGroup.Cache(group);
-  }
+  NativeLinkable getNativeLinkable(CxxPlatform cxxPlatform);
 
   enum Linkage {
     ANY,

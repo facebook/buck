@@ -48,6 +48,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
@@ -88,12 +89,12 @@ public class CxxLinkableEnhancerTest {
       CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
   private static class FakeNativeLinkableGroup extends FakeBuildRule
-      implements NativeLinkableGroup {
+      implements LegacyNativeLinkableGroup {
 
     private final NativeLinkableInput staticInput;
     private final NativeLinkableInput sharedInput;
     private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
-        NativeLinkableGroup.getNativeLinkableCache(this);
+        LegacyNativeLinkableGroup.getNativeLinkableCache(this);
 
     public FakeNativeLinkableGroup(
         BuildTarget buildTarget,

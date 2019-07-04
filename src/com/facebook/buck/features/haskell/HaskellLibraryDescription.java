@@ -51,6 +51,7 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
@@ -665,7 +666,7 @@ public class HaskellLibraryDescription
 
     return new HaskellLibrary(buildTarget, projectFilesystem, params) {
       private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
-          NativeLinkableGroup.getNativeLinkableCache(this);
+          LegacyNativeLinkableGroup.getNativeLinkableCache(this);
 
       @Override
       public Iterable<BuildRule> getCompileDeps(HaskellPlatform platform) {

@@ -28,11 +28,11 @@ import java.util.Optional;
  * {@link NativeLinkTargetGroup}.
  */
 public class PlatformLockedNativeLinkTargetGroup implements NativeLinkTarget {
-  private final NativeLinkTargetGroup underlyingGroup;
+  private final LegacyNativeLinkTargetGroup underlyingGroup;
   private final CxxPlatform cxxPlatform;
 
   public PlatformLockedNativeLinkTargetGroup(
-      NativeLinkTargetGroup underlyingGroup, CxxPlatform cxxPlatform) {
+      LegacyNativeLinkTargetGroup underlyingGroup, CxxPlatform cxxPlatform) {
     this.underlyingGroup = underlyingGroup;
     this.cxxPlatform = cxxPlatform;
   }

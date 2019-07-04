@@ -46,7 +46,7 @@ import org.junit.Test;
 public class NativeLinkableGroupTest {
 
   private static class FakeNativeLinkableGroup extends FakeBuildRule
-      implements NativeLinkableGroup {
+      implements LegacyNativeLinkableGroup {
 
     private final Iterable<NativeLinkableGroup> deps;
     private final Iterable<NativeLinkableGroup> exportedDeps;
@@ -54,7 +54,7 @@ public class NativeLinkableGroupTest {
     private final NativeLinkableInput nativeLinkableInput;
     private final ImmutableMap<String, SourcePath> sharedLibraries;
     private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
-        NativeLinkableGroup.getNativeLinkableCache(this);
+        LegacyNativeLinkableGroup.getNativeLinkableCache(this);
 
     FakeNativeLinkableGroup(
         String target,

@@ -33,6 +33,7 @@ import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
@@ -49,7 +50,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements CxxPreprocessorDep, NativeLinkableGroup {
+    implements CxxPreprocessorDep, LegacyNativeLinkableGroup {
 
   private final ActionGraphBuilder graphBuilder;
   private final Optional<Pattern> supportedPlatformsRegex;
@@ -57,7 +58,7 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
       new TransitiveCxxPreprocessorInputCache(this);
   private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
-      NativeLinkableGroup.getNativeLinkableCache(this);
+      LegacyNativeLinkableGroup.getNativeLinkableCache(this);
 
   protected HalideLibrary(
       BuildTarget buildTarget,
