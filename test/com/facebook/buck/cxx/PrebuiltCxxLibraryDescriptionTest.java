@@ -830,8 +830,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
     NativeLinkableInput input =
         rule.getNativeLinkTarget(CXX_PLATFORM, graphBuilder)
             .get()
-            .getNativeLinkTargetInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, pathResolver);
+            .getTargetForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
+            .getNativeLinkTargetInput(graphBuilder, pathResolver);
     assertThat(Arg.stringify(input.getArgs(), pathResolver), Matchers.hasItems("--exported-flag"));
   }
 

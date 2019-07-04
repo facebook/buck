@@ -17,18 +17,11 @@
 package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 
 /** Represents a target of a native link. */
 public interface NativeLinkTargetGroup {
-
   BuildTarget getBuildTarget();
 
   NativeLinkTarget getTargetForPlatform(CxxPlatform cxxPlatform);
-
-  /** @return the {@link NativeLinkableInput} used to link this target. */
-  NativeLinkableInput getNativeLinkTargetInput(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder, SourcePathResolver pathResolver);
 }

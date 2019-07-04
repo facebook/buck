@@ -16,6 +16,7 @@
 package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -54,4 +55,8 @@ public interface LegacyNativeLinkTargetGroup extends NativeLinkTargetGroup {
   default NativeLinkTarget getTargetForPlatform(CxxPlatform cxxPlatform) {
     return new PlatformLockedNativeLinkTargetGroup(this, cxxPlatform);
   }
+
+  /** @return the {@link NativeLinkableInput} used to link this target. */
+  NativeLinkableInput getNativeLinkTargetInput(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder, SourcePathResolver pathResolver);
 }
