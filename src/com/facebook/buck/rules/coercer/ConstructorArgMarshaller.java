@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
@@ -81,6 +82,7 @@ public interface ConstructorArgMarshaller {
       CellPathResolver cellPathResolver,
       ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
+      TargetConfigurationTransformer targetConfigurationTransformer,
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
       ConstructorArgBuilder<T> constructorArgBuilder,

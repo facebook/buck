@@ -60,13 +60,15 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class TargetCompatibilityCheckerTest {
 
-  private final ConstraintSetting cs1 =
-      ConstraintSetting.of(
-          ConfigurationBuildTargetFactoryForTests.newInstance("//cs:cs1"), Optional.empty());
-  private final ConstraintValue cs1v1 =
-      ConstraintValue.of(ConfigurationBuildTargetFactoryForTests.newInstance("//cs:cs1v1"), cs1);
-  private final ConstraintValue cs1v2 =
-      ConstraintValue.of(ConfigurationBuildTargetFactoryForTests.newInstance("//cs:cs1v2"), cs1);
+  private final BuildTarget cs1target =
+      ConfigurationBuildTargetFactoryForTests.newInstance("//cs:cs1");
+  private final ConstraintSetting cs1 = ConstraintSetting.of(cs1target, Optional.empty());
+  private final BuildTarget cs1v1target =
+      ConfigurationBuildTargetFactoryForTests.newInstance("//cs:cs1v1");
+  private final ConstraintValue cs1v1 = ConstraintValue.of(cs1v1target, cs1);
+  private final BuildTarget cs1v2target =
+      ConfigurationBuildTargetFactoryForTests.newInstance("//cs:cs1v2");
+  private final ConstraintValue cs1v2 = ConstraintValue.of(cs1v2target, cs1);
 
   private Platform platform;
   private ConfigurationRuleRegistry configurationRuleRegistry;

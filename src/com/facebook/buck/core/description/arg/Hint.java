@@ -34,6 +34,7 @@ public @interface Hint {
   boolean DEFAULT_IS_INPUT = true;
   boolean DEFAULT_IS_TARGET_GRAPH_ONLY_DEP = false;
   boolean DEFAULT_IS_CONFIGURABLE = true;
+  boolean DEFAULT_SPLIT_CONFIGURATION = false;
 
   /** @return Whether to search the field's value for dependencies */
   boolean isDep() default DEFAULT_IS_DEP;
@@ -53,4 +54,16 @@ public @interface Hint {
 
   /** @return Whether an attribute can be configured using {@code select}. */
   boolean isConfigurable() default DEFAULT_IS_CONFIGURABLE;
+
+  /**
+   * Indicates that target configuration needs to be split.
+   *
+   * <p>The target configuration will be transformed into multiple other configurations and every
+   * target in this attribute (target-based object) will be created for every configuration and the
+   * resulting list will be stored in this attribute.
+   *
+   * <p>Note that this logic only applies when target configuration supports transformation into
+   * multiple configurations and the attribute type supports concatenation.
+   */
+  boolean splitConfiguration() default DEFAULT_SPLIT_CONFIGURATION;
 }

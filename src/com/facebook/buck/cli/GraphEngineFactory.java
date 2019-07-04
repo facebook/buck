@@ -26,9 +26,11 @@ import com.facebook.buck.core.graph.transformation.impl.DefaultGraphTransformati
 import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
+import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDepsPackage;
@@ -145,6 +147,8 @@ public class GraphEngineFactory {
 
     // COMPUTATION: raw target node to raw target node with deps
 
+    // TODO: replace with TargetPlatformResolver
+    TargetPlatformResolver targetPlatformResolver = targetConfiguration -> EmptyPlatform.INSTANCE;
     RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
         new RawTargetNodeToTargetNodeFactory(
             params.getTypeCoercerFactory(),
@@ -180,8 +184,8 @@ public class GraphEngineFactory {
                     buildTarget, ConstraintSetting.of(buildTarget, Optional.empty()));
               }
             },
-            // TODO: replace with TargetPlatformResolver
-            targetConfiguration -> EmptyPlatform.INSTANCE);
+            targetPlatformResolver,
+            new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver));
 
     RawTargetNodeToRawTargetNodeWithDepsComputation
         rawTargetNodeToRawTargetNodeWithDepsComputation =

@@ -56,6 +56,9 @@ public interface ParamInfo extends Comparable<ParamInfo> {
   /** @return Whether this attribute is configurable or not */
   boolean isConfigurable();
 
+  /** @see Hint#splitConfiguration() */
+  boolean splitConfiguration();
+
   /**
    * @return the type that input values will be coerced to. Return the type parameter of Optional if
    *     wrapped in Optional.

@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
@@ -27,6 +28,7 @@ import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.syntax.ListWithSelects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
@@ -96,6 +98,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       CellPathResolver cellPathResolver,
       ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
+      TargetConfigurationTransformer targetConfigurationTransformer,
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
       ConstructorArgBuilder<T> constructorArgBuilder,
@@ -110,29 +113,103 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       if (attribute == null) {
         continue;
       }
-      Object attributeWithSelectableValue =
-          createCoercedAttributeWithSelectableValue(
-              cellPathResolver,
-              filesystem,
-              buildTarget,
-              buildTarget.getTargetConfiguration(),
-              info,
-              attribute);
-      Object configuredAttributeValue =
-          configureAttributeValue(
-              configurationContext,
-              selectorListResolver,
-              buildTarget,
-              configurationDeps,
-              info.getName(),
-              attributeWithSelectableValue);
-      if (configuredAttributeValue != null) {
-        info.setCoercedValue(constructorArgBuilder.getBuilder(), configuredAttributeValue);
+      Object attributeValue;
+      if (info.splitConfiguration()
+          && info.getTypeCoercer().supportsConcatenation()
+          && targetConfigurationTransformer.needsTransformation(
+              buildTarget.getTargetConfiguration())) {
+        attributeValue =
+            createAttributeWithConfigurationTransformation(
+                cellPathResolver,
+                filesystem,
+                selectorListResolver,
+                targetConfigurationTransformer,
+                configurationContext,
+                buildTarget,
+                buildTarget.getTargetConfiguration(),
+                configurationDeps,
+                info,
+                attribute);
+      } else {
+        attributeValue =
+            createAttribute(
+                cellPathResolver,
+                filesystem,
+                selectorListResolver,
+                configurationContext,
+                buildTarget,
+                buildTarget.getTargetConfiguration(),
+                configurationDeps,
+                info,
+                attribute);
+      }
+      if (attributeValue != null) {
+        info.setCoercedValue(constructorArgBuilder.getBuilder(), attributeValue);
       }
     }
     T dto = constructorArgBuilder.build();
     collectDeclaredDeps(cellPathResolver, allParamInfo.get("deps"), declaredDeps, dto);
     return dto;
+  }
+
+  @SuppressWarnings("unchecked")
+  @Nullable
+  private Object createAttributeWithConfigurationTransformation(
+      CellPathResolver cellPathResolver,
+      ProjectFilesystem filesystem,
+      SelectorListResolver selectorListResolver,
+      TargetConfigurationTransformer targetConfigurationTransformer,
+      SelectableConfigurationContext configurationContext,
+      BuildTarget buildTarget,
+      TargetConfiguration targetConfiguration,
+      ImmutableSet.Builder<BuildTarget> configurationDeps,
+      ParamInfo info,
+      Object attribute)
+      throws CoerceFailedException {
+    ImmutableList.Builder<Object> valuesForConcatenation = ImmutableList.builder();
+    for (TargetConfiguration nestedTargetConfiguration :
+        targetConfigurationTransformer.transform(targetConfiguration)) {
+      Object configuredAttributeValue =
+          createAttribute(
+              cellPathResolver,
+              filesystem,
+              selectorListResolver,
+              configurationContext.withTargetConfiguration(nestedTargetConfiguration),
+              buildTarget.getUnconfiguredBuildTargetView().configure(nestedTargetConfiguration),
+              nestedTargetConfiguration,
+              configurationDeps,
+              info,
+              attribute);
+      if (configuredAttributeValue != null) {
+        valuesForConcatenation.add(configuredAttributeValue);
+      }
+    }
+    TypeCoercer<Object> coercer = (TypeCoercer<Object>) info.getTypeCoercer();
+    return coercer.concat(valuesForConcatenation.build());
+  }
+
+  @Nullable
+  private Object createAttribute(
+      CellPathResolver cellPathResolver,
+      ProjectFilesystem filesystem,
+      SelectorListResolver selectorListResolver,
+      SelectableConfigurationContext configurationContext,
+      BuildTarget buildTarget,
+      TargetConfiguration targetConfiguration,
+      ImmutableSet.Builder<BuildTarget> configurationDeps,
+      ParamInfo info,
+      Object attribute)
+      throws CoerceFailedException {
+    Object attributeWithSelectableValue =
+        createCoercedAttributeWithSelectableValue(
+            cellPathResolver, filesystem, buildTarget, targetConfiguration, info, attribute);
+    return configureAttributeValue(
+        configurationContext,
+        selectorListResolver,
+        buildTarget,
+        configurationDeps,
+        info.getName(),
+        attributeWithSelectableValue);
   }
 
   private Object createCoercedAttributeWithSelectableValue(

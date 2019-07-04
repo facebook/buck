@@ -31,7 +31,14 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.TargetConfigurationTransformer;
+import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
+import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
+import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
+import com.facebook.buck.core.model.platform.TargetPlatformResolver;
+import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
+import com.facebook.buck.core.model.platform.impl.MultiPlatform;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.platform.DummyConfigurationRule;
@@ -647,12 +654,15 @@ public class ConstructorArgMarshallerImmutableTest {
                 ImmutableSelectorValue.of(
                     ImmutableMap.of("DEFAULT", "string3", "//x:y", "string4"), "")),
             ImmutableMap.class);
+    TargetPlatformResolver targetPlatformResolver = configuration -> EmptyPlatform.INSTANCE;
     SelectableConfigurationContext selectableConfigurationContext =
         DefaultSelectableConfigurationContext.of(
             FakeBuckConfig.builder().build(),
             new RuleBasedConstraintResolver(DummyConfigurationRule::of),
             EmptyTargetConfiguration.INSTANCE,
-            configuration -> EmptyPlatform.INSTANCE);
+            targetPlatformResolver);
+    TargetConfigurationTransformer targetConfigurationTransformer =
+        new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     ImmutableSet.Builder<BuildTarget> configurationDeps = ImmutableSet.builder();
 
@@ -661,6 +671,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem),
             filesystem,
             selectorListResolver,
+            targetConfigurationTransformer,
             selectableConfigurationContext,
             TARGET,
             builder(DtoWithString.class),
@@ -677,12 +688,15 @@ public class ConstructorArgMarshallerImmutableTest {
   public void populateWithConfiguringAttributesCopiesValuesToImmutable() throws Exception {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
+    TargetConfigurationTransformer targetConfigurationTransformer =
+        new MultiPlatformTargetConfigurationTransformer(configuration -> EmptyPlatform.INSTANCE);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     DtoWithString dto =
         marshaller.populateWithConfiguringAttributes(
             createCellRoots(filesystem),
             filesystem,
             selectorListResolver,
+            targetConfigurationTransformer,
             NonCopyingSelectableConfigurationContext.INSTANCE,
             TARGET,
             builder(DtoWithString.class),
@@ -697,12 +711,15 @@ public class ConstructorArgMarshallerImmutableTest {
   public void populateWithConfiguringAttributesCollectsDeclaredDeps() throws Exception {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
+    TargetConfigurationTransformer targetConfigurationTransformer =
+        new MultiPlatformTargetConfigurationTransformer(configuration -> EmptyPlatform.INSTANCE);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     BuildTarget dep = BuildTargetFactory.newInstance("//a/b:c");
     marshaller.populateWithConfiguringAttributes(
         createCellRoots(filesystem),
         filesystem,
         selectorListResolver,
+        targetConfigurationTransformer,
         NonCopyingSelectableConfigurationContext.INSTANCE,
         TARGET,
         builder(DtoWithDepsAndNotDeps.class),
@@ -716,11 +733,14 @@ public class ConstructorArgMarshallerImmutableTest {
   public void populateWithConfiguringAttributesSkipsMissingValues() throws Exception {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
+    TargetConfigurationTransformer targetConfigurationTransformer =
+        new MultiPlatformTargetConfigurationTransformer(configuration -> EmptyPlatform.INSTANCE);
     DtoWithOptionalSetOfStrings dto =
         marshaller.populateWithConfiguringAttributes(
             createCellRoots(filesystem),
             filesystem,
             selectorListResolver,
+            targetConfigurationTransformer,
             NonCopyingSelectableConfigurationContext.INSTANCE,
             TARGET,
             builder(DtoWithOptionalSetOfStrings.class),
@@ -728,6 +748,59 @@ public class ConstructorArgMarshallerImmutableTest {
             ImmutableSet.builder(),
             ImmutableMap.of());
     assertFalse(dto.getStrings().isPresent());
+  }
+
+  @Test
+  public void populateWithConfiguringAttributesSplitsConfiguration() throws Exception {
+    BuildTarget multiPlatformTarget =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//platform:multi_platform");
+    BuildTarget basePlatformTarget =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//platform:base_platform");
+    BuildTarget nestedPlatform1Target =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//platform:nested_platform_1");
+    BuildTarget nestedPlatform2Target =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//platform:nested_platform_2");
+
+    MultiPlatform multiPlatform =
+        new MultiPlatform(
+            multiPlatformTarget,
+            new ConstraintBasedPlatform(basePlatformTarget, ImmutableSet.of()),
+            ImmutableList.of(
+                new ConstraintBasedPlatform(nestedPlatform1Target, ImmutableSet.of()),
+                new ConstraintBasedPlatform(nestedPlatform2Target, ImmutableSet.of())));
+    SelectorListResolver selectorListResolver =
+        new DefaultSelectorListResolver(new TestSelectableResolver());
+    TargetPlatformResolver targetPlatformResolver = configuration -> multiPlatform;
+    TargetConfigurationTransformer targetConfigurationTransformer =
+        new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver);
+    SelectableConfigurationContext selectableConfigurationContext =
+        DefaultSelectableConfigurationContext.of(
+            FakeBuckConfig.builder().build(),
+            new RuleBasedConstraintResolver(DummyConfigurationRule::of),
+            ImmutableDefaultTargetConfiguration.of(multiPlatformTarget),
+            targetPlatformResolver);
+
+    DtoWithSplit dto =
+        marshaller.populateWithConfiguringAttributes(
+            createCellRoots(filesystem),
+            filesystem,
+            selectorListResolver,
+            targetConfigurationTransformer,
+            selectableConfigurationContext,
+            TARGET,
+            builder(DtoWithSplit.class),
+            ImmutableSet.builder(),
+            ImmutableSet.builder(),
+            ImmutableMap.of("deps", ImmutableList.of("//a/b:c")));
+
+    assertEquals(3, dto.getDeps().size());
+    assertEquals(
+        ImmutableSet.of(multiPlatformTarget, nestedPlatform1Target, nestedPlatform2Target),
+        dto.getDeps().stream()
+            .map(BuildTarget::getTargetConfiguration)
+            .map(DefaultTargetConfiguration.class::cast)
+            .map(DefaultTargetConfiguration::getTargetPlatform)
+            .collect(ImmutableSet.toImmutableSet()));
   }
 
   @BuckStyleImmutable
@@ -966,4 +1039,11 @@ public class ConstructorArgMarshallerImmutableTest {
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractInheritsFromHasDefaultMethod extends HasDefaultMethod {}
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  abstract static class AbstractDtoWithSplit {
+    @Hint(splitConfiguration = true)
+    abstract ImmutableSortedSet<BuildTarget> getDeps();
+  }
 }

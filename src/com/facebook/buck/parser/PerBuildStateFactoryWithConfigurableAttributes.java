@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
@@ -191,7 +192,9 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             symlinkCheckers,
             selectorListResolver,
             configurationRuleRegistry.getConstraintResolver(),
-            configurationRuleRegistry.getTargetPlatformResolver());
+            configurationRuleRegistry.getTargetPlatformResolver(),
+            new MultiPlatformTargetConfigurationTransformer(
+                configurationRuleRegistry.getTargetPlatformResolver()));
 
     ListeningExecutorService configuredPipelineExecutor =
         MoreExecutors.listeningDecorator(

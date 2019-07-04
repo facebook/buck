@@ -94,6 +94,15 @@ public abstract class AbstractParamInfo implements ParamInfo {
   }
 
   @Override
+  public boolean splitConfiguration() {
+    Hint hint = getHint();
+    if (hint != null) {
+      return hint.splitConfiguration();
+    }
+    return Hint.DEFAULT_SPLIT_CONFIGURATION;
+  }
+
+  @Override
   public Class<?> getResultClass() {
     return typeCoercer.getOutputClass();
   }

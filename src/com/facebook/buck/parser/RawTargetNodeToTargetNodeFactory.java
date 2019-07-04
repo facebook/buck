@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -55,6 +56,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
   private final SelectorListResolver selectorListResolver;
   private final ConstraintResolver constraintResolver;
   private final TargetPlatformResolver targetPlatformResolver;
+  private final TargetConfigurationTransformer targetConfigurationTransformer;
 
   public RawTargetNodeToTargetNodeFactory(
       TypeCoercerFactory typeCoercerFactory,
@@ -65,7 +67,8 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
       TargetNodeListener<TargetNode<?>> nodeListener,
       SelectorListResolver selectorListResolver,
       ConstraintResolver constraintResolver,
-      TargetPlatformResolver targetPlatformResolver) {
+      TargetPlatformResolver targetPlatformResolver,
+      TargetConfigurationTransformer targetConfigurationTransformer) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.marshaller = marshaller;
@@ -75,6 +78,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
     this.selectorListResolver = selectorListResolver;
     this.constraintResolver = constraintResolver;
     this.targetPlatformResolver = targetPlatformResolver;
+    this.targetConfigurationTransformer = targetConfigurationTransformer;
   }
 
   @Override
@@ -109,6 +113,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
               targetCell.getCellPathResolver(),
               targetCell.getFilesystem(),
               selectorListResolver,
+              targetConfigurationTransformer,
               configurationContext,
               target,
               builder,
