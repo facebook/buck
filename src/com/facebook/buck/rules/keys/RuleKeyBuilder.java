@@ -28,6 +28,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -131,6 +132,13 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
           };
     }
     return hasher;
+  }
+
+  /** To be called from {@link #setAction(Action)}. */
+  final RuleKeyBuilder<RULE_KEY> setActionRuleKey(RuleKey ruleKey) {
+    try (Scope ignored = scopedHasher.wrapperScope(Wrapper.ACTION)) {
+      return setSingleValue(ruleKey);
+    }
   }
 
   /** To be called from {@link #setBuildRule(BuildRule)}. */

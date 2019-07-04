@@ -21,6 +21,7 @@ import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.log.Logger;
@@ -93,6 +94,10 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> {
 
     if (val instanceof AddsToRuleKey) {
       return setAddsToRuleKey((AddsToRuleKey) val);
+    }
+
+    if (val instanceof Action) {
+      return setAction((Action) val);
     }
 
     if (val instanceof BuildRule) {
@@ -188,6 +193,8 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> {
   }
 
   protected abstract AbstractRuleKeyBuilder<RULE_KEY> setSingleValue(@Nullable Object val);
+
+  protected abstract AbstractRuleKeyBuilder<RULE_KEY> setAction(Action action);
 
   protected abstract AbstractRuleKeyBuilder<RULE_KEY> setBuildRule(BuildRule rule);
 

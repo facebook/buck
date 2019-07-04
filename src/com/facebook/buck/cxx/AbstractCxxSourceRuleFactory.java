@@ -26,6 +26,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -908,6 +909,11 @@ abstract class AbstractCxxSourceRuleFactory {
         throw new RuntimeException("Unsupported value type: " + val.getClass());
       }
       return this;
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<String> setAction(Action action) {
+      throw new IllegalStateException();
     }
 
     @Override

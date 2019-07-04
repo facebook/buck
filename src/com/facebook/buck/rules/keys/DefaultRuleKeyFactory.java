@@ -21,6 +21,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.attr.HasDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -164,6 +165,12 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
 
     public Builder(RuleKeyHasher<RULE_KEY> hasher) {
       super(ruleFinder, hashLoader, hasher);
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<RULE_KEY> setAction(Action action) {
+      deps.add(action);
+      return setActionRuleKey(DefaultRuleKeyFactory.this.build(action));
     }
 
     @Override

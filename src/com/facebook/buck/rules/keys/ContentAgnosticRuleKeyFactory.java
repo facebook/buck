@@ -22,6 +22,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
@@ -99,6 +100,11 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
 
     public Builder(RuleKeyHasher<RULE_KEY> hasher) {
       super(ruleFinder, fileHashLoader, hasher);
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<RULE_KEY> setAction(Action action) {
+      return setActionRuleKey(ContentAgnosticRuleKeyFactory.this.build(action));
     }
 
     @Override

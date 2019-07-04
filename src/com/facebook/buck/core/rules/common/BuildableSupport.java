@@ -20,6 +20,7 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.attr.HasCustomDepsLogic;
 import com.facebook.buck.core.rules.modern.HasCustomInputsLogic;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -120,6 +121,11 @@ public final class BuildableSupport {
     }
 
     @Override
+    protected AbstractRuleKeyBuilder<Stream<BuildRule>> setAction(Action action) {
+      return this;
+    }
+
+    @Override
     protected AbstractRuleKeyBuilder<Stream<BuildRule>> setBuildRule(BuildRule rule) {
       streamBuilder.accept(rule);
       return this;
@@ -170,6 +176,11 @@ public final class BuildableSupport {
     @Override
     protected AbstractRuleKeyBuilder<Stream<SourcePath>> setSingleValue(@Nullable Object val) {
       return this;
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<Stream<SourcePath>> setAction(Action action) {
+      throw new RuntimeException("cannot derive inputs from Action");
     }
 
     @Override

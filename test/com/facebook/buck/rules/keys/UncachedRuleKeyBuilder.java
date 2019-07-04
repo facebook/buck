@@ -20,6 +20,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.keys.hasher.GuavaRuleKeyHasher;
@@ -61,6 +62,11 @@ public class UncachedRuleKeyBuilder extends RuleKeyBuilder<HashCode> {
       FileHashLoader hashCache,
       RuleKeyFactory<RuleKey> ruleKeyFactory) {
     return () -> new UncachedRuleKeyBuilder(ruleFinder, hashCache, ruleKeyFactory);
+  }
+
+  @Override
+  protected AbstractRuleKeyBuilder<HashCode> setAction(Action action) {
+    return setActionRuleKey(ruleKeyFactory.build(action));
   }
 
   @Override

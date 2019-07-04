@@ -221,6 +221,13 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
       return this;
     }
 
+    @Override
+    protected AbstractRuleKeyBuilder<RULE_KEY> setAction(Action action) {
+      // called reflectively via InputBasedRuleKeyFactory.build(BuildRule), so we still need to
+      // handle it.
+      return setActionRuleKey(InputBasedRuleKeyFactory.this.build(action));
+    }
+
     // Rules supporting input-based rule keys should be described entirely by their `SourcePath`
     // inputs.  If we see a `BuildRule` when generating the rule key, this is likely a break in
     // that contract, so check for that.

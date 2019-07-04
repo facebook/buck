@@ -60,6 +60,8 @@ public class RuleKeyHasherTypes {
         return (byte) 'L';
       case EITHER_RIGHT:
         return (byte) 'R';
+      case ACTION:
+        return (byte) 'C';
       case BUILD_RULE:
         return (byte) 'B';
       case APPENDABLE:

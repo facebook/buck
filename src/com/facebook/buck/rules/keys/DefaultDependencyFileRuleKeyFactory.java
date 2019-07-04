@@ -20,6 +20,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -264,6 +265,15 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
     protected Builder<RULE_KEY> setNonHashingSourcePath(SourcePath sourcePath) {
       setNonHashingSourcePathDirectly(sourcePath);
       return this;
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<RULE_KEY> setAction(Action action) {
+      throw new IllegalStateException(
+          String.format(
+              "Dependency-file rule key builders cannot process actions. "
+                  + "Was given %s to add to rule key.",
+              action));
     }
 
     // Rules supporting dep-file rule keys should be described entirely by their `SourcePath`

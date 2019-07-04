@@ -23,6 +23,7 @@ import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.artifact.BuildTargetSourcePathToArtifactConverter;
 import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.artifact.SourceArtifact;
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -33,6 +34,10 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.actions.Action;
+import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
+import com.facebook.buck.core.rules.actions.FakeAction;
+import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
@@ -52,6 +57,7 @@ import com.facebook.buck.util.types.Either;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -80,6 +86,34 @@ public class RuleKeyBuilderTest {
   private static final RuleKey RULE_KEY_1 = new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52c");
   private static final RuleKey RULE_KEY_2 = new RuleKey("b67816b13867c32ac52ca002b39af204cdfaa5fd");
   private static final RuleKey RULE_KEY_3 = new RuleKey("c57816b13867c32ac52cb002b39af204cdfae5fe");
+
+  private static final Action ACTION_1;
+  private static final Action ACTION_2;
+
+  static {
+    FakeAction.FakeActionExecuteLambda executeLambda =
+        (ignored1, ignored2, ignored3) ->
+            ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
+
+    ActionRegistryForTests actionRegistry = new ActionRegistryForTests(TARGET_1);
+    ACTION_1 =
+        new FakeAction(
+            actionRegistry,
+            ImmutableSet.of(),
+            ImmutableSet.of(actionRegistry.declareArtifact("foo")),
+            executeLambda);
+    ACTION_2 =
+        new FakeAction(
+            actionRegistry,
+            ImmutableSet.of(),
+            ImmutableSet.of(actionRegistry.declareArtifact("bar")),
+            executeLambda);
+  }
+
+  private static final RuleKey ACTION_RULE_KEY_1 =
+      new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52d");
+  private static final RuleKey ACTION_RULE_KEY_2 =
+      new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac22d");
 
   private static final AddsToRuleKey IGNORED_APPENDABLE = new FakeRuleKeyAppendable("");
   private static final AddsToRuleKey APPENDABLE_1 = new FakeRuleKeyAppendable("");
@@ -166,6 +200,8 @@ public class RuleKeyBuilderTest {
           // Buck rules & appendables
           RULE_1,
           RULE_2,
+          ACTION_1,
+          ACTION_2,
           APPENDABLE_1,
           APPENDABLE_2,
 
@@ -227,8 +263,18 @@ public class RuleKeyBuilderTest {
   private RuleKeyBuilder<HashCode> newBuilder() {
     Map<BuildTarget, BuildRule> ruleMap =
         ImmutableMap.of(TARGET_1, RULE_1, TARGET_2, RULE_2, TARGET_3, RULE_3);
-    Map<BuildRule, RuleKey> ruleKeyMap =
-        ImmutableMap.of(RULE_1, RULE_KEY_1, RULE_2, RULE_KEY_2, RULE_3, RULE_KEY_3);
+    Map<BuildEngineAction, RuleKey> ruleKeyMap =
+        ImmutableMap.of(
+            RULE_1,
+            RULE_KEY_1,
+            RULE_2,
+            RULE_KEY_2,
+            RULE_3,
+            RULE_KEY_3,
+            ACTION_1,
+            ACTION_RULE_KEY_1,
+            ACTION_2,
+            ACTION_RULE_KEY_2);
     Map<AddsToRuleKey, RuleKey> appendableKeys =
         ImmutableMap.of(APPENDABLE_1, RULE_KEY_1, APPENDABLE_2, RULE_KEY_2);
     BuildRuleResolver ruleResolver = new FakeActionGraphBuilder(ruleMap);
@@ -248,6 +294,11 @@ public class RuleKeyBuilderTest {
 
     return new RuleKeyBuilder<HashCode>(
         ruleResolver, hashCache, RuleKeyBuilder.createDefaultHasher(Optional.empty())) {
+
+      @Override
+      protected AbstractRuleKeyBuilder<HashCode> setAction(Action action) {
+        return setActionRuleKey(ruleKeyMap.get(action));
+      }
 
       @Override
       protected RuleKeyBuilder<HashCode> setBuildRule(BuildRule rule) {
