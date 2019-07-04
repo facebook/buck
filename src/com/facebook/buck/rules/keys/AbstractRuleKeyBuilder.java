@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -84,6 +85,10 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> {
       throws IOException {
     if (val instanceof SourcePath) {
       return setSourcePath((SourcePath) val);
+    }
+
+    if (val instanceof Artifact) {
+      return setArtifact((Artifact) val);
     }
 
     if (val instanceof AddsToRuleKey) {
@@ -187,6 +192,9 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> {
   protected abstract AbstractRuleKeyBuilder<RULE_KEY> setBuildRule(BuildRule rule);
 
   protected abstract AbstractRuleKeyBuilder<RULE_KEY> setAddsToRuleKey(AddsToRuleKey appendable);
+
+  protected abstract AbstractRuleKeyBuilder<RULE_KEY> setArtifact(Artifact artifact)
+      throws IOException;
 
   protected abstract AbstractRuleKeyBuilder<RULE_KEY> setSourcePath(SourcePath sourcePath)
       throws IOException;

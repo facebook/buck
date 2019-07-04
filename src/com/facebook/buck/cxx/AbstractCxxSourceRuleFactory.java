@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -918,6 +919,11 @@ abstract class AbstractCxxSourceRuleFactory {
     protected HashBuilder setAddsToRuleKey(AddsToRuleKey appendable) {
       hasher.putString(commandHashCache.apply(appendable));
       return this;
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<String> setArtifact(Artifact artifact) {
+      return setSourcePath(artifact.asBound().getSourcePath());
     }
 
     @Override

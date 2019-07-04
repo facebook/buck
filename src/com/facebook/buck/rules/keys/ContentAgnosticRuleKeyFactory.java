@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -106,6 +107,11 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     @Override
     protected RuleKeyBuilder<RULE_KEY> setAddsToRuleKey(AddsToRuleKey appendable) {
       return setAddsToRuleKey(ContentAgnosticRuleKeyFactory.this.buildAppendableKey(appendable));
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<RULE_KEY> setArtifact(Artifact artifact) throws IOException {
+      return setSourcePath(artifact.asBound().getSourcePath());
     }
 
     @Override
