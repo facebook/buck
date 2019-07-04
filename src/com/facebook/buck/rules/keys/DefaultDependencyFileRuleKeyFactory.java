@@ -269,11 +269,11 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
 
     @Override
     protected AbstractRuleKeyBuilder<RULE_KEY> setAction(Action action) {
-      throw new IllegalStateException(
-          String.format(
-              "Dependency-file rule key builders cannot process actions. "
-                  + "Was given %s to add to rule key.",
-              action));
+      // we just hash the action directly like for AddsToRuleKey objects.
+      try (Scope ignored = getScopedHasher().wrapperScope(RuleKeyHasher.Wrapper.ACTION)) {
+        AlterRuleKeys.amendKey(this, action);
+      }
+      return this;
     }
 
     // Rules supporting dep-file rule keys should be described entirely by their `SourcePath`

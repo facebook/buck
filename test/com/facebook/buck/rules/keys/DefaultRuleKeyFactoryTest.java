@@ -30,6 +30,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -278,6 +279,20 @@ public class DefaultRuleKeyFactoryTest {
         result.diagKey,
         Matchers.containsString(
             "string(\"stilton\"):key(alpha):number(1):key(beta):string(\"stinking bishop\"):key(gamma):"));
+  }
+
+  @Test
+  public void actionsFieldsAreAddedToRuleKeysInOrder() {
+    BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
+
+    DefaultRuleKeyFactory factory =
+        new TestDefaultRuleKeyFactory(new DummyFileHashCache(), ruleFinder);
+
+    Result<RuleKey, String> result =
+        factory.buildForDiagnostics(
+            new SomeAction(new ActionRegistryForTests(target), 2, "C"), new StringRuleKeyHasher());
+    assertThat(result.diagKey, Matchers.containsString("string(\"C\"):key(a):number(2):key(i):"));
   }
 
   @Test

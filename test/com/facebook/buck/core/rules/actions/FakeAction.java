@@ -16,12 +16,15 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.util.function.TriFunction;
 import com.google.common.collect.ImmutableSet;
+import java.util.Objects;
 
 public class FakeAction extends AbstractAction {
 
-  private final FakeActionExecuteLambda executeFunction;
+  private final HashableWrapper hasheableWrapper;
 
   public FakeAction(
       ActionRegistry actionRegistry,
@@ -29,7 +32,7 @@ public class FakeAction extends AbstractAction {
       ImmutableSet<Artifact> outputs,
       FakeActionExecuteLambda executeFunction) {
     super(actionRegistry, inputs, outputs);
-    this.executeFunction = executeFunction;
+    this.hasheableWrapper = new HashableWrapper(executeFunction);
   }
 
   @Override
@@ -39,7 +42,7 @@ public class FakeAction extends AbstractAction {
 
   @Override
   public ActionExecutionResult execute(ActionExecutionContext executionContext) {
-    return executeFunction.apply(inputs, outputs, executionContext);
+    return hasheableWrapper.executeFunction.apply(inputs, outputs, executionContext);
   }
 
   @Override
@@ -48,7 +51,7 @@ public class FakeAction extends AbstractAction {
   }
 
   public FakeActionExecuteLambda getExecuteFunction() {
-    return executeFunction;
+    return hasheableWrapper.executeFunction;
   }
 
   @FunctionalInterface
@@ -58,4 +61,22 @@ public class FakeAction extends AbstractAction {
           ImmutableSet<Artifact>,
           ActionExecutionContext,
           ActionExecutionResult> {}
+
+  /**
+   * For testing purposes only, where we create a hacky wrapper around lambdas that lets it be
+   * hashed for rulekeys
+   */
+  private static class HashableWrapper implements AddsToRuleKey {
+
+    private final FakeActionExecuteLambda executeFunction;
+
+    @AddToRuleKey
+    @SuppressWarnings("unused")
+    private final int hash;
+
+    private HashableWrapper(FakeActionExecuteLambda executeFunction) {
+      this.executeFunction = executeFunction;
+      this.hash = Objects.hash(executeFunction);
+    }
+  }
 }
