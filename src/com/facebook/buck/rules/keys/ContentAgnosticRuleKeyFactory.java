@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -60,7 +61,8 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
         }
       };
 
-  private final SingleBuildRuleKeyCache<RuleKey> ruleKeyCache = new SingleBuildRuleKeyCache<>();
+  private final SingleBuildActionRuleKeyCache<RuleKey> ruleKeyCache =
+      new SingleBuildActionRuleKeyCache<>();
 
   public ContentAgnosticRuleKeyFactory(
       RuleKeyFieldLoader ruleKeyFieldLoader,
@@ -71,9 +73,9 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     this.ruleKeyLogger = ruleKeyLogger;
   }
 
-  private RuleKey calculateBuildRuleKey(BuildRule buildRule) {
+  private RuleKey calculateBuildRuleKey(BuildEngineAction action) {
     Builder<HashCode> builder = new Builder<>(RuleKeyBuilder.createDefaultHasher(ruleKeyLogger));
-    ruleKeyFieldLoader.setFields(builder, buildRule, RuleKeyType.CONTENT_AGNOSTIC);
+    ruleKeyFieldLoader.setFields(builder, action, RuleKeyType.CONTENT_AGNOSTIC);
     return builder.build(RuleKey::new);
   }
 

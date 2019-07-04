@@ -16,9 +16,9 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.Action;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -31,10 +31,11 @@ import java.util.function.Function;
  *
  * @param <V> The rule key type.
  */
-public class SingleBuildRuleKeyCache<V> {
+public class SingleBuildActionRuleKeyCache<V> {
 
   // Use key identity when caching.
-  private final Cache<BuildRule, V> buildRuleCache = CacheBuilder.newBuilder().weakKeys().build();
+  private final Cache<BuildEngineAction, V> buildEngineActionCache =
+      CacheBuilder.newBuilder().weakKeys().build();
   private final Cache<Action, V> actionCache = CacheBuilder.newBuilder().weakKeys().build();
   private final Cache<AddsToRuleKey, V> ruleKeyAppendableVCache =
       CacheBuilder.newBuilder().weakKeys().build();
@@ -47,8 +48,8 @@ public class SingleBuildRuleKeyCache<V> {
     }
   }
 
-  public V get(BuildRule rule, Function<BuildRule, V> create) {
-    return getInternal(buildRuleCache, rule, create);
+  public V get(BuildEngineAction action, Function<BuildEngineAction, V> create) {
+    return getInternal(buildEngineActionCache, action, create);
   }
 
   public V get(AddsToRuleKey appendable, Function<AddsToRuleKey, V> create) {
