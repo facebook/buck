@@ -192,7 +192,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .addArgs(SourcePathArg.of(lib1), SourcePathArg.of(lib2))
                 .build()));
     assertThat(
-        lib.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),
+        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM).getSharedLibraries(graphBuilder),
         Matchers.equalTo(ImmutableMap.of("lib1.so", lib1)));
   }
 
@@ -207,7 +207,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setStaticLink(ImmutableList.of("-something"))
                 .build(graphBuilder);
     assertThat(
-        any.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        any.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM).getPreferredLinkage(),
         Matchers.equalTo(NativeLinkableGroup.Linkage.ANY));
 
     NativeLinkableGroup staticOnly =
@@ -216,7 +216,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setStaticLink(ImmutableList.of("-something"))
                 .build(graphBuilder);
     assertThat(
-        staticOnly.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        staticOnly.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM).getPreferredLinkage(),
         Matchers.equalTo(NativeLinkableGroup.Linkage.STATIC));
 
     NativeLinkableGroup sharedOnly =
@@ -225,7 +225,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setSharedLink(ImmutableList.of("-something"))
                 .build(graphBuilder);
     assertThat(
-        sharedOnly.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
+        sharedOnly.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM).getPreferredLinkage(),
         Matchers.equalTo(NativeLinkableGroup.Linkage.SHARED));
   }
 
@@ -294,7 +294,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         Matchers.emptyIterable());
 
     assertThat(
-        lib.getSharedLibraries(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),
+        lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM).getSharedLibraries(graphBuilder),
         Matchers.anEmptyMap());
 
     CxxPreprocessorDep cxxPreprocessorDep = (CxxPreprocessorDep) buildRule;

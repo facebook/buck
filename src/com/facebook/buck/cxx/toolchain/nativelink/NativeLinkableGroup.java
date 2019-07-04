@@ -20,9 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.google.common.collect.ImmutableMap;
 
 /**
  * Interface for {@link BuildRule} objects (e.g. C++ libraries) which can contribute to the
@@ -65,15 +63,6 @@ public interface NativeLinkableGroup {
    */
   Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
       BuildRuleResolver ruleResolver);
-
-  Linkage getPreferredLinkage(CxxPlatform cxxPlatform);
-
-  /**
-   * @return a map of shared library SONAME to shared library path for the given {@link
-   *     CxxPlatform}.
-   */
-  ImmutableMap<String, SourcePath> getSharedLibraries(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
   NativeLinkable getNativeLinkable(CxxPlatform cxxPlatform);
 

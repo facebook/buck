@@ -345,7 +345,11 @@ public class PythonUtil {
         FluentIterable.from(preloadDeps)
             .transform(graphBuilder::getRule)
             .filter(NativeLinkableGroup.class)) {
-      builder.addAll(nativeLinkableGroup.getSharedLibraries(cxxPlatform, graphBuilder).keySet());
+      builder.addAll(
+          nativeLinkableGroup
+              .getNativeLinkable(cxxPlatform)
+              .getSharedLibraries(graphBuilder)
+              .keySet());
     }
     return builder.build();
   }

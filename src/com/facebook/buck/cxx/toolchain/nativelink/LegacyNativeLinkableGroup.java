@@ -18,10 +18,12 @@ package com.facebook.buck.cxx.toolchain.nativelink;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
 /**
@@ -137,6 +139,17 @@ public interface LegacyNativeLinkableGroup extends NativeLinkableGroup {
     }
     throw new UnsupportedOperationException();
   }
+
+  @Deprecated
+  Linkage getPreferredLinkage(CxxPlatform cxxPlatform);
+
+  /**
+   * @return a map of shared library SONAME to shared library path for the given {@link
+   *     CxxPlatform}.
+   */
+  @Deprecated
+  ImmutableMap<String, SourcePath> getSharedLibraries(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
   @Override
   default NativeLinkable getNativeLinkable(CxxPlatform cxxPlatform) {
