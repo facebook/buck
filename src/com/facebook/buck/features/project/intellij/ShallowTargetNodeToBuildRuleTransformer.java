@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ImmutableBuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.shell.AbstractGenruleDescription;
@@ -59,6 +60,7 @@ public class ShallowTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
   public <T> BuildRule transform(
       ToolchainProvider toolchainProvider,
       TargetGraph targetGraph,
+      ConfigurationRuleRegistry configurationRuleRegistry,
       ActionGraphBuilder graphBuilder,
       TargetNode<T> targetNode) {
     DescriptionWithTargetGraph<T> description =
@@ -90,7 +92,8 @@ public class ShallowTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
               graphBuilder,
               targetNode.getFilesystem(),
               targetNode.getCellNames(),
-              toolchainProvider);
+              toolchainProvider,
+              configurationRuleRegistry);
 
       return description.createBuildRule(context, targetNode.getBuildTarget(), params, arg);
     }

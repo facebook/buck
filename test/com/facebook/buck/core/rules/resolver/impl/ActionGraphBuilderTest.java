@@ -36,6 +36,8 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
+import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
@@ -87,6 +89,7 @@ public class ActionGraphBuilderTest {
             new MultiThreadedActionGraphBuilder(
                 MoreExecutors.listeningDecorator(this.executorService),
                 graph,
+                ConfigurationRuleRegistryFactory.createRegistry(TargetGraph.EMPTY),
                 transformer,
                 new TestCellBuilder().build().getCellProvider());
   }
@@ -215,6 +218,7 @@ public class ActionGraphBuilderTest {
               public <T> BuildRule transform(
                   ToolchainProvider toolchainProvider,
                   TargetGraph targetGraph,
+                  ConfigurationRuleRegistry configurationRuleRegistry,
                   ActionGraphBuilder graphBuilder,
                   TargetNode<T> targetNode) {
                 Assert.assertFalse(graphBuilder.getRuleOptional(target).isPresent());
@@ -246,6 +250,7 @@ public class ActionGraphBuilderTest {
               public <T> BuildRule transform(
                   ToolchainProvider toolchainProvider,
                   TargetGraph targetGraph,
+                  ConfigurationRuleRegistry configurationRuleRegistry,
                   ActionGraphBuilder graphBuilder,
                   TargetNode<T> targetNode) {
                 Boolean existing = transformCalls.put(targetNode.getBuildTarget(), true);
@@ -331,11 +336,13 @@ public class ActionGraphBuilderTest {
           new MultiThreadedActionGraphBuilder(
               executorService,
               targetGraph,
+              ConfigurationRuleRegistryFactory.createRegistry(TargetGraph.EMPTY),
               new TargetNodeToBuildRuleTransformer() {
                 @Override
                 public <T> BuildRule transform(
                     ToolchainProvider toolchainProvider,
                     TargetGraph targetGraph,
+                    ConfigurationRuleRegistry configurationRuleRegistry,
                     ActionGraphBuilder graphBuilder,
                     TargetNode<T> targetNode) {
 

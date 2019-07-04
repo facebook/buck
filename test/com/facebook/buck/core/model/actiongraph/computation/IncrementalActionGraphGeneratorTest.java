@@ -37,6 +37,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
@@ -658,6 +659,7 @@ public class IncrementalActionGraphGeneratorTest {
     return new MultiThreadedActionGraphBuilder(
         MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
         targetGraph,
+        ConfigurationRuleRegistryFactory.createRegistry(TargetGraph.EMPTY),
         new DefaultTargetNodeToBuildRuleTransformer(),
         new TestCellBuilder().build().getCellProvider());
   }

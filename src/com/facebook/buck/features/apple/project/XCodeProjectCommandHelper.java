@@ -43,6 +43,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
@@ -813,6 +814,7 @@ public class XCodeProjectCommandHelper {
           new MultiThreadedActionGraphBuilder(
               MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
               targetGraph,
+              ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
               new DefaultTargetNodeToBuildRuleTransformer(),
               cellProvider);
       this.traversedTargets = new HashSet<>();

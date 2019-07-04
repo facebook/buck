@@ -93,6 +93,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -1069,6 +1070,7 @@ public class ProjectGenerator {
         new MultiThreadedActionGraphBuilder(
             MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
             TargetGraph.EMPTY,
+            ConfigurationRuleRegistryFactory.createRegistry(TargetGraph.EMPTY),
             new DefaultTargetNodeToBuildRuleTransformer(),
             projectCell.getCellProvider());
     ImmutableList.Builder<String> result = new ImmutableList.Builder<>();

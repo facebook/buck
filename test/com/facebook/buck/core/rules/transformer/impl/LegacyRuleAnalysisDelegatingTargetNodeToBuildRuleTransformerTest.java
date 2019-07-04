@@ -44,6 +44,8 @@ import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisComputation;
 import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisComputation;
 import com.facebook.buck.core.rules.analysis.impl.ImmutableFakeRuleAnalysisResultImpl;
+import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
+import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
@@ -95,6 +97,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
           public <T> BuildRule transform(
               ToolchainProvider tool,
               TargetGraph targetGraph,
+              ConfigurationRuleRegistry configurationRuleRegistry,
               ActionGraphBuilder graphBuilder,
               TargetNode<T> node) {
             assertSame(targetNode, node);
@@ -108,7 +111,12 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
 
     assertSame(
         rule,
-        transformer.transform(toolchainProvider, targetGraph, actionGraphBuilder, targetNode));
+        transformer.transform(
+            toolchainProvider,
+            targetGraph,
+            ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
+            actionGraphBuilder,
+            targetNode));
   }
 
   @Test
@@ -183,6 +191,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
           public <T> BuildRule transform(
               ToolchainProvider tool,
               TargetGraph targetGraph,
+              ConfigurationRuleRegistry configurationRuleRegistry,
               ActionGraphBuilder graphBuilder,
               TargetNode<T> node) {
             fail();
@@ -194,7 +203,12 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
         new LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer(
             ruleAnalysisComputation, delegate);
     BuildRule rule =
-        transformer.transform(toolchainProvider, targetGraph, actionGraphBuilder, targetNode);
+        transformer.transform(
+            toolchainProvider,
+            targetGraph,
+            ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
+            actionGraphBuilder,
+            targetNode);
 
     assertTrue(ruleAnalysisCalled.get());
     assertSame(target, rule.getBuildTarget());
@@ -260,6 +274,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
           public <T> BuildRule transform(
               ToolchainProvider tool,
               TargetGraph targetGraph,
+              ConfigurationRuleRegistry configurationRuleRegistry,
               ActionGraphBuilder graphBuilder,
               TargetNode<T> node) {
             fail();
@@ -271,7 +286,12 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
         new LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer(
             ruleAnalysisComputation, delegate);
     BuildRule rule =
-        transformer.transform(toolchainProvider, targetGraph, actionGraphBuilder, targetNode);
+        transformer.transform(
+            toolchainProvider,
+            targetGraph,
+            ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
+            actionGraphBuilder,
+            targetNode);
 
     assertTrue(ruleAnalysisCalled.get());
     assertSame(target, rule.getBuildTarget());

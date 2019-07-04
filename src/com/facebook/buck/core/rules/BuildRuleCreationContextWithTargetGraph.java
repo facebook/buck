@@ -18,6 +18,7 @@ package com.facebook.buck.core.rules;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import org.immutables.value.Value;
@@ -47,4 +48,8 @@ public interface BuildRuleCreationContextWithTargetGraph extends BuildRuleCreati
   @Value.Parameter
   @Override
   ToolchainProvider getToolchainProvider();
+
+  @Value.Parameter
+  @Override
+  ConfigurationRuleRegistry getConfigurationRuleRegistry();
 }

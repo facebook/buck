@@ -11,7 +11,9 @@ java_library(
     ],
     visibility = ["//test/..."],
     deps = [
+        "//src/com/facebook/buck/core/model/platform/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/config/registry/impl:impl",
         "//src/com/facebook/buck/core/rules/transformer/impl:impl",
         "//src/com/facebook/buck/util:util",
         "//test/com/facebook/buck/core/cell:testutil",
@@ -25,7 +27,9 @@ java_test(
     ),
     deps = [
         ":testutil",
+        "//src/com/facebook/buck/core/model/platform/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/config/registry/impl:impl",
         "//src/com/facebook/buck/core/rules/providers/impl:impl",
         "//src/com/facebook/buck/core/rules/transformer/impl:impl",
         "//src/com/facebook/buck/jvm/java:rules",

@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.impl.SameThreadConfigurationRuleResolver;
@@ -37,6 +38,10 @@ import java.util.function.Function;
 /** Creates {@link ConfigurationRuleRegistry}. */
 public class ConfigurationRuleRegistryFactory {
   private ConfigurationRuleRegistryFactory() {}
+
+  public static ConfigurationRuleRegistry createRegistry(TargetGraph targetGraph) {
+    return createRegistry(targetGraph::get);
+  }
 
   public static ConfigurationRuleRegistry createRegistry(
       Function<BuildTarget, TargetNode<?>> targetNodeSupplier) {

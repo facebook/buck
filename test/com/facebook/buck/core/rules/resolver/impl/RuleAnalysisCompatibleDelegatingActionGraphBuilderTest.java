@@ -42,6 +42,7 @@ import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisComputation;
 import com.facebook.buck.core.rules.analysis.impl.FakeRuleDescriptionArg;
 import com.facebook.buck.core.rules.analysis.impl.ImmutableFakeRuleAnalysisResultImpl;
+import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
@@ -143,6 +144,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
                 new MultiThreadedActionGraphBuilder(
                     MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
                     targetGraph,
+                    ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
                     transformer,
                     cellProvider) {
                   @Override

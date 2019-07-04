@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.util.MoreIterables;
@@ -77,6 +78,7 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
 
   private final ListeningExecutorService executor;
   private final TargetGraph targetGraph;
+  private final ConfigurationRuleRegistry configurationRuleRegistry;
   private final TargetNodeToBuildRuleTransformer buildRuleGenerator;
   private final Function<BuildTarget, ToolchainProvider> toolchainProviderResolver;
 
@@ -87,9 +89,11 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
   public MultiThreadedActionGraphBuilder(
       ListeningExecutorService executor,
       TargetGraph targetGraph,
+      ConfigurationRuleRegistry configurationRuleRegistry,
       TargetNodeToBuildRuleTransformer buildRuleGenerator,
       CellProvider cellProvider) {
     this.targetGraph = targetGraph;
+    this.configurationRuleRegistry = configurationRuleRegistry;
     this.buildRuleGenerator = buildRuleGenerator;
 
     this.executor = executor;
@@ -225,6 +229,7 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
                                 buildRuleGenerator.transform(
                                     toolchainProviderResolver.apply(target),
                                     targetGraph,
+                                    configurationRuleRegistry,
                                     this,
                                     targetGraph.get(target)))
                         .apply(target)));
