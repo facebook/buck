@@ -47,10 +47,10 @@ public interface RuleAnalysisContext {
   ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> deps();
 
   /**
-   * @return the factory for creating and registering {@link
-   *     com.facebook.buck.core.rules.actions.Action}s
+   * @return the factory for creating {@link com.facebook.buck.core.artifact.Artifact}s and
+   *     registering {@link com.facebook.buck.core.rules.actions.Action}s
    */
-  ActionRegistry actionFactory();
+  ActionRegistry actionRegistry();
 
   /** @return an {@link BuckEventBus} for sending stats and printing */
   BuckEventBus getEventBus();

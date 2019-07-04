@@ -69,10 +69,10 @@ public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg
               .build();
       args.getRule().getImplementation().call(ImmutableList.of(ctx), ImmutableMap.of(), null, env);
 
-      Artifact outputArtifact = context.actionFactory().declareArtifact(Paths.get("output"));
+      Artifact outputArtifact = context.actionRegistry().declareArtifact(Paths.get("output"));
 
       new WriteAction(
-          context.actionFactory(),
+          context.actionRegistry(),
           ImmutableSet.of(),
           ImmutableSet.of(outputArtifact),
           "some output",

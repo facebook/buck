@@ -60,7 +60,7 @@ class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisData
   }
 
   @Override
-  public ActionRegistry actionFactory() {
+  public ActionRegistry actionRegistry() {
     return actionRegistry;
   }
 

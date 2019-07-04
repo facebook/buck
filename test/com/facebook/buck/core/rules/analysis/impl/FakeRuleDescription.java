@@ -43,7 +43,7 @@ public class FakeRuleDescription implements RuleDescription<FakeRuleDescriptionA
       RuleAnalysisContext context, BuildTarget target, FakeRuleDescriptionArg args)
       throws ActionCreationException {
 
-    Artifact artifact = context.actionFactory().declareArtifact(Paths.get("output"));
+    Artifact artifact = context.actionRegistry().declareArtifact(Paths.get("output"));
 
     FakeAction.FakeActionExecuteLambda actionExecution =
         (inputs, outputs, ctx) -> {
@@ -60,7 +60,7 @@ public class FakeRuleDescription implements RuleDescription<FakeRuleDescriptionA
         };
 
     new FakeAction(
-        context.actionFactory(), ImmutableSet.of(), ImmutableSet.of(artifact), actionExecution);
+        context.actionRegistry(), ImmutableSet.of(), ImmutableSet.of(artifact), actionExecution);
     return ProviderInfoCollectionImpl.builder().build();
   }
 

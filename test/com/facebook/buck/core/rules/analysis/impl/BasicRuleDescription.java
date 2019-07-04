@@ -49,7 +49,7 @@ public class BasicRuleDescription implements RuleDescription<BasicRuleDescriptio
       RuleAnalysisContext context, BuildTarget target, BasicRuleDescriptionArg args)
       throws ActionCreationException {
 
-    Artifact artifact = context.actionFactory().declareArtifact(Paths.get("output"));
+    Artifact artifact = context.actionRegistry().declareArtifact(Paths.get("output"));
 
     FakeAction.FakeActionExecuteLambda actionExecution =
         (inputs, outputs, ctx) -> {
@@ -85,7 +85,10 @@ public class BasicRuleDescription implements RuleDescription<BasicRuleDescriptio
     }
 
     new FakeAction(
-        context.actionFactory(), inputsBuilder.build(), ImmutableSet.of(artifact), actionExecution);
+        context.actionRegistry(),
+        inputsBuilder.build(),
+        ImmutableSet.of(artifact),
+        actionExecution);
     return ProviderInfoCollectionImpl.builder()
         .put(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableSet.of(artifact)))
         .build();
