@@ -56,7 +56,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
   }
 
   @Test
-  public void ruleAnalysisRuleWithDepsBuilds() throws IOException {
+  public void ruleAnalysisRuleWithDepsBuildsAndRebuildsOnChange() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "rule_with_deps", tmp);
 
@@ -96,6 +96,43 @@ public class RuleAnalysisRulesBuildIntegrationTest {
     assertNotEquals(-1, lines.indexOf("baz4dep{"));
     assertNotEquals(-1, lines.indexOf("faz0dep{"));
     int indexFoo = lines.indexOf("foo2dep{");
+    assertNotEquals(-1, indexFoo);
+
+    assertEquals("baz4dep{", lines.get(indexFoo + 1));
+
+    workspace.writeContentsToPath(
+        "basic_rule(\n"
+            + "    name = \"faz\",\n"
+            + "    val = 10,\n"
+            + "    visibility = [\"PUBLIC\"],\n"
+            + ")",
+        "dir/BUCK");
+
+    resultPath = workspace.buildAndReturnOutput("//:bar");
+
+    /**
+     * we should get something like
+     *
+     * <pre>
+     * bar1dep{
+     *    baz4dep{
+     *    }
+     *    foo2dep{
+     *      baz4dep{
+     *      }
+     *    }
+     *    faz10dep{
+     *    }
+     * }
+     * </pre>
+     */
+    lines = Files.readAllLines(resultPath);
+
+    assertEquals("bar1dep{", lines.get(0));
+
+    assertNotEquals(-1, lines.indexOf("baz4dep{"));
+    assertNotEquals(-1, lines.indexOf("faz10dep{"));
+    indexFoo = lines.indexOf("foo2dep{");
     assertNotEquals(-1, indexFoo);
 
     assertEquals("baz4dep{", lines.get(indexFoo + 1));
