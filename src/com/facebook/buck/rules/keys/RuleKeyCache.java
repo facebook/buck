@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import java.util.function.Function;
@@ -26,15 +26,15 @@ import javax.annotation.Nullable;
 /** Interface for caches for rule keys. */
 public interface RuleKeyCache<V> {
 
-  /** @return the rule key value for the given {@code rule}, or null if it is not cached.. */
+  /** @return the rule key value for the given {@code action}, or null if it is not cached.. */
   @Nullable
-  V get(BuildRule rule);
+  V get(BuildEngineAction action);
 
   /**
    * @return the rule key value for the given {@code rule}, either serving it form cache or by
    *     running the given function.
    */
-  V get(BuildRule rule, Function<? super BuildRule, RuleKeyResult<V>> create);
+  V get(BuildEngineAction action, Function<? super BuildEngineAction, RuleKeyResult<V>> create);
 
   /**
    * @return the rule key value for the given {@code appendable}, either serving it form cache or by

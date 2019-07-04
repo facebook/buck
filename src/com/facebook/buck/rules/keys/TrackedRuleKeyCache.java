@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.cache.CacheStats;
 import com.facebook.buck.util.cache.CacheStatsTracker;
@@ -43,13 +43,14 @@ public class TrackedRuleKeyCache<V> implements RuleKeyCache<V> {
 
   @Override
   @Nullable
-  public V get(BuildRule rule) {
-    return cache.get(rule, statsTracker);
+  public V get(BuildEngineAction action) {
+    return cache.get(action, statsTracker);
   }
 
   @Override
-  public V get(BuildRule rule, Function<? super BuildRule, RuleKeyResult<V>> create) {
-    return cache.get(rule, create, statsTracker);
+  public V get(
+      BuildEngineAction action, Function<? super BuildEngineAction, RuleKeyResult<V>> create) {
+    return cache.get(action, create, statsTracker);
   }
 
   @Override

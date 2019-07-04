@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
@@ -578,8 +579,8 @@ public class DefaultRuleKeyFactoryTest {
 
     @Nullable
     @Override
-    public V get(BuildRule rule) {
-      RuleKeyResult<V> result = results.get(rule);
+    public V get(BuildEngineAction action) {
+      RuleKeyResult<V> result = results.get(action);
       if (result != null) {
         return result.result;
       }
@@ -587,9 +588,10 @@ public class DefaultRuleKeyFactoryTest {
     }
 
     @Override
-    public V get(BuildRule rule, Function<? super BuildRule, RuleKeyResult<V>> create) {
-      RuleKeyResult<V> result = create.apply(rule);
-      results.put(rule, result);
+    public V get(
+        BuildEngineAction action, Function<? super BuildEngineAction, RuleKeyResult<V>> create) {
+      RuleKeyResult<V> result = create.apply(action);
+      results.put(action, result);
       return result.result;
     }
 

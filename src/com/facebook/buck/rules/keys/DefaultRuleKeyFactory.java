@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -84,10 +85,12 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
   }
 
   private <HASH> Builder<HASH> newPopulatedBuilder(
-      BuildRule buildRule, RuleKeyHasher<HASH> hasher) {
+      BuildEngineAction action, RuleKeyHasher<HASH> hasher) {
     Builder<HASH> builder = new Builder<>(hasher);
-    ruleKeyFieldLoader.setFields(builder, buildRule, RuleKeyType.DEFAULT);
-    addDepsToRuleKey(buildRule, builder);
+    ruleKeyFieldLoader.setFields(builder, action, RuleKeyType.DEFAULT);
+    if (action instanceof BuildRule) {
+      addDepsToRuleKey((BuildRule) action, builder);
+    }
     return builder;
   }
 
@@ -113,8 +116,8 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
   public RuleKey build(BuildRule buildRule) {
     return ruleKeyCache.get(
         buildRule,
-        rule ->
-            newPopulatedBuilder(rule, RuleKeyBuilder.createDefaultHasher(ruleKeyLogger))
+        action ->
+            newPopulatedBuilder(action, RuleKeyBuilder.createDefaultHasher(ruleKeyLogger))
                 .buildResult(RuleKey::new));
   }
 

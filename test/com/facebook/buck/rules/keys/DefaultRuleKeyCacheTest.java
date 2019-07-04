@@ -22,6 +22,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
+import com.facebook.buck.core.rules.actions.FakeAction;
+import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -29,6 +32,8 @@ import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -58,6 +63,27 @@ public class DefaultRuleKeyCacheTest {
     assertTrue(internalCache.isCached(rule));
     cache.get(
         rule,
+        r -> {
+          throw new IllegalStateException();
+        });
+  }
+
+  @Test
+  public void cachesActions() {
+    DefaultRuleKeyCache<String> internalCache = new DefaultRuleKeyCache<>();
+    TrackedRuleKeyCache<String> cache =
+        new TrackedRuleKeyCache<>(internalCache, new InstrumentingCacheStatsTracker());
+    FakeAction fakeAction =
+        new FakeAction(
+            new ActionRegistryForTests(BuildTargetFactory.newInstance("//my:test")),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
+            (ignored1, ignored2, ignored3) ->
+                ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty()));
+    cache.get(fakeAction, r -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of()));
+    assertTrue(internalCache.isCached(fakeAction));
+    cache.get(
+        fakeAction,
         r -> {
           throw new IllegalStateException();
         });
