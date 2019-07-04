@@ -91,6 +91,7 @@ public abstract class BaseRunner {
     Element root = doc.createElement("testcase");
     root.setAttribute("name", testClassName);
     root.setAttribute("runner_capabilities", getRunnerCapabilities());
+    root.setAttribute("testprotocol", "1.0");
     doc.appendChild(root);
 
     for (TestResult result : results) {
