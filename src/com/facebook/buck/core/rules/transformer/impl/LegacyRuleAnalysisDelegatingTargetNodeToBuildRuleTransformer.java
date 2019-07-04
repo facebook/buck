@@ -78,7 +78,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
           RichStream.from(correspondingAction.getInputs())
               .map(artifact -> artifact.asBound().asBuildArtifact())
               .filter(Objects::nonNull)
-              .map(buildArtifact -> buildArtifact.getActionDataKey().getBuildTarget())
+              .map(buildArtifact -> buildArtifact.getSourcePath().getTarget())
               .toImmutableList());
 
       return new RuleAnalysisLegacyBuildRuleView(

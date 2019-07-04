@@ -87,7 +87,7 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule {
             .map(Artifact::asBound)
             .map(BoundArtifact::asBuildArtifact)
             .filter(Objects::nonNull)
-            .map(artifact -> artifact.getActionDataKey().getBuildTarget())
+            .map(artifact -> artifact.getSourcePath().getTarget())
             .collect(ImmutableList.toImmutableList()));
   }
 

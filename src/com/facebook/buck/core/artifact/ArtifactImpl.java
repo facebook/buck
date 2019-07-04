@@ -46,7 +46,7 @@ class ArtifactImpl extends AbstractArtifact
   private final Path basePath;
   private final Path outputPath;
 
-  static DeclaredArtifact of(BuildTarget target, Path genDir, Path packagePath, Path outputPath)
+  static ArtifactImpl of(BuildTarget target, Path genDir, Path packagePath, Path outputPath)
       throws ArtifactDeclarationException {
 
     if (outputPath.isAbsolute()) {
@@ -64,6 +64,15 @@ class ArtifactImpl extends AbstractArtifact
     }
 
     return new ArtifactImpl(target, genDir, packagePath, outputPath);
+  }
+
+  static ArtifactImpl ofLegacy(
+      BuildTarget target,
+      Path genDir,
+      Path packagePath,
+      Path outputPath,
+      ExplicitBuildTargetSourcePath sourcePath) {
+    return new ArtifactImpl(target, genDir, packagePath, outputPath, sourcePath);
   }
 
   /** @return the {@link BuildTarget} of the rule that creates this {@link Artifact} */
@@ -86,7 +95,7 @@ class ArtifactImpl extends AbstractArtifact
 
   @Override
   public boolean isBound() {
-    return actionAnalysisDataKey != null;
+    return sourcePath != null;
   }
 
   @Override
@@ -106,9 +115,10 @@ class ArtifactImpl extends AbstractArtifact
   }
 
   @Override
+  @Nullable
   public ActionAnalysisDataKey getActionDataKey() {
     requireBound();
-    return Objects.requireNonNull(actionAnalysisDataKey);
+    return actionAnalysisDataKey;
   }
 
   @Override
@@ -122,6 +132,19 @@ class ArtifactImpl extends AbstractArtifact
     this.genDir = genDir;
     this.basePath = packagePath;
     this.outputPath = outputPath;
+  }
+
+  private ArtifactImpl(
+      BuildTarget target,
+      Path genDir,
+      Path packagePath,
+      Path outputPath,
+      ExplicitBuildTargetSourcePath sourcePath) {
+    this.target = target;
+    this.genDir = genDir;
+    this.basePath = packagePath;
+    this.outputPath = outputPath;
+    this.sourcePath = sourcePath;
   }
 
   @Override
