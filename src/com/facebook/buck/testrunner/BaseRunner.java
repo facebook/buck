@@ -73,6 +73,9 @@ public abstract class BaseRunner {
   protected boolean isDryRun;
   protected boolean shouldExplainTestSelectors;
 
+  private final TestXmlEscaper attributeEscaper = TestXmlEscaper.ATTRIBUTE_ESCAPER;
+  private final TestXmlEscaper contentEscaper = TestXmlEscaper.CONTENT_ESCAPER;
+
   public abstract void run() throws Throwable;
 
   /**
@@ -122,23 +125,25 @@ public abstract class BaseRunner {
       Throwable failure = result.failure;
       if (failure != null) {
         String message = failure.getMessage();
-        test.setAttribute("message", message);
+        test.setAttribute("message", attributeEscaper.escape(message));
 
         String stacktrace = stackTraceToString(failure);
-        test.setAttribute("stacktrace", stacktrace);
+        test.setAttribute("stacktrace", attributeEscaper.escape(stacktrace));
       }
 
       // stdout, if non-empty.
       if (result.stdOut != null) {
         Element stdOutEl = doc.createElement("stdout");
-        stdOutEl.appendChild(doc.createTextNode(removeCRIfNeeded(result.stdOut)));
+        stdOutEl.appendChild(
+            doc.createTextNode(contentEscaper.escape(removeCRIfNeeded(result.stdOut))));
         test.appendChild(stdOutEl);
       }
 
       // stderr, if non-empty.
       if (result.stdErr != null) {
         Element stdErrEl = doc.createElement("stderr");
-        stdErrEl.appendChild(doc.createTextNode(removeCRIfNeeded(result.stdErr)));
+        stdErrEl.appendChild(
+            doc.createTextNode(contentEscaper.escape(removeCRIfNeeded(result.stdErr))));
         test.appendChild(stdErrEl);
       }
 

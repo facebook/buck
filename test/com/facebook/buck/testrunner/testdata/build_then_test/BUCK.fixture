@@ -8,7 +8,10 @@ java_test(
 
 java_test(
     name = "nontestclass",
-    srcs = glob(["*.java"]),
+    srcs = glob(
+        ["*.java"],
+        exclude = ["FailingTest.java"],
+    ),
     deps = [
         "buck//third-party/java/junit:junit",
     ],
@@ -17,6 +20,14 @@ java_test(
 java_test(
     name = "abstractclass",
     srcs = ["AbstractClassWithTests.java"],
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+)
+
+java_test(
+    name = "failingtest",
+    srcs = ["FailingTest.java"],
     deps = [
         "buck//third-party/java/junit:junit",
     ],
