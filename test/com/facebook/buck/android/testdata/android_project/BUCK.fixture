@@ -10,6 +10,30 @@ android_platform(
     ],
 )
 
+android_platform(
+    name = "android-x86_64-arm-armv7",
+    base_platform = ":android-os",
+    native_platforms = [
+        ":android-x86_64",
+        ":android-arm",
+        ":android-armv7",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+android_platform(
+    name = "android-platform-x86_64",
+    base_platform = ":android-os",
+    native_platforms = [
+        ":android-x86_64",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
 platform(
     name = "android-os",
     constraint_values = [
@@ -33,6 +57,17 @@ platform(
 
 platform(
     name = "android-arm",
+    constraint_values = [
+        ":android",
+        "buck//config/constraints:arm",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+platform(
+    name = "android-armv7",
     constraint_values = [
         ":android",
         "buck//config/constraints:arm",
