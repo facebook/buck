@@ -128,3 +128,28 @@ cxx_library(
         "PUBLIC",
     ],
 )
+
+cxx_library(
+    name = "lib-with-platform-deps",
+    srcs = [
+        "lib.cpp",
+    ],
+    headers = [
+        "lib.h",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = select({
+        "//:x86-64_config": [":x86-only-2"],
+        "DEFAULT": [],
+    }),
+)
+
+cxx_library(
+    name = "x86-only-2",
+    srcs = ["x86-only.c"],
+    visibility = [
+        "PUBLIC",
+    ],
+)

@@ -80,7 +80,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private final ImmutableList<Pattern> relinkerWhitelist;
   private final RelinkerMode relinkerMode;
   private final APKModuleGraph apkModuleGraph;
-
+  private final AndroidNativeTargetConfigurationMatcher androidNativeTargetConfigurationMatcher;
   private final CellPathResolver cellPathResolver;
 
   public AndroidNativeLibsPackageableGraphEnhancer(
@@ -96,7 +96,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
       RelinkerMode relinkerMode,
       ImmutableList<Pattern> relinkerWhitelist,
-      APKModuleGraph apkModuleGraph) {
+      APKModuleGraph apkModuleGraph,
+      AndroidNativeTargetConfigurationMatcher androidNativeTargetConfigurationMatcher) {
     this.toolchainProvider = toolchainProvider;
     this.cellPathResolver = cellPathResolver;
     this.projectFilesystem = projectFilesystem;
@@ -110,6 +111,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     this.relinkerMode = relinkerMode;
     this.relinkerWhitelist = relinkerWhitelist;
     this.apkModuleGraph = apkModuleGraph;
+    this.androidNativeTargetConfigurationMatcher = androidNativeTargetConfigurationMatcher;
   }
 
   @BuckStyleValue
@@ -134,6 +136,11 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     for (Map.Entry<APKModule, NativeLinkable> linkableEntry : linkables.entries()) {
       NativeLinkable nativeLinkable = linkableEntry.getValue();
       if (nativeLinkable.getPreferredLinkage() != NativeLinkableGroup.Linkage.STATIC) {
+        if (!androidNativeTargetConfigurationMatcher.nativeTargetConfigurationMatchesCpuType(
+            linkableEntry.getValue().getBuildTarget(), targetCpuType)) {
+          continue;
+        }
+
         getSharedLibrariesAndMetadata(
             targetCpuType,
             nativeLinkable,

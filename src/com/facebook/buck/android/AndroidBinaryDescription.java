@@ -28,9 +28,11 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTests;
+import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -177,7 +179,8 @@ public class AndroidBinaryDescription
             args,
             false,
             javaOptions.get(),
-            javacFactory);
+            javacFactory,
+            context.getConfigurationRuleRegistry());
     AndroidBinary androidBinary =
         androidBinaryFactory.create(
             toolchainProvider,
@@ -268,6 +271,12 @@ public class AndroidBinaryDescription
                     targetGraphOnlyDepsBuilder, targetConfiguration));
   }
 
+  @Override
+  public ImmutableSet<BuildTarget> getConfigurationDeps(AndroidBinaryDescriptionArg arg) {
+    return ImmutableSet.copyOf(
+        ConfigurationBuildTargets.convertValues(arg.getTargetCpuTypeConstraints()).values());
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
   abstract static class AbstractAndroidBinaryDescriptionArg
@@ -342,5 +351,10 @@ public class AndroidBinaryDescription
     abstract Optional<SourcePath> getRedexConfig();
 
     abstract ImmutableList<StringWithMacros> getRedexExtraArgs();
+
+    @Hint(splitConfiguration = true)
+    @Override
+    @Value.NaturalOrder
+    public abstract ImmutableSortedSet<BuildTarget> getDeps();
   }
 }

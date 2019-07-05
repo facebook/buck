@@ -145,6 +145,7 @@ public class AndroidBinaryGraphEnhancer {
   private final AndroidBinaryResourcesGraphEnhancer androidBinaryResourcesGraphEnhancer;
   private final NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs;
   private final Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex;
+  private final AndroidNativeTargetConfigurationMatcher androidNativeTargetConfigurationMatcher;
 
   AndroidBinaryGraphEnhancer(
       ToolchainProvider toolchainProvider,
@@ -207,7 +208,8 @@ public class AndroidBinaryGraphEnhancer {
       Optional<Arg> postFilterResourcesCmd,
       NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs,
       Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex,
-      boolean useProtoFormat) {
+      boolean useProtoFormat,
+      AndroidNativeTargetConfigurationMatcher androidNativeTargetConfigurationMatcher) {
     this.ignoreAaptProguardConfig = ignoreAaptProguardConfig;
     this.androidPlatformTarget = androidPlatformTarget;
     Preconditions.checkArgument(originalParams.getExtraDeps().get().isEmpty());
@@ -252,7 +254,8 @@ public class AndroidBinaryGraphEnhancer {
             nativeLibraryMergeLocalizedSymbols,
             relinkerMode,
             relinkerWhitelist,
-            apkModuleGraph);
+            apkModuleGraph,
+            androidNativeTargetConfigurationMatcher);
     this.androidBinaryResourcesGraphEnhancer =
         new AndroidBinaryResourcesGraphEnhancer(
             originalBuildTarget,
@@ -289,6 +292,7 @@ public class AndroidBinaryGraphEnhancer {
     this.dexTool = dexTool;
     this.javacFactory = javacFactory;
     this.javac = javacFactory.create(graphBuilder, null);
+    this.androidNativeTargetConfigurationMatcher = androidNativeTargetConfigurationMatcher;
   }
 
   AndroidGraphEnhancementResult createAdditionalBuildables() {
@@ -303,7 +307,9 @@ public class AndroidBinaryGraphEnhancer {
             nativeLinkablesToExcludeGroup,
             nativeLibAssetsToExclude,
             nativeLinkablesAssetsToExcludeGroup,
-            apkModuleGraph);
+            apkModuleGraph,
+            AndroidPackageableFilterFactory.createFromConfigurationMatcher(
+                originalBuildTarget, androidNativeTargetConfigurationMatcher));
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(originalDeps), graphBuilder);
     AndroidPackageableCollection packageableCollection = collector.build();

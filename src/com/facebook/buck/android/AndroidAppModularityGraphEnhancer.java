@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.common.BuildRules;
+import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Collection;
@@ -36,18 +37,21 @@ public class AndroidAppModularityGraphEnhancer {
   private final BuildRuleResolver ruleResolver;
   private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
   private final APKModuleGraph apkModuleGraph;
+  private final ConfigurationRuleRegistry configurationRuleRegistry;
 
   AndroidAppModularityGraphEnhancer(
       BuildTarget buildTarget,
       BuildRuleParams originalParams,
       BuildRuleResolver ruleResolver,
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
-      APKModuleGraph apkModuleGraph) {
+      APKModuleGraph apkModuleGraph,
+      ConfigurationRuleRegistry configurationRuleRegistry) {
     this.originalBuildTarget = buildTarget;
     this.originalDeps = originalParams.getBuildDeps();
     this.ruleResolver = ruleResolver;
     this.buildTargetsToExcludeFromDex = buildTargetsToExcludeFromDex;
     this.apkModuleGraph = apkModuleGraph;
+    this.configurationRuleRegistry = configurationRuleRegistry;
   }
 
   AndroidAppModularityGraphEnhancementResult createAdditionalBuildables() {
@@ -57,7 +61,11 @@ public class AndroidAppModularityGraphEnhancer {
 
     AndroidPackageableCollector collector =
         new AndroidPackageableCollector(
-            originalBuildTarget, buildTargetsToExcludeFromDex, apkModuleGraph);
+            originalBuildTarget,
+            buildTargetsToExcludeFromDex,
+            apkModuleGraph,
+            AndroidPackageableFilterFactory.createForNonNativeTargets(
+                configurationRuleRegistry, originalBuildTarget));
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(originalDeps), ruleResolver);
     AndroidPackageableCollection packageableCollection = collector.build();

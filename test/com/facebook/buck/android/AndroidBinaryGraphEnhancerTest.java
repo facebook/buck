@@ -201,7 +201,8 @@ public class AndroidBinaryGraphEnhancerTest {
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet::of,
-            false);
+            false,
+            new NoopAndroidNativeTargetConfigurationMatcher());
 
     BuildTarget aaptPackageResourcesTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
@@ -382,7 +383,8 @@ public class AndroidBinaryGraphEnhancerTest {
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet::of,
-            false);
+            false,
+            new NoopAndroidNativeTargetConfigurationMatcher());
 
     BuildTarget aaptPackageResourcesTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
@@ -583,7 +585,8 @@ public class AndroidBinaryGraphEnhancerTest {
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet::of,
-            false);
+            false,
+            new NoopAndroidNativeTargetConfigurationMatcher());
 
     BuildTarget aaptPackageResourcesTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
@@ -734,7 +737,8 @@ public class AndroidBinaryGraphEnhancerTest {
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet::of,
-            false);
+            false,
+            new NoopAndroidNativeTargetConfigurationMatcher());
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
     // Verify that android_build_config() was processed correctly.
@@ -869,7 +873,8 @@ public class AndroidBinaryGraphEnhancerTest {
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet::of,
-            false);
+            false,
+            new NoopAndroidNativeTargetConfigurationMatcher());
     graphEnhancer.createAdditionalBuildables();
 
     BuildRule aaptPackageResourcesRule = findRuleOfType(graphBuilder, AaptPackageResources.class);
@@ -951,7 +956,8 @@ public class AndroidBinaryGraphEnhancerTest {
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet::of,
-            false);
+            false,
+            new NoopAndroidNativeTargetConfigurationMatcher());
     graphEnhancer.createAdditionalBuildables();
 
     ResourcesFilter resourcesFilter = findRuleOfType(graphBuilder, ResourcesFilter.class);
@@ -1061,7 +1067,8 @@ public class AndroidBinaryGraphEnhancerTest {
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet::of,
-            false);
+            false,
+            new NoopAndroidNativeTargetConfigurationMatcher());
     graphEnhancer.createAdditionalBuildables();
 
     ResourcesFilter resourcesFilter = findRuleOfType(graphBuilder, ResourcesFilter.class);

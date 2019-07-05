@@ -248,7 +248,8 @@ public class AndroidInstrumentationApkDescription
             nonPreDexedDexBuildableArgs,
             createRulesToExcludeFromDexSupplier(
                 apkUnderTest.getRulesToExcludeFromDex(), apkUnderTestTransitiveClasspathDeps),
-            false);
+            false,
+            new NoopAndroidNativeTargetConfigurationMatcher());
 
     AndroidGraphEnhancementResult enhancementResult = graphEnhancer.createAdditionalBuildables();
     AndroidBinaryFilesInfo filesInfo =
