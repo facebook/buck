@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.skylark.parser;
+package com.facebook.buck.core.starlark.eventhandler;
 
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.event.BuckEventBus;

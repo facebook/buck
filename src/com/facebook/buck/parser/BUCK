@@ -44,6 +44,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/rules/platform:platform",
         "//src/com/facebook/buck/core/select:select",
         "//src/com/facebook/buck/core/select/impl:impl",
+        "//src/com/facebook/buck/core/starlark/eventhandler:eventhandler",
         "//src/com/facebook/buck/core/util/graph:graph",
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/counters:counters",
