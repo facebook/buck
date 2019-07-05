@@ -24,6 +24,7 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -37,6 +38,7 @@ import javax.annotation.Nullable;
  */
 class ArtifactImpl extends AbstractArtifact
     implements BoundArtifact, DeclaredArtifact, BuildArtifact {
+  private static final Path PARENT_PATH = Paths.get("..");
 
   private @Nullable ActionAnalysisDataKey actionAnalysisDataKey = null;
   private @Nullable ExplicitBuildTargetSourcePath sourcePath;
@@ -48,22 +50,28 @@ class ArtifactImpl extends AbstractArtifact
 
   static ArtifactImpl of(BuildTarget target, Path genDir, Path packagePath, Path outputPath)
       throws ArtifactDeclarationException {
+    Path normalizedOutputPath = validateAndNormalizeOutputPath(target, outputPath);
 
+    return new ArtifactImpl(target, genDir, packagePath, normalizedOutputPath);
+  }
+
+  private static Path validateAndNormalizeOutputPath(BuildTarget target, Path outputPath) {
     if (outputPath.isAbsolute()) {
       throw new ArtifactDeclarationException(
           ArtifactDeclarationException.Reason.ABSOLUTE_PATH, target, outputPath);
     }
-    Path normalizedOuptutPath = outputPath.normalize();
-    if (MorePaths.isEmpty(normalizedOuptutPath)) {
+    Path normalizedOutputPath = outputPath.normalize();
+    if (MorePaths.isEmpty(normalizedOutputPath)) {
       throw new ArtifactDeclarationException(
           ArtifactDeclarationException.Reason.EMPTY_PATH, target, outputPath);
     }
-    if (!normalizedOuptutPath.equals(outputPath)) {
+    // Normalization should take care of any ".." in the middle of the path. If we still are
+    // trying to access a parent dir, throw an error.
+    if (normalizedOutputPath.startsWith(PARENT_PATH)) {
       throw new ArtifactDeclarationException(
           ArtifactDeclarationException.Reason.PATH_TRAVERSAL, target, outputPath);
     }
-
-    return new ArtifactImpl(target, genDir, packagePath, outputPath);
+    return normalizedOutputPath;
   }
 
   static ArtifactImpl ofLegacy(

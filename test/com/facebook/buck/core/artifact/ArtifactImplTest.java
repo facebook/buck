@@ -78,6 +78,26 @@ public class ArtifactImplTest {
   }
 
   @Test
+  public void rejectsPrefixedUpwardPathTraversal() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path genDir = Paths.get("buck-out/gen");
+    Path packagePath = Paths.get("my/foo__");
+
+    expectedException.expect(ArtifactDeclarationException.class);
+    ArtifactImpl.of(target, genDir, packagePath, Paths.get("../bar"));
+  }
+
+  @Test
+  public void rejectsSuffixedUpwardPathTraversal() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path genDir = Paths.get("buck-out/gen");
+    Path packagePath = Paths.get("my/foo__");
+
+    expectedException.expect(ArtifactDeclarationException.class);
+    ArtifactImpl.of(target, genDir, packagePath, Paths.get("foo/../.."));
+  }
+
+  @Test
   public void rejectsUpwardPathTraversal() {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     Path packagePath = Paths.get("my/foo__");
@@ -93,6 +113,17 @@ public class ArtifactImplTest {
 
     expectedException.expect(ArtifactDeclarationException.class);
     ArtifactImpl.of(target, genDir, packagePath, Paths.get("").toAbsolutePath());
+  }
+
+  @Test
+  public void normalizesPaths() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path genDir = Paths.get("buck-out/gen");
+    Path packagePath = Paths.get("my/foo__");
+
+    DeclaredArtifact artifact =
+        ArtifactImpl.of(target, genDir, packagePath, Paths.get("bar/baz/.././blargl.sh"));
+    assertEquals(Paths.get("my", "foo__", "bar", "blargl.sh").toString(), artifact.getShortPath());
   }
 
   @Test
