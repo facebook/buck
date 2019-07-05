@@ -17,6 +17,7 @@ package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.description.RuleDescription;
+import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.actions.lib.WriteAction;
@@ -25,12 +26,13 @@ import com.facebook.buck.core.rules.analysis.RuleAnalysisException;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
+import com.facebook.buck.core.starlark.eventhandler.ConsoleEventHandler;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
-import com.google.devtools.build.lib.events.NullEventHandler;
+import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Mutability;
@@ -65,8 +67,14 @@ public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg
       Environment env =
           Environment.builder(mutability)
               .useDefaultSemantics()
-              .setEventHandler(NullEventHandler.INSTANCE)
+              .setEventHandler(
+                  new ConsoleEventHandler(
+                      context.getEventBus(),
+                      EventKind.ALL_EVENTS,
+                      ImmutableSet.of(),
+                      new HumanReadableExceptionAugmentor(ImmutableMap.of())))
               .build();
+
       args.getRule().getImplementation().call(ImmutableList.of(ctx), ImmutableMap.of(), null, env);
 
       Artifact outputArtifact = context.actionRegistry().declareArtifact(Paths.get("output"));

@@ -1,7 +1,7 @@
 """ Module docstring """
 
 def _impl(_ctx):
-    print("here")
+    print("printing at debug level")
 
 my_rule = rule(
     attrs = {

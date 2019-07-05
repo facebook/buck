@@ -22,6 +22,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
+import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -62,6 +63,12 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
     workspace.setUp();
 
-    workspace.runBuckBuild("//foo:prints").assertSuccess();
+    ProcessResult result = workspace.runBuckBuild("//foo:prints").assertSuccess();
+    assertThat(
+        result.getStderr(),
+        Matchers.matchesPattern(
+            Pattern.compile(
+                ".*^DEBUG: \\S+defs.bzl:4:5: printing at debug level.*",
+                Pattern.MULTILINE | Pattern.DOTALL)));
   }
 }
