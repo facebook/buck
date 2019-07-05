@@ -664,27 +664,45 @@ public class RustCompileUtils {
     }
 
     String platform = parts.get(0);
-    if (!platform.equals(ApplePlatform.IPHONEOS.getName())
-        && !platform.equals(ApplePlatform.IPHONESIMULATOR.getName())) {
-      return null;
-    }
-
-    // This is according to https://forge.rust-lang.org/platform-support.html
     String rawArch = parts.get(1);
     String rustArch;
-    if (rawArch.equals("armv7")) {
-      // armv7 is not part of Architecture.
-      rustArch = "armv7";
-    } else {
-      Architecture arch = Architecture.fromName(parts.get(1));
-      if (arch == Architecture.X86_32) {
-        rustArch = "i386";
+    if (platform.equals(ApplePlatform.IPHONEOS.getName())
+        || platform.equals(ApplePlatform.IPHONESIMULATOR.getName())) {
+      // This is according to https://forge.rust-lang.org/platform-support.html
+      if (rawArch.equals("armv7")) {
+        // armv7 is not part of Architecture.
+        rustArch = "armv7";
       } else {
-        rustArch = arch.toString();
+        Architecture arch = Architecture.fromName(parts.get(1));
+        if (arch == Architecture.X86_32) {
+          rustArch = "i386";
+        } else {
+          rustArch = arch.toString();
+        }
       }
+      return rustArch + "-apple-ios";
+    } else if (platform.equals("android")) {
+      // This is according to https://forge.rust-lang.org/platform-support.html
+      if (rawArch.equals("armv7")) {
+        // The only difference I see between
+        // thumbv7neon-linux-androideabi and armv7-linux-androideabi
+        // is that the former does not set +d16, but d16 support is
+        // part of armeabi-v7a per
+        // https://developer.android.com/ndk/guides/abis.html#v7a.
+        return "armv7-linux-androideabi";
+      } else {
+        // We want aarch64-linux-android, i686-linux-android, or x86_64-linux-android.
+        Architecture arch = Architecture.fromName(parts.get(1));
+        if (arch == Architecture.X86_32) {
+          rustArch = "i686";
+        } else {
+          rustArch = arch.toString();
+        }
+        return rustArch + "-linux-android";
+      }
+    } else {
+      return null;
     }
-
-    return rustArch + "-apple-ios";
   }
 
   /** Add the appropriate --target option to the given rustc args if the given flavor is known. */
