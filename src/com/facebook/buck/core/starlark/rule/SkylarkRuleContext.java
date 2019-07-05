@@ -24,6 +24,7 @@ public class SkylarkRuleContext implements SkylarkRuleContextApi {
 
   private final Label label;
   private final SkylarkRuleContextAttr attr;
+  private final SkylarkRuleContextActions actions;
 
   /**
    * Create a {@link SkylarkRuleContext} to be used in users' implementation functions
@@ -35,6 +36,7 @@ public class SkylarkRuleContext implements SkylarkRuleContextApi {
   public SkylarkRuleContext(Label label, String methodName, Map<String, Object> methodParameters) {
     this.label = label;
     this.attr = new SkylarkRuleContextAttr(methodName, methodParameters);
+    this.actions = new SkylarkRuleContextActions();
   }
 
   @Override
@@ -50,5 +52,10 @@ public class SkylarkRuleContext implements SkylarkRuleContextApi {
   @Override
   public Label getLabel() {
     return label;
+  }
+
+  @Override
+  public SkylarkRuleContextActionsApi getActions() {
+    return this.actions;
   }
 }

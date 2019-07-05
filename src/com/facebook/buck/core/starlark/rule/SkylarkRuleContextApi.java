@@ -32,4 +32,10 @@ interface SkylarkRuleContextApi extends SkylarkValue {
       doc = "The label for the target that is currently being created",
       structField = true)
   Label getLabel();
+
+  @SkylarkCallable(
+      name = "actions",
+      doc = "Struct containing methods to create and interact with actions",
+      structField = true)
+  SkylarkRuleContextActionsApi getActions();
 }
