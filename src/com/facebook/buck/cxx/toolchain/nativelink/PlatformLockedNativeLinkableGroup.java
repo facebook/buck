@@ -149,4 +149,9 @@ public class PlatformLockedNativeLinkableGroup implements NativeLinkable {
   public boolean forceLinkWholeForHaskellOmnibus() {
     return underlyingGroup.forceLinkWholeForHaskellOmnibus();
   }
+
+  @Override
+  public String toString() {
+    return String.format("%s[%s]", underlyingGroup, cxxPlatform.getFlavor());
+  }
 }
