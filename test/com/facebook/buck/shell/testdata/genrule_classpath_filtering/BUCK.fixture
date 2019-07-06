@@ -133,6 +133,12 @@ genrule(
     cmd = "echo $(query_targets_and_outputs \"labels(provided_deps, //other:exporter)\") > $OUT",
 )
 
+genrule(
+    name = "echo_deps_of_a_with_select",
+    out = "out",
+    cmd = "echo $(query_targets \"deps(//:lib_a_with_select)\") > $OUT",
+)
+
 java_library(
     name = "lib_a",
     srcs = ["A.java"],
@@ -142,6 +148,24 @@ java_library(
         "//annotations:proc-lib",
         #add_import_to_lib_a ':lib_c',
     ],
+)
+
+java_library(
+    name = "lib_a_with_select",
+    srcs = ["A.java"],
+    deps = [
+        ":lib_b",
+    ] + select({
+        ":condition": [":lib_d"],
+        "DEFAULT": [],
+    }),
+)
+
+config_setting(
+    name = "condition",
+    values = {
+        "option.name": "value",
+    },
 )
 
 java_library(

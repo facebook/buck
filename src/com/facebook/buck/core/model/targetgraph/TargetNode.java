@@ -96,6 +96,12 @@ public interface TargetNode<T>
    */
   Set<BuildTarget> getParseDeps();
 
+  /**
+   * Dependencies that include build targets as well as configuration targets that this node depends
+   * on.
+   */
+  Set<BuildTarget> getTotalDeps();
+
   boolean isVisibleTo(TargetNode<?> viewer);
 
   void isVisibleToOrThrow(TargetNode<?> viewer);

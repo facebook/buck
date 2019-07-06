@@ -137,7 +137,12 @@ abstract class AbstractImmutableTargetNode<T> implements TargetNode<T> {
    */
   @Override
   public Set<BuildTarget> getParseDeps() {
-    return Sets.union(Sets.union(getBuildDeps(), getTargetGraphOnlyDeps()), getConfigurationDeps());
+    return Sets.union(getBuildDeps(), getTargetGraphOnlyDeps());
+  }
+
+  @Override
+  public Set<BuildTarget> getTotalDeps() {
+    return Sets.union(getParseDeps(), getConfigurationDeps());
   }
 
   @Override

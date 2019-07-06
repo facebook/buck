@@ -239,7 +239,7 @@ abstract class AbstractParser implements Parser {
           // visitor pattern otherwise.
           // it's also work we need to do anyways. the getTargetNode() result is cached, so that
           // when we come around and re-visit that node there won't actually be any work performed.
-          for (BuildTarget dep : node.getParseDeps()) {
+          for (BuildTarget dep : node.getTotalDeps()) {
             try {
               state.getTargetNode(dep);
             } catch (BuildFileParseException e) {
@@ -248,7 +248,7 @@ abstract class AbstractParser implements Parser {
               throw ParserMessages.createReadableExceptionWithWhenSuffix(target, dep, e);
             }
           }
-          return node.getParseDeps().iterator();
+          return node.getTotalDeps().iterator();
         };
 
     AcyclicDepthFirstPostOrderTraversal<BuildTarget> targetNodeTraversal =
