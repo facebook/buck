@@ -188,6 +188,18 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testMergeWithPlatformSpecificDeps() throws Exception {
+    workspace.replaceFileContents(".buckconfig", "#cpu_abis", "cpu_abis = x86, armv7");
+    Path apkPath =
+        workspace.buildAndReturnOutput("//apps/sample:app_with_different_merged_libs_per_platform");
+
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+
+    zipInspector.assertFileExists("lib/armeabi-v7a/liball.so");
+    zipInspector.assertFileExists("lib/x86/liball.so");
+  }
+
+  @Test
   public void throwIfLibMergedIntoTwoTargets() {
     ProcessResult processResult =
         workspace.runBuckBuild("//apps/sample:app_with_merge_lib_into_two_targets");

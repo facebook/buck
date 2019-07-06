@@ -813,6 +813,9 @@ public class PrebuiltCxxLibraryDescription
         if (getPreferredLinkage(cxxPlatform) == Linkage.SHARED) {
           return Optional.empty();
         }
+        if (!isPlatformSupported(cxxPlatform)) {
+          return Optional.empty();
+        }
         return Optional.of(
             new LegacyNativeLinkTargetGroup() {
               @Override
