@@ -16,6 +16,7 @@
 package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -42,7 +43,7 @@ public class PlatformLockedNativeLinkableGroup implements NativeLinkable {
    */
   public static class Cache {
     private final LegacyNativeLinkableGroup underlyingGroup;
-    private final Map<CxxPlatform, NativeLinkable> cache;
+    private final Map<Flavor, NativeLinkable> cache;
 
     Cache(LegacyNativeLinkableGroup group) {
       this.underlyingGroup = group;
@@ -51,7 +52,8 @@ public class PlatformLockedNativeLinkableGroup implements NativeLinkable {
 
     public NativeLinkable get(CxxPlatform platform) {
       return cache.computeIfAbsent(
-          platform, ignored -> new PlatformLockedNativeLinkableGroup(underlyingGroup, platform));
+          platform.getFlavor(),
+          ignored -> new PlatformLockedNativeLinkableGroup(underlyingGroup, platform));
     }
   }
 
