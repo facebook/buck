@@ -17,9 +17,18 @@ package com.facebook.buck.core.starlark.rule;
 
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
+import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
+import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
 
 /** The `ctx` variable that is passed to user implementation functions */
+@SkylarkModule(
+    name = "ctx",
+    doc =
+        "The ctx variable that is passed to rule implementation functions. "
+            + "Provides information about dependencies, attributes, actions, etc",
+    title = "ctx",
+    category = SkylarkModuleCategory.BUILTIN)
 interface SkylarkRuleContextApi extends SkylarkValue {
   @SkylarkCallable(
       name = "attr",
