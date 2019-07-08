@@ -1305,7 +1305,8 @@ public final class MainRunner {
           ImmutableList<String> remainingArgs =
               filteredArgsForLogging.isEmpty()
                   ? ImmutableList.of()
-                  : filteredArgsForLogging.subList(1, filteredArgsForLogging.size());
+                  : filteredUnexpandedArgsForLogging.subList(
+                      1, filteredUnexpandedArgsForLogging.size());
 
           CommandEvent.Started startedEvent =
               CommandEvent.started(
