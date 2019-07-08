@@ -17,7 +17,10 @@ package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactDeclarationException;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.rules.actions.lib.WriteAction;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
+import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import java.nio.file.InvalidPathException;
@@ -42,6 +45,21 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
     } catch (InvalidPathException e) {
       throw new EvalException(location, String.format("Invalid path '%s' provided", path));
     } catch (ArtifactDeclarationException e) {
+      throw new EvalException(location, e.getHumanReadableErrorMessage());
+    }
+  }
+
+  @Override
+  public void write(Artifact output, String content, boolean isExecutable, Location location)
+      throws EvalException {
+    try {
+      new WriteAction(
+          context.actionRegistry(),
+          ImmutableSet.of(),
+          ImmutableSet.of(output),
+          content,
+          isExecutable);
+    } catch (HumanReadableException e) {
       throw new EvalException(location, e.getHumanReadableErrorMessage());
     }
   }

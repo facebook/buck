@@ -15,12 +15,10 @@
  */
 package com.facebook.buck.core.starlark.rule;
 
-import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
-import com.facebook.buck.core.rules.actions.lib.WriteAction;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisException;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
@@ -37,7 +35,6 @@ import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
-import java.nio.file.Paths;
 
 /**
  * Description for User Defined Rules. This Description runs user-supplied implementation functions
@@ -63,8 +60,6 @@ public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg
               Label.parseAbsolute(target.getFullyQualifiedName(), ImmutableMap.of()),
               args.getRule().getExportedName(),
               args.getCoercedAttrValues());
-      // TODO: Pass some extra information in ruleImpl so that we can properly log/write out when
-      //       print() is called
       Environment env =
           Environment.builder(mutability)
               .useDefaultSemantics()
@@ -78,17 +73,8 @@ public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg
 
       args.getRule().getImplementation().call(ImmutableList.of(ctx), ImmutableMap.of(), null, env);
 
-      Artifact outputArtifact = context.actionRegistry().declareArtifact(Paths.get("output"));
-
-      new WriteAction(
-          context.actionRegistry(),
-          ImmutableSet.of(),
-          ImmutableSet.of(outputArtifact),
-          "some output",
-          false);
-
       ImmutableDefaultInfo defaultInfo =
-          new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of(outputArtifact));
+          new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of());
 
       // TODO: Verify that we get providers back, validate types, etc, etc
       return ProviderInfoCollectionImpl.builder().put(defaultInfo).build();

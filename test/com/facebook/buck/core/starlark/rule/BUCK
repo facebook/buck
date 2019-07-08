@@ -16,6 +16,8 @@ standard_java_test(
         "//src/com/facebook/buck/skylark/packages:packages",
         "//src/com/facebook/buck/skylark/parser/context:context",
         "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/skylark/function:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
