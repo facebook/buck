@@ -34,7 +34,7 @@ import java.util.Map;
  * Implementation of {@link com.facebook.buck.core.rules.analysis.RuleAnalysisContext}. This context
  * is created per rule analysis.
  */
-class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisDataRegistry {
+public class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisDataRegistry {
 
   private final BuildTarget buildTarget;
   private final ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> depProviders;
@@ -43,7 +43,7 @@ class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisData
   private final ActionRegistry actionRegistry;
   private final BuckEventBus eventBus;
 
-  RuleAnalysisContextImpl(
+  public RuleAnalysisContextImpl(
       BuildTarget buildTarget,
       ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> depProviders,
       ProjectFilesystem filesystem,

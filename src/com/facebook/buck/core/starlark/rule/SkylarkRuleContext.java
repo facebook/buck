@@ -15,7 +15,9 @@
  */
 package com.facebook.buck.core.starlark.rule;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
+import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.util.Map;
@@ -64,5 +66,19 @@ public class SkylarkRuleContext implements SkylarkRuleContextApi {
   @Override
   public SkylarkRuleContextActionsApi getActions() {
     return this.actions;
+  }
+
+  /**
+   * Get a list of all Artifacts that were used in actions
+   *
+   * <p>This is used to infer outputs to use to create a {@link
+   * com.facebook.buck.core.rules.providers.lib.DefaultInfo} object if no output attributes were
+   * specified, or if no {@link com.facebook.buck.core.rules.providers.lib.DefaultInfo} object was
+   * returned by a user's implementation function.
+   *
+   * @return List of {@link Artifact}s that were used in actions.
+   */
+  ImmutableSet<Artifact> getOutputs() {
+    return actions.getOutputs();
   }
 }

@@ -33,6 +33,7 @@ import java.nio.file.Paths;
 public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
 
   private final RuleAnalysisContext context;
+  private ImmutableSet.Builder<Artifact> outputs = ImmutableSet.builder();
 
   public SkylarkRuleContextActions(RuleAnalysisContext context) {
     this.context = context;
@@ -59,8 +60,13 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
           ImmutableSet.of(output),
           content,
           isExecutable);
+      outputs.add(output);
     } catch (HumanReadableException e) {
       throw new EvalException(location, e.getHumanReadableErrorMessage());
     }
+  }
+
+  public ImmutableSet<Artifact> getOutputs() {
+    return outputs.build();
   }
 }
