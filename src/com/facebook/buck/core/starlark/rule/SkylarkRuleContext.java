@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.starlark.rule;
 
+import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.util.Map;
@@ -32,11 +33,17 @@ public class SkylarkRuleContext implements SkylarkRuleContextApi {
    * @param label the label of the new rule being evaluated
    * @param methodName the name of the implementation method in the extension file
    * @param methodParameters a mapping of field names to values for a given rule
+   * @param context the context for the analysing this rule. Used primarily for creating and
+   *     manipulating actions
    */
-  public SkylarkRuleContext(Label label, String methodName, Map<String, Object> methodParameters) {
+  public SkylarkRuleContext(
+      RuleAnalysisContext context,
+      Label label,
+      String methodName,
+      Map<String, Object> methodParameters) {
     this.label = label;
     this.attr = new SkylarkRuleContextAttr(methodName, methodParameters);
-    this.actions = new SkylarkRuleContextActions();
+    this.actions = new SkylarkRuleContextActions(context);
   }
 
   @Override

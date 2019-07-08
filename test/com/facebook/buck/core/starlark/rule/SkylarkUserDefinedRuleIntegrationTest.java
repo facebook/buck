@@ -71,4 +71,31 @@ public class SkylarkUserDefinedRuleIntegrationTest {
                 ".*^DEBUG: \\S+defs.bzl:4:5: printing at debug level.*",
                 Pattern.MULTILINE | Pattern.DOTALL)));
   }
+
+  @Test
+  public void implementationFunctionCanDeclareFiles() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "implementation_declares_artifacts", tmp);
+
+    workspace.setUp();
+
+    workspace.runBuckBuild("//foo:valid_filename").assertSuccess();
+  }
+
+  @Test
+  public void implementationDeclareFilesFailsOnInvalidFiles() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "implementation_declares_artifacts", tmp);
+
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckBuild("//foo:not_a_path").assertFailure().getStderr(),
+        Matchers.containsString("Invalid path"));
+    assertThat(
+        workspace.runBuckBuild("//foo:rejected_path").assertFailure().getStderr(),
+        Matchers.containsString("attempted to traverse upwards"));
+  }
 }

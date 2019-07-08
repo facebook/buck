@@ -15,8 +15,34 @@
  */
 package com.facebook.buck.core.starlark.rule;
 
+import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.ArtifactDeclarationException;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
+import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.EvalException;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Paths;
+
 /**
  * Container for all methods that create actions within the implementation function of a user
  * defined rule
  */
-public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {}
+public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
+
+  private final RuleAnalysisContext context;
+
+  public SkylarkRuleContextActions(RuleAnalysisContext context) {
+    this.context = context;
+  }
+
+  @Override
+  public Artifact declareFile(String path, Location location) throws EvalException {
+    try {
+      return context.actionRegistry().declareArtifact(Paths.get(path));
+    } catch (InvalidPathException e) {
+      throw new EvalException(location, String.format("Invalid path '%s' provided", path));
+    } catch (ArtifactDeclarationException e) {
+      throw new EvalException(location, e.getHumanReadableErrorMessage());
+    }
+  }
+}

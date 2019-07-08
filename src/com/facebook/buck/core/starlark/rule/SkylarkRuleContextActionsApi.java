@@ -15,7 +15,12 @@
  */
 package com.facebook.buck.core.starlark.rule;
 
+import com.facebook.buck.core.artifact.Artifact;
+import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.skylarkinterface.Param;
+import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
+import com.google.devtools.build.lib.syntax.EvalException;
 
 /**
  * Struct containing methods that create actions within the implementation function of a user
@@ -25,4 +30,20 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
     name = "actions",
     title = "actions",
     doc = "Struct containing methods to create actions within a rule's implementation method")
-public interface SkylarkRuleContextActionsApi {}
+public interface SkylarkRuleContextActionsApi {
+
+  @SkylarkCallable(
+      name = "declare_file",
+      doc = "Declares a file that will be used as the output by subsequent actions",
+      useLocation = true,
+      parameters = {
+        @Param(
+            name = "filename",
+            doc =
+                "The name of the file that will be created. This must be relative and not traverse "
+                    + "upward in the filesystem",
+            type = String.class,
+            named = true)
+      })
+  Artifact declareFile(String path, Location location) throws EvalException;
+}
