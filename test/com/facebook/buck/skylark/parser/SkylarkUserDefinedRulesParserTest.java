@@ -176,7 +176,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
   @Test
   public void enablesAttrsStringIfConfigured() throws IOException, InterruptedException {
-    setupWorkspace("attr_int_exported");
+    setupWorkspace("attr_string_exported");
     Path buildFile = projectFilesystem.resolve("BUCK");
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
