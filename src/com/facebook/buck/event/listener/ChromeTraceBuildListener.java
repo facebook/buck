@@ -18,6 +18,7 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheConnectEvent;
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
+import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -595,7 +596,17 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             .put("rule_key", Joiner.on(", ").join(finished.getRuleKeys()))
             .put(
                 "rule",
-                finished.getTarget().map(BuildTarget::getFullyQualifiedName).orElse("unknown"));
+                finished.getTarget().map(BuildTarget::getFullyQualifiedName).orElse("unknown"))
+            .put(
+                "artifact_size",
+                finished
+                    .getCacheResult()
+                    .map(
+                        result ->
+                            result.getType() == CacheResultType.HIT
+                                ? Long.toString(result.getArtifactSizeBytes())
+                                : "unknown")
+                    .orElse("unknown"));
     Optionals.putIfPresent(
         finished.getCacheResult().map(Object::toString), "cache_result", argumentsBuilder);
 
