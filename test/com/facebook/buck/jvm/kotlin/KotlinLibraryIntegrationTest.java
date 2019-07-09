@@ -162,6 +162,12 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
+  public void shouldCompileKotlinCodeWithBackticks() {
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/backticks:example");
+    buildResult.assertSuccess("Build should have succeeded.");
+  }
+
+  @Test
   public void shouldCompileMixedJavaAndKotlinSources() {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/mixed:example");
     buildResult.assertSuccess("Build should have succeeded.");

@@ -25,12 +25,14 @@ import com.facebook.buck.jvm.java.classes.FileLikes;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -158,7 +160,9 @@ public class AccumulateClassNamesStep implements Step {
     Map<String, HashCode> classNames = new HashMap<>();
 
     for (String line : lines) {
-      int index = line.trim().lastIndexOf(CLASS_NAME_HASH_CODE_SEPARATOR);
+      int index = line.lastIndexOf(CLASS_NAME_HASH_CODE_SEPARATOR);
+      Preconditions.checkArgument(index > 0,
+              String.format("Class names and hashcodes malformed: %1$s", line));
       String key = line.substring(0, index);
       HashCode value = HashCode.fromString(line.substring(index + 1));
       HashCode existing = classNames.putIfAbsent(key, value);
