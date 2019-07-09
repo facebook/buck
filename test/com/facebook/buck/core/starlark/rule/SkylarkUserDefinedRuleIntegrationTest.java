@@ -151,12 +151,48 @@ public class SkylarkUserDefinedRuleIntegrationTest {
   @Test
   public void builtInProvidersAreAvailableAtAnalysisTime() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "implementation_can_use_builtin_providers", tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_return_values", tmp);
 
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckBuild("//foo:").assertSuccess();
+    ProcessResult result =
+        workspace.runBuckBuild("//foo:can_use_providers_in_impl").assertSuccess();
     assertThat(result.getStderr(), Matchers.containsString("in bzl: DefaultInfo("));
+  }
+
+  @Test
+  public void returnsAnErrorWhenNonListIsReturned() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_return_values", tmp);
+
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckBuild("//foo:return_non_list").assertFailure().getStderr(),
+        Matchers.containsString("is not of expected type"));
+  }
+
+  @Test
+  public void returnsAnErrorWhenItemInListIsNotProviderInfo() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_return_values", tmp);
+
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckBuild("//foo:return_non_info_in_list").assertFailure().getStderr(),
+        Matchers.containsString("expected type 'SkylarkProviderInfo'"));
+  }
+
+  @Test
+  public void returnsAnErrorWhenDuplicateProvidersReturned() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_return_values", tmp);
+
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckBuild("//foo:return_duplicate_info_types").assertFailure().getStderr(),
+        Matchers.containsString("returned two or more Info objects"));
   }
 }

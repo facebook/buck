@@ -26,17 +26,21 @@ import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.analysis.impl.RuleAnalysisContextImpl;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
+import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.skylark.function.FakeSkylarkUserDefinedRuleFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.timing.AbstractFakeClock;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.SkylarkList;
 import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Rule;
@@ -79,6 +83,38 @@ public class SkylarkDescriptionTest {
     ProviderInfoCollection infos =
         description.ruleImpl(context, target, new SkylarkDescriptionArg(rule));
     Path expectedShortPath = BuildPaths.getBaseDir(target).resolve("baz.sh");
+
+    DefaultInfo info = infos.get(DefaultInfo.PROVIDER).get();
+    Artifact artifact = Iterables.getOnlyElement(info.defaultOutputs());
+
+    assertTrue(info.namedOutputs().isEmpty());
+    assertEquals(expectedShortPath.toString(), artifact.getShortPath());
+  }
+
+  @Test
+  public void returnsDefaultInfoFromImplIfImplReturnsOne()
+      throws LabelSyntaxException, EvalException {
+    SkylarkUserDefinedRule rule =
+        FakeSkylarkUserDefinedRuleFactory.createSimpleRuleFromCallable(
+            ctx -> {
+              try {
+                Artifact f = ctx.getActions().declareFile("baz1.sh", Location.BUILTIN);
+                ctx.getActions().write(f, "content", false, Location.BUILTIN);
+                Artifact g = ctx.getActions().declareFile("baz2.sh", Location.BUILTIN);
+                ctx.getActions().write(g, "content", false, Location.BUILTIN);
+                return SkylarkList.createImmutable(
+                    ImmutableList.of(
+                        new ImmutableDefaultInfo(
+                            SkylarkDict.empty(),
+                            SkylarkList.createImmutable(ImmutableList.of(f)))));
+              } catch (EvalException e) {
+                throw new RuntimeException(e);
+              }
+            });
+
+    ProviderInfoCollection infos =
+        description.ruleImpl(context, target, new SkylarkDescriptionArg(rule));
+    Path expectedShortPath = BuildPaths.getBaseDir(target).resolve("baz1.sh");
 
     DefaultInfo info = infos.get(DefaultInfo.PROVIDER).get();
     Artifact artifact = Iterables.getOnlyElement(info.defaultOutputs());
