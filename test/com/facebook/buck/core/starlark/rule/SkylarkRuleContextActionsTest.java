@@ -53,10 +53,11 @@ public class SkylarkRuleContextActionsTest {
   @Test
   public void writingAFileAddsToListOfOutputs() throws EvalException {
 
-    SkylarkRuleContextActions actions = new SkylarkRuleContextActions(context);
+    CapturingActionRegistry registry = new CapturingActionRegistry(context.actionRegistry());
+    SkylarkRuleContextActions actions = new SkylarkRuleContextActions(registry);
     Artifact artifact = actions.declareFile("bar.sh", Location.BUILTIN);
     actions.write(artifact, "contents", false, Location.BUILTIN);
 
-    assertEquals(ImmutableSet.of(artifact), actions.getOutputs());
+    assertEquals(ImmutableSet.of(artifact), registry.getOutputs());
   }
 }

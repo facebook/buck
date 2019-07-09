@@ -63,7 +63,7 @@ public class ActionWrapperDataFactoryTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     ActionRegistry actionRegistry =
-        new ActionRegistry(target, actionAnalysisDataRegistry, filesystem);
+        new DefaultActionRegistry(target, actionAnalysisDataRegistry, filesystem);
     ImmutableSet<Artifact> inputs =
         ImmutableSet.of(
             ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("myinput"))));
@@ -109,7 +109,7 @@ public class ActionWrapperDataFactoryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
 
     ActionRegistry actionRegistry =
-        new ActionRegistry(target, actionAnalysisDataRegistry, filesystem);
+        new DefaultActionRegistry(target, actionAnalysisDataRegistry, filesystem);
 
     ImmutableSet<Artifact> inputs = ImmutableSet.of();
     Artifact output = actionRegistry.declareArtifact(Paths.get("myoutput"));

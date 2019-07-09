@@ -33,7 +33,7 @@ public abstract class AbstractAction implements Action {
   protected final ImmutableSet<Artifact> outputs;
 
   /**
-   * @param registry the {@link ActionRegistry} to registry this action for.
+   * @param registry the {@link DefaultActionRegistry} to registry this action for.
    * @param inputs the input {@link Artifact} for this {@link Action}. They can be either outputs of
    *     other {@link Action}s or be source files
    * @param outputs the outputs for this {@link Action}

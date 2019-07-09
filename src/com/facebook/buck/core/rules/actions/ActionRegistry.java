@@ -18,14 +18,10 @@ package com.facebook.buck.core.rules.actions;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactDeclarationException;
 import com.facebook.buck.core.artifact.BuildArtifact;
-import com.facebook.buck.core.artifact.BuildArtifactFactory;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
-import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData.ID;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataRegistry;
-import com.facebook.buck.core.rules.analysis.action.ImmutableActionAnalysisDataKey;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
 
 /**
@@ -37,23 +33,7 @@ import java.nio.file.Path;
  * <p>There is one registry per {@link BuildTarget}, such that all {@link Action}s registered by
  * this are considered to be associated with the build target.
  */
-public class ActionRegistry extends BuildArtifactFactory {
-
-  private final ActionAnalysisDataRegistry actionRegistry;
-
-  /**
-   * @param buildTarget the {@link BuildTarget} for which all of the {@link Action}s created are for
-   * @param actionRegistry the {@link ActionAnalysisDataRegistry} that all actions created are
-   *     registered to
-   * @param filesystem the {@link ProjectFilesystem} to use for generating paths
-   */
-  public ActionRegistry(
-      BuildTarget buildTarget,
-      ActionAnalysisDataRegistry actionRegistry,
-      ProjectFilesystem filesystem) {
-    super(buildTarget, filesystem);
-    this.actionRegistry = actionRegistry;
-  }
+public interface ActionRegistry {
 
   /**
    * @param output the output {@link Path} relative to the package path for the current rule that
@@ -61,9 +41,7 @@ public class ActionRegistry extends BuildArtifactFactory {
    * @return a {@link Artifact} for the given path
    * @throws ArtifactDeclarationException if the provided output path is invalid
    */
-  public Artifact declareArtifact(Path output) throws ArtifactDeclarationException {
-    return createDeclaredArtifact(output);
-  }
+  Artifact declareArtifact(Path output) throws ArtifactDeclarationException;
 
   /**
    * Creates the {@link ActionWrapperData} from its {@link Action} and registers the {@link
@@ -75,28 +53,11 @@ public class ActionRegistry extends BuildArtifactFactory {
    *
    * @param action the {@link Action} to create an {@link ActionWrapperData} for and registers it
    */
-  void registerActionAnalysisDataForAction(Action action) throws ActionCreationException {
-
-    // require all inputs to be bound for now. We could change this.
-    for (Artifact input : action.getInputs()) {
-      if (!input.isBound()) {
-        throw new ActionCreationException(
-            action, "Input Artifact %s should be bound to an Action, but is actually not", input);
-      }
-    }
-
-    ActionAnalysisDataKey key = ImmutableActionAnalysisDataKey.of(target, new ID() {});
-    action.getOutputs().forEach(artifact -> bindtoBuildArtifact(key, artifact));
-
-    ActionWrapperData actionAnalysisData = ImmutableActionWrapperData.of(key, action);
-    actionRegistry.registerAction(actionAnalysisData);
-  }
+  void registerActionAnalysisDataForAction(Action action) throws ActionCreationException;
 
   /**
    * @return the {@link BuildTarget} responsible for all the {@link Action}s registered to this
    *     factory.
    */
-  BuildTarget getOwner() {
-    return target;
-  }
+  BuildTarget getOwner();
 }

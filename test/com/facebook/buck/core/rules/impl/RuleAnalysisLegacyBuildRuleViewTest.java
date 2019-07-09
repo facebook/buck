@@ -34,6 +34,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.ActionWrapperData;
+import com.facebook.buck.core.rules.actions.DefaultActionRegistry;
 import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.rules.actions.FakeActionAnalysisRegistry;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
@@ -110,7 +111,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
         (ins, outs, ctx) -> ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
 
     ActionRegistry actionRegistry =
-        new ActionRegistry(depTarget, actionAnalysisRegistry, filesystem);
+        new DefaultActionRegistry(depTarget, actionAnalysisRegistry, filesystem);
     Artifact depArtifact = actionRegistry.declareArtifact(Paths.get("bar.output"));
 
     new FakeAction(
@@ -135,7 +136,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
           return ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
         };
 
-    actionRegistry = new ActionRegistry(buildTarget, actionAnalysisRegistry, filesystem);
+    actionRegistry = new DefaultActionRegistry(buildTarget, actionAnalysisRegistry, filesystem);
     Artifact artifact = actionRegistry.declareArtifact(outpath);
 
     new FakeAction(

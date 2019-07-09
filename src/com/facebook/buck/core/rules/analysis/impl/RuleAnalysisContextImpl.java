@@ -17,6 +17,7 @@ package com.facebook.buck.core.rules.analysis.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
+import com.facebook.buck.core.rules.actions.DefaultActionRegistry;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
@@ -51,7 +52,7 @@ public class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnaly
     this.buildTarget = buildTarget;
     this.depProviders = depProviders;
     this.eventBus = eventBus;
-    this.actionRegistry = new ActionRegistry(buildTarget, this, filesystem);
+    this.actionRegistry = new DefaultActionRegistry(buildTarget, this, filesystem);
   }
 
   @Override

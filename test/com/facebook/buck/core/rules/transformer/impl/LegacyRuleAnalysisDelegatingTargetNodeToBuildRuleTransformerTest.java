@@ -37,6 +37,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
+import com.facebook.buck.core.rules.actions.DefaultActionRegistry;
 import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.rules.actions.FakeActionAnalysisRegistry;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
@@ -161,7 +162,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
     Path output = Paths.get("foo.output");
 
     ActionRegistry actionRegistry =
-        new ActionRegistry(target, fakeActionAnalysisRegistry, fakeFilesystem);
+        new DefaultActionRegistry(target, fakeActionAnalysisRegistry, fakeFilesystem);
     Artifact artifact = actionRegistry.declareArtifact(output);
 
     new FakeAction(
