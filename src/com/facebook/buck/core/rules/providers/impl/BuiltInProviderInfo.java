@@ -72,4 +72,9 @@ public abstract class BuiltInProviderInfo<T extends BuiltInProviderInfo<T>>
   protected Class<?> getDeclaredClass() {
     return infoClass;
   }
+
+  @Override
+  public ProviderInfo<?> getProviderInfo() {
+    return this;
+  }
 }

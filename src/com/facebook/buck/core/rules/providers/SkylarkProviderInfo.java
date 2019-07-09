@@ -16,11 +16,13 @@
 package com.facebook.buck.core.rules.providers;
 
 /**
- * The information, which is a struct-like object, passed between rules during rule analysis. This
- * object is created via {@link Provider}.
+ * An interface to {@link ProviderInfo} to use in skylark methods. This allows us to more easily
+ * validate user provided {@link com.google.devtools.build.lib.syntax.SkylarkList} and {@link
+ * com.google.devtools.build.lib.syntax.SkylarkDict} objects which have problems with generic
+ * subtypes. See {@link com.google.devtools.build.lib.syntax.SkylarkList#getContents(Class, String)}
+ * for an example of a problem method
  */
-public interface ProviderInfo<U extends ProviderInfo<U>> extends SkylarkProviderInfo {
-
-  /** @return the {@link Provider} instance that constructs instances of this info. */
-  Provider<U> getProvider();
+public interface SkylarkProviderInfo {
+  /** @return The original provider info */
+  ProviderInfo<?> getProviderInfo();
 }

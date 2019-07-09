@@ -30,4 +30,9 @@ public class FakeInfo implements ProviderInfo<FakeInfo> {
   public Provider<FakeInfo> getProvider() {
     return provider;
   }
+
+  @Override
+  public ProviderInfo<?> getProviderInfo() {
+    return this;
+  }
 }
