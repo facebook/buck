@@ -15,13 +15,15 @@
  */
 package com.facebook.buck.core.artifact;
 
+import com.facebook.buck.core.starlark.rule.artifact.SkylarkArtifactApi;
+
 /**
  * An {@link Artifact} is a file used during the build stage. It can either be a source file for the
  * build or a generated file from an action
  *
  * <p>This is the interface exposed to users.
  */
-public interface Artifact {
+public interface Artifact extends SkylarkArtifactApi {
 
   /** TODO: we should make the below package protected. */
 

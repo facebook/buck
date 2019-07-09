@@ -26,10 +26,11 @@ import com.facebook.buck.core.graph.transformation.impl.DefaultGraphTransformati
 import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
+import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDepsPackage;
@@ -43,11 +44,11 @@ import com.facebook.buck.parser.BuiltTargetVerifier;
 import com.facebook.buck.parser.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.parser.DefaultRawTargetNodeFactory;
 import com.facebook.buck.parser.NoopPackageBoundaryChecker;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ProjectBuildFileParserFactory;
 import com.facebook.buck.parser.RawTargetNodeToTargetNodeFactory;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.manifest.BuildPackagePathToBuildFileManifestComputation;
 import com.facebook.buck.parser.targetnode.BuildPackagePathToRawTargetNodePackageComputation;
 import com.facebook.buck.parser.targetnode.BuildTargetToRawTargetNodeComputation;
@@ -146,8 +147,11 @@ public class GraphEngineFactory {
 
     // COMPUTATION: raw target node to raw target node with deps
 
+    // TODO: replace with TargetPlatformResolver
+    TargetPlatformResolver targetPlatformResolver = targetConfiguration -> EmptyPlatform.INSTANCE;
     RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
         new RawTargetNodeToTargetNodeFactory(
+            params.getTypeCoercerFactory(),
             params.getKnownRuleTypesProvider(),
             new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
             new TargetNodeFactory(params.getTypeCoercerFactory()),
@@ -170,19 +174,18 @@ public class GraphEngineFactory {
             // TODO: replace with RuleBasedConstraintResolver
             new ConstraintResolver() {
               @Override
-              public ConstraintSetting getConstraintSetting(
-                  UnconfiguredBuildTargetView buildTarget) {
+              public ConstraintSetting getConstraintSetting(BuildTarget buildTarget) {
                 return ConstraintSetting.of(buildTarget, Optional.empty());
               }
 
               @Override
-              public ConstraintValue getConstraintValue(UnconfiguredBuildTargetView buildTarget) {
+              public ConstraintValue getConstraintValue(BuildTarget buildTarget) {
                 return ConstraintValue.of(
                     buildTarget, ConstraintSetting.of(buildTarget, Optional.empty()));
               }
             },
-            // TODO: replace with TargetPlatformResolver
-            targetConfiguration -> EmptyPlatform.INSTANCE);
+            targetPlatformResolver,
+            new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver));
 
     RawTargetNodeToRawTargetNodeWithDepsComputation
         rawTargetNodeToRawTargetNodeWithDepsComputation =

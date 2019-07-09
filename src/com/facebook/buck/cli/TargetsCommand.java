@@ -64,12 +64,12 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ImmutableTargetNodePredicateSpec;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -637,7 +637,7 @@ public class TargetsCommand extends AbstractCommand {
       TargetGraphCreationResult completeTargetGraphAndBuildTargets =
           params
               .getParser()
-              .buildTargetGraphWithConfigurationTargets(
+              .buildTargetGraphWithTopLevelConfigurationTargets(
                   parsingContext,
                   ImmutableList.of(
                       ImmutableTargetNodePredicateSpec.of(
@@ -656,7 +656,7 @@ public class TargetsCommand extends AbstractCommand {
       return filterTargetGraphCreationResultByType(
           params
               .getParser()
-              .buildTargetGraphWithConfigurationTargets(
+              .buildTargetGraphWithTopLevelConfigurationTargets(
                   parsingContext.withApplyDefaultFlavorsMode(
                       ParserConfig.ApplyDefaultFlavorsMode.DISABLED),
                   parseArgumentsAsTargetNodeSpecs(
@@ -759,7 +759,7 @@ public class TargetsCommand extends AbstractCommand {
           new ImmutableTargetGraphCreationResult(
               params
                   .getParser()
-                  .buildTargetGraphWithConfigurationTargets(
+                  .buildTargetGraphWithTopLevelConfigurationTargets(
                       parsingContext,
                       ImmutableList.of(
                           ImmutableTargetNodePredicateSpec.of(
@@ -772,7 +772,7 @@ public class TargetsCommand extends AbstractCommand {
       targetGraphCreationResult =
           params
               .getParser()
-              .buildTargetGraphWithConfigurationTargets(
+              .buildTargetGraphWithTopLevelConfigurationTargets(
                   parsingContext,
                   parseArgumentsAsTargetNodeSpecs(
                       params.getCell(), params.getBuckConfig(), arguments),

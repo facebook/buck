@@ -46,6 +46,7 @@ public class GrpcExecutionFactory {
   private static final int MAX_CONNECT_RETRIES = 2;
   private static final int INITIAL_DELAY_ON_RETRY_MS = 50;
   private static final int MAX_DELAY_ON_RETRY_MS = 2000;
+  private static final int CAS_DEADLINE_S = 120;
 
   /**
    * The in-process strategy starts up a grpc remote execution service in process and connects to it
@@ -69,6 +70,7 @@ public class GrpcExecutionFactory {
         "in-process",
         channel,
         channel,
+        CAS_DEADLINE_S,
         MetadataProviderFactory.emptyMetadataProvider(),
         buckEventBus) {
       @Override
@@ -93,6 +95,7 @@ public class GrpcExecutionFactory {
       int executionEnginePort,
       String casHost,
       int casPort,
+      int casDeadline,
       boolean insecure,
       boolean casInsecure,
       Optional<Path> certPath,
@@ -118,7 +121,7 @@ public class GrpcExecutionFactory {
     }
 
     return new GrpcRemoteExecutionClients(
-        "buck", executionEngineChannel, casChannel, metadataProvider, buckEventBus);
+        "buck", executionEngineChannel, casChannel, casDeadline, metadataProvider, buckEventBus);
   }
 
   private static ManagedChannel createInsecureChannel(String host, int port) {

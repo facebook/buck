@@ -50,8 +50,10 @@ import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableCacheKey;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -250,7 +252,9 @@ public class PrebuiltCxxLibraryDescription
         ImmutableList.of(),
         Linker.LinkableDepType.SHARED,
         CxxLinkOptions.of(),
-        FluentIterable.from(params.getBuildDeps()).filter(NativeLinkableGroup.class),
+        FluentIterable.from(params.getBuildDeps())
+            .filter(NativeLinkableGroup.class)
+            .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
         Optional.empty(),
         Optional.empty(),
         ImmutableSet.of(),
@@ -507,18 +511,22 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public ImmutableList<Arg> getExportedLinkerArgs(
+      public ImmutableList<Arg> getExportedLinkerFlags(
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         return PrebuiltCxxLibraryDescription.this.getExportedLinkerArgs(
             cxxPlatform, args, buildTarget, cellRoots, graphBuilder);
       }
 
       @Override
-      public ImmutableList<String> getExportedPostLinkerFlags(CxxPlatform cxxPlatform) {
+      public ImmutableList<Arg> getExportedPostLinkerFlags(
+          CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         return CxxFlags.getFlagsWithPlatformMacroExpansion(
-            args.getExportedPostLinkerFlags(),
-            args.getExportedPostPlatformLinkerFlags(),
-            cxxPlatform);
+                args.getExportedPostLinkerFlags(),
+                args.getExportedPostPlatformLinkerFlags(),
+                cxxPlatform)
+            .stream()
+            .map(s -> (Arg) StringArg.from(s))
+            .collect(ImmutableList.toImmutableList());
       }
 
       private String getSoname(CxxPlatform cxxPlatform) {
@@ -671,17 +679,19 @@ public class PrebuiltCxxLibraryDescription
           return NativeLinkableInput.of();
         }
 
+        NativeLinkable linkable = getNativeLinkable(cxxPlatform, graphBuilder);
+
         Linker.LinkableDepType type = key.getType();
         boolean forceLinkWhole = key.getForceLinkWhole();
 
         // Build the library path and linker arguments that we pass through the
         // {@link NativeLinkable} interface for linking.
         ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
-        linkerArgsBuilder.addAll(getExportedLinkerArgs(cxxPlatform, graphBuilder));
+        linkerArgsBuilder.addAll(linkable.getExportedLinkerFlags(graphBuilder));
 
         if (!args.isHeaderOnly()) {
           if (type == Linker.LinkableDepType.SHARED) {
-            Preconditions.checkState(getPreferredLinkage(cxxPlatform) != Linkage.STATIC);
+            Preconditions.checkState(linkable.getPreferredLinkage() != Linkage.STATIC);
             SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform, true, graphBuilder);
             if (args.getLinkWithoutSoname()) {
               if (!(sharedLibrary instanceof PathSourcePath)) {
@@ -694,7 +704,7 @@ public class PrebuiltCxxLibraryDescription
                   SourcePathArg.of(requireSharedLibrary(cxxPlatform, true, graphBuilder)));
             }
           } else {
-            Preconditions.checkState(getPreferredLinkage(cxxPlatform) != Linkage.SHARED);
+            Preconditions.checkState(linkable.getPreferredLinkage() != Linkage.SHARED);
             Optional<SourcePath> staticLibraryPath =
                 type == Linker.LinkableDepType.STATIC_PIC
                     ? getStaticPicLibrary(cxxPlatform, graphBuilder)
@@ -718,7 +728,7 @@ public class PrebuiltCxxLibraryDescription
         }
 
         // Add any post exported flags, if any.
-        linkerArgsBuilder.addAll(StringArg.from(getExportedPostLinkerFlags(cxxPlatform)));
+        linkerArgsBuilder.addAll(linkable.getExportedPostLinkerFlags(graphBuilder));
 
         ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
 
@@ -803,8 +813,11 @@ public class PrebuiltCxxLibraryDescription
         if (getPreferredLinkage(cxxPlatform) == Linkage.SHARED) {
           return Optional.empty();
         }
+        if (!isPlatformSupported(cxxPlatform)) {
+          return Optional.empty();
+        }
         return Optional.of(
-            new NativeLinkTargetGroup() {
+            new LegacyNativeLinkTargetGroup() {
               @Override
               public BuildTarget getBuildTarget() {
                 return buildTarget;
@@ -828,8 +841,9 @@ public class PrebuiltCxxLibraryDescription
                   CxxPlatform cxxPlatform,
                   ActionGraphBuilder graphBuilder,
                   SourcePathResolver pathResolver) {
+                NativeLinkable linkable = getNativeLinkable(cxxPlatform, graphBuilder);
                 return NativeLinkableInput.builder()
-                    .addAllArgs(getExportedLinkerArgs(cxxPlatform, graphBuilder))
+                    .addAllArgs(linkable.getExportedLinkerFlags(graphBuilder))
                     .addAllArgs(
                         cxxPlatform
                             .getLd()
@@ -838,7 +852,7 @@ public class PrebuiltCxxLibraryDescription
                                 SourcePathArg.of(
                                     getStaticPicLibrary(cxxPlatform, graphBuilder).get()),
                                 pathResolver))
-                    .addAllArgs(StringArg.from(getExportedPostLinkerFlags(cxxPlatform)))
+                    .addAllArgs(linkable.getExportedPostLinkerFlags(graphBuilder))
                     .build();
               }
 

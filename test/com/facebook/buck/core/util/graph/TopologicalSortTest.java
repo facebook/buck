@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Ordering;
 import java.util.List;
 import org.junit.Test;
 
@@ -56,16 +57,7 @@ public class TopologicalSortTest {
     return new DirectedAcyclicGraph<>(graph);
   }
 
-  @Test
-  public void sorts() {
-    DirectedAcyclicGraph<String> graph = makeGraph();
-    ImmutableList<String> sorted = TopologicalSort.sort(graph);
-    verifySorted(graph, sorted);
-  }
-
-  public void verifySorted(
-      DirectedAcyclicGraph<String> graph, ImmutableList<? extends String> sorted) {
-    assertEquals(graph.getNodes(), ImmutableSet.copyOf(sorted));
+  public void assertTopologicallySorted(ImmutableList<? extends String> sorted) {
     assertOrdering(sorted, "B", "A");
     assertOrdering(sorted, "C", "A");
     assertOrdering(sorted, "D", "B");
@@ -76,12 +68,38 @@ public class TopologicalSortTest {
   }
 
   @Test
+  public void sorts() {
+    DirectedAcyclicGraph<String> graph = makeGraph();
+    ImmutableList<String> sorted = TopologicalSort.sort(graph);
+    assertEquals(graph.getNodes(), ImmutableSet.copyOf(sorted));
+    assertTopologicallySorted(sorted);
+  }
+
+  @Test
+  public void sortsSnowflakes() {
+    DirectedAcyclicGraph<String> graph = makeGraph();
+    ImmutableList<? extends String> sorted =
+        TopologicalSort.snowflakeSort(
+            graph.getNodesWithNoIncomingEdges(),
+            s -> graph.getOutgoingNodesFor(s).iterator(),
+            Ordering.natural());
+
+    assertEquals(graph.getNodes(), ImmutableSet.copyOf(sorted));
+    assertTopologicallySorted(sorted);
+
+    // snowflakeSort also guarantees that each "level" of leaves is sorted.
+    assertOrdering(sorted, "E", "F");
+    assertOrdering(sorted, "F", "G");
+    assertOrdering(sorted, "C", "D");
+  }
+
+  @Test
   public void sortsTraversable() {
     DirectedAcyclicGraph<String> graph = makeGraph();
     ImmutableList<? extends String> sorted =
         TopologicalSort.sort(
             graph.getNodesWithNoIncomingEdges(), s -> graph.getOutgoingNodesFor(s).iterator());
-    verifySorted(graph, sorted);
+    assertTopologicallySorted(sorted);
   }
 
   private <T> void assertOrdering(List<? extends T> list, T before, T after) {

@@ -12,9 +12,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import os
 import unittest
 
-from buck_tool import BuckToolException, CommandLineArgs
+from buck_tool import BuckToolException, CommandLineArgs, MovableTemporaryFile
 
 
 class TestCommandLineArgs(unittest.TestCase):
@@ -104,6 +105,73 @@ class TestCommandLineArgs(unittest.TestCase):
         self.assertEqual(args.buck_options, [])
         self.assertEqual(args.command_options, ["--help", "//some:cli"])
         self.assertTrue(args.is_help())
+
+
+class TestMovableTemporaryFile(unittest.TestCase):
+    def test_cleans_up_if_not_moved(self):
+        path = None
+        with MovableTemporaryFile() as f:
+            f.close()
+            path = f.name
+            self.assertTrue(os.path.exists(path))
+
+        self.assertIsNotNone(path)
+        self.assertFalse(os.path.exists(path))
+
+    def test_leaves_file_if_moved(self):
+        path = None
+        moved = None
+        with MovableTemporaryFile() as f:
+            f.close()
+            path = f.name
+            self.assertTrue(os.path.exists(path))
+            moved = f.move()
+
+        try:
+            self.assertIsNotNone(path)
+            self.assertIsNotNone(moved)
+            self.assertTrue(os.path.exists(path))
+        finally:
+            if path and os.path.exists(path):
+                os.unlink(path)
+
+    def test_cleans_up_if_moved_context_is_entered(self):
+        path = None
+        moved = None
+
+        path = None
+        moved = None
+        with MovableTemporaryFile() as f:
+            f.close()
+            path = f.name
+            self.assertTrue(os.path.exists(path))
+            moved = f.move()
+
+        try:
+            with moved as f2:
+                self.assertEquals(path, f2.file.name)
+                self.assertTrue(os.path.exists(path))
+            self.assertFalse(os.path.exists(path))
+        finally:
+            if path and os.path.exists(path):
+                os.unlink(path)
+
+    def test_close_and_name(self):
+        with MovableTemporaryFile() as f:
+            self.assertFalse(f.file.closed)
+            f.close()
+            self.assertTrue(f.file.closed)
+            self.assertEquals(f.file.name, f.name)
+
+    def test_handles_file_going_missing_while_entered(self):
+        path = None
+
+        with MovableTemporaryFile() as f:
+            f.close()
+            path = f.name
+            self.assertTrue(os.path.exists(path))
+            os.unlink(path)
+        self.assertFalse(os.path.exists(path))
 
 
 if __name__ == "__main__":

@@ -31,8 +31,10 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.util.types.Either;
@@ -61,6 +63,8 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
       new TransitiveCxxPreprocessorInputCache(this);
+  private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
+      LegacyNativeLinkableGroup.getNativeLinkableCache(this);
 
   public FakeCxxLibrary(
       BuildTarget buildTarget,
@@ -85,6 +89,11 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.sharedLibraryOutput = sharedLibraryOutput;
     this.sharedLibrarySoname = sharedLibrarySoname;
     this.tests = tests;
+  }
+
+  @Override
+  public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+    return linkableCache;
   }
 
   @Override

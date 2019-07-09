@@ -16,10 +16,14 @@
 
 package com.facebook.buck.android.toolchain;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableCollection;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Supplier;
@@ -61,7 +65,7 @@ public abstract class AbstractAndroidPlatformTarget implements Toolchain, AddsTo
   public abstract Supplier<Tool> getAaptExecutable();
 
   @Value.Parameter
-  public abstract Supplier<Tool> getAapt2Executable();
+  public abstract ToolProvider getAapt2ToolProvider();
 
   @Value.Parameter
   public abstract Path getAdbExecutable();
@@ -86,4 +90,11 @@ public abstract class AbstractAndroidPlatformTarget implements Toolchain, AddsTo
 
   @Value.Parameter
   public abstract Path getOptimizedProguardConfig();
+
+  /** Process aapt2 tool's parse dependencies and adds them to the {@code builder} */
+  @Value.Derived
+  public void addParseTimeDeps(
+      ImmutableCollection.Builder<BuildTarget> builder, TargetConfiguration targetConfiguration) {
+    builder.addAll(getAapt2ToolProvider().getParseTimeDeps(targetConfiguration));
+  }
 }

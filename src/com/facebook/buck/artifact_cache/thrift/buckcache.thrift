@@ -150,6 +150,10 @@ enum FetchResultType {
   // the requested key was looked up. The key should be requested again.
   SKIPPED = 103,
   ERROR = 104,
+  MISS_ONLY_IN_MEMCACHE = 105,
+  MISS_IN_SLA = 106,
+  MISS_OUT_SLA = 107,
+  MISS_UNKNOWN = 108,
 }
 
 struct FetchResult {

@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.config.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
@@ -35,19 +36,17 @@ import javax.annotation.Nullable;
  */
 public class SameThreadConfigurationRuleResolver implements ConfigurationRuleResolver {
 
-  private final Function<UnconfiguredBuildTargetView, TargetNode<?>> targetNodeSupplier;
-  private final ConcurrentHashMap<UnconfiguredBuildTargetView, ConfigurationRule>
-      configurationRuleIndex;
+  private final Function<BuildTarget, TargetNode<?>> targetNodeSupplier;
+  private final ConcurrentHashMap<BuildTarget, ConfigurationRule> configurationRuleIndex;
 
   public SameThreadConfigurationRuleResolver(
-      Function<UnconfiguredBuildTargetView, TargetNode<?>> targetNodeSupplier) {
+      Function<BuildTarget, TargetNode<?>> targetNodeSupplier) {
     this.targetNodeSupplier = targetNodeSupplier;
     this.configurationRuleIndex = new ConcurrentHashMap<>();
   }
 
   private ConfigurationRule computeIfAbsent(
-      UnconfiguredBuildTargetView target,
-      Function<UnconfiguredBuildTargetView, ConfigurationRule> mappingFunction) {
+      BuildTarget target, Function<BuildTarget, ConfigurationRule> mappingFunction) {
     @Nullable ConfigurationRule configurationRule = configurationRuleIndex.get(target);
     if (configurationRule != null) {
       return configurationRule;
@@ -58,11 +57,11 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
   }
 
   @Override
-  public ConfigurationRule getRule(UnconfiguredBuildTargetView buildTarget) {
+  public ConfigurationRule getRule(BuildTarget buildTarget) {
     return computeIfAbsent(buildTarget, this::createConfigurationRule);
   }
 
-  private <T> ConfigurationRule createConfigurationRule(UnconfiguredBuildTargetView buildTarget) {
+  private <T> ConfigurationRule createConfigurationRule(BuildTarget buildTarget) {
     @SuppressWarnings("unchecked")
     TargetNode<T> targetNode = (TargetNode<T>) targetNodeSupplier.apply(buildTarget);
     if (!(targetNode.getDescription() instanceof ConfigurationRuleDescription)) {

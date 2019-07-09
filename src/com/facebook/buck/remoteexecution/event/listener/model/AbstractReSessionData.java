@@ -18,6 +18,7 @@ package com.facebook.buck.remoteexecution.event.listener.model;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
+import com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy;
 import org.immutables.value.Value;
 
 /** Information specific to Remote Execution. */
@@ -30,4 +31,7 @@ interface AbstractReSessionData {
 
   @Value.Parameter
   String getReSessionLabel();
+
+  @Value.Parameter
+  ModernBuildRuleBuildStrategy getStrategy();
 }

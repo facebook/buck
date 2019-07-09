@@ -95,6 +95,19 @@ public class RustCompileTest {
     assertEquals(
         "i386-apple-ios",
         RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("iphonesimulator-i386")));
+
+    assertEquals(
+        "aarch64-linux-android",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("android-arm64")));
+    assertEquals(
+        "armv7-linux-androideabi",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("android-armv7")));
+    assertEquals(
+        "x86_64-linux-android",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("android-x86_64")));
+    assertEquals(
+        "i686-linux-android",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("android-i386")));
   }
 
   private static Tool fakeTool() {

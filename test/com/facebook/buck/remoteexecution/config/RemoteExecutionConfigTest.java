@@ -16,10 +16,14 @@
 
 package com.facebook.buck.remoteexecution.config;
 
+import static com.facebook.buck.remoteexecution.config.AbstractRemoteExecutionConfig.AUTO_RE_EXPERIMENT_PROPERTY_KEY;
+import static com.facebook.buck.remoteexecution.config.AbstractRemoteExecutionConfig.DEFAULT_AUTO_RE_EXPERIMENT_PROPERTY;
+
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
+import com.google.common.collect.ImmutableMap;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -62,6 +66,66 @@ public class RemoteExecutionConfigTest {
               + "Config [remoteexecution.ca] points to file [does_not_exist] that does not exist.",
           e.getMessage());
     }
+  }
+
+  @Test
+  public void testIsExperimentEnabled() {
+    BuckConfig configWithCustomExperimentEnabled =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "remoteexecution",
+                        ImmutableMap.of(
+                            AUTO_RE_EXPERIMENT_PROPERTY_KEY, "some_experiment_property"),
+                    "experiments", ImmutableMap.of("some_experiment_property", "true")))
+            .build();
+    RemoteExecutionConfig reConfigWithCustomExperimentEnabled =
+        configWithCustomExperimentEnabled.getView(RemoteExecutionConfig.class);
+    Assert.assertTrue(reConfigWithCustomExperimentEnabled.isExperimentEnabled());
+
+    BuckConfig configWithCustomExperimentDisabled =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "remoteexecution",
+                        ImmutableMap.of(
+                            AUTO_RE_EXPERIMENT_PROPERTY_KEY, "some_experiment_property"),
+                    "experiments", ImmutableMap.of("some_experiment_property", "false")))
+            .build();
+    RemoteExecutionConfig reConfigWithCustomExperimentDisabled =
+        configWithCustomExperimentDisabled.getView(RemoteExecutionConfig.class);
+    Assert.assertFalse(reConfigWithCustomExperimentDisabled.isExperimentEnabled());
+
+    BuckConfig configWithCustomExperimentNotSet =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "remoteexecution",
+                    ImmutableMap.of(AUTO_RE_EXPERIMENT_PROPERTY_KEY, "some_experiment_property")))
+            .build();
+    RemoteExecutionConfig reConfigWithCustomExperimentNotSet =
+        configWithCustomExperimentNotSet.getView(RemoteExecutionConfig.class);
+    Assert.assertFalse(reConfigWithCustomExperimentNotSet.isExperimentEnabled());
+
+    BuckConfig configWithDefaultExperimentEnabled =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "experiments", ImmutableMap.of(DEFAULT_AUTO_RE_EXPERIMENT_PROPERTY, "true")))
+            .build();
+    RemoteExecutionConfig reConfigWithDefaultExperimentEnabled =
+        configWithDefaultExperimentEnabled.getView(RemoteExecutionConfig.class);
+    Assert.assertTrue(reConfigWithDefaultExperimentEnabled.isExperimentEnabled());
+
+    BuckConfig configWithDefaultExperimentDisabled =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "experiments", ImmutableMap.of(DEFAULT_AUTO_RE_EXPERIMENT_PROPERTY, "false")))
+            .build();
+    RemoteExecutionConfig reConfigWithDefaultExperimentDisabled =
+        configWithDefaultExperimentDisabled.getView(RemoteExecutionConfig.class);
+    Assert.assertFalse(reConfigWithDefaultExperimentDisabled.isExperimentEnabled());
   }
 
   @Test

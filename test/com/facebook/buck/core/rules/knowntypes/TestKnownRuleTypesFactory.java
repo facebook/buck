@@ -27,13 +27,13 @@ import org.pf4j.PluginManager;
 
 public class TestKnownRuleTypesFactory {
 
-  public static KnownRuleTypes create(
+  public static KnownNativeRuleTypes create(
       BuckConfig config, ToolchainProvider toolchainProvider, ProcessExecutor processExecutor) {
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
 
     SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory =
         new TestSandboxExecutionStrategyFactory();
-    return KnownRuleTypes.of(
+    return KnownNativeRuleTypes.of(
         KnownBuildRuleDescriptionsFactory.createBuildDescriptions(
             config,
             processExecutor,

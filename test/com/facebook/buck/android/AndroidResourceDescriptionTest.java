@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -33,6 +34,8 @@ import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -98,6 +101,7 @@ public class AndroidResourceDescriptionTest {
 
     AndroidResourceDescription description =
         new AndroidResourceDescription(
+            createToolchainProviderForAndroidResource(),
             new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()));
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot().toPath());
@@ -115,6 +119,13 @@ public class AndroidResourceDescriptionTest {
                 FakeSourcePath.of(filesystem, "res/_file"),
                 Paths.get("dirs/values/strings.xml"),
                 FakeSourcePath.of(filesystem, "res/dirs/values/strings.xml"))));
+  }
+
+  private static ToolchainProvider createToolchainProviderForAndroidResource() {
+    return new ToolchainProviderBuilder()
+        .withToolchain(
+            AndroidPlatformTarget.DEFAULT_NAME, AndroidTestUtils.createAndroidPlatformTarget())
+        .build();
   }
 
   @Test

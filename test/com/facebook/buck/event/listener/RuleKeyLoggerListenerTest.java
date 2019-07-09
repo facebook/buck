@@ -152,6 +152,11 @@ public class RuleKeyLoggerListenerTest {
   private RuleKeyLoggerListener newInstance(
       TaskManagerCommandScope managerScope, int minLinesForAutoFlush) {
     return new RuleKeyLoggerListener(
-        projectFilesystem, info, outputExecutor, managerScope, minLinesForAutoFlush);
+        projectFilesystem,
+        info,
+        outputExecutor,
+        managerScope,
+        Optional.empty(),
+        minLinesForAutoFlush);
   }
 }

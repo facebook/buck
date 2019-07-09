@@ -54,6 +54,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.ForkJoinPool;
 import java.util.regex.Pattern;
@@ -372,8 +373,9 @@ public class PythonLibraryDescriptionTest {
     cxxBuilder.build(graphBuilder);
     libBuilder.build(graphBuilder);
     PythonBinary binary = binaryBuilder.build(graphBuilder);
+    ImmutableSortedSet<Path> nativeLibs = binary.getComponents().getNativeLibraries().keySet();
     assertThat(
-        Iterables.transform(binary.getComponents().getNativeLibraries().keySet(), Object::toString),
+        Iterables.transform(nativeLibs, Object::toString),
         Matchers.containsInAnyOrder("libdep.so", "libcxx.so"));
   }
 }

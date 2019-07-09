@@ -7,8 +7,10 @@ java_test(
     ),
     deps = [
         "//src/com/facebook/buck/core/cell/impl:impl",
+        "//src/com/facebook/buck/core/model/platform/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/analysis/impl:impl",
+        "//src/com/facebook/buck/core/rules/config/registry/impl:impl",
         "//src/com/facebook/buck/core/rules/providers/impl:impl",
         "//src/com/facebook/buck/core/rules/transformer/impl:impl",
         "//src/com/facebook/buck/rules/coercer:coercer",

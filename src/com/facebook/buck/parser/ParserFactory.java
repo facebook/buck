@@ -16,7 +16,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.manifestservice.ManifestService;

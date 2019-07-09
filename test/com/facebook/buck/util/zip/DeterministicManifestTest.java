@@ -16,13 +16,16 @@
 
 package com.facebook.buck.util.zip;
 
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertArrayEquals;
 
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -136,6 +139,10 @@ public class DeterministicManifestTest {
 
   @Test
   public void testLinesSplitLikeJavaImpl() throws IOException {
+    // TODO(jtorkkola): Re-enable and change behavior of {@link DeterministicManifest} to match new
+    //  behavior {@link java.util.jar.Manifest} once Java 11 migration is complete.
+    Assume.assumeThat(JavaVersion.getMajorVersion(), lessThanOrEqualTo(8));
+
     String entryName = "test";
     String key = "12345678";
     String value =

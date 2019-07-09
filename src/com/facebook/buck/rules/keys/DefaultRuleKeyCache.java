@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -65,8 +66,8 @@ public class DefaultRuleKeyCache<V> implements TrackableRuleKeyCache<V> {
 
   private <K> V calculateNode(K node, Function<K, RuleKeyResult<V>> create) {
     Preconditions.checkArgument(
-        node instanceof BuildRule || node instanceof AddsToRuleKey,
-        "%s must be one of either a `BuildRule` or `AddsToRuleKey`",
+        node instanceof BuildEngineAction || node instanceof AddsToRuleKey,
+        "%s must be one of either a `BuildEngineAction` or `AddsToRuleKey`",
         node.getClass());
 
     RuleKeyResult<V> result = create.apply(node);
@@ -121,9 +122,9 @@ public class DefaultRuleKeyCache<V> implements TrackableRuleKeyCache<V> {
 
   @Nullable
   @Override
-  public V get(BuildRule rule, CacheStatsTracker statsTracker) {
+  public V get(BuildEngineAction action, CacheStatsTracker statsTracker) {
     CacheStatsTracker.CacheRequest request = statsTracker.startRequest();
-    Node<Object, V> node = cache.get(new IdentityWrapper<Object>(rule));
+    Node<Object, V> node = cache.get(new IdentityWrapper<Object>(action));
     if (node != null && node.value != null) {
       request.recordHit();
       return Objects.requireNonNull(node.value).get();
@@ -134,10 +135,10 @@ public class DefaultRuleKeyCache<V> implements TrackableRuleKeyCache<V> {
 
   @Override
   public V get(
-      BuildRule rule,
-      Function<? super BuildRule, RuleKeyResult<V>> create,
+      BuildEngineAction action,
+      Function<? super BuildEngineAction, RuleKeyResult<V>> create,
       CacheStatsTracker statsTracker) {
-    return getNode(rule, create, statsTracker);
+    return getNode(action, create, statsTracker);
   }
 
   @Override
@@ -153,7 +154,7 @@ public class DefaultRuleKeyCache<V> implements TrackableRuleKeyCache<V> {
   }
 
   @VisibleForTesting
-  boolean isCached(BuildRule rule) {
+  boolean isCached(BuildEngineAction rule) {
     return isCachedNode(rule);
   }
 

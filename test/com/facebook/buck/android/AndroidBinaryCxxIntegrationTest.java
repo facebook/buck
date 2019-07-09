@@ -16,6 +16,9 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertThat;
+
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -257,5 +260,77 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
     String target = "//apps/sample:app_cxx_lib_dep";
     workspace.addBuckConfigLocalOption("ndk", "use_unified_headers", "true");
     workspace.runBuckCommand("build", target).assertSuccess();
+  }
+
+  @Test
+  public void testCxxLibraryDepWithConstraints() throws IOException {
+    String target = "//apps/sample:app_cxx_lib_dep_with_constraints";
+    workspace
+        .runBuckCommand("build", target, "--target-platforms", "//:android-x86_64-arm")
+        .assertSuccess();
+
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(
+                BuildTargetPaths.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib-with-platform-deps.so");
+    zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libnative_cxx_x86-only-2.so");
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_lib-with-platform-deps.so");
+    zipInspector.assertFileExists("lib/x86/libnative_cxx_x86-only-2.so");
+    if (AssumeAndroidPlatform.isGnuStlAvailable()) {
+      zipInspector.assertFileExists("lib/armeabi-v7a/libgnustl_shared.so");
+      zipInspector.assertFileExists("lib/x86/libgnustl_shared.so");
+    } else {
+      zipInspector.assertFileExists("lib/armeabi-v7a/libc++_shared.so");
+      zipInspector.assertFileExists("lib/x86/libc++_shared.so");
+    }
+  }
+
+  @Test
+  public void cannotBuildBinaryWithAndroidPlatformAndWithoutCpuMap() {
+    String target = "//apps/sample:app_cxx_lib_dep_with_constraints_without_cpu_map";
+    ProcessResult result =
+        workspace.runBuckCommand("build", target, "--target-platforms", "//:android-x86_64-arm");
+
+    result.assertFailure();
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "//apps/sample:app_cxx_lib_dep_with_constraints_without_cpu_map "
+                + "is missing information about constraint for ARMV7 CPU type in "
+                + "target_cpu_type_to_constraint"));
+  }
+
+  @Test
+  public void cannotBuildBinaryWhenMultipleNativePlatformsMatchingConstraint() {
+    String target = "//apps/sample:app_cxx_lib_dep_with_constraints";
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "build", target, "--target-platforms", "//:android-x86_64-arm-armv7");
+
+    result.assertFailure();
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "//apps/sample:app_cxx_lib_dep_with_constraints "
+                + "contains ambiguous information in target_cpu_type_to_constraint: "
+                + "buck//config/constraints:arm matches both //:android-arm and //:android-armv7"));
+  }
+
+  @Test
+  public void cannotBuildBinaryWhenCpuTypeDoesNotMatchNativePlatforms() {
+    String target = "//apps/sample:app_cxx_lib_dep_with_constraints";
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "build", target, "--target-platforms", "//:android-platform-x86_64");
+
+    result.assertFailure();
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "//apps/sample:app_cxx_lib_dep_with_constraints "
+                + "contains incomplete information in target_cpu_type_to_constraint: "
+                + "buck//config/constraints:arm does not match native platforms [//:android-x86_64]"));
   }
 }

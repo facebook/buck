@@ -26,7 +26,7 @@ import org.immutables.value.Value;
 @Value.Immutable(copy = false, intern = true)
 @BuckStyleImmutable
 @JsonDeserialize
-abstract class AbstractRuleType {
+public abstract class AbstractRuleType {
 
   /** The kind of a rule type. */
   public enum Kind {

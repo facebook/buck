@@ -214,6 +214,7 @@ public class DelegateAndGraphsInitializer {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
+            typeCoercerFactory,
             args.getKnownRuleTypesProvider(),
             new DefaultConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(

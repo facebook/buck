@@ -16,29 +16,30 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.BuildRule;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
 public interface RuleKeyFactory<RULE_KEY> {
 
   /**
-   * Creates a new {@code RULE_KEY} for the given {@link BuildRule}. In most cases {@code RULE_KEY}
-   * is going to be {@link RuleKey}, but it can be anything really.
+   * Creates a new {@code RULE_KEY} for the given {@link BuildEngineAction}. In most cases {@code
+   * RULE_KEY} is going to be {@link RuleKey}, but it can be anything really.
    *
-   * @param buildRule The build rule to create the key for.
+   * @param action The build rule to create the key for.
    * @return A rule key.
    */
-  RULE_KEY build(BuildRule buildRule);
+  RULE_KEY build(BuildEngineAction action);
 
   /**
    * Returns a {@code RULE_KEY} from an internal cache, if possible. If a non-null value is
    * returned, it is guaranteed to be he same as if {@link #build} were called instead.
+   *
+   * @param action
    */
   @Nullable
-  @SuppressWarnings("unused")
-  default RULE_KEY getFromCache(BuildRule buildRule) {
+  default RULE_KEY getFromCache(BuildEngineAction action) {
     return null;
   }
 

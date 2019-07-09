@@ -239,7 +239,8 @@ public class AndroidAarDescription
             Optional.empty(),
             args.isEnableRelinker() ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
             ImmutableList.of(),
-            apkModuleGraph);
+            apkModuleGraph,
+            new NoopAndroidNativeTargetConfigurationMatcher());
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> nativeLibrariesOptional =
         packageableGraphEnhancer.enhance(packageableCollection).getCopyNativeLibraries();
     Optional<CopyNativeLibraries> rootModuleCopyNativeLibraries =

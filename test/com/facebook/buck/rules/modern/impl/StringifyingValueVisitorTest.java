@@ -207,6 +207,19 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
 
   @Test
   @Override
+  public void buildTargetWithConfigurationForConfigurationTargets() {
+    assertEquals(
+        "target:path($OTHER$)Optional<\n"
+            + "  string(other)\n"
+            + ">string(//some)string(target)SortedSet<\n"
+            + "  string(flavor1)\n"
+            + "  string(flavor2)\n"
+            + ">configuration<configurationTarget>",
+        stringify(new WithBuildTargetWithConfigurationForConfigurationTargets()));
+  }
+
+  @Test
+  @Override
   public void buildTargetWithHostConfiguration() {
     assertEquals(
         "target:path($OTHER$)Optional<\n"

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -25,6 +26,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -910,6 +912,11 @@ abstract class AbstractCxxSourceRuleFactory {
     }
 
     @Override
+    protected AbstractRuleKeyBuilder<String> setAction(Action action) {
+      throw new IllegalStateException();
+    }
+
+    @Override
     protected HashBuilder setBuildRule(BuildRule rule) {
       throw new IllegalStateException();
     }
@@ -918,6 +925,11 @@ abstract class AbstractCxxSourceRuleFactory {
     protected HashBuilder setAddsToRuleKey(AddsToRuleKey appendable) {
       hasher.putString(commandHashCache.apply(appendable));
       return this;
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<String> setArtifact(Artifact artifact) {
+      return setSourcePath(artifact.asBound().getSourcePath());
     }
 
     @Override

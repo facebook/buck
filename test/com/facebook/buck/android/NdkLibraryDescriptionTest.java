@@ -29,8 +29,10 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -40,13 +42,20 @@ import org.junit.Test;
 public class NdkLibraryDescriptionTest {
 
   private static class FakeNativeLinkableGroup extends FakeBuildRule
-      implements NativeLinkableGroup {
+      implements LegacyNativeLinkableGroup {
 
     private final SourcePath input;
+    private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
+        LegacyNativeLinkableGroup.getNativeLinkableCache(this);
 
     public FakeNativeLinkableGroup(String target, SourcePath input, BuildRule... deps) {
       super(target, deps);
       this.input = input;
+    }
+
+    @Override
+    public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+      return linkableCache;
     }
 
     @Override

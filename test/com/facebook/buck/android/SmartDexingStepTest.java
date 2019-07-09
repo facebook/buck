@@ -24,6 +24,7 @@ import com.facebook.buck.android.SmartDexingStep.DxPseudoRule;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -300,7 +301,7 @@ public class SmartDexingStepTest {
         Paths.get(""),
         Collections.emptyList(),
         () -> new SimpleTool(""),
-        () -> new SimpleTool(""),
+        new ConstantToolProvider(new SimpleTool("")),
         Paths.get(""),
         Paths.get(""),
         Paths.get(""),

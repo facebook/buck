@@ -46,6 +46,15 @@ abstract class AbstractToolConfig implements ConfigView<BuckConfig> {
    *     given section:field, if set.
    */
   public Optional<ToolProvider> getToolProvider(String section, String field) {
+    return getToolProvider(section, field, Paths::get);
+  }
+
+  /**
+   * @return a {@link Tool} identified by a @{link BuildTarget} or {@link Path} reference by the
+   *     given section:field, if set.
+   */
+  public Optional<ToolProvider> getToolProvider(
+      String section, String field, Function<String, Path> valueToPathMapper) {
     Optional<String> value = getDelegate().getValue(section, field);
     if (!value.isPresent()) {
       return Optional.empty();
@@ -56,7 +65,7 @@ abstract class AbstractToolConfig implements ConfigView<BuckConfig> {
       return Optional.of(
           new BinaryBuildRuleToolProvider(target.get(), String.format("[%s] %s", section, field)));
     } else {
-      return getPrebuiltTool(section, field, Paths::get).map(ConstantToolProvider::new);
+      return getPrebuiltTool(section, field, valueToPathMapper).map(ConstantToolProvider::new);
     }
   }
 

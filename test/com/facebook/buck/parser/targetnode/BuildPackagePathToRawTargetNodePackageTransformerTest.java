@@ -24,6 +24,8 @@ import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironme
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
+import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -53,8 +55,10 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
     Cell cell = new TestCellBuilder().build();
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    TargetPlatformResolver targetPlatformResolver = configuration -> EmptyPlatform.INSTANCE;
     RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
         new RawTargetNodeToTargetNodeFactory(
+            typeCoercerFactory,
             TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager()),
             new DefaultConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory),
@@ -62,7 +66,8 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
             (file, targetNode) -> {},
             new DefaultSelectorListResolver(new TestSelectableResolver()),
             new ThrowingConstraintResolver(),
-            configuration -> EmptyPlatform.INSTANCE);
+            targetPlatformResolver,
+            new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver));
 
     ImmutableMap<String, Object> rawAttributes1 =
         ImmutableMap.of(

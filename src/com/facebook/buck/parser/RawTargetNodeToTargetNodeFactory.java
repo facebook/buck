@@ -20,20 +20,26 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
+import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Function;
@@ -41,6 +47,7 @@ import java.util.function.Function;
 /** Creates {@link TargetNode} from {@link RawTargetNode}. */
 public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory<RawTargetNode> {
 
+  private final TypeCoercerFactory typeCoercerFactory;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final ConstructorArgMarshaller marshaller;
   private final TargetNodeFactory targetNodeFactory;
@@ -49,8 +56,10 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
   private final SelectorListResolver selectorListResolver;
   private final ConstraintResolver constraintResolver;
   private final TargetPlatformResolver targetPlatformResolver;
+  private final TargetConfigurationTransformer targetConfigurationTransformer;
 
   public RawTargetNodeToTargetNodeFactory(
+      TypeCoercerFactory typeCoercerFactory,
       KnownRuleTypesProvider knownRuleTypesProvider,
       ConstructorArgMarshaller marshaller,
       TargetNodeFactory targetNodeFactory,
@@ -58,7 +67,9 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
       TargetNodeListener<TargetNode<?>> nodeListener,
       SelectorListResolver selectorListResolver,
       ConstraintResolver constraintResolver,
-      TargetPlatformResolver targetPlatformResolver) {
+      TargetPlatformResolver targetPlatformResolver,
+      TargetConfigurationTransformer targetConfigurationTransformer) {
+    this.typeCoercerFactory = typeCoercerFactory;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.marshaller = marshaller;
     this.targetNodeFactory = targetNodeFactory;
@@ -67,6 +78,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
     this.selectorListResolver = selectorListResolver;
     this.constraintResolver = constraintResolver;
     this.targetPlatformResolver = targetPlatformResolver;
+    this.targetConfigurationTransformer = targetConfigurationTransformer;
   }
 
   @Override
@@ -77,8 +89,9 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
       RawTargetNode rawTargetNode,
       Function<PerfEventId, Scope> perfEventScope) {
 
-    BaseDescription<?> description =
-        knownRuleTypesProvider.get(cell).getDescription(rawTargetNode.getRuleType());
+    KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
+    RuleType ruleType = rawTargetNode.getRuleType();
+    BaseDescription<?> description = knownRuleTypes.getDescription(ruleType);
     Cell targetCell = cell.getCell(target);
 
     SelectableConfigurationContext configurationContext =
@@ -88,22 +101,30 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
             target.getTargetConfiguration(),
             targetPlatformResolver);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
+    ImmutableSortedSet.Builder<BuildTarget> configurationDeps = ImmutableSortedSet.naturalOrder();
     Object constructorArg;
     try (SimplePerfEvent.Scope scope =
         perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg.convertRawAttributes"))) {
+      ConstructorArgBuilder<?> builder =
+          knownRuleTypes.getConstructorArgBuilder(
+              typeCoercerFactory, ruleType, description.getConstructorArgType(), target);
       constructorArg =
           marshaller.populateWithConfiguringAttributes(
               targetCell.getCellPathResolver(),
               targetCell.getFilesystem(),
               selectorListResolver,
+              targetConfigurationTransformer,
               configurationContext,
               target,
-              description.getConstructorArgType(),
+              builder,
               declaredDeps,
+              configurationDeps,
               rawTargetNode.getAttributes());
     } catch (CoerceFailedException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }
+
+    configurationDeps.addAll(target.getTargetConfiguration().getConfigurationTargets());
 
     TargetNode<?> targetNode =
         targetNodeFactory.createFromObject(
@@ -112,6 +133,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
             targetCell.getFilesystem(),
             target,
             declaredDeps.build(),
+            configurationDeps.build(),
             rawTargetNode.getVisibilityPatterns(),
             rawTargetNode.getWithinViewPatterns(),
             targetCell.getCellPathResolver());

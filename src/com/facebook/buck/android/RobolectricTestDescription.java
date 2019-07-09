@@ -227,6 +227,7 @@ public class RobolectricTestDescription
         args.getLabels(),
         args.getContacts(),
         TestType.JUNIT,
+        javacOptions.getLanguageLevelOptions().getTargetLevel(),
         vmArgs,
         cxxLibraryEnhancement.nativeLibsEnvironment,
         dummyRDotJava,

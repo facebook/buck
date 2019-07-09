@@ -36,6 +36,7 @@ import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Suppliers;
@@ -49,7 +50,6 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.StringWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -451,7 +451,7 @@ public class QueryCommand extends AbstractCommand {
       BuckQueryEnvironment env,
       Set<QueryTarget> queryResult,
       PrintStream printStream)
-      throws QueryException {
+      throws QueryException, IOException {
     if (shouldOutputAttributes()) {
       collectAndPrintAttributesAsJson(params, env, queryResult, outputAttributes(), printStream);
     } else {
@@ -502,7 +502,7 @@ public class QueryCommand extends AbstractCommand {
       BuckQueryEnvironment env,
       Set<QueryBuildTarget> queryResult,
       PrintStream printStream)
-      throws QueryException {
+      throws QueryException, IOException {
     Map<TargetNode<?>, Integer> ranks =
         computeRanks(env.getTargetGraph(), env.getNodesFromQueryTargets(queryResult)::contains);
 
@@ -637,21 +637,21 @@ public class QueryCommand extends AbstractCommand {
       Set<QueryTarget> queryResult,
       ImmutableSet<String> attributes,
       PrintStream printStream)
-      throws QueryException {
+      throws QueryException, IOException {
     printAttributesAsJson(collectAttributes(params, env, queryResult, attributes), printStream);
   }
 
   private static <T extends SortedMap<String, Object>> void printAttributesAsJson(
-      ImmutableSortedMap<String, T> result, PrintStream printStream) {
-    StringWriter stringWriter = new StringWriter();
-    try {
-      ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, result);
-    } catch (IOException e) {
-      // Shouldn't be possible while writing to a StringWriter...
-      throw new RuntimeException(e);
-    }
-    String output = stringWriter.getBuffer().toString();
-    printStream.println(output);
+      ImmutableSortedMap<String, T> result, PrintStream printStream) throws IOException {
+    ObjectMappers.WRITER
+        .withDefaultPrettyPrinter()
+        // Jackson closes stream by default - we do not want it
+        .without(JsonGenerator.Feature.AUTO_CLOSE_TARGET)
+        .writeValue(printStream, result);
+
+    // Jackson does not append a newline after final closing bracket. Do it to make JSON look
+    // nice on console.
+    printStream.println();
   }
 
   private static ImmutableSortedMap<String, SortedMap<String, Object>> collectAttributes(

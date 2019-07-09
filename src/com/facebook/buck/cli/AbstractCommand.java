@@ -33,9 +33,9 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.parser.BuildTargetMatcherTargetNodeParser;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.TargetNodeSpec;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.EventPostingRuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
@@ -177,6 +177,20 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       forbids = {GlobalCliOptions.CONFIG_LONG_ARG, GlobalCliOptions.CONFIG_FILE_LONG_ARG})
   private boolean reuseCurrentConfig = false;
 
+  @Nullable
+  @Option(
+      name = GlobalCliOptions.COMMAND_ARGS_FILE_LONG_ARG,
+      usage = GlobalCliOptions.COMMAND_ARGS_FILE_HELP,
+      hidden = true)
+  protected String commandArgsFile;
+
+  @Nullable
+  @Option(
+      name = GlobalCliOptions.FIX_SPEC_FILE_LONG_ARG,
+      usage = GlobalCliOptions.FIX_SPEC_FILE_HELP,
+      hidden = true)
+  protected String fixSpecFile;
+
   /** @return {code true} if the {@code [cache]} in {@code .buckconfig} should be ignored. */
   public boolean isNoCache() {
     return noCache;
@@ -184,6 +198,16 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
 
   public boolean isReuseCurrentConfig() {
     return reuseCurrentConfig;
+  }
+
+  @Nullable
+  public String getCommandArgsFile() {
+    return commandArgsFile;
+  }
+
+  @Nullable
+  public String getFixSpecFile() {
+    return fixSpecFile;
   }
 
   public Optional<Path> getEventsOutputPath() {

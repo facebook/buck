@@ -15,8 +15,10 @@
  */
 package com.facebook.buck.core.model.impl;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value.Immutable;
 import org.immutables.value.Value.Parameter;
 
@@ -25,5 +27,11 @@ import org.immutables.value.Value.Parameter;
 public abstract class DefaultTargetConfiguration implements TargetConfiguration {
 
   @Parameter
-  public abstract UnconfiguredBuildTargetView getTargetPlatform();
+  public abstract BuildTarget getTargetPlatform();
+
+  @JsonIgnore
+  @Override
+  public ImmutableSet<BuildTarget> getConfigurationTargets() {
+    return ImmutableSet.of(getTargetPlatform());
+  }
 }

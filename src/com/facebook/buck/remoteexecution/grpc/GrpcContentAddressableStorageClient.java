@@ -37,6 +37,11 @@ import java.util.List;
 
 /** Implementation of a CAS client using GRPC. */
 public class GrpcContentAddressableStorageClient implements ContentAddressedStorageClient {
+
+  private static final int SIZE_LIMIT = 10 * 1024 * 1024; // 10MB
+  private static final int FIND_MISSING_CHECK_LIMIT = 1000;
+  private static final int EXECUTOR_THREADS = 4;
+
   private final MultiThreadedBlobUploader uploader;
   private final OutputsMaterializer outputsMaterializer;
   private final GrpcAsyncBlobFetcher fetcher;
@@ -44,20 +49,34 @@ public class GrpcContentAddressableStorageClient implements ContentAddressedStor
   public GrpcContentAddressableStorageClient(
       ContentAddressableStorageFutureStub storageStub,
       ByteStreamStub byteStreamStub,
+      int casDeadline,
       String instanceName,
       Protocol protocol,
       BuckEventBus buckEventBus,
       RemoteExecutionMetadata metadata) {
     this.uploader =
         new MultiThreadedBlobUploader(
-            1000,
-            10 * 1024 * 1024,
-            MostExecutors.newMultiThreadExecutor("blob-uploader", 4),
+            FIND_MISSING_CHECK_LIMIT,
+            SIZE_LIMIT,
+            MostExecutors.newMultiThreadExecutor("blob-uploader", EXECUTOR_THREADS),
             new GrpcCasBlobUploader(
                 instanceName, storageStub, byteStreamStub, buckEventBus, metadata));
 
-    this.fetcher = new GrpcAsyncBlobFetcher(instanceName, byteStreamStub, buckEventBus, metadata);
-    this.outputsMaterializer = new OutputsMaterializer(fetcher, protocol);
+    this.fetcher =
+        new GrpcAsyncBlobFetcher(
+            instanceName,
+            storageStub,
+            byteStreamStub,
+            buckEventBus,
+            metadata,
+            protocol,
+            casDeadline);
+    this.outputsMaterializer =
+        new OutputsMaterializer(
+            SIZE_LIMIT,
+            MostExecutors.newMultiThreadExecutor("output-materializer", EXECUTOR_THREADS),
+            fetcher,
+            protocol);
   }
 
   @Override

@@ -55,7 +55,12 @@ public class TestRemoteExecutionClients implements RemoteExecutionClients {
 
     clients =
         new GrpcRemoteExecutionClients(
-            "buck", channel, channel, MetadataProviderFactory.emptyMetadataProvider(), eventBus);
+            "buck",
+            channel,
+            channel,
+            100,
+            MetadataProviderFactory.emptyMetadataProvider(),
+            eventBus);
   }
 
   @Override

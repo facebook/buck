@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -34,11 +35,11 @@ import javax.annotation.Nullable;
 public interface TrackableRuleKeyCache<V> {
 
   @Nullable
-  V get(BuildRule rule, CacheStatsTracker statsTracker);
+  V get(BuildEngineAction action, CacheStatsTracker statsTracker);
 
   V get(
-      BuildRule rule,
-      Function<? super BuildRule, RuleKeyResult<V>> create,
+      BuildEngineAction rule,
+      Function<? super BuildEngineAction, RuleKeyResult<V>> create,
       CacheStatsTracker statsTracker);
 
   V get(

@@ -18,8 +18,9 @@ package com.facebook.buck.core.rules.platform;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.collect.ImmutableSortedSet;
@@ -36,8 +37,7 @@ public class RuleBasedPlatformResolverTest {
   @Test
   public void requestingPlatformForWrongTypeThrowsException() {
 
-    UnconfiguredBuildTargetView constraint =
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:setting");
+    BuildTarget constraint = BuildTargetFactory.newInstance("//constraint:setting");
     RuleBasedPlatformResolver resolver =
         new RuleBasedPlatformResolver(
             target -> new ConstraintSettingRule(constraint, "setting", Optional.empty()),
@@ -53,12 +53,12 @@ public class RuleBasedPlatformResolverTest {
   @Test
   public void requestingPlatformForPlatformRuleCreatesPlatform() {
 
-    UnconfiguredBuildTargetView platformTarget =
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//platform:platform");
-    UnconfiguredBuildTargetView constraintValue =
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:value");
-    UnconfiguredBuildTargetView constraintSetting =
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:setting");
+    BuildTarget platformTarget =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//platform:platform");
+    BuildTarget constraintValue =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:value");
+    BuildTarget constraintSetting =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
 
     ConfigurationRuleResolver configurationRuleResolver =
         buildTarget -> {
@@ -73,7 +73,7 @@ public class RuleBasedPlatformResolverTest {
             return new ConstraintValueRule(constraintValue, "value", constraintSetting);
           }
           if (buildTarget.equals(constraintSetting)) {
-            return new ConstraintSettingRule(constraintValue, "value", Optional.empty());
+            return new ConstraintSettingRule(constraintSetting, "value", Optional.empty());
           }
           throw new IllegalArgumentException("Invalid build target: " + buildTarget);
         };

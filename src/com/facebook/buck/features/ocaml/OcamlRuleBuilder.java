@@ -38,8 +38,10 @@ import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
@@ -56,6 +58,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -171,16 +174,23 @@ public class OcamlRuleBuilder {
       ActionGraphBuilder graphBuilder,
       TargetConfiguration targetConfiguration,
       Iterable<BuildRule> deps) {
-    return NativeLinkableGroups.getTransitiveNativeLinkableInput(
-        platform.getCxxPlatform(),
+    // Get the topologically sorted native linkables.
+    ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
+        NativeLinkableGroups.getNativeLinkableRoots(
+            deps,
+            (Function<? super BuildRule, Optional<Iterable<? extends BuildRule>>>)
+                r ->
+                    r instanceof OcamlLibrary
+                        ? Optional.of(
+                            ((OcamlLibrary) r).getOcamlLibraryDeps(graphBuilder, platform))
+                        : Optional.empty());
+
+    return NativeLinkables.getTransitiveNativeLinkableInput(
         graphBuilder,
         targetConfiguration,
-        deps,
-        Linker.LinkableDepType.STATIC,
-        r ->
-            r instanceof OcamlLibrary
-                ? Optional.of(((OcamlLibrary) r).getOcamlLibraryDeps(graphBuilder, platform))
-                : Optional.empty());
+        Iterables.transform(
+            roots.values(), g -> g.getNativeLinkable(platform.getCxxPlatform(), graphBuilder)),
+        Linker.LinkableDepType.STATIC);
   }
 
   static OcamlBuild createBulkCompileRule(

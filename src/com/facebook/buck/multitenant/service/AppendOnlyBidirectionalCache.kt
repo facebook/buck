@@ -16,8 +16,9 @@
 
 package com.facebook.buck.multitenant.service
 
-import it.unimi.dsi.fastutil.ints.IntIterator
+import it.unimi.dsi.fastutil.ints.IntIterable
 import java.util.ArrayList
+import java.util.HashSet
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import javax.annotation.concurrent.GuardedBy
@@ -64,21 +65,35 @@ internal class AppendOnlyBidirectionalCache<K> {
     }
 
     /**
-     * Batch operation to add the reverse mapping of each index in `indexes` to the specified
-     * `destination`. This is preferable to running [getByIndex] in a loop because it only takes the
-     * read lock on the reverse index once.
+     * Maps each index in `iterable` to the corresponding value and adds it to a [Set].
      */
-    fun addAllByIndex(indexes: Sequence<Int>, destination: MutableCollection<K>) {
-        lock.read {
-            indexes.mapTo(destination) { reverse[it] }
+    fun resolveIndexes(iterable: Iterable<Int>): Set<K> {
+        val destination: HashSet<K> = if (iterable is java.util.Collection<*>) {
+            HashSet(iterable.size())
+        } else {
+            HashSet()
         }
+
+        resolveIndexes(iterable, destination)
+        return destination
     }
 
-    fun addAllByIndex(indexes: IntIterator, destination: MutableCollection<K>) {
-        lock.read {
-            while (indexes.hasNext()) {
-                val value = reverse[indexes.nextInt()]
-                destination.add(value)
+    /**
+     * Maps each index in `iterable` to the corresponding value and adds it to `destination`.
+     */
+    fun resolveIndexes(iterable: Iterable<Int>, destination: MutableCollection<K>) {
+        // Note that this takes advantage of it.unimi.dsi.fastutil, if appropriate.
+        if (iterable is IntIterable) {
+            val indexes = iterable.iterator()
+            lock.read {
+                while (indexes.hasNext()) {
+                    val value = reverse[indexes.nextInt()]
+                    destination.add(value)
+                }
+            }
+        } else {
+            lock.read {
+                iterable.mapTo(destination) { reverse[it] }
             }
         }
     }

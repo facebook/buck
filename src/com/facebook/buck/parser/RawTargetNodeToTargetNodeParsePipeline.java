@@ -29,6 +29,7 @@ import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;

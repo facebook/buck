@@ -43,6 +43,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -53,9 +54,11 @@ import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -65,6 +68,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -228,17 +232,23 @@ public class RustCompileUtils {
     // it's either an executable, or a native library that C/C++ can link with. Rust DYLIBs
     // also need all dependencies available.
     if (crateType.needAllDeps()) {
-      ImmutableList<Arg> nativeArgs =
-          NativeLinkableGroups.getTransitiveNativeLinkableInput(
-                  cxxPlatform,
-                  graphBuilder,
-                  target.getTargetConfiguration(),
-                  ruledeps,
-                  depType,
+      // Get the topologically sorted native linkables.
+      ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
+          NativeLinkableGroups.getNativeLinkableRoots(
+              ruledeps,
+              (Function<? super BuildRule, Optional<Iterable<? extends BuildRule>>>)
                   r ->
                       r instanceof RustLinkable
                           ? Optional.of(((RustLinkable) r).getRustLinakbleDeps(rustPlatform))
-                          : Optional.empty())
+                          : Optional.empty());
+
+      ImmutableList<Arg> nativeArgs =
+          NativeLinkables.getTransitiveNativeLinkableInput(
+                  graphBuilder,
+                  target.getTargetConfiguration(),
+                  Iterables.transform(
+                      roots.values(), g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
+                  depType)
               .getArgs();
 
       // Add necessary rpaths if we're dynamically linking with things
@@ -654,27 +664,45 @@ public class RustCompileUtils {
     }
 
     String platform = parts.get(0);
-    if (!platform.equals(ApplePlatform.IPHONEOS.getName())
-        && !platform.equals(ApplePlatform.IPHONESIMULATOR.getName())) {
-      return null;
-    }
-
-    // This is according to https://forge.rust-lang.org/platform-support.html
     String rawArch = parts.get(1);
     String rustArch;
-    if (rawArch.equals("armv7")) {
-      // armv7 is not part of Architecture.
-      rustArch = "armv7";
-    } else {
-      Architecture arch = Architecture.fromName(parts.get(1));
-      if (arch == Architecture.X86_32) {
-        rustArch = "i386";
+    if (platform.equals(ApplePlatform.IPHONEOS.getName())
+        || platform.equals(ApplePlatform.IPHONESIMULATOR.getName())) {
+      // This is according to https://forge.rust-lang.org/platform-support.html
+      if (rawArch.equals("armv7")) {
+        // armv7 is not part of Architecture.
+        rustArch = "armv7";
       } else {
-        rustArch = arch.toString();
+        Architecture arch = Architecture.fromName(parts.get(1));
+        if (arch == Architecture.X86_32) {
+          rustArch = "i386";
+        } else {
+          rustArch = arch.toString();
+        }
       }
+      return rustArch + "-apple-ios";
+    } else if (platform.equals("android")) {
+      // This is according to https://forge.rust-lang.org/platform-support.html
+      if (rawArch.equals("armv7")) {
+        // The only difference I see between
+        // thumbv7neon-linux-androideabi and armv7-linux-androideabi
+        // is that the former does not set +d16, but d16 support is
+        // part of armeabi-v7a per
+        // https://developer.android.com/ndk/guides/abis.html#v7a.
+        return "armv7-linux-androideabi";
+      } else {
+        // We want aarch64-linux-android, i686-linux-android, or x86_64-linux-android.
+        Architecture arch = Architecture.fromName(parts.get(1));
+        if (arch == Architecture.X86_32) {
+          rustArch = "i686";
+        } else {
+          rustArch = arch.toString();
+        }
+        return rustArch + "-linux-android";
+      }
+    } else {
+      return null;
     }
-
-    return rustArch + "-apple-ios";
   }
 
   /** Add the appropriate --target option to the given rustc args if the given flavor is known. */

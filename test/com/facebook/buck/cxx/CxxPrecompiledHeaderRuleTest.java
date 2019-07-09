@@ -79,6 +79,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -447,7 +448,9 @@ public class CxxPrecompiledHeaderRuleTest {
             ImmutableList.of(),
             Linker.LinkableDepType.STATIC,
             CxxLinkOptions.of(),
-            nativeLinkableGroupDeps,
+            Iterables.transform(
+                nativeLinkableGroupDeps,
+                g -> g.getNativeLinkable(platformSupportingPch, graphBuilder)),
             Optional.empty(), // cxxRuntimeType,
             Optional.empty(), // bundleLoader,
             ImmutableSet.of(), // blacklist,

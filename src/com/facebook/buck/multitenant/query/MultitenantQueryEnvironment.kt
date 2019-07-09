@@ -25,6 +25,7 @@ import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.BuildTargets
 import com.facebook.buck.multitenant.service.Generation
 import com.facebook.buck.multitenant.service.Index
+import com.facebook.buck.multitenant.service.RawBuildRule
 import com.facebook.buck.query.AllPathsFunction
 import com.facebook.buck.query.BuildFileFunction
 import com.facebook.buck.query.DepsFunction
@@ -179,6 +180,13 @@ class MultitenantQueryEnvironment(
 
     /** @see Index.getRefs */
     fun getRefs(target: UnconfiguredBuildTarget): List<UnconfiguredBuildTarget> = index.getRefs(generation, target)
+
+    /** Get the rules defined in the build file in the specified directory. */
+    fun getRulesInBasePath(basePath: FsAgnosticPath): List<RawBuildRule> {
+        val targets = index.getTargetsInBasePath(generation, basePath) ?: listOf()
+        val rules = index.getTargetNodes(generation, targets)
+        return rules.mapNotNull { it }
+    }
 }
 
 private class TargetEvaluator(private val index: Index, private val generation: Generation) : QueryEnvironment.TargetEvaluator {

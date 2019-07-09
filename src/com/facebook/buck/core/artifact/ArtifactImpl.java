@@ -18,8 +18,15 @@ package com.facebook.buck.core.artifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.io.file.MorePaths;
+import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.cmdline.Label;
+import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
+import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
@@ -31,16 +38,49 @@ import javax.annotation.Nullable;
  */
 class ArtifactImpl extends AbstractArtifact
     implements BoundArtifact, DeclaredArtifact, BuildArtifact {
+  private static final Path PARENT_PATH = Paths.get("..");
 
   private @Nullable ActionAnalysisDataKey actionAnalysisDataKey = null;
   private @Nullable ExplicitBuildTargetSourcePath sourcePath;
 
   private final BuildTarget target;
-  private final Path packagePath;
+  private final Path genDir;
+  private final Path basePath;
   private final Path outputPath;
 
-  static DeclaredArtifact of(BuildTarget target, Path packagePath, Path outputPath) {
-    return new ArtifactImpl(target, packagePath, outputPath);
+  static ArtifactImpl of(BuildTarget target, Path genDir, Path packagePath, Path outputPath)
+      throws ArtifactDeclarationException {
+    Path normalizedOutputPath = validateAndNormalizeOutputPath(target, outputPath);
+
+    return new ArtifactImpl(target, genDir, packagePath, normalizedOutputPath);
+  }
+
+  private static Path validateAndNormalizeOutputPath(BuildTarget target, Path outputPath) {
+    if (outputPath.isAbsolute()) {
+      throw new ArtifactDeclarationException(
+          ArtifactDeclarationException.Reason.ABSOLUTE_PATH, target, outputPath);
+    }
+    Path normalizedOutputPath = outputPath.normalize();
+    if (MorePaths.isEmpty(normalizedOutputPath)) {
+      throw new ArtifactDeclarationException(
+          ArtifactDeclarationException.Reason.EMPTY_PATH, target, outputPath);
+    }
+    // Normalization should take care of any ".." in the middle of the path. If we still are
+    // trying to access a parent dir, throw an error.
+    if (normalizedOutputPath.startsWith(PARENT_PATH)) {
+      throw new ArtifactDeclarationException(
+          ArtifactDeclarationException.Reason.PATH_TRAVERSAL, target, outputPath);
+    }
+    return normalizedOutputPath;
+  }
+
+  static ArtifactImpl ofLegacy(
+      BuildTarget target,
+      Path genDir,
+      Path packagePath,
+      Path outputPath,
+      ExplicitBuildTargetSourcePath sourcePath) {
+    return new ArtifactImpl(target, genDir, packagePath, outputPath, sourcePath);
   }
 
   /** @return the {@link BuildTarget} of the rule that creates this {@link Artifact} */
@@ -53,7 +93,7 @@ class ArtifactImpl extends AbstractArtifact
    *     buck-out/gen folder generated using the {@link BuildTarget}.
    */
   Path getPackagePath() {
-    return packagePath;
+    return genDir.resolve(basePath);
   }
 
   /** @return the output path relative to the {@link #getPackagePath()} */
@@ -63,7 +103,7 @@ class ArtifactImpl extends AbstractArtifact
 
   @Override
   public boolean isBound() {
-    return actionAnalysisDataKey != null;
+    return sourcePath != null;
   }
 
   @Override
@@ -83,9 +123,10 @@ class ArtifactImpl extends AbstractArtifact
   }
 
   @Override
+  @Nullable
   public ActionAnalysisDataKey getActionDataKey() {
     requireBound();
-    return Objects.requireNonNull(actionAnalysisDataKey);
+    return actionAnalysisDataKey;
   }
 
   @Override
@@ -94,14 +135,64 @@ class ArtifactImpl extends AbstractArtifact
     return Objects.requireNonNull(sourcePath);
   }
 
-  private ArtifactImpl(BuildTarget target, Path packagePath, Path outputPath) {
+  private ArtifactImpl(BuildTarget target, Path genDir, Path packagePath, Path outputPath) {
     this.target = target;
-    this.packagePath = packagePath;
+    this.genDir = genDir;
+    this.basePath = packagePath;
     this.outputPath = outputPath;
+  }
+
+  private ArtifactImpl(
+      BuildTarget target,
+      Path genDir,
+      Path packagePath,
+      Path outputPath,
+      ExplicitBuildTargetSourcePath sourcePath) {
+    this.target = target;
+    this.genDir = genDir;
+    this.basePath = packagePath;
+    this.outputPath = outputPath;
+    this.sourcePath = sourcePath;
   }
 
   @Override
   public @Nullable SourceArtifactImpl asSource() {
     return null;
+  }
+
+  @Override
+  public String getBasename() {
+    return outputPath.getFileName().toString();
+  }
+
+  @Override
+  public String getExtension() {
+    return MorePaths.getFileExtension(outputPath);
+  }
+
+  @Override
+  public Optional<Label> getOwnerTyped() {
+    try {
+      return Optional.of(Label.parseAbsolute(target.getFullyQualifiedName(), ImmutableMap.of()));
+    } catch (LabelSyntaxException e) {
+      return Optional.empty();
+    }
+  }
+
+  @Override
+  public String getShortPath() {
+    return basePath.resolve(outputPath).toString();
+  }
+
+  @Override
+  public boolean isSource() {
+    return false;
+  }
+
+  @Override
+  public void repr(SkylarkPrinter printer) {
+    printer.append("<generated file '");
+    printer.append(getShortPath());
+    printer.append("'>");
   }
 }

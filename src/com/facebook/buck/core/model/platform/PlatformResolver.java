@@ -15,10 +15,10 @@
  */
 package com.facebook.buck.core.model.platform;
 
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.BuildTarget;
 
 /** An interface to access a platform using a build target. */
 public interface PlatformResolver {
   /** @return {@link Platform} for a given build target. */
-  Platform getPlatform(UnconfiguredBuildTargetView buildTarget);
+  Platform getPlatform(BuildTarget buildTarget);
 }

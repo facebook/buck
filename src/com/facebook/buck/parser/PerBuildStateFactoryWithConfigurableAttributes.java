@@ -18,26 +18,16 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
-import com.facebook.buck.core.model.platform.ConstraintResolver;
-import com.facebook.buck.core.model.platform.Platform;
-import com.facebook.buck.core.model.platform.PlatformResolver;
-import com.facebook.buck.core.model.platform.TargetPlatformResolver;
-import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
+import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
-import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.impl.ConfigurationRuleSelectableResolver;
-import com.facebook.buck.core.rules.config.impl.SameThreadConfigurationRuleResolver;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
-import com.facebook.buck.core.rules.platform.CachingPlatformResolver;
-import com.facebook.buck.core.rules.platform.DefaultTargetPlatformResolver;
-import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
-import com.facebook.buck.core.rules.platform.RuleBasedPlatformResolver;
-import com.facebook.buck.core.rules.platform.RuleBasedTargetPlatformResolver;
+import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
+import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectableResolver;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
@@ -47,6 +37,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.manifestservice.ManifestService;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
@@ -159,6 +150,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
     ParserTargetNodeFactory<RawTargetNode> nonResolvingRawTargetNodeToTargetNodeFactory =
         new NonResolvingRawTargetNodeToTargetNodeFactory(
             DefaultParserTargetNodeFactory.createForParser(
+                typeCoercerFactory,
                 knownRuleTypesProvider,
                 marshaller,
                 daemonicParserState.getBuildFileTrees(),
@@ -179,39 +171,30 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             enableSpeculativeParsing,
             nonResolvingRawTargetNodeToTargetNodeFactory);
 
-    ConfigurationRuleResolver configurationRuleResolver =
-        new SameThreadConfigurationRuleResolver(
+    ConfigurationRuleRegistry configurationRuleRegistry =
+        ConfigurationRuleRegistryFactory.createRegistry(
             target ->
-                nonResolvingTargetNodeParsePipeline.getNode(
-                    cellManager.getCell(target),
-                    target.configure(EmptyTargetConfiguration.INSTANCE)));
+                nonResolvingTargetNodeParsePipeline.getNode(cellManager.getCell(target), target));
 
     SelectableResolver selectableResolver =
-        new ConfigurationRuleSelectableResolver(configurationRuleResolver);
+        new ConfigurationRuleSelectableResolver(
+            configurationRuleRegistry.getConfigurationRuleResolver());
 
     SelectorListResolver selectorListResolver = new DefaultSelectorListResolver(selectableResolver);
 
-    ConstraintResolver constraintResolver =
-        new RuleBasedConstraintResolver(configurationRuleResolver);
-
-    Platform defaultPlatform = EmptyPlatform.INSTANCE;
-    PlatformResolver platformResolver =
-        new CachingPlatformResolver(
-            new RuleBasedPlatformResolver(configurationRuleResolver, constraintResolver));
-    TargetPlatformResolver targetPlatformResolver =
-        new DefaultTargetPlatformResolver(
-            new RuleBasedTargetPlatformResolver(platformResolver), defaultPlatform);
-
     RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
         new RawTargetNodeToTargetNodeFactory(
+            typeCoercerFactory,
             knownRuleTypesProvider,
             marshaller,
             targetNodeFactory,
             packageBoundaryChecker,
             symlinkCheckers,
             selectorListResolver,
-            constraintResolver,
-            targetPlatformResolver);
+            configurationRuleRegistry.getConstraintResolver(),
+            configurationRuleRegistry.getTargetPlatformResolver(),
+            new MultiPlatformTargetConfigurationTransformer(
+                configurationRuleRegistry.getTargetPlatformResolver()));
 
     ListeningExecutorService configuredPipelineExecutor =
         MoreExecutors.listeningDecorator(
@@ -250,11 +233,9 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
         buildFileRawNodeParsePipeline,
         targetNodeParsePipeline,
         parsingContext,
-        constraintResolver,
         selectorListResolver,
         selectorListFactory,
-        targetPlatformResolver,
-        platformResolver);
+        configurationRuleRegistry);
   }
 
   @SuppressWarnings("PMD.AvoidThreadGroup")

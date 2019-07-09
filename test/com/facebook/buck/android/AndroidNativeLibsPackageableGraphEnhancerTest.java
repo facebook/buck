@@ -94,7 +94,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             Optional.empty(),
             RelinkerMode.DISABLED,
             ImmutableList.of(),
-            apkModuleGraph);
+            apkModuleGraph,
+            new NoopAndroidNativeTargetConfigurationMatcher());
 
     AndroidPackageableCollector collector =
         new AndroidPackageableCollector(target, ImmutableSet.of(), apkModuleGraph);
@@ -168,7 +169,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             Optional.empty(),
             RelinkerMode.DISABLED,
             ImmutableList.of(),
-            apkModuleGraph);
+            apkModuleGraph,
+            new NoopAndroidNativeTargetConfigurationMatcher());
 
     AndroidPackageableCollector collector =
         new AndroidPackageableCollector(target, ImmutableSet.of(), apkModuleGraph);
@@ -236,7 +238,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             Optional.empty(),
             RelinkerMode.DISABLED,
             ImmutableList.of(),
-            apkModuleGraph);
+            apkModuleGraph,
+            new NoopAndroidNativeTargetConfigurationMatcher());
 
     AndroidPackageableCollector collector =
         new AndroidPackageableCollector(target, ImmutableSet.of(), apkModuleGraph);
@@ -279,7 +282,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             Optional.empty(),
             RelinkerMode.DISABLED,
             ImmutableList.of(),
-            apkModuleGraph);
+            apkModuleGraph,
+            new NoopAndroidNativeTargetConfigurationMatcher());
 
     AndroidPackageableCollector collector =
         new AndroidPackageableCollector(target, ImmutableSet.of(), apkModuleGraph);
@@ -360,7 +364,8 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             Optional.empty(),
             RelinkerMode.DISABLED,
             ImmutableList.of(),
-            apkModuleGraph);
+            apkModuleGraph,
+            new NoopAndroidNativeTargetConfigurationMatcher());
 
     AndroidPackageableCollector collector =
         new AndroidPackageableCollector(target, ImmutableSet.of(), apkModuleGraph);

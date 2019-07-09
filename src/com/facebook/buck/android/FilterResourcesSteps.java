@@ -261,15 +261,16 @@ public class FilterResourcesSteps {
     Collection<Path> drawables =
         drawableFinder.findDrawables(inResDirToOutResDirMap.values(), filesystem);
     for (Path drawable : drawables) {
-      if (drawable.toString().endsWith(".xml")) {
+      String drawableFileName = drawable.getFileName().toString();
+      if (drawableFileName.endsWith(".xml")) {
         // Skip SVG and network drawables.
         continue;
       }
-      if (drawable.toString().endsWith(".9.png")) {
+      if (drawableFileName.endsWith(".9.png")) {
         // Skip nine-patch for now.
         continue;
       }
-      if (drawable.toString().endsWith(".webp")) {
+      if (drawableFileName.endsWith(".webp")) {
         // Skip webp for now.
         continue;
       }
@@ -281,6 +282,24 @@ public class FilterResourcesSteps {
       Objects.requireNonNull(targetDensities);
       if (!targetDensities.contains(density)) {
 
+        double factor = targetDensity.value() / density.value();
+        if (factor >= 1.0) {
+          // There is no point in up-scaling, or converting between drawable and drawable-mdpi.
+          continue;
+        }
+
+        Path tmpFile = filesystem.createTempFile("scaled_", drawableFileName);
+        Objects.requireNonNull(imageScaler);
+        imageScaler.scale(factor, drawable, tmpFile, context);
+
+        long oldSize = filesystem.getFileSize(drawable);
+        long newSize = filesystem.getFileSize(tmpFile);
+        if (newSize > oldSize) {
+          // Don't keep the new one if it is larger than the old one.
+          filesystem.deleteFileAtPath(tmpFile);
+          continue;
+        }
+
         // Replace density qualifier with target density using regular expression to match
         // the qualifier in the context of a path to a drawable.
         String fromDensity = (density == ResourceFilters.Density.NO_QUALIFIER ? "" : "-") + density;
@@ -291,16 +310,9 @@ public class FilterResourcesSteps {
                         "((?:^|/)drawable[^/]*)" + Pattern.quote(fromDensity) + "(-|$|/)",
                         "$1-" + targetDensity + "$2"));
 
-        double factor = targetDensity.value() / density.value();
-        if (factor >= 1.0) {
-          // There is no point in up-scaling, or converting between drawable and drawable-mdpi.
-          continue;
-        }
-
         // Make sure destination folder exists and perform downscaling.
         filesystem.createParentDirs(destination);
-        Objects.requireNonNull(imageScaler);
-        imageScaler.scale(factor, drawable, destination, context);
+        filesystem.move(tmpFile, destination);
 
         // Delete source file.
         filesystem.deleteFileAtPath(drawable);

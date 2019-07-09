@@ -48,8 +48,10 @@ import com.facebook.buck.cxx.CxxSourceTypes;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.EnvironmentVariableMacroExpander;
@@ -66,7 +68,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
@@ -80,6 +84,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
@@ -251,14 +256,20 @@ public class NdkLibraryDescription
 
       // Collect the native linkable input for all C/C++ library deps.  We search *through* other
       // NDK library rules.
+      // Get the topologically sorted native linkables.
+      ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
+          NativeLinkableGroups.getNativeLinkableRoots(
+              buildDeps,
+              (Function<? super BuildRule, Optional<Iterable<? extends BuildRule>>>)
+                  r -> r instanceof NdkLibrary ? Optional.of(r.getBuildDeps()) : Optional.empty());
+
       NativeLinkableInput nativeLinkableInput =
-          NativeLinkableGroups.getTransitiveNativeLinkableInput(
-              cxxPlatform,
+          NativeLinkables.getTransitiveNativeLinkableInput(
               graphBuilder,
               targetConfiguration,
-              buildDeps,
-              Linker.LinkableDepType.SHARED,
-              r -> r instanceof NdkLibrary ? Optional.of(r.getBuildDeps()) : Optional.empty());
+              Iterables.transform(
+                  roots.values(), g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
+              Linker.LinkableDepType.SHARED);
 
       // We add any dependencies from the native linkable input to this rule, even though
       // it technically should be added to the top-level rule.

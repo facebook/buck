@@ -422,7 +422,7 @@ public class FakeProjectFilesystemTest {
     Zip.create(filesystem, ImmutableList.of(file, dir, dir.resolve("file")), output);
 
     try (ZipArchive zipArchive = new ZipArchive(output, /* forWriting */ false)) {
-      assertEquals(ImmutableSet.of("", "dir/"), zipArchive.getDirNames());
+      assertEquals(ImmutableSet.of("", "dir"), zipArchive.getDirNames());
       assertEquals(ImmutableSet.of("file", "dir/file"), zipArchive.getFileNames());
       assertArrayEquals(contents, zipArchive.readFully("file"));
       assertArrayEquals(contents, zipArchive.readFully("dir/file"));

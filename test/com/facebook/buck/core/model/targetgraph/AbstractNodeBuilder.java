@@ -30,6 +30,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ImmutableBuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -138,7 +139,12 @@ public abstract class AbstractNodeBuilder<
         (TBuildRule)
             description.createBuildRule(
                 ImmutableBuildRuleCreationContextWithTargetGraph.of(
-                    targetGraph, graphBuilder, filesystem, cellRoots, toolchainProvider),
+                    targetGraph,
+                    graphBuilder,
+                    filesystem,
+                    cellRoots,
+                    toolchainProvider,
+                    ConfigurationRuleRegistryFactory.createRegistry(targetGraph)),
                 target,
                 params,
                 builtArg);
@@ -158,6 +164,7 @@ public abstract class AbstractNodeBuilder<
               filesystem,
               target,
               getDepsFromArg(populatedArg),
+              ImmutableSortedSet.of(),
               ImmutableSet.of(
                   VisibilityPatternParser.parse(null, VisibilityPatternParser.VISIBILITY_PUBLIC)),
               ImmutableSet.of(),

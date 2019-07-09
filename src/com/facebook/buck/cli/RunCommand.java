@@ -24,6 +24,8 @@ import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.support.fix.BuckRunSpec;
+import com.facebook.buck.support.fix.ImmutableBuckRunSpec;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ForwardingProcessListener;
@@ -45,7 +47,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.Option;
@@ -60,14 +61,6 @@ public final class RunCommand extends AbstractCommand {
    * </pre>
    */
   @Argument private List<String> noDashArguments = new ArrayList<>();
-
-  @Nullable
-  @Option(
-      name = "--command-args-file",
-      usage =
-          "Serialize the command, args, and environment for running the target to this file, for consumption by the python wrapper.",
-      hidden = true)
-  private String commandArgsFile;
 
   @Option(name = "--", handler = ConsumeAllOptionsHandler.class)
   private List<String> withDashArguments = new ArrayList<>();
@@ -181,16 +174,14 @@ public final class RunCommand extends AbstractCommand {
               .addAll(executable.getCommandPrefix(resolver))
               .addAll(getTargetArguments())
               .build();
-      ImmutableMap<String, Object> cmd =
-          ImmutableMap.of(
-              "path", argv.get(0),
-              "argv", argv,
-              "envp",
-                  ImmutableMap.<String, String>builder()
-                      .putAll(params.getEnvironment())
-                      .putAll(executable.getEnvironment(resolver))
-                      .build(),
-              "cwd", params.getCell().getFilesystem().getRootPath());
+      ImmutableMap<String, String> envp =
+          ImmutableMap.<String, String>builder()
+              .putAll(params.getEnvironment())
+              .putAll(executable.getEnvironment(resolver))
+              .build();
+      BuckRunSpec cmd =
+          new ImmutableBuckRunSpec(
+              argv, envp, params.getCell().getFilesystem().getRootPath(), false);
       Files.write(Paths.get(commandArgsFile), ObjectMappers.WRITER.writeValueAsBytes(cmd));
       return ExitCode.SUCCESS;
     }

@@ -21,14 +21,16 @@ import com.facebook.buck.core.artifact.BoundArtifact;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
+import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.ActionExecutionStep;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.impl.ActionExecutionStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -41,13 +43,15 @@ import javax.annotation.Nullable;
  * This represents the {@link RuleAnalysisResult} in the modern action framework as a legacy {@link
  * BuildRule} so that existing architecture can use them.
  *
- * <p>TODO(bobyf): figure out how to propagate provider info from here
+ * <p>TODO(bobyf): figure out how to propagate provider info from here TODO(bobyf): make this a
+ * {@link com.facebook.buck.rules.modern.ModernBuildRule}
  */
-public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule {
+public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
+    implements SupportsInputBasedRuleKey {
   // TODO(bobyf) figure out rulekeys and caching for new Actions
 
   private final String type;
-  private final Action action;
+  @AddToRuleKey private final Action action;
   private Supplier<SortedSet<BuildRule>> buildDepsSupplier;
   private BuildRuleResolver ruleResolver;
 
@@ -87,7 +91,7 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule {
             .map(Artifact::asBound)
             .map(BoundArtifact::asBuildArtifact)
             .filter(Objects::nonNull)
-            .map(artifact -> artifact.getActionDataKey().getBuildTarget())
+            .map(artifact -> artifact.getSourcePath().getTarget())
             .collect(ImmutableList.toImmutableList()));
   }
 

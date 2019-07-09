@@ -31,7 +31,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -81,7 +81,7 @@ public class BuildCommandErrorsIntegrationTest {
             sandboxExecutionStrategyFactory,
             knownConfigurationDescriptions) ->
             cell ->
-                KnownRuleTypes.of(
+                KnownNativeRuleTypes.of(
                     ImmutableList.of(mockDescription), knownConfigurationDescriptions));
   }
 

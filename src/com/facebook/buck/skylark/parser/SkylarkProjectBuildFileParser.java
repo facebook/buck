@@ -760,6 +760,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       SkylarkUtils.setPhase(extensionEnv, Phase.LOADING);
 
       BuildFileAST ast = load.getAST();
+      buckGlobals.getKnownUserDefinedRuleTypes().invalidateExtension(load.getLabel());
       for (Statement stmt : ast.getStatements()) {
         if (!ast.execTopLevelStatement(stmt, extensionEnv, eventHandler)) {
           throw BuildFileParseException.createForUnknownParseError(
@@ -806,6 +807,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         Label extensionLabel = extensionEnv.getGlobals().getLabel();
         if (extensionLabel != null) {
           exportable.export(extensionLabel, identifier);
+          this.buckGlobals.getKnownUserDefinedRuleTypes().addRule(exportable);
         }
       }
     }

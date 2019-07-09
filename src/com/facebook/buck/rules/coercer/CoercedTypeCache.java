@@ -20,7 +20,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.Types;
-import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
@@ -41,7 +40,6 @@ import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
 import java.util.Set;
-import java.util.function.Function;
 
 /** Caches the set of possible {@link ParamInfo}s for each param on a coercable type. */
 public class CoercedTypeCache {
@@ -62,13 +60,14 @@ public class CoercedTypeCache {
    * finished being populated.
    */
   @SuppressWarnings("unchecked")
-  public static <T> Pair<Object, Function<Object, T>> instantiateSkeleton(
-      Class<T> dtoType, BuildTarget buildTarget) {
+  public static <T> ConstructorArgBuilder<T> instantiateSkeleton(
+      TypeCoercerFactory typeCoercerFactory, Class<T> dtoType, BuildTarget buildTarget) {
     try {
       Object builder = dtoType.getMethod("builder").invoke(null);
       Method buildMethod = builder.getClass().getMethod("build");
-      return new Pair<>(
+      return new ImmutableConstructorArgBuilder<T>(
           builder,
+          INSTANCE.getAllParamInfo(typeCoercerFactory, dtoType),
           x -> {
             try {
               return (T) buildMethod.invoke(x);
@@ -169,7 +168,7 @@ public class CoercedTypeCache {
     for (Map.Entry<String, Set<Method>> entry : foundSetters.entrySet()) {
       if (entry.getValue().size() == 1) {
         ParamInfo paramInfo =
-            new ParamInfo(typeCoercerFactory, Iterables.getOnlyElement(entry.getValue()));
+            ReflectionParamInfo.of(typeCoercerFactory, Iterables.getOnlyElement(entry.getValue()));
         allInfo.put(paramInfo.getName(), paramInfo);
         continue;
       }
@@ -196,7 +195,7 @@ public class CoercedTypeCache {
                     + "and non-Optional. Don't know how to coerce.",
                 coercableType.getName(), entry.getKey()));
       }
-      ParamInfo paramInfo = new ParamInfo(typeCoercerFactory, takesOptional);
+      ParamInfo paramInfo = ReflectionParamInfo.of(typeCoercerFactory, takesOptional);
       allInfo.put(paramInfo.getName(), paramInfo);
     }
     return allInfo.build();

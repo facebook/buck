@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
@@ -45,6 +46,7 @@ public class BuildTargetToBuildEngineActionResolverTest {
               public <T> BuildRule transform(
                   ToolchainProvider toolchainProvider,
                   TargetGraph targetGraph,
+                  ConfigurationRuleRegistry configurationRuleRegistry,
                   ActionGraphBuilder graphBuilder,
                   TargetNode<T> targetNode) {
                 return rule;

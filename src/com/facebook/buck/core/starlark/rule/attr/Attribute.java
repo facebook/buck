@@ -21,8 +21,11 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.base.Joiner;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.List;
+import org.immutables.value.Value;
 
 /** Representation of a parameter of a user defined rule */
 public abstract class Attribute<CoercedType> implements AttributeHolder {
@@ -30,6 +33,42 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
   @Override
   public Attribute<?> getAttribute() {
     return this;
+  }
+
+  /**
+   * Get the generic type parameters of {@code CoercedType}, if any.
+   *
+   * @returns A list of the generic types of {@code CoercedType}. For example, {@link
+   *     Attribute<com.google.common.collect.ImmutableList<String>>} would return {@link Type}
+   *     objects for {@link String}. {@link Attribute<Integer>} would return an empty array.
+   */
+  @Value.Lazy
+  public Type[] getGenericTypes() {
+    Class<?> clazz = this.getClass();
+
+    /**
+     * We might be pretty far down the class hierarchy. Get to where we're just below {@link
+     * Attribute}
+     */
+    while (!Object.class.equals(clazz)) {
+      if (Attribute.class.equals(clazz.getSuperclass())) {
+        // Get {@code CoercedType}; if it's something parameterized, return its types,
+        // otherwise return an empty list of types
+        Type coercedType =
+            ((ParameterizedType) clazz.getGenericSuperclass()).getActualTypeArguments()[0];
+        if (coercedType instanceof ParameterizedType) {
+          return ((ParameterizedType) coercedType).getActualTypeArguments();
+        }
+        return new Type[0];
+
+      } else {
+        clazz = clazz.getSuperclass();
+      }
+    }
+    throw new IllegalStateException(
+        String.format(
+            "Called Attribute.getGenericTypes on object of type %s that is not an Attribute",
+            clazz.getName()));
   }
 
   /** The default value to use if no value is provided */

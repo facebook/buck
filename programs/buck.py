@@ -36,25 +36,14 @@ from buck_tool import (
     BuckDaemonErrorException,
     BuckStatusReporter,
     ExecuteTarget,
+    ExitCode,
+    ExitCodeCallable,
     install_signal_handlers,
 )
 from java_lookup import get_java_path
 from java_version import get_java_major_version
 from subprocutils import propagate_failure
 from tracing import Tracing
-
-
-class ExitCode(object):
-    """Python equivalent of com.facebook.buck.util.ExitCode"""
-
-    SUCCESS = 0
-    COMMANDLINE_ERROR = 3
-    FATAL_GENERIC = 10
-    FATAL_BOOTSTRAP = 11
-    FATAL_IO = 13
-    FATAL_DISK_FULL = 14
-    SIGNAL_INTERRUPT = 130
-    SIGNAL_PIPE = 141
 
 
 if sys.version_info < (2, 7):
@@ -207,9 +196,17 @@ def main(argv, reporter):
 
             return BuckRepo(THIS_DIR, p, reporter)
 
-    # If 'killall' is the second argument, shut down all the buckd processes
-    if argv[1:] == ["killall"]:
-        return killall_buck(reporter)
+    def kill_buck(reporter):
+        buck_repo = get_repo(BuckProject.from_current_dir())
+        buck_repo.kill_buckd()
+        return ExitCode.SUCCESS
+
+    # Execute wrapper specific commands
+    wrapper_specific_commands = [("kill", kill_buck), ("killall", killall_buck)]
+    if "--help" not in argv:
+        for command_str, command_fcn in wrapper_specific_commands:
+            if len(argv) > 0 and argv[1] == command_str:
+                return ExitCodeCallable(command_fcn(reporter))
 
     install_signal_handlers()
     try:
@@ -225,22 +222,6 @@ def main(argv, reporter):
                         java_version_status_queue, java_path, required_java_version
                     )
 
-                    def has_kill_argument():
-                        if argv[1:] == ["kill"]:
-                            return True
-                        if (
-                            len(argv) > 3
-                            and argv[3:] == ["kill"]
-                            and argv[1] == "--isolation_prefix"
-                        ):
-                            return True
-                        return False
-
-                    # If 'kill' is the second argument, or immediately follows the
-                    # isolation prefix argument, shut down the buckd process
-                    if has_kill_argument():
-                        buck_repo.kill_buckd()
-                        return ExitCode.SUCCESS
                     return buck_repo.launch_buck(build_id, java_path, argv)
     finally:
         if tracing_dir:
@@ -251,17 +232,17 @@ def main(argv, reporter):
 if __name__ == "__main__":
     exit_code = ExitCode.SUCCESS
     reporter = BuckStatusReporter(sys.argv)
-    fn_exec = None
+    exit_code_callable = None
     exception = None
     exc_type = None
     exc_traceback = None
     try:
         setup_logging()
-        exit_code = main(sys.argv, reporter)
-    except ExecuteTarget as e:
-        # this is raised once 'buck run' has the binary
-        # it can get here only if exit_code of corresponding buck build is 0
-        fn_exec = e.execve
+        exit_code_callable = main(sys.argv, reporter)
+        # Grab the original exit code here for logging. If this callable does something
+        # more advanced (like exec) we want to make sure that at least the original
+        # code is logged
+        exit_code = exit_code_callable.exit_code
     except NoBuckConfigFoundException as e:
         exception = e
         # buck is started outside project root
@@ -308,7 +289,7 @@ if __name__ == "__main__":
         )
 
     # execute 'buck run' target
-    if fn_exec is not None:
-        fn_exec()
+    if exit_code_callable is not None:
+        exit_code = exit_code_callable()
 
     propagate_failure(exit_code)

@@ -55,6 +55,7 @@ import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
@@ -328,7 +329,10 @@ public class CxxPythonExtensionDescription
         args.getLinkerExtraOutputs(),
         Linker.LinkableDepType.SHARED,
         CxxLinkOptions.of(),
-        RichStream.from(deps).filter(NativeLinkableGroup.class).toImmutableList(),
+        RichStream.from(deps)
+            .filter(NativeLinkableGroup.class)
+            .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+            .toImmutableList(),
         args.getCxxRuntimeType(),
         Optional.empty(),
         ImmutableSet.of(),
@@ -482,7 +486,7 @@ public class CxxPythonExtensionDescription
 
       @Override
       public NativeLinkTargetGroup getNativeLinkTarget(PythonPlatform pythonPlatform) {
-        return new NativeLinkTargetGroup() {
+        return new LegacyNativeLinkTargetGroup() {
 
           @Override
           public BuildTarget getBuildTarget() {

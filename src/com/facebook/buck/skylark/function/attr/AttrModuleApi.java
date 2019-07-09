@@ -115,4 +115,36 @@ public interface AttrModuleApi extends SkylarkValue {
   AttributeHolder stringAttribute(
       String defaultValue, String doc, Boolean mandatory, SkylarkList<String> values)
       throws EvalException;
+
+  @SkylarkCallable(
+      name = "bool",
+      doc = "Create a parameter for user defined rules that is a boolean",
+      parameters = {
+        @Param(
+            name = AttributeConstants.DEFAULT_PARAM_NAME,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC,
+            defaultValue = "False",
+            noneable = false,
+            positional = false,
+            named = true,
+            type = Boolean.class),
+        @Param(
+            name = AttributeConstants.DOC_PARAM_NAME,
+            doc = AttributeConstants.DOC_PARAM_DOC,
+            defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = String.class),
+        @Param(
+            name = AttributeConstants.MANDATORY_PARAM_NAME,
+            doc = AttributeConstants.MANDATORY_PARAM_DOC,
+            defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = Boolean.class),
+      })
+  AttributeHolder boolAttribute(boolean defaultValue, String doc, boolean mandatory)
+      throws EvalException;
 }

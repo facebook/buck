@@ -235,6 +235,7 @@ public class CxxLuaExtensionDescription
                 Stream.of(
                     luaPlatform.getLuaCxxLibrary(
                         graphBuilder, buildTarget.getTargetConfiguration())))
+            .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
             .toImmutableList(),
         args.getCxxRuntimeType(),
         Optional.empty(),

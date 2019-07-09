@@ -26,6 +26,8 @@ import com.facebook.buck.core.rules.actions.ActionWrapperData;
 import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisComputation;
+import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
+import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -54,6 +56,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
   public <T> BuildRule transform(
       ToolchainProvider toolchainProvider,
       TargetGraph targetGraph,
+      ConfigurationRuleRegistry configurationRuleRegistry,
       ActionGraphBuilder graphBuilder,
       TargetNode<T> targetNode) {
     BaseDescription<T> description = targetNode.getDescription();
@@ -64,6 +67,10 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
               ImmutableRuleAnalysisKey.of(targetNode.getBuildTarget()));
 
       // TODO(bobyf): add support for multiple actions from a rule
+      if (result.getRegisteredActions().isEmpty()) {
+        return new NoopBuildRule(result.getBuildTarget(), targetNode.getFilesystem());
+      }
+
       Action correspondingAction =
           ((ActionWrapperData)
                   Iterables.getOnlyElement(result.getRegisteredActions().entrySet()).getValue())
@@ -73,7 +80,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
           RichStream.from(correspondingAction.getInputs())
               .map(artifact -> artifact.asBound().asBuildArtifact())
               .filter(Objects::nonNull)
-              .map(buildArtifact -> buildArtifact.getActionDataKey().getBuildTarget())
+              .map(buildArtifact -> buildArtifact.getSourcePath().getTarget())
               .toImmutableList());
 
       return new RuleAnalysisLegacyBuildRuleView(
@@ -84,6 +91,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
           targetNode.getFilesystem());
     }
 
-    return delegate.transform(toolchainProvider, targetGraph, graphBuilder, targetNode);
+    return delegate.transform(
+        toolchainProvider, targetGraph, configurationRuleRegistry, graphBuilder, targetNode);
   }
 }

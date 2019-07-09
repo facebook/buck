@@ -70,6 +70,9 @@ abstract class AbstractHaskellPlatform implements FlavorConvertible {
   /** @return whether to use the deprecated binary output location. */
   abstract Optional<Boolean> shouldUsedOldBinaryOutputLocation();
 
+  /** @return whether ghc supports the -expose-package flag. */
+  abstract boolean supportExposePackage();
+
   /** @return The template to use for startup scripts for GHCi targets. */
   abstract Supplier<Path> getGhciScriptTemplate();
 

@@ -22,7 +22,13 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
+import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
+import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
@@ -31,6 +37,7 @@ import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.platform.ThrowingConstraintResolver;
+import com.facebook.buck.core.select.TestSelectable;
 import com.facebook.buck.core.select.TestSelectableResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -38,6 +45,8 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
+import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
+import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -55,7 +64,12 @@ public class RawTargetNodeToTargetNodeFactoryTest {
 
   @Test
   public void testTargetNodeCreatedWithAttributes() {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//a/b:c");
+    BuildTarget targetPlatform = BuildTargetFactory.newInstance("//config:platform");
+    TargetConfiguration targetConfiguration =
+        ImmutableDefaultTargetConfiguration.of(targetPlatform);
+    BuildTarget buildTarget =
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c")
+            .configure(targetConfiguration);
     Path basepath = Paths.get("a").resolve("b");
     Cell cell =
         new TestCellBuilder()
@@ -66,10 +80,17 @@ public class RawTargetNodeToTargetNodeFactoryTest {
                         basepath.resolve("src2"),
                         basepath.resolve("BUCK"))))
             .build();
+    ImmutableListWithSelects selectorList =
+        ImmutableListWithSelects.of(
+            ImmutableList.of(
+                ImmutableSelectorValue.of(ImmutableMap.of("DEFAULT", "1", "//x:y", "2"), ""),
+                ImmutableSelectorValue.of(ImmutableMap.of("DEFAULT", "8", "//x:y", "9"), "")),
+            ImmutableMap.class);
     ImmutableMap<String, Object> attributes =
         ImmutableMap.<String, Object>builder()
             .put("name", "c")
             .put("srcs", ImmutableList.of("src1", "src2"))
+            .put("source", selectorList)
             .build();
     RawTargetNode node =
         ImmutableRawTargetNode.of(
@@ -79,16 +100,22 @@ public class RawTargetNodeToTargetNodeFactoryTest {
             ImmutableSet.of(),
             ImmutableSet.of());
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
+    TargetPlatformResolver targetPlatformResolver = configuration -> EmptyPlatform.INSTANCE;
     RawTargetNodeToTargetNodeFactory factory =
         new RawTargetNodeToTargetNodeFactory(
+            typeCoercerFactory,
             TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager()),
             new DefaultConstructorArgMarshaller(typeCoercerFactory),
             new TargetNodeFactory(typeCoercerFactory),
             new NoopPackageBoundaryChecker(),
             (file, targetNode) -> {},
-            new DefaultSelectorListResolver(new TestSelectableResolver()),
+            new DefaultSelectorListResolver(
+                new TestSelectableResolver(
+                    ImmutableList.of(new TestSelectable(selectableTarget, true)))),
             new ThrowingConstraintResolver(),
-            configuration -> EmptyPlatform.INSTANCE);
+            targetPlatformResolver,
+            new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver));
 
     TargetNode<?> targetNode =
         factory.createTargetNode(
@@ -105,5 +132,7 @@ public class RawTargetNodeToTargetNodeFactoryTest {
             PathSourcePath.of(cell.getFilesystem(), basepath.resolve("src1")),
             PathSourcePath.of(cell.getFilesystem(), basepath.resolve("src2"))),
         arg.getSrcs());
+    assertEquals(
+        ImmutableSet.of(targetPlatform, selectableTarget), targetNode.getConfigurationDeps());
   }
 }

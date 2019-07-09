@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;

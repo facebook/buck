@@ -49,9 +49,9 @@ import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodeSpec;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -716,7 +716,7 @@ public class BuildCommand extends AbstractCommand {
     try {
       return params
           .getParser()
-          .buildTargetGraphWithoutConfigurationTargets(
+          .buildTargetGraphWithoutTopLevelConfigurationTargets(
               createParsingContext(params.getCell(), executor)
                   .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                   .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode()),

@@ -18,17 +18,27 @@ package com.facebook.buck.rules.keys;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.actions.Action;
+import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
+import com.facebook.buck.core.rules.actions.FakeAction;
+import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -59,6 +69,28 @@ public class ContentAgnosticRuleKeyFactoryTest {
     assertThat(ruleKey1, Matchers.not(Matchers.equalTo(ruleKey2)));
   }
 
+  @Test
+  public void ruleKeyDoesNotChangeWhenFileContentsChangeForActions() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    // Changing the contents of a file should not alter the rulekey.
+    RuleKey ruleKey1 = createRuleKey(filesystem, "output_file", "contents");
+    RuleKey ruleKey2 = createRuleKey(filesystem, "output_file", "diff_contents");
+
+    assertThat(ruleKey1, Matchers.equalTo(ruleKey2));
+  }
+
+  @Test
+  public void ruleKeyDoesChangeWithFileRenameForActions() throws Exception {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    // A file rename should alter the rulekey.
+    RuleKey ruleKey1 = createRuleKeyForAction(filesystem, "output_file", "contents");
+    RuleKey ruleKey2 = createRuleKeyForAction(filesystem, "output_file_2", "diff_contents");
+
+    assertThat(ruleKey1, Matchers.not(Matchers.equalTo(ruleKey2)));
+  }
+
   private RuleKey createRuleKey(ProjectFilesystem fileSystem, String filename, String fileContents)
       throws Exception {
     RuleKeyFieldLoader fieldLoader =
@@ -79,6 +111,35 @@ public class ContentAgnosticRuleKeyFactoryTest {
             .setOut(filename)
             .setSrcs(ImmutableList.of(dep.getSourcePathToOutput()))
             .build(graphBuilder, fileSystem);
+
+    return new ContentAgnosticRuleKeyFactory(fieldLoader, graphBuilder, Optional.empty())
+        .build(rule);
+  }
+
+  private RuleKey createRuleKeyForAction(
+      ProjectFilesystem fileSystem, String filename, String fileContents) throws Exception {
+    RuleKeyFieldLoader fieldLoader =
+        new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+
+    PathSourcePath sourcePath = PathSourcePath.of(fileSystem, Paths.get(filename));
+
+    fileSystem.writeContentsToPath(
+        fileContents, graphBuilder.getSourcePathResolver().getRelativePath(sourcePath));
+
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:rule");
+    ActionRegistryForTests actionRegistry = new ActionRegistryForTests(buildTarget);
+    Artifact artifact = actionRegistry.declareArtifact(filename);
+
+    Action action =
+        new FakeAction(
+            actionRegistry,
+            ImmutableSet.of(ImmutableSourceArtifactImpl.of(sourcePath)),
+            ImmutableSet.of(artifact),
+            (ignored1, ignored2, ignored3) ->
+                ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty()));
+    BuildRule rule =
+        new RuleAnalysisLegacyBuildRuleView("rule", buildTarget, action, graphBuilder, fileSystem);
 
     return new ContentAgnosticRuleKeyFactory(fieldLoader, graphBuilder, Optional.empty())
         .build(rule);

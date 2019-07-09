@@ -18,12 +18,12 @@ package com.facebook.buck.skylark.parser;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.LabelCache;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -83,7 +83,7 @@ public class SkylarkProjectBuildFileParserTestUtils {
         .setIgnorePaths(ImmutableSet.of())
         .setBuildFileName("BUCK")
         .setRawConfig(ImmutableMap.of("dummy_section", ImmutableMap.of("dummy_key", "dummy_value")))
-        .setDescriptions(knownRuleTypesProvider.get(cell).getDescriptions())
+        .setDescriptions(knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions())
         .setBuildFileImportWhitelist(ImmutableList.of())
         .setPythonInterpreter("skylark");
   }
@@ -91,7 +91,9 @@ public class SkylarkProjectBuildFileParserTestUtils {
   static SkylarkProjectBuildFileParser createParserWithOptions(
       SkylarkFilesystem skylarkFilesystem,
       EventHandler eventHandler,
-      ProjectBuildFileParserOptions options) {
+      ProjectBuildFileParserOptions options,
+      KnownRuleTypesProvider knownRuleTypesProvider,
+      Cell cell) {
     return SkylarkProjectBuildFileParser.using(
         options,
         BuckEventBusForTests.newInstance(),
@@ -102,6 +104,7 @@ public class SkylarkProjectBuildFileParserTestUtils {
             .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
             .setEnableUserDefinedRules(options.getEnableUserDefinedRules())
             .setLabelCache(LabelCache.newLabelCache())
+            .setKnownUserDefinedRuleTypes(knownRuleTypesProvider.getUserDefinedRuleTypes(cell))
             .build(),
         eventHandler,
         NativeGlobber::create);

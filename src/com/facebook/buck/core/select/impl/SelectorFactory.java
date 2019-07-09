@@ -17,6 +17,7 @@
 package com.facebook.buck.core.select.impl;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -93,12 +94,13 @@ public class SelectorFactory {
       } else {
         selectorKey =
             new SelectorKey(
-                buildTargetTypeCoercer.coerce(
-                    cellPathResolver,
-                    filesystem,
-                    pathRelativeToProjectRoot,
-                    EmptyTargetConfiguration.INSTANCE,
-                    key));
+                ConfigurationBuildTargets.convert(
+                    buildTargetTypeCoercer.coerce(
+                        cellPathResolver,
+                        filesystem,
+                        pathRelativeToProjectRoot,
+                        EmptyTargetConfiguration.INSTANCE,
+                        key)));
       }
       if (entry.getValue() == Runtime.NONE) {
         result.remove(selectorKey);

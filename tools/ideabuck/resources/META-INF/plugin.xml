@@ -12,6 +12,8 @@
   <change-notes><![CDATA[
 <h3>3.7.6</h3>
 <ul>
+  <li>Use <code>buildifier</code> for the "Reformat Code" action</li>
+  <li>Support auto-formatting build files on save</li>
 </ul>
 <h3>3.7.5</h3>
 <ul>
@@ -245,7 +247,7 @@
   </change-notes>
 
   <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
-  <idea-version since-build="172.1294"/>
+  <idea-version since-build="191.5849.21"/>
 
   <depends>com.intellij.modules.platform</depends>
   <depends>com.intellij.modules.lang</depends>
@@ -287,12 +289,8 @@
       implementation="com.facebook.buck.intellij.ideabuck.config.BuckCodeStyleSettingsProvider"/>
     <langCodeStyleSettingsProvider
       implementation="com.facebook.buck.intellij.ideabuck.format.BuckLanguageCodeStyleSettingsProvider"/>
-    <gotoDeclarationHandler
-      implementation="com.facebook.buck.intellij.ideabuck.navigation.BuckGotoProvider"
-      order="FIRST"/>
-    <gotoDeclarationHandler
-      implementation="com.facebook.buck.intellij.ideabuck.navigation.BcfgGotoFileProvider"
-      language="Buckconfig"/>
+    <gotoDeclarationHandler implementation="com.facebook.buck.intellij.ideabuck.navigation.BuckGotoProvider" order="FIRST"/>
+    <gotoDeclarationHandler implementation="com.facebook.buck.intellij.ideabuck.navigation.BcfgGotoFileProvider" />
     <annotator language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.annotator.BuckAnnotator"/>
     <annotator language="Buckconfig"
@@ -361,6 +359,7 @@
 
     <stepsBeforeRunProvider implementation="com.facebook.buck.intellij.ideabuck.configurations.BuckCommandBeforeRunTaskProvider"/>
 
+    <postFormatProcessor implementation="com.facebook.buck.intellij.ideabuck.format.BuildifierPostFormatProcessor"/>
   </extensions>
 
   <actions>
@@ -431,6 +430,12 @@
       <add-to-group anchor="last" group-id="RunContextGroup"/>
     </group>
 
+    <!-- Under certain circumstances (while debugging ideabuck?), the "Reformat Code" action does
+    not invoke the BuildifierPostFormatProcessor.  Instead, provide this action (but don't put it
+    in menus) to make it possible to invoke directly. -->
+    <action class="com.facebook.buck.intellij.ideabuck.format.BuildifierExternalFormatAction"
+        id="buck.BuildifierExternalFormatAction"/>
+
   </actions>
 
   <project-components>
@@ -457,6 +462,10 @@
     <component>
       <implementation-class>
         com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider
+      </implementation-class>
+    </component>
+    <component>
+      <implementation-class>com.facebook.buck.intellij.ideabuck.format.BuildifierAutoFormatter
       </implementation-class>
     </component>
 

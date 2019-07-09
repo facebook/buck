@@ -23,9 +23,11 @@ from zipfile import ZipFile
 
 import pkg_resources
 
+
 ALLOWED_ENTRIES = """
 com/facebook/buck/core/util/log/appendablelogrecord/AppendableLogRecord.class
 com/facebook/buck/jvm/java/runner/FileClassPathRunner.class
+com/facebook/buck/jvm/java/version/JavaVersion.class
 com/facebook/buck/test/result/type/ResultType.class
 com/facebook/buck/test/selectors/Nullable.class
 com/facebook/buck/test/selectors/PatternTestSelector.class
@@ -69,6 +71,10 @@ com/facebook/buck/testrunner/TestNGRunner$JUnitReportReporterWithMethodParameter
 com/facebook/buck/testrunner/TestNGRunner$TestListener.class
 com/facebook/buck/testrunner/TestNGRunner.class
 com/facebook/buck/testrunner/TestResult.class
+com/facebook/buck/testrunner/TestXmlEscaper.class
+com/facebook/buck/testrunner/TestXmlEscaper$1.class
+com/facebook/buck/testrunner/TestXmlEscaper$AttributeEscaper.class
+com/facebook/buck/testrunner/TestXmlEscaper$ContentEscaper.class
 com/facebook/buck/util/concurrent/MostExecutors$1.class
 com/facebook/buck/util/concurrent/MostExecutors$NamedThreadFactory.class
 com/facebook/buck/util/concurrent/MostExecutors.class

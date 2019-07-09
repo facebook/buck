@@ -36,6 +36,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeFilterForSpecResolver;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecResolver;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.syntax.ListWithSelects;
@@ -191,9 +192,9 @@ class ParserWithConfigurableAttributes extends AbstractParser {
     SelectableConfigurationContext configurationContext =
         DefaultSelectableConfigurationContext.of(
             cell.getBuckConfig(),
-            state.getConstraintResolver(),
+            state.getConfigurationRuleRegistry().getConstraintResolver(),
             buildTarget.getTargetConfiguration(),
-            state.getTargetPlatformResolver());
+            state.getConfigurationRuleRegistry().getTargetPlatformResolver());
 
     SortedMap<String, Object> convertedAttributes = new TreeMap<>();
 
@@ -270,10 +271,10 @@ class ParserWithConfigurableAttributes extends AbstractParser {
     return targetNodes.filter(
         targetNode ->
             TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-                state.getConstraintResolver(),
-                state.getPlatformResolver(),
+                state.getConfigurationRuleRegistry(),
                 targetNode.getConstructorArg(),
                 state
+                    .getConfigurationRuleRegistry()
                     .getTargetPlatformResolver()
                     .getTargetPlatform(targetNode.getBuildTarget().getTargetConfiguration())));
   }
@@ -374,13 +375,11 @@ class ParserWithConfigurableAttributes extends AbstractParser {
 
     Platform targetPlatform =
         state
+            .getConfigurationRuleRegistry()
             .getTargetPlatformResolver()
             .getTargetPlatform(targetNode.getBuildTarget().getTargetConfiguration());
     if (!TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-        state.getConstraintResolver(),
-        state.getPlatformResolver(),
-        targetNode.getConstructorArg(),
-        targetPlatform)) {
+        state.getConfigurationRuleRegistry(), targetNode.getConstructorArg(), targetPlatform)) {
       HasTargetCompatibleWith argWithTargetCompatible =
           (HasTargetCompatibleWith) targetNode.getConstructorArg();
 

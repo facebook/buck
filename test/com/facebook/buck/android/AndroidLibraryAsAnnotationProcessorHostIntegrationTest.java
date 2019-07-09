@@ -88,7 +88,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
     assertZipFileContains(output, "res1");
 
     // Now, edit a config and assert we rebuild
-    workspace.replaceFileContents("res/META-INF/res1.json", "res1", "replaced");
+    workspace.replaceFileContents("res/_STRIPPED_RESOURCES/res1.json", "res1", "replaced");
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
@@ -116,7 +116,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
     assertZipFileContains(output, "res1");
 
     // Now, edit a used config and assert we rebuild
-    workspace.replaceFileContents("res/META-INF/res1.json", "res1", "replaced");
+    workspace.replaceFileContents("res/_STRIPPED_RESOURCES/res1.json", "res1", "replaced");
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
@@ -150,7 +150,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
 
     // Edit the unread metadata file and assert no dep file false negative
-    workspace.replaceFileContents("res/META-INF/unread.json", "replace_me", "foobar");
+    workspace.replaceFileContents("res/_STRIPPED_RESOURCES/unread.json", "replace_me", "foobar");
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
     workspace.getBuildLog().assertTargetHadMatchingDepfileRuleKey("//:top_level");
@@ -164,7 +164,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
     workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
 
     // Edit the unread metadata file and assert we can get a manifest hit
-    workspace.replaceFileContents("res/META-INF/unread.json", "replace_me", "foobar");
+    workspace.replaceFileContents("res/_STRIPPED_RESOURCES/unread.json", "replace_me", "foobar");
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
     workspace.getBuildLog().assertTargetWasFetchedFromCacheByManifestMatch("//:top_level");

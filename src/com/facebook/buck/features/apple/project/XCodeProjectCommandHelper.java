@@ -43,6 +43,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
@@ -56,10 +57,10 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.features.halide.HalideBuckConfig;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodeSpec;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -813,6 +814,7 @@ public class XCodeProjectCommandHelper {
           new MultiThreadedActionGraphBuilder(
               MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
               targetGraph,
+              ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
               new DefaultTargetNodeToBuildRuleTransformer(),
               cellProvider);
       this.traversedTargets = new HashSet<>();
@@ -829,7 +831,8 @@ public class XCodeProjectCommandHelper {
                               ? Collections.emptyIterator()
                               : targetGraph.getOutgoingNodesFor(node).iterator())
                   .traverse(ImmutableList.of(root))) {
-            if (!traversedTargets.contains(targetNode.getBuildTarget())) {
+            if (!traversedTargets.contains(targetNode.getBuildTarget())
+                && targetNode.getRuleType().isBuildRule()) {
               graphBuilder.requireRule(targetNode.getBuildTarget());
               currentTargets.add(targetNode.getBuildTarget());
             }

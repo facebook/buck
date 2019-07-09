@@ -33,11 +33,13 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkTargetGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableCacheKey;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
@@ -68,7 +70,10 @@ import java.util.stream.Stream;
  * interfaces to make it consumable by C/C++ preprocessing and native linkable rules.
  */
 public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements AbstractCxxLibraryGroup, HasRuntimeDeps, NativeTestable, NativeLinkTargetGroup {
+    implements AbstractCxxLibraryGroup,
+        HasRuntimeDeps,
+        NativeTestable,
+        LegacyNativeLinkTargetGroup {
 
   private static final Logger LOG = Logger.get(CxxLibraryGroup.class);
 
@@ -94,6 +99,8 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final boolean supportsOmnibusLinking;
 
   private final CxxLibraryDescriptionDelegate delegate;
+
+  private final PlatformLockedNativeLinkableGroup.Cache linkableCache;
 
   /**
    * Whether Native Linkable dependencies should be propagated for the purpose of computing objects
@@ -152,6 +159,7 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.supportsOmnibusLinking = supportsOmnibusLinking;
     this.delegate = delegate;
     this.transitiveCxxPreprocessorInputCache = new TransitiveCxxPreprocessorInputCache(this);
+    this.linkableCache = LegacyNativeLinkableGroup.getNativeLinkableCache(this);
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
@@ -486,6 +494,12 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public boolean supportsOmnibusLinkingForHaskell(CxxPlatform cxxPlatform) {
+    // TODO(agallagher): This should use supportsOmnibusLinking.
+    return true;
+  }
+
+  @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     // We export all declared deps as runtime deps, to setup a transitive runtime dep chain which
     // will pull in runtime deps (e.g. other binaries) or transitive C/C++ libraries.  Since the
@@ -500,13 +514,26 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
         .map(BuildRule::getBuildTarget);
   }
 
+  @Override
   public Iterable<? extends Arg> getExportedLinkerFlags(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return exportedLinkerFlags.apply(cxxPlatform, graphBuilder);
   }
 
+  @Override
   public Iterable<? extends Arg> getExportedPostLinkerFlags(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return postExportedLinkerFlags.apply(cxxPlatform, graphBuilder);
+  }
+
+  @Override
+  public boolean forceLinkWholeForHaskellOmnibus() {
+    // We link C/C++ libraries whole...
+    return true;
+  }
+
+  @Override
+  public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+    return linkableCache;
   }
 }

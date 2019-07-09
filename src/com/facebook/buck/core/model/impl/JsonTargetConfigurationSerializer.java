@@ -16,6 +16,9 @@
 package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
@@ -39,6 +42,10 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
       HOST_TARGET_CONFIGURATION_ATTRIBUTES_FOR_SERIALIZATION =
           ImmutableMap.of("hostPlatform", true);
 
+  private static final ImmutableMap<String, Boolean>
+      TARGET_CONFIGURATION_FOR_CONFIGURATION_ATTRIBUTES_FOR_SERIALIZATION =
+          ImmutableMap.of("configuration", true);
+
   private final ObjectWriter objectWriter;
   private final ObjectReader objectReader;
   private final Function<String, UnconfiguredBuildTargetView> buildTargetProvider;
@@ -49,8 +56,7 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
     ObjectMapper objectMapper = ObjectMappers.createWithEmptyBeansPermitted();
     SimpleModule targetConfigurationModule = new SimpleModule();
     targetConfigurationModule.addSerializer(
-        UnconfiguredBuildTargetView.class,
-        new UnconfiguredBuildTargetSimpleSerializer(UnconfiguredBuildTargetView.class));
+        BuildTarget.class, new BuildTargetSimpleSerializer(BuildTarget.class));
     objectMapper.registerModule(targetConfigurationModule);
 
     objectReader = objectMapper.reader();
@@ -63,6 +69,9 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
       if (targetConfiguration instanceof HostTargetConfiguration) {
         return objectWriter.writeValueAsString(
             HOST_TARGET_CONFIGURATION_ATTRIBUTES_FOR_SERIALIZATION);
+      } else if (targetConfiguration instanceof ConfigurationForConfigurationTargets) {
+        return objectWriter.writeValueAsString(
+            TARGET_CONFIGURATION_FOR_CONFIGURATION_ATTRIBUTES_FOR_SERIALIZATION);
       } else {
         return objectWriter.writeValueAsString(targetConfiguration);
       }
@@ -83,14 +92,18 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
     if (node.size() == 0) {
       return EmptyTargetConfiguration.INSTANCE;
     }
+    if (node.has("configuration")) {
+      return ConfigurationForConfigurationTargets.INSTANCE;
+    }
     if (node.has("hostPlatform")) {
       return HostTargetConfiguration.INSTANCE;
     }
     JsonNode targetPlatformNode =
         Preconditions.checkNotNull(
             node.get("targetPlatform"), "Cannot find targetPlatform in %s", rawValue);
-    UnconfiguredBuildTargetView platform =
-        buildTargetProvider.apply(targetPlatformNode.textValue());
+    BuildTarget platform =
+        ConfigurationBuildTargets.convert(
+            buildTargetProvider.apply(targetPlatformNode.textValue()));
     return ImmutableDefaultTargetConfiguration.of(platform);
   }
 }

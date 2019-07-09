@@ -19,10 +19,8 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.platform.ConstraintResolver;
-import com.facebook.buck.core.model.platform.PlatformResolver;
-import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -39,31 +37,25 @@ public class PerBuildState implements AutoCloseable {
   private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
   private final ParsePipeline<TargetNode<?>> targetNodeParsePipeline;
   private final ParsingContext parsingContext;
-  private final ConstraintResolver constraintResolver;
   private final SelectorListResolver selectorListResolver;
   private final SelectorListFactory selectorListFactory;
-  private final TargetPlatformResolver targetPlatformResolver;
-  private final PlatformResolver platformResolver;
+  private final ConfigurationRuleRegistry configurationRuleRegistry;
 
   PerBuildState(
       CellManager cellManager,
       BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline,
       ParsePipeline<TargetNode<?>> targetNodeParsePipeline,
       ParsingContext parsingContext,
-      ConstraintResolver constraintResolver,
       SelectorListResolver selectorListResolver,
       SelectorListFactory selectorListFactory,
-      TargetPlatformResolver targetPlatformResolver,
-      PlatformResolver platformResolver) {
+      ConfigurationRuleRegistry configurationRuleRegistry) {
     this.cellManager = cellManager;
     this.buildFileRawNodeParsePipeline = buildFileRawNodeParsePipeline;
     this.targetNodeParsePipeline = targetNodeParsePipeline;
     this.parsingContext = parsingContext;
-    this.constraintResolver = constraintResolver;
     this.selectorListResolver = selectorListResolver;
     this.selectorListFactory = selectorListFactory;
-    this.targetPlatformResolver = targetPlatformResolver;
-    this.platformResolver = platformResolver;
+    this.configurationRuleRegistry = configurationRuleRegistry;
   }
 
   TargetNode<?> getTargetNode(BuildTarget target) throws BuildFileParseException {
@@ -109,10 +101,6 @@ public class PerBuildState implements AutoCloseable {
     return parsingContext;
   }
 
-  ConstraintResolver getConstraintResolver() {
-    return constraintResolver;
-  }
-
   SelectorListResolver getSelectorListResolver() {
     return selectorListResolver;
   }
@@ -121,12 +109,8 @@ public class PerBuildState implements AutoCloseable {
     return selectorListFactory;
   }
 
-  TargetPlatformResolver getTargetPlatformResolver() {
-    return targetPlatformResolver;
-  }
-
-  PlatformResolver getPlatformResolver() {
-    return platformResolver;
+  ConfigurationRuleRegistry getConfigurationRuleRegistry() {
+    return configurationRuleRegistry;
   }
 
   @Override

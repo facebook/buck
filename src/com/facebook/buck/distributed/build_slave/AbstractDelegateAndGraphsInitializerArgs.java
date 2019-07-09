@@ -19,7 +19,7 @@ package com.facebook.buck.distributed.build_slave;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildState;

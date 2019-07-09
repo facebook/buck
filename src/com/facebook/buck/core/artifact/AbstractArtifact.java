@@ -16,6 +16,9 @@
 package com.facebook.buck.core.artifact;
 
 import com.google.common.base.Preconditions;
+import com.google.devtools.build.lib.cmdline.Label;
+import com.google.devtools.build.lib.syntax.Runtime;
+import java.util.Optional;
 
 /**
  * The abstract {@link Artifact} with information on whether or not the artifact is a bound
@@ -53,4 +56,15 @@ abstract class AbstractArtifact implements Artifact {
     Preconditions.checkState(
         !isBound(), "Requesting the Declared but this artifact is actually already bound.");
   }
+
+  @Override
+  public final Object getOwner() {
+    return getOwnerTyped().map(Object.class::cast).orElse(Runtime.NONE);
+  }
+
+  /**
+   * @return The Label of the rule that created this artifact, or {@link Optional#empty()} if not
+   *     applicable. This is converted to a Skylark appropriate type by {@link #getOwner()}
+   */
+  protected abstract Optional<Label> getOwnerTyped();
 }

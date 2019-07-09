@@ -39,6 +39,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -112,9 +113,14 @@ public abstract class BuckStarlarkFunction
   public Object call(
       List<Object> args,
       @Nullable Map<String, Object> kwargs,
-      FuncallExpression ast,
+      @Nullable FuncallExpression nullableAst,
       Environment env)
       throws EvalException, InterruptedException {
+
+    FuncallExpression ast =
+        Objects.requireNonNull(
+            nullableAst, "AST should not be null as this should only be called from Starlark");
+
     // this is the effectively the same as bazel's {@BuiltInCallable}
     try (SilentCloseable c =
         Profiler.instance().profile(ProfilerTask.STARLARK_BUILTIN_FN, methodDescriptor.getName())) {

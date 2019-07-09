@@ -56,6 +56,7 @@ public class HaskellPlatformsFactory {
         .setShouldUseArgsfile(haskellBuckConfig.getShouldUseArgsfile(section))
         .setShouldUsedOldBinaryOutputLocation(
             haskellBuckConfig.getShouldUsedOldBinaryOutputLocation(section))
+        .setSupportExposePackage(haskellBuckConfig.getSupportExposePackage(section))
         .setPackageNamePrefix(haskellBuckConfig.getPackageNamePrefix(section))
         .setGhciScriptTemplate(haskellBuckConfig.getGhciScriptTemplate(section))
         .setGhciIservScriptTemplate(haskellBuckConfig.getGhciIservScriptTemplate(section))

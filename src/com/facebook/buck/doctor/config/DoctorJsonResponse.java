@@ -17,7 +17,10 @@
 package com.facebook.buck.doctor.config;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.collect.Iterables;
+import java.util.Arrays;
 import java.util.Optional;
 
 @BuckStyleValue
@@ -36,4 +39,14 @@ public interface DoctorJsonResponse {
 
   /** @return the message which is Json in the format/content that the server uses. */
   Optional<String> getMessage();
+
+  /**
+   * @return the id of the generated report. This is a workaround of the fact that the server does
+   *     not respond with a dedicated field for the report id, and changing it it's too much
+   *     trouble, so this pretends that it was in fact included in the response's json
+   */
+  @JsonIgnore
+  default Optional<String> getReportId() {
+    return getRageUrl().map(url -> Iterables.getLast(Arrays.asList(url.split("/"))));
+  }
 }

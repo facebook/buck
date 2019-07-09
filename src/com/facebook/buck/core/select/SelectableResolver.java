@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.select;
 
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.BuildTarget;
 
 /** Provides access to instances of {@link Selectable}. */
 public interface SelectableResolver {
@@ -24,5 +24,5 @@ public interface SelectableResolver {
   /**
    * @return a {@link Selectable} or throws an exception if it's not registered in this resolver.
    */
-  Selectable getSelectable(UnconfiguredBuildTargetView target);
+  Selectable getSelectable(BuildTarget target);
 }

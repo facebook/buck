@@ -34,12 +34,14 @@ import com.google.bytestream.ByteStreamGrpc;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
 import com.google.bytestream.ByteStreamProto.ReadRequest;
 import com.google.bytestream.ByteStreamProto.ReadResponse;
+import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
+import java.security.MessageDigest;
 import java.util.concurrent.TimeUnit;
 import org.immutables.value.Value;
 
@@ -65,6 +67,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
       String instanceName,
       ManagedChannel executionEngineChannel,
       ManagedChannel casChannel,
+      int casDeadline,
       MetadataProvider metadataProvider,
       BuckEventBus buckEventBus) {
     this.executionEngineChannel = executionEngineChannel;
@@ -76,13 +79,14 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
         createStorage(
             ContentAddressableStorageGrpc.newFutureStub(casChannel),
             byteStreamStub,
+            casDeadline,
             instanceName,
             PROTOCOL,
             buckEventBus);
     ExecutionStub executionStub = ExecutionGrpc.newStub(executionEngineChannel);
     this.executionService =
         new GrpcRemoteExecutionServiceClient(
-            executionStub, byteStreamStub, instanceName, getProtocol());
+            executionStub, byteStreamStub, instanceName, getProtocol(), casDeadline);
   }
 
   public static String getResourceName(String instanceName, Protocol.Digest digest) {
@@ -94,44 +98,52 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
       String instanceName,
       Protocol.Digest digest,
       ByteStreamStub byteStreamStub,
-      ThrowingConsumer<ByteString, IOException> dataConsumer) {
+      ThrowingConsumer<ByteString, IOException> dataConsumer,
+      int casDeadline) {
     String name = getResourceName(instanceName, digest);
     SettableFuture<Void> future = SettableFuture.create();
-    byteStreamStub.read(
-        ReadRequest.newBuilder().setResourceName(name).setReadLimit(0).setReadOffset(0).build(),
-        new StreamObserver<ReadResponse>() {
-          int size = 0;
+    byteStreamStub
+        .withDeadlineAfter(casDeadline, TimeUnit.SECONDS)
+        .read(
+            ReadRequest.newBuilder().setResourceName(name).setReadLimit(0).setReadOffset(0).build(),
+            new StreamObserver<ReadResponse>() {
+              int size = 0;
+              MessageDigest messageDigest = PROTOCOL.getMessageDigest();
 
-          @Override
-          public void onNext(ReadResponse value) {
-            try {
-              ByteString data = value.getData();
-              size += data.size();
-              dataConsumer.accept(data);
-            } catch (IOException e) {
-              onError(e);
-            }
-          }
+              @Override
+              public void onNext(ReadResponse value) {
+                try {
+                  ByteString data = value.getData();
+                  size += data.size();
+                  messageDigest.update(data.asReadOnlyByteBuffer());
+                  dataConsumer.accept(data);
+                } catch (IOException e) {
+                  onError(e);
+                }
+              }
 
-          @Override
-          public void onError(Throwable t) {
-            future.setException(t);
-          }
+              @Override
+              public void onError(Throwable t) {
+                future.setException(t);
+              }
 
-          @Override
-          public void onCompleted() {
-            if (size == digest.getSize()) {
-              future.set(null);
-            } else {
-              future.setException(
-                  new BuckUncheckedExecutionException(
-                      "Size of received bytes: "
-                          + size
-                          + " doesn't match expected size of: "
-                          + digest));
-            }
-          }
-        });
+              @Override
+              public void onCompleted() {
+                String digestHash = HashCode.fromBytes(messageDigest.digest()).toString();
+                if (size == digest.getSize() && digestHash.equals(digest.getHash())) {
+                  future.set(null);
+                } else {
+                  future.setException(
+                      new BuckUncheckedExecutionException(
+                          "Digest of received bytes: "
+                              + digestHash
+                              + ":"
+                              + size
+                              + " doesn't match expected digest: "
+                              + digest));
+                }
+              }
+            });
     return future;
   }
 
@@ -168,10 +180,17 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
   private ContentAddressedStorageClient createStorage(
       ContentAddressableStorageFutureStub storageStub,
       ByteStreamStub byteStreamStub,
+      int casDeadline,
       String instanceName,
       Protocol protocol,
       BuckEventBus buckEventBus) {
     return new GrpcContentAddressableStorageClient(
-        storageStub, byteStreamStub, instanceName, protocol, buckEventBus, metadataProvider.get());
+        storageStub,
+        byteStreamStub,
+        casDeadline,
+        instanceName,
+        protocol,
+        buckEventBus,
+        metadataProvider.get());
   }
 }

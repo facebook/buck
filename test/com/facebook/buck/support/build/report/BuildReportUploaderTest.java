@@ -22,8 +22,9 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.util.versioncontrol.FullVersionControlStats;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -40,6 +41,15 @@ public class BuildReportUploaderTest {
       FakeBuckConfig.builder()
           .setSections(
               "[section1]\nfield1 = value1.1, value1.2\n[section2]\nfield2 = value2\nfield4 = value2")
+          .build();
+
+  private final FullVersionControlStats versionControlStats =
+      FullVersionControlStats.builder()
+          .setCurrentRevisionId("f00")
+          .setBranchedFromMasterRevisionId("b47")
+          .setBranchedFromMasterTS(0L)
+          .setBaseBookmarks(ImmutableSet.of("remote/master"))
+          .setPathsChangedInWorkingDirectory(ImmutableSet.of("hello.txt"))
           .build();
 
   private BuildId buildId = new BuildId();
@@ -62,11 +72,16 @@ public class BuildReportUploaderTest {
       assertNotNull(currentConfig.get("rawConfig"));
       assertNotNull(currentConfig.get("configsMap"));
 
+      JsonNode versionControlStats = reportReceived.get("versionControlStats");
+      assertNotNull(versionControlStats);
+      assertNotNull(versionControlStats.get("pathsChangedInWorkingDirectory"));
+      assertNotNull(versionControlStats.get("currentRevisionId"));
+
       httpResponse.setContentType("application/json");
       httpResponse.setCharacterEncoding("utf-8");
 
       // this is an example json of what the real endpoint should return.
-      String jsonResponse = "{ \"success\": true, \"content\":{\"field\":\"value\"}}";
+      String jsonResponse = "{ \"uri\": \"a.test.uri.com\"}";
 
       DataOutputStream out = new DataOutputStream(httpResponse.getOutputStream());
       out.writeBytes(jsonResponse);
@@ -76,7 +91,8 @@ public class BuildReportUploaderTest {
   @Test
   public void uploadReportToTestServer() throws Exception {
 
-    FullBuildReport reportToSend = new ImmutableFullBuildReport(buckConfig.getConfig(), buildId);
+    FullBuildReport reportToSend =
+        new ImmutableFullBuildReport(buckConfig.getConfig(), Optional.of(versionControlStats));
 
     try (HttpdForTests httpd = HttpdForTests.httpdForOkHttpTests()) {
       httpd.addHandler(new BuildReportHandler());
@@ -86,14 +102,12 @@ public class BuildReportUploaderTest {
       long timeoutMs = buckConfig.getView(BuildReportConfig.class).getEndpointTimeoutMs();
 
       UploadResponse response =
-          BuildReportUploader.uploadReport(reportToSend, testEndpointURI.toURL(), timeoutMs);
+          new BuildReportUploader(testEndpointURI.toURL(), timeoutMs, buildId)
+              .uploadReport(reportToSend);
 
-      Optional<String> errorMessage = response.getErrorMessage();
+      Optional<String> uri = response.uri();
 
-      assertFalse(errorMessage.isPresent());
-
-      assertEquals(Optional.of(ImmutableMap.of("field", "value")), response.getContent());
-      assertEquals(Optional.of(true), response.getSuccess());
+      assertEquals("a.test.uri.com", uri.get());
     }
   }
 }

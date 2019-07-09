@@ -31,15 +31,15 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.LabelCache;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
@@ -104,7 +104,7 @@ public class SkylarkProjectBuildFileParserTest {
   private SkylarkProjectBuildFileParser createParserWithOptions(
       EventHandler eventHandler, ProjectBuildFileParserOptions options) {
     return SkylarkProjectBuildFileParserTestUtils.createParserWithOptions(
-        skylarkFilesystem, eventHandler, options);
+        skylarkFilesystem, eventHandler, options, knownRuleTypesProvider, cell);
   }
 
   private SkylarkProjectBuildFileParser createParser(EventHandler eventHandler) {
@@ -1002,7 +1002,7 @@ public class SkylarkProjectBuildFileParserTest {
             .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
             .setIgnorePaths(ImmutableSet.of())
             .setBuildFileName("BUCK")
-            .setDescriptions(knownRuleTypesProvider.get(cell).getDescriptions())
+            .setDescriptions(knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions())
             .setBuildFileImportWhitelist(ImmutableList.of())
             .setPythonInterpreter("skylark")
             .setCellRoots(ImmutableMap.of("tp2", anotherCell))
@@ -1018,6 +1018,7 @@ public class SkylarkProjectBuildFileParserTest {
                 .setRuleFunctionFactory(new RuleFunctionFactory(new DefaultTypeCoercerFactory()))
                 .setEnableUserDefinedRules(options.getEnableUserDefinedRules())
                 .setLabelCache(LabelCache.newLabelCache())
+                .setKnownUserDefinedRuleTypes(knownRuleTypesProvider.getUserDefinedRuleTypes(cell))
                 .build(),
             new PrintingEventHandler(EnumSet.allOf(EventKind.class)),
             NativeGlobber::create);

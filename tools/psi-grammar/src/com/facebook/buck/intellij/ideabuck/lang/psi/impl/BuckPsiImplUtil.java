@@ -15,20 +15,51 @@
  */
 package com.facebook.buck.intellij.ideabuck.lang.psi.impl;
 
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckAndExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArithmeticExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckAtomicExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckBitwiseAndExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckComparisonExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckElementFactory;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFactorExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionDefinition;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionTrailer;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckIdentifier;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadArgument;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckNotExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckOrExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPowerExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckShiftExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSimpleExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckString;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTermExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckXorExpression;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNameIdentifierOwner;
+import java.util.Objects;
 import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /** Mixins for {@link com.facebook.buck.intellij.ideabuck.lang.BuckLanguage} elements. */
 public class BuckPsiImplUtil {
+
+  // BuckAndExpression mixins
+  /**
+   * Returns the value of the given {@link BuckAndExpression} as a string, or null if its value
+   * cannot be deduced.
+   */
+  @Nullable
+  public static String getStringValue(BuckAndExpression andExpression) {
+    return Optional.of(andExpression)
+        .map(BuckAndExpression::getNotExpressionList)
+        .filter(list -> list.size() == 1)
+        .map(list -> list.get(0))
+        .map(BuckPsiImplUtil::getStringValue)
+        .orElse(null);
+  }
 
   // BuckArgument mixins
   /** See {@link PsiNameIdentifierOwner#getName()} */
@@ -50,6 +81,92 @@ public class BuckPsiImplUtil {
     return argument;
   }
 
+  // BuckAtomicExpression mixins
+  /**
+   * Returns the value of the given {@link BuckAtomicExpression} as a string, or null if its value
+   * cannot be deduced.
+   */
+  @Nullable
+  public static String getStringValue(BuckAtomicExpression atomicExpression) {
+    return Optional.of(atomicExpression)
+        .map(BuckAtomicExpression::getString)
+        .map(BuckPsiImplUtil::getValue)
+        .orElse(null);
+  }
+
+  // BuckArithmeticExpression mixins
+  /**
+   * Returns the value of the given {@link BuckArithmeticExpression} as a string, or null if its
+   * value cannot be deduced.
+   */
+  @Nullable
+  public static String getStringValue(BuckArithmeticExpression arithmeticExpression) {
+    return Optional.of(arithmeticExpression)
+        .map(BuckArithmeticExpression::getTermExpressionList)
+        .filter(list -> list.size() == 1)
+        .map(list -> list.get(0))
+        .map(BuckPsiImplUtil::getStringValue)
+        .orElse(null);
+  }
+
+  // BuckBitwiseAndExpression mixins
+  /**
+   * Returns the value of the given {@link BuckBitwiseAndExpression} as a string, or null if its
+   * value cannot be deduced.
+   */
+  @Nullable
+  public static String getStringValue(BuckBitwiseAndExpression bitwiseAndExpression) {
+    return Optional.of(bitwiseAndExpression)
+        .map(BuckBitwiseAndExpression::getShiftExpressionList)
+        .filter(list -> list.size() == 1)
+        .map(list -> list.get(0))
+        .map(BuckPsiImplUtil::getStringValue)
+        .orElse(null);
+  }
+
+  // BuckComparisonExpression mixins
+  /**
+   * Returns the value of the given {@link BuckComparisonExpression} as a string, or null if its
+   * value cannot be deduced.
+   */
+  @Nullable
+  public static String getStringValue(BuckComparisonExpression comparisonExpression) {
+    return Optional.of(comparisonExpression)
+        .map(BuckComparisonExpression::getSimpleExpressionList)
+        .filter(list -> list.size() == 1)
+        .map(list -> list.get(0))
+        .map(BuckPsiImplUtil::getStringValue)
+        .orElse(null);
+  }
+
+  // BuckExpression mixins
+  /**
+   * Returns the value of the given {@link BuckExpression} as a string, or null if its value cannot
+   * be deduced.
+   */
+  @Nullable
+  public static String getStringValue(BuckExpression expression) {
+    return Optional.of(expression)
+        .map(BuckExpression::getOrExpressionList)
+        .filter(list -> list.size() == 1)
+        .map(list -> list.get(0))
+        .map(BuckPsiImplUtil::getStringValue)
+        .orElse(null);
+  }
+
+  // BuckFactorExpression mixins
+  /**
+   * Returns the value of the given {@link BuckFactorExpression} as a string, or null if its value
+   * cannot be deduced.
+   */
+  @Nullable
+  public static String getStringValue(BuckFactorExpression factorExpression) {
+    return Optional.of(factorExpression)
+        .map(BuckFactorExpression::getPowerExpression)
+        .map(BuckPsiImplUtil::getStringValue)
+        .orElse(null);
+  }
+
   // BuckFunctionDefinition mixins
 
   /** See {@link PsiNameIdentifierOwner#getName()} */
@@ -67,6 +184,33 @@ public class BuckPsiImplUtil {
       BuckFunctionDefinition buckFunctionDefinition, @NotNull String newName) {
     buckFunctionDefinition.getIdentifier().setName(newName);
     return buckFunctionDefinition;
+  }
+
+  // BuckFunctionTrailer mixins
+
+  /** See {@link PsiNameIdentifierOwner#getName()} */
+  @Nullable
+  public static BuckArgument getNamedArgument(BuckFunctionTrailer functionTrailer, String name) {
+    return functionTrailer.getArgumentList().stream()
+        .filter(argument -> Objects.equals(name, getName(argument)))
+        .findFirst()
+        .orElse(null);
+  }
+
+  /** Returns the {@link BuckExpression} for the "name" keyword parameter, if present */
+  @Nullable
+  public static BuckExpression getNameExpression(BuckFunctionTrailer functionTrailer) {
+    return Optional.ofNullable(getNamedArgument(functionTrailer, "name"))
+        .map(BuckArgument::getExpression)
+        .orElse(null);
+  }
+
+  /** Returns the value of the "name" keyword as a string. */
+  @Nullable
+  public static String getName(BuckFunctionTrailer functionTrailer) {
+    return Optional.ofNullable(getNameExpression(functionTrailer))
+        .map(expression -> getStringValue(expression))
+        .orElse(null);
   }
 
   // BuckIdentifier mixins
@@ -119,6 +263,79 @@ public class BuckPsiImplUtil {
       setValue(buckLoadArgument.getString(), newName);
     }
     return buckLoadArgument;
+  }
+
+  // BuckNotExpression mixins
+  /**
+   * Returns the value of the given {@link BuckNotExpression} as a string, or null if its value
+   * cannot be deduced.
+   */
+  @Nullable
+  public static String getStringValue(BuckNotExpression notExpression) {
+    return Optional.of(notExpression)
+        .map(BuckNotExpression::getComparisonExpression)
+        .map(BuckPsiImplUtil::getStringValue)
+        .orElse(null);
+  }
+
+  // BuckOrExpression mixins
+  /**
+   * Returns the value of the given {@link BuckOrExpression} as a string, or null if its value
+   * cannot be deduced.
+   */
+  @Nullable
+  public static String getStringValue(BuckOrExpression orExpression) {
+    return Optional.of(orExpression)
+        .map(BuckOrExpression::getAndExpressionList)
+        .filter(list -> list.size() == 1)
+        .map(list -> list.get(0))
+        .map(BuckPsiImplUtil::getStringValue)
+        .orElse(null);
+  }
+
+  // BuckPowerExpression mixins
+  /**
+   * Returns the value of the given {@link BuckPowerExpression} as a string, or null if its value
+   * cannot be deduced.
+   */
+  @Nullable
+  public static String getStringValue(BuckPowerExpression powerExpression) {
+    return Optional.of(powerExpression)
+        .filter(expr -> expr.getExpressionTrailerList().isEmpty())
+        .filter(expr -> expr.getFactorExpression() == null)
+        .map(BuckPowerExpression::getAtomicExpression)
+        .map(BuckPsiImplUtil::getStringValue)
+        .orElse(null);
+  }
+
+  // BuckShiftExpression mixins
+  /**
+   * Returns the value of the given {@link BuckShiftExpression} as a string, or null if its value
+   * cannot be deduced.
+   */
+  @Nullable
+  public static String getStringValue(BuckShiftExpression shiftExpression) {
+    return Optional.of(shiftExpression)
+        .map(BuckShiftExpression::getArithmeticExpressionList)
+        .filter(list -> list.size() == 1)
+        .map(list -> list.get(0))
+        .map(BuckPsiImplUtil::getStringValue)
+        .orElse(null);
+  }
+
+  // BuckSimpleExpression mixins
+  /**
+   * Returns the value of the given {@link BuckSimpleExpression} as a string, or null if its value
+   * cannot be deduced.
+   */
+  @Nullable
+  public static String getStringValue(BuckSimpleExpression simpleExpression) {
+    return Optional.of(simpleExpression)
+        .map(BuckSimpleExpression::getXorExpressionList)
+        .filter(list -> list.size() == 1)
+        .map(list -> list.get(0))
+        .map(BuckPsiImplUtil::getStringValue)
+        .orElse(null);
   }
 
   // BuckString mixins
@@ -252,5 +469,35 @@ public class BuckPsiImplUtil {
         BuckElementFactory.createElement(buckString.getProject(), newText, BuckString.class);
     buckString.getNode().replaceAllChildrenToChildrenOf(newString.getNode());
     return buckString;
+  }
+
+  // BuckTermExpression mixins
+  /**
+   * Returns the value of the given {@link BuckTermExpression} as a string, or null if its value
+   * cannot be deduced.
+   */
+  @Nullable
+  public static String getStringValue(BuckTermExpression termExpression) {
+    return Optional.of(termExpression)
+        .map(BuckTermExpression::getFactorExpressionList)
+        .filter(list -> list.size() == 1)
+        .map(list -> list.get(0))
+        .map(BuckPsiImplUtil::getStringValue)
+        .orElse(null);
+  }
+
+  // BuckXorExpression mixins
+  /**
+   * Returns the value of the given {@link BuckXorExpression} as a string, or null if its value
+   * cannot be deduced.
+   */
+  @Nullable
+  public static String getStringValue(BuckXorExpression xorExpression) {
+    return Optional.of(xorExpression)
+        .map(BuckXorExpression::getBitwiseAndExpressionList)
+        .filter(list -> list.size() == 1)
+        .map(list -> list.get(0))
+        .map(BuckPsiImplUtil::getStringValue)
+        .orElse(null);
   }
 }

@@ -24,54 +24,61 @@ import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.versioncontrol.FullVersionControlStats;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /** Schedules the background task that uploads a {@link FullBuildReport} */
 public class BuildReportUpload {
 
   private static final Logger LOG = Logger.get(BuildReportUpload.class);
 
-  private final TaskManagerCommandScope managerScope;
-  private final FullBuildReport report;
+  private static final int VERSION_CONTROL_STATS_GENERATION_TIMEOUT = 3;
 
-  BuildReportUpload(TaskManagerCommandScope managerScope, Config config, BuildId buildId) {
-    this.report = new ImmutableFullBuildReport(config, buildId);
+  private final TaskManagerCommandScope managerScope;
+  private final BuildReportUploader buildReportUploader;
+
+  BuildReportUpload(
+      TaskManagerCommandScope managerScope, URL endpointURL, long timeout, BuildId buildId) {
     this.managerScope = managerScope;
+    this.buildReportUploader = new BuildReportUploader(endpointURL, timeout, buildId);
   }
 
   /**
    * If reporting is not enabled in the config, or the endpoint url is empty, it will not run.
    *
    * @param managerScope the task manager scope to use for scheduling
+   * @param vcStatsFuture the future that returns an optional FullVersionControlStats
    * @param buckConfig the config of the current run. This is added to the report and used to
    *     determine whether the report should be uploaded
+   * @param buildId of the current Build
    */
   public static void runBuildReportUpload(
-      TaskManagerCommandScope managerScope, BuckConfig buckConfig, BuildId buildId) {
+      TaskManagerCommandScope managerScope,
+      ListenableFuture<Optional<FullVersionControlStats>> vcStatsFuture,
+      BuckConfig buckConfig,
+      BuildId buildId) {
     BuildReportConfig buildReportConfig = buckConfig.getView(BuildReportConfig.class);
 
-    if (!buildReportConfig.getEnabled()) {
-      LOG.info("Build report is not enabled");
-      return;
-    }
+    URL endpointUrl = buildReportConfig.getEndpointUrl().get();
 
-    Optional<URL> endpointUrl = buildReportConfig.getEndpointUrl();
+    BuildReportUpload buildReportUpload =
+        new BuildReportUpload(
+            managerScope, endpointUrl, buildReportConfig.getEndpointTimeoutMs(), buildId);
 
-    if (!endpointUrl.isPresent()) {
-      LOG.error("Build report is enabled but its endpoint url is not configured");
-      return;
-    }
-
-    new BuildReportUpload(managerScope, buckConfig.getConfig(), buildId)
-        .uploadInBackground(endpointUrl.get(), buildReportConfig.getEndpointTimeoutMs());
+    buildReportUpload.uploadInBackground(buckConfig.getConfig(), vcStatsFuture);
   }
 
   /** Schedules background task to upload the report */
-  private void uploadInBackground(URL endpointURL, long timeout) {
+  private void uploadInBackground(
+      Config config, ListenableFuture<Optional<FullVersionControlStats>> vcStatsFuture) {
     BuildReportUploadActionArgs args =
-        new ImmutableBuildReportUploadActionArgs(this.report, endpointURL, timeout);
+        new ImmutableBuildReportUploadActionArgs(config, buildReportUploader, vcStatsFuture);
 
     BackgroundTask<BuildReportUploadActionArgs> task =
         ImmutableBackgroundTask.of("BuildReportUpload", new BuildReportUploadAction(), args);
@@ -83,9 +90,26 @@ public class BuildReportUpload {
   static class BuildReportUploadAction implements TaskAction<BuildReportUploadActionArgs> {
     @Override
     public void run(BuildReportUploadActionArgs args) {
+      Optional<FullVersionControlStats> vcStats = Optional.empty();
       try {
-        BuildReportUploader.uploadReport(
-            args.getBuildReport(), args.getUploadURL(), args.getTimeout());
+        vcStats =
+            args.getVcStatsFuture().get(VERSION_CONTROL_STATS_GENERATION_TIMEOUT, TimeUnit.SECONDS);
+
+      } catch (InterruptedException | ExecutionException | TimeoutException e) {
+
+        LOG.warn(
+            e,
+            "version control stats generation timed out,"
+                + " was interrupted, or threw an exception");
+      }
+
+      if (!vcStats.isPresent()) {
+        LOG.warn("Uploading build report without version control stats");
+      }
+
+      FullBuildReport buildReport = new ImmutableFullBuildReport(args.getConfig(), vcStats);
+      try {
+        args.getBuildReportUploader().uploadReport(buildReport);
       } catch (IOException e) {
         LOG.error(e);
       }
@@ -96,10 +120,10 @@ public class BuildReportUpload {
   @BuckStyleValue
   abstract static class BuildReportUploadActionArgs {
 
-    abstract FullBuildReport getBuildReport();
+    abstract Config getConfig();
 
-    abstract URL getUploadURL();
+    abstract BuildReportUploader getBuildReportUploader();
 
-    abstract long getTimeout();
+    abstract ListenableFuture<Optional<FullVersionControlStats>> getVcStatsFuture();
   }
 }

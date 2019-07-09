@@ -48,6 +48,7 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   public static final int DEFAULT_REMOTE_PORT = 19030;
   public static final int DEFAULT_CAS_PORT = 19031;
+  public static final int DEFAULT_CAS_DEADLINE_S = 300;
 
   public static final int DEFAULT_REMOTE_STRATEGY_THREADS = 12;
   public static final int DEFAULT_REMOTE_CONCURRENT_ACTION_COMPUTATIONS = 4;
@@ -130,10 +131,25 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   // Auxiliary flag used for setting custom build tags.
   public static final String BUILD_TAGS_KEY = "build_tags";
 
+  // Property inside [experiments] section that will be used to enable Remote Execution
+  // automatically or not
+  public static final String AUTO_RE_EXPERIMENT_PROPERTY_KEY = "auto_re_experiment_property";
+
+  public static final String DEFAULT_AUTO_RE_EXPERIMENT_PROPERTY = "remote_execution_beta_test";
+
+  private String getAutoReExperimentPropertyKey() {
+    return getValue(AUTO_RE_EXPERIMENT_PROPERTY_KEY).orElse(DEFAULT_AUTO_RE_EXPERIMENT_PROPERTY);
+  }
+
+  @VisibleForTesting
+  boolean isExperimentEnabled() {
+    return getDelegate().getBooleanValue("experiments", getAutoReExperimentPropertyKey(), false);
+  }
+
   public boolean isRemoteExecutionAutoEnabled(String username, List<String> commandArguments) {
     return isRemoteExecutionAutoEnabled(
         isBuildWhitelistedForRemoteExecution(username, commandArguments),
-        getDelegate().getBooleanValue("experiments", "remote_execution_beta_test", false),
+        isExperimentEnabled(),
         getAutoRemoteExecutionStrategy());
   }
 
@@ -178,6 +194,10 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   public int getCasPort() {
     return getValue("cas_port").map(Integer::parseInt).orElse(DEFAULT_CAS_PORT);
+  }
+
+  public int getCasDeadline() {
+    return getValue("cas_deadline_sec").map(Integer::parseInt).orElse(DEFAULT_CAS_DEADLINE_S);
   }
 
   public boolean getInsecure() {

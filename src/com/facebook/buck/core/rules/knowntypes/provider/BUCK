@@ -1,0 +1,19 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "provider",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
+        "//src/com/facebook/buck/core/starlark/knowntypes:knowntypes",
+    ],
+    tests = [
+        "//test/com/facebook/buck/core/rules/knowntypes/provider:provider",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/parser/config:config",
+    ],
+)

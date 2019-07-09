@@ -15,9 +15,11 @@
  */
 package com.facebook.buck.core.starlark.rule;
 
+import com.facebook.buck.core.starlark.coercer.SkylarkParamInfo;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
+import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -52,8 +54,11 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
 
   private boolean isExported = false;
   @Nullable private String name = null;
+  @Nullable private Label label = null;
+  @Nullable private String exportedName = null;
   private final BaseFunction implementation;
   private final ImmutableMap<String, Attribute<?>> attrs;
+  private final ImmutableMap<String, ParamInfo> params;
 
   private SkylarkUserDefinedRule(
       FunctionSignature.WithValues<Object, SkylarkType> signature,
@@ -67,6 +72,11 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     super("<incomplete rule>", signature, location);
     this.implementation = implementation;
     this.attrs = attrs;
+    this.params =
+        getAttrs().entrySet().stream()
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    Map.Entry::getKey, e -> new SkylarkParamInfo(e.getKey(), e.getValue())));
   }
 
   @Override
@@ -255,9 +265,29 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   /** Ensure that we only get our name after this function has been exported */
   @Override
   public String getName() {
-    Preconditions.checkNotNull(
+    return Preconditions.checkNotNull(
         name, "Tried to get name before function has been assigned to a variable and exported");
-    return name;
+  }
+
+  /**
+   * Get the string representation of the label of extension file. Only may be called after calling
+   * {@link #export(Label, String)}
+   *
+   * @return
+   */
+  public Label getLabel() {
+    return Preconditions.checkNotNull(
+        label, "Tried to get label before function has been assigned to a variable and exported");
+  }
+
+  /**
+   * Get the exported name of the function within an extension file. Only may be called after
+   * calling {@link #export(Label, String)}
+   */
+  public String getExportedName() {
+    return Preconditions.checkNotNull(
+        exportedName,
+        "Tried to get exported name before function has been assigned to a variable and exported");
   }
 
   @Override
@@ -268,17 +298,24 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   @Override
   public void export(Label extensionLabel, String exportedName) {
     this.name = UserDefinedRuleNames.getIdentifier(extensionLabel, exportedName);
+    this.label = extensionLabel;
+    this.exportedName = exportedName;
     this.isExported = true;
   }
 
   /** The attributes that this function accepts */
-  ImmutableMap<String, Attribute<?>> getAttrs() {
+  public ImmutableMap<String, Attribute<?>> getAttrs() {
     return attrs;
   }
 
   /** The implementation function used during the analysis phase */
   BaseFunction getImplementation() {
     return implementation;
+  }
+
+  /** Get ParamInfo objects for all of the {@link Attribute}s provided to this instance */
+  public ImmutableMap<String, ParamInfo> getAllParamInfo() {
+    return params;
   }
 
   private static class MandatoryComparator implements Comparator<Map.Entry<String, Attribute<?>>> {

@@ -22,6 +22,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
+import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.types.Pair;
@@ -33,7 +34,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 /**
  * A helper class which uses reflection to translate {@link BuildTarget}s in {@link TargetNode}s.
@@ -264,16 +264,18 @@ public abstract class TargetNodeTranslator {
           .translateConstructorArg(
               node.getBuildTarget(), node.getCellNames(), this, constructorArg);
     } else {
-      Pair<Object, Function<Object, A>> newArgAndBuild =
+      ConstructorArgBuilder<A> newArgAndBuild =
           CoercedTypeCache.instantiateSkeleton(
-              node.getDescription().getConstructorArgType(), node.getBuildTarget());
+              typeCoercerFactory,
+              node.getDescription().getConstructorArgType(),
+              node.getBuildTarget());
       boolean modified =
           translateConstructorArg(
-              cellPathResolver, targetBaseName, constructorArg, newArgAndBuild.getFirst());
+              cellPathResolver, targetBaseName, constructorArg, newArgAndBuild.getBuilder());
       if (!modified) {
         return Optional.empty();
       }
-      return Optional.of(newArgAndBuild.getSecond().apply(newArgAndBuild.getFirst()));
+      return Optional.of(newArgAndBuild.build());
     }
   }
 

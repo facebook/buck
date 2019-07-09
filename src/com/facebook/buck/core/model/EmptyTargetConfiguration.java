@@ -15,6 +15,9 @@
  */
 package com.facebook.buck.core.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.ImmutableSet;
+
 /** Configuration that doesn't have any options */
 public class EmptyTargetConfiguration implements TargetConfiguration {
   public static final EmptyTargetConfiguration INSTANCE = new EmptyTargetConfiguration();
@@ -31,5 +34,11 @@ public class EmptyTargetConfiguration implements TargetConfiguration {
   @Override
   public boolean equals(Object obj) {
     return obj instanceof EmptyTargetConfiguration;
+  }
+
+  @JsonIgnore
+  @Override
+  public ImmutableSet<BuildTarget> getConfigurationTargets() {
+    return ImmutableSet.of();
   }
 }

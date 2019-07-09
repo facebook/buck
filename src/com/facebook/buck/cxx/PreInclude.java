@@ -34,8 +34,10 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.RichStream;
@@ -57,7 +59,7 @@ import java.util.function.Function;
  * {@code deps} list.
  */
 public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements NativeLinkableGroup, CxxPreprocessorDep {
+    implements LegacyNativeLinkableGroup, CxxPreprocessorDep {
 
   private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
       InternalFlavor.of("preprocessor-deps");
@@ -76,6 +78,9 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
    * is guaranteed to be an absolute path.
    */
   private final Path absoluteHeaderPath;
+
+  private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
+      LegacyNativeLinkableGroup.getNativeLinkableCache(this);
 
   /** @param buildRuleParams the params for this PCH rule, <b>including</b> {@code deps} */
   PreInclude(
@@ -113,6 +118,11 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   private ImmutableSortedSet<BuildRule> getExportedDeps() {
     return BuildRules.getExportedRules(getBuildDeps());
+  }
+
+  @Override
+  public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+    return linkableCache;
   }
 
   /**

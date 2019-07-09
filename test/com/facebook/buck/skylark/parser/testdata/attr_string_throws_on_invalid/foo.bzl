@@ -2,4 +2,4 @@
 
 def foo():
     """ Function docstring """
-    _a = attr.string(mandatory=True, doc="Some int", default="val", values=[1,2,3])
+    _a = attr.string(mandatory=True, doc="Some string", default="val", values=[1,2,3])

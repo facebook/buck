@@ -37,6 +37,9 @@ public interface BuildLogEntry {
   Optional<List<String>> getCommandArgs();
 
   @Value.Parameter
+  Optional<List<String>> getExpandedCommandArgs();
+
+  @Value.Parameter
   OptionalInt getExitCode();
 
   @Value.Parameter
@@ -56,6 +59,9 @@ public interface BuildLogEntry {
 
   @Value.Parameter
   Optional<Path> getTraceFile();
+
+  @Value.Parameter
+  Optional<Path> getConfigJsonFile();
 
   @Value.Parameter
   long getSize();

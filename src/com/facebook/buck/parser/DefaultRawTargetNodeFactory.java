@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.rules.visibility.VisibilityPattern;

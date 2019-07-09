@@ -30,15 +30,19 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisException;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import org.junit.Test;
 
 public class RuleAnalysisTransformerTest {
@@ -47,6 +51,7 @@ public class RuleAnalysisTransformerTest {
   private final CellPathResolver cellPathResolver = TestCellPathResolver.get(projectFilesystem);
   private final TargetNodeFactory targetNodeFactory =
       new TargetNodeFactory(new DefaultTypeCoercerFactory());
+  private final BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
   @Test
   public void getDepsWhenNoDeps() {
@@ -72,6 +77,7 @@ public class RuleAnalysisTransformerTest {
             projectFilesystem,
             buildTarget,
             ImmutableSet.of(),
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             cellPathResolver);
@@ -81,7 +87,7 @@ public class RuleAnalysisTransformerTest {
         ImmutableMap.of(buildTarget, targetNode);
     TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
 
-    RuleAnalysisComputation transformer = new RuleAnalysisComputation(targetGraph);
+    RuleAnalysisComputation transformer = new RuleAnalysisComputation(targetGraph, eventBus);
     assertEquals(
         ImmutableSet.of(),
         transformer.discoverPreliminaryDeps(ImmutableRuleAnalysisKey.of(buildTarget)));
@@ -113,6 +119,7 @@ public class RuleAnalysisTransformerTest {
             projectFilesystem,
             buildTarget1,
             ImmutableSet.of(buildTarget2, buildTarget3),
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             cellPathResolver);
@@ -123,6 +130,7 @@ public class RuleAnalysisTransformerTest {
             projectFilesystem,
             buildTarget2,
             ImmutableSet.of(),
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             cellPathResolver);
@@ -133,6 +141,7 @@ public class RuleAnalysisTransformerTest {
             projectFilesystem,
             buildTarget3,
             ImmutableSet.of(),
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             cellPathResolver);
@@ -145,7 +154,7 @@ public class RuleAnalysisTransformerTest {
             buildTarget1, targetNode1, buildTarget2, targetNode2, buildTarget3, targetNode3);
     TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
 
-    RuleAnalysisComputation transformer = new RuleAnalysisComputation(targetGraph);
+    RuleAnalysisComputation transformer = new RuleAnalysisComputation(targetGraph, eventBus);
     assertEquals(
         ImmutableSet.of(
             ImmutableRuleAnalysisKey.of(buildTarget2), ImmutableRuleAnalysisKey.of(buildTarget3)),
@@ -153,7 +162,8 @@ public class RuleAnalysisTransformerTest {
   }
 
   @Test
-  public void transformNodeWithNoDepsCorrectly() throws ActionCreationException {
+  public void transformNodeWithNoDepsCorrectly()
+      throws ActionCreationException, RuleAnalysisException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:target");
 
     ProviderInfoCollection expectedProviders =
@@ -183,6 +193,7 @@ public class RuleAnalysisTransformerTest {
             projectFilesystem,
             buildTarget,
             ImmutableSet.of(),
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             cellPathResolver);
@@ -192,7 +203,7 @@ public class RuleAnalysisTransformerTest {
         ImmutableMap.of(buildTarget, targetNode);
     TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
 
-    RuleAnalysisComputation transformer = new RuleAnalysisComputation(targetGraph);
+    RuleAnalysisComputation transformer = new RuleAnalysisComputation(targetGraph, eventBus);
 
     RuleAnalysisResult ruleAnalysisResult =
         transformer.transform(
@@ -206,7 +217,8 @@ public class RuleAnalysisTransformerTest {
   }
 
   @Test
-  public void transformNodeWithDepsCorrectly() throws ActionCreationException {
+  public void transformNodeWithDepsCorrectly()
+      throws ActionCreationException, RuleAnalysisException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:target");
     BuildTarget buildTarget2 = BuildTargetFactory.newInstance("//my:target2");
 
@@ -251,6 +263,7 @@ public class RuleAnalysisTransformerTest {
             projectFilesystem,
             buildTarget,
             ImmutableSet.of(),
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             cellPathResolver);
@@ -261,6 +274,7 @@ public class RuleAnalysisTransformerTest {
             projectFilesystem,
             buildTarget2,
             ImmutableSet.of(),
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             cellPathResolver);
@@ -273,7 +287,7 @@ public class RuleAnalysisTransformerTest {
         ImmutableMap.of(buildTarget, targetNode, buildTarget2, targetNode2);
     TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
 
-    RuleAnalysisComputation transformer = new RuleAnalysisComputation(targetGraph);
+    RuleAnalysisComputation transformer = new RuleAnalysisComputation(targetGraph, eventBus);
 
     RuleAnalysisResult ruleAnalysisResult =
         transformer.transform(

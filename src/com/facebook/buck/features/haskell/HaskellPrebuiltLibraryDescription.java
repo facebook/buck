@@ -35,8 +35,10 @@ import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -68,6 +70,13 @@ public class HaskellPrebuiltLibraryDescription
 
       private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
           new TransitiveCxxPreprocessorInputCache(this);
+      private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
+          LegacyNativeLinkableGroup.getNativeLinkableCache(this);
+
+      @Override
+      public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+        return linkableCache;
+      }
 
       @Override
       public Iterable<BuildRule> getCompileDeps(HaskellPlatform platform) {

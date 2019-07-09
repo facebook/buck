@@ -19,9 +19,9 @@ package com.facebook.buck.multitenant.service
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import it.unimi.dsi.fastutil.ints.IntArrayFIFOQueue
+import it.unimi.dsi.fastutil.ints.IntArrayList
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import java.util.ArrayList
-import java.util.HashSet
 
 /**
  * View of build graph data across a range of generations. Because this is a "view," it is not
@@ -123,8 +123,7 @@ class Index internal constructor(
         // not need to be guarded by rwLock.
         return internalRules.map {
             if (it != null) {
-                val deps = HashSet<UnconfiguredBuildTarget>(it.deps.size)
-                buildTargetCache.addAllByIndex(it.deps.asSequence(), deps)
+                val deps = buildTargetCache.resolveIndexes(IntArrayList.wrap(it.deps))
                 RawBuildRule(it.targetNode, deps)
             } else {
                 null
@@ -172,10 +171,7 @@ class Index internal constructor(
             }
         }
 
-        // We use a HashSet instead of a Kotlin Set so we can specify the initialCapacity.
-        val out = HashSet<UnconfiguredBuildTarget>(visited.size)
-        buildTargetCache.addAllByIndex(visited.iterator(), out)
-        return out
+        return buildTargetCache.resolveIndexes(visited)
     }
 
     fun getFwdDeps(
@@ -196,9 +192,7 @@ class Index internal constructor(
             addBuildTargetSetToCollection(rule.deps, union)
         }
 
-        val out = HashSet<UnconfiguredBuildTarget>(union.size)
-        buildTargetCache.addAllByIndex(union.iterator(), out)
-        return out
+        return buildTargetCache.resolveIndexes(union)
     }
 
     /**
@@ -221,9 +215,7 @@ class Index internal constructor(
             }
             1 -> {
                 val onlySet = rdepsSets.single()
-                val out = HashSet<UnconfiguredBuildTarget>(onlySet.size)
-                buildTargetCache.addAllByIndex(onlySet.asSequence(), out)
-                out
+                buildTargetCache.resolveIndexes(onlySet)
             }
             else -> {
                 // Take the union of all of the deps across all of the rules so we can make one call to
@@ -232,9 +224,7 @@ class Index internal constructor(
                 for (set in rdepsSets) {
                     set.addAllTo(union)
                 }
-                val out = HashSet<UnconfiguredBuildTarget>(union.size)
-                buildTargetCache.addAllByIndex(union.iterator(), out)
-                out
+                buildTargetCache.resolveIndexes(union)
             }
         }
     }
@@ -251,7 +241,7 @@ class Index internal constructor(
             rDepsMap.getVersion(targetId, generation)
         } ?: return listOf()
         val out = ArrayList<UnconfiguredBuildTarget>(rdeps.size)
-        buildTargetCache.addAllByIndex(rdeps.asSequence(), out)
+        buildTargetCache.resolveIndexes(rdeps, out)
         return out
     }
 
@@ -266,7 +256,10 @@ class Index internal constructor(
         // Note that we release the read lock before making a bunch of requests to the
         // buildTargetCache.
         val out = ArrayList<UnconfiguredBuildTarget>(pairs.size)
-        buildTargetCache.addAllByIndex(pairs.asSequence().map { it.first }, out)
+        val iterable = object : Iterable<Int> {
+            override fun iterator(): Iterator<Int> = pairs.asSequence().map { it.first }.iterator()
+        }
+        buildTargetCache.resolveIndexes(iterable, out)
         return out
     }
 

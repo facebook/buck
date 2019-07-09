@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -73,6 +74,7 @@ public class VerifyCachesCommand extends AbstractCommand {
         new MultiThreadedActionGraphBuilder(
             MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
             TargetGraph.EMPTY,
+            ConfigurationRuleRegistryFactory.createRegistry(TargetGraph.EMPTY),
             new DefaultTargetNodeToBuildRuleTransformer(),
             cellProvider);
     contents.forEach(e -> graphBuilder.addToIndex(e.getKey()));

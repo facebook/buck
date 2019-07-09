@@ -1,10 +1,11 @@
 load("//tools/build_rules:java_rules.bzl", "java_test")
 
 java_test(
-    name = "handlers",
+    name = "handler",
     srcs = glob(["*.java"]),
     deps = [
         "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/rules/analysis:analysis",
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/support/exceptions/handler:handler",

@@ -16,16 +16,15 @@
 package com.facebook.buck.core.rules.config;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.BuildTarget;
 
 /** Provides access to {@link ConfigurationRule}. */
 public interface ConfigurationRuleResolver {
 
   /**
-   * Returns the {@link ConfigurationRule} associated with the given {@link
-   * UnconfiguredBuildTargetView}.
+   * Returns the {@link ConfigurationRule} associated with the given {@link BuildTarget}.
    *
    * @throws HumanReadableException if no rule is associated with the target.
    */
-  ConfigurationRule getRule(UnconfiguredBuildTargetView buildTarget);
+  ConfigurationRule getRule(BuildTarget buildTarget);
 }

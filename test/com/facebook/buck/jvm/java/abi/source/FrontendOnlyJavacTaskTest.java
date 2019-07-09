@@ -27,12 +27,14 @@ import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.jvm.java.plugin.adapter.TestTaskListener;
 import com.facebook.buck.jvm.java.plugin.adapter.TestTaskListenerAdapter;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.sun.source.tree.CompilationUnitTree;
 import java.io.IOException;
+import java.io.Writer;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,11 +42,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
+import javax.tools.JavaFileObject;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -98,12 +103,23 @@ public class FrontendOnlyJavacTaskTest extends CompilerTreeApiParameterizedTest 
             "package com.facebook.foo;"));
 
     Iterable<? extends Element> actualElements = testCompiler.enter();
-    assertThat(
-        actualElements,
-        Matchers.containsInAnyOrder(
-            elements.getTypeElement("com.facebook.foo.Foo"),
-            elements.getTypeElement("com.facebook.foo.Extra"),
-            elements.getTypeElement("com.facebook.bar.Bar")));
+
+    if (JavaVersion.getMajorVersion() <= 8) {
+      assertThat(
+          actualElements,
+          Matchers.containsInAnyOrder(
+              elements.getTypeElement("com.facebook.foo.Foo"),
+              elements.getTypeElement("com.facebook.foo.Extra"),
+              elements.getTypeElement("com.facebook.bar.Bar")));
+    } else {
+      assertThat(
+          actualElements,
+          Matchers.containsInAnyOrder(
+              elements.getTypeElement("com.facebook.foo.Foo"),
+              elements.getTypeElement("com.facebook.foo.Extra"),
+              elements.getTypeElement("com.facebook.bar.Bar"),
+              elements.getPackageElement("com.facebook.foo")));
+    }
   }
 
   @Test
@@ -210,7 +226,7 @@ public class FrontendOnlyJavacTaskTest extends CompilerTreeApiParameterizedTest 
 
     testCompiler.compile();
 
-    String[] javacEvents = {
+    String[] javacEventsJava8 = {
       "PARSE started",
       "PARSE finished",
       "ENTER started",
@@ -221,9 +237,34 @@ public class FrontendOnlyJavacTaskTest extends CompilerTreeApiParameterizedTest 
       "GENERATE finished",
     };
 
-    String[] treesEvents = {
+    String[] javacEventsJava9 = {
+      "COMPILATION started",
+      "PARSE started",
+      "PARSE finished",
+      "ENTER started",
+      "ENTER finished",
+      "ANALYZE started",
+      "ANALYZE finished",
+      "GENERATE started",
+      "GENERATE finished",
+      "COMPILATION finished",
+    };
+    String[] javacEvents =
+        (JavaVersion.getMajorVersion() >= 9) ? javacEventsJava9 : javacEventsJava8;
+
+    String[] treesEventsJava8 = {
       "PARSE started", "PARSE finished", "ENTER started", "ENTER finished",
     };
+    String[] treesEventsJava9 = {
+      "COMPILATION started",
+      "PARSE started",
+      "PARSE finished",
+      "ENTER started",
+      "ENTER finished",
+      "COMPILATION finished",
+    };
+    String[] treesEvents =
+        (JavaVersion.getMajorVersion() >= 9) ? treesEventsJava9 : treesEventsJava8;
 
     assertThat(events, Matchers.contains(testingJavac() ? javacEvents : treesEvents));
   }
@@ -237,6 +278,7 @@ public class FrontendOnlyJavacTaskTest extends CompilerTreeApiParameterizedTest 
     testCompiler.setProcessors(
         ImmutableList.of(
             new AbstractProcessor() {
+              private Filer filer;
               private Elements elementsFromEnvironment;
               private TypeElement element;
 
@@ -246,8 +288,14 @@ public class FrontendOnlyJavacTaskTest extends CompilerTreeApiParameterizedTest 
               }
 
               @Override
+              public SourceVersion getSupportedSourceVersion() {
+                return SourceVersion.latestSupported();
+              }
+
+              @Override
               public synchronized void init(ProcessingEnvironment processingEnv) {
                 super.init(processingEnv);
+                filer = processingEnv.getFiler();
                 elementsFromEnvironment = processingEnv.getElementUtils();
               }
 
@@ -256,11 +304,22 @@ public class FrontendOnlyJavacTaskTest extends CompilerTreeApiParameterizedTest 
                   Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
                 TypeElement newElement = elementsFromEnvironment.getTypeElement("Foo");
                 assertNotNull(newElement);
-                assertNotSame(newElement, element);
-                element = newElement;
+
+                if (elementsFromEnvironment.getTypeElement("Bar") == null) {
+                  assertNotSame(newElement, element);
+                  element = newElement;
+
+                  try {
+                    JavaFileObject fileObject = filer.createSourceFile("Bar", newElement);
+                    try (Writer writer = fileObject.openWriter()) {
+                      writer.write("public class Bar { }");
+                    }
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                }
 
                 processorRan.set(roundEnv.processingOver());
-
                 return false;
               }
             }));

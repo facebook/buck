@@ -79,6 +79,7 @@ matrix:
           # base ghc package does not include dynamic libraries
           # https://stackoverflow.com/a/11711501/1548477
           - ghc-dynamic
+          - ghc-haddock
     env: CI_ACTION=integration GROOVY_HOME=/usr/share/groovy/
     # ANDROID_SDK is required for build.
     android:
@@ -118,6 +119,7 @@ matrix:
           # base ghc package does not include dynamic libraries
           # https://stackoverflow.com/a/11711501/1548477
           - ghc-dynamic
+          - ghc-haddock
     # https://docs.travis-ci.com/user/caching#Things-not-to-cache
     # https://docs.travis-ci.com/user/caching#Explicitly-disabling-caching
     cache:

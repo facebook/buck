@@ -15,6 +15,7 @@ java_test(
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/jvm/java/lang/model:model",
         "//src/com/facebook/buck/jvm/java/plugin/adapter:adapter",
+        "//src/com/facebook/buck/jvm/java/version:version",
         "//src/com/facebook/buck/util:util",
         "//test/com/facebook/buck/jvm/java/abi/source:testutil",
         "//test/com/facebook/buck/jvm/java/plugin/adapter:testutil",

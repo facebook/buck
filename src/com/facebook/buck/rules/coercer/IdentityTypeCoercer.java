@@ -24,7 +24,7 @@ import java.nio.file.Path;
 public class IdentityTypeCoercer<T> extends LeafTypeCoercer<T> {
   private Class<T> type;
 
-  IdentityTypeCoercer(Class<T> type) {
+  public IdentityTypeCoercer(Class<T> type) {
     this.type = type;
   }
 

@@ -29,20 +29,24 @@ import java.nio.file.Path;
 public class BuildArtifactFactory {
 
   protected final BuildTarget target;
-  private final Path packagePath;
+  private final Path basePath;
+  private final Path genDir;
 
   protected BuildArtifactFactory(BuildTarget target, ProjectFilesystem filesystem) {
     this.target = target;
-    this.packagePath = BuildPaths.getGenDir(filesystem, target);
+    this.genDir = filesystem.getBuckPaths().getGenDir();
+    this.basePath = BuildPaths.getBaseDir(target);
   }
 
   /**
    * @param output the output {@link Path} relative to the package path for the current rule that
    *     the {@link com.facebook.buck.core.rules.actions.Action}s are being created for
    * @return a {@link DeclaredArtifact} for the given path
+   * @throws ArtifactDeclarationException if the provided output path is invalid in some way
    */
-  protected DeclaredArtifact createDeclaredArtifact(Path output) {
-    return ArtifactImpl.of(target, packagePath, output);
+  protected DeclaredArtifact createDeclaredArtifact(Path output)
+      throws ArtifactDeclarationException {
+    return ArtifactImpl.of(target, genDir, basePath, output);
   }
 
   /**

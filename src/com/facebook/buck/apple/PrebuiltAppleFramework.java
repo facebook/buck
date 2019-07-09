@@ -38,9 +38,11 @@ import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableCacheKey;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -65,7 +67,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 
 public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements CxxPreprocessorDep, NativeLinkableGroup, HasOutputName {
+    implements CxxPreprocessorDep, LegacyNativeLinkableGroup, HasOutputName {
 
   @AddToRuleKey(stringify = true)
   private final Path out;
@@ -84,6 +86,8 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
 
   private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
       new TransitiveCxxPreprocessorInputCache(this);
+  private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
+      LegacyNativeLinkableGroup.getNativeLinkableCache(this);
 
   public PrebuiltAppleFramework(
       BuildTarget buildTarget,
@@ -159,6 +163,11 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   @Override
   public String getOutputName() {
     return this.frameworkName;
+  }
+
+  @Override
+  public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+    return linkableCache;
   }
 
   @Override

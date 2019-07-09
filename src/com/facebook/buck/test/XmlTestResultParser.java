@@ -148,21 +148,21 @@ public class XmlTestResultParser {
       long time = Long.parseLong(node.getAttribute("time"));
       String typeString = node.getAttribute("type");
       ResultType type = ResultType.valueOf(typeString);
-
       String message;
       String stacktrace;
       if (type == ResultType.SUCCESS) {
         message = null;
         stacktrace = null;
       } else {
-        message = node.getAttribute("message");
-        stacktrace = node.getAttribute("stacktrace");
+        message = TestXmlUnescaper.ATTRIBUTE_UNESCAPER.unescape(node.getAttribute("message"));
+        stacktrace = TestXmlUnescaper.ATTRIBUTE_UNESCAPER.unescape(node.getAttribute("stacktrace"));
       }
 
       NodeList stdoutElements = node.getElementsByTagName("stdout");
       String stdOut;
       if (stdoutElements.getLength() == 1) {
-        stdOut = stdoutElements.item(0).getTextContent();
+        stdOut =
+            TestXmlUnescaper.CONTENT_UNESCAPER.unescape(stdoutElements.item(0).getTextContent());
       } else {
         stdOut = null;
       }
@@ -170,7 +170,8 @@ public class XmlTestResultParser {
       NodeList stderrElements = node.getElementsByTagName("stderr");
       String stdErr;
       if (stderrElements.getLength() == 1) {
-        stdErr = stderrElements.item(0).getTextContent();
+        stdErr =
+            TestXmlUnescaper.CONTENT_UNESCAPER.unescape(stderrElements.item(0).getTextContent());
       } else {
         stdErr = null;
       }

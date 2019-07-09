@@ -43,10 +43,10 @@ import com.facebook.buck.features.go.CgoLibraryDescription.AbstractCgoLibraryDes
 import com.facebook.buck.features.go.GoLibraryDescription.AbstractGoLibraryDescriptionArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodeSpec;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;

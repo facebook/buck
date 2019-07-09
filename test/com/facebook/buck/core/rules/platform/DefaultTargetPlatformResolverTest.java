@@ -18,15 +18,17 @@ package com.facebook.buck.core.rules.platform;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.util.Optional;
@@ -53,15 +55,29 @@ public class DefaultTargetPlatformResolverTest {
   }
 
   @Test
+  public void returnCorrectPlatformForConfigurationForConfigurationTargets() {
+    Platform emptyTargetConfigurationPlatform = EmptyPlatform.INSTANCE;
+    DefaultTargetPlatformResolver targetPlatformResolver =
+        new DefaultTargetPlatformResolver(
+            new RuleBasedTargetPlatformResolver(
+                new RuleBasedPlatformResolver(target -> null, new ThrowingConstraintResolver())),
+            emptyTargetConfigurationPlatform);
+
+    assertEquals(
+        emptyTargetConfigurationPlatform,
+        targetPlatformResolver.getTargetPlatform(ConfigurationForConfigurationTargets.INSTANCE));
+  }
+
+  @Test
   public void returnCorrectPlatformForDefaultTargetConfiguration() {
     Platform emptyTargetConfigurationPlatform = EmptyPlatform.INSTANCE;
 
-    UnconfiguredBuildTargetView platformTarget =
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//platform:platform");
-    UnconfiguredBuildTargetView constraintValue =
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:value");
-    UnconfiguredBuildTargetView constraintSetting =
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:setting");
+    BuildTarget platformTarget =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//platform:platform");
+    BuildTarget constraintValue =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:value");
+    BuildTarget constraintSetting =
+        ConfigurationBuildTargetFactoryForTests.newInstance("//constraint:setting");
 
     ConfigurationRuleResolver configurationRuleResolver =
         buildTarget -> {
@@ -72,7 +88,9 @@ public class DefaultTargetPlatformResolverTest {
                 ImmutableSortedSet.of(constraintValue),
                 ImmutableSortedSet.of());
           }
-          if (buildTarget.equals(constraintValue)) {
+          if (buildTarget
+              .getUnconfiguredBuildTargetView()
+              .equals(constraintValue.getUnconfiguredBuildTargetView())) {
             return new ConstraintValueRule(constraintValue, "value", constraintSetting);
           }
           if (buildTarget.equals(constraintSetting)) {
@@ -114,6 +132,12 @@ public class DefaultTargetPlatformResolverTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("Cannot determine target platform for configuration:");
 
-    targetPlatformResolver.getTargetPlatform(new TargetConfiguration() {});
+    targetPlatformResolver.getTargetPlatform(
+        new TargetConfiguration() {
+          @Override
+          public ImmutableSet<BuildTarget> getConfigurationTargets() {
+            return ImmutableSet.of();
+          }
+        });
   }
 }

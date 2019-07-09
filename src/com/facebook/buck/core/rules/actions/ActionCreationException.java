@@ -15,39 +15,28 @@
  */
 package com.facebook.buck.core.rules.actions;
 
-import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.actions.AbstractAction.ActionConstructorParams;
-import com.google.common.collect.ImmutableSet;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 
 /** Represents an error during action creation */
-public class ActionCreationException extends Exception {
+public class ActionCreationException extends HumanReadableException {
 
-  public ActionCreationException(
-      Throwable e,
-      Class<? extends Action> clazz,
-      BuildTarget target,
-      ImmutableSet<Artifact> inputs,
-      ImmutableSet<Artifact> outputs,
-      ActionConstructorParams args) {
+  public ActionCreationException(Throwable e, Action action) {
     super(
-        String.format(
-            "Got exception creating action %s of target: %s, inputs: %s, output: %s, args: %s.",
-            clazz, target, inputs, outputs, args),
-        e);
+        e,
+        "Got exception creating action %s of target: %s, inputs: %s, output: %s.",
+        action.getShortName(),
+        action.getOwner(),
+        action.getInputs(),
+        action.getOutputs());
   }
 
-  public <T extends AbstractAction<U>, U extends ActionConstructorParams> ActionCreationException(
-      Class<T> clazz,
-      BuildTarget target,
-      ImmutableSet<Artifact> inputs,
-      ImmutableSet<Artifact> outputs,
-      U args,
-      String fmt,
-      Object... fmtArgs) {
+  public ActionCreationException(Action action, String fmt, Object... fmtArgs) {
     super(
-        String.format(
-            "Error %s when creating action %s of target: %s, inputs: %s, output: %s, args: %s.",
-            String.format(fmt, fmtArgs), clazz, target, inputs, outputs, args));
+        "Error %s when creating action %s of target: %s, inputs: %s, output: %s.",
+        String.format(fmt, fmtArgs),
+        action.getShortName(),
+        action.getOwner(),
+        action.getInputs(),
+        action.getOutputs());
   }
 }

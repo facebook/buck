@@ -22,7 +22,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.watchman.Watchman;

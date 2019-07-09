@@ -36,6 +36,7 @@ import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.MoreFiles;
@@ -69,7 +70,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
   private final StripedKeyedLocker<String> fileLock = new StripedKeyedLocker<>(8);
 
   private static final int MISSING_CHECK_LIMIT = 1000;
-  private static final int UPLOAD_SIZE_LIMIT = 10 * 1024 * 1024;
+  private static final int SIZE_LIMIT = 10 * 1024 * 1024;
 
   private final MultiThreadedBlobUploader uploader;
   private final OutputsMaterializer outputsMaterializer;
@@ -84,7 +85,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
     this.uploader =
         new MultiThreadedBlobUploader(
             MISSING_CHECK_LIMIT,
-            UPLOAD_SIZE_LIMIT,
+            SIZE_LIMIT,
             uploadService,
             new CasBlobUploader() {
               @Override
@@ -128,8 +129,26 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
               return Futures.immediateFailedFuture(e);
             }
           }
+
+          @Override
+          public ListenableFuture<Void> batchFetchBlobs(
+              ImmutableMultimap<Digest, WritableByteChannel> requests) throws IOException {
+            for (Digest digest : requests.keySet()) {
+              FileInputStream stream = getFileInputStream(digest);
+              FileChannel input = stream.getChannel();
+              for (WritableByteChannel channel : requests.get(digest)) {
+                input.transferTo(0, input.size(), channel);
+              }
+            }
+            return Futures.immediateFuture(null);
+          }
         };
-    this.outputsMaterializer = new OutputsMaterializer(fetcher, protocol);
+    this.outputsMaterializer =
+        new OutputsMaterializer(
+            SIZE_LIMIT,
+            MostExecutors.newMultiThreadExecutor("output-materializer", 4),
+            fetcher,
+            protocol);
     this.inputsMaterializer =
         new InputsMaterializer(
             protocol,

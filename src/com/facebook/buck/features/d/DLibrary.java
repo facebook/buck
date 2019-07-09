@@ -27,18 +27,24 @@ import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements NativeLinkableGroup {
+/** A {@link NativeLinkableGroup} for d libraries. */
+public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
+    implements LegacyNativeLinkableGroup {
 
   private final ActionGraphBuilder graphBuilder;
   private final DIncludes includes;
+  private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
+      LegacyNativeLinkableGroup.getNativeLinkableCache(this);
 
   public DLibrary(
       BuildTarget buildTarget,
@@ -49,6 +55,11 @@ public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements N
     super(buildTarget, projectFilesystem, params);
     this.graphBuilder = graphBuilder;
     this.includes = includes;
+  }
+
+  @Override
+  public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+    return linkableCache;
   }
 
   @Override

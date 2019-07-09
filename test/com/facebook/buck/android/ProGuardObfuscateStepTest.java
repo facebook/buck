@@ -25,6 +25,7 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.step.Step;
@@ -61,7 +62,7 @@ public class ProGuardObfuscateStepTest {
             Paths.get(""),
             Collections.emptyList(),
             () -> new SimpleTool(""),
-            () -> new SimpleTool(""),
+            new ConstantToolProvider(new SimpleTool("")),
             Paths.get(""),
             Paths.get(""),
             Paths.get(""),

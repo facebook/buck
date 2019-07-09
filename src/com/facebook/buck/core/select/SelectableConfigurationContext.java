@@ -16,8 +16,12 @@
 
 package com.facebook.buck.core.select;
 
+import com.facebook.buck.core.model.TargetConfiguration;
+
 /**
  * Contains context that can be accessed by {@link Selectable} to get information about the current
  * configuration.
  */
-public interface SelectableConfigurationContext {}
+public interface SelectableConfigurationContext {
+  SelectableConfigurationContext withTargetConfiguration(TargetConfiguration targetConfiguration);
+}

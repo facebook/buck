@@ -37,6 +37,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;

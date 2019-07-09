@@ -232,10 +232,12 @@ public class AndroidBinary extends AbstractBuildRule
     this.exopackageInfo = exopackageInfo;
 
     params =
-        params.withExtraDeps(
+        new BuildRuleParams(
+            ImmutableSortedSet::of,
             () ->
                 BuildableSupport.deriveDeps(this, ruleFinder)
-                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
+            params.getTargetGraphOnlyDeps());
     this.buildRuleParams = params;
 
     this.transitiveClasspathDepsSupplier =

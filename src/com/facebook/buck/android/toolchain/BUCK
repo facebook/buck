@@ -16,6 +16,7 @@ java_immutables_library(
     ],
     deps = [
         "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/core/toolchain/toolprovider:toolprovider",
         "//third-party/java/guava:guava",
     ],
 )

@@ -57,7 +57,12 @@ public class AndroidAppModularityDescription
 
     AndroidAppModularityGraphEnhancer graphEnhancer =
         new AndroidAppModularityGraphEnhancer(
-            buildTarget, params, context.getActionGraphBuilder(), args.getNoDx(), apkModuleGraph);
+            buildTarget,
+            params,
+            context.getActionGraphBuilder(),
+            args.getNoDx(),
+            apkModuleGraph,
+            context.getConfigurationRuleRegistry());
 
     AndroidAppModularityGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 

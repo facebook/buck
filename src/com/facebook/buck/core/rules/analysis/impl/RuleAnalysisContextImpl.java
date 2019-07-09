@@ -16,12 +16,13 @@
 package com.facebook.buck.core.rules.analysis.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory;
+import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataRegistry;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
@@ -33,20 +34,24 @@ import java.util.Map;
  * Implementation of {@link com.facebook.buck.core.rules.analysis.RuleAnalysisContext}. This context
  * is created per rule analysis.
  */
-class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisDataRegistry {
+public class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisDataRegistry {
 
   private final BuildTarget buildTarget;
   private final ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> depProviders;
-  private final Map<ActionAnalysisData.ID, ActionAnalysisData> actionRegistry = new HashMap<>();
-  private final ActionWrapperDataFactory actionWrapperDataFactory;
+  private final Map<ActionAnalysisData.ID, ActionAnalysisData> actionAnalysisDataRegistry =
+      new HashMap<>();
+  private final ActionRegistry actionRegistry;
+  private final BuckEventBus eventBus;
 
-  RuleAnalysisContextImpl(
+  public RuleAnalysisContextImpl(
       BuildTarget buildTarget,
       ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> depProviders,
-      ProjectFilesystem filesystem) {
+      ProjectFilesystem filesystem,
+      BuckEventBus eventBus) {
     this.buildTarget = buildTarget;
     this.depProviders = depProviders;
-    this.actionWrapperDataFactory = new ActionWrapperDataFactory(buildTarget, this, filesystem);
+    this.eventBus = eventBus;
+    this.actionRegistry = new ActionRegistry(buildTarget, this, filesystem);
   }
 
   @Override
@@ -55,8 +60,13 @@ class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisData
   }
 
   @Override
-  public ActionWrapperDataFactory actionFactory() {
-    return actionWrapperDataFactory;
+  public ActionRegistry actionRegistry() {
+    return actionRegistry;
+  }
+
+  @Override
+  public BuckEventBus getEventBus() {
+    return eventBus;
   }
 
   @Override
@@ -64,7 +74,8 @@ class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisData
     Preconditions.checkState(actionAnalysisData.getKey().getBuildTarget().equals(buildTarget));
 
     ActionAnalysisData prev =
-        actionRegistry.putIfAbsent(actionAnalysisData.getKey().getID(), actionAnalysisData);
+        actionAnalysisDataRegistry.putIfAbsent(
+            actionAnalysisData.getKey().getID(), actionAnalysisData);
     Verify.verify(
         prev == null,
         "Action of key %s was already registered with %s",
@@ -73,6 +84,6 @@ class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisData
   }
 
   public Map<ActionAnalysisData.ID, ActionAnalysisData> getRegisteredActionData() {
-    return actionRegistry;
+    return actionAnalysisDataRegistry;
   }
 }

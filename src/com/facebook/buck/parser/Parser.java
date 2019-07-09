@@ -87,7 +87,7 @@ public interface Parser {
    * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
    * @return the target graph containing the build targets and their related targets.
    */
-  TargetGraphCreationResult buildTargetGraphWithoutConfigurationTargets(
+  TargetGraphCreationResult buildTargetGraphWithoutTopLevelConfigurationTargets(
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       TargetConfiguration targetConfiguration)
@@ -97,7 +97,7 @@ public interface Parser {
    * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
    * @return the target graph containing the build targets and their related targets.
    */
-  TargetGraphCreationResult buildTargetGraphWithConfigurationTargets(
+  TargetGraphCreationResult buildTargetGraphWithTopLevelConfigurationTargets(
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       TargetConfiguration targetConfiguration)

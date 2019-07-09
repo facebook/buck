@@ -18,9 +18,11 @@ package com.facebook.buck.core.starlark.rule;
 import static com.facebook.buck.skylark.function.SkylarkRuleFunctions.IMPLICIT_ATTRIBUTES;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.starlark.coercer.SkylarkParamInfo;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableIntAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
+import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableList;
@@ -126,6 +128,9 @@ public class SkylarkUserDefinedRuleTest {
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
     assertEquals("@foo//bar:extension.bzl:baz_rule", rule.getName());
+    assertEquals(
+        Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), rule.getLabel());
+    assertEquals("baz_rule", rule.getExportedName());
   }
 
   @Test
@@ -381,5 +386,27 @@ public class SkylarkUserDefinedRuleTest {
       assertEquals(1, rules.size());
       assertEquals(expected, rules.get("some_rule_name"));
     }
+  }
+
+  @Test
+  public void returnsParamInfos() throws EvalException {
+
+    ImmutableMap<String, AttributeHolder> params =
+        ImmutableMap.of(
+            "arg1", new ImmutableStringAttribute("some string", "", false, ImmutableList.of()));
+    SkylarkUserDefinedRule rule =
+        SkylarkUserDefinedRule.of(
+            Location.BUILTIN, SimpleFunction.of(1), IMPLICIT_ATTRIBUTES, params);
+
+    ImmutableMap<String, ParamInfo> paramInfos = rule.getAllParamInfo();
+
+    assertEquals(
+        ImmutableMap.of(
+            "name",
+            new SkylarkParamInfo(
+                "name", new ImmutableStringAttribute("", "", true, ImmutableList.of())),
+            "arg1",
+            new SkylarkParamInfo("arg1", params.get("arg1").getAttribute())),
+        paramInfos);
   }
 }

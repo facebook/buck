@@ -249,8 +249,10 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
               .equals(fetchResponse.getMetadata().getArtifactPayloadMd5())) {
             String msg =
                 String.format(
-                    "The artifact fetched from cache is corrupted. ExpectedMD5=[%s] ActualMD5=[%s]",
-                    fetchResponse.getMetadata().getArtifactPayloadMd5(), readResult.getMd5Hash());
+                    "The artifact fetched from cache for rule key [%s] is corrupted. ExpectedMD5=[%s] ActualMD5=[%s]",
+                    ruleKey,
+                    fetchResponse.getMetadata().getArtifactPayloadMd5(),
+                    readResult.getMd5Hash());
             LOG.warn(msg);
             return resultBuilder
                 .setCacheResult(CacheResult.error(getName(), getMode(), msg))
@@ -562,6 +564,10 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
                 getName(), getMode(), String.format("Got bad result of type %s", resultType)));
         return;
       case MISS:
+      case MISS_IN_SLA:
+      case MISS_ONLY_IN_MEMCACHE:
+      case MISS_OUT_SLA:
+      case MISS_UNKNOWN:
         LOG.verbose("Artifact did not exist.");
         builder.setCacheResult(CacheResult.miss());
         return;
@@ -657,8 +663,10 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     if (!readResult.getMd5Hash().equals(fetchResponse.getMetadata().getArtifactPayloadMd5())) {
       String msg =
           String.format(
-              "The artifact fetched from cache is corrupted. ExpectedMD5=[%s] ActualMD5=[%s]",
-              fetchResponse.getMetadata().getArtifactPayloadMd5(), readResult.getMd5Hash());
+              "The artifact fetched from cache for rule key [%s] is corrupted. ExpectedMD5=[%s] ActualMD5=[%s]",
+              ruleKey,
+              fetchResponse.getMetadata().getArtifactPayloadMd5(),
+              readResult.getMd5Hash());
       LOG.warn(msg);
       builder.setCacheResult(CacheResult.error(getName(), getMode(), msg));
       return;

@@ -149,7 +149,9 @@ abstract class DDescriptionUtils {
         ImmutableList.of(),
         Linker.LinkableDepType.STATIC,
         CxxLinkOptions.of(),
-        FluentIterable.from(params.getBuildDeps()).filter(NativeLinkableGroup.class),
+        FluentIterable.from(params.getBuildDeps())
+            .filter(NativeLinkableGroup.class)
+            .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
         /* cxxRuntimeType */ Optional.empty(),
         /* bundleLoader */ Optional.empty(),
         ImmutableSet.of(),

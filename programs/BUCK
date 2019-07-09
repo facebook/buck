@@ -73,7 +73,7 @@ RESOURCES_NOT_AFFECTING_BUILD_ARTIFACTS = {
     "android_agent_path": "//assets/android:agent.apk",
     "buck_build_type_info": ":gen_build_type_info",
     "buck_package_info": ":gen_buck_package_info",
-    "fix_script": "//programs/fixes/source_only_abi:fix",
+    "legacy_fix_script": "//programs/fixes/source_only_abi:fix",
     "jacoco_agent_jar": "//third-party/java/jacoco:agent",
     # The name of this resource is important, since it needs to have this filename in the PEX.
     "libjcocoa.dylib": "//third-party/java/ObjCBridge:libjcocoa.dylib",

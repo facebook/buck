@@ -22,7 +22,9 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.exceptions.config.ErrorHandlingBuckConfig;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
+import com.facebook.buck.core.starlark.eventhandler.ConsoleEventHandler;
+import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -32,13 +34,14 @@ import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.json.TargetCountVerificationParserDecorator;
 import com.facebook.buck.manifestservice.ManifestService;
-import com.facebook.buck.parser.AbstractParserConfig.SkylarkGlobHandler;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.cache.impl.AbstractParserCacheConfig;
 import com.facebook.buck.parser.cache.impl.CachingProjectBuildFileParserDecorator;
 import com.facebook.buck.parser.cache.impl.ParserCache;
 import com.facebook.buck.parser.cache.impl.ParserCacheConfig;
+import com.facebook.buck.parser.config.AbstractParserConfig.SkylarkGlobHandler;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.decorators.EventReportingProjectBuildFileParser;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -47,7 +50,6 @@ import com.facebook.buck.skylark.io.impl.HybridGlobberFactory;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
 import com.facebook.buck.skylark.io.impl.SyncCookieState;
 import com.facebook.buck.skylark.parser.BuckGlobals;
-import com.facebook.buck.skylark.parser.ConsoleEventHandler;
 import com.facebook.buck.skylark.parser.RuleFunctionFactory;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.facebook.buck.util.Console;
@@ -163,7 +165,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             .setIgnorePaths(cell.getFilesystem().getIgnorePaths())
             .setBuildFileName(cell.getBuckConfigView(ParserConfig.class).getBuildFileName())
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
-            .setDescriptions(knownRuleTypesProvider.get(cell).getDescriptions())
+            .setDescriptions(knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions())
             .setUseWatchmanGlob(useWatchmanGlob)
             .setWatchmanGlobStatResults(watchmanGlobStatResults)
             .setWatchmanUseGlobGenerator(watchmanUseGlobGenerator)
@@ -244,6 +246,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
                       newSkylarkParser(
                           cell,
                           typeCoercerFactory,
+                          knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
                           eventBus,
                           buildFileParserOptions,
                           parserConfig.getSkylarkGlobHandler()),
@@ -259,6 +262,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
                   newSkylarkParser(
                       cell,
                       typeCoercerFactory,
+                      knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
                       eventBus,
                       buildFileParserOptions,
                       parserConfig.getSkylarkGlobHandler()),
@@ -309,6 +313,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   private static SkylarkProjectBuildFileParser newSkylarkParser(
       Cell cell,
       TypeCoercerFactory typeCoercerFactory,
+      KnownUserDefinedRuleTypes knownUserDefinedRuleTypes,
       BuckEventBus eventBus,
       ProjectBuildFileParserOptions buildFileParserOptions,
       SkylarkGlobHandler skylarkGlobHandler) {
@@ -326,6 +331,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             .setDescriptions(buildFileParserOptions.getDescriptions())
             .setRuleFunctionFactory(new RuleFunctionFactory(typeCoercerFactory))
             .setLabelCache(LabelCache.newLabelCache())
+            .setKnownUserDefinedRuleTypes(knownUserDefinedRuleTypes)
             .build();
 
     HumanReadableExceptionAugmentor augmentor;

@@ -4,9 +4,16 @@ java_library(
         "BaseRunner.java",
         "CheckDependency.java",
         "TestResult.java",
+        "TestXmlEscaper.java",
     ],
     source = "8",
     target = "8",
+    tests = [
+        "//test/com/facebook/buck/testrunner:testrunner",
+    ],
+    visibility = [
+        "//test/com/facebook/buck/testrunner:testrunner",
+    ],
     deps = [
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/test/selectors:selectors",

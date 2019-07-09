@@ -5,6 +5,7 @@ java_library_with_plugins(
     srcs = glob(["*.java"]),
     exported_deps = [
         "//src/com/facebook/buck/core/model/platform:platform",
+        "//src/com/facebook/buck/core/rules/attr:attr",
         "//src/com/facebook/buck/core/rules/config:config",
     ],
     tests = [

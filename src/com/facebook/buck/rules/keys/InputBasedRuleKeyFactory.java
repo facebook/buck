@@ -16,10 +16,12 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.attr.HasDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -37,6 +39,7 @@ import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -52,8 +55,8 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
   private final long inputSizeLimit;
   private final Optional<ThriftRuleKeyLogger> ruleKeyLogger;
 
-  private final SingleBuildRuleKeyCache<Result<RuleKey>> ruleKeyCache =
-      new SingleBuildRuleKeyCache<>();
+  private final SingleBuildActionRuleKeyCache<Result<RuleKey>> ruleKeyCache =
+      new SingleBuildActionRuleKeyCache<>();
 
   public InputBasedRuleKeyFactory(
       RuleKeyFieldLoader ruleKeyFieldLoader,
@@ -73,9 +76,9 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     return Optional.of(inputSizeLimit);
   }
 
-  private Result<RuleKey> calculateBuildRuleKey(BuildRule buildRule) {
-    Builder<HashCode> builder = newVerifyingBuilder(buildRule);
-    ruleKeyFieldLoader.setFields(builder, buildRule, RuleKeyType.INPUT);
+  private Result<RuleKey> calculateBuildRuleKey(BuildEngineAction action) {
+    Builder<HashCode> builder = newVerifyingBuilder(action);
+    ruleKeyFieldLoader.setFields(builder, action, RuleKeyType.INPUT);
     return builder.buildResult(RuleKey::new);
   }
 
@@ -87,9 +90,9 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
   }
 
   @Override
-  public RuleKey build(BuildRule buildRule) {
+  public RuleKey build(BuildEngineAction action) {
     try {
-      return ruleKeyCache.get(buildRule, this::calculateBuildRuleKey).getRuleKey();
+      return ruleKeyCache.get(action, this::calculateBuildRuleKey).getRuleKey();
     } catch (RuntimeException e) {
       propagateIfSizeLimitException(e);
       throw e;
@@ -110,9 +113,22 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
         .ifPresent(Throwables::throwIfUnchecked);
   }
 
-  private Builder<HashCode> newVerifyingBuilder(BuildRule rule) {
+  private Builder<HashCode> newVerifyingBuilder(BuildEngineAction action) {
+    Set<BuildRule> deps;
+    if (action instanceof BuildRule) {
+      deps = ((BuildRule) action).getBuildDeps();
+    } else if (action instanceof Action) {
+      deps =
+          ruleFinder.filterBuildRuleInputs(
+              Iterables.transform(
+                  ((Action) action).getInputs(), artifact -> artifact.asBound().getSourcePath()));
+    } else {
+      throw new IllegalStateException(
+          String.format("Unknown BuildEngineAction type %s", action.getClass()));
+    }
+
     Iterable<DependencyAggregation> aggregatedRules =
-        Iterables.filter(rule.getBuildDeps(), DependencyAggregation.class);
+        Iterables.filter(deps, DependencyAggregation.class);
     return new Builder<HashCode>(RuleKeyBuilder.createDefaultHasher(ruleKeyLogger)) {
       private boolean hasEffectiveDirectDep(BuildRule dep) {
         for (BuildRule aggregationRule : aggregatedRules) {
@@ -130,16 +146,16 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
         Result<RESULT> result = super.buildResult(mapper);
         for (BuildRule usedDep : result.getDeps()) {
           Preconditions.checkState(
-              rule.getBuildDeps().contains(usedDep)
+              deps.contains(usedDep)
                   || hasEffectiveDirectDep(usedDep)
-                  || (rule instanceof HasDeclaredAndExtraDeps
-                      && ((HasDeclaredAndExtraDeps) rule)
+                  || (action instanceof HasDeclaredAndExtraDeps
+                      && ((HasDeclaredAndExtraDeps) action)
                           .getTargetGraphOnlyDeps()
                           .contains(usedDep)),
               "%s: %s not in deps (%s)",
-              rule.getBuildTarget(),
+              action.getBuildTarget(),
               usedDep.getBuildTarget(),
-              rule.getBuildDeps());
+              deps);
         }
         return result;
       }
@@ -203,6 +219,13 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
       }
       setSourcePathDirectly(sourcePath);
       return this;
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<RULE_KEY> setAction(Action action) {
+      // called reflectively via InputBasedRuleKeyFactory.build(BuildRule), so we still need to
+      // handle it.
+      return setActionRuleKey(InputBasedRuleKeyFactory.this.build(action));
     }
 
     // Rules supporting input-based rule keys should be described entirely by their `SourcePath`

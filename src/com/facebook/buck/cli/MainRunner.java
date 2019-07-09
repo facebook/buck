@@ -44,6 +44,8 @@ import com.facebook.buck.core.graph.transformation.executor.factory.DepsAwareExe
 import com.facebook.buck.core.graph.transformation.executor.factory.DepsAwareExecutorType;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -59,8 +61,8 @@ import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationDescriptionsFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypesFactory;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.core.toolchain.impl.DefaultToolchainProviderFactory;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
@@ -69,6 +71,8 @@ import com.facebook.buck.counters.CounterBuckConfig;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
 import com.facebook.buck.distributed.DistBuildConfig;
+import com.facebook.buck.doctor.DefaultDefectReporter;
+import com.facebook.buck.doctor.config.ImmutableDoctorConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.BuckInitializationDurationEvent;
@@ -126,10 +130,10 @@ import com.facebook.buck.log.LogConfig;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.manifestservice.ManifestServiceConfig;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserFactory;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.TargetSpecResolver;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionStatsProvider;
@@ -148,10 +152,16 @@ import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
+import com.facebook.buck.support.build.report.BuildReportConfig;
 import com.facebook.buck.support.build.report.BuildReportUpload;
+import com.facebook.buck.support.build.report.BuildReportUtils;
+import com.facebook.buck.support.build.report.RuleKeyLogFileUploader;
 import com.facebook.buck.support.cli.args.BuckArgsMethods;
+import com.facebook.buck.support.cli.args.GlobalCliOptions;
+import com.facebook.buck.support.cli.config.BuckConfigWriter;
 import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.support.exceptions.handler.ExceptionHandlerRegistryFactory;
+import com.facebook.buck.support.fix.FixBuckConfig;
 import com.facebook.buck.support.log.LogBuckConfig;
 import com.facebook.buck.support.state.BuckGlobalState;
 import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager;
@@ -205,6 +215,7 @@ import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.timing.NanosAdjustedClock;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.versioncontrol.DelegatingVersionControlCmdLineInterface;
+import com.facebook.buck.util.versioncontrol.FullVersionControlStats;
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
@@ -217,6 +228,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.sun.jna.Pointer;
@@ -367,7 +380,7 @@ public final class MainRunner {
 
   public interface KnownRuleTypesFactoryFactory {
 
-    KnownRuleTypesFactory create(
+    KnownNativeRuleTypesFactory create(
         ProcessExecutor executor,
         PluginManager pluginManager,
         SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory,
@@ -594,6 +607,11 @@ public final class MainRunner {
     ImmutableList<String> args =
         BuckArgsMethods.expandAtFiles(unexpandedCommandLineArgs, rootCellMapping);
 
+    // Filter out things like --command-args-file from the arguments lists that we log
+    ImmutableList<String> filteredUnexpandedArgsForLogging =
+        filterArgsForLogging(unexpandedCommandLineArgs);
+    ImmutableList<String> filteredArgsForLogging = filterArgsForLogging(args);
+
     // Parse command line arguments
     BuckCommand command = new BuckCommand();
     command.setPluginManager(pluginManager);
@@ -637,7 +655,7 @@ public final class MainRunner {
 
       // statically configure Buck logging environment based on Buck config, usually buck-x.log
       // files
-      setupLogging(command, args);
+      setupLogging(command, filteredArgsForLogging);
 
       ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
       UnconfiguredBuildTargetViewFactory buildTargetFactory =
@@ -798,6 +816,8 @@ public final class MainRunner {
           createTargetConfigurationSupplier(
               command, buckConfig, buildTargetFactory, rootCellCellPathResolver);
 
+      // NOTE: This new KnownUserDefinedRuleTypes is only used if BuckGlobals need to be invalidated
+      // Otherwise, everything should use the KnownUserDefinedRuleTypes object from BuckGlobals
       KnownRuleTypesProvider knownRuleTypesProvider =
           new KnownRuleTypesProvider(
               knownRuleTypesFactoryFactory.create(
@@ -912,8 +932,8 @@ public final class MainRunner {
               superConsoleConfig.isEnabled(console.getAnsi(), console.getVerbosity()),
               context.isPresent(),
               command.getSubCommandNameForLogging(),
-              args,
-              unexpandedCommandLineArgs,
+              filteredArgsForLogging,
+              filteredUnexpandedArgsForLogging,
               filesystem.getBuckPaths().getLogDir(),
               isRemoteExecutionBuild);
 
@@ -964,11 +984,7 @@ public final class MainRunner {
                   },
                   ManifestService::close);
           ) {
-
-        if (command.getSubcommand().isPresent()
-            && command.getSubcommand().get() instanceof BuildCommand) {
-          BuildReportUpload.runBuildReportUpload(managerScope, buckConfig, buildId);
-        }
+        BuckConfigWriter.writeConfig(filesystem.getRootPath(), invocationInfo, buckConfig);
 
         CommonThreadFactoryState commonThreadFactoryState =
             GlobalStateManager.singleton().getThreadToCommandRegister();
@@ -1201,6 +1217,7 @@ public final class MainRunner {
                   rootCell.getBuckConfig(),
                   webServer,
                   clock,
+                  executionEnvironment,
                   counterRegistry,
                   commandEventListeners,
                   remoteExecutionListener.isPresent()
@@ -1247,6 +1264,10 @@ public final class MainRunner {
               .ifPresent(event -> buildEventBus.post(DaemonEvent.newDaemonInstance(event)));
 
 
+          ListenableFuture<Optional<FullVersionControlStats>> vcStatsFuture =
+              Futures.immediateFuture(Optional.empty());
+          boolean shouldUploadBuildReport = BuildReportUtils.shouldUploadBuildReport(buckConfig);
+
           VersionControlBuckConfig vcBuckConfig = new VersionControlBuckConfig(buckConfig);
           VersionControlStatsGenerator vcStatsGenerator =
               new VersionControlStatsGenerator(
@@ -1256,21 +1277,36 @@ public final class MainRunner {
                       vcBuckConfig.getHgCmd(),
                       buckConfig.getEnvironment()),
                   vcBuckConfig.getPregeneratedVersionControlStats());
-          if (vcBuckConfig.shouldGenerateStatistics()
+          if ((vcBuckConfig.shouldGenerateStatistics() || shouldUploadBuildReport)
               && command.subcommand instanceof AbstractCommand
               && !(command.subcommand instanceof DistBuildCommand)) {
             AbstractCommand subcommand = (AbstractCommand) command.subcommand;
             if (!commandMode.equals(CommandMode.TEST)) {
-              vcStatsGenerator.generateStatsAsync(
-                  subcommand.isSourceControlStatsGatheringEnabled(),
-                  diskIoExecutorService.get(),
-                  buildEventBus);
+
+              boolean shouldPreGenerate = !subcommand.isSourceControlStatsGatheringEnabled();
+              vcStatsFuture =
+                  vcStatsGenerator.generateStatsAsync(
+                      shouldUploadBuildReport,
+                      shouldPreGenerate,
+                      buildEventBus,
+                      listeningDecorator(diskIoExecutorService.get()));
             }
           }
+
+          if (command.getSubcommand().isPresent()
+              && command.getSubcommand().get() instanceof BuildCommand
+              && shouldUploadBuildReport) {
+            BuildReportUpload.runBuildReportUpload(
+                managerScope, vcStatsFuture, buckConfig, buildId);
+          }
+
           NetworkInfo.generateActiveNetworkAsync(diskIoExecutorService.get(), buildEventBus);
 
           ImmutableList<String> remainingArgs =
-              args.isEmpty() ? ImmutableList.of() : args.subList(1, args.size());
+              filteredArgsForLogging.isEmpty()
+                  ? ImmutableList.of()
+                  : filteredUnexpandedArgsForLogging.subList(
+                      1, filteredUnexpandedArgsForLogging.size());
 
           CommandEvent.Started startedEvent =
               CommandEvent.started(
@@ -1403,6 +1439,11 @@ public final class MainRunner {
                     parserAndCaches.getVersionedTargetGraphCache().getCacheStats()));
           }
         } finally {
+          if (exitCode != ExitCode.SUCCESS) {
+            handleAutoFix(
+                filesystem, console, clientEnvironment, command, buckConfig, buildId, exitCode);
+          }
+
           // signal nailgun that we are not interested in client disconnect events anymore
           context.ifPresent(c -> c.removeAllClientListeners());
 
@@ -1435,6 +1476,28 @@ public final class MainRunner {
     return exitCode;
   }
 
+  /**
+   * Filters out command line arguments that are provided by the python wrapper.
+   *
+   * <p>These arguments are generally not useful to users, and we do not want them showing up in
+   * logging, as they are not provided by users and their values are not really actionable.
+   */
+  private ImmutableList<String> filterArgsForLogging(ImmutableList<String> args) {
+    ImmutableList.Builder<String> builder = ImmutableList.builderWithExpectedSize(args.size());
+    for (int i = 0; i < args.size(); i++) {
+      String arg = args.get(i);
+      if (arg.equals(GlobalCliOptions.COMMAND_ARGS_FILE_LONG_ARG)
+          || arg.equals(GlobalCliOptions.FIX_SPEC_FILE_LONG_ARG)) {
+        // Skip --command-args-file and its argument. These are added by the python wrapper
+        // and aren't useful to users.
+        i++;
+        continue;
+      }
+      builder.add(arg);
+    }
+    return builder.build();
+  }
+
   private Supplier<TargetConfiguration> createTargetConfigurationSupplier(
       Command command,
       BuckConfig buckConfig,
@@ -1445,13 +1508,15 @@ public final class MainRunner {
           buckConfig.getView(BuildBuckConfig.class).getHostPlatform();
       TargetConfiguration hostTargetConfiguration =
           hostPlatformFromConfig
+              .map(ConfigurationBuildTargets::convert)
               .<TargetConfiguration>map(ImmutableDefaultTargetConfiguration::of)
               .orElse(HostTargetConfiguration.INSTANCE);
       return () -> hostTargetConfiguration;
     }
-    UnconfiguredBuildTargetView targetPlatform =
-        unconfiguredBuildTargetFactory.create(
-            cellPathResolver, Iterables.getOnlyElement(command.getTargetPlatforms()));
+    BuildTarget targetPlatform =
+        ConfigurationBuildTargets.convert(
+            unconfiguredBuildTargetFactory.create(
+                cellPathResolver, Iterables.getOnlyElement(command.getTargetPlatforms())));
     return () -> ImmutableDefaultTargetConfiguration.of(targetPlatform);
   }
 
@@ -1469,6 +1534,46 @@ public final class MainRunner {
       }
     }
     return false;
+  }
+
+  private void handleAutoFix(
+      ProjectFilesystem filesystem,
+      Console console,
+      ImmutableMap<String, String> environment,
+      BuckCommand command,
+      BuckConfig buckConfig,
+      BuildId buildId,
+      ExitCode exitCode) {
+    if (!(command.subcommand instanceof AbstractCommand)) {
+      return;
+    }
+    AbstractCommand subcommand = (AbstractCommand) command.subcommand;
+    FixBuckConfig config = buckConfig.getView(FixBuckConfig.class);
+
+    if (!config.shouldRunAutofix(
+        console.getAnsi().isAnsiTerminal(), command.getDeclaredSubCommandName())) {
+      LOG.info("Auto fixing is not enabled for command %s", command.getDeclaredSubCommandName());
+      return;
+    }
+
+    // Only log here so that we still return with the correct top level exit code
+    try {
+      FixCommandHandler fixCommandHandler =
+          new FixCommandHandler(
+              filesystem,
+              console,
+              environment,
+              config,
+              subcommand.getCommandArgsFile(),
+              subcommand.getFixSpecFile());
+
+      fixCommandHandler.runWithBuildIdWithExitCode(buildId, exitCode, false);
+    } catch (IOException e) {
+      console.printErrorText(
+          "Failed to write fix script information to %s", subcommand.getCommandArgsFile());
+    } catch (FixCommandHandler.FixCommandHandlerException e) {
+      console.printErrorText("Error running auto-fix: %s", e.getMessage());
+    }
   }
 
   private void warnAboutConfigFileOverrides(Path root, CliConfig cliConfig) throws IOException {
@@ -1509,17 +1614,21 @@ public final class MainRunner {
     }
   }
 
+  private boolean isRemoteExecutionAutoEnabled(
+      BuckCommand command, BuckConfig config, String username) {
+    BuildCommand subcommand = (BuildCommand) command.getSubcommand().get();
+    return config
+        .getView(RemoteExecutionConfig.class)
+        .isRemoteExecutionAutoEnabled(username, subcommand.getArguments());
+  }
+
   private boolean isRemoteExecutionBuild(BuckCommand command, BuckConfig config, String username) {
     if (!command.getSubcommand().isPresent()
         || !(command.getSubcommand().get() instanceof BuildCommand)) {
       return false;
     }
 
-    BuildCommand subcommand = (BuildCommand) command.getSubcommand().get();
-    boolean remoteExecutionAutoEnabled =
-        config
-            .getView(RemoteExecutionConfig.class)
-            .isRemoteExecutionAutoEnabled(username, subcommand.getArguments());
+    boolean remoteExecutionAutoEnabled = isRemoteExecutionAutoEnabled(command, config, username);
 
     ModernBuildRuleStrategyConfig strategyConfig =
         config.getView(ModernBuildRuleConfig.class).getDefaultStrategyConfig();
@@ -1530,6 +1639,7 @@ public final class MainRunner {
     return strategyConfig.getBuildStrategy(remoteExecutionAutoEnabled)
         == ModernBuildRuleBuildStrategy.REMOTE;
   }
+
 
   private ImmutableList<AdditionalConsoleLineProvider> createAdditionalConsoleLinesProviders(
       Optional<RemoteExecutionEventListener> remoteExecutionListener,
@@ -1911,6 +2021,7 @@ public final class MainRunner {
       BuckConfig buckConfig,
       Optional<WebServer> webServer,
       Clock clock,
+      ExecutionEnvironment executionEnvironment,
       CounterRegistry counterRegistry,
       Iterable<BuckEventListener> commandSpecificEventListeners,
       Optional<RemoteExecutionStatsProvider> reStatsProvider,
@@ -1965,13 +2076,19 @@ public final class MainRunner {
             invocationInfo.getBuildId(),
             managerScope));
     if (logBuckConfig.isRuleKeyLoggerEnabled()) {
+
+      Optional<RuleKeyLogFileUploader> keyLogFileUploader =
+          createRuleKeyLogFileUploader(
+              buckConfig, projectFilesystem, buckEventBus, clock, executionEnvironment, buildId);
+
       eventListenersBuilder.add(
           new RuleKeyLoggerListener(
               projectFilesystem,
               invocationInfo,
               MostExecutors.newSingleThreadExecutor(
                   new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
-              managerScope));
+              managerScope,
+              keyLogFileUploader));
     }
 
     eventListenersBuilder.add(
@@ -2019,6 +2136,32 @@ public final class MainRunner {
         executionEnvironment,
         new ArtifactCacheBuckConfig(buckConfig).getArtifactCacheModesRaw(),
         environmentExtraData.build());
+  }
+
+  private Optional<RuleKeyLogFileUploader> createRuleKeyLogFileUploader(
+      BuckConfig buckConfig,
+      ProjectFilesystem projectFilesystem,
+      BuckEventBus buckEventBus,
+      Clock clock,
+      ExecutionEnvironment executionEnvironment,
+      BuildId buildId) {
+    if (BuildReportUtils.shouldUploadBuildReport(buckConfig)) {
+      BuildReportConfig buildReportConfig = buckConfig.getView(BuildReportConfig.class);
+      return Optional.of(
+          new RuleKeyLogFileUploader(
+              new DefaultDefectReporter(
+                  projectFilesystem,
+                  buckConfig.getView(ImmutableDoctorConfig.class),
+                  buckEventBus,
+                  clock),
+              getBuildEnvironmentDescription(
+                  executionEnvironment,
+                  buckConfig),
+              buildReportConfig.getEndpointUrl().get(),
+              buildReportConfig.getEndpointTimeoutMs(),
+              buildId));
+    }
+    return Optional.empty();
   }
 
   private AbstractConsoleEventBusListener createConsoleEventListener(

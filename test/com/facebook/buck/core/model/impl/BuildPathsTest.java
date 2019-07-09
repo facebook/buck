@@ -66,4 +66,10 @@ public class BuildPathsTest {
     assertEquals(
         Paths.get("buck-out/bin").resolve(path), BuildPaths.getScratchDir(filesystem, target));
   }
+
+  @Test
+  @Parameters(method = "getTargetsForTest")
+  public void basePathFormat(BuildTarget target, Path path) {
+    assertEquals(path, BuildPaths.getBaseDir(target));
+  }
 }

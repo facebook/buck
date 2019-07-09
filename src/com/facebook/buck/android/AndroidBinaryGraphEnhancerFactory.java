@@ -23,9 +23,11 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -69,7 +71,8 @@ public class AndroidBinaryGraphEnhancerFactory {
       AndroidGraphEnhancerArgs args,
       boolean useProtoFormat,
       JavaOptions javaOptions,
-      JavacFactory javacFactory) {
+      JavacFactory javacFactory,
+      ConfigurationRuleRegistry configurationRuleRegistry) {
 
     AndroidPlatformTarget androidPlatformTarget =
         toolchainProvider.getByName(
@@ -195,7 +198,12 @@ public class AndroidBinaryGraphEnhancerFactory {
         getPostFilterResourcesArgs(args, buildTarget, graphBuilder, cellPathResolver),
         nonPreDexedDexBuildableArgs,
         rulesToExcludeFromDex,
-        useProtoFormat);
+        useProtoFormat,
+        AndroidNativeTargetConfigurationMatcherFactory.create(
+            configurationRuleRegistry,
+            buildTarget,
+            args.getCpuFilters(),
+            ConfigurationBuildTargets.convertValues(args.getTargetCpuTypeConstraints())));
   }
 
   private ImmutableSet<String> addFallbackLocales(ImmutableSet<String> locales) {

@@ -42,7 +42,7 @@ import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.core.rules.knowntypes.DefaultKnownRuleTypesFactory;
+import com.facebook.buck.core.rules.knowntypes.DefaultKnownNativeRuleTypesFactory;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.core.toolchain.impl.DefaultToolchainProviderFactory;
 import com.facebook.buck.io.ExecutableFinder;
@@ -552,7 +552,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
               testConsole,
               stdin,
               knownRuleTypesFactoryFactory == null
-                  ? DefaultKnownRuleTypesFactory::new
+                  ? DefaultKnownNativeRuleTypesFactory::new
                   : knownRuleTypesFactoryFactory,
               repoRoot,
               sanizitedEnv,

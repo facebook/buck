@@ -17,15 +17,10 @@
 package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.google.common.collect.ImmutableMap;
-import java.util.Optional;
 
 /**
  * Interface for {@link BuildRule} objects (e.g. C++ libraries) which can contribute to the
@@ -33,28 +28,7 @@ import java.util.Optional;
  * platforms.
  */
 public interface NativeLinkableGroup {
-
   BuildTarget getBuildTarget();
-
-  /**
-   * @return All native linkable dependencies that are required by this linkable on a specific
-   *     platform.
-   */
-  @SuppressWarnings("unused")
-  default Iterable<? extends NativeLinkableGroup> getNativeLinkableDepsForPlatform(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-    return getNativeLinkableDeps(ruleResolver);
-  }
-
-  /**
-   * @return All native linkable exported dependencies that are required by this linkable on a
-   *     specific platform.
-   */
-  @SuppressWarnings("unused")
-  default Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDepsForPlatform(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    return getNativeLinkableExportedDeps(graphBuilder);
-  }
 
   /**
    * @return All native linkable dependencies that might be required by this linkable on any
@@ -69,56 +43,7 @@ public interface NativeLinkableGroup {
   Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
       BuildRuleResolver ruleResolver);
 
-  /**
-   * Return input that *dependents* should put on their link line when linking against this
-   * linkable.
-   */
-  NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type,
-      boolean forceLinkWhole,
-      ActionGraphBuilder graphBuilder,
-      TargetConfiguration targetConfiguration);
-
-  /**
-   * Return input that *dependents* should put on their link line when linking against this
-   * linkable.
-   */
-  default NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type,
-      ActionGraphBuilder graphBuilder,
-      TargetConfiguration targetConfiguration) {
-    return getNativeLinkableInput(cxxPlatform, type, false, graphBuilder, targetConfiguration);
-  }
-
-  /**
-   * Optionally returns a {@link NativeLinkTargetGroup}. Most implementations of NativeLinkableGroup
-   * are themselves instances of NativeLinkTargetGroup.
-   */
-  @SuppressWarnings("unused")
-  default Optional<NativeLinkTargetGroup> getNativeLinkTarget(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    if (this instanceof NativeLinkTargetGroup) {
-      return Optional.of((NativeLinkTargetGroup) this);
-    }
-    return Optional.empty();
-  }
-
-  Linkage getPreferredLinkage(CxxPlatform cxxPlatform);
-
-  /**
-   * @return a map of shared library SONAME to shared library path for the given {@link
-   *     CxxPlatform}.
-   */
-  ImmutableMap<String, SourcePath> getSharedLibraries(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
-
-  /** @return whether this {@link NativeLinkableGroup} supports omnibus linking. */
-  @SuppressWarnings("unused")
-  default boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
-    return true;
-  }
+  NativeLinkable getNativeLinkable(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
   enum Linkage {
     ANY,

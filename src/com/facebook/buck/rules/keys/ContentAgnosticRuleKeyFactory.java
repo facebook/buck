@@ -16,10 +16,13 @@
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
@@ -59,7 +62,8 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
         }
       };
 
-  private final SingleBuildRuleKeyCache<RuleKey> ruleKeyCache = new SingleBuildRuleKeyCache<>();
+  private final SingleBuildActionRuleKeyCache<RuleKey> ruleKeyCache =
+      new SingleBuildActionRuleKeyCache<>();
 
   public ContentAgnosticRuleKeyFactory(
       RuleKeyFieldLoader ruleKeyFieldLoader,
@@ -70,9 +74,9 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     this.ruleKeyLogger = ruleKeyLogger;
   }
 
-  private RuleKey calculateBuildRuleKey(BuildRule buildRule) {
+  private RuleKey calculateBuildRuleKey(BuildEngineAction action) {
     Builder<HashCode> builder = new Builder<>(RuleKeyBuilder.createDefaultHasher(ruleKeyLogger));
-    ruleKeyFieldLoader.setFields(builder, buildRule, RuleKeyType.CONTENT_AGNOSTIC);
+    ruleKeyFieldLoader.setFields(builder, action, RuleKeyType.CONTENT_AGNOSTIC);
     return builder.build(RuleKey::new);
   }
 
@@ -84,8 +88,8 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
   }
 
   @Override
-  public RuleKey build(BuildRule buildRule) {
-    return ruleKeyCache.get(buildRule, this::calculateBuildRuleKey);
+  public RuleKey build(BuildEngineAction action) {
+    return ruleKeyCache.get(action, this::calculateBuildRuleKey);
   }
 
   private RuleKey buildAppendableKey(AddsToRuleKey appendable) {
@@ -99,6 +103,11 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     }
 
     @Override
+    protected AbstractRuleKeyBuilder<RULE_KEY> setAction(Action action) {
+      return setActionRuleKey(ContentAgnosticRuleKeyFactory.this.build(action));
+    }
+
+    @Override
     protected RuleKeyBuilder<RULE_KEY> setBuildRule(BuildRule rule) {
       return setBuildRuleKey(ContentAgnosticRuleKeyFactory.this.build(rule));
     }
@@ -106,6 +115,11 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     @Override
     protected RuleKeyBuilder<RULE_KEY> setAddsToRuleKey(AddsToRuleKey appendable) {
       return setAddsToRuleKey(ContentAgnosticRuleKeyFactory.this.buildAppendableKey(appendable));
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<RULE_KEY> setArtifact(Artifact artifact) throws IOException {
+      return setSourcePath(artifact.asBound().getSourcePath());
     }
 
     @Override

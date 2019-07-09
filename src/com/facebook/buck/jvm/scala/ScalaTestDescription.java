@@ -146,6 +146,7 @@ public class ScalaTestDescription
         args.getLabels(),
         args.getContacts(),
         args.getTestType().isPresent() ? args.getTestType().get() : TestType.JUNIT,
+        javacOptions.getLanguageLevelOptions().getTargetLevel(),
         javaOptionsForTests
             .get()
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),

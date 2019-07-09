@@ -24,6 +24,7 @@ import com.google.devtools.build.lib.skylarkinterface.StarlarkContext;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /** Implementation of {@link ProviderInfoCollection}. */
 public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
@@ -39,7 +40,11 @@ public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
   public Object getIndex(Object key, Location loc, StarlarkContext context) throws EvalException {
     verifyKeyIsProvider(
         key, loc, "Type Target only supports indexing by object constructors, got %s instead");
-    return getNullable(((Provider<?>) key));
+    Object result = getNullable(((Provider<?>) key));
+    if (result == null) {
+      throw new EvalException(loc, String.format("Provider of %s is not found", key));
+    }
+    return result;
   }
 
   @Override
@@ -64,6 +69,7 @@ public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
   }
 
   @SuppressWarnings("unchecked")
+  @Nullable
   private <T extends ProviderInfo<T>> T getNullable(Provider<T> provider) {
     return (T) infoMap.get(provider.getKey());
   }

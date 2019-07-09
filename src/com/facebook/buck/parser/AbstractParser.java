@@ -29,6 +29,7 @@ import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.util.MoreMaps;
@@ -238,7 +239,7 @@ abstract class AbstractParser implements Parser {
           // visitor pattern otherwise.
           // it's also work we need to do anyways. the getTargetNode() result is cached, so that
           // when we come around and re-visit that node there won't actually be any work performed.
-          for (BuildTarget dep : node.getParseDeps()) {
+          for (BuildTarget dep : node.getTotalDeps()) {
             try {
               state.getTargetNode(dep);
             } catch (BuildFileParseException e) {
@@ -247,7 +248,7 @@ abstract class AbstractParser implements Parser {
               throw ParserMessages.createReadableExceptionWithWhenSuffix(target, dep, e);
             }
           }
-          return node.getParseDeps().iterator();
+          return node.getTotalDeps().iterator();
         };
 
     AcyclicDepthFirstPostOrderTraversal<BuildTarget> targetNodeTraversal =
@@ -285,7 +286,7 @@ abstract class AbstractParser implements Parser {
   }
 
   @Override
-  public synchronized TargetGraphCreationResult buildTargetGraphWithoutConfigurationTargets(
+  public synchronized TargetGraphCreationResult buildTargetGraphWithoutTopLevelConfigurationTargets(
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       TargetConfiguration targetConfiguration)
@@ -295,7 +296,7 @@ abstract class AbstractParser implements Parser {
   }
 
   @Override
-  public synchronized TargetGraphCreationResult buildTargetGraphWithConfigurationTargets(
+  public synchronized TargetGraphCreationResult buildTargetGraphWithTopLevelConfigurationTargets(
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       TargetConfiguration targetConfiguration)

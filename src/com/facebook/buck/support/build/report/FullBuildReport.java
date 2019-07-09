@@ -15,11 +15,12 @@
  */
 package com.facebook.buck.support.build.report;
 
-import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.versioncontrol.FullVersionControlStats;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.util.Optional;
 
 /**
  * FullBuildReport is an object serialized and uploaded to the server by {@link BuildReportUpload}
@@ -34,5 +35,6 @@ public interface FullBuildReport {
   @JsonProperty
   Config currentConfig();
 
-  BuildId getBuildId();
+  @JsonProperty
+  Optional<FullVersionControlStats> versionControlStats();
 }

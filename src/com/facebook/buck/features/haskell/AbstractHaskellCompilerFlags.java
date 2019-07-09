@@ -93,7 +93,9 @@ abstract class AbstractHaskellCompilerFlags implements AddsToRuleKey {
   }
 
   /** @return the arguments to pass to the compiler to build against package dependencies. */
-  public final Iterable<String> getPackageFlags(SourcePathResolver resolver) {
+  public final Iterable<String> getPackageFlags(
+      HaskellPlatform platform, SourcePathResolver resolver) {
+    String exposePackage = platform.supportExposePackage() ? "-expose-package" : "-package";
     Set<String> packageDbs = new TreeSet<>();
     Set<String> hidden = new TreeSet<>();
     Set<String> exposed = new TreeSet<>();
@@ -118,7 +120,7 @@ abstract class AbstractHaskellCompilerFlags implements AddsToRuleKey {
     return ImmutableList.<String>builder()
         .addAll(Iterables.concat(getPackageExportedFlags().values()))
         .addAll(MoreIterables.zipAndConcat(Iterables.cycle("-package-db"), packageDbs))
-        .addAll(MoreIterables.zipAndConcat(Iterables.cycle("-package"), exposed))
+        .addAll(MoreIterables.zipAndConcat(Iterables.cycle(exposePackage), exposed))
         .addAll(MoreIterables.zipAndConcat(Iterables.cycle("-hide-package"), hidden))
         .build();
   }

@@ -21,7 +21,6 @@ import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.actions.FakeAction;
-import com.facebook.buck.core.rules.actions.FakeAction.FakeActionConstructorArgs;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionFailure;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
@@ -44,9 +43,9 @@ public class FakeRuleDescription implements RuleDescription<FakeRuleDescriptionA
       RuleAnalysisContext context, BuildTarget target, FakeRuleDescriptionArg args)
       throws ActionCreationException {
 
-    Artifact artifact = context.actionFactory().declareArtifact(Paths.get("output"));
+    Artifact artifact = context.actionRegistry().declareArtifact(Paths.get("output"));
 
-    FakeActionConstructorArgs actionExecution =
+    FakeAction.FakeActionExecuteLambda actionExecution =
         (inputs, outputs, ctx) -> {
           Artifact output = Iterables.getOnlyElement(outputs);
           try {
@@ -60,10 +59,8 @@ public class FakeRuleDescription implements RuleDescription<FakeRuleDescriptionA
           return ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
         };
 
-    context
-        .actionFactory()
-        .createActionAnalysisData(
-            FakeAction.class, ImmutableSet.of(), ImmutableSet.of(artifact), actionExecution);
+    new FakeAction(
+        context.actionRegistry(), ImmutableSet.of(), ImmutableSet.of(artifact), actionExecution);
     return ProviderInfoCollectionImpl.builder().build();
   }
 

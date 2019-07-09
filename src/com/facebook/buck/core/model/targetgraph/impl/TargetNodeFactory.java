@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.CoercedTypeCache;
@@ -35,6 +36,7 @@ import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.PathTypeCoercer.PathExistenceVerificationMode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -85,6 +87,7 @@ public class TargetNodeFactory implements NodeCopier {
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
+      ImmutableSortedSet<BuildTarget> configurationDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns,
       CellPathResolver cellRoots)
@@ -95,6 +98,7 @@ public class TargetNodeFactory implements NodeCopier {
         filesystem,
         buildTarget,
         declaredDeps,
+        configurationDeps,
         visibilityPatterns,
         withinViewPatterns,
         cellRoots);
@@ -107,6 +111,7 @@ public class TargetNodeFactory implements NodeCopier {
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
+      ImmutableSortedSet<BuildTarget> configurationDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns,
       CellPathResolver cellRoots)
@@ -117,11 +122,17 @@ public class TargetNodeFactory implements NodeCopier {
         ImmutableSortedSet.naturalOrder();
     ImmutableSet.Builder<Path> pathsBuilder = ImmutableSet.builder();
 
+    ImmutableMap<String, ParamInfo> paramInfos;
+    if (constructorArg instanceof SkylarkDescriptionArg) {
+      paramInfos = ((SkylarkDescriptionArg) constructorArg).getRule().getAllParamInfo();
+    } else {
+      paramInfos =
+          CoercedTypeCache.INSTANCE.getAllParamInfo(
+              typeCoercerFactory, description.getConstructorArgType());
+    }
+
     // Scan the input to find possible BuildTargetPaths, necessary for loading dependent rules.
-    for (ParamInfo info :
-        CoercedTypeCache.INSTANCE
-            .getAllParamInfo(typeCoercerFactory, description.getConstructorArgType())
-            .values()) {
+    for (ParamInfo info : paramInfos.values()) {
       if (info.isDep()
           && info.isInput()
           && info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)
@@ -149,6 +160,16 @@ public class TargetNodeFactory implements NodeCopier {
                   buildTarget.getUnflavoredBuildTarget(), constructorArg));
     }
 
+    ImmutableSet<BuildTarget> configurationDepsFromArg =
+        description.getConfigurationDeps(constructorArg);
+    if (!configurationDepsFromArg.isEmpty()) {
+      configurationDeps =
+          ImmutableSortedSet.<BuildTarget>naturalOrder()
+              .addAll(configurationDeps)
+              .addAll(configurationDepsFromArg)
+              .build();
+    }
+
     ImmutableSet<Path> paths = pathsBuilder.build();
     pathsChecker.checkPaths(filesystem, buildTarget, paths);
 
@@ -167,6 +188,7 @@ public class TargetNodeFactory implements NodeCopier {
         declaredDeps,
         extraDepsBuilder.build(),
         targetGraphOnlyDepsBuilder.build(),
+        configurationDeps,
         cellRoots,
         visibilityPatterns,
         withinViewPatterns,
@@ -217,6 +239,7 @@ public class TargetNodeFactory implements NodeCopier {
           originalNode.getFilesystem(),
           originalNode.getBuildTarget().withFlavors(flavors),
           originalNode.getDeclaredDeps(),
+          originalNode.getConfigurationDeps(),
           originalNode.getVisibilityPatterns(),
           originalNode.getWithinViewPatterns(),
           originalNode.getCellNames());

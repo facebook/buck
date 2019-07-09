@@ -101,6 +101,10 @@ abstract class AbstractImmutableTargetNode<T> implements TargetNode<T> {
 
   @Value.Parameter
   @Override
+  public abstract ImmutableSortedSet<BuildTarget> getConfigurationDeps();
+
+  @Value.Parameter
+  @Override
   public abstract CellPathResolver getCellNames();
 
   @Value.Parameter
@@ -134,6 +138,11 @@ abstract class AbstractImmutableTargetNode<T> implements TargetNode<T> {
   @Override
   public Set<BuildTarget> getParseDeps() {
     return Sets.union(getBuildDeps(), getTargetGraphOnlyDeps());
+  }
+
+  @Override
+  public Set<BuildTarget> getTotalDeps() {
+    return Sets.union(getParseDeps(), getConfigurationDeps());
   }
 
   @Override

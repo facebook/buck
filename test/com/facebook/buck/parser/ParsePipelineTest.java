@@ -31,8 +31,8 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
@@ -42,6 +42,7 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.BuildFileManifestFactory;
 import com.facebook.buck.parser.api.ForwardingProjectBuildFileParserDecorator;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
@@ -443,6 +444,7 @@ public class ParsePipelineTest {
       ParserTargetNodeFactory<RawTargetNode> rawTargetNodeToTargetNodeFactory =
           new NonResolvingRawTargetNodeToTargetNodeFactory(
               DefaultParserTargetNodeFactory.createForParser(
+                  coercerFactory,
                   knownRuleTypesProvider,
                   constructorArgMarshaller,
                   buildFileTrees,

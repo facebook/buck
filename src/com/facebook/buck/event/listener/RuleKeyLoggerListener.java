@@ -32,8 +32,10 @@ import com.facebook.buck.support.bgtasks.BackgroundTask;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
+import com.facebook.buck.support.build.report.RuleKeyLogFileUploader;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ThrowingPrintWriter;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.eventbus.Subscribe;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -41,6 +43,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -57,6 +60,8 @@ public class RuleKeyLoggerListener implements BuckEventListener {
   private final int minLinesForAutoFlush;
   private final ProjectFilesystem projectFilesystem;
   private final TaskManagerCommandScope managerScope;
+  private final Optional<RuleKeyLogFileUploader> ruleKeyLogFileUploader;
+
   private final Object lock;
 
   @GuardedBy("lock")
@@ -66,15 +71,24 @@ public class RuleKeyLoggerListener implements BuckEventListener {
       ProjectFilesystem projectFilesystem,
       InvocationInfo info,
       ExecutorService outputExecutor,
-      TaskManagerCommandScope managerScope) {
-    this(projectFilesystem, info, outputExecutor, managerScope, DEFAULT_MIN_LINES_FOR_AUTO_FLUSH);
+      TaskManagerCommandScope managerScope,
+      Optional<RuleKeyLogFileUploader> ruleKeyLogFileUploader) {
+    this(
+        projectFilesystem,
+        info,
+        outputExecutor,
+        managerScope,
+        ruleKeyLogFileUploader,
+        DEFAULT_MIN_LINES_FOR_AUTO_FLUSH);
   }
 
+  @VisibleForTesting
   public RuleKeyLoggerListener(
       ProjectFilesystem projectFilesystem,
       InvocationInfo info,
       ExecutorService outputExecutor,
       TaskManagerCommandScope managerScope,
+      Optional<RuleKeyLogFileUploader> ruleKeyLogFileUploader,
       int minLinesForAutoFlush) {
     this.projectFilesystem = projectFilesystem;
     this.minLinesForAutoFlush = minLinesForAutoFlush;
@@ -83,6 +97,7 @@ public class RuleKeyLoggerListener implements BuckEventListener {
     this.outputExecutor = outputExecutor;
     this.logLines = new ArrayList<>();
     this.managerScope = managerScope;
+    this.ruleKeyLogFileUploader = ruleKeyLogFileUploader;
   }
 
   @Subscribe
@@ -173,12 +188,16 @@ public class RuleKeyLoggerListener implements BuckEventListener {
   @Override
   public void close() {
     submitFlushLogLines();
+
+    RuleKeyLoggerListenerCloseArgs args =
+        RuleKeyLoggerListenerCloseArgs.of(
+            outputExecutor,
+            ruleKeyLogFileUploader,
+            info.getLogDirectoryPath().resolve(BuckConstant.RULE_KEY_LOGGER_FILE_NAME));
+
     BackgroundTask<RuleKeyLoggerListenerCloseArgs> task =
-        ImmutableBackgroundTask.<RuleKeyLoggerListenerCloseArgs>builder()
-            .setAction(new RuleKeyLoggerListenerCloseAction())
-            .setActionArgs(RuleKeyLoggerListenerCloseArgs.of(outputExecutor))
-            .setName("RuleKeyLoggerListener_close")
-            .build();
+        ImmutableBackgroundTask.of(
+            "RuleKeyLoggerListener_close", new RuleKeyLoggerListenerCloseAction(), args);
     managerScope.schedule(task);
   }
 
@@ -193,6 +212,8 @@ public class RuleKeyLoggerListener implements BuckEventListener {
       args.getOutputExecutor().shutdown();
       try {
         args.getOutputExecutor().awaitTermination(1, TimeUnit.HOURS);
+        args.getRuleKeyLogFileUploader()
+            .ifPresent(uploader -> uploader.uploadRuleKeyLogFile(args.getRuleKeyLogFilePath()));
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       }
@@ -205,5 +226,11 @@ public class RuleKeyLoggerListener implements BuckEventListener {
   abstract static class AbstractRuleKeyLoggerListenerCloseArgs {
     @Value.Parameter
     public abstract ExecutorService getOutputExecutor();
+
+    @Value.Parameter
+    public abstract Optional<RuleKeyLogFileUploader> getRuleKeyLogFileUploader();
+
+    @Value.Parameter
+    public abstract Path getRuleKeyLogFilePath();
   }
 }

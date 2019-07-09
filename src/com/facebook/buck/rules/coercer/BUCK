@@ -1,16 +1,19 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 INTERFACE_SRCS = [
+    "AbstractParamInfo.java",
     "CoerceFailedException.java",
     "CoercedTypeCache.java",
     "ConstructorArgMarshaller.java",
+    "ConstructorArgBuilder.java",
     "ParamInfo.java",
     "ParamInfoException.java",
+    "ReflectionParamInfo.java",
     "TypeCoercer.java",
     "TypeCoercerFactory.java",
 ]
 
-java_library(
+java_immutables_library(
     name = "interface",
     srcs = INTERFACE_SRCS,
     exported_deps = [

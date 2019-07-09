@@ -33,8 +33,10 @@ import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -48,13 +50,15 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements CxxPreprocessorDep, NativeLinkableGroup {
+    implements CxxPreprocessorDep, LegacyNativeLinkableGroup {
 
   private final ActionGraphBuilder graphBuilder;
   private final Optional<Pattern> supportedPlatformsRegex;
 
   private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
       new TransitiveCxxPreprocessorInputCache(this);
+  private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
+      LegacyNativeLinkableGroup.getNativeLinkableCache(this);
 
   protected HalideLibrary(
       BuildTarget buildTarget,
@@ -102,6 +106,11 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, graphBuilder);
+  }
+
+  @Override
+  public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+    return linkableCache;
   }
 
   @Override

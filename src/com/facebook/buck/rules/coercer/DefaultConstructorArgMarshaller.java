@@ -20,16 +20,18 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
+import com.facebook.buck.core.select.Selector;
+import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.syntax.ListWithSelects;
-import com.facebook.buck.util.types.Pair;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
-import java.util.function.Function;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
@@ -53,24 +55,22 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
-      Class<T> dtoClass,
+      ConstructorArgBuilder<T> constructorArgBuilder,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       Map<String, ?> instance)
       throws ParamInfoException {
-    Pair<Object, Function<Object, T>> dtoAndBuild =
-        CoercedTypeCache.instantiateSkeleton(dtoClass, buildTarget);
-    ImmutableMap<String, ParamInfo> allParamInfo =
-        CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dtoClass);
+
+    ImmutableMap<String, ParamInfo> allParamInfo = constructorArgBuilder.getParamInfos();
     for (ParamInfo info : allParamInfo.values()) {
       info.setFromParams(
           cellRoots,
           filesystem,
           buildTarget,
           buildTarget.getTargetConfiguration(),
-          dtoAndBuild.getFirst(),
+          constructorArgBuilder.getBuilder(),
           instance);
     }
-    T dto = dtoAndBuild.getSecond().apply(dtoAndBuild.getFirst());
+    T dto = constructorArgBuilder.build();
     collectDeclaredDeps(cellRoots, allParamInfo.get("deps"), declaredDeps, dto);
     return dto;
   }
@@ -98,43 +98,118 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       CellPathResolver cellPathResolver,
       ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
+      TargetConfigurationTransformer targetConfigurationTransformer,
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
-      Class<T> dtoClass,
+      ConstructorArgBuilder<T> constructorArgBuilder,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
+      ImmutableSet.Builder<BuildTarget> configurationDeps,
       ImmutableMap<String, ?> attributes)
       throws CoerceFailedException {
-    Pair<Object, Function<Object, T>> dtoAndBuild =
-        CoercedTypeCache.instantiateSkeleton(dtoClass, buildTarget);
-    ImmutableMap<String, ParamInfo> allParamInfo =
-        CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dtoClass);
+
+    ImmutableMap<String, ParamInfo> allParamInfo = constructorArgBuilder.getParamInfos();
     for (ParamInfo info : allParamInfo.values()) {
       Object attribute = attributes.get(info.getName());
       if (attribute == null) {
         continue;
       }
-      Object attributeWithSelectableValue =
-          createCoercedAttributeWithSelectableValue(
-              cellPathResolver,
-              filesystem,
-              buildTarget,
-              buildTarget.getTargetConfiguration(),
-              info,
-              attribute);
-      Object configuredAttributeValue =
-          configureAttributeValue(
-              configurationContext,
-              selectorListResolver,
-              buildTarget,
-              info.getName(),
-              attributeWithSelectableValue);
-      if (configuredAttributeValue != null) {
-        info.setCoercedValue(dtoAndBuild.getFirst(), configuredAttributeValue);
+      Object attributeValue;
+      if (info.splitConfiguration()
+          && info.getTypeCoercer().supportsConcatenation()
+          && targetConfigurationTransformer.needsTransformation(
+              buildTarget.getTargetConfiguration())) {
+        attributeValue =
+            createAttributeWithConfigurationTransformation(
+                cellPathResolver,
+                filesystem,
+                selectorListResolver,
+                targetConfigurationTransformer,
+                configurationContext,
+                buildTarget,
+                buildTarget.getTargetConfiguration(),
+                configurationDeps,
+                info,
+                attribute);
+      } else {
+        attributeValue =
+            createAttribute(
+                cellPathResolver,
+                filesystem,
+                selectorListResolver,
+                configurationContext,
+                buildTarget,
+                buildTarget.getTargetConfiguration(),
+                configurationDeps,
+                info,
+                attribute);
+      }
+      if (attributeValue != null) {
+        info.setCoercedValue(constructorArgBuilder.getBuilder(), attributeValue);
       }
     }
-    T dto = dtoAndBuild.getSecond().apply(dtoAndBuild.getFirst());
+    T dto = constructorArgBuilder.build();
     collectDeclaredDeps(cellPathResolver, allParamInfo.get("deps"), declaredDeps, dto);
     return dto;
+  }
+
+  @SuppressWarnings("unchecked")
+  @Nullable
+  private Object createAttributeWithConfigurationTransformation(
+      CellPathResolver cellPathResolver,
+      ProjectFilesystem filesystem,
+      SelectorListResolver selectorListResolver,
+      TargetConfigurationTransformer targetConfigurationTransformer,
+      SelectableConfigurationContext configurationContext,
+      BuildTarget buildTarget,
+      TargetConfiguration targetConfiguration,
+      ImmutableSet.Builder<BuildTarget> configurationDeps,
+      ParamInfo info,
+      Object attribute)
+      throws CoerceFailedException {
+    ImmutableList.Builder<Object> valuesForConcatenation = ImmutableList.builder();
+    for (TargetConfiguration nestedTargetConfiguration :
+        targetConfigurationTransformer.transform(targetConfiguration)) {
+      Object configuredAttributeValue =
+          createAttribute(
+              cellPathResolver,
+              filesystem,
+              selectorListResolver,
+              configurationContext.withTargetConfiguration(nestedTargetConfiguration),
+              buildTarget.getUnconfiguredBuildTargetView().configure(nestedTargetConfiguration),
+              nestedTargetConfiguration,
+              configurationDeps,
+              info,
+              attribute);
+      if (configuredAttributeValue != null) {
+        valuesForConcatenation.add(configuredAttributeValue);
+      }
+    }
+    TypeCoercer<Object> coercer = (TypeCoercer<Object>) info.getTypeCoercer();
+    return coercer.concat(valuesForConcatenation.build());
+  }
+
+  @Nullable
+  private Object createAttribute(
+      CellPathResolver cellPathResolver,
+      ProjectFilesystem filesystem,
+      SelectorListResolver selectorListResolver,
+      SelectableConfigurationContext configurationContext,
+      BuildTarget buildTarget,
+      TargetConfiguration targetConfiguration,
+      ImmutableSet.Builder<BuildTarget> configurationDeps,
+      ParamInfo info,
+      Object attribute)
+      throws CoerceFailedException {
+    Object attributeWithSelectableValue =
+        createCoercedAttributeWithSelectableValue(
+            cellPathResolver, filesystem, buildTarget, targetConfiguration, info, attribute);
+    return configureAttributeValue(
+        configurationContext,
+        selectorListResolver,
+        buildTarget,
+        configurationDeps,
+        info.getName(),
+        attributeWithSelectableValue);
   }
 
   private Object createCoercedAttributeWithSelectableValue(
@@ -160,9 +235,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
 
       coercer =
           typeCoercerFactory.typeCoercerForParameterizedType(
-              "ListWithSelects",
-              SelectorList.class,
-              argumentInfo.getSetter().getGenericParameterTypes());
+              "ListWithSelects", SelectorList.class, argumentInfo.getGenericParameterTypes());
     } else {
       coercer = argumentInfo.getTypeCoercer();
     }
@@ -176,6 +249,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       SelectableConfigurationContext configurationContext,
       SelectorListResolver selectorListResolver,
       BuildTarget buildTarget,
+      ImmutableSet.Builder<BuildTarget> configurationDeps,
       String attributeName,
       Object rawAttributeValue) {
     T value;
@@ -184,9 +258,20 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       value =
           selectorListResolver.resolveList(
               configurationContext, buildTarget, attributeName, selectorList);
+      addSelectorListConfigurationDepsToBuilder(configurationDeps, selectorList);
     } else {
       value = (T) rawAttributeValue;
     }
     return value;
+  }
+
+  private <T> void addSelectorListConfigurationDepsToBuilder(
+      ImmutableSet.Builder<BuildTarget> configurationDeps, SelectorList<T> selectorList) {
+    for (Selector<T> selector : selectorList.getSelectors()) {
+      selector.getConditions().keySet().stream()
+          .filter(selectorKey -> !selectorKey.isReserved())
+          .map(SelectorKey::getBuildTarget)
+          .forEach(configurationDeps::add);
+    }
   }
 }

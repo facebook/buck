@@ -18,6 +18,7 @@ package com.facebook.buck.core.artifact;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 /**
@@ -28,8 +29,12 @@ import org.immutables.value.Value;
  */
 public interface BuildArtifact extends Artifact {
 
-  /** @return the key to the {@link ActionAnalysisData} that owns this artifact */
+  /**
+   * @return the key to the {@link ActionAnalysisData} that owns this artifact. This is null if this
+   *     is a legacy artifact (one that refers to a source path of an old BuildRule.
+   */
   @Value.Parameter
+  @Nullable
   ActionAnalysisDataKey getActionDataKey();
 
   /** @return the path to the artifact */

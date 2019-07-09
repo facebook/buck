@@ -25,19 +25,22 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.parser.function.BuckPyFunction;
+import com.facebook.buck.rules.coercer.ConstructorArgBuilder;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.ParamInfoException;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
@@ -57,8 +60,10 @@ public class DefaultParserTargetNodeFactory
   private final TargetNodeListener<TargetNode<?>> nodeListener;
   private final TargetNodeFactory targetNodeFactory;
   private final BuiltTargetVerifier builtTargetVerifier;
+  private final TypeCoercerFactory typeCoercerFactory;
 
   private DefaultParserTargetNodeFactory(
+      TypeCoercerFactory typeCoercerFactory,
       KnownRuleTypesProvider knownRuleTypesProvider,
       ConstructorArgMarshaller marshaller,
       PackageBoundaryChecker packageBoundaryChecker,
@@ -71,15 +76,18 @@ public class DefaultParserTargetNodeFactory
     this.nodeListener = nodeListener;
     this.targetNodeFactory = targetNodeFactory;
     this.builtTargetVerifier = builtTargetVerifier;
+    this.typeCoercerFactory = typeCoercerFactory;
   }
 
   public static ParserTargetNodeFactory<Map<String, Object>> createForParser(
+      TypeCoercerFactory typeCoercerFactory,
       KnownRuleTypesProvider knownRuleTypesProvider,
       ConstructorArgMarshaller marshaller,
       LoadingCache<Cell, BuildFileTree> buildFileTrees,
       TargetNodeListener<TargetNode<?>> nodeListener,
       TargetNodeFactory targetNodeFactory) {
     return new DefaultParserTargetNodeFactory(
+        typeCoercerFactory,
         knownRuleTypesProvider,
         marshaller,
         new ThrowingPackageBoundaryChecker(buildFileTrees),
@@ -89,10 +97,12 @@ public class DefaultParserTargetNodeFactory
   }
 
   public static ParserTargetNodeFactory<Map<String, Object>> createForDistributedBuild(
+      TypeCoercerFactory typeCoercerFactory,
       KnownRuleTypesProvider knownRuleTypesProvider,
       ConstructorArgMarshaller marshaller,
       TargetNodeFactory targetNodeFactory) {
     return new DefaultParserTargetNodeFactory(
+        typeCoercerFactory,
         knownRuleTypesProvider,
         marshaller,
         new NoopPackageBoundaryChecker(),
@@ -132,12 +142,15 @@ public class DefaultParserTargetNodeFactory
       ImmutableSet<VisibilityPattern> withinViewPatterns;
       try (SimplePerfEvent.Scope scope =
           perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg"))) {
+        ConstructorArgBuilder<?> builder =
+            knownRuleTypes.getConstructorArgBuilder(
+                typeCoercerFactory, buildRuleType, description.getConstructorArgType(), target);
         constructorArg =
             marshaller.populate(
                 cell.getCellPathResolver(),
                 cell.getFilesystem(),
                 target,
-                description.getConstructorArgType(),
+                builder,
                 declaredDeps,
                 rawNode);
         visibilityPatterns =
@@ -192,6 +205,7 @@ public class DefaultParserTargetNodeFactory
               cell.getFilesystem(),
               target,
               declaredDeps,
+              ImmutableSortedSet.of(),
               visibilityPatterns,
               withinViewPatterns,
               cell.getCellPathResolver());

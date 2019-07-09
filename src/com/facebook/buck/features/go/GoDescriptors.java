@@ -39,8 +39,10 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.file.MorePaths;
@@ -69,6 +71,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 abstract class GoDescriptors {
 
@@ -265,14 +268,20 @@ abstract class GoDescriptors {
     // CGoLibrary cxx dependencies.
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
 
+    // Get the topologically sorted native linkables.
+    ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
+        NativeLinkableGroups.getNativeLinkableRoots(
+            linkables,
+            (Function<? super BuildRule, Optional<Iterable<? extends BuildRule>>>)
+                r -> Optional.empty());
+
     NativeLinkableInput linkableInput =
-        NativeLinkableGroups.getTransitiveNativeLinkableInput(
-            cxxPlatform,
+        NativeLinkables.getTransitiveNativeLinkableInput(
             graphBuilder,
             targetConfiguration,
-            linkables,
-            linkStyle,
-            r -> Optional.empty());
+            Iterables.transform(
+                roots.values(), g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
+            linkStyle);
 
     // skip setting any arg if no linkable inputs are present
     if (linkableInput.getArgs().isEmpty() && Iterables.size(externalLinkerFlags) == 0) {
