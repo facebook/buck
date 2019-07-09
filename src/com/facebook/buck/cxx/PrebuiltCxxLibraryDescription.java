@@ -813,7 +813,7 @@ public class PrebuiltCxxLibraryDescription
         if (getPreferredLinkage(cxxPlatform) == Linkage.SHARED) {
           return Optional.empty();
         }
-        if (!isPlatformSupported(cxxPlatform)) {
+        if (!isPlatformSupported(cxxPlatform) || args.isHeaderOnly()) {
           return Optional.empty();
         }
         return Optional.of(
