@@ -89,4 +89,15 @@ public class ArtifactFilesystemTest {
 
     assertEquals("foobar", Iterables.getOnlyElement(filesystem.readLines(Paths.get("bar"))));
   }
+
+  @Test
+  public void expandCommandLine() {
+    ArtifactFilesystem artifactFilesystem = new ArtifactFilesystem(filesystem);
+    ImmutableSourceArtifactImpl sourceArtifact =
+        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("bar", "baz")));
+
+    assertEquals(
+        filesystem.resolve("bar").resolve("baz").toAbsolutePath().toString(),
+        artifactFilesystem.stringifyForCommandLine(sourceArtifact));
+  }
 }
