@@ -5,6 +5,7 @@ standard_java_test(
     deps = [
         ":testutil",
         "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/rules/providers/lib:lib",
         "//src/com/facebook/buck/core/starlark/knowntypes:knowntypes",
         "//src/com/facebook/buck/core/starlark/rule/attr/impl:impl",
         "//src/com/facebook/buck/event:interfaces",

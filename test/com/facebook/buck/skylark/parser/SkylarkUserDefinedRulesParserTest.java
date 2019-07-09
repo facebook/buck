@@ -37,6 +37,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventCollector;
 import com.google.devtools.build.lib.events.EventHandler;
@@ -468,5 +469,19 @@ public class SkylarkUserDefinedRulesParserTest {
     assertEquals(rule2Identifier, rule2.getName());
     assertEquals(Integer.class, rule1.getAllParamInfo().get("attr1").getResultClass());
     assertEquals(Integer.class, rule2.getAllParamInfo().get("attr2").getResultClass());
+  }
+
+  @Test
+  public void builtInProvidersAreExportedWhenEnabled() throws IOException, InterruptedException {
+    setupWorkspace("builtin_providers_exported");
+    Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
+
+    EventCollector collector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(collector);
+
+    assertEquals("target1", getSingleRule(buildFile).get("name"));
+    Iterables.find(
+        collector,
+        e -> e.getKind() == EventKind.DEBUG && e.getMessage().contains("in bzl: DefaultInfo("));
   }
 }

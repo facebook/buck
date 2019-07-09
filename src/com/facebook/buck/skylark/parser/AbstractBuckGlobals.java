@@ -19,6 +19,7 @@ package com.facebook.buck.skylark.parser;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.skylark.function.SkylarkBuiltInProviders;
 import com.facebook.buck.skylark.function.SkylarkNativeModule;
 import com.facebook.buck.skylark.function.SkylarkProviderFunction;
 import com.facebook.buck.skylark.function.SkylarkRuleFunctions;
@@ -75,6 +76,7 @@ abstract class AbstractBuckGlobals {
     if (getEnableUserDefinedRules()) {
       Runtime.setupSkylarkLibrary(builder, new SkylarkRuleFunctions(getLabelCache()));
       Runtime.setupSkylarkLibrary(builder, new AttrModule());
+      builder.putAll(SkylarkBuiltInProviders.PROVIDERS);
     }
     Runtime.setupSkylarkLibrary(builder, new SkylarkProviderFunction());
     return GlobalFrame.createForBuiltins(builder.build());

@@ -147,4 +147,16 @@ public class SkylarkUserDefinedRuleIntegrationTest {
       assertFalse(filesystem.isExecutable(withSpacesPath));
     }
   }
+
+  @Test
+  public void builtInProvidersAreAvailableAtAnalysisTime() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "implementation_can_use_builtin_providers", tmp);
+
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckBuild("//foo:").assertSuccess();
+    assertThat(result.getStderr(), Matchers.containsString("in bzl: DefaultInfo("));
+  }
 }
