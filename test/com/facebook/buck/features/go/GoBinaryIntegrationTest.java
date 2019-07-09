@@ -19,16 +19,29 @@ package com.facebook.buck.features.go;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -376,5 +389,60 @@ public class GoBinaryIntegrationTest {
     workspace.runBuckCommand("run", "//src/mixed_with_c:bin-shared").assertSuccess();
 
     workspace.getBuildLog().assertTargetWasFetchedFromCache("//src/mixed_with_c:bin-shared");
+  }
+
+  @Test
+  public void testCgoBinaryWithCxxThinArchives() throws IOException {
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
+    assumeTrue(
+        cxxPlatform
+            .getAr()
+            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .supportsThinArchives());
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+    workspace
+        .runBuckBuild(
+            "-c",
+            "cxx.cache_links=false",
+            "-c",
+            "cxx.archive_contents=thin",
+            "//src/cgo_with_go_deps:bin")
+        .assertSuccess();
+    // we are looking for the .o files produced by cxx library /src/cxx (not cgo toolchain)
+    ImmutableSortedSet<Path> initialObjects =
+        findFiles(tmp.getRoot(), tmp.getRoot().getFileSystem().getPathMatcher("glob:**/cxx**/*.o"));
+    workspace.runBuckCommand("clean", "--keep-cache");
+    workspace
+        .runBuckBuild(
+            "-c",
+            "cxx.cache_links=false",
+            "-c",
+            "cxx.archive_contents=thin",
+            "//src/cgo_with_go_deps:bin")
+        .assertSuccess();
+    ImmutableSortedSet<Path> subsequentObjects =
+        findFiles(tmp.getRoot(), tmp.getRoot().getFileSystem().getPathMatcher("glob:**/cxx**/*.o"));
+    assertThat(initialObjects, Matchers.equalTo(subsequentObjects));
+    assertTrue(initialObjects.size() > 0);
+  }
+
+  private ImmutableSortedSet<Path> findFiles(Path root, PathMatcher matcher) throws IOException {
+    ImmutableSortedSet.Builder<Path> files = ImmutableSortedSet.naturalOrder();
+    Files.walkFileTree(
+        root,
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+            if (matcher.matches(file)) {
+              files.add(file);
+            }
+            return FileVisitResult.CONTINUE;
+          }
+        });
+    return files.build();
   }
 }
