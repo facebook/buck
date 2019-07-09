@@ -151,8 +151,13 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
    */
   @Value.Immutable(copy = false, builder = false, prehash = true)
   @Value.Style(visibility = Value.Style.ImplementationVisibility.PACKAGE)
-  public interface BuiltInKey<U> extends Provider.Key<U> {
+  public abstract static class BuiltInKey<U> implements Provider.Key<U> {
     @Value.Parameter
-    Class<?> getInfoClass();
+    abstract Class<?> getInfoClass();
+
+    @Override
+    public String toString() {
+      return getInfoClass().getSimpleName();
+    }
   }
 }
