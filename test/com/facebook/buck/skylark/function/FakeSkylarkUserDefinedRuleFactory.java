@@ -17,9 +17,11 @@ package com.facebook.buck.skylark.function;
 
 import static com.facebook.buck.skylark.function.SkylarkRuleFunctions.IMPLICIT_ATTRIBUTES;
 
+import com.facebook.buck.core.starlark.rule.SkylarkRuleContext;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
@@ -31,6 +33,7 @@ import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Runtime;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /** Simple container class to make constructing {@link SkylarkUserDefinedRule}s easier in tests */
@@ -58,12 +61,34 @@ public class FakeSkylarkUserDefinedRuleFactory {
   public static SkylarkUserDefinedRule createSingleArgRuleWithLabel(
       String exportedName, String attrName, Attribute<?> attr, String label)
       throws EvalException, LabelSyntaxException {
+    return createRuleFromCallable(exportedName, attrName, attr, label, ctx -> Runtime.NONE);
+  }
+
+  public static SkylarkUserDefinedRule createSimpleRuleFromCallable(
+      Function<SkylarkRuleContext, Object> callable) throws EvalException, LabelSyntaxException {
+    return createRuleFromCallable(
+        "some_rule",
+        "baz",
+        new ImmutableStringAttribute("default", "", false, ImmutableList.of()),
+        "//foo:bar.bzl",
+        callable);
+  }
+
+  public static SkylarkUserDefinedRule createRuleFromCallable(
+      String exportedName,
+      String attrName,
+      Attribute<?> attr,
+      String label,
+      Function<SkylarkRuleContext, Object> callable)
+      throws EvalException, LabelSyntaxException {
     FunctionSignature signature = FunctionSignature.of(1, 0, 0, false, false, "ctx");
     BaseFunction implementation =
         new BaseFunction("unconfigured", signature) {
           @Override
           public Object call(Object[] args, @Nullable FuncallExpression ast, Environment env) {
-            return Runtime.NONE;
+            Preconditions.checkArgument(args.length == 1);
+            Preconditions.checkArgument(args[0] instanceof SkylarkRuleContext);
+            return callable.apply((SkylarkRuleContext) args[0]);
           }
         };
     SkylarkUserDefinedRule ret =

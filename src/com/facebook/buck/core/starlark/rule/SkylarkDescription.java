@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.starlark.rule;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildTarget;
@@ -34,6 +35,7 @@ import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Mutability;
+import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 
 /**
@@ -60,6 +62,7 @@ public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg
               Label.parseAbsolute(target.getFullyQualifiedName(), ImmutableMap.of()),
               args.getRule().getExportedName(),
               args.getCoercedAttrValues());
+
       Environment env =
           Environment.builder(mutability)
               .useDefaultSemantics()
@@ -71,13 +74,13 @@ public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg
                       new HumanReadableExceptionAugmentor(ImmutableMap.of())))
               .build();
 
-      args.getRule().getImplementation().call(ImmutableList.of(ctx), ImmutableMap.of(), null, env);
-
-      ImmutableDefaultInfo defaultInfo =
-          new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of());
+      Object implResult =
+          args.getRule()
+              .getImplementation()
+              .call(ImmutableList.of(ctx), ImmutableMap.of(), null, env);
 
       // TODO: Verify that we get providers back, validate types, etc, etc
-      return ProviderInfoCollectionImpl.builder().put(defaultInfo).build();
+      return getProviderInfos(implResult, ImmutableSet.of(), ctx);
     } catch (EvalException e) {
       throw new RuleAnalysisException(e, e.print());
     } catch (InterruptedException e) {
@@ -85,6 +88,27 @@ public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg
     } catch (LabelSyntaxException e) {
       throw new RuleAnalysisException(e, "Could not convert BuildTarget to Label");
     }
+  }
+
+  private ProviderInfoCollection getProviderInfos(
+      Object implResult, ImmutableSet<Artifact> declaredOutputs, SkylarkRuleContext ctx) {
+    if (implResult != Runtime.NONE) {
+      // TODO: We'll eventually do implResult validation here. For now, just say that it cannot
+      // be set.
+      throw new RuleAnalysisException(null, "Unexpectedly got return value");
+    }
+
+    ProviderInfoCollectionImpl.Builder infos = ProviderInfoCollectionImpl.builder();
+    // TODO: If we have output params set, use those artifacts
+    // TODO: Use a DefaultInfo returned in implResult if available
+
+    ImmutableSet<Artifact> outputs = declaredOutputs;
+    if (outputs.isEmpty()) {
+      outputs = ctx.getOutputs();
+    }
+    ImmutableDefaultInfo defaultInfo = new ImmutableDefaultInfo(SkylarkDict.empty(), outputs);
+    infos.put(defaultInfo);
+    return infos.build();
   }
 
   @Override
