@@ -30,6 +30,7 @@ import com.facebook.buck.support.bgtasks.BackgroundTask;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
+import com.facebook.buck.support.build.report.BuildReportFileUploader;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import com.google.common.collect.ImmutableList;
@@ -62,6 +63,8 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
   private final InvocationInfo info;
   private final ExecutorService outputExecutor;
 
+  private final Optional<BuildReportFileUploader> buildReportFileUploader;
+
   private final TaskManagerCommandScope managerScope;
 
   private final int minDiagKeysForAutoFlush;
@@ -81,7 +84,8 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
       ProjectFilesystem projectFilesystem,
       InvocationInfo info,
       ExecutorService outputExecutor,
-      TaskManagerCommandScope managerScope) {
+      TaskManagerCommandScope managerScope,
+      Optional<BuildReportFileUploader> buildReportFileUploader) {
     this.projectFilesystem = projectFilesystem;
     this.info = info;
     this.outputExecutor = outputExecutor;
@@ -90,6 +94,7 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
     this.diagKeys = new ArrayList<>();
     this.diagKeysSize = 0;
     this.managerScope = managerScope;
+    this.buildReportFileUploader = buildReportFileUploader;
   }
 
   @Subscribe
@@ -230,12 +235,18 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
   public void close() { // todo same issue w/passed function
     submitFlushDiagKeys();
     outputExecutor.execute(this::writeDiagGraph);
+
+    Path logDir = info.getLogDirectoryPath();
+    RuleKeyDiagnosticsListenerCloseArgs args =
+        RuleKeyDiagnosticsListenerCloseArgs.of(
+            outputExecutor,
+            buildReportFileUploader,
+            logDir.resolve(BuckConstant.RULE_KEY_DIAG_GRAPH_FILE_NAME),
+            logDir.resolve(BuckConstant.RULE_KEY_DIAG_KEYS_FILE_NAME));
+
     BackgroundTask<RuleKeyDiagnosticsListenerCloseArgs> task =
-        ImmutableBackgroundTask.<RuleKeyDiagnosticsListenerCloseArgs>builder()
-            .setAction(new RuleKeyDiagnosticsListenerCloseAction())
-            .setActionArgs(RuleKeyDiagnosticsListenerCloseArgs.of(outputExecutor))
-            .setName("RuleKeyDiagnosticsListener_close")
-            .build();
+        ImmutableBackgroundTask.of(
+            "RuleKeyDiagnosticsListener_close", new RuleKeyDiagnosticsListenerCloseAction(), args);
     managerScope.schedule(task);
   }
 
@@ -248,6 +259,12 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
     @Override
     public void run(RuleKeyDiagnosticsListenerCloseArgs args) {
       args.getOutputExecutor().shutdown();
+      args.getBuildReportFileUploader()
+          .ifPresent(
+              uploader -> {
+                uploader.uploadFile(args.getRuleDiagGraphFilePath(), "rule_diag_graph");
+                uploader.uploadFile(args.getRuleDiagKeyFilePath(), "rule_diag_keys");
+              });
       try {
         args.getOutputExecutor().awaitTermination(1, TimeUnit.HOURS);
       } catch (InterruptedException e) {
@@ -262,6 +279,15 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
   abstract static class AbstractRuleKeyDiagnosticsListenerCloseArgs {
     @Value.Parameter
     public abstract ExecutorService getOutputExecutor();
+
+    @Value.Parameter
+    public abstract Optional<BuildReportFileUploader> getBuildReportFileUploader();
+
+    @Value.Parameter
+    public abstract Path getRuleDiagGraphFilePath();
+
+    @Value.Parameter
+    public abstract Path getRuleDiagKeyFilePath();
   }
 
   private static class RuleInfo {
