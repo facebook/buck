@@ -45,6 +45,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -202,7 +203,8 @@ public abstract class AbstractReport {
       return ImmutableMap.of();
     }
     List<String> args = entry.getCommandArgs().get();
-    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    Map<String, String> configOverrides = new HashMap<>();
+
     for (int i = 0; i < args.size(); i++) {
       if (args.get(i).equals("--config") || args.get(i).equals("-c")) {
         i++;
@@ -210,10 +212,11 @@ public abstract class AbstractReport {
           break;
         }
         String[] pieces = args.get(i).split("=", 2);
-        builder.put(pieces[0], pieces.length == 2 ? pieces[1] : "");
+        // If duplicate entries exist, latter one will override previous one
+        configOverrides.put(pieces[0], pieces.length == 2 ? pieces[1] : "");
       }
     }
-    return builder.build();
+    return ImmutableMap.copyOf(configOverrides);
   }
 
   private ImmutableMap<Path, String> getLocalConfigs() {

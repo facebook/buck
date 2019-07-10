@@ -449,4 +449,51 @@ public class DoctorCommandIntegrationTest {
       }
     };
   }
+
+  @Test
+  public void testRedundantConfigArgs() throws Exception {
+    DoctorConfig doctorConfig =
+        createDoctorConfig(httpd.getRootUri().getPort(), "", DoctorProtocolVersion.SIMPLE);
+    DoctorReportHelper helper =
+        createDoctorHelper(workspace, userInputFixture.getUserInput(), doctorConfig);
+    BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
+
+    Path machineLog =
+        filesystem.resolve(BUILD_COMMAND_DIR_PATH + BuckConstant.BUCK_MACHINE_LOG_FILE_NAME);
+    Path logDir = machineLog.getParent();
+
+    filesystem.deleteFileAtPathIfExists(machineLog);
+    filesystem.move(logDir.resolve("buck-machine-log_duplicate_cmd_args"), machineLog);
+
+    Optional<BuildLogEntry> entry =
+        helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
+
+    Console console = new TestConsole();
+    DoctorTestUtils.CapturingDefectReporter reporter =
+        new DoctorTestUtils.CapturingDefectReporter();
+    DoctorInteractiveReport report =
+        new DoctorInteractiveReport(
+            reporter,
+            filesystem,
+            console,
+            userInputFixture.getUserInput(),
+            Optional.empty(),
+            TestBuildEnvironmentDescription.INSTANCE,
+            new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
+            doctorConfig,
+            new DefaultExtraInfoCollector(
+                doctorConfig, filesystem, new DefaultProcessExecutor(console)),
+            ImmutableSet.of(entry.get()),
+            Optional.empty());
+    report.collectAndSubmitResult();
+
+    assertThat(
+        reporter
+            .getDefectReport()
+            .getUserLocalConfiguration()
+            .get()
+            .getConfigOverrides()
+            .get("foo.bar"),
+        Matchers.equalTo("baz2"));
+  }
 }
