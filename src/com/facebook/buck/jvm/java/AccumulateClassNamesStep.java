@@ -160,8 +160,7 @@ public class AccumulateClassNamesStep implements Step {
 
     for (String line : lines) {
       int index = line.lastIndexOf(CLASS_NAME_HASH_CODE_SEPARATOR);
-      Preconditions.checkArgument(
-          index > 0, String.format("Class names and hashcodes malformed: %1$s", line));
+      Preconditions.checkArgument(index > 0, "Class names and hashcodes malformed: %1$s", line);
       String key = line.substring(0, index);
       HashCode value = HashCode.fromString(line.substring(index + 1));
       HashCode existing = classNames.putIfAbsent(key, value);

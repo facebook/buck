@@ -163,8 +163,7 @@ public class KotlinLibraryIntegrationTest {
 
   @Test
   public void shouldCompileKotlinCodeWithBackticks() {
-    ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/backticks:example");
-    buildResult.assertSuccess("Build should have succeeded.");
+    workspace.runBuckBuild("//com/example/backticks:example").assertSuccess();
   }
 
   @Test
