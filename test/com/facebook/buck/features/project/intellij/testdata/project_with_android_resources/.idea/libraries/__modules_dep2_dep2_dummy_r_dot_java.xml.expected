@@ -1,5 +1,5 @@
 <component name="libraryTable">
-  <library name="library_modules_dep2_extra_classpath">
+  <library name="//modules/dep2:dep2#dummy_r_dot_java">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/buck-out/gen/modules/dep2/__dep2#dummy_r_dot_java_dummyrdotjava_output__/dep2#dummy_r_dot_java.jar!/" />
       <root url="jar://$PROJECT_DIR$/buck-out/gen/modules/dep2/__dep3#dummy_r_dot_java_dummyrdotjava_output__/dep3#dummy_r_dot_java.jar!/" />

@@ -25,7 +25,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="library_java_com_sample_lib_extra_classpath" scope="COMPILE" level="project" />
+    <orderEntry type="library" name="//java/com/sample/lib:lib#dummy_r_dot_java" scope="COMPILE" level="project" />
     <orderEntry type="module" module-name="res_com_sample_base" scope="COMPILE" />
     <orderEntry type="module" module-name="___secondary_java_com_crosscell" scope="COMPILE" />
   </component>
