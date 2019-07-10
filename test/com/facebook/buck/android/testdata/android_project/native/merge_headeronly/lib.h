@@ -1,0 +1,1 @@
+#define LIB_CONST 1

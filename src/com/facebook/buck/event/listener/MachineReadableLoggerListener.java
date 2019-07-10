@@ -46,6 +46,7 @@ import com.facebook.buck.support.bgtasks.BackgroundTask;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
+import com.facebook.buck.support.build.report.BuildReportFileUploader;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -84,6 +85,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   private final ProjectFilesystem filesystem;
   private final ObjectWriter objectWriter;
   private BufferedOutputStream outputStream;
+  private final Optional<BuildReportFileUploader> buildReportFileUploader;
 
   private final TaskManagerCommandScope managerScope;
 
@@ -108,11 +110,13 @@ public class MachineReadableLoggerListener implements BuckEventListener {
       ProjectFilesystem filesystem,
       ExecutorService executor,
       ImmutableSet<ArtifactCacheMode> cacheModes,
+      Optional<BuildReportFileUploader> buildReportFileUploader,
       TaskManagerCommandScope managerScope)
       throws FileNotFoundException {
     this.info = info;
     this.filesystem = filesystem;
     this.executor = executor;
+    this.buildReportFileUploader = buildReportFileUploader;
     this.managerScope = managerScope;
 
     for (ArtifactCacheMode mode : cacheModes) {
@@ -295,12 +299,18 @@ public class MachineReadableLoggerListener implements BuckEventListener {
             LOG.warn("Failed to close output stream.");
           }
         });
+
+    MachineReadableLoggerListenerCloseArgs args =
+        MachineReadableLoggerListenerCloseArgs.of(
+            executor,
+            buildReportFileUploader,
+            info.getLogDirectoryPath().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME));
+
     BackgroundTask<MachineReadableLoggerListenerCloseArgs> task =
-        ImmutableBackgroundTask.<MachineReadableLoggerListenerCloseArgs>builder()
-            .setAction(new MachineReadableLoggerListenerCloseAction())
-            .setActionArgs(MachineReadableLoggerListenerCloseArgs.of(executor))
-            .setName("MachineReadableLoggerListener_close")
-            .build();
+        ImmutableBackgroundTask.of(
+            "MachineReadableLoggerListener_close",
+            new MachineReadableLoggerListenerCloseAction(),
+            args);
     managerScope.schedule(task);
   }
 
@@ -313,6 +323,13 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     @Override
     public void run(MachineReadableLoggerListenerCloseArgs args) {
       args.getExecutor().shutdown();
+
+      args.getBuildReportFileUploader()
+          .ifPresent(
+              uploader ->
+                  uploader.uploadFile(
+                      args.getMachineReadableLogFilePath(), "machine_readable_log"));
+
       // Allow SHUTDOWN_TIMEOUT_SECONDS seconds for already scheduled writeToLog calls
       // to complete.
       try {
@@ -333,5 +350,11 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   abstract static class AbstractMachineReadableLoggerListenerCloseArgs {
     @Value.Parameter
     public abstract ExecutorService getExecutor();
+
+    @Value.Parameter
+    public abstract Optional<BuildReportFileUploader> getBuildReportFileUploader();
+
+    @Value.Parameter
+    public abstract Path getMachineReadableLogFilePath();
   }
 }

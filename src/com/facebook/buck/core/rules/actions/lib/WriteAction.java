@@ -22,6 +22,7 @@ import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
+import com.facebook.buck.core.rules.actions.DefaultActionRegistry;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionFailure;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.google.common.collect.ImmutableSet;
@@ -40,7 +41,7 @@ public class WriteAction extends AbstractAction {
   /**
    * Create an instance of {@link WriteAction}
    *
-   * @param actionRegistry the {@link ActionRegistry} to register this action
+   * @param actionRegistry the {@link DefaultActionRegistry} to register this action
    * @param inputs the input {@link Artifact} for this {@link Action}. They can be either outputs of
    *     other {@link Action}s or be source files
    * @param outputs the outputs for this {@link Action}

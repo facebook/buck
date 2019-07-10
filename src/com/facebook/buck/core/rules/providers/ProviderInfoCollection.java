@@ -33,8 +33,19 @@ public interface ProviderInfoCollection extends SkylarkIndexable {
   <T extends ProviderInfo<T>> Optional<T> get(Provider<T> provider);
 
   interface Builder {
+
+    /**
+     * Add a new {@link ProviderInfo} to the collection. Multiple {@link ProviderInfo} objects with
+     * the same {@link Provider.Key} should not be added.
+     */
     Builder put(ProviderInfo<?> info);
 
+    /**
+     * Build the {@link ProviderInfoCollection}
+     *
+     * @throws IllegalArgumentException if a two or more {@link ProviderInfo}s have the same {@link
+     *     Provider.Key}
+     */
     ProviderInfoCollection build();
   }
 }

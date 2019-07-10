@@ -26,6 +26,7 @@ import java.util.Map;
 public class SkylarkRuleContext implements SkylarkRuleContextApi {
 
   private final Label label;
+  private final CapturingActionRegistry registry;
   private final SkylarkRuleContextAttr attr;
   private final SkylarkRuleContextActions actions;
 
@@ -44,8 +45,9 @@ public class SkylarkRuleContext implements SkylarkRuleContextApi {
       String methodName,
       Map<String, Object> methodParameters) {
     this.label = label;
+    this.registry = new CapturingActionRegistry(context.actionRegistry());
     this.attr = new SkylarkRuleContextAttr(methodName, methodParameters);
-    this.actions = new SkylarkRuleContextActions(context);
+    this.actions = new SkylarkRuleContextActions(registry);
   }
 
   @Override
@@ -79,6 +81,6 @@ public class SkylarkRuleContext implements SkylarkRuleContextApi {
    * @return List of {@link Artifact}s that were used in actions.
    */
   ImmutableSet<Artifact> getOutputs() {
-    return actions.getOutputs();
+    return registry.getOutputs();
   }
 }

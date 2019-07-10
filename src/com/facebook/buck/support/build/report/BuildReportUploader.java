@@ -23,15 +23,10 @@ import com.facebook.buck.util.versioncontrol.FullVersionControlStats;
 import com.facebook.buck.util.versioncontrol.VersionControlCommandFailedException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.io.CharStreams;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
 import okhttp3.FormBody;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 
 /**
@@ -40,8 +35,9 @@ import okhttp3.RequestBody;
  */
 public class BuildReportUploader {
   private static final Logger LOG = Logger.get(BuildReportUploader.class);
+  private final BuildReportFileUploader buildReportFileUploader;
 
-  private RequestUploader requestUploader;
+  private final RequestUploader requestUploader;
 
   /**
    * @param endpointUrl the endpoint to upload to
@@ -49,6 +45,7 @@ public class BuildReportUploader {
    */
   BuildReportUploader(URL endpointUrl, long timeout, BuildId buildId) {
     this.requestUploader = new RequestUploader(endpointUrl, timeout, buildId);
+    this.buildReportFileUploader = new BuildReportFileUploader(endpointUrl, timeout, buildId);
   }
 
   /**
@@ -67,7 +64,7 @@ public class BuildReportUploader {
             diffSupplier -> {
               try {
                 InputStream inputStream = diffSupplier.get();
-                uploadDiffFile(inputStream, requestUploader.getBuildId());
+                buildReportFileUploader.uploadDiffFile(inputStream);
               } catch (VersionControlCommandFailedException | InterruptedException e) {
                 LOG.error(e);
               } catch (IOException e) {
@@ -91,29 +88,5 @@ public class BuildReportUploader {
     RequestBody formBody = new FormBody.Builder().add("data", encodedResponse).build();
 
     return requestUploader.uploadRequest(formBody);
-  }
-
-  /**
-   * @param inputStream that has an input stream containing the output of `hg export` command see
-   *     {@link com.facebook.buck.util.versioncontrol.HgCmdLineInterface} for more info.
-   * @param buildId of the current build
-   * @return the endpoints' response
-   * @throws IOException when an error occurs while executing the http call
-   */
-  public UploadResponse uploadDiffFile(InputStream inputStream, String buildId) throws IOException {
-
-    String diffContent = CharStreams.toString(new InputStreamReader(inputStream));
-
-    RequestBody requestBody =
-        new MultipartBody.Builder()
-            .setType(MultipartBody.FORM)
-            .addFormDataPart(
-                "trace_file",
-                "hg_diff_" + buildId,
-                RequestBody.create(MediaType.parse("text/plain"), diffContent))
-            .build();
-
-    return requestUploader.uploadRequest(
-        requestBody, ImmutableMap.of("trace_file_kind", "diff_file"));
   }
 }

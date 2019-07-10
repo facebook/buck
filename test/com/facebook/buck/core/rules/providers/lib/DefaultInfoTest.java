@@ -31,4 +31,9 @@ public class DefaultInfoTest {
     assertEquals(SkylarkDict.empty(), defaultInfo.namedOutputs());
     assertEquals(ImmutableSet.of(), defaultInfo.defaultOutputs());
   }
+
+  @Test
+  public void hasReasonableNameForKey() {
+    assertEquals("DefaultInfo", DefaultInfo.PROVIDER.getKey().toString());
+  }
 }

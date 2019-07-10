@@ -777,13 +777,14 @@ public class RealAndroidDevice implements AndroidDevice {
     return chan;
   }
 
+  @SuppressWarnings("PMD.AvoidUsingOctalValues")
   private void pushFile(String localPath, String remotePath, SocketChannel chan) throws Exception {
     byte[] remotePathContent = remotePath.getBytes(DEFAULT_ENCODING);
     File f = new File(localPath);
     FileInputStream fis = new FileInputStream(f);
     BufferedInputStream bis = new BufferedInputStream(fis);
     byte[] send_msg =
-        createSendFileReq(ID_SEND, remotePathContent, 644); // set the correct permission
+        createSendFileReq(ID_SEND, remotePathContent, 0644); // set the correct permission
     writeAllToChannel(chan, ByteBuffer.wrap(send_msg));
 
     byte[] dataBuffer = new byte[SYNC_DATA_MAX + 8];

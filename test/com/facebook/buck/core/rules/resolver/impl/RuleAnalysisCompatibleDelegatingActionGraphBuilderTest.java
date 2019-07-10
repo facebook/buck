@@ -32,6 +32,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
+import com.facebook.buck.core.rules.actions.DefaultActionRegistry;
 import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.rules.actions.FakeActionAnalysisRegistry;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
@@ -160,7 +161,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
                   FakeActionAnalysisRegistry actionAnalysisRegistry =
                       new FakeActionAnalysisRegistry();
                   ActionRegistry actionRegistry =
-                      new ActionRegistry(target, actionAnalysisRegistry, projectFilesystem);
+                      new DefaultActionRegistry(target, actionAnalysisRegistry, projectFilesystem);
                   Artifact artifact = actionRegistry.declareArtifact(Paths.get("foo"));
 
                   FakeAction.FakeActionExecuteLambda actionFunction =

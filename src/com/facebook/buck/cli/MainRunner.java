@@ -153,6 +153,7 @@ import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.build.report.BuildReportConfig;
+import com.facebook.buck.support.build.report.BuildReportFileUploader;
 import com.facebook.buck.support.build.report.BuildReportUpload;
 import com.facebook.buck.support.build.report.BuildReportUtils;
 import com.facebook.buck.support.build.report.RuleKeyLogFileUploader;
@@ -2091,13 +2092,17 @@ public final class MainRunner {
               keyLogFileUploader));
     }
 
+    Optional<BuildReportFileUploader> buildReportFileUploader =
+        createBuildReportFileUploader(buckConfig, buildId);
+
     eventListenersBuilder.add(
         new RuleKeyDiagnosticsListener(
             projectFilesystem,
             invocationInfo,
             MostExecutors.newSingleThreadExecutor(
                 new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
-            managerScope));
+            managerScope,
+            buildReportFileUploader));
 
     if (logBuckConfig.isMachineReadableLoggerEnabled()) {
       try {
@@ -2108,6 +2113,7 @@ public final class MainRunner {
                 MostExecutors.newSingleThreadExecutor(
                     new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
                 artifactCacheConfig.getArtifactCacheModes(),
+                buildReportFileUploader,
                 managerScope));
       } catch (FileNotFoundException e) {
         LOG.warn("Unable to open stream for machine readable log file.");
@@ -2157,6 +2163,19 @@ public final class MainRunner {
               getBuildEnvironmentDescription(
                   executionEnvironment,
                   buckConfig),
+              buildReportConfig.getEndpointUrl().get(),
+              buildReportConfig.getEndpointTimeoutMs(),
+              buildId));
+    }
+    return Optional.empty();
+  }
+
+  private Optional<BuildReportFileUploader> createBuildReportFileUploader(
+      BuckConfig buckConfig, BuildId buildId) {
+    if (BuildReportUtils.shouldUploadBuildReport(buckConfig)) {
+      BuildReportConfig buildReportConfig = buckConfig.getView(BuildReportConfig.class);
+      return Optional.of(
+          new BuildReportFileUploader(
               buildReportConfig.getEndpointUrl().get(),
               buildReportConfig.getEndpointTimeoutMs(),
               buildId));

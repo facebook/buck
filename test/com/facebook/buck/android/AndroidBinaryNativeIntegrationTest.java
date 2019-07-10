@@ -200,6 +200,15 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testMergeHeaderOnly() throws Exception {
+    workspace.replaceFileContents(".buckconfig", "#cpu_abis", "cpu_abis = x86");
+    Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_with_header_only_merged");
+
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+    zipInspector.assertFileExists("lib/x86/liball.so");
+  }
+
+  @Test
   public void throwIfLibMergedIntoTwoTargets() {
     ProcessResult processResult =
         workspace.runBuckBuild("//apps/sample:app_with_merge_lib_into_two_targets");

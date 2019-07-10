@@ -23,7 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /** Registers {@link Action}s conveniently for tests */
-public class ActionRegistryForTests extends ActionRegistry {
+public class ActionRegistryForTests extends DefaultActionRegistry {
 
   public ActionRegistryForTests(BuildTarget buildTarget) {
     this(buildTarget, new FakeProjectFilesystem());

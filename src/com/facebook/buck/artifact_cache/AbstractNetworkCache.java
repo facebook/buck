@@ -151,6 +151,8 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
           HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
       dispatcher.post(startedEvent);
       return new MultiFetchRequestEvents() {
+        long artifactSizeBytes = 0L;
+
         @Override
         public void skipped(int keyIndex) {
           LOG.debug("multiFetchSkipped for %s.", ruleKeys.get(keyIndex));
@@ -158,21 +160,22 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
         }
 
         @Override
-        public void finished(int keyIndex, FetchResult thisResult) {
+        public void finished(int keyIndex, FetchResult fetchResult) {
           LOG.debug(
               "multiFetchFinished for %s with result %s.",
-              ruleKeys.get(keyIndex), thisResult.getCacheResult().getType());
-          // TODO(cjhopman): implement.
+              ruleKeys.get(keyIndex), fetchResult.getCacheResult().getType());
+          artifactSizeBytes += fetchResult.getArtifactSizeBytes().orElse(0L);
         }
 
         @Override
         public void failed(int keyIndex, IOException e, String msg, CacheResult result) {
           reportFetchFailure(ruleKeys.get(keyIndex), e, msg);
-          // TODO(cjhopman): implement this.
+          eventBuilder.getFetchBuilder().setErrorMessage(msg);
         }
 
         @Override
         public void close() {
+          eventBuilder.getFetchBuilder().setArtifactSizeBytes(artifactSizeBytes);
           dispatcher.post(eventBuilder.build());
         }
       };
