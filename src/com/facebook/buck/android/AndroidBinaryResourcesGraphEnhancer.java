@@ -549,7 +549,6 @@ class AndroidBinaryResourcesGraphEnhancer {
         projectFilesystem,
         graphBuilder,
         compileListBuilder.build(),
-        getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
         realManifest,
         manifestEntries,
         packageId,
