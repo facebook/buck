@@ -33,6 +33,8 @@ import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.Directory;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.DirectoryNode;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.FileNode;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.SymlinkNode;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
@@ -45,6 +47,7 @@ import com.facebook.buck.rules.modern.Serializer;
 import com.facebook.buck.rules.modern.Serializer.Delegate;
 import com.facebook.buck.rules.modern.impl.InputsMapBuilder;
 import com.facebook.buck.rules.modern.impl.InputsMapBuilder.Data;
+import com.facebook.buck.util.Memoizer;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.Scope;
@@ -181,6 +184,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
   private final HashFunction hasher;
 
   private final Protocol protocol;
+  private final Memoizer<Digest> emptyDirectoryDigestMemoizer = new Memoizer<>();
 
   public ModernBuildRuleRemoteExecutionHelper(
       BuckEventBus eventBus,
@@ -323,7 +327,8 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
               this.sharedRequiredFiles
                   .get()
                   .forEach(file -> sharedRequiredFiles.put(file.path, file.fileNode));
-              return nodeCache.createNode(sharedRequiredFiles, ImmutableMap.of());
+              return nodeCache.createNode(
+                  sharedRequiredFiles, ImmutableMap.of(), ImmutableMap.of());
             },
             IOException.class);
   }
@@ -483,7 +488,8 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
         .filter(dataSupplier -> requiredDataPredicate.test(dataSupplier.getDigest()));
   }
 
-  private ConcurrentHashMap<Data, MerkleTreeNode> resolvedInputsCache = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<Data, MerkleTreeNode> resolvedInputsCache =
+      new ConcurrentHashMap<>();
 
   private MerkleTreeNode resolveInputs(Data inputs) {
     MerkleTreeNode cached = resolvedInputsCache.get(inputs);
@@ -498,8 +504,9 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
         inputs,
         ignored -> {
           try {
-            HashMap<Path, FileNode> files = new HashMap<>();
-            HashMap<Path, SymlinkNode> symlinks = new HashMap<>();
+            Map<Path, FileNode> files = new HashMap<>();
+            Map<Path, DirectoryNode> emptyDirectories = new HashMap<>();
+            Map<Path, SymlinkNode> symlinks = new HashMap<>();
 
             FileInputsAdder inputsAdder =
                 new FileInputsAdder(
@@ -516,6 +523,14 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                       }
 
                       @Override
+                      public void addEmptyDirectory(Path path) {
+                        DirectoryNode directoryNode =
+                            protocol.newDirectoryNode(
+                                path.getFileName().toString(), getEmptyDirectoryDigest());
+                        emptyDirectories.put(cellPathPrefix.relativize(path), directoryNode);
+                      }
+
+                      @Override
                       public void addSymlink(Path path, Path fixedTarget) {
                         symlinks.put(
                             cellPathPrefix.relativize(path),
@@ -529,13 +544,22 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
             }
 
             List<MerkleTreeNode> nodes = new ArrayList<>();
-            nodes.add(nodeCache.createNode(files, symlinks));
+            nodes.add(nodeCache.createNode(files, symlinks, emptyDirectories));
 
             inputs.getChildren().forEach(child -> nodes.add(resolveInputs(child)));
             return nodeCache.mergeNodes(nodes);
           } catch (IOException e) {
             throw new BuckUncheckedExecutionException(e);
           }
+        });
+  }
+
+  private Digest getEmptyDirectoryDigest() {
+    return emptyDirectoryDigestMemoizer.get(
+        () -> {
+          Directory emptyDirectory =
+              protocol.newDirectory(ImmutableList.of(), ImmutableList.of(), ImmutableList.of());
+          return protocol.computeDigest(emptyDirectory);
         });
   }
 
@@ -704,7 +728,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
     new DataAdder().addData(Paths.get("__data__"), Objects.requireNonNull(nodeMap.get(hash)));
 
-    return nodeCache.createNode(fileNodes, ImmutableMap.of());
+    return nodeCache.createNode(fileNodes, ImmutableMap.of(), ImmutableMap.of());
   }
 
   private ThrowingSupplier<ClassPath, IOException> prepareClassPath(

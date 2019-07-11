@@ -107,7 +107,7 @@ public class LocalContentAddressedStorageTest {
     files.put(otherPath, newFileNode(otherData, otherPath, false));
 
     MerkleTreeNodeCache nodeCache = new MerkleTreeNodeCache(protocol);
-    MerkleTreeNode node = nodeCache.createNode(files, ImmutableMap.of());
+    MerkleTreeNode node = nodeCache.createNode(files, ImmutableMap.of(), ImmutableMap.of());
     Digest rootDigest = nodeCache.getData(node).getDigest();
 
     ImmutableList.Builder<UploadDataSupplier> requiredData = ImmutableList.builder();

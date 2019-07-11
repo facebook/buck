@@ -36,6 +36,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -248,6 +249,23 @@ public class GrpcProtocol implements Protocol {
     public Digest getDigest() {
       return new GrpcDigest(directoryNode.getDigest());
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      GrpcDirectoryNode that = (GrpcDirectoryNode) o;
+      return directoryNode.equals(that.directoryNode);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(directoryNode);
+    }
   }
 
   private static class GrpcTree implements Tree {
@@ -425,12 +443,14 @@ public class GrpcProtocol implements Protocol {
 
   @Override
   public Directory newDirectory(
-      List<DirectoryNode> children, Collection<FileNode> files, Collection<SymlinkNode> symlinks) {
+      List<DirectoryNode> directories,
+      Collection<FileNode> files,
+      Collection<SymlinkNode> symlinks) {
     return new GrpcDirectory(
         build.bazel.remote.execution.v2.Directory.newBuilder()
             .addAllFiles(files.stream().map(GrpcProtocol::get).collect(Collectors.toList()))
             .addAllDirectories(
-                children.stream().map(GrpcProtocol::get).collect(Collectors.toList()))
+                directories.stream().map(GrpcProtocol::get).collect(Collectors.toList()))
             .addAllSymlinks(symlinks.stream().map(GrpcProtocol::get).collect(Collectors.toList()))
             .build());
   }

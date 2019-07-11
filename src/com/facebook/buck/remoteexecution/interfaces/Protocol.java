@@ -41,9 +41,13 @@ public interface Protocol {
     int getSize();
   }
 
-  /** Represents a possibly executable file in directories/trees. */
-  interface FileNode {
+  /** Represents a tree node */
+  interface TreeNode {
     String getName();
+  }
+
+  /** Represents a possibly executable file in directories/trees. */
+  interface FileNode extends TreeNode {
 
     Digest getDigest();
 
@@ -51,16 +55,12 @@ public interface Protocol {
   }
 
   /** Representation of a symlink. */
-  interface SymlinkNode {
-    String getName();
-
+  interface SymlinkNode extends TreeNode {
     String getTarget();
   }
 
   /** Represents a child of a Directory. */
-  interface DirectoryNode {
-    String getName();
-
+  interface DirectoryNode extends TreeNode {
     Digest getDigest();
   }
 
@@ -149,7 +149,9 @@ public interface Protocol {
   DirectoryNode newDirectoryNode(String name, Digest child);
 
   Directory newDirectory(
-      List<DirectoryNode> children, Collection<FileNode> files, Collection<SymlinkNode> symlinks);
+      List<DirectoryNode> directories,
+      Collection<FileNode> files,
+      Collection<SymlinkNode> symlinks);
 
   byte[] toByteArray(Directory directory);
 

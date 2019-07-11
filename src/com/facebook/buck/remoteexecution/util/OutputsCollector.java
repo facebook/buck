@@ -181,7 +181,8 @@ public class OutputsCollector {
 
         MerkleTreeNodeCache merkleTreeCache = new MerkleTreeNodeCache(protocol);
 
-        MerkleTreeNode node = merkleTreeCache.createNode(files, ImmutableMap.of());
+        MerkleTreeNode node =
+            merkleTreeCache.createNode(files, ImmutableMap.of(), ImmutableMap.of());
 
         node.forAllFiles(
             (file, fileNode) ->
