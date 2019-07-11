@@ -149,8 +149,10 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
                   Preconditions.checkState(
                       Status.fromCodeValue(batchResponse.getStatus().getCode()).isOk()
                           && requests.containsKey(digest),
-                      "Invalid batchResponse from CAS server. For digest: %s",
-                      digest);
+                      "Invalid batchResponse from CAS server for digest: [%s], code: [%s] message: [%s].",
+                      digest,
+                      batchResponse.getStatus().getCode(),
+                      batchResponse.getStatus().getMessage());
                   MessageDigest messageDigest = protocol.getMessageDigest();
                   for (ByteBuffer dataByteBuffer :
                       batchResponse.getData().asReadOnlyByteBufferList()) {
