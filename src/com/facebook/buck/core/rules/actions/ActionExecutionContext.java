@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.util.ProcessExecutor;
+import java.util.Map;
 import org.immutables.value.Value;
 
 /**
@@ -59,4 +60,8 @@ public abstract class ActionExecutionContext {
   /** @return The executor to run processes in */
   @Value.Parameter
   public abstract ProcessExecutor getProcessExecutor();
+
+  /** @return The environment of the current context */
+  @Value.Parameter
+  public abstract Map<String, String> getEnvironment();
 }

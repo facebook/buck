@@ -50,7 +50,8 @@ public class ActionExecutionStep implements Step {
             context.getBuckEventBus(),
             shouldDeleteTemporaries,
             artifactFilesystem,
-            context.getProcessExecutor());
+            context.getProcessExecutor(),
+            context.getEnvironment());
 
     ActionExecutionResult result = action.execute(executionContext);
     if (result instanceof ActionExecutionResult.ActionExecutionSuccess) {
