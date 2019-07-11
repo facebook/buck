@@ -47,7 +47,10 @@ public class ActionExecutionStep implements Step {
 
     ActionExecutionContext executionContext =
         ImmutableActionExecutionContext.of(
-            context.getBuckEventBus(), shouldDeleteTemporaries, artifactFilesystem);
+            context.getBuckEventBus(),
+            shouldDeleteTemporaries,
+            artifactFilesystem,
+            context.getProcessExecutor());
 
     ActionExecutionResult result = action.execute(executionContext);
     if (result instanceof ActionExecutionResult.ActionExecutionSuccess) {

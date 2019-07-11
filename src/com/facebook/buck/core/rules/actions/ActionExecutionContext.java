@@ -19,6 +19,7 @@ import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
+import com.facebook.buck.util.ProcessExecutor;
 import org.immutables.value.Value;
 
 /**
@@ -54,4 +55,8 @@ public abstract class ActionExecutionContext {
   public void postEvent(BuckEvent event) {
     getBuckEventBus().post(event);
   }
+
+  /** @return The executor to run processes in */
+  @Value.Parameter
+  public abstract ProcessExecutor getProcessExecutor();
 }
