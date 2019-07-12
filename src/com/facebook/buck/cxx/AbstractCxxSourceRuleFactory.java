@@ -21,7 +21,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -265,13 +264,6 @@ abstract class AbstractCxxSourceRuleFactory {
 
   private String getCompileFlavorSuffix(String name) {
     return getOutputName(name) + "." + getCxxPlatform().getObjectFileExtension();
-  }
-
-  /** @return the output path for an object file compiled from the source with the given name. */
-  @VisibleForTesting
-  Path getCompileOutputPath(BuildTarget target, String name) {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), target, "%s")
-        .resolve(getCompileOutputName(name));
   }
 
   /** @return a build target for a {@link CxxThinLTOOpt} rule for the source with the given name. */
