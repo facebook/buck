@@ -52,7 +52,8 @@ public class BuckConfigWriterTest {
             ImmutableList.of("//:target"),
             ImmutableList.of("//:target"),
             Paths.get("buck-out", "log"),
-            false);
+            false,
+            "repository");
 
     Path expectedPath =
         tmp.getRoot().resolve(info.getLogDirectoryPath()).resolve("buckconfig.json");

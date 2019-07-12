@@ -74,7 +74,8 @@ public class RuleKeyLoggerListenerTest {
             ImmutableList.of(),
             ImmutableList.of(),
             tempDirectory.getRoot().toPath(),
-            false);
+            false,
+            "repository");
     durationTracker = new BuildRuleDurationTracker();
     managerScope = TestBackgroundTaskManager.of().getNewScope(info.getBuildId());
   }

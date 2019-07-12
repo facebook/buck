@@ -100,6 +100,10 @@ abstract class AbstractInvocationInfo {
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract boolean getIsRemoteExecution();
 
+  @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract String getRepository();
+
   public Path getLogDirectoryPath() {
     return getBuckLogDir().resolve(getLogDirectoryName());
   }

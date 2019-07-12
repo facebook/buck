@@ -63,6 +63,8 @@ public class GlobalStateManager {
   private final ConcurrentMap<String, Boolean> commandIdToIsDaemon;
   private final ConcurrentMap<String, Boolean> commandIdToIsRemoteExecution;
 
+  private String repository;
+
   public static GlobalStateManager singleton() {
     return SINGLETON;
   }
@@ -75,6 +77,7 @@ public class GlobalStateManager {
     this.commandIdToIsSuperconsoleEnabled = new ConcurrentHashMap<>();
     this.commandIdToIsDaemon = new ConcurrentHashMap<>();
     this.commandIdToIsRemoteExecution = new ConcurrentHashMap<>();
+    this.repository = "";
 
     ReferenceCountedWriter defaultWriter =
         createReferenceCountedWriter(
@@ -86,7 +89,8 @@ public class GlobalStateManager {
                     ImmutableList.of(),
                     ImmutableList.of(),
                     LogConfigSetup.DEFAULT_SETUP.getLogDir(),
-                    false)
+                    false,
+                    "")
                 .getLogFilePath());
     putReferenceCountedWriter(DEFAULT_LOG_FILE_WRITER_KEY, defaultWriter);
   }
@@ -98,6 +102,8 @@ public class GlobalStateManager {
       Verbosity consoleHandlerVerbosity) {
     long threadId = Thread.currentThread().getId();
     String commandId = info.getCommandId();
+
+    repository = info.getRepository();
 
     ReferenceCountedWriter defaultWriter = createReferenceCountedWriter(info.getLogFilePath());
     ReferenceCountedWriter newWriter = defaultWriter.newReference();
@@ -263,6 +269,10 @@ public class GlobalStateManager {
 
   public CommandIdToIsSuperConsoleEnabledMapper getCommandIdToIsSuperConsoleEnabledMapper() {
     return commandIdToIsSuperconsoleEnabled::get;
+  }
+
+  public String getRepository() {
+    return repository;
   }
 
   /**

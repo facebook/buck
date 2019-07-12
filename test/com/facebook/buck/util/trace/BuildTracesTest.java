@@ -217,7 +217,8 @@ public class BuildTracesTest {
                 ImmutableList.of(),
                 ImmutableList.of(),
                 fs.getBuckPaths().getLogDir(),
-                false)
+                false,
+                "repository")
             .withTimestampMillis(TimeUnit.SECONDS.toMillis(seconds));
     return info.getLogDirectoryPath().resolve("build." + buildId + ".trace");
   }
