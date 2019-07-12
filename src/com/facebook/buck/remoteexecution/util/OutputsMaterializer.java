@@ -222,14 +222,16 @@ public class OutputsMaterializer {
   private void processFetchAndMaterialize() {
     ImmutableList.Builder<PendingMaterialization> builder = ImmutableList.builder();
     int size = 0;
+    int items = 0;
     while (!waitingMaterialization.isEmpty()) {
       PendingMaterialization data = waitingMaterialization.poll();
       if (data == null) {
         break;
       }
-      if (size == 0 || data.digest.getSize() + size < sizeLimit) {
+      if (items == 0 || (data.digest.getSize() + size < sizeLimit)) {
         builder.add(data);
         size += data.digest.getSize();
+        items++;
       } else {
         waitingMaterialization.addFirst(data);
         break;

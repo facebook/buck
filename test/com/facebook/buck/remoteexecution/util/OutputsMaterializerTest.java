@@ -126,6 +126,42 @@ public class OutputsMaterializerTest {
   }
 
   @Test
+  public void testMaterializeZeroSizeFiles()
+      throws IOException, ExecutionException, InterruptedException {
+    Protocol protocol = new GrpcProtocol();
+    OutputsMaterializerTest.RecordingFileMaterializer recordingMaterializer =
+        new RecordingFileMaterializer();
+
+    Path path1 = Paths.get("some/output/one");
+    Path path2 = Paths.get("some/output/two");
+
+    ByteString data1 = ByteString.copyFromUtf8("");
+    ByteString data2 = ByteString.copyFromUtf8("data123"); // Force size to be larger than limit
+
+    Digest digest1 = protocol.computeDigest(data1.toByteArray());
+    Digest digest2 = protocol.computeDigest(data2.toByteArray());
+
+    OutputFile outputFile1 = protocol.newOutputFile(path1, digest1, false);
+    OutputFile outputFile2 = protocol.newOutputFile(path2, digest2, true);
+
+    ExecutorService service = Executors.newSingleThreadExecutor();
+
+    AsyncBlobFetcher fetcher =
+        new SimpleSingleThreadedBlobFetcher(ImmutableMap.of(digest1, data1, digest2, data2));
+
+    new OutputsMaterializer(SIZE_LIMIT, service, fetcher, protocol)
+        .materialize(
+            ImmutableList.of(), ImmutableList.of(outputFile1, outputFile2), recordingMaterializer)
+        .get();
+
+    Map<Path, OutputItemState> expectedState =
+        ImmutableMap.of(
+            path1, new OutputItemState(data1, false), path2, new OutputItemState(data2, true));
+
+    recordingMaterializer.verify(expectedState, ImmutableSet.of("some", "some/output"));
+  }
+
+  @Test
   public void testMaterializeDirs() throws IOException, ExecutionException, InterruptedException {
     Protocol protocol = new GrpcProtocol();
     OutputsMaterializerTest.RecordingFileMaterializer recordingMaterializer =
