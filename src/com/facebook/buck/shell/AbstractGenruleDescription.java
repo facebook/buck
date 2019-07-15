@@ -230,5 +230,13 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
      * attribute
      */
     Optional<Boolean> getCacheable();
+
+    /**
+     * This argument allows genrule to specify if it needs android tools (like dex, aapt, ndk, sdk).
+     */
+    @Value.Default
+    default boolean isNeedAndroidTools() {
+      return false;
+    }
   }
 }
