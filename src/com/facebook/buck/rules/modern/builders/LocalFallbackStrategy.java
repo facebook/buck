@@ -42,10 +42,15 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
 
   private final BuildRuleStrategy mainBuildRuleStrategy;
   private final BuckEventBus eventBus;
+  private final boolean localFallbackEnabled;
 
-  public LocalFallbackStrategy(BuildRuleStrategy mainBuildRuleStrategy, BuckEventBus eventBus) {
+  public LocalFallbackStrategy(
+      BuildRuleStrategy mainBuildRuleStrategy,
+      BuckEventBus eventBus,
+      boolean localFallbackEnabled) {
     this.mainBuildRuleStrategy = mainBuildRuleStrategy;
     this.eventBus = eventBus;
+    this.localFallbackEnabled = localFallbackEnabled;
   }
 
   @Override
@@ -59,7 +64,8 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
         rule.getFullyQualifiedName(),
         mainBuildRuleStrategy.build(rule, strategyContext),
         strategyContext,
-        eventBus);
+        eventBus,
+        localFallbackEnabled);
   }
 
   @Override
@@ -74,6 +80,12 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     }
   }
 
+  /** Thrown when execution failed remotely and cannot be retried locally */
+  public static class RemoteActionFailedException extends Exception {
+    RemoteActionFailedException(String message) {
+      super(message);
+    }
+  }
   /**
    * Contains the combined result of running the remote execution and local execution if necessary.
    */
@@ -86,6 +98,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     private final BuckEventBus eventBus;
     private final LocalFallbackEvent.Started startedEvent;
     private final Stopwatch remoteExecutionTimer;
+    private final boolean localFallbackEnabled;
 
     private Optional<ListenableFuture<Optional<BuildResult>>> localStrategyBuildResult;
     private boolean hasCancellationBeenRequested;
@@ -96,7 +109,8 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
         String buildTarget,
         StrategyBuildResult remoteStrategyBuildResult,
         BuildStrategyContext strategyContext,
-        BuckEventBus eventBus) {
+        BuckEventBus eventBus,
+        boolean localFallbackEnabled) {
       this.lock = new Object();
       this.localStrategyBuildResult = Optional.empty();
       this.buildTarget = buildTarget;
@@ -109,6 +123,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
       this.remoteBuildResult = Optional.empty();
       this.remoteExecutionTimer = Stopwatch.createStarted();
       this.remoteBuildErrorMessage = Optional.empty();
+      this.localFallbackEnabled = localFallbackEnabled;
 
       this.eventBus.post(this.startedEvent);
       this.remoteStrategyBuildResult
@@ -186,7 +201,11 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
         remoteBuildResult = Optional.of(Result.FAIL);
       }
       remoteBuildErrorMessage = Optional.of(result.toString());
-      fallbackBuildToLocalStrategy();
+      if (localFallbackEnabled) {
+        fallbackBuildToLocalStrategy();
+      } else {
+        completeCombinedFuture(result, remoteBuildResult.get(), Result.NOT_RUN);
+      }
     }
 
     private void handleRemoteBuildFailedWithException(Throwable t) {
@@ -195,7 +214,11 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
       remoteBuildResult =
           Optional.of(t instanceof InterruptedException ? Result.INTERRUPTED : Result.EXCEPTION);
       remoteBuildErrorMessage = Optional.of(t.toString());
-      fallbackBuildToLocalStrategy();
+      if (localFallbackEnabled) {
+        fallbackBuildToLocalStrategy();
+      } else {
+        completeCombinedFutureWithException(t, remoteBuildResult.get(), Result.NOT_RUN);
+      }
     }
 
     private void fallbackBuildToLocalStrategy() {

@@ -125,8 +125,12 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     this.eventBus.post(remoteExecutionSessionStartedEvent);
   }
 
-  /** Creates a BuildRuleStrategy for a particular */
-  static BuildRuleStrategy createRemoteExecutionStrategy(
+  /**
+   * Creates a BuildRuleStrategy for a particular config
+   *
+   * @return
+   */
+  static LocalFallbackStrategy createRemoteExecutionStrategy(
       BuckEventBus eventBus,
       RemoteExecutionStrategyConfig strategyConfig,
       RemoteExecutionClients clients,
@@ -135,7 +139,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       ThrowingFunction<Path, HashCode, IOException> fileHasher,
       MetadataProvider metadataProvider,
       WorkerRequirementsProvider workerRequirementsProvider) {
-    BuildRuleStrategy strategy =
+    return new LocalFallbackStrategy(
         new RemoteExecutionStrategy(
             eventBus,
             strategyConfig,
@@ -145,12 +149,9 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                 eventBus, clients.getProtocol(), ruleFinder, rootCell, fileHasher),
             workerRequirementsProvider,
             MoreExecutors.listeningDecorator(
-                MostExecutors.newMultiThreadExecutor("remote-exec", strategyConfig.getThreads())));
-    if (strategyConfig.isLocalFallbackEnabled()) {
-      strategy = new LocalFallbackStrategy(strategy, eventBus);
-    }
-
-    return strategy;
+                MostExecutors.newMultiThreadExecutor("remote-exec", strategyConfig.getThreads()))),
+        eventBus,
+        strategyConfig.isLocalFallbackEnabled());
   }
 
   @Override
