@@ -991,6 +991,8 @@ public final class MainRunner {
         CommonThreadFactoryState commonThreadFactoryState =
             GlobalStateManager.singleton().getThreadToCommandRegister();
 
+        Optional<Exception> exceptionForFix = Optional.empty();
+
         try (ThrowingCloseableWrapper<ExecutorService, InterruptedException> diskIoExecutorService =
                 getExecutorWrapper(
                     MostExecutors.newSingleThreadExecutor("Disk I/O"),
@@ -1440,10 +1442,20 @@ public final class MainRunner {
                     "versioned_target_graph_cache",
                     parserAndCaches.getVersionedTargetGraphCache().getCacheStats()));
           }
+        } catch (Exception e) {
+          exceptionForFix = Optional.of(e);
+          throw e;
         } finally {
           if (exitCode != ExitCode.SUCCESS) {
             handleAutoFix(
-                filesystem, console, clientEnvironment, command, buckConfig, buildId, exitCode);
+                filesystem,
+                console,
+                clientEnvironment,
+                command,
+                buckConfig,
+                buildId,
+                exitCode,
+                exceptionForFix);
           }
 
           // signal nailgun that we are not interested in client disconnect events anymore
@@ -1545,7 +1557,8 @@ public final class MainRunner {
       BuckCommand command,
       BuckConfig buckConfig,
       BuildId buildId,
-      ExitCode exitCode) {
+      ExitCode exitCode,
+      Optional<Exception> exceptionForFix) {
     if (!(command.subcommand instanceof AbstractCommand)) {
       return;
     }
@@ -1569,7 +1582,7 @@ public final class MainRunner {
               subcommand.getCommandArgsFile(),
               subcommand.getFixSpecFile());
 
-      fixCommandHandler.runWithBuildIdWithExitCode(buildId, exitCode, false);
+      fixCommandHandler.runWithBuildIdWithExitCode(buildId, exitCode, false, exceptionForFix);
     } catch (IOException e) {
       console.printErrorText(
           "Failed to write fix script information to %s", subcommand.getCommandArgsFile());

@@ -20,6 +20,8 @@ import com.facebook.buck.doctor.BuildLogHelper;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.types.Either;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -70,7 +72,10 @@ public class BuckFixSpecParser {
       BuildLogHelper helper, FixBuckConfig fixConfig, boolean manuallyInvoked) throws IOException {
     Optional<BuildLogEntry> entry = helper.getBuildLogs().stream().findFirst();
     return entry
-        .map(e -> specFromBuildLogEntry(fixConfig, e, OptionalInt.empty(), manuallyInvoked))
+        .map(
+            e ->
+                specFromBuildLogEntry(
+                    fixConfig, e, OptionalInt.empty(), manuallyInvoked, Optional.empty()))
         .orElse(Either.ofRight(FixSpecFailure.MISSING));
   }
 
@@ -99,7 +104,10 @@ public class BuckFixSpecParser {
             .filter(e -> e.getBuildId().map(id -> id.equals(buildId)).orElse(false))
             .findFirst();
     return entry
-        .map(e -> specFromBuildLogEntry(fixConfig, e, OptionalInt.empty(), manuallyInvoked))
+        .map(
+            e ->
+                specFromBuildLogEntry(
+                    fixConfig, e, OptionalInt.empty(), manuallyInvoked, Optional.empty()))
         .orElse(Either.ofRight(FixSpecFailure.MISSING));
   }
 
@@ -128,7 +136,8 @@ public class BuckFixSpecParser {
       FixBuckConfig fixConfig,
       BuildId buildId,
       ExitCode exitCode,
-      boolean manuallyInvoked)
+      boolean manuallyInvoked,
+      Optional<Exception> runException)
       throws IOException {
 
     Optional<BuildLogEntry> entry =
@@ -139,7 +148,11 @@ public class BuckFixSpecParser {
         .map(
             e ->
                 specFromBuildLogEntry(
-                    fixConfig, e, OptionalInt.of(exitCode.getCode()), manuallyInvoked))
+                    fixConfig,
+                    e,
+                    OptionalInt.of(exitCode.getCode()),
+                    manuallyInvoked,
+                    runException))
         .orElse(Either.ofRight(FixSpecFailure.MISSING));
   }
 
@@ -147,7 +160,8 @@ public class BuckFixSpecParser {
       FixBuckConfig fixConfig,
       BuildLogEntry buildLogEntry,
       OptionalInt exitCodeOverride,
-      boolean manuallyInvoked) {
+      boolean manuallyInvoked,
+      Optional<Exception> runException) {
     if (!buildLogEntry.getBuildId().isPresent()) {
       return Either.ofRight(FixSpecFailure.MISSING_BUILD_ID);
     }
@@ -181,12 +195,17 @@ public class BuckFixSpecParser {
             commandArgs.subList(1, commandArgs.size()),
             expandedCommandArgs.subList(1, expandedCommandArgs.size()),
             manuallyInvoked,
-            Optional.empty(),
+            commandDataObject(runException),
             fixConfig.getBuckProvidedScripts(),
             BuckFixSpec.getLogsMapping(
                 Optional.of(buildLogEntry.getRelativePath()),
                 buildLogEntry.getMachineReadableLogFile(),
                 buildLogEntry.getTraceFile(),
                 buildLogEntry.getConfigJsonFile())));
+  }
+
+  @VisibleForTesting
+  static Optional<Object> commandDataObject(Optional<Exception> runException) {
+    return runException.map(e -> ImmutableMap.of("exception", runException));
   }
 }

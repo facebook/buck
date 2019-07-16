@@ -137,12 +137,13 @@ public class FixCommandHandler {
     run(fixSpec.getLeft());
   }
 
-  void runWithBuildIdWithExitCode(BuildId buildId, ExitCode exitCode, boolean manuallyInvoked)
+  void runWithBuildIdWithExitCode(
+      BuildId buildId, ExitCode exitCode, boolean manuallyInvoked, Optional<Exception> runException)
       throws FixCommandHandlerException, IOException {
     BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
     Either<BuckFixSpec, BuckFixSpecParser.FixSpecFailure> fixSpec =
         BuckFixSpecParser.parseFromBuildIdWithExitCode(
-            buildLogHelper, fixConfig, buildId, exitCode, manuallyInvoked);
+            buildLogHelper, fixConfig, buildId, exitCode, manuallyInvoked, runException);
     if (fixSpec.isRight()) {
       throw new FixCommandHandlerException(
           "Error fetching logs for build %s: %s", buildId, fixSpec.getRight().humanReadableError());

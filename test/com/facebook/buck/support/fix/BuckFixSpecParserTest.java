@@ -27,6 +27,7 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -249,6 +250,43 @@ public class BuckFixSpecParserTest {
 
     BuckFixSpec spec = BuckFixSpecParser.parseLastCommand(helper, fixConfig, false).getLeft();
 
+    assertEquals(expectedSpec, spec);
+  }
+
+  @Test
+  public void returnsWithExitCodeAndException() throws IOException {
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "report", tempFolder);
+    workspace.setUp();
+
+    Path logDir = filesystem.getBuckPaths().getLogDir().resolve(buildCommandDir);
+
+    Optional<Exception> expectedException =
+        Optional.of(
+            new Exception("outer exception message", new Exception("inner exception message")));
+
+    BuckFixSpec expectedSpec =
+        new ImmutableBuckFixSpec(
+            buildCommandId,
+            "build",
+            ExitCode.FATAL_GENERIC.getCode(),
+            ImmutableList.of("@file", "buck"),
+            ImmutableList.of("-c", "foo.bar=baz", "buck"),
+            false,
+            BuckFixSpecParser.commandDataObject(expectedException),
+            ImmutableMap.of("jasabi_fix", ImmutableList.of("legacy/script/location")),
+            BuckFixSpec.getLogsMapping(
+                Optional.of(logDir.resolve("buck.log")),
+                Optional.of(logDir.resolve("buck-machine-log")),
+                Optional.of(logDir.resolve(buildCommandTrace)),
+                Optional.of(logDir.resolve("buckconfig.json"))));
+
+    BuildLogHelper helper = new BuildLogHelper(filesystem);
+    BuckFixSpec spec =
+        BuckFixSpecParser.parseFromBuildIdWithExitCode(
+                helper, fixConfig, buildCommandId, ExitCode.FATAL_GENERIC, false, expectedException)
+            .getLeft();
     assertEquals(expectedSpec, spec);
   }
 }
