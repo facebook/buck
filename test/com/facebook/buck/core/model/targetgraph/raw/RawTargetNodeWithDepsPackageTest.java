@@ -23,9 +23,12 @@ import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
+import com.facebook.buck.parser.exceptions.ImmutableParsingError;
+import com.facebook.buck.parser.exceptions.ParsingError;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -77,10 +80,13 @@ public class RawTargetNodeWithDepsPackageTest {
     RawTargetNodeWithDeps rawTargetNodeWithDeps2 =
         ImmutableRawTargetNodeWithDeps.of(rawTargetNode2, ImmutableSet.of());
 
+    ParsingError error = ImmutableParsingError.of("error1", ImmutableList.of("stacktrace1"));
+
     RawTargetNodeWithDepsPackage rawTargetNodeWithDepsPackage =
         new ImmutableRawTargetNodeWithDepsPackage(
             Paths.get("base"),
-            ImmutableMap.of("target1", rawTargetNodeWithDeps1, "target2", rawTargetNodeWithDeps2));
+            ImmutableMap.of("target1", rawTargetNodeWithDeps1, "target2", rawTargetNodeWithDeps2),
+            ImmutableList.of(error));
 
     return rawTargetNodeWithDepsPackage;
   }

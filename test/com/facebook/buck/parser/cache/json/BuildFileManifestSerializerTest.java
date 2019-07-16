@@ -21,8 +21,8 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
-import com.facebook.buck.parser.api.ImmutableParsingError;
-import com.facebook.buck.parser.api.ParsingError;
+import com.facebook.buck.parser.exceptions.ImmutableParsingError;
+import com.facebook.buck.parser.exceptions.ParsingError;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.util.environment.Platform;

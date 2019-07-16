@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.parser.api;
+package com.facebook.buck.parser.exceptions;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

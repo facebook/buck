@@ -17,6 +17,7 @@
 package com.facebook.buck.parser.api;
 
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
+import com.facebook.buck.parser.exceptions.ParsingError;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

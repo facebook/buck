@@ -39,13 +39,18 @@ import com.facebook.buck.core.select.TestSelectableResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.parser.NoopPackageBoundaryChecker;
 import com.facebook.buck.parser.RawTargetNodeToTargetNodeFactory;
+import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
+import com.facebook.buck.parser.manifest.ImmutableBuildPackagePathToBuildFileManifestKey;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Test;
 
 public class BuildPackagePathToRawTargetNodePackageTransformerTest {
@@ -109,6 +114,15 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
             ImmutableSet.of(),
             ImmutableSet.of());
 
+    BuildFileManifest buildFileManifest =
+        ImmutableBuildFileManifest.of(
+            ImmutableMap.of("target1", rawAttributes1, "target2", rawAttributes2),
+            ImmutableSortedSet.of(),
+            ImmutableMap.of(),
+            Optional.empty(),
+            ImmutableList.of(),
+            ImmutableList.of());
+
     BuildPackagePathToRawTargetNodePackageComputation transformer =
         BuildPackagePathToRawTargetNodePackageComputation.of(
             rawTargetNodeToTargetNodeFactory, cell);
@@ -117,6 +131,8 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
             ImmutableBuildPackagePathToRawTargetNodePackageKey.of(Paths.get("")),
             new FakeComputationEnvironment(
                 ImmutableMap.of(
+                    ImmutableBuildPackagePathToBuildFileManifestKey.of(Paths.get("")),
+                    buildFileManifest,
                     ImmutableBuildTargetToRawTargetNodeKey.of(
                         unconfiguredBuildTarget1, Paths.get("")),
                     rawTargetNode1,

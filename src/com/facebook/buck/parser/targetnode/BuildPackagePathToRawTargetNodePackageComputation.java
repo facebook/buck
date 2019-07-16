@@ -132,7 +132,11 @@ public class BuildPackagePathToRawTargetNodePackageComputation
       builder.put(unconfiguredBuildTarget.getName(), rawTargetNodeWithDeps);
     }
 
-    return new ImmutableRawTargetNodeWithDepsPackage(key.getPath(), builder.build());
+    BuildFileManifest buildFileManifest =
+        env.getDep(ImmutableBuildPackagePathToBuildFileManifestKey.of(key.getPath()));
+
+    return new ImmutableRawTargetNodeWithDepsPackage(
+        key.getPath(), builder.build(), buildFileManifest.getErrors());
   }
 
   @Override

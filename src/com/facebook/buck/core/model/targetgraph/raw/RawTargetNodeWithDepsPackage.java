@@ -18,8 +18,10 @@ package com.facebook.buck.core.model.targetgraph.raw;
 
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.parser.exceptions.ParsingError;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 
@@ -39,4 +41,11 @@ public abstract class RawTargetNodeWithDepsPackage implements ComputeResult {
    */
   @JsonProperty("nodes")
   public abstract ImmutableMap<String, RawTargetNodeWithDeps> getRawTargetNodesWithDeps();
+
+  /**
+   * Errors that occurred parsing this package. If errors exist, package may be incomplete, i.e.
+   * some or all target nodes may be missing
+   */
+  @JsonProperty("errors")
+  public abstract ImmutableList<ParsingError> getErrors();
 }
