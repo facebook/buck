@@ -42,7 +42,7 @@ public class BuildPackagePathToBuildFileManifestComputationTest {
 
     BuildPackagePathToBuildFileManifestComputation computation =
         BuildPackagePathToBuildFileManifestComputation.of(
-            parser, Paths.get("BUCK"), Paths.get("/root"));
+            parser, Paths.get("BUCK"), Paths.get("/root"), true);
     FakeComputationEnvironment env = new FakeComputationEnvironment(ImmutableMap.of());
 
     computation.transform(

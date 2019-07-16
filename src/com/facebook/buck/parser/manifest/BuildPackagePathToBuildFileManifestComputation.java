@@ -22,9 +22,17 @@ import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
+import com.facebook.buck.parser.api.ImmutableParsingError;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Optional;
 
 /** Parses build file to {@link BuildFileManifest} structure */
 public class BuildPackagePathToBuildFileManifestComputation
@@ -33,12 +41,14 @@ public class BuildPackagePathToBuildFileManifestComputation
   private final Path root;
   private final ProjectBuildFileParser parser;
   private final Path buildFileName;
+  private final boolean throwOnParseError;
 
   private BuildPackagePathToBuildFileManifestComputation(
-      ProjectBuildFileParser parser, Path buildFileName, Path root) {
+      ProjectBuildFileParser parser, Path buildFileName, Path root, boolean throwOnParseError) {
     this.parser = parser;
     this.buildFileName = buildFileName;
     this.root = root;
+    this.throwOnParseError = throwOnParseError;
   }
 
   /**
@@ -47,10 +57,13 @@ public class BuildPackagePathToBuildFileManifestComputation
    * @param parser Parser used to parse build file. This parser should be thread-safe.
    * @param buildFileName File name of the build file (like BUCK) expressed as a {@link Path}
    * @param root Absolute {@link Path} to the build root, usually cell root
+   * @param throwOnParseError If true, error in parsing of a build file results in exception thrown.
+   *     Otherwise an empty {@link BuildFileManifest} is created and filled with error information.
    */
   public static BuildPackagePathToBuildFileManifestComputation of(
-      ProjectBuildFileParser parser, Path buildFileName, Path root) {
-    return new BuildPackagePathToBuildFileManifestComputation(parser, buildFileName, root);
+      ProjectBuildFileParser parser, Path buildFileName, Path root, boolean throwOnParseError) {
+    return new BuildPackagePathToBuildFileManifestComputation(
+        parser, buildFileName, root, throwOnParseError);
   }
 
   @Override
@@ -61,7 +74,26 @@ public class BuildPackagePathToBuildFileManifestComputation
   @Override
   public BuildFileManifest transform(
       BuildPackagePathToBuildFileManifestKey key, ComputationEnvironment env) throws Exception {
-    return parser.getBuildFileManifest(root.resolve(key.getPath()).resolve(buildFileName));
+    try {
+      return parser.getBuildFileManifest(root.resolve(key.getPath()).resolve(buildFileName));
+    } catch (BuildFileParseException ex) {
+      if (throwOnParseError) {
+        throw ex;
+      }
+
+      return ImmutableBuildFileManifest.of(
+          ImmutableMap.of(),
+          ImmutableSortedSet.of(),
+          ImmutableMap.of(),
+          Optional.empty(),
+          ImmutableList.of(),
+          ImmutableList.of(
+              ImmutableParsingError.of(
+                  ex.getMessage(),
+                  Arrays.stream(ex.getStackTrace())
+                      .map(element -> element.toString())
+                      .collect(ImmutableList.toImmutableList()))));
+    }
   }
 
   @Override
