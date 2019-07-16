@@ -17,6 +17,8 @@ package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
+import com.facebook.buck.core.starlark.rule.attr.Attribute;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
@@ -33,20 +35,23 @@ public class SkylarkRuleContext implements SkylarkRuleContextApi {
   /**
    * Create a {@link SkylarkRuleContext} to be used in users' implementation functions
    *
+   * @param context the context for the analysing this rule. Used primarily for creating and
+   *     manipulating actions
    * @param label the label of the new rule being evaluated
    * @param methodName the name of the implementation method in the extension file
    * @param methodParameters a mapping of field names to values for a given rule
-   * @param context the context for the analysing this rule. Used primarily for creating and
-   *     manipulating actions
+   * @param attributes a mapping of field names to attributes for a given rule
    */
   public SkylarkRuleContext(
       RuleAnalysisContext context,
       Label label,
       String methodName,
-      Map<String, Object> methodParameters) {
+      Map<String, Object> methodParameters,
+      ImmutableMap<String, Attribute<?>> attributes) {
     this.label = label;
     this.registry = new CapturingActionRegistry(context.actionRegistry());
-    this.attr = new SkylarkRuleContextAttr(methodName, methodParameters);
+    this.attr =
+        new SkylarkRuleContextAttr(methodName, methodParameters, attributes, context.deps());
     this.actions = new SkylarkRuleContextActions(registry);
   }
 

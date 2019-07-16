@@ -256,4 +256,23 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         toList.apply(inputs, "//with_source_list:with_explicit_srcs"),
         Matchers.containsInAnyOrder(Paths.get("with_source_list", "some_src.txt").toString()));
   }
+
+  @Test
+  public void implementationGetsSourceFromSourceList() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "implementation_gets_artifacts_from_source_list", tmp);
+    DefaultProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:with_sources").assertSuccess();
+
+    assertEquals(
+        "contents2",
+        workspace.getFileContents(
+            BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:with_sources"))
+                .resolve("out2.txt")));
+  }
 }

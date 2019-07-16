@@ -15,12 +15,22 @@
  */
 package com.facebook.buck.core.starlark.rule;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
+import com.facebook.buck.core.starlark.rule.attr.Attribute;
+import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
 import com.google.devtools.build.lib.syntax.ClassObject;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
 /**
@@ -31,15 +41,48 @@ public class SkylarkRuleContextAttr implements ClassObject, SkylarkValue {
 
   private final Map<String, Object> methodParameters;
   private final String methodName;
+  private final ImmutableMap<String, Attribute<?>> attributes;
+  private final LoadingCache<String, Object> postCoercionTransformValues;
 
-  public SkylarkRuleContextAttr(String methodName, Map<String, Object> methodParameters) {
+  /**
+   * @param methodName
+   * @param methodParameters
+   * @param attributes
+   * @param deps
+   */
+  public SkylarkRuleContextAttr(
+      String methodName,
+      Map<String, Object> methodParameters,
+      ImmutableMap<String, Attribute<?>> attributes,
+      ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
     this.methodParameters = methodParameters;
     this.methodName = methodName;
+    this.attributes = attributes;
+    this.postCoercionTransformValues =
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<String, Object>() {
+                  @Override
+                  public Object load(String paramName) {
+                    Object coercedValue =
+                        Preconditions.checkNotNull(methodParameters.get(paramName));
+                    return Preconditions.checkNotNull(attributes.get(paramName))
+                        .getPostCoercionTransform()
+                        .postCoercionTransform(coercedValue, deps);
+                  }
+                });
   }
 
   @Nullable
   @Override
   public Object getValue(String name) {
+    if (attributes.containsKey(name)) {
+      try {
+        return postCoercionTransformValues.get(name);
+      } catch (ExecutionException e) {
+        throw new BuckUncheckedExecutionException(e);
+      }
+    }
     return methodParameters.get(name);
   }
 
