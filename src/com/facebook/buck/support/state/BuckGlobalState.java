@@ -30,7 +30,6 @@ import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanCursor;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.parser.DaemonicParserState;
-import com.facebook.buck.parser.manifest.BuildFileManifestCache;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
@@ -68,7 +67,6 @@ public final class BuckGlobalState implements Closeable {
   private final DaemonicParserState daemonicParserState;
   private final ImmutableList<ProjectFileHashCache> hashCaches;
   private final LoadingCache<Path, DirectoryListCache> directoryListCachePerRoot;
-  private final LoadingCache<Path, BuildFileManifestCache> buildFileManifestCachePerRoot;
   private final LoadingCache<Path, FileTreeCache> fileTreeCachePerRoot;
   private final EventBus fileEventBus;
   private final Optional<WebServer> webServer;
@@ -89,7 +87,6 @@ public final class BuckGlobalState implements Closeable {
       ImmutableList<ProjectFileHashCache> hashCaches,
       LoadingCache<Path, DirectoryListCache> directoryListCachePerRoot,
       LoadingCache<Path, FileTreeCache> fileTreeCachePerRoot,
-      LoadingCache<Path, BuildFileManifestCache> buildFileManifestCachePerRoot,
       EventBus fileEventBus,
       Optional<WebServer> webServer,
       ConcurrentMap<String, WorkerProcessPool> persistentWorkerPools,
@@ -106,7 +103,6 @@ public final class BuckGlobalState implements Closeable {
     this.hashCaches = hashCaches;
     this.directoryListCachePerRoot = directoryListCachePerRoot;
     this.fileTreeCachePerRoot = fileTreeCachePerRoot;
-    this.buildFileManifestCachePerRoot = buildFileManifestCachePerRoot;
     this.fileEventBus = fileEventBus;
     this.webServer = webServer;
     this.persistentWorkerPools = persistentWorkerPools;
@@ -152,11 +148,6 @@ public final class BuckGlobalState implements Closeable {
    */
   public LoadingCache<Path, DirectoryListCache> getDirectoryListCaches() {
     return directoryListCachePerRoot;
-  }
-
-  /** Return a map of all build file manifest caches for each cell which is a key */
-  public LoadingCache<Path, BuildFileManifestCache> getBuildFileManifestCaches() {
-    return buildFileManifestCachePerRoot;
   }
 
   /**

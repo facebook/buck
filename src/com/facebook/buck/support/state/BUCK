@@ -21,7 +21,6 @@ java_library(
         "//src/com/facebook/buck/httpserver:httpserver",
         "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/parser:parser",
-        "//src/com/facebook/buck/parser/manifest:manifest",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/support/bgtasks:bgtasks",
