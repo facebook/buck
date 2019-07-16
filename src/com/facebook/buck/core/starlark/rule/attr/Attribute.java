@@ -16,11 +16,14 @@
 package com.facebook.buck.core.starlark.rule.attr;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
@@ -29,6 +32,12 @@ import org.immutables.value.Value;
 
 /** Representation of a parameter of a user defined rule */
 public abstract class Attribute<CoercedType> implements AttributeHolder {
+
+  private static final PostCoercionTransform<
+          ImmutableMap<BuildTarget, ProviderInfoCollection>, Object>
+      IDENTITY =
+          (Object object, ImmutableMap<BuildTarget, ProviderInfoCollection> additionalData) ->
+              object;
 
   @Override
   public Attribute<?> getAttribute() {
@@ -100,6 +109,15 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
    *     values)
    */
   protected void validateCoercedValue(CoercedType value) throws CoerceFailedException {}
+
+  /**
+   * @return a method that transforms a coerced value into something more useful to users, taking
+   *     into account the rule's dependencies
+   */
+  public PostCoercionTransform<ImmutableMap<BuildTarget, ProviderInfoCollection>, ?>
+      getPostCoercionTransform() {
+    return IDENTITY;
+  }
 
   /**
    * Get the coerced value for this attribute.

@@ -15,9 +15,17 @@
  */
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
+import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
+import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
@@ -27,7 +35,9 @@ import com.facebook.buck.rules.coercer.SourcePathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import java.util.List;
 
 /**
  * Class that represents a list of sources files, whether on disk or that are other build targets
@@ -73,5 +83,46 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
     if (!getAllowEmpty() && paths.isEmpty()) {
       throw new CoerceFailedException("List of source paths may not be empty");
     }
+  }
+
+  @Override
+  public PostCoercionTransform<ImmutableMap<BuildTarget, ProviderInfoCollection>, List<Artifact>>
+      getPostCoercionTransform() {
+    return SourceListAttribute::postCoercionTransform;
+  }
+
+  private static ImmutableList<Artifact> postCoercionTransform(
+      Object coercedValue, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
+    if (!(coercedValue instanceof List<?>)) {
+      throw new IllegalArgumentException(String.format("Value %s must be a list", coercedValue));
+    }
+    List<?> listValue = (List<?>) coercedValue;
+    // Start with a reasonable-ish default size. If we have a lot of build-target sources, this
+    // will obviously be too small.
+    ImmutableList.Builder<Artifact> builder =
+        ImmutableList.builderWithExpectedSize(listValue.size());
+    for (Object src : listValue) {
+      if (src instanceof BuildTargetSourcePath) {
+        ProviderInfoCollection providerInfos = deps.get(((BuildTargetSourcePath) src).getTarget());
+        if (providerInfos == null) {
+          throw new IllegalArgumentException(
+              String.format("Deps %s did not contain %s", deps, src));
+        }
+        builder.addAll(
+            providerInfos
+                .get(DefaultInfo.PROVIDER)
+                .map(DefaultInfo::defaultOutputs)
+                .orElseThrow(
+                    () ->
+                        new IllegalArgumentException(
+                            String.format("List element %s did not provide DefaultInfo", src))));
+      } else if (src instanceof PathSourcePath) {
+        builder.add(ImmutableSourceArtifactImpl.of((PathSourcePath) src));
+      } else {
+        throw new IllegalArgumentException(
+            String.format("List element %s must either be an Artifact, or a BuildTarget", src));
+      }
+    }
+    return builder.build();
   }
 }

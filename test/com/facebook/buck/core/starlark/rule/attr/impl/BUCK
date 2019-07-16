@@ -10,6 +10,7 @@ java_test(
         "//src/com/facebook/buck/rules/coercer:interface",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/rules/actions:testutil",
         "//third-party/java/junit:junit",
     ],
 )

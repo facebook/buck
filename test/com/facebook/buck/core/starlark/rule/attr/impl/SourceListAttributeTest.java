@@ -18,17 +18,26 @@ package com.facebook.buck.core.starlark.rule.attr.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.SourceArtifact;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
+import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
@@ -130,5 +139,92 @@ public class SourceListAttributeTest {
         Paths.get(""),
         EmptyTargetConfiguration.INSTANCE,
         ImmutableList.of(absolutePathString));
+  }
+
+  @Test
+  public void failsTransformIfInvalidCoercedTypeProvided() {
+    SourceListAttribute attr = new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true);
+
+    thrown.expect(IllegalArgumentException.class);
+
+    attr.getPostCoercionTransform().postCoercionTransform("invalid", ImmutableMap.of());
+  }
+
+  @Test
+  public void failsTransformIfInvalidElementInList() {
+    SourceListAttribute attr = new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true);
+
+    thrown.expect(IllegalArgumentException.class);
+
+    attr.getPostCoercionTransform()
+        .postCoercionTransform(ImmutableList.of("invalid"), ImmutableMap.of());
+  }
+
+  @Test
+  public void failsTransformIfElementMissingFromDeps() throws CoerceFailedException {
+
+    SourceListAttribute attr = new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true);
+    ImmutableList<SourcePath> coerced =
+        attr.getValue(
+            cellRoots,
+            filesystem,
+            Paths.get(""),
+            EmptyTargetConfiguration.INSTANCE,
+            ImmutableList.of("//foo:bar", "src/main.cpp"));
+
+    thrown.expect(IllegalArgumentException.class);
+    attr.getPostCoercionTransform().postCoercionTransform(coerced, ImmutableMap.of());
+  }
+
+  @Test
+  public void failsTransformIfMissingDefaultInfo() throws CoerceFailedException {
+    SourceListAttribute attr = new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true);
+    ImmutableList<SourcePath> coerced =
+        attr.getValue(
+            cellRoots,
+            filesystem,
+            Paths.get(""),
+            EmptyTargetConfiguration.INSTANCE,
+            ImmutableList.of("//foo:bar", "src/main.cpp"));
+
+    thrown.expect(IllegalArgumentException.class);
+    attr.getPostCoercionTransform()
+        .postCoercionTransform(
+            coerced,
+            ImmutableMap.of(
+                BuildTargetFactory.newInstance("//foo:bar"),
+                ProviderInfoCollectionImpl.builder().build()));
+  }
+
+  @Test
+  public void transformsToListOfArtifacts() throws CoerceFailedException {
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
+    Artifact buildArtifact1 = registry.declareArtifact(Paths.get("baz1"));
+    Artifact buildArtifact2 = registry.declareArtifact(Paths.get("baz2"));
+    SourceArtifact sourceArtifact =
+        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("src", "main.cpp")));
+    ImmutableDefaultInfo defaultInfo =
+        new ImmutableDefaultInfo(
+            SkylarkDict.empty(), ImmutableList.of(buildArtifact1, buildArtifact2));
+
+    ImmutableMap<BuildTarget, ProviderInfoCollection> deps =
+        ImmutableMap.of(target, ProviderInfoCollectionImpl.builder().put(defaultInfo).build());
+
+    SourceListAttribute attr = new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true);
+    ImmutableList<SourcePath> coerced =
+        attr.getValue(
+            cellRoots,
+            filesystem,
+            Paths.get(""),
+            EmptyTargetConfiguration.INSTANCE,
+            ImmutableList.of("//foo:bar", "src/main.cpp"));
+
+    ImmutableList<Artifact> expected =
+        ImmutableList.of(buildArtifact1, buildArtifact2, sourceArtifact);
+
+    Object transformed = attr.getPostCoercionTransform().postCoercionTransform(coerced, deps);
+
+    assertEquals(expected, transformed);
   }
 }
