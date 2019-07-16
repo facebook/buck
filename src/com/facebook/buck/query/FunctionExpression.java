@@ -31,30 +31,36 @@
 package com.facebook.buck.query;
 
 import com.facebook.buck.core.model.QueryTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import java.util.Objects;
 import java.util.Set;
-import org.immutables.value.Value;
 
 /** A query expression for user-defined query functions. */
-@Value.Immutable(prehash = true, builder = false, copy = false)
-@BuckStyleValue
-public abstract class FunctionExpression<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
-  @Value.Auxiliary
-  public abstract QueryFunction<?, NODE_TYPE> getFunction();
+final class FunctionExpression<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
+  private final QueryEnvironment.QueryFunction<?, NODE_TYPE> function;
+  private final ImmutableList<QueryEnvironment.Argument<NODE_TYPE>> args;
+  private final int hash;
 
-  // Use the function's class for equals/hashcode.
-  @Value.Derived
-  Class<?> getFunctionClass() {
-    return getFunction().getClass();
+  public FunctionExpression(
+      QueryEnvironment.QueryFunction<?, NODE_TYPE> function,
+      Iterable<? extends QueryEnvironment.Argument<NODE_TYPE>> args) {
+    this.function = function;
+    this.args = ImmutableList.copyOf(args);
+    this.hash = Objects.hash(function.getClass(), args);
   }
 
-  public abstract ImmutableList<Argument<NODE_TYPE>> getArgs();
+  QueryFunction<?, NODE_TYPE> getFunction() {
+    return function;
+  }
+
+  ImmutableList<Argument<NODE_TYPE>> getArgs() {
+    return args;
+  }
 
   @Override
   @SuppressWarnings("unchecked")
@@ -72,6 +78,26 @@ public abstract class FunctionExpression<NODE_TYPE> extends QueryExpression<NODE
         }
       }
     }
+  }
+
+  @Override
+  public int hashCode() {
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+
+    if (!(obj instanceof FunctionExpression)) {
+      return false;
+    }
+
+    FunctionExpression<?> that = (FunctionExpression<?>) obj;
+    return Objects.equals(this.function.getClass(), that.function.getClass())
+        && Objects.equals(this.args, that.args);
   }
 
   @Override

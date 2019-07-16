@@ -41,8 +41,7 @@ public class DepsFunctionTest {
   private static final DepsFunction DEPS_FUNCTION = new DepsFunction();
   private static final QueryEnvironment.Argument FIRST_ORDER_DEPS =
       QueryEnvironment.Argument.of(
-          new ImmutableFunctionExpression<>(
-              new DepsFunction.FirstOrderDepsFunction(), ImmutableList.of()));
+          new FunctionExpression(new DepsFunction.FirstOrderDepsFunction(), ImmutableList.of()));
   private static final QueryEnvironment.Argument DEPTH = QueryEnvironment.Argument.of(10);
 
   @Test
@@ -84,7 +83,7 @@ public class DepsFunctionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(a, b, c);
     QueryEnvironment queryEnvironment = makeFakeQueryEnvironment(targetGraph);
     FunctionExpression expression =
-        new ImmutableFunctionExpression(
+        new FunctionExpression(
             new FilterFunction(), ImmutableList.of(Argument.of("//foo.*"), FIRST_ORDER_DEPS));
     assertThat(
         (Iterable<QueryBuildTarget>)

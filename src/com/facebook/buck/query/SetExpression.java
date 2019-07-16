@@ -31,11 +31,10 @@
 package com.facebook.buck.query;
 
 import com.facebook.buck.core.model.QueryTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import java.util.Objects;
 import java.util.Set;
-import org.immutables.value.Value;
 
 /**
  * A set(word, ..., word) expression, which computes the union of zero or more target patterns
@@ -54,10 +53,23 @@ import org.immutables.value.Value;
  *
  * <pre>expr ::= SET '(' WORD * ')'</pre>
  */
-@Value.Immutable(prehash = true)
-@BuckStyleTuple
-abstract class AbstractSetExpression<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
-  abstract ImmutableList<TargetLiteral<NODE_TYPE>> getWords();
+final class SetExpression<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
+  private final ImmutableList<TargetLiteral<NODE_TYPE>> words;
+  private final int hash;
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  static <NODE_TYPE> SetExpression<NODE_TYPE> of(ImmutableList<TargetLiteral<NODE_TYPE>> words) {
+    return new SetExpression(words);
+  }
+
+  private SetExpression(ImmutableList<TargetLiteral<NODE_TYPE>> words) {
+    this.words = words;
+    this.hash = Objects.hash(words);
+  }
+
+  ImmutableList<TargetLiteral<NODE_TYPE>> getWords() {
+    return words;
+  }
 
   @Override
   <OUTPUT_TYPE extends QueryTarget> Set<OUTPUT_TYPE> eval(
@@ -72,6 +84,25 @@ abstract class AbstractSetExpression<NODE_TYPE> extends QueryExpression<NODE_TYP
         word.traverse(visitor);
       }
     }
+  }
+
+  @Override
+  public int hashCode() {
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+
+    if (!(obj instanceof SetExpression)) {
+      return false;
+    }
+
+    SetExpression<?> that = (SetExpression<?>) obj;
+    return Objects.equals(this.words, that.words);
   }
 
   @Override

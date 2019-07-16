@@ -32,13 +32,12 @@ package com.facebook.buck.query;
 import static com.facebook.buck.query.Lexer.TokenKind;
 
 import com.facebook.buck.core.model.QueryTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
-import org.immutables.value.Value;
 
 /**
  * A binary algebraic set operation.
@@ -52,9 +51,7 @@ import org.immutables.value.Value;
  *        | expr ('-' expr)+
  * </pre>
  */
-@Value.Immutable(prehash = true)
-@BuckStyleTuple
-abstract class AbstractBinaryOperatorExpression<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
+final class BinaryOperatorExpression<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
   enum Operator {
     INTERSECT("^"),
     UNION("+"),
@@ -89,18 +86,32 @@ abstract class AbstractBinaryOperatorExpression<NODE_TYPE> extends QueryExpressi
     }
   }
 
-  abstract Operator getOperator();
+  private final Operator operator;
+  private final ImmutableList<QueryExpression<NODE_TYPE>> operands;
+  private final int hash;
 
-  abstract ImmutableList<QueryExpression<NODE_TYPE>> getOperands();
-
-  protected static <T> BinaryOperatorExpression<T> of(
-      TokenKind operator, List<QueryExpression<T>> operands) {
-    return BinaryOperatorExpression.<T>of(Operator.from(operator), operands);
+  private BinaryOperatorExpression(
+      Operator operator, ImmutableList<QueryExpression<NODE_TYPE>> operands) {
+    Preconditions.checkState(operands.size() > 1);
+    this.operator = operator;
+    this.operands = operands;
+    this.hash = Objects.hash(operator, operands);
   }
 
-  @Value.Check
-  protected void check() {
-    Preconditions.checkState(getOperands().size() > 1);
+  Operator getOperator() {
+    return operator;
+  }
+
+  ImmutableList<QueryExpression<NODE_TYPE>> getOperands() {
+    return operands;
+  }
+
+  static <T> BinaryOperatorExpression<T> of(TokenKind operator, List<QueryExpression<T>> operands) {
+    return BinaryOperatorExpression.of(Operator.from(operator), ImmutableList.copyOf(operands));
+  }
+
+  static <T> BinaryOperatorExpression<T> of(Operator operator, List<QueryExpression<T>> operands) {
+    return new BinaryOperatorExpression<>(operator, ImmutableList.copyOf(operands));
   }
 
   @Override
@@ -136,6 +147,26 @@ abstract class AbstractBinaryOperatorExpression<NODE_TYPE> extends QueryExpressi
         subExpression.traverse(visitor);
       }
     }
+  }
+
+  @Override
+  public int hashCode() {
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+
+    if (!(obj instanceof BinaryOperatorExpression)) {
+      return false;
+    }
+
+    BinaryOperatorExpression<?> that = (BinaryOperatorExpression<?>) obj;
+    return Objects.equals(this.operator, that.operator)
+        && Objects.equals(this.operands, that.operands);
   }
 
   @Override

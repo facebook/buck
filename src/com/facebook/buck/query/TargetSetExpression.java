@@ -17,23 +17,35 @@
 package com.facebook.buck.query;
 
 import com.facebook.buck.core.model.QueryTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
+import java.util.Objects;
 import java.util.Set;
-import org.immutables.value.Value;
 
 /** A set(word, ..., word) expression or literal set of targets precomputed at parse-time. */
-@Value.Immutable(prehash = true)
-@BuckStyleTuple
-abstract class AbstractTargetSetExpression<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
-  abstract Set<QueryTarget> getTargets();
+final class TargetSetExpression<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
+  private final Set<NODE_TYPE> targets;
+  private final int hash;
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  static <NODE_TYPE> TargetSetExpression<NODE_TYPE> of(Set<? extends QueryTarget> targets) {
+    return new TargetSetExpression(targets);
+  }
+
+  private TargetSetExpression(Set<NODE_TYPE> targets) {
+    this.targets = targets;
+    this.hash = Objects.hash(targets);
+  }
+
+  Set<NODE_TYPE> getTargets() {
+    return targets;
+  }
 
   @Override
   @SuppressWarnings("unchecked")
   <OUTPUT_TYPE extends QueryTarget> Set<OUTPUT_TYPE> eval(
       QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env) {
-    return (Set<OUTPUT_TYPE>) getTargets();
+    return (Set<OUTPUT_TYPE>) targets;
   }
 
   @Override
@@ -42,12 +54,30 @@ abstract class AbstractTargetSetExpression<NODE_TYPE> extends QueryExpression<NO
   }
 
   @Override
+  public int hashCode() {
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+
+    if (!(obj instanceof TargetSetExpression)) {
+      return false;
+    }
+
+    TargetSetExpression<?> that = (TargetSetExpression<?>) obj;
+    return Objects.equals(this.targets, that.targets);
+  }
+
+  @Override
   public String toString() {
-    Set<QueryTarget> targets = getTargets();
     if (targets.size() == 1) {
       return Iterables.getOnlyElement(targets).toString();
     }
 
-    return "set(" + Joiner.on(' ').join(getTargets()) + ")";
+    return "set(" + Joiner.on(' ').join(targets) + ")";
   }
 }

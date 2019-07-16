@@ -91,9 +91,9 @@ public class QueryTargetCollectorTest {
                 Argument.of(SetExpression.of(ImmutableList.of(literal("foo"), literal("bar")))),
             (Argument<QueryBuildTarget>) Argument.of(2));
     BinaryOperatorExpression.of(
-            AbstractBinaryOperatorExpression.Operator.UNION,
+            BinaryOperatorExpression.Operator.UNION,
             ImmutableList.of(
-                new ImmutableFunctionExpression<>(new DepsFunction(), args),
+                new FunctionExpression<>(new DepsFunction(), args),
                 TargetSetExpression.of(ImmutableSet.of(target("bar"), target("baz")))))
         .traverse(collector);
     assertThat(

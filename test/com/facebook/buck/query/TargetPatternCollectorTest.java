@@ -56,9 +56,9 @@ public class TargetPatternCollectorTest {
   @Test
   public void complexExpression() {
     BinaryOperatorExpression.of(
-            AbstractBinaryOperatorExpression.Operator.UNION,
+            BinaryOperatorExpression.Operator.UNION,
             ImmutableList.of(
-                new ImmutableFunctionExpression<>(
+                new FunctionExpression<>(
                     new DepsFunction(), ImmutableList.of(Argument.of(TargetLiteral.of("foo")))),
                 SetExpression.of(
                     ImmutableList.of(TargetLiteral.of("bar"), TargetLiteral.of("baz")))))

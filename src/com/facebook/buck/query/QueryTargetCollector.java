@@ -31,6 +31,7 @@ class QueryTargetCollector<ENV_NODE_TYPE> implements QueryExpression.Visitor<ENV
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public QueryExpression.VisitResult visit(QueryExpression<ENV_NODE_TYPE> exp) {
     if (exp instanceof TargetLiteral) {
       try {
@@ -42,7 +43,7 @@ class QueryTargetCollector<ENV_NODE_TYPE> implements QueryExpression.Visitor<ENV
     }
 
     if (exp instanceof TargetSetExpression) {
-      targets.addAll(((AbstractTargetSetExpression<ENV_NODE_TYPE>) exp).getTargets());
+      targets.addAll(((TargetSetExpression<QueryTarget>) exp).getTargets());
     }
 
     return QueryExpression.VisitResult.CONTINUE;
