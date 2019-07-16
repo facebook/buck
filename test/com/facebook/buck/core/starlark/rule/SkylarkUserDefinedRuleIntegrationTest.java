@@ -28,9 +28,15 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Streams;
 import com.sun.jna.Platform;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -194,5 +200,60 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     assertThat(
         workspace.runBuckBuild("//foo:return_duplicate_info_types").assertFailure().getStderr(),
         Matchers.containsString("returned two or more Info objects"));
+  }
+
+  @Test
+  public void dependenciesAreAdded() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_deps", tmp);
+
+    workspace.setUp();
+
+    ProcessResult depsQueryRes =
+        workspace
+            .runBuckCommand(
+                "query",
+                "--json",
+                "deps(%s)",
+                "//with_source_list:with_default_srcs",
+                "//with_source_list:with_explicit_srcs")
+            .assertSuccess();
+
+    ProcessResult inputsQueryRes =
+        workspace
+            .runBuckCommand(
+                "query",
+                "--json",
+                "inputs(%s)",
+                "//with_source_list:with_default_srcs",
+                "//with_source_list:with_explicit_srcs")
+            .assertSuccess();
+
+    BiFunction<JsonNode, String, ImmutableList<String>> toList =
+        (JsonNode node, String field) ->
+            Streams.stream(node.get(field).elements())
+                .map(JsonNode::asText)
+                .collect(ImmutableList.toImmutableList());
+
+    JsonNode deps = ObjectMappers.READER.readTree(depsQueryRes.getStdout());
+    JsonNode inputs = ObjectMappers.READER.readTree(inputsQueryRes.getStdout());
+
+    assertThat(
+        toList.apply(deps, "//with_source_list:with_default_srcs"),
+        Matchers.containsInAnyOrder(
+            "//with_source_list:default", "//with_source_list:with_default_srcs"));
+
+    assertThat(
+        toList.apply(deps, "//with_source_list:with_explicit_srcs"),
+        Matchers.containsInAnyOrder(
+            "//with_source_list:other", "//with_source_list:with_explicit_srcs"));
+
+    assertThat(
+        toList.apply(inputs, "//with_source_list:with_default_srcs"),
+        Matchers.containsInAnyOrder(Paths.get("with_source_list", "default_src.txt").toString()));
+
+    assertThat(
+        toList.apply(inputs, "//with_source_list:with_explicit_srcs"),
+        Matchers.containsInAnyOrder(Paths.get("with_source_list", "some_src.txt").toString()));
   }
 }

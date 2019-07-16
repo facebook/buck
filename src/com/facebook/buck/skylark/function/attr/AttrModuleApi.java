@@ -147,4 +147,50 @@ public interface AttrModuleApi extends SkylarkValue {
       })
   AttributeHolder boolAttribute(boolean defaultValue, String doc, boolean mandatory)
       throws EvalException;
+
+  @SkylarkCallable(
+      name = "source_list",
+      doc =
+          "Create a parameter for user defined rules that is a list of sources, both source files "
+              + "on disk, and build targets.\nThis is exposed to rule implementations via "
+              + "ctx.attr.{@code name}  as a list of artifacts, not as a list of ProviderInfo "
+              + "objects.\nIf only a list of dependencies is required, or ProviderInfo objects "
+              + "are needed, this is not the correct attribute to use.",
+      parameters = {
+        @Param(
+            name = AttributeConstants.DEFAULT_PARAM_NAME,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC,
+            defaultValue = "[]",
+            noneable = false,
+            positional = false,
+            named = true,
+            type = SkylarkList.class,
+            generic1 = String.class),
+        @Param(
+            name = AttributeConstants.DOC_PARAM_NAME,
+            doc = AttributeConstants.DOC_PARAM_DOC,
+            defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = String.class),
+        @Param(
+            name = AttributeConstants.MANDATORY_PARAM_NAME,
+            doc = AttributeConstants.MANDATORY_PARAM_DOC,
+            defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = Boolean.class),
+        @Param(
+            name = "allow_empty",
+            doc = "Whether the source list may be empty",
+            defaultValue = "False",
+            positional = false,
+            named = true,
+            type = Boolean.class)
+      })
+  AttributeHolder sourceListAttribute(
+      SkylarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      throws EvalException;
 }
