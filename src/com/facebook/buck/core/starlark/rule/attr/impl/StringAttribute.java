@@ -30,7 +30,7 @@ public abstract class StringAttribute extends Attribute<String> {
   private static final TypeCoercer<String> coercer = new StringTypeCoercer();
 
   @Override
-  public abstract String getDefaultValue();
+  public abstract String getPreCoercionDefaultValue();
 
   @Override
   public abstract String getDoc();

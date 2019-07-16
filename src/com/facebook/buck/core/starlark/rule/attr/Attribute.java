@@ -71,8 +71,14 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
             clazz.getName()));
   }
 
-  /** The default value to use if no value is provided */
-  public abstract CoercedType getDefaultValue();
+  /**
+   * The default value to use if no value is provided.
+   *
+   * <p>This will be validated against {@link #getTypeCoercer()}, so may return a value whose type
+   * does not match {@link CoercedType} (e.g. a list of strings, rather than a list of {@link
+   * com.facebook.buck.core.sourcepath.SourcePath})
+   */
+  public abstract Object getPreCoercionDefaultValue();
 
   /** The docstring to use for this attribute */
   public abstract String getDoc();

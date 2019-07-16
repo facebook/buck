@@ -223,7 +223,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       if (param.getMandatory()) {
         mandatory++;
       } else {
-        defaultValues.add(param.getDefaultValue());
+        defaultValues.add(param.getPreCoercionDefaultValue());
       }
 
       String name = entry.getKey();

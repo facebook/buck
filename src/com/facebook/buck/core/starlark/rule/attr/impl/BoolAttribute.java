@@ -29,7 +29,7 @@ public abstract class BoolAttribute extends Attribute<Boolean> {
       new IdentityTypeCoercer<>(Boolean.class);
 
   @Override
-  public abstract Boolean getDefaultValue();
+  public abstract Boolean getPreCoercionDefaultValue();
 
   @Override
   public abstract String getDoc();

@@ -60,7 +60,7 @@ public class SkylarkParamInfoTest {
   abstract static class TestIntAttribute extends Attribute<Integer> {
 
     @Override
-    public abstract Integer getDefaultValue();
+    public abstract Integer getPreCoercionDefaultValue();
 
     @Override
     public abstract String getDoc();
@@ -83,7 +83,7 @@ public class SkylarkParamInfoTest {
   abstract static class TestOptionalIntAttribute extends Attribute<Optional<Integer>> {
 
     @Override
-    public abstract Optional<Integer> getDefaultValue();
+    public abstract Optional<Integer> getPreCoercionDefaultValue();
 
     @Override
     public abstract String getDoc();
@@ -105,7 +105,7 @@ public class SkylarkParamInfoTest {
   @BuckStyleValue
   abstract static class TestListStringAttribute extends Attribute<ImmutableList<String>> {
     @Override
-    public abstract ImmutableList<String> getDefaultValue();
+    public abstract ImmutableList<String> getPreCoercionDefaultValue();
 
     @Override
     public abstract String getDoc();
@@ -127,7 +127,7 @@ public class SkylarkParamInfoTest {
   @BuckStyleValue
   abstract static class TestMapStringAttribute extends Attribute<ImmutableMap<String, Integer>> {
     @Override
-    public abstract ImmutableMap<String, Integer> getDefaultValue();
+    public abstract ImmutableMap<String, Integer> getPreCoercionDefaultValue();
 
     @Override
     public abstract String getDoc();

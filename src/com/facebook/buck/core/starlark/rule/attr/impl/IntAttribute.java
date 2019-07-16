@@ -30,7 +30,7 @@ public abstract class IntAttribute extends Attribute<Integer> {
   private static final NumberTypeCoercer<Integer> coercer = new NumberTypeCoercer<>(Integer.class);
 
   @Override
-  public abstract Integer getDefaultValue();
+  public abstract Integer getPreCoercionDefaultValue();
 
   @Override
   public abstract String getDoc();
