@@ -19,7 +19,6 @@ package com.facebook.buck.query;
 import com.facebook.buck.core.model.QueryTarget;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -29,12 +28,11 @@ import java.util.function.Predicate;
  */
 public class TargetVariablesQueryEnvironment<NODE_TYPE> implements QueryEnvironment<NODE_TYPE> {
 
-  private final ImmutableMap<String, ImmutableSet<NODE_TYPE>> targetVariables;
+  private final ImmutableMap<String, Set<NODE_TYPE>> targetVariables;
   private final QueryEnvironment<NODE_TYPE> delegate;
 
   public TargetVariablesQueryEnvironment(
-      ImmutableMap<String, ImmutableSet<NODE_TYPE>> targetVariables,
-      QueryEnvironment<NODE_TYPE> delegate) {
+      ImmutableMap<String, Set<NODE_TYPE>> targetVariables, QueryEnvironment<NODE_TYPE> delegate) {
     this.targetVariables = targetVariables;
     this.delegate = delegate;
   }
@@ -109,7 +107,7 @@ public class TargetVariablesQueryEnvironment<NODE_TYPE> implements QueryEnvironm
 
   @Override
   public Set<NODE_TYPE> resolveTargetVariable(String name) {
-    ImmutableSet<NODE_TYPE> targets = targetVariables.get(name);
+    Set<NODE_TYPE> targets = targetVariables.get(name);
     if (targets != null) {
       return targets;
     }

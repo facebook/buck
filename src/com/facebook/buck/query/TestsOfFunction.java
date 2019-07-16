@@ -20,7 +20,6 @@ import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 
 /**
@@ -53,14 +52,10 @@ public class TestsOfFunction<T extends QueryTarget> implements QueryFunction<T, 
   }
 
   @Override
-  public ImmutableSet<T> eval(
+  public Set<T> eval(
       QueryEvaluator<T> evaluator, QueryEnvironment<T> env, ImmutableList<Argument<T>> args)
       throws QueryException {
     Set<T> targets = evaluator.eval(args.get(0).getExpression(), env);
-    ImmutableSet.Builder<T> tests = new ImmutableSet.Builder<>();
-    for (T target : targets) {
-      tests.addAll(env.getTestsForTarget(target));
-    }
-    return tests.build();
+    return Unions.of((T target) -> env.getTestsForTarget(target), targets);
   }
 }

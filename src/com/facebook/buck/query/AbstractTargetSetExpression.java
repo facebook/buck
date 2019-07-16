@@ -19,20 +19,21 @@ package com.facebook.buck.query;
 import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import java.util.Set;
 import org.immutables.value.Value;
 
 /** A set(word, ..., word) expression or literal set of targets precomputed at parse-time. */
 @Value.Immutable(prehash = true)
 @BuckStyleTuple
 abstract class AbstractTargetSetExpression<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
-  abstract ImmutableSet<QueryTarget> getTargets();
+  abstract Set<QueryTarget> getTargets();
 
   @Override
   @SuppressWarnings("unchecked")
-  <OUTPUT_TYPE extends QueryTarget> ImmutableSet<OUTPUT_TYPE> eval(
+  <OUTPUT_TYPE extends QueryTarget> Set<OUTPUT_TYPE> eval(
       QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env) {
-    return (ImmutableSet<OUTPUT_TYPE>) getTargets();
+    return (Set<OUTPUT_TYPE>) getTargets();
   }
 
   @Override
@@ -42,8 +43,9 @@ abstract class AbstractTargetSetExpression<NODE_TYPE> extends QueryExpression<NO
 
   @Override
   public String toString() {
-    if (getTargets().size() == 1) {
-      return getTargets().asList().get(0).toString();
+    Set<QueryTarget> targets = getTargets();
+    if (targets.size() == 1) {
+      return Iterables.getOnlyElement(targets).toString();
     }
 
     return "set(" + Joiner.on(' ').join(getTargets()) + ")";

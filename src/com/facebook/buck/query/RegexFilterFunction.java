@@ -20,7 +20,7 @@ import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -41,7 +41,7 @@ abstract class RegexFilterFunction<T extends QueryTarget, ENV_NODE_TYPE>
       throws QueryException;
 
   @Override
-  public ImmutableSet<T> eval(
+  public Set<T> eval(
       QueryEvaluator<ENV_NODE_TYPE> evaluator,
       QueryEnvironment<ENV_NODE_TYPE> env,
       ImmutableList<Argument<ENV_NODE_TYPE>> args)
@@ -55,13 +55,13 @@ abstract class RegexFilterFunction<T extends QueryTarget, ENV_NODE_TYPE>
     }
 
     Set<T> targets = evaluator.eval(getExpressionToEval(args), env);
-    ImmutableSet.Builder<T> result = new ImmutableSet.Builder<>();
+    HashSet<T> result = new HashSet<>(targets.size());
     for (T target : targets) {
       String attributeValue = getStringToFilter(env, args, target);
       if (compiledPattern.matcher(attributeValue).find()) {
         result.add(target);
       }
     }
-    return result.build();
+    return result;
   }
 }

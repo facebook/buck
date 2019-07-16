@@ -34,7 +34,7 @@ import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import java.util.Set;
 import org.immutables.value.Value;
 
 /**
@@ -60,13 +60,9 @@ abstract class AbstractSetExpression<NODE_TYPE> extends QueryExpression<NODE_TYP
   abstract ImmutableList<TargetLiteral<NODE_TYPE>> getWords();
 
   @Override
-  <OUTPUT_TYPE extends QueryTarget> ImmutableSet<OUTPUT_TYPE> eval(
+  <OUTPUT_TYPE extends QueryTarget> Set<OUTPUT_TYPE> eval(
       QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env) throws QueryException {
-    ImmutableSet.Builder<OUTPUT_TYPE> result = new ImmutableSet.Builder<>();
-    for (TargetLiteral<NODE_TYPE> expr : getWords()) {
-      result.addAll(evaluator.eval(expr, env));
-    }
-    return result.build();
+    return Unions.of((TargetLiteral<NODE_TYPE> expr) -> evaluator.eval(expr, env), getWords());
   }
 
   @Override

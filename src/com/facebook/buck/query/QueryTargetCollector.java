@@ -19,6 +19,7 @@ package com.facebook.buck.query;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.QueryTarget;
 import com.google.common.collect.ImmutableSet;
+import java.util.Set;
 
 class QueryTargetCollector<ENV_NODE_TYPE> implements QueryExpression.Visitor<ENV_NODE_TYPE> {
   private final ImmutableSet.Builder<QueryTarget> targets;
@@ -47,7 +48,7 @@ class QueryTargetCollector<ENV_NODE_TYPE> implements QueryExpression.Visitor<ENV
     return QueryExpression.VisitResult.CONTINUE;
   }
 
-  ImmutableSet<QueryTarget> getTargets() {
+  Set<QueryTarget> getTargets() {
     return targets.build();
   }
 }

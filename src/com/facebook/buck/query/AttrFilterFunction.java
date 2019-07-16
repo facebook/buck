@@ -21,8 +21,8 @@ import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -74,14 +74,14 @@ public class AttrFilterFunction implements QueryFunction<QueryBuildTarget, Query
             !(input instanceof Collection || input instanceof Map)
                 && attrValue.equals(input.toString());
 
-    ImmutableSet.Builder<QueryBuildTarget> result = new ImmutableSet.Builder<>();
     Set<QueryBuildTarget> targets = evaluator.eval(argument, env);
+    HashSet<QueryBuildTarget> result = new HashSet<>(targets.size());
     for (QueryBuildTarget target : targets) {
       Set<Object> matchingObjects = env.filterAttributeContents(target, attr, predicate);
       if (!matchingObjects.isEmpty()) {
         result.add(target);
       }
     }
-    return result.build();
+    return result;
   }
 }

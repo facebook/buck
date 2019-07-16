@@ -35,7 +35,6 @@ import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -106,7 +105,7 @@ abstract class AbstractBinaryOperatorExpression<NODE_TYPE> extends QueryExpressi
 
   @Override
   @SuppressWarnings("unchecked")
-  <OUTPUT_TYPE extends QueryTarget> ImmutableSet<OUTPUT_TYPE> eval(
+  <OUTPUT_TYPE extends QueryTarget> Set<OUTPUT_TYPE> eval(
       QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env) throws QueryException {
     ImmutableList<QueryExpression<NODE_TYPE>> operands = getOperands();
     Set<QueryTarget> lhsValue = new LinkedHashSet<>(evaluator.eval(operands.get(0), env));
@@ -127,7 +126,7 @@ abstract class AbstractBinaryOperatorExpression<NODE_TYPE> extends QueryExpressi
           throw new IllegalStateException("operator=" + getOperator());
       }
     }
-    return (ImmutableSet<OUTPUT_TYPE>) ImmutableSet.copyOf(lhsValue);
+    return (Set<OUTPUT_TYPE>) lhsValue;
   }
 
   @Override

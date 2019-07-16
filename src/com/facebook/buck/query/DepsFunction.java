@@ -37,9 +37,9 @@ import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -92,9 +92,9 @@ public class DepsFunction<T extends QueryTarget> implements QueryFunction<T, T> 
               new TargetVariablesQueryEnvironment<T>(
                   ImmutableMap.of(
                       FirstOrderDepsFunction.NAME,
-                      ImmutableSet.copyOf(env.getFwdDeps(ImmutableList.of(target))),
+                      env.getFwdDeps(ImmutableList.of(target)),
                       "@this",
-                      ImmutableSet.of(target)),
+                      Collections.singleton(target)),
                   env));
       deps.forEach(consumer);
     }
@@ -195,12 +195,12 @@ public class DepsFunction<T extends QueryTarget> implements QueryFunction<T, T> 
 
     @Override
     @SuppressWarnings("unchecked")
-    public ImmutableSet<OUTPUT_TYPE> eval(
+    public Set<OUTPUT_TYPE> eval(
         QueryEvaluator<ENV_NODE_TYPE> evaluator,
         QueryEnvironment<ENV_NODE_TYPE> env,
         ImmutableList<Argument<ENV_NODE_TYPE>> args) {
       Preconditions.checkArgument(args.size() == 1);
-      return (ImmutableSet<OUTPUT_TYPE>) env.resolveTargetVariable(args.get(0).getWord());
+      return (Set<OUTPUT_TYPE>) env.resolveTargetVariable(args.get(0).getWord());
     }
   }
 }

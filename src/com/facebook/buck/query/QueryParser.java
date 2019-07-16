@@ -39,13 +39,13 @@ import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
@@ -310,11 +310,10 @@ final class QueryParser<NODE_TYPE> {
                     .map(TargetLiteral::<NODE_TYPE>of)
                     .collect(Collectors.toList()));
           } else {
-            ImmutableSet.Builder<QueryTarget> targets = ImmutableSet.builder();
-            for (String word : wordsBuilder.build()) {
-              targets.addAll(targetEvaluator.evaluateTarget(word));
-            }
-            return TargetSetExpression.of(targets.build());
+            Set<QueryTarget> targets =
+                Unions.of(
+                    (String word) -> targetEvaluator.evaluateTarget(word), wordsBuilder.build());
+            return TargetSetExpression.of(targets);
           }
         }
         // $CASES-OMITTED$

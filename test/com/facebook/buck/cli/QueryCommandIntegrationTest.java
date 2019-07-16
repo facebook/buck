@@ -20,11 +20,13 @@ import static com.facebook.buck.cli.ThriftOutputUtils.edgesToStringList;
 import static com.facebook.buck.cli.ThriftOutputUtils.nodesToStringList;
 import static com.facebook.buck.util.MoreStringsForTests.containsIgnoringPlatformNewlines;
 import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
+import static com.facebook.buck.util.MoreStringsForTests.normalizeNewlines;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -42,9 +44,12 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
@@ -52,7 +57,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.hamcrest.Matchers;
@@ -63,7 +71,40 @@ import org.junit.runner.RunWith;
 @RunWith(JUnitParamsRunner.class)
 public class QueryCommandIntegrationTest {
 
+  private static final Splitter NEWLINE_SPLITTER = Splitter.on('\n');
+  private static final Joiner NEWLINE_JOINER = Joiner.on('\n');
+
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
+
+  /**
+   * Asserts that the result succeeded and that the lines printed to stdout are the same as those in
+   * the specified file. Note that sort order is not guaranteed by {@code buck query} unless it is
+   * specified explicitly via {@code --sort-output}.
+   */
+  private void assertLinesMatch(
+      String expectedOutputFile, ProcessResult result, ProjectWorkspace workspace)
+      throws IOException {
+    result.assertSuccess();
+
+    // All lines in expected output files are sorted so sort the output from `buck query` before
+    // comparing. Although query/--sort-output claims to sort labels by default, this does not
+    // appear to be honored, in practice.
+    assertEquals(
+        normalizeNewlines(workspace.getFileContents(expectedOutputFile)),
+        normalizeContents(result.getStdout()));
+  }
+
+  /** @param contents lines from a text file to normalize via sorting */
+  private String normalizeContents(String contents) {
+    List<String> unsortedLines = NEWLINE_SPLITTER.splitToList(normalizeNewlines(contents));
+    assertFalse("Output should have at least one blank line.", unsortedLines.isEmpty());
+    assertEquals("", unsortedLines.get(unsortedLines.size() - 1));
+    // Note that splitToList() returns an immutable list, so we must copy it to an ArrayList so we
+    // can sort it. We ignore the "" entry at the end of the list.
+    List<String> lines = new ArrayList<>(unsortedLines.subList(0, unsortedLines.size() - 1));
+    lines.sort(String::compareTo);
+    return NEWLINE_JOINER.join(lines) + "\n";
+  }
 
   @Test
   public void testTransitiveDependencies() throws IOException {
@@ -73,12 +114,7 @@ public class QueryCommandIntegrationTest {
 
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("query", "deps(//example:one)");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(
-            equalToIgnoringPlatformNewlines(
-                workspace.getFileContents("stdout-one-transitive-deps"))));
+    assertLinesMatch("stdout-one-transitive-deps", result, workspace);
   }
 
   @Test
@@ -89,10 +125,7 @@ public class QueryCommandIntegrationTest {
 
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("query", "testsof(//example:one)");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-one-testsof"))));
+    assertLinesMatch("stdout-one-testsof", result, workspace);
   }
 
   @Parameters(method = "getJsonParams")
@@ -136,10 +169,7 @@ public class QueryCommandIntegrationTest {
     // Print all of the inputs to the rule.
     ProcessResult result =
         workspace.runBuckCommand("query", "testsof(deps(%s, 1))", "//example:two");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-two-deps-tests"))));
+    assertLinesMatch("stdout-two-deps-tests", result, workspace);
   }
 
   @Parameters(method = "getJsonParams")
@@ -194,12 +224,7 @@ public class QueryCommandIntegrationTest {
     // Print all of the inputs to the rule.
     ProcessResult result =
         workspace.runBuckCommand("query", "deps(%s, 1) union testsof(%s)", "//example:one");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(
-            equalToIgnoringPlatformNewlines(
-                workspace.getFileContents("stdout-one-direct-deps-tests"))));
+    assertLinesMatch("stdout-one-direct-deps-tests", result, workspace);
   }
 
   @Test
@@ -210,12 +235,7 @@ public class QueryCommandIntegrationTest {
 
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("query", "testsof(//example:)");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(
-            equalToIgnoringPlatformNewlines(
-                workspace.getFileContents("stdout-pkg-pattern-testsof"))));
+    assertLinesMatch("stdout-pkg-pattern-testsof", result, workspace);
   }
 
   @Test
@@ -226,12 +246,7 @@ public class QueryCommandIntegrationTest {
 
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("query", "testsof(//...)");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(
-            equalToIgnoringPlatformNewlines(
-                workspace.getFileContents("stdout-recursive-pattern-testsof"))));
+    assertLinesMatch("stdout-recursive-pattern-testsof", result, workspace);
   }
 
   @Parameters(method = "getJsonParams")
@@ -260,11 +275,7 @@ public class QueryCommandIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("query", "owner('example/1.txt')");
-
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-one-owner"))));
+    assertLinesMatch("stdout-one-owner", result, workspace);
   }
 
   @Test
@@ -380,13 +391,7 @@ public class QueryCommandIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("query", "kind('.*_test', '//example/...')");
-
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(
-            equalToIgnoringPlatformNewlines(
-                workspace.getFileContents("stdout-recursive-pattern-kind"))));
+    assertLinesMatch("stdout-recursive-pattern-kind", result, workspace);
   }
 
   @Test
@@ -434,10 +439,7 @@ public class QueryCommandIntegrationTest {
         workspace.runBuckCommand(
             "query",
             "rdeps(set(//example:one //example/app:seven), set(//example/app:seven //example:five))");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-five-seven-rdeps"))));
+    assertLinesMatch("stdout-five-seven-rdeps", result, workspace);
   }
 
   @Test
@@ -452,10 +454,7 @@ public class QueryCommandIntegrationTest {
             "rdeps(set(//example:one //example/app:seven), %Ss)",
             "//example/app:seven",
             "//example:five");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-five-seven-rdeps"))));
+    assertLinesMatch("stdout-five-seven-rdeps", result, workspace);
   }
 
   @Parameters(method = "getJsonParams")
@@ -657,10 +656,7 @@ public class QueryCommandIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("query", "filter('four', '//example/...')");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-filter-four"))));
+    assertLinesMatch("stdout-filter-four", result, workspace);
   }
 
   @Test
@@ -1058,14 +1054,13 @@ public class QueryCommandIntegrationTest {
         workspace.runBuckCommand("query", "inputs(//example:four-tests + //example:one)");
 
     result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(
-            equalToIgnoringPlatformNewlines(
-                String.format(
-                    "%s%n%s%n",
-                    MorePaths.pathWithPlatformSeparators("example/4-test.txt"),
-                    MorePaths.pathWithPlatformSeparators("example/1.txt")))));
+    assertEquals(
+        normalizeContents(
+            String.format(
+                "%s%n%s%n",
+                MorePaths.pathWithPlatformSeparators("example/4-test.txt"),
+                MorePaths.pathWithPlatformSeparators("example/1.txt"))),
+        normalizeContents(result.getStdout()));
   }
 
   @Test
@@ -1594,7 +1589,37 @@ public class QueryCommandIntegrationTest {
   }
 
   private static JsonNode parseJSON(String content) throws IOException {
-    return ObjectMappers.READER.readTree(ObjectMappers.createParser(content));
+    JsonNode original = ObjectMappers.READER.readTree(ObjectMappers.createParser(content));
+    return normalizeJson(original);
+  }
+
+  /** Normalizes the JSON by sorting all of the arrays of strings. */
+  private static JsonNode normalizeJson(JsonNode node) {
+    if (node.isValueNode()) {
+      return node;
+    } else if (node.isArray()) {
+      // Only if this is an array of strings, copy the array and sort it.
+      if (Iterables.all(node, (JsonNode child) -> child.isTextual())) {
+        ArrayList<String> values = new ArrayList<>();
+        Iterables.addAll(values, Iterables.transform(node, (JsonNode child) -> child.asText()));
+        values.sort(String::compareTo);
+        ArrayNode normalized = (ArrayNode) ObjectMappers.READER.createArrayNode();
+        values.forEach((String value) -> normalized.add(value));
+        return normalized;
+      } else {
+        return node;
+      }
+    } else if (node.isObject()) {
+      ObjectNode original = (ObjectNode) node;
+      ObjectNode normalized = (ObjectNode) ObjectMappers.READER.createObjectNode();
+      for (Iterator<Map.Entry<String, JsonNode>> iter = original.fields(); iter.hasNext(); ) {
+        Map.Entry<String, JsonNode> entry = iter.next();
+        normalized.set(entry.getKey(), normalizeJson(entry.getValue()));
+      }
+      return normalized;
+    } else {
+      throw new IllegalArgumentException("Unexpected node type: " + node);
+    }
   }
 
   private static DirectedAcyclicGraph parseThrift(byte[] bytes) throws IOException {
