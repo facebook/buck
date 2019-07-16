@@ -19,7 +19,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.DefaultActionRegistry;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
-import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataRegistry;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
@@ -38,7 +37,7 @@ import java.util.Map;
 public class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisDataRegistry {
 
   private final BuildTarget buildTarget;
-  private final ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> depProviders;
+  private final ImmutableMap<BuildTarget, ProviderInfoCollection> depProviders;
   private final Map<ActionAnalysisData.ID, ActionAnalysisData> actionAnalysisDataRegistry =
       new HashMap<>();
   private final ActionRegistry actionRegistry;
@@ -46,7 +45,7 @@ public class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnaly
 
   public RuleAnalysisContextImpl(
       BuildTarget buildTarget,
-      ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> depProviders,
+      ImmutableMap<BuildTarget, ProviderInfoCollection> depProviders,
       ProjectFilesystem filesystem,
       BuckEventBus eventBus) {
     this.buildTarget = buildTarget;
@@ -56,7 +55,7 @@ public class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnaly
   }
 
   @Override
-  public ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> deps() {
+  public ImmutableMap<BuildTarget, ProviderInfoCollection> deps() {
     return depProviders;
   }
 

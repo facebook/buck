@@ -234,7 +234,7 @@ public class RuleAnalysisTransformerTest {
               RuleAnalysisContext context, BuildTarget target, FakeRuleDescriptionArg args) {
             // here we use the deps
             assertEquals(buildTarget, target);
-            return context.deps().get(ImmutableRuleAnalysisKey.of(buildTarget2));
+            return context.deps().get(buildTarget2);
           }
 
           @Override

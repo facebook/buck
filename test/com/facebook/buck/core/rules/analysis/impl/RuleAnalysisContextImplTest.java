@@ -28,8 +28,6 @@ import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.actions.ActionWrapperData;
 import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
-import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
-import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData.ID;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
@@ -61,12 +59,12 @@ public class RuleAnalysisContextImplTest {
   @Test
   public void getDepsReturnCorrectDeps() {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
-    ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> deps = ImmutableMap.of();
+    ImmutableMap<BuildTarget, ProviderInfoCollection> deps = ImmutableMap.of();
     assertSame(deps, new RuleAnalysisContextImpl(target, deps, fakeFilesystem, eventBus).deps());
 
     deps =
         ImmutableMap.of(
-            ImmutableRuleAnalysisKey.of(BuildTargetFactory.newInstance("//my:foo")),
+            BuildTargetFactory.newInstance("//my:foo"),
             ProviderInfoCollectionImpl.builder().build());
     assertSame(deps, new RuleAnalysisContextImpl(target, deps, fakeFilesystem, eventBus).deps());
   }

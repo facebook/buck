@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.analysis;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.event.BuckEventBus;
@@ -44,7 +45,7 @@ public interface RuleAnalysisContext {
    *     as a map with key of the {@link RuleAnalysisKey} that correspond to the {@link
    *     ProviderInfoCollection}.
    */
-  ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> deps();
+  ImmutableMap<BuildTarget, ProviderInfoCollection> deps();
 
   /**
    * @return the factory for creating {@link com.facebook.buck.core.artifact.Artifact}s and

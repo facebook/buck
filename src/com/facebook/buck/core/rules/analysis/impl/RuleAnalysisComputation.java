@@ -35,7 +35,6 @@ import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 
 /**
  * The {@link GraphComputation} for performing the target graph to provider and action graph
@@ -90,9 +89,10 @@ public class RuleAnalysisComputation
     RuleAnalysisContextImpl ruleAnalysisContext =
         new RuleAnalysisContextImpl(
             targetNode.getBuildTarget(),
-            ImmutableMap.copyOf(
-                Maps.transformValues(
-                    env.getDeps(RuleAnalysisKey.IDENTIFIER), RuleAnalysisResult::getProviderInfos)),
+            env.getDeps(RuleAnalysisKey.IDENTIFIER).values().stream()
+                .collect(
+                    ImmutableMap.toImmutableMap(
+                        RuleAnalysisResult::getBuildTarget, RuleAnalysisResult::getProviderInfos)),
             targetNode.getFilesystem(),
             eventBus);
 
