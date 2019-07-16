@@ -19,7 +19,7 @@ package com.facebook.buck.multitenant.service
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
-import java.util.*
+import java.util.Objects
 
 typealias Commit = String
 typealias Generation = Int
@@ -37,6 +37,11 @@ internal typealias BuildTargetSet = IntArray
  * the empty configuration.
  */
 data class RawBuildRule(val targetNode: RawTargetNode, val deps: Set<UnconfiguredBuildTarget>)
+
+/**
+ * Represents an error happened during parsing a package
+ */
+data class BuildPackageParsingError(val message: String, val stacktrace: List<String>)
 
 /**
  * @param[deps] must be sorted in ascending order!!!
@@ -72,7 +77,10 @@ private fun hashCodeBuildTargetSet(set: BuildTargetSet): Int {
  * By construction, the name for each rule in rules should be distinct across all of the rules in
  * the set.
  */
-data class BuildPackage(val buildFileDirectory: FsAgnosticPath, val rules: Set<RawBuildRule>)
+data class BuildPackage(
+    val buildFileDirectory: FsAgnosticPath,
+    val rules: Set<RawBuildRule>,
+    val errors: List<BuildPackageParsingError> = emptyList())
 
 internal data class InternalBuildPackage(val buildFileDirectory: FsAgnosticPath, val rules: Set<InternalRawBuildRule>)
 

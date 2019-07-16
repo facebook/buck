@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.BuildPackage
 import com.facebook.buck.multitenant.service.BuildPackageChanges
+import com.facebook.buck.multitenant.service.BuildPackageParsingError
 import com.facebook.buck.multitenant.service.BuildTargets
 import com.facebook.buck.multitenant.service.IndexAppender
 import com.facebook.buck.multitenant.service.RawBuildRule
@@ -132,7 +133,16 @@ private fun toBuildPackage(nodes: JsonNode): BuildPackage {
         val depsAsTargets = deps.map { BuildTargets.parseOrThrow(it) }.toSet()
         createRawRule(buildTarget, ruleType, depsAsTargets, attrs.build())
     }.toSet()
-    return BuildPackage(path, rules)
+    val nodesErrors = nodes.get("errors")
+    val errors = if (nodesErrors == null) {
+        listOf()
+    } else {
+        nodesErrors.elements().asSequence().map { error ->
+            BuildPackageParsingError(error.get("message").asText(), error.get(
+                "stacktrace").elements().asSequence().map { stacktrace -> stacktrace.asText() }.toList())
+        }.toList()
+    }
+    return BuildPackage(path, rules, errors)
 }
 
 private fun normalizeJsonValue(value: JsonNode): Any {

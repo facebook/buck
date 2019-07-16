@@ -116,5 +116,22 @@
         }
       }
     ]
+  },
+  {
+    "commit": "b5b5b5cccc",
+    "added": [
+      {
+        // new build file was added for the commit, but it failed to parse
+        "path": "error/build/file",
+        "nodes": {
+        },
+        "errors": [
+          {
+            "message": "Error parsing error/build/file",
+            "stacktrace": ["error/build/file/BUCK:1:1", "error/build/file/def.bzl:10:1"]
+          }
+        ]
+      }
+    ]
   }
 ]
