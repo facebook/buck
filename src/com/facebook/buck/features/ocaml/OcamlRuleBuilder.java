@@ -454,7 +454,8 @@ public class OcamlRuleBuilder {
                 .getCCompiler()
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
             ocamlPlatform
-                .getCxxCompiler()
+                .getCxxPlatform()
+                .getLd()
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
             bytecodeOnly,
             buildNativePlugin);
