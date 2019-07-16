@@ -187,7 +187,7 @@
     <include name="icu4j/icu4j-54.1.1.jar" />
     <include name="immutables/builder-2.7.3.jar" />
     <include name="immutables/value-2.7.3.jar" />
-    <include name="infer-annotations/infer-annotations-4.2.jar" />
+    <include name="infer-annotations/infer-annotation-0.17.0.jar" />
     <include name="jacoco/org.jacoco.core-0.8.3.201812281252.jar" />
     <include name="jacoco/org.jacoco.report-0.8.3.201812281252.jar" />
     <include name="jdom/jdom-2.0.6.jar" />
@@ -1089,7 +1089,7 @@
         gensrcdir="@{module-gen-dir}">
         <javac-params>
           <compilerarg value="-processorpath" />
-          <compilerarg value="${module.processorpath}" /> 
+          <compilerarg value="${module.processorpath}" />
           <compilerarg value="${pf4j-annotation-processor-storage-config}" />
           <module-javac-params/>
         </javac-params>
@@ -1259,4 +1259,3 @@
   <target name="pre-checkin" depends="clean, default, lint"/>
   <target name="all" depends="default, javadoc" />
 </project>
-

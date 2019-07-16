@@ -48,7 +48,7 @@ third-party/java/grpc/grpc-stub-1.18.0.jar
 third-party/java/httpcomponents/httpclient-4.4.1.jar
 third-party/java/httpcomponents/httpcore-4.4.1.jar
 third-party/java/icu4j/icu4j-54.1.1.jar
-third-party/java/infer-annotations/infer-annotations-4.2.jar
+third-party/java/infer-annotations/infer-annotation-0.17.0.jar
 third-party/java/ini4j/ini4j-0.5.5-SNAPSHOT.jar
 third-party/java/jackson/jackson-annotations-2.9.7.jar
 third-party/java/jackson/jackson-core-2.9.7.jar
