@@ -64,6 +64,7 @@ public class ProjectBuildFileParserPoolTest {
           ImmutableSortedSet.of(),
           ImmutableMap.of(),
           Optional.empty(),
+          ImmutableList.of(),
           ImmutableList.of());
 
   private ProjectBuildFileParserPool createParserPool(

@@ -117,7 +117,8 @@ public class BuildFileManifestCacheTest {
                 ImmutableSet.of("1.java", "2.java")));
 
     manifestCell1Root =
-        ImmutableBuildFileManifest.of(targets, includes, configs, Optional.empty(), globManifest);
+        ImmutableBuildFileManifest.of(
+            targets, includes, configs, Optional.empty(), globManifest, ImmutableList.of());
 
     cache.put(ImmutableBuildPackagePathToBuildFileManifestKey.of(Paths.get("")), manifestCell1Root);
 
@@ -126,7 +127,8 @@ public class BuildFileManifestCacheTest {
             includesFolder.resolve("include2.bzl").toString(),
             cell2IncludesFolder.resolve("include2.bzl").toString());
     manifestCell1Folder =
-        ImmutableBuildFileManifest.of(targets, includes, configs, Optional.empty(), globManifest);
+        ImmutableBuildFileManifest.of(
+            targets, includes, configs, Optional.empty(), globManifest, ImmutableList.of());
 
     cache.put(
         ImmutableBuildPackagePathToBuildFileManifestKey.of(Paths.get("folder1/folder2")),

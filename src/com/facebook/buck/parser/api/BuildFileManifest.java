@@ -58,4 +58,13 @@ public abstract class BuildFileManifest implements ComputeResult {
   @Value.Parameter
   @JsonProperty("globManifest")
   public abstract ImmutableList<GlobSpecWithResult> getGlobManifest();
+
+  /**
+   * @return A list of fatal errors occurred during parsing a build file, i.e. errors that might
+   *     render manifest incomplete. It is up for the parser to decide if still wants to fill this
+   *     object with unaffected targets
+   */
+  @Value.Parameter
+  @JsonProperty("errors")
+  public abstract ImmutableList<ParsingError> getErrors();
 }

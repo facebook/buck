@@ -145,6 +145,7 @@ public class EventReportingProjectBuildFileParserTest {
             ImmutableSortedSet.of(),
             ImmutableMap.of(),
             Optional.empty(),
+            ImmutableList.of(),
             ImmutableList.of());
     assertSame(allRulesAndMetadata, parser.getBuildFileManifest(SOME_PATH));
   }

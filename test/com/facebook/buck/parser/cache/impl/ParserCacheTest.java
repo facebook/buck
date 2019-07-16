@@ -286,7 +286,12 @@ public class ParserCacheTest {
 
     BuildFileManifest buildFileManifest =
         ImmutableBuildFileManifest.of(
-            targets, includes, configs, Optional.of(ImmutableMap.of()), globSpecs);
+            targets,
+            includes,
+            configs,
+            Optional.of(ImmutableMap.of()),
+            globSpecs,
+            ImmutableList.of());
 
     byte[] serializedManifest = BuildFileManifestSerializer.serialize(buildFileManifest);
     String resultString =

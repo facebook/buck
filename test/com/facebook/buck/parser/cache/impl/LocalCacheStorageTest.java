@@ -283,7 +283,12 @@ public class LocalCacheStorageTest {
 
     BuildFileManifest buildFileManifest =
         ImmutableBuildFileManifest.of(
-            targets, includes, configs, Optional.of(ImmutableMap.of()), globSpecMap);
+            targets,
+            includes,
+            configs,
+            Optional.of(ImmutableMap.of()),
+            globSpecMap,
+            ImmutableList.of());
 
     byte[] serializedManifest = BuildFileManifestSerializer.serialize(buildFileManifest);
     String resultString =

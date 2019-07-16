@@ -50,6 +50,7 @@ public class HybridProjectBuildFileParserTest {
           ImmutableSortedSet.of(),
           ImmutableMap.of(),
           Optional.empty(),
+          ImmutableList.of(),
           ImmutableList.of());
 
   @Mock PythonDslProjectBuildFileParser pythonDslParser;

@@ -192,7 +192,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
           ImmutableSortedSet.copyOf(parseResult.getLoadedPaths()),
           parseResult.getReadConfigurationOptions(),
           Optional.empty(),
-          parseResult.getGlobManifestWithResult());
+          parseResult.getGlobManifestWithResult(),
+          ImmutableList.of());
     } finally {
       LOG.verbose("Finished parsing build file %s", buildFile);
       buckEventBus.post(ParseBuckFileEvent.finished(startEvent, rulesParsed, 0L, Optional.empty()));

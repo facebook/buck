@@ -449,6 +449,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
             ImmutableSortedSet.of(),
             ImmutableMap.of(),
             Optional.empty(),
+            ImmutableList.of(),
             ImmutableList.of());
       }
       return toBuildFileManifest(values);
@@ -484,6 +485,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
                     Objects.requireNonNull(
                         (Map<String, String>) values.get(values.size() - 1).get(MetaRules.ENV)),
                     Optional::ofNullable))),
+        ImmutableList.of(),
         ImmutableList.of());
   }
 

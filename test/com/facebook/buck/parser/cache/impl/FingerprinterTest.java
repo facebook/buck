@@ -99,7 +99,12 @@ public class FingerprinterTest {
         ImmutableSortedSet.of("/foo/bar/FooBar.bzl", "/foo/bar/BUCK", "/foo/bar/BarFoo.bzl");
     BuildFileManifest buildFileManifest =
         ImmutableBuildFileManifest.of(
-            ImmutableMap.of(), includes, ImmutableMap.of(), Optional.empty(), ImmutableList.of());
+            ImmutableMap.of(),
+            includes,
+            ImmutableMap.of(),
+            Optional.empty(),
+            ImmutableList.of(),
+            ImmutableList.of());
     FakeFileHashCache fileHashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
@@ -133,7 +138,12 @@ public class FingerprinterTest {
         ImmutableSortedSet.of("/foo/bar/FooBar.bzl", "/foo/bar/BUCK", "/foo/bar/BarFoo.bzl");
     BuildFileManifest buildFileManifest =
         ImmutableBuildFileManifest.of(
-            ImmutableMap.of(), includes, ImmutableMap.of(), Optional.empty(), ImmutableList.of());
+            ImmutableMap.of(),
+            includes,
+            ImmutableMap.of(),
+            Optional.empty(),
+            ImmutableList.of(),
+            ImmutableList.of());
 
     Fingerprinter.getStrongFingerprint(
         fs,

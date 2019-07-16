@@ -13,25 +13,25 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
 package com.facebook.buck.parser.api;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
-import java.util.Map;
-import java.util.Optional;
+import org.immutables.value.Value;
 
-public class BuildFileManifestFactory {
+/** Holds information about error occurred during parsing a build file */
+@Value.Immutable(builder = false, copy = false)
+@JsonDeserialize
+public abstract class ParsingError {
+  /** @return Human readable message of the error. */
+  @Value.Parameter
+  @JsonProperty("message")
+  public abstract String getMessage();
 
-  private BuildFileManifestFactory() {}
-
-  public static BuildFileManifest create(ImmutableMap<String, Map<String, Object>> targets) {
-    return ImmutableBuildFileManifest.of(
-        targets,
-        ImmutableSortedSet.of(),
-        ImmutableMap.of(),
-        Optional.empty(),
-        ImmutableList.of(),
-        ImmutableList.of());
-  }
+  /** @return Parser stack trace to the errorred callsite, if any. */
+  @Value.Parameter
+  @JsonProperty("stacktrace")
+  public abstract ImmutableList<String> getStackTrace();
 }
