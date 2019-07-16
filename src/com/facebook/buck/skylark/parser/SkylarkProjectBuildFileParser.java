@@ -294,6 +294,11 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
               implicitLoad.getExtensionData());
       boolean exec = buildFileAst.exec(envData.getEnvironment(), eventHandler);
       if (!exec) {
+        // buildFileAst.exec reports extended error information to console with eventHandler
+        // but this is not propagated to BuildFileParseException. So in case of resilient parsing
+        // when exceptions are stored in BuildFileManifest they do not have detailed information.
+        // TODO(sergeyb): propagate detailed error information from AST evaluation to exception
+
         throw BuildFileParseException.createForUnknownParseError(
             "Cannot evaluate build file " + buildFile);
       }

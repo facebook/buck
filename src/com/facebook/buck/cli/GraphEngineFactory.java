@@ -131,7 +131,7 @@ public class GraphEngineFactory {
             buildFileParser,
             cell.getFilesystem().getPath(parserConfig.getBuildFileName()),
             cell.getRoot(),
-            true);
+            false);
 
     // COMPOSITION: build target pattern to build file manifest
     ComposedComputation<BuildTargetPatternToBuildPackagePathKey, BuildPackagePaths>
