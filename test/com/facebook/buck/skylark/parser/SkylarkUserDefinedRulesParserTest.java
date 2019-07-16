@@ -122,8 +122,8 @@ public class SkylarkUserDefinedRulesParserTest {
 
   @Test
   public void enablesAttrsModuleIfConfigured() throws IOException, InterruptedException {
-    setupWorkspace("attr_exported");
-    Path buildFile = projectFilesystem.resolve("BUCK");
+    setupWorkspace("attr");
+    Path buildFile = projectFilesystem.resolve("exported").resolve("BUCK");
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
 
@@ -132,8 +132,8 @@ public class SkylarkUserDefinedRulesParserTest {
 
   @Test
   public void enablesAttrsIntIfConfigured() throws IOException, InterruptedException {
-    setupWorkspace("attr_int_exported");
-    Path buildFile = projectFilesystem.resolve("BUCK");
+    setupWorkspace("attr");
+    Path buildFile = projectFilesystem.resolve("int").resolve("well_formed").resolve("BUCK");
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
     parser.getBuildFileManifest(buildFile);
@@ -142,10 +142,10 @@ public class SkylarkUserDefinedRulesParserTest {
   @Test
   public void attrsIntThrowsExceptionOnInvalidTypes() throws IOException, InterruptedException {
 
-    setupWorkspace("attr_int_throws_on_invalid");
+    setupWorkspace("attr");
 
     EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
-    Path buildFile = projectFilesystem.resolve("BUCK");
+    Path buildFile = projectFilesystem.resolve("int").resolve("malformed").resolve("BUCK");
 
     parser = createParser(eventCollector);
 
@@ -155,8 +155,8 @@ public class SkylarkUserDefinedRulesParserTest {
 
   @Test
   public void enablesAttrsBoolIfConfigured() throws IOException, InterruptedException {
-    setupWorkspace("attr_bool_exported");
-    Path buildFile = projectFilesystem.resolve("BUCK");
+    setupWorkspace("attr");
+    Path buildFile = projectFilesystem.resolve("bool").resolve("well_formed").resolve("BUCK");
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
     parser.getBuildFileManifest(buildFile);
@@ -165,10 +165,10 @@ public class SkylarkUserDefinedRulesParserTest {
   @Test
   public void attrsBoolThrowsExceptionOnInvalidTypes() throws IOException, InterruptedException {
 
-    setupWorkspace("attr_bool_throws_on_invalid");
+    setupWorkspace("attr");
 
     EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
-    Path buildFile = projectFilesystem.resolve("BUCK");
+    Path buildFile = projectFilesystem.resolve("bool").resolve("malformed").resolve("BUCK");
 
     parser = createParser(eventCollector);
 
@@ -177,8 +177,8 @@ public class SkylarkUserDefinedRulesParserTest {
 
   @Test
   public void enablesAttrsStringIfConfigured() throws IOException, InterruptedException {
-    setupWorkspace("attr_string_exported");
-    Path buildFile = projectFilesystem.resolve("BUCK");
+    setupWorkspace("attr");
+    Path buildFile = projectFilesystem.resolve("string").resolve("well_formed").resolve("BUCK");
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
 
@@ -188,10 +188,10 @@ public class SkylarkUserDefinedRulesParserTest {
   @Test
   public void attrsStringThrowsExceptionOnInvalidTypes() throws IOException, InterruptedException {
 
-    setupWorkspace("attr_string_throws_on_invalid");
+    setupWorkspace("attr");
 
     EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
-    Path buildFile = projectFilesystem.resolve("BUCK");
+    Path buildFile = projectFilesystem.resolve("string").resolve("malformed").resolve("BUCK");
 
     parser = createParser(eventCollector);
 
@@ -201,8 +201,9 @@ public class SkylarkUserDefinedRulesParserTest {
 
   @Test
   public void enablesAttrsSourceListIfConfigured() throws IOException, InterruptedException {
-    setupWorkspace("attr_source_list_exported");
-    Path buildFile = projectFilesystem.resolve("BUCK");
+    setupWorkspace("attr");
+    Path buildFile =
+        projectFilesystem.resolve("source_list").resolve("well_formed").resolve("BUCK");
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
 
@@ -213,10 +214,10 @@ public class SkylarkUserDefinedRulesParserTest {
   public void attrsSourceListThrowsExceptionOnInvalidTypes()
       throws IOException, InterruptedException {
 
-    setupWorkspace("attr_source_list_throws_on_invalid");
+    setupWorkspace("attr");
 
     EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
-    Path buildFile = projectFilesystem.resolve("BUCK");
+    Path buildFile = projectFilesystem.resolve("source_list").resolve("malformed").resolve("BUCK");
 
     parser = createParser(eventCollector);
 

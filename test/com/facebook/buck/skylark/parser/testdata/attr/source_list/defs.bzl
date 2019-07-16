@@ -1,6 +1,6 @@
 """ Module docstring """
 
-def foo():
+def well_formed():
     """ Function docstring """
     a = attr.source_list()
     if repr(a) != "<attr.source_list>":
@@ -14,3 +14,7 @@ def foo():
     a = attr.source_list(mandatory=True, doc="Some source_list", default=["BUCK"], allow_empty=False)
     if repr(a) != "<attr.source_list>":
         fail("Expected attr.source_list instance")
+
+def malformed():
+    """ Function docstring """
+    _a = attr.source_list(mandatory=True, doc="Some source_list", default=3, allow_empty=True)

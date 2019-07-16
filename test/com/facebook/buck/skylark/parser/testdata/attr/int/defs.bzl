@@ -1,6 +1,6 @@
 """ Module docstring """
 
-def foo():
+def well_formed():
     """ Function docstring """
     a = attr.int()
     if repr(a) != "<attr.int>":
@@ -14,3 +14,7 @@ def foo():
     a = attr.int(mandatory=True, doc="Some int", default=3, values=[])
     if repr(a) != "<attr.int>":
         fail("Expected attr.int instance")
+
+def malformed():
+    """ Function docstring """
+    _a = attr.int(mandatory=True, doc="Some int", default=3, values=["foo"])
