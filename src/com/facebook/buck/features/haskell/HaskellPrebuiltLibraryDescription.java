@@ -35,10 +35,11 @@ import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInfo;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformMappedCache;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -70,13 +71,8 @@ public class HaskellPrebuiltLibraryDescription
 
       private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
           new TransitiveCxxPreprocessorInputCache(this);
-      private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
-          LegacyNativeLinkableGroup.getNativeLinkableCache(this);
-
-      @Override
-      public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
-        return linkableCache;
-      }
+      private final PlatformMappedCache<NativeLinkableInfo> linkableCache =
+          new PlatformMappedCache<>();
 
       @Override
       public Iterable<BuildRule> getCompileDeps(HaskellPlatform platform) {
@@ -130,12 +126,11 @@ public class HaskellPrebuiltLibraryDescription
       }
 
       @Override
-      public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
+      public FluentIterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
           BuildRuleResolver ruleResolver) {
         return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkableGroup.class);
       }
 
-      @Override
       public NativeLinkableInput getNativeLinkableInput(
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type,
@@ -166,14 +161,34 @@ public class HaskellPrebuiltLibraryDescription
       }
 
       @Override
-      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-        return Linkage.ANY;
-      }
-
-      @Override
-      public ImmutableMap<String, SourcePath> getSharedLibraries(
+      public NativeLinkable getNativeLinkable(
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-        return args.getSharedLibs();
+        return linkableCache.get(
+            cxxPlatform,
+            () -> {
+              ImmutableList<NativeLinkable> exportedDeps =
+                  getNativeLinkableExportedDeps(graphBuilder)
+                      .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+                      .toList();
+              return new NativeLinkableInfo(
+                  buildTarget,
+                  ImmutableList.of(),
+                  exportedDeps,
+                  Linkage.ANY,
+                  args.getSharedLibs(),
+                  new NativeLinkableInfo.Delegate() {
+                    @Override
+                    public NativeLinkableInput computeInput(
+                        ActionGraphBuilder graphBuilder,
+                        Linker.LinkableDepType type,
+                        boolean forceLinkWhole,
+                        TargetConfiguration targetConfiguration) {
+                      return getNativeLinkableInput(
+                          cxxPlatform, type, forceLinkWhole, graphBuilder, targetConfiguration);
+                    }
+                  },
+                  NativeLinkableInfo.defaults());
+            });
       }
 
       @Override
