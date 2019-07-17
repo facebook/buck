@@ -129,4 +129,26 @@ public class ArtifactFilesystemTest {
 
     assertTrue(filesystem.isDirectory(expectedPath));
   }
+
+  @Test
+  public void deletesBuildArtifactsForOutputs() throws IOException {
+    ArtifactFilesystem artifactFilesystem = new ArtifactFilesystem(filesystem);
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
+
+    BuildArtifactFactory factory = new BuildArtifactFactory(buildTarget, filesystem);
+    ActionAnalysisDataKey key =
+        ImmutableActionAnalysisDataKey.of(buildTarget, new ActionAnalysisData.ID() {});
+
+    BuildArtifact artifact = factory.createDeclaredArtifact(Paths.get("out.txt")).materialize(key);
+
+    artifactFilesystem.writeContentsToPath("contents", artifact);
+
+    Path expectedBuildPath = BuildPaths.getGenDir(filesystem, buildTarget).resolve("out.txt");
+
+    assertTrue(filesystem.isFile(expectedBuildPath));
+
+    artifactFilesystem.removeBuildArtifacts(ImmutableSet.of(artifact));
+
+    assertFalse(filesystem.isFile(expectedBuildPath));
+  }
 }

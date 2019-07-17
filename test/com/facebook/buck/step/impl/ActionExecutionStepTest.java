@@ -174,4 +174,56 @@ public class ActionExecutionStepTest {
                 new DefaultProjectFilesystemFactory())));
     assertTrue(projectFilesystem.isDirectory(packagePath));
   }
+
+  @Test
+  public void deletesExistingOutputsOnDiskBeforeExecuting() throws IOException {
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+
+    Path baseCell = Paths.get("cell");
+    Path output = Paths.get("somepath");
+    BuckEventBus testEventBus = BuckEventBusForTests.newInstance();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:foo");
+
+    ImmutableActionExecutionFailure result =
+        ImmutableActionExecutionFailure.of(
+            Optional.empty(), Optional.of("my std err"), Optional.empty());
+
+    ActionRegistryForTests actionFactoryForTests = new ActionRegistryForTests(buildTarget);
+    Artifact declaredArtifact = actionFactoryForTests.declareArtifact(output);
+    FakeAction action =
+        new FakeAction(
+            actionFactoryForTests,
+            ImmutableSet.of(),
+            ImmutableSet.of(declaredArtifact),
+            (inputs, outputs, ctx) -> result);
+
+    ActionExecutionStep step =
+        new ActionExecutionStep(action, false, new ArtifactFilesystem(projectFilesystem));
+
+    Path expectedPath = BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve(output);
+
+    projectFilesystem.mkdirs(expectedPath.getParent());
+    projectFilesystem.writeContentsToPath("contents", expectedPath);
+
+    assertTrue(projectFilesystem.exists(expectedPath));
+    assertEquals(
+        StepExecutionResult.of(-1, Optional.of("my std err")),
+        step.execute(
+            ExecutionContext.of(
+                Console.createNullConsole(),
+                testEventBus,
+                Platform.UNKNOWN,
+                ImmutableMap.of(),
+                new FakeJavaPackageFinder(),
+                ImmutableMap.of(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                TestCellPathResolver.get(projectFilesystem),
+                baseCell,
+                new FakeProcessExecutor(),
+                new DefaultProjectFilesystemFactory())));
+    assertFalse(projectFilesystem.exists(expectedPath));
+  }
 }

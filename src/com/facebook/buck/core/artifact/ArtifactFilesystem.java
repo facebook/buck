@@ -127,4 +127,13 @@ public class ArtifactFilesystem {
         .distinct()
         .forEachThrowing(filesystem::mkdirs);
   }
+
+  /** Remove build artifacts (only) that exist on the underlying filesystem. */
+  public void removeBuildArtifacts(ImmutableSet<Artifact> outputs) throws IOException {
+    RichStream.from(outputs)
+        .map(output -> output.asBound().asBuildArtifact())
+        .filter(Objects::nonNull)
+        .map(this::resolveToPath)
+        .forEachThrowing(filesystem::deleteRecursivelyIfExists);
+  }
 }

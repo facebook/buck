@@ -54,7 +54,15 @@ public class ActionExecutionStep implements Step {
             context.getEnvironment(),
             context.getBuildCellRootPath());
 
+    /*
+     * Create the output directory for the step's rule, and then delete any output artifacts that
+     * already exist. We do this, rather than deleting the whole directory, because if a rule
+     * has multiple outputs, we don't want to delete outputs whose actions may not be run
+     */
+    // TODO(pjameson): If an output is removed from an action, find a way to delete these orphaned
+    //                 artifacts
     executionContext.getArtifactFilesystem().createPackagePaths(action.getOutputs());
+    executionContext.getArtifactFilesystem().removeBuildArtifacts(action.getOutputs());
 
     ActionExecutionResult result = action.execute(executionContext);
     if (result instanceof ActionExecutionResult.ActionExecutionSuccess) {
