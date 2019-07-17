@@ -18,22 +18,23 @@ package com.facebook.buck.cxx.toolchain.nativelink;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /** An implementation of {@link NativeLinkTarget} where the behavior is fixed when created. */
 public final class NativeLinkTargetInfo implements NativeLinkTarget {
   private final BuildTarget target;
   private final NativeLinkTargetMode targetMode;
-  private final ImmutableList<NativeLinkable> linkableDeps;
-  private final NativeLinkableInput linkableInput;
+  private final Iterable<NativeLinkable> linkableDeps;
+  @Nullable private final NativeLinkableInput linkableInput;
 
   public NativeLinkTargetInfo(
       BuildTarget target,
       NativeLinkTargetMode targetMode,
-      ImmutableList<NativeLinkable> linkableDeps,
-      NativeLinkableInput linkableInput) {
+      Iterable<NativeLinkable> linkableDeps,
+      @Nullable NativeLinkableInput linkableInput) {
     this.target = target;
     this.targetMode = targetMode;
     this.linkableDeps = linkableDeps;
@@ -59,7 +60,9 @@ public final class NativeLinkTargetInfo implements NativeLinkTarget {
   @Override
   public NativeLinkableInput getNativeLinkTargetInput(
       ActionGraphBuilder graphBuilder, SourcePathResolver pathResolver) {
-    return linkableInput;
+    return Objects.requireNonNull(
+        linkableInput,
+        String.format("NativeLinkTargetInfo for %s has no NativeLinkableInput.", target));
   }
 
   @Override
