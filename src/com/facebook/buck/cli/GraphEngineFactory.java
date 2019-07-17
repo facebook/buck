@@ -226,7 +226,12 @@ public class GraphEngineFactory {
                     fileTreeComputation,
                     params.getGlobalState().getFileTreeCaches().getUnchecked(cell.getRoot())),
                 patternToPathComputation.asStage(),
-                new GraphComputationStage<>(packagePathToManifestComputation),
+                new GraphComputationStage<>(
+                    packagePathToManifestComputation,
+                    params
+                        .getGlobalState()
+                        .getBuildFileManifestCaches()
+                        .getUnchecked(cell.getRoot())),
                 new GraphComputationStage<>(buildTargetToRawTargetNodeComputation),
                 new GraphComputationStage<>(rawTargetNodeToRawTargetNodeWithDepsComputation),
                 new GraphComputationStage<>(buildPackagePathToRawTargetNodePackageComputation),

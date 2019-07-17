@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.files.DirectoryListCache;
 import com.facebook.buck.core.files.FileTreeCache;
@@ -37,6 +38,7 @@ import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.parser.DaemonicParserState;
 import com.facebook.buck.parser.config.ParserConfig;
+import com.facebook.buck.parser.manifest.BuildFileManifestCache;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
@@ -53,12 +55,14 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.eventbus.EventBus;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 /** Factory for {@link BuckGlobalState}. */
 public class BuckGlobalStateFactory {
@@ -98,6 +102,9 @@ public class BuckGlobalStateFactory {
         createDirectoryListCachePerCellMap(fileEventBus);
     LoadingCache<Path, FileTreeCache> fileTreeCachePerRoot =
         createFileTreeCachePerCellMap(fileEventBus);
+    LoadingCache<Path, BuildFileManifestCache> buildFileManifestCachePerRoot =
+        createBuildFileManifestCachePerCellMap(
+            fileEventBus, rootCell.getCellProvider(), getSuperRootPath(rootCell));
     ActionGraphCache actionGraphCache =
         new ActionGraphCache(buildBuckConfig.getMaxActionGraphCacheEntries());
     VersionedTargetGraphCache versionedTargetGraphCache = new VersionedTargetGraphCache();
@@ -152,6 +159,7 @@ public class BuckGlobalStateFactory {
         hashCaches,
         directoryListCachePerRoot,
         fileTreeCachePerRoot,
+        buildFileManifestCachePerRoot,
         fileEventBus,
         webServer,
         persistentWorkerPools,
@@ -162,6 +170,34 @@ public class BuckGlobalStateFactory {
         knownRuleTypesProvider,
         clock,
         watchman != WatchmanFactory.NULL_WATCHMAN);
+  }
+
+  /** @return Path of the topmost cell's path that roots all other cells */
+  private static Path getSuperRootPath(Cell cell) {
+    Path cellRoot = cell.getRoot();
+    ImmutableSortedSet<Path> allRoots = cell.getKnownRoots();
+    Path path = cellRoot.getRoot();
+
+    // check if supercell is a root folder, like '/' or 'C:\'
+    if (allRoots.contains(path)) {
+      return path;
+    }
+
+    // There is an assumption that there is exactly one cell with a path that prefixes all other
+    // cell paths. So just try to find the cell with the shortest common path.
+
+    for (Path next : cellRoot) {
+      path = path.resolve(next);
+      if (allRoots.contains(path)) {
+        return path;
+      }
+    }
+    throw new IllegalStateException(
+        "Unreachable: at least one path should be in getKnownRoots(), including root cell '"
+            + cellRoot.toString()
+            + "'; known roots = ["
+            + allRoots.stream().map(p -> p.toString()).collect(Collectors.joining(", "))
+            + "]");
   }
 
   /** Create a number of instances of {@link DirectoryListCache}, one per each cell */
@@ -188,6 +224,29 @@ public class BuckGlobalStateFactory {
               @Override
               public FileTreeCache load(Path path) {
                 FileTreeCache cache = FileTreeCache.of(path);
+                fileEventBus.register(cache.getInvalidator());
+                return cache;
+              }
+            });
+  }
+
+  /** Create a number of instances of {@link BuildFileManifestCache}, one per each cell */
+  private static LoadingCache<Path, BuildFileManifestCache> createBuildFileManifestCachePerCellMap(
+      EventBus fileEventBus, CellProvider cellProvider, Path superRootPath) {
+    return CacheBuilder.newBuilder()
+        .build(
+            new CacheLoader<Path, BuildFileManifestCache>() {
+              @Override
+              public BuildFileManifestCache load(Path path) {
+                Cell cell = cellProvider.getCellByPath(path);
+                String buildFileName =
+                    cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
+                BuildFileManifestCache cache =
+                    BuildFileManifestCache.of(
+                        superRootPath,
+                        path,
+                        cell.getFilesystem().getPath(buildFileName),
+                        cell.getFilesystemViewForSourceFiles());
                 fileEventBus.register(cache.getInvalidator());
                 return cache;
               }
