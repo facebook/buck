@@ -142,6 +142,6 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
   }
 
   private String cellRelativeName(BuildTarget buildTarget) {
-    return buildTarget.withoutCell().getFullyQualifiedName();
+    return buildTarget.getCellRelativeName();
   }
 }

@@ -41,7 +41,7 @@ public interface UnflavoredBuildTargetView extends Comparable<UnflavoredBuildTar
   Optional<String> getCell();
 
   /**
-   * If this build target were //third_party/java/guava:guava-latest, then this would return
+   * If this build target were cell//third_party/java/guava:guava-latest, then this would return
    * "//third_party/java/guava".
    */
   String getBaseName();

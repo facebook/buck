@@ -65,7 +65,7 @@ public abstract class UnconfiguredBuildTarget
 
   /**
    * Base name of build target, i.e. part of fully qualified name before the colon If this build
-   * target were //third_party/java/guava:guava-latest, then this would return
+   * target were cell_name//third_party/java/guava:guava-latest, then this would return
    * "//third_party/java/guava"
    */
   @Value.Parameter
@@ -74,7 +74,8 @@ public abstract class UnconfiguredBuildTarget
 
   /**
    * Name of the build target, i.e. part of fully qualified name after the colon If this build
-   * target were //third_party/java/guava:guava-latest, then this would return "guava-latest"
+   * target were cell_name//third_party/java/guava:guava-latest, then this would return
+   * "guava-latest"
    */
   @Value.Parameter
   @JsonProperty("name")
@@ -116,7 +117,7 @@ public abstract class UnconfiguredBuildTarget
   @Value.Lazy
   @JsonIgnore
   public String getFullyQualifiedName() {
-    return getCell() + getBaseName() + ":" + getName() + getFlavorPostfix();
+    return getCell() + getCellRelativeName();
   }
 
   @JsonIgnore
@@ -149,5 +150,11 @@ public abstract class UnconfiguredBuildTarget
         .compare(getName(), o.getName())
         .compare(getFlavors(), o.getFlavors(), LEXICOGRAPHICAL_ORDERING)
         .result();
+  }
+
+  @Value.Lazy
+  @JsonIgnore
+  public String getCellRelativeName() {
+    return getBaseName() + ":" + getName() + getFlavorPostfix();
   }
 }

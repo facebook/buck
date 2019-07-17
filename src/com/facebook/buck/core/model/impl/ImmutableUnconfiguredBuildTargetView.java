@@ -220,6 +220,12 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
 
   @JsonIgnore
   @Override
+  public String getCellRelativeName() {
+    return data.getCellRelativeName();
+  }
+
+  @JsonIgnore
+  @Override
   public boolean isFlavored() {
     return !getFlavors().isEmpty();
   }
@@ -265,14 +271,6 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
   @Override
   public UnconfiguredBuildTargetView withUnflavoredBuildTarget(UnflavoredBuildTargetView target) {
     return ImmutableUnconfiguredBuildTargetView.of(target, getFlavors());
-  }
-
-  @Override
-  public UnconfiguredBuildTargetView withoutCell() {
-    return ImmutableUnconfiguredBuildTargetView.of(
-        ImmutableUnflavoredBuildTargetView.of(
-            getCellPath(), Optional.empty(), getBaseName(), getShortName()),
-        getFlavors());
   }
 
   @Override

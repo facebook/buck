@@ -84,6 +84,11 @@ public abstract class AbstractBuildTarget implements BuildTarget {
   }
 
   @Override
+  public String getCellRelativeName() {
+    return getUnconfiguredBuildTargetView().getCellRelativeName();
+  }
+
+  @Override
   public boolean isFlavored() {
     return getUnconfiguredBuildTargetView().isFlavored();
   }

@@ -153,10 +153,4 @@ abstract class AbstractImmutableBuildTarget extends AbstractBuildTarget {
         getUnconfiguredBuildTargetView().withUnflavoredBuildTarget(target),
         getTargetConfiguration());
   }
-
-  @Override
-  public BuildTarget withoutCell() {
-    return ImmutableBuildTarget.of(
-        getUnconfiguredBuildTargetView().withoutCell(), getTargetConfiguration());
-  }
 }
