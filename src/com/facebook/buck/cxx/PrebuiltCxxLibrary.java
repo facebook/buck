@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public abstract class PrebuiltCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements AbstractCxxLibraryGroup {
+    implements AbstractCxxLibraryGroup, LegacyNativeLinkableGroup {
   private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
       LegacyNativeLinkableGroup.getNativeLinkableCache(this);
 

@@ -73,6 +73,7 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements AbstractCxxLibraryGroup,
         HasRuntimeDeps,
         NativeTestable,
+        LegacyNativeLinkableGroup,
         LegacyNativeLinkTargetGroup {
 
   private static final Logger LOG = Logger.get(CxxLibraryGroup.class);

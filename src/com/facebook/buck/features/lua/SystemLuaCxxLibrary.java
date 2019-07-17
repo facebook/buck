@@ -19,32 +19,40 @@ package com.facebook.buck.features.lua;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.AbstractCxxLibraryGroup;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInfo;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /** Represents the system lua c++ library. */
-public class SystemLuaCxxLibrary implements AbstractCxxLibraryGroup {
+public class SystemLuaCxxLibrary implements AbstractCxxLibraryGroup, NativeLinkableGroup {
 
   private final BuildTarget target;
-  private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
-      LegacyNativeLinkableGroup.getNativeLinkableCache(this);
+  // This has the same NativeLinkableInfo for all platforms.
+  private final NativeLinkableInfo linkableInfo;
 
   public SystemLuaCxxLibrary(BuildTarget target) {
     this.target = target;
+    NativeLinkableInput linkableInput =
+        NativeLinkableInput.builder().addAllArgs(StringArg.from("-llua")).build();
+    this.linkableInfo =
+        new NativeLinkableInfo(
+            getBuildTarget(),
+            ImmutableList.of(),
+            ImmutableList.of(),
+            Linkage.SHARED,
+            ImmutableMap.of(),
+            NativeLinkableInfo.fixedDelegate(linkableInput),
+            NativeLinkableInfo.defaults().setSupportsOmnibusLinking(false));
   }
 
   @Override
@@ -91,33 +99,8 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibraryGroup {
   }
 
   @Override
-  public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type,
-      boolean forceLinkWhole,
-      ActionGraphBuilder graphBuilder,
-      TargetConfiguration targetConfiguration) {
-    return NativeLinkableInput.builder().addAllArgs(StringArg.from("-llua")).build();
-  }
-
-  @Override
-  public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-    return Linkage.SHARED;
-  }
-
-  @Override
-  public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
-    return false;
-  }
-
-  @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(
+  public NativeLinkable getNativeLinkable(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    return ImmutableMap.of();
-  }
-
-  @Override
-  public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
-    return linkableCache;
+    return linkableInfo;
   }
 }

@@ -49,7 +49,7 @@ import java.nio.file.Paths;
 
 /** Fake implementation of {@link CxxLibraryGroup} for testing. */
 public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements AbstractCxxLibraryGroup, NativeTestable {
+    implements AbstractCxxLibraryGroup, NativeTestable, LegacyNativeLinkableGroup {
 
   private final BuildTarget publicHeaderTarget;
   private final BuildTarget publicHeaderSymlinkTreeTarget;

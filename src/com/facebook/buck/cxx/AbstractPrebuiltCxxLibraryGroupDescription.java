@@ -347,7 +347,8 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
   }
 
   public abstract static class CustomPrebuiltCxxLibrary
-      extends NoopBuildRuleWithDeclaredAndExtraDeps implements AbstractCxxLibraryGroup {
+      extends NoopBuildRuleWithDeclaredAndExtraDeps
+      implements AbstractCxxLibraryGroup, LegacyNativeLinkableGroup {
     private PlatformLockedNativeLinkableGroup.Cache linkableCache =
         LegacyNativeLinkableGroup.getNativeLinkableCache(this);
 
