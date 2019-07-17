@@ -40,7 +40,7 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
 
   private static final Logger LOG = Logger.get(DefaultCellPathResolver.class);
 
-  static final String REPOSITORIES_SECTION = "repositories";
+  public static final String REPOSITORIES_SECTION = "repositories";
 
   @Value.Parameter
   public abstract Path getRoot();

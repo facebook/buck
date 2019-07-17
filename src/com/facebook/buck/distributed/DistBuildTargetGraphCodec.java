@@ -40,6 +40,7 @@ import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -201,7 +202,7 @@ public class DistBuildTargetGraphCodec {
         () -> {
           Cell cell = cellLookup.apply(remoteNode.getCellIndex());
           if (remoteNode.getCellIndex() == DistBuildCellIndexer.ROOT_CELL_INDEX) {
-            cell = cell.withCanonicalName(Optional.empty());
+            Verify.verify(!cell.getCanonicalName().isPresent());
           }
 
           ProjectFilesystem projectFilesystem = cell.getFilesystem();

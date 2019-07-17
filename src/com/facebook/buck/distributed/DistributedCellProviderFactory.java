@@ -37,6 +37,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -54,6 +55,21 @@ public class DistributedCellProviderFactory {
             .collect(
                 Collectors.toMap(
                     p -> p.getCanonicalName().get(), p -> p.getFilesystem().getRootPath()));
+
+    // We do this really odd thing where we allow secondary cell's to refer to the main cell only if
+    // the main cell has a non-empty alias for itself and the secondary cell uses the same alias.
+    // TODO(cjhopman): This is quite wrong and should be fixed to actually use the correct mappings
+    // like a non-stampede build would.
+    Optional<ImmutableMap<String, String>> rootCellRepositories =
+        rootCell.getConfig().getSection(DefaultCellPathResolver.REPOSITORIES_SECTION);
+    if (rootCellRepositories.isPresent()) {
+      for (Map.Entry<String, String> entry : rootCellRepositories.get().entrySet()) {
+        if (entry.getValue().equals(".")) {
+          cellPaths.put(entry.getKey(), rootCell.getFilesystem().getRootPath());
+        }
+      }
+    }
+
     ImmutableSet<String> declaredCellNames = ImmutableSet.copyOf(cellPaths.keySet());
     Path rootCellPath = rootCell.getFilesystem().getRootPath();
     DefaultCellPathResolver rootCellResolver = DefaultCellPathResolver.of(rootCellPath, cellPaths);

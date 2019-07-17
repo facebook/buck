@@ -17,7 +17,6 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
 import com.facebook.buck.distributed.thrift.BuildJobStateCell;
@@ -46,31 +45,12 @@ public class DistBuildCellIndexer {
   final Map<Integer, ProjectFilesystem> localFilesystemsByCellIndex;
 
   public DistBuildCellIndexer(Cell rootCell) {
-    this.rootCell = withCanonicalNameIfExists(rootCell);
+    this.rootCell = rootCell;
     this.index = new HashMap<>();
     this.state = new HashMap<>();
     this.localFilesystemsByCellIndex = new HashMap<>();
     // Make sure root cell is at index 0.
     Preconditions.checkState(ROOT_CELL_INDEX == this.getCellIndex(rootCell.getRoot()));
-  }
-
-  private Cell withCanonicalNameIfExists(Cell rootCell) {
-    if (rootCell.getCanonicalName().isPresent()) {
-      return rootCell;
-    }
-
-    // CellPathResolver.getCanonicalName(..) exists however that tries to hide the fact that the
-    // main cell has a canonical name, by return always empty string so in order to get the actual
-    // canonical name we need to look at the buckconfig. By using
-    // DefaultCellPathResolver.getCanonicalNames() we avoid duplicating the parsing code.
-    DefaultCellPathResolver resolver =
-        DefaultCellPathResolver.of(rootCell.getRoot(), rootCell.getBuckConfig().getConfig());
-    if (resolver.getExternalNamesInRootCell().containsKey(rootCell.getRoot())) {
-      return rootCell.withCanonicalName(
-          resolver.getExternalNamesInRootCell().get(rootCell.getRoot()));
-    }
-
-    return rootCell;
   }
 
   /** @return ProjectFilesystems indexed by cell */
@@ -91,7 +71,7 @@ public class DistBuildCellIndexer {
       i = index.size();
       index.put(input, i);
 
-      Cell cell = withCanonicalNameIfExists(rootCell.getCellIgnoringVisibilityCheck(input));
+      Cell cell = rootCell.getCellIgnoringVisibilityCheck(input);
       state.put(i, dumpCell(cell));
       localFilesystemsByCellIndex.put(i, cell.getFilesystem());
     }

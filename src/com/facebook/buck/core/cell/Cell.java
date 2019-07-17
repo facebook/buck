@@ -84,8 +84,4 @@ public interface Cell {
   ImmutableMap<Path, Cell> getLoadedCells();
 
   CellPathResolver getCellPathResolver();
-
-  Cell withCanonicalName(String canonicalName);
-
-  Cell withCanonicalName(Optional<String> canonicalName);
 }
