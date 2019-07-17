@@ -49,6 +49,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 public class HaskellPrebuiltLibraryDescription
@@ -158,6 +159,13 @@ public class HaskellPrebuiltLibraryDescription
           builder.addAllArgs(libArgs);
         }
         return builder.build();
+      }
+
+      @Override
+      public Optional<Iterable<? extends NativeLinkableGroup>> getOmnibusPassthroughDeps(
+          CxxPlatform platform, ActionGraphBuilder graphBuilder) {
+        // Haskell prebuilt libraries don't have platform-specific deps so just return all of them.
+        return Optional.of(getNativeLinkableExportedDeps(graphBuilder));
       }
 
       @Override

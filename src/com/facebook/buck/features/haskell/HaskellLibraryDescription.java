@@ -52,6 +52,7 @@ import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
@@ -70,6 +71,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.nio.file.Path;
@@ -748,6 +750,20 @@ public class HaskellLibraryDescription
       public Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(
           BuildRuleResolver ruleResolver) {
         return ImmutableList.of();
+      }
+
+      @Override
+      public Optional<Iterable<? extends NativeLinkableGroup>> getOmnibusPassthroughDeps(
+          CxxPlatform platform, ActionGraphBuilder graphBuilder) {
+        ImmutableSet<? extends NativeLinkable> platformDeps =
+            ImmutableSet.copyOf(
+                getNativeLinkable(platform, graphBuilder)
+                    .getNativeLinkableExportedDeps(graphBuilder));
+        Iterable<? extends NativeLinkableGroup> allDeps =
+            getNativeLinkableExportedDeps(graphBuilder);
+        return Optional.of(
+            Iterables.filter(
+                allDeps, g -> platformDeps.contains(g.getNativeLinkable(platform, graphBuilder))));
       }
 
       private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =

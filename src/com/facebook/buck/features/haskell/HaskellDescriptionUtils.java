@@ -481,25 +481,9 @@ public class HaskellDescriptionUtils {
                             n -> {
                               if (n instanceof HaskellLibrary
                                   || n instanceof PrebuiltHaskellLibrary) {
-                                // This filters the deps to just the ones that are also deps for the
-                                // requested platform.
-                                // TODO(cjhopman): This should probably just be done with a specific
-                                // function on the Haskell groups.
-                                ImmutableSet<? extends NativeLinkable> platformDeps =
-                                    ImmutableSet.copyOf(
-                                        n.getNativeLinkable(platform.getCxxPlatform(), graphBuilder)
-                                            .getNativeLinkableExportedDeps(graphBuilder));
-
-                                Iterable<? extends NativeLinkableGroup> allDeps =
-                                    n.getNativeLinkableExportedDeps(graphBuilder);
-
-                                return Optional.of(
-                                    Iterables.filter(
-                                        allDeps,
-                                        g ->
-                                            platformDeps.contains(
-                                                g.getNativeLinkable(
-                                                    platform.getCxxPlatform(), graphBuilder))));
+                                HaskellOmnibusLinkable haskellLinkable = (HaskellOmnibusLinkable) n;
+                                return haskellLinkable.getOmnibusPassthroughDeps(
+                                    platform.getCxxPlatform(), graphBuilder);
                               } else {
                                 return Optional.empty();
                               }
