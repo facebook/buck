@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.transformer.impl;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -49,52 +50,57 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
       ConfigurationRuleRegistry configurationRuleRegistry,
       ActionGraphBuilder graphBuilder,
       TargetNode<T> targetNode) {
-    Preconditions.checkState(
-        targetNode.getDescription() instanceof DescriptionWithTargetGraph,
-        "Invalid type of target node description: %s",
-        targetNode.getDescription().getClass());
-    DescriptionWithTargetGraph<T> description =
-        (DescriptionWithTargetGraph<T>) targetNode.getDescription();
-    T arg = targetNode.getConstructorArg();
+    try {
+      Preconditions.checkState(
+          targetNode.getDescription() instanceof DescriptionWithTargetGraph,
+          "Invalid type of target node description: %s",
+          targetNode.getDescription().getClass());
+      DescriptionWithTargetGraph<T> description =
+          (DescriptionWithTargetGraph<T>) targetNode.getDescription();
+      T arg = targetNode.getConstructorArg();
 
-    Set<BuildTarget> extraDeps = targetNode.getExtraDeps();
-    Set<BuildTarget> targetGraphOnlyDeps = targetNode.getTargetGraphOnlyDeps();
+      Set<BuildTarget> extraDeps = targetNode.getExtraDeps();
+      Set<BuildTarget> targetGraphOnlyDeps = targetNode.getTargetGraphOnlyDeps();
 
-    arg =
-        QueryUtils.withDepsQuery(
-            arg,
-            targetNode.getBuildTarget(),
-            cache,
-            graphBuilder,
-            targetNode.getCellNames(),
-            targetGraph);
-    arg =
-        QueryUtils.withProvidedDepsQuery(
-            arg,
-            targetNode.getBuildTarget(),
-            cache,
-            graphBuilder,
-            targetNode.getCellNames(),
-            targetGraph);
+      arg =
+          QueryUtils.withDepsQuery(
+              arg,
+              targetNode.getBuildTarget(),
+              cache,
+              graphBuilder,
+              targetNode.getCellNames(),
+              targetGraph);
+      arg =
+          QueryUtils.withProvidedDepsQuery(
+              arg,
+              targetNode.getBuildTarget(),
+              cache,
+              graphBuilder,
+              targetNode.getCellNames(),
+              targetGraph);
 
-    // The params used for the Buildable only contain the declared parameters. However, the deps of
-    // the rule include not only those, but also any that were picked up through the deps declared
-    // via a SourcePath.
-    BuildRuleParams params =
-        new BuildRuleParams(
-            Suppliers.ofInstance(graphBuilder.requireAllRules(targetNode.getDeclaredDeps())),
-            Suppliers.ofInstance(graphBuilder.requireAllRules(extraDeps)),
-            graphBuilder.requireAllRules(targetGraphOnlyDeps));
+      // The params used for the Buildable only contain the declared parameters. However, the deps
+      // of the rule include not only those, but also any that were picked up through the deps
+      // declared via a SourcePath.
+      BuildRuleParams params =
+          new BuildRuleParams(
+              Suppliers.ofInstance(graphBuilder.requireAllRules(targetNode.getDeclaredDeps())),
+              Suppliers.ofInstance(graphBuilder.requireAllRules(extraDeps)),
+              graphBuilder.requireAllRules(targetGraphOnlyDeps));
 
-    BuildRuleCreationContextWithTargetGraph context =
-        ImmutableBuildRuleCreationContextWithTargetGraph.of(
-            targetGraph,
-            graphBuilder,
-            targetNode.getFilesystem(),
-            targetNode.getCellNames(),
-            toolchainProvider,
-            configurationRuleRegistry);
+      BuildRuleCreationContextWithTargetGraph context =
+          ImmutableBuildRuleCreationContextWithTargetGraph.of(
+              targetGraph,
+              graphBuilder,
+              targetNode.getFilesystem(),
+              targetNode.getCellNames(),
+              toolchainProvider,
+              configurationRuleRegistry);
 
-    return description.createBuildRule(context, targetNode.getBuildTarget(), params, arg);
+      return description.createBuildRule(context, targetNode.getBuildTarget(), params, arg);
+    } catch (Exception e) {
+      throw new BuckUncheckedExecutionException(
+          e, "When creating rule %s.", targetNode.getBuildTarget());
+    }
   }
 }
