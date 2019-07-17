@@ -17,19 +17,28 @@ package com.facebook.buck.core.artifact;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildPaths;
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
+import com.facebook.buck.core.rules.analysis.action.ImmutableActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
@@ -99,5 +108,25 @@ public class ArtifactFilesystemTest {
     assertEquals(
         filesystem.resolve("bar").resolve("baz").toAbsolutePath().toString(),
         artifactFilesystem.stringifyForCommandLine(sourceArtifact));
+  }
+
+  @Test
+  public void createsPackagePathsForOutputs() throws IOException {
+    ArtifactFilesystem artifactFilesystem = new ArtifactFilesystem(filesystem);
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
+    BuildArtifactFactory factory = new BuildArtifactFactory(buildTarget, filesystem);
+    ActionAnalysisDataKey key =
+        ImmutableActionAnalysisDataKey.of(buildTarget, new ActionAnalysisData.ID() {});
+
+    ImmutableSet<Artifact> artifacts =
+        ImmutableSet.of(factory.createDeclaredArtifact(Paths.get("out.txt")).materialize(key));
+
+    Path expectedPath = BuildPaths.getGenDir(filesystem, buildTarget);
+
+    assertFalse(filesystem.isDirectory(expectedPath));
+
+    artifactFilesystem.createPackagePaths(artifacts);
+
+    assertTrue(filesystem.isDirectory(expectedPath));
   }
 }

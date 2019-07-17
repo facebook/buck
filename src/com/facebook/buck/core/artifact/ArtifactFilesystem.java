@@ -15,8 +15,11 @@
  */
 package com.facebook.buck.core.artifact;
 
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.RichStream;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -108,5 +111,20 @@ public class ArtifactFilesystem {
      * or "get absolute", but if it becomes a problem we can refactor that API
      */
     return filesystem.resolve(resolveToPath(artifact)).toAbsolutePath().toString();
+  }
+
+  /** Create the package paths that actions will write into if it does not exist */
+  public void createPackagePaths(ImmutableSet<Artifact> outputs) throws IOException {
+    /*
+     * Normally we'd just want to completely delete this directory if it exists. However, for
+     * rules with multiple actions / outputs, they will all go in the same per-rule directory.
+     * If only one action needs to re-run, we can't have the other action's files go missing.
+     */
+    RichStream.from(outputs)
+        .map(output -> output.asBound().asBuildArtifact())
+        .filter(Objects::nonNull)
+        .map(ba -> BuildPaths.getGenDir(filesystem, ba.getSourcePath().getTarget()))
+        .distinct()
+        .forEachThrowing(filesystem::mkdirs);
   }
 }

@@ -18,6 +18,7 @@ package com.facebook.buck.step.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
@@ -29,6 +30,7 @@ import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.actions.FakeAction;
+import com.facebook.buck.core.rules.actions.ImmutableActionExecutionFailure;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.event.BuckEventBus;
@@ -36,10 +38,13 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
@@ -51,9 +56,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class ActionExecutionStepTest {
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
+
   @Test
   public void canExecuteAnAction() throws IOException, ActionCreationException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -116,5 +124,54 @@ public class ActionExecutionStepTest {
             Matchers.containsString(
                 "my error 1" + System.lineSeparator() + "java.lang.RuntimeException: message"),
             Matchers.containsString("my test info")));
+  }
+
+  @Test
+  public void createsPackagePathBeforeExecution() throws IOException {
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+
+    Path baseCell = Paths.get("cell");
+    Path output = Paths.get("somepath");
+    BuckEventBus testEventBus = BuckEventBusForTests.newInstance();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:foo");
+
+    ImmutableActionExecutionFailure result =
+        ImmutableActionExecutionFailure.of(
+            Optional.empty(), Optional.of("my std err"), Optional.empty());
+
+    ActionRegistryForTests actionFactoryForTests = new ActionRegistryForTests(buildTarget);
+    Artifact declaredArtifact = actionFactoryForTests.declareArtifact(output);
+    FakeAction action =
+        new FakeAction(
+            actionFactoryForTests,
+            ImmutableSet.of(),
+            ImmutableSet.of(declaredArtifact),
+            (inputs, outputs, ctx) -> result);
+
+    ActionExecutionStep step =
+        new ActionExecutionStep(action, false, new ArtifactFilesystem(projectFilesystem));
+
+    Path packagePath = BuildPaths.getGenDir(projectFilesystem, buildTarget);
+
+    assertFalse(projectFilesystem.exists(packagePath));
+    assertEquals(
+        StepExecutionResult.of(-1, Optional.of("my std err")),
+        step.execute(
+            ExecutionContext.of(
+                Console.createNullConsole(),
+                testEventBus,
+                Platform.UNKNOWN,
+                ImmutableMap.of(),
+                new FakeJavaPackageFinder(),
+                ImmutableMap.of(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                TestCellPathResolver.get(projectFilesystem),
+                baseCell,
+                new FakeProcessExecutor(),
+                new DefaultProjectFilesystemFactory())));
+    assertTrue(projectFilesystem.isDirectory(packagePath));
   }
 }

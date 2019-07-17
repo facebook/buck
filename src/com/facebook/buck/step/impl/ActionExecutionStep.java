@@ -54,6 +54,8 @@ public class ActionExecutionStep implements Step {
             context.getEnvironment(),
             context.getBuildCellRootPath());
 
+    executionContext.getArtifactFilesystem().createPackagePaths(action.getOutputs());
+
     ActionExecutionResult result = action.execute(executionContext);
     if (result instanceof ActionExecutionResult.ActionExecutionSuccess) {
       return StepExecutionResult.of(0, result.getStdErr());
