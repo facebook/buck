@@ -21,6 +21,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.base.Throwables;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -43,7 +44,7 @@ public final class NativeLinkableInfo implements NativeLinkable {
    * The Delegate allows instances to create {@link NativeLinkableInput} when requested. The
    * returned values will be cached.
    */
-  interface Delegate {
+  public interface Delegate {
     NativeLinkableInput computeInput(
         ActionGraphBuilder graphBuilder,
         Linker.LinkableDepType type,
@@ -56,11 +57,73 @@ public final class NativeLinkableInfo implements NativeLinkable {
     return (graphBuilder, type, forceLinkWhole, targetConfiguration) -> instance;
   }
 
+  /**
+   * Configuration is used for configuring the less-commonly changed parts of the @{link
+   * NativeLinkableInfo}. Most cases can just use the default values.
+   */
+  public static class Configuration {
+    private Configuration() {}
+
+    private ImmutableList<? extends Arg> exportedLinkerFlags = ImmutableList.of();
+    private ImmutableList<? extends Arg> exportedPostLinkerFlags = ImmutableList.of();
+    private boolean supportsOmnibusLinking = true;
+    private boolean supportsOmnibusLinkingForHaskell = false;
+    private boolean isPrebuiltSOForHaskellOmnibus = false;
+    private Optional<? extends NativeLinkTarget> nativeLinkTarget = Optional.empty();
+
+    public Configuration setExportedLinkerFlags(ImmutableList<? extends Arg> exportedLinkerFlags) {
+      this.exportedLinkerFlags = exportedLinkerFlags;
+      return this;
+    }
+
+    public Configuration setExportedPostLinkerFlags(
+        ImmutableList<? extends Arg> exportedPostLinkerFlags) {
+      this.exportedPostLinkerFlags = exportedPostLinkerFlags;
+      return this;
+    }
+
+    public Configuration setSupportsOmnibusLinking(boolean supportsOmnibusLinking) {
+      this.supportsOmnibusLinking = supportsOmnibusLinking;
+      return this;
+    }
+
+    public Configuration setSupportsOmnibusLinkingForHaskell(
+        boolean supportsOmnibusLinkingForHaskell) {
+      this.supportsOmnibusLinkingForHaskell = supportsOmnibusLinkingForHaskell;
+      return this;
+    }
+
+    public Configuration setPrebuiltSOForHaskellOmnibus(boolean prebuiltSOForHaskellOmnibus) {
+      isPrebuiltSOForHaskellOmnibus = prebuiltSOForHaskellOmnibus;
+      return this;
+    }
+
+    public Configuration setNativeLinkTarget(
+        Optional<? extends NativeLinkTarget> nativeLinkTarget) {
+      this.nativeLinkTarget = nativeLinkTarget;
+      return this;
+    }
+  }
+
+  /**
+   * Returns a Configuration with all the default values. These can be overriden with the various
+   * set methods.
+   */
+  public static Configuration defaults() {
+    return new Configuration();
+  }
+
   private final BuildTarget buildTarget;
   private final ImmutableList<NativeLinkable> deps;
   private final ImmutableList<NativeLinkable> exportedDeps;
   private final NativeLinkableGroup.Linkage preferredLinkage;
   private final ImmutableMap<String, SourcePath> sharedLibraries;
+  private final ImmutableList<? extends Arg> exportedLinkerFlags;
+  private final ImmutableList<? extends Arg> exportedPostLinkerFlags;
+  private final boolean supportsOmnibusLinking;
+  private final boolean supportsOmnibusLinkingForHaskell;
+  private final boolean isPrebuiltSOForHaskellOmnibus;
+  private final Optional<? extends NativeLinkTarget> nativeLinkTarget;
   private final Delegate delegate;
 
   public NativeLinkableInfo(
@@ -69,12 +132,19 @@ public final class NativeLinkableInfo implements NativeLinkable {
       ImmutableList<NativeLinkable> exportedDeps,
       NativeLinkableGroup.Linkage preferredLinkage,
       ImmutableMap<String, SourcePath> sharedLibraries,
-      Delegate delegate) {
+      Delegate delegate,
+      Configuration config) {
     this.buildTarget = buildTarget;
     this.deps = deps;
     this.exportedDeps = exportedDeps;
+    this.exportedLinkerFlags = config.exportedLinkerFlags;
+    this.exportedPostLinkerFlags = config.exportedPostLinkerFlags;
     this.preferredLinkage = preferredLinkage;
     this.sharedLibraries = sharedLibraries;
+    this.supportsOmnibusLinking = config.supportsOmnibusLinking;
+    this.supportsOmnibusLinkingForHaskell = config.supportsOmnibusLinkingForHaskell;
+    this.isPrebuiltSOForHaskellOmnibus = config.isPrebuiltSOForHaskellOmnibus;
+    this.nativeLinkTarget = config.nativeLinkTarget;
     this.delegate = delegate;
   }
 
@@ -86,6 +156,21 @@ public final class NativeLinkableInfo implements NativeLinkable {
     Linker.LinkableDepType getLinkableDepType();
 
     TargetConfiguration getTargetConfiguration();
+  }
+
+  @Override
+  public boolean supportsOmnibusLinking() {
+    return supportsOmnibusLinking;
+  }
+
+  @Override
+  public boolean isPrebuiltSOForHaskellOmnibus(ActionGraphBuilder graphBuilder) {
+    return isPrebuiltSOForHaskellOmnibus;
+  }
+
+  @Override
+  public boolean supportsOmnibusLinkingForHaskell() {
+    return supportsOmnibusLinkingForHaskell;
   }
 
   @Override
@@ -122,7 +207,7 @@ public final class NativeLinkableInfo implements NativeLinkable {
 
   @Override
   public Optional<NativeLinkTarget> getNativeLinkTarget(ActionGraphBuilder graphBuilder) {
-    return Optional.empty();
+    return nativeLinkTarget.map(NativeLinkTarget.class::cast);
   }
 
   @Override
@@ -133,6 +218,16 @@ public final class NativeLinkableInfo implements NativeLinkable {
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(ActionGraphBuilder graphBuilder) {
     return sharedLibraries;
+  }
+
+  @Override
+  public Iterable<? extends Arg> getExportedLinkerFlags(ActionGraphBuilder graphBuilder) {
+    return exportedLinkerFlags;
+  }
+
+  @Override
+  public Iterable<? extends Arg> getExportedPostLinkerFlags(ActionGraphBuilder graphBuilder) {
+    return exportedPostLinkerFlags;
   }
 
   @Override

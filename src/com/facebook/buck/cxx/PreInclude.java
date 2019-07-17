@@ -139,7 +139,8 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
               exportedDeps,
               Linkage.ANY,
               ImmutableMap.of(),
-              NativeLinkableInfo.fixedDelegate(NativeLinkableInput.of()));
+              NativeLinkableInfo.fixedDelegate(NativeLinkableInput.of()),
+              NativeLinkableInfo.defaults());
         });
   }
 
