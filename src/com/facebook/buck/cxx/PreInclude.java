@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -33,14 +32,15 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
-import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInfo;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformMappedCache;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.RichStream;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -59,7 +59,7 @@ import java.util.function.Function;
  * {@code deps} list.
  */
 public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements LegacyNativeLinkableGroup, CxxPreprocessorDep {
+    implements NativeLinkableGroup, CxxPreprocessorDep {
 
   private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
       InternalFlavor.of("preprocessor-deps");
@@ -79,8 +79,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
    */
   private final Path absoluteHeaderPath;
 
-  private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
-      LegacyNativeLinkableGroup.getNativeLinkableCache(this);
+  private final PlatformMappedCache<NativeLinkable> linkableCache = new PlatformMappedCache<>();
 
   /** @param buildRuleParams the params for this PCH rule, <b>including</b> {@code deps} */
   PreInclude(
@@ -121,8 +120,27 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
-    return linkableCache;
+  public NativeLinkable getNativeLinkable(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return linkableCache.get(
+        cxxPlatform,
+        () -> {
+          ImmutableList<NativeLinkable> deps =
+              FluentIterable.from(getNativeLinkableDeps(graphBuilder))
+                  .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+                  .toList();
+          ImmutableList<NativeLinkable> exportedDeps =
+              FluentIterable.from(getNativeLinkableExportedDeps(graphBuilder))
+                  .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+                  .toList();
+          return new NativeLinkableInfo(
+              getBuildTarget(),
+              deps,
+              exportedDeps,
+              Linkage.ANY,
+              ImmutableMap.of(),
+              NativeLinkableInfo.fixedDelegate(NativeLinkableInput.of()));
+        });
   }
 
   /**
@@ -143,39 +161,6 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
   public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
       BuildRuleResolver ruleResolver) {
     return RichStream.from(getExportedDeps()).filter(NativeLinkableGroup.class).toImmutableList();
-  }
-
-  /**
-   * Linkage doesn't matter for PCHs, but use care not to change it from the rest of the builds'
-   * rules' preferred linkage.
-   */
-  @Override
-  public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-    return Linkage.ANY;
-  }
-
-  /** Doesn't really apply to us. No shared libraries to add here. */
-  @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    return ImmutableMap.of();
-  }
-
-  /**
-   * This class doesn't add any native linkable code of its own, it just has deps which need to be
-   * passed along (see {@link #getNativeLinkableDeps(BuildRuleResolver)} and {@link
-   * #getNativeLinkableExportedDeps(BuildRuleResolver)} for the handling of those linkables).
-   *
-   * @return empty {@link NativeLinkableInput}
-   */
-  @Override
-  public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type,
-      boolean forceLinkWhole,
-      ActionGraphBuilder graphBuilder,
-      TargetConfiguration targetConfiguration) {
-    return NativeLinkableInput.of();
   }
 
   @Override

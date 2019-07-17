@@ -51,6 +51,11 @@ public final class NativeLinkableInfo implements NativeLinkable {
         TargetConfiguration targetConfiguration);
   }
 
+  /** Creates a delegate that always returns a fixed instance. */
+  public static Delegate fixedDelegate(NativeLinkableInput instance) {
+    return (graphBuilder, type, forceLinkWhole, targetConfiguration) -> instance;
+  }
+
   private final BuildTarget buildTarget;
   private final ImmutableList<NativeLinkable> deps;
   private final ImmutableList<NativeLinkable> exportedDeps;
