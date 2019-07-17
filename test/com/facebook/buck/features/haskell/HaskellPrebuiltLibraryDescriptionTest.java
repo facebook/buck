@@ -61,11 +61,10 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PrebuiltHaskellLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     NativeLinkableInput input =
-        library.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            Linker.LinkableDepType.STATIC,
-            graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+        library
+            .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .getNativeLinkableInput(
+                Linker.LinkableDepType.STATIC, graphBuilder, EmptyTargetConfiguration.INSTANCE);
     assertThat(
         RichStream.from(input.getArgs())
             .flatMap(
@@ -90,11 +89,10 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PrebuiltHaskellLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     NativeLinkableInput input =
-        library.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            Linker.LinkableDepType.SHARED,
-            graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+        library
+            .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .getNativeLinkableInput(
+                Linker.LinkableDepType.SHARED, graphBuilder, EmptyTargetConfiguration.INSTANCE);
     assertThat(
         RichStream.from(input.getArgs())
             .flatMap(
@@ -175,18 +173,16 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
     PrebuiltHaskellLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     NativeLinkableInput staticInput =
-        library.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            Linker.LinkableDepType.STATIC,
-            graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+        library
+            .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .getNativeLinkableInput(
+                Linker.LinkableDepType.STATIC, graphBuilder, EmptyTargetConfiguration.INSTANCE);
     assertThat(Arg.stringify(staticInput.getArgs(), pathResolver), Matchers.contains(flag));
     NativeLinkableInput sharedInput =
-        library.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            Linker.LinkableDepType.SHARED,
-            graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+        library
+            .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .getNativeLinkableInput(
+                Linker.LinkableDepType.SHARED, graphBuilder, EmptyTargetConfiguration.INSTANCE);
     assertThat(Arg.stringify(sharedInput.getArgs(), pathResolver), Matchers.contains(flag));
   }
 
