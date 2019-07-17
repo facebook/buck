@@ -122,13 +122,16 @@ class DefaultClassUsageFileReader {
       Path cellRootedPath, CellPathResolver cellPathResolver) {
     Preconditions.checkArgument(cellRootedPath.isAbsolute(), "Path must begin with /<cell_name>");
     Iterator<Path> pathIterator = cellRootedPath.iterator();
-    Path cellName = pathIterator.next();
+    Path cellNamePath = pathIterator.next();
     Path relativeToCellRoot = pathIterator.next();
     while (pathIterator.hasNext()) {
       relativeToCellRoot = relativeToCellRoot.resolve(pathIterator.next());
     }
-    return cellPathResolver
-        .getCellPathOrThrow(Optional.of(cellName.toString()))
-        .resolve(relativeToCellRoot);
+    String cellName = cellNamePath.toString();
+    Optional<String> canonicalCellName =
+        cellName.equals(DefaultClassUsageFileWriter.ROOT_CELL_IDENTIFIER)
+            ? Optional.empty()
+            : Optional.of(cellName);
+    return cellPathResolver.getCellPathOrThrow(canonicalCellName).resolve(relativeToCellRoot);
   }
 }
