@@ -897,6 +897,8 @@ abstract class AbstractCxxSourceRuleFactory {
         hasher.putPattern((Pattern) val);
       } else if (val instanceof byte[]) {
         hasher.putBytes((byte[]) val);
+      } else if (val instanceof BuildTarget) {
+        hasher.putBuildTarget((BuildTarget) val);
       } else {
         throw new RuntimeException("Unsupported value type: " + val.getClass());
       }
