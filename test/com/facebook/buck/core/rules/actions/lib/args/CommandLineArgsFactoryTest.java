@@ -56,4 +56,16 @@ public class CommandLineArgsFactoryTest {
     thrown.expect(CommandLineArgException.class);
     CommandLineArgsFactory.from(ImmutableList.of(ImmutableList.of()));
   }
+
+  @Test
+  public void createsCommandLineArgsForListOfOtherArgs() {
+    assertEquals(
+        ImmutableList.of("1", "foo", "bar"),
+        CommandLineArgsFactory.fromArgs(
+                ImmutableList.of(
+                    CommandLineArgsFactory.from(ImmutableList.of(1)),
+                    CommandLineArgsFactory.from(ImmutableList.of("foo", "bar"))))
+            .getStrings(new ArtifactFilesystem(new FakeProjectFilesystem()))
+            .collect(ImmutableList.toImmutableList()));
+  }
 }

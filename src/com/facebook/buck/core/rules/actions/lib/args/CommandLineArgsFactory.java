@@ -59,4 +59,12 @@ public class CommandLineArgsFactory {
     }
     return new ListCommandLineArgs(args);
   }
+
+  /**
+   * @return a {@link CommandLineArgs} instance that is backed by a list of other {@link
+   *     CommandLineArgs} objects
+   */
+  public static CommandLineArgs fromArgs(ImmutableList<CommandLineArgs> args) {
+    return new AggregateCommandLineArgs(args);
+  }
 }
