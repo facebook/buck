@@ -82,7 +82,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -395,15 +394,13 @@ public class XCodeProjectCommandHelper {
             outputPresenter,
             sharedLibraryToBundle);
     if (!requiredBuildTargets.isEmpty()) {
-      ImmutableMultimap<Path, String> cellPathToCellName =
-          cell.getCellPathResolver().getCellPathsByRootCellExternalName().asMultimap().inverse();
       ImmutableList<String> arguments =
           RichStream.from(requiredBuildTargets)
               .map(
                   target -> {
                     if (!target.getCellPath().equals(cell.getRoot())) {
                       Optional<String> cellName =
-                          cellPathToCellName.get(target.getCellPath()).stream().findAny();
+                          cell.getCellPathResolver().getCanonicalCellName(target.getCellPath());
                       if (cellName.isPresent()) {
                         return target.withUnflavoredBuildTarget(
                             ImmutableUnflavoredBuildTargetView.of(
