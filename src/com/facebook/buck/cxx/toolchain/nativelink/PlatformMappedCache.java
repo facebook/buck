@@ -25,7 +25,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
 /** A simple cache for helping implement {@link NativeLinkableGroup}. */
-public class PlatformMappedCache<T extends NativeLinkable> {
+public class PlatformMappedCache<T> {
   // Use the Flavor as a key because hashing the CxxPlatform is expensive.
   private final Cache<Flavor, T> cache = CacheBuilder.newBuilder().build();
 
