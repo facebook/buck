@@ -120,15 +120,7 @@ public class HaskellPrebuiltLibraryDescription
             .build();
       }
 
-      @Override
-      public Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(
-          BuildRuleResolver ruleResolver) {
-        return ImmutableList.of();
-      }
-
-      @Override
-      public FluentIterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
-          BuildRuleResolver ruleResolver) {
+      private FluentIterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps() {
         return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkableGroup.class);
       }
 
@@ -165,7 +157,7 @@ public class HaskellPrebuiltLibraryDescription
       public Optional<Iterable<? extends NativeLinkableGroup>> getOmnibusPassthroughDeps(
           CxxPlatform platform, ActionGraphBuilder graphBuilder) {
         // Haskell prebuilt libraries don't have platform-specific deps so just return all of them.
-        return Optional.of(getNativeLinkableExportedDeps(graphBuilder));
+        return Optional.of(getNativeLinkableExportedDeps());
       }
 
       @Override
@@ -175,7 +167,7 @@ public class HaskellPrebuiltLibraryDescription
             cxxPlatform,
             () -> {
               ImmutableList<NativeLinkable> exportedDeps =
-                  getNativeLinkableExportedDeps(graphBuilder)
+                  getNativeLinkableExportedDeps()
                       .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
                       .toList();
               return new NativeLinkableInfo(

@@ -34,6 +34,19 @@ import java.util.Optional;
 public interface LegacyNativeLinkableGroup extends NativeLinkableGroup {
 
   /**
+   * @return All native linkable dependencies that might be required by this linkable on any
+   *     platform.
+   */
+  Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(BuildRuleResolver ruleResolver);
+
+  /**
+   * @return All native linkable exported dependencies that might be required by this linkable on
+   *     any platform.
+   */
+  Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
+      BuildRuleResolver ruleResolver);
+
+  /**
    * @return All native linkable dependencies that are required by this linkable on a specific
    *     platform.
    */

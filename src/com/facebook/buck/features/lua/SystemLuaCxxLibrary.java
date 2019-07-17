@@ -87,18 +87,6 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibraryGroup, NativeLinka
   }
 
   @Override
-  public Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(
-      BuildRuleResolver ruleResolver) {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
-      BuildRuleResolver ruleResolver) {
-    return ImmutableList.of();
-  }
-
-  @Override
   public NativeLinkable getNativeLinkable(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return linkableInfo;

@@ -126,11 +126,13 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
         cxxPlatform,
         () -> {
           ImmutableList<NativeLinkable> deps =
-              FluentIterable.from(getNativeLinkableDeps(graphBuilder))
+              FluentIterable.from(getBuildDeps())
+                  .filter(NativeLinkableGroup.class)
                   .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
                   .toList();
           ImmutableList<NativeLinkable> exportedDeps =
-              FluentIterable.from(getNativeLinkableExportedDeps(graphBuilder))
+              FluentIterable.from(getExportedDeps())
+                  .filter(NativeLinkableGroup.class)
                   .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
                   .toList();
           return new NativeLinkableInfo(
@@ -142,26 +144,6 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
               NativeLinkableInfo.fixedDelegate(NativeLinkableInput.of()),
               NativeLinkableInfo.defaults());
         });
-  }
-
-  /**
-   * Returns our {@link #getBuildDeps()}, limited to the subset of those which are {@link
-   * NativeLinkableGroup}.
-   */
-  @Override
-  public Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(
-      BuildRuleResolver ruleResolver) {
-    return RichStream.from(getBuildDeps()).filter(NativeLinkableGroup.class).toImmutableList();
-  }
-
-  /**
-   * Returns our {@link #getExportedDeps()}, limited to the subset of those which are {@link
-   * NativeLinkableGroup}.
-   */
-  @Override
-  public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
-      BuildRuleResolver ruleResolver) {
-    return RichStream.from(getExportedDeps()).filter(NativeLinkableGroup.class).toImmutableList();
   }
 
   @Override

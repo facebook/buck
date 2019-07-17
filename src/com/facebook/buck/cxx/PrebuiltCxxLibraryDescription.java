@@ -641,24 +641,6 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public Iterable<NativeLinkableGroup> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
-        return getDeclaredDeps().stream()
-            .filter(r -> r instanceof NativeLinkableGroup)
-            .map(r -> (NativeLinkableGroup) r)
-            .collect(ImmutableList.toImmutableList());
-      }
-
-      @Override
-      public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
-          BuildRuleResolver ruleResolver) {
-        return args.getExportedDeps().stream()
-            .map(ruleResolver::getRule)
-            .filter(r -> r instanceof NativeLinkableGroup)
-            .map(r -> (NativeLinkableGroup) r)
-            .collect(ImmutableList.toImmutableList());
-      }
-
-      @Override
       protected NativeLinkableInfo createNativeLinkable(
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         if (!isPlatformSupported(cxxPlatform)) {
@@ -700,12 +682,15 @@ public class PrebuiltCxxLibraryDescription
         }
 
         ImmutableList<NativeLinkable> deps =
-            FluentIterable.from(getNativeLinkableDeps(graphBuilder))
+            FluentIterable.from(getDeclaredDeps())
+                .filter(NativeLinkableGroup.class)
                 .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
                 .toList();
 
         ImmutableList<NativeLinkable> exportedDeps =
-            FluentIterable.from(getNativeLinkableExportedDeps(graphBuilder))
+            FluentIterable.from(args.getExportedDeps())
+                .transform(graphBuilder::getRule)
+                .filter(NativeLinkableGroup.class)
                 .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
                 .toList();
 
