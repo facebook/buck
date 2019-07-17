@@ -51,7 +51,8 @@ public class ActionExecutionStep implements Step {
             shouldDeleteTemporaries,
             artifactFilesystem,
             context.getProcessExecutor(),
-            context.getEnvironment());
+            context.getEnvironment(),
+            context.getBuildCellRootPath());
 
     ActionExecutionResult result = action.execute(executionContext);
     if (result instanceof ActionExecutionResult.ActionExecutionSuccess) {
