@@ -47,11 +47,12 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
 
   @Override
   @Value.Parameter
-  public abstract ImmutableMap<String, Path> getCellPaths();
+  public abstract ImmutableMap<String, Path> getCellPathsByRootCellExternalName();
 
+  /** This gives the names as they are specified in the root cell. */
   @Value.Lazy
-  public ImmutableMap<Path, String> getCanonicalNames() {
-    return getCellPaths().entrySet().stream()
+  public ImmutableMap<Path, String> getExternalNamesInRootCell() {
+    return getCellPathsByRootCellExternalName().entrySet().stream()
         .collect(
             Collectors.collectingAndThen(
                 Collectors.toMap(
@@ -63,7 +64,7 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
 
   @Value.Lazy
   public ImmutableMap<CellName, Path> getPathMapping() {
-    return bootstrapPathMapping(getRoot(), getCellPaths());
+    return bootstrapPathMapping(getRoot(), getCellPathsByRootCellExternalName());
   }
 
   @Value.Lazy
@@ -141,7 +142,7 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
   @Override
   public Optional<Path> getCellPath(Optional<String> cellName) {
     if (cellName.isPresent()) {
-      return Optional.ofNullable(getCellPaths().get(cellName.get()));
+      return Optional.ofNullable(getCellPathsByRootCellExternalName().get(cellName.get()));
     } else {
       return Optional.of(getRoot());
     }
@@ -152,7 +153,7 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
     if (cellPath.equals(getRoot())) {
       return Optional.empty();
     } else {
-      String name = getCanonicalNames().get(cellPath);
+      String name = getExternalNamesInRootCell().get(cellPath);
       if (name == null) {
         throw new IllegalArgumentException("Unknown cell path: " + cellPath);
       }

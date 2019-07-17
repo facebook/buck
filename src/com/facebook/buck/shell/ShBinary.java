@@ -125,7 +125,8 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     cellsNamesBuilder.add(Escaper.BASH_ESCAPER.apply(ROOT_CELL_LINK_NAME));
 
     // Create symlink to the cells.
-    for (ImmutableMap.Entry<String, Path> ent : cellRoots.getCellPaths().entrySet()) {
+    for (ImmutableMap.Entry<String, Path> ent :
+        cellRoots.getCellPathsByRootCellExternalName().entrySet()) {
       relativePath = projectFilesystem.getRootPath().relativize(ent.getValue());
       cellsPathsStringsBuilder.add(Escaper.BASH_ESCAPER.apply(relativePath.toString()));
       cellsNamesBuilder.add(Escaper.BASH_ESCAPER.apply(ent.getKey()));
@@ -208,7 +209,8 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
 
     // Match other cells.
-    for (Map.Entry<String, Path> cellEntry : cellRoots.getCellPaths().entrySet()) {
+    for (Map.Entry<String, Path> cellEntry :
+        cellRoots.getCellPathsByRootCellExternalName().entrySet()) {
       // Get the longest match.
       if (path.startsWith(cellEntry.getValue())
           && (matchedPath == null

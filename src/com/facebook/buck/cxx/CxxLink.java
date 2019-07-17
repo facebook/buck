@@ -108,7 +108,9 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
     ImmutableSortedSet.Builder<Path> builder = ImmutableSortedSet.naturalOrder();
     Path cellPath = cellResolver.getCellPathOrThrow(cell);
     builder.add(cellPath.relativize(cellPath));
-    cellResolver.getCellPaths().forEach((name, path) -> builder.add(cellPath.relativize(path)));
+    cellResolver
+        .getCellPathsByRootCellExternalName()
+        .forEach((name, path) -> builder.add(cellPath.relativize(path)));
     return builder.build();
   }
 

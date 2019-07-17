@@ -157,7 +157,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
         ProjectBuildFileParserOptions.builder()
             .setEnableProfiling(enableProfiling)
             .setProjectRoot(cell.getFilesystem().getRootPath())
-            .setCellRoots(cell.getCellPathResolver().getCellPaths())
+            .setCellRoots(cell.getCellPathResolver().getCellPathsByRootCellExternalName())
             .setCellName(cell.getCanonicalName().orElse(""))
             .setPythonInterpreter(pythonInterpreterProvider.getOrFail())
             .setPythonModuleSearchPath(pythonModuleSearchPath)

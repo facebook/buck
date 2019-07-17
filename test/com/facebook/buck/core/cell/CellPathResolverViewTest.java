@@ -55,7 +55,7 @@ public class CellPathResolverViewTest {
         ImmutableMap.of(
             "b", filesystem.getPath("foo/b"),
             "c", filesystem.getPath("foo/c")),
-        view.getCellPaths());
+        view.getCellPathsByRootCellExternalName());
   }
 
   @Test

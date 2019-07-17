@@ -221,7 +221,7 @@ public class DefaultCellPathResolverTest {
                 "a", a));
 
     assertEquals(
-        cellPathResolver.getCellPaths(),
+        cellPathResolver.getCellPathsByRootCellExternalName(),
         ImmutableMap.of(
             "i", i,
             "afg", afg,

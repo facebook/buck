@@ -65,8 +65,9 @@ public class DistBuildCellIndexer {
     // DefaultCellPathResolver.getCanonicalNames() we avoid duplicating the parsing code.
     DefaultCellPathResolver resolver =
         DefaultCellPathResolver.of(rootCell.getRoot(), rootCell.getBuckConfig().getConfig());
-    if (resolver.getCanonicalNames().containsKey(rootCell.getRoot())) {
-      return rootCell.withCanonicalName(resolver.getCanonicalNames().get(rootCell.getRoot()));
+    if (resolver.getExternalNamesInRootCell().containsKey(rootCell.getRoot())) {
+      return rootCell.withCanonicalName(
+          resolver.getExternalNamesInRootCell().get(rootCell.getRoot()));
     }
 
     return rootCell;

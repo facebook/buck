@@ -396,7 +396,7 @@ public class XCodeProjectCommandHelper {
             sharedLibraryToBundle);
     if (!requiredBuildTargets.isEmpty()) {
       ImmutableMultimap<Path, String> cellPathToCellName =
-          cell.getCellPathResolver().getCellPaths().asMultimap().inverse();
+          cell.getCellPathResolver().getCellPathsByRootCellExternalName().asMultimap().inverse();
       ImmutableList<String> arguments =
           RichStream.from(requiredBuildTargets)
               .map(

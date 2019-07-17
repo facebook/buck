@@ -86,7 +86,8 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
    * Optional.empty() is returned.
    */
   private static Optional<Path> getCrossCellPath(Path jarAbsolutePath, CellPathResolver resolver) {
-    for (Map.Entry<String, Path> cellEntry : resolver.getCellPaths().entrySet()) {
+    for (Map.Entry<String, Path> cellEntry :
+        resolver.getCellPathsByRootCellExternalName().entrySet()) {
       Path cellRoot = cellEntry.getValue();
       if (jarAbsolutePath.startsWith(cellRoot)) {
         Path relativePath = cellRoot.relativize(jarAbsolutePath);

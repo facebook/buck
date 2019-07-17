@@ -42,8 +42,11 @@ public interface CellPathResolver {
    */
   Path getCellPathOrThrow(UnflavoredBuildTargetView buildTarget);
 
-  /** @return absolute paths to all cells this resolver knows about. */
-  ImmutableMap<String, Path> getCellPaths();
+  /**
+   * @return absolute paths to all cells this resolver knows about. The key is the name of the cell
+   *     in the root cell's config (this is not necessarily the canonical name).
+   */
+  ImmutableMap<String, Path> getCellPathsByRootCellExternalName();
 
   /**
    * Returns a cell name that can be used to refer to the cell at the given path.

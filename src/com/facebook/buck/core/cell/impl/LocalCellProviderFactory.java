@@ -94,7 +94,8 @@ public class LocalCellProviderFactory {
                 // The cell should only contain a subset of cell mappings of the root cell.
                 cellMapping.forEach(
                     (name, path) -> {
-                      Path pathInRootResolver = rootCellCellPathResolver.getCellPaths().get(name);
+                      Path pathInRootResolver =
+                          rootCellCellPathResolver.getCellPathsByRootCellExternalName().get(name);
                       if (pathInRootResolver == null) {
                         throw new HumanReadableException(
                             "In the config of %s:  %s.%s must exist in the root cell's cell mappings.",

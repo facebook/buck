@@ -63,9 +63,10 @@ public final class CellPathResolverView extends AbstractCellPathResolver {
   }
 
   @Override
-  public ImmutableMap<String, Path> getCellPaths() {
+  public ImmutableMap<String, Path> getCellPathsByRootCellExternalName() {
     return ImmutableMap.copyOf(
-        Maps.filterKeys(delegate.getCellPaths(), declaredCellNames::contains));
+        Maps.filterKeys(
+            delegate.getCellPathsByRootCellExternalName(), declaredCellNames::contains));
   }
 
   @Override

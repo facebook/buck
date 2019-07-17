@@ -251,7 +251,7 @@ public abstract class IsolatedBuildableBuilder {
                 .getCellByPath(cellPathResolver.getCellPath(cellName).get())
                 .getToolchainProvider();
 
-    RichStream.from(cellPathResolver.getCellPaths().keySet())
+    RichStream.from(cellPathResolver.getCellPathsByRootCellExternalName().keySet())
         .forEachThrowing(
             name -> {
               // Sadly, some things assume this exists and writes to it.

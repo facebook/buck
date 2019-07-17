@@ -55,7 +55,7 @@ public class AuditCellCommand extends AbstractCommand {
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     ImmutableMap<String, Path> cellMap;
     if (getArguments().isEmpty()) {
-      cellMap = params.getCell().getCellPathResolver().getCellPaths();
+      cellMap = params.getCell().getCellPathResolver().getCellPathsByRootCellExternalName();
     } else {
       CellPathResolver cellPathResolver = params.getCell().getCellPathResolver();
       ImmutableMap.Builder<String, Path> outputBuilder = ImmutableMap.builder();
