@@ -104,7 +104,7 @@ public class ArtifactFilesystem {
      * We return an absolute path here because sometimes it's required. An example is when the
      * artifact is a binary at the root of the tree. If you try to just run 'foo.sh' in exec, it
      * will fail. This is cleaner cluttering the {@link
-     * CommandLineArg#getString(ArtifactFilesystem)} api that calls this method with "get relative"
+     * CommandLineArgStringifier#asString(ArtifactFilesystem)} api that calls this method with "get relative"
      * or "get absolute", but if it becomes a problem we can refactor that API
      */
     return filesystem.resolve(resolveToPath(artifact)).toAbsolutePath().toString();
