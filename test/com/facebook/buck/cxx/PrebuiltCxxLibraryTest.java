@@ -70,8 +70,9 @@ public class PrebuiltCxxLibraryTest {
 
     PrebuiltCxxLibrary lib =
         (PrebuiltCxxLibrary) builder.build(graphBuilder, filesystem, targetGraph);
-    lib.getNativeLinkableInput(
-        platform, Linker.LinkableDepType.STATIC, graphBuilder, EmptyTargetConfiguration.INSTANCE);
+    lib.getNativeLinkable(platform, graphBuilder)
+        .getNativeLinkableInput(
+            Linker.LinkableDepType.STATIC, graphBuilder, EmptyTargetConfiguration.INSTANCE);
 
     FileHashLoader originalHashCache =
         new StackedFileHashCache(
