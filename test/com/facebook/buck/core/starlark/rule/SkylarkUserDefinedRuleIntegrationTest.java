@@ -275,4 +275,21 @@ public class SkylarkUserDefinedRuleIntegrationTest {
             BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:with_sources"))
                 .resolve("out2.txt")));
   }
+
+  @Test
+  public void failsWhenInvalidArgTypesGiven() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "args", tmp);
+
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:add").assertSuccess();
+    workspace.runBuckBuild("//:add_all").assertSuccess();
+    assertThat(
+        workspace.runBuckBuild("//:add_failure").assertFailure().getStderr(),
+        Matchers.containsString("expected value of type"));
+    assertThat(
+        workspace.runBuckBuild("//:add_all_failure").assertFailure().getStderr(),
+        Matchers.containsString("Invalid command line argument type"));
+  }
 }

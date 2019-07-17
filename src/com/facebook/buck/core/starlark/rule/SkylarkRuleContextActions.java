@@ -20,6 +20,8 @@ import com.facebook.buck.core.artifact.ArtifactDeclarationException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.lib.WriteAction;
+import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilder;
+import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilderApi;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
@@ -57,5 +59,10 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
     } catch (HumanReadableException e) {
       throw new EvalException(location, e.getHumanReadableErrorMessage());
     }
+  }
+
+  @Override
+  public CommandLineArgsBuilderApi args() {
+    return new CommandLineArgsBuilder();
   }
 }

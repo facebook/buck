@@ -16,6 +16,7 @@
 package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilderApi;
 import com.facebook.buck.core.starlark.rule.artifact.SkylarkArtifactApi;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.Param;
@@ -77,4 +78,9 @@ public interface SkylarkRuleContextActionsApi {
       })
   void write(Artifact output, String content, boolean isExecutable, Location location)
       throws EvalException;
+
+  @SkylarkCallable(
+      name = "args",
+      doc = "Get an instance of Args to construct command lines for actions")
+  CommandLineArgsBuilderApi args();
 }
