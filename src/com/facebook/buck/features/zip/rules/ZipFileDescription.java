@@ -26,7 +26,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.Optional;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
@@ -47,9 +46,9 @@ public class ZipFileDescription
       ZipFileDescriptionArg args) {
 
     ImmutableList<SourcePath> zipSources = args.getZipSrcs();
-    Optional<Boolean> mergeSourceZips = args.getMergeSourceZips();
+    boolean mergeSourceZips = args.getMergeSourceZips();
 
-    if (!zipSources.isEmpty() && mergeSourceZips.isPresent())
+    if (!zipSources.isEmpty() && mergeSourceZips)
       throw new IllegalArgumentException(
           "Illegal to define merge_source_zips when zip_srcs is present in " + buildTarget);
 
@@ -85,7 +84,10 @@ public class ZipFileDescription
 
     ImmutableSet<SourcePath> getSrcs();
 
-    Optional<Boolean> getMergeSourceZips();
+    @Value.Default
+    default boolean getMergeSourceZips() {
+      return false;
+    }
 
     ImmutableSet<Pattern> getEntriesToExclude();
 

@@ -40,7 +40,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildable {
@@ -49,7 +48,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
   @AddToRuleKey private final ImmutableList<SourcePath> zipSources;
   @AddToRuleKey private final OutputPath output;
   @AddToRuleKey private final boolean flatten;
-  @AddToRuleKey private final Optional<Boolean> mergeSourceZips;
+  @AddToRuleKey private final boolean mergeSourceZips;
   @AddToRuleKey private final ImmutableSet<Pattern> entriesToExclude;
 
   public Zip(
@@ -60,7 +59,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
       ImmutableSet<SourcePath> sources,
       ImmutableList<SourcePath> zipSources,
       boolean flatten,
-      Optional<Boolean> mergeSourceZips,
+      boolean mergeSourceZips,
       ImmutableSet<Pattern> entriesToExclude) {
     super(buildTarget, projectFilesystem, ruleFinder, Zip.class);
 
@@ -95,10 +94,10 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
               buildContext.getSourcePathResolver(),
               excludedEntriesMatcher));
       bundler = new CopyingFileBundler(filesystem, getBuildTarget());
-    } else if (!mergeSourceZips.orElse(true)) {
-      bundler = new CopyingFileBundler(filesystem, getBuildTarget());
-    } else {
+    } else if (mergeSourceZips) {
       bundler = new SrcZipAwareFileBundler(filesystem, getBuildTarget(), excludedEntriesMatcher);
+    } else {
+      bundler = new CopyingFileBundler(filesystem, getBuildTarget());
     }
 
     bundler.copy(
