@@ -178,7 +178,7 @@ public class DistBuildState {
       ProjectFilesystem projectFilesystem =
           projectFilesystemFactory.createProjectFilesystem(cellRoot, config);
       CellPathResolver cellPathResolver =
-          DefaultCellPathResolver.of(projectFilesystem.getRootPath(), config);
+          DefaultCellPathResolver.create(projectFilesystem.getRootPath(), config);
       BuckConfig buckConfig =
           createBuckConfigFromRawConfigAndEnv(
               config,

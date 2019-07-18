@@ -77,7 +77,8 @@ public class CellMappingsFactoryTest {
             .put("cell2_alias", "repo2")
             .build();
 
-    NewCellPathResolver newCellPathResolver = CellMappingsFactory.create(root, rootConfig);
+    NewCellPathResolver newCellPathResolver =
+        CellMappingsFactory.create(root, rootConfig.getConfig());
 
     assertEquals(root, newCellPathResolver.getCellPath(CanonicalCellName.ROOT_CELL));
     assertEquals(
@@ -99,10 +100,12 @@ public class CellMappingsFactoryTest {
             .put("cell2_alias", "repo2")
             .build();
 
-    NewCellPathResolver newCellPathResolver = CellMappingsFactory.create(root, rootConfig);
+    NewCellPathResolver newCellPathResolver =
+        CellMappingsFactory.create(root, rootConfig.getConfig());
 
     CellNameResolver rootNameResolver =
-        CellMappingsFactory.createCellNameResolver(root, rootConfig, newCellPathResolver);
+        CellMappingsFactory.createCellNameResolver(
+            root, rootConfig.getConfig(), newCellPathResolver);
 
     assertEquals(CanonicalCellName.ROOT_CELL, rootNameResolver.getName(Optional.empty()));
     assertEquals(
@@ -136,11 +139,12 @@ public class CellMappingsFactoryTest {
             .put("other_self", ".")
             .build();
 
-    NewCellPathResolver newCellPathResolver = CellMappingsFactory.create(root, rootConfig);
+    NewCellPathResolver newCellPathResolver =
+        CellMappingsFactory.create(root, rootConfig.getConfig());
 
     CellNameResolver otherNameResolver =
         CellMappingsFactory.createCellNameResolver(
-            root.resolve("repo1"), otherConfig, newCellPathResolver);
+            root.resolve("repo1"), otherConfig.getConfig(), newCellPathResolver);
 
     assertEquals(
         new ImmutableCanonicalCellName(Optional.of("cell1")),

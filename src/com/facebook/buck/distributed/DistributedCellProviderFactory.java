@@ -74,10 +74,15 @@ public class DistributedCellProviderFactory {
 
     ImmutableSet<String> declaredCellNames = ImmutableSet.copyOf(cellPaths.keySet());
     Path rootCellPath = rootCell.getFilesystem().getRootPath();
-    DefaultCellPathResolver rootCellResolver = DefaultCellPathResolver.of(rootCellPath, cellPaths);
-
     NewCellPathResolver newCellPathResolver =
-        CellMappingsFactory.create(rootCell.getFilesystem().getRootPath(), rootCell.getConfig());
+        CellMappingsFactory.create(rootCellPath, rootCell.getConfig().getConfig());
+    CellNameResolver rootCellNameResolver =
+        CellMappingsFactory.createCellNameResolver(
+            rootCellPath, rootCell.getConfig().getConfig(), newCellPathResolver);
+
+    DefaultCellPathResolver rootCellResolver =
+        DefaultCellPathResolver.create(
+            rootCellPath, cellPaths, rootCellNameResolver, newCellPathResolver);
 
     return new CellProvider(
         cellProvider ->
@@ -96,9 +101,13 @@ public class DistributedCellProviderFactory {
                   // that relative main cell from inside a secondary cell resolves actually to
                   // secondary cell. If the DefaultCellPathResolver is used, then it would return
                   // a BuildTarget as if it belonged to the main cell.
+                  CellNameResolver cellNameResolver =
+                      CellMappingsFactory.createCellNameResolver(
+                          cellPath, cellParam.getConfig().getConfig(), newCellPathResolver);
+
                   currentCellResolver =
                       new CellPathResolverView(
-                          rootCellResolver, declaredCellNames, currentCellRoot);
+                          rootCellResolver, cellNameResolver, declaredCellNames, currentCellRoot);
                   CellPathResolver cellPathResolverForParser = currentCellResolver;
                   BuckConfig configWithResolver =
                       cellParam
@@ -120,10 +129,6 @@ public class DistributedCellProviderFactory {
                           cellParam.getExecutableFinder(),
                           ruleKeyConfiguration,
                           targetConfiguration);
-
-                  CellNameResolver cellNameResolver =
-                      CellMappingsFactory.createCellNameResolver(
-                          cellPath, cellParam.getConfig(), newCellPathResolver);
 
                   return ImmutableCell.of(
                       ImmutableSortedSet.copyOf(cellParams.keySet()),

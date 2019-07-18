@@ -680,14 +680,14 @@ public final class MainRunner {
                     () -> new IllegalStateException("Daemon is present but config is missing."));
         config = buckConfig.getConfig();
         filesystem = buckConfig.getFilesystem();
-        cellPathResolver = DefaultCellPathResolver.of(filesystem.getRootPath(), config);
+        cellPathResolver = DefaultCellPathResolver.create(filesystem.getRootPath(), config);
 
         Map<String, ConfigChange> configDiff = ConfigDifference.compare(config, currentConfig);
         UIMessagesFormatter.reusedConfigWarning(configDiff).ifPresent(this::printWarnMessage);
       } else {
         config = currentConfig;
         filesystem = projectFilesystemFactory.createProjectFilesystem(canonicalRootPath, config);
-        cellPathResolver = DefaultCellPathResolver.of(filesystem.getRootPath(), config);
+        cellPathResolver = DefaultCellPathResolver.create(filesystem.getRootPath(), config);
         buckConfig =
             new BuckConfig(
                 config,
@@ -811,7 +811,7 @@ public final class MainRunner {
           PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager);
 
       DefaultCellPathResolver rootCellCellPathResolver =
-          DefaultCellPathResolver.of(filesystem.getRootPath(), buckConfig.getConfig());
+          DefaultCellPathResolver.create(filesystem.getRootPath(), buckConfig.getConfig());
 
       Supplier<TargetConfiguration> targetConfigurationSupplier =
           createTargetConfigurationSupplier(

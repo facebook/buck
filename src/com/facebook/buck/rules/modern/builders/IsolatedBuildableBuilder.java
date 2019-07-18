@@ -145,7 +145,7 @@ public abstract class IsolatedBuildableBuilder {
     ImmutableMap<String, String> clientEnvironment = EnvVariablesProvider.getSystemEnv();
 
     DefaultCellPathResolver cellPathResolver =
-        DefaultCellPathResolver.of(filesystem.getRootPath(), config);
+        DefaultCellPathResolver.create(filesystem.getRootPath(), config);
     UnconfiguredBuildTargetViewFactory buildTargetFactory =
         new ParsingUnconfiguredBuildTargetViewFactory();
 

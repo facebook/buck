@@ -17,12 +17,35 @@ package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.RawConfig;
 import com.google.common.collect.ImmutableMap;
+import java.nio.file.Path;
 
 public final class TestCellPathResolver {
   public static CellPathResolver get(ProjectFilesystem projectFilesystem) {
-    return DefaultCellPathResolver.of(projectFilesystem.getRootPath(), ImmutableMap.of());
+    return create(projectFilesystem.getRootPath());
   }
 
   private TestCellPathResolver() {}
+
+  /** Utility for creating a simple DefaultCellPathResolver from a root path and cell mappings. */
+  public static DefaultCellPathResolver create(
+      Path rootPath, ImmutableMap<String, Path> cellMappings) {
+    Config config =
+        new Config(
+            RawConfig.of(
+                ImmutableMap.of(
+                    DefaultCellPathResolver.REPOSITORIES_SECTION,
+                    cellMappings.entrySet().stream()
+                        .collect(
+                            ImmutableMap.toImmutableMap(
+                                e -> e.getKey(), e -> e.getValue().toString())))));
+    return DefaultCellPathResolver.create(rootPath, config);
+  }
+
+  /** Utility to create a DefaultCellPathResolver for a root path with no other cells. */
+  public static DefaultCellPathResolver create(Path root) {
+    return create(root, ImmutableMap.of());
+  }
 }

@@ -19,9 +19,9 @@ import com.facebook.buck.core.cell.CellNameResolver;
 import com.facebook.buck.core.cell.ImmutableDefaultCellNameResolver;
 import com.facebook.buck.core.cell.ImmutableDefaultNewCellPathResolver;
 import com.facebook.buck.core.cell.NewCellPathResolver;
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.ImmutableCanonicalCellName;
+import com.facebook.buck.util.config.Config;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import java.nio.file.Path;
@@ -37,19 +37,13 @@ public class CellMappingsFactory {
    * Creates a {@link NewCellPathResolver} from the root cell's path and config. We currently
    * require that all cells appear in the root cell's config.
    */
-  public static NewCellPathResolver create(Path rootPath, BuckConfig rootConfig) {
+  public static NewCellPathResolver create(Path rootPath, Config rootConfig) {
     // TODO(cjhopman): We should support cells that the root cell doesn't know about. To do that, we
     // should probably continue to compute this mapping first (because that's hardest to get wrong).
     // It would require here that we be able to traverse all the other cells in the build and look
     // at their buckconfigs. We could construct canonical names for newly discovered cells by adding
     // a namespacing of some sort (i.e. secondary#tertiary).
-    ImmutableSortedMap<String, Path> cellMapping =
-        ImmutableSortedMap.copyOf(
-            DefaultCellPathResolver.getCellPathsFromConfigRepositoriesSection(
-                rootPath,
-                rootConfig
-                    .getSection(DefaultCellPathResolver.REPOSITORIES_SECTION)
-                    .orElse(ImmutableMap.of())));
+    ImmutableSortedMap<String, Path> cellMapping = getCellMapping(rootPath, rootConfig);
 
     Map<Path, CanonicalCellName> canonicalNameMap = new LinkedHashMap<>();
 
@@ -64,14 +58,8 @@ public class CellMappingsFactory {
 
   /** Creates a {@link CellNameResolver} for a cell. */
   public static CellNameResolver createCellNameResolver(
-      Path cellPath, BuckConfig cellConfig, NewCellPathResolver cellPathResolver) {
-    ImmutableSortedMap<String, Path> cellMapping =
-        ImmutableSortedMap.copyOf(
-            DefaultCellPathResolver.getCellPathsFromConfigRepositoriesSection(
-                cellPath,
-                cellConfig
-                    .getSection(DefaultCellPathResolver.REPOSITORIES_SECTION)
-                    .orElse(ImmutableMap.of())));
+      Path cellPath, Config config, NewCellPathResolver cellPathResolver) {
+    ImmutableSortedMap<String, Path> cellMapping = getCellMapping(cellPath, config);
 
     Map<Optional<String>, CanonicalCellName> builder = new LinkedHashMap<>();
     builder.put(Optional.empty(), cellPathResolver.getCanonicalCellName(cellPath));
@@ -79,5 +67,11 @@ public class CellMappingsFactory {
         (name, path) ->
             builder.put(Optional.of(name), cellPathResolver.getCanonicalCellName(path)));
     return new ImmutableDefaultCellNameResolver(builder);
+  }
+
+  private static ImmutableSortedMap<String, Path> getCellMapping(Path cellRoot, Config cellConfig) {
+    return ImmutableSortedMap.copyOf(
+        DefaultCellPathResolver.getCellPathsFromConfigRepositoriesSection(
+            cellRoot, cellConfig.get(DefaultCellPathResolver.REPOSITORIES_SECTION)));
   }
 }

@@ -18,13 +18,12 @@ package com.facebook.buck.features.python.toolchain;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.cell.impl.ImmutableDefaultCellPathResolver;
+import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.rules.modern.SerializationTestHelper;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -42,7 +41,7 @@ public class PythonEnvironmentTest {
 
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     Path root = Paths.get("root");
-    CellPathResolver cellResolver = ImmutableDefaultCellPathResolver.of(root, ImmutableMap.of());
+    CellPathResolver cellResolver = TestCellPathResolver.create(root);
     PythonEnvironment reconstructed =
         SerializationTestHelper.serializeAndDeserialize(
             environment,

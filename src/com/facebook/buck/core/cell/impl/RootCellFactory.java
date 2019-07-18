@@ -103,6 +103,6 @@ public class RootCellFactory {
         rootCellCellPathResolver,
         newCellPathResolver,
         CellMappingsFactory.createCellNameResolver(
-            rootFilesystem.getRootPath(), rootConfig, newCellPathResolver));
+            rootFilesystem.getRootPath(), rootConfig.getConfig(), newCellPathResolver));
   }
 }

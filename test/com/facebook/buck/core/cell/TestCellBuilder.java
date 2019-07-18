@@ -101,7 +101,7 @@ public class TestCellBuilder {
             : (buckConfig, filesystem, ruleKeyConfiguration) -> toolchainProvider;
 
     DefaultCellPathResolver rootCellCellPathResolver =
-        DefaultCellPathResolver.of(filesystem.getRootPath(), config.getConfig());
+        DefaultCellPathResolver.create(filesystem.getRootPath(), config.getConfig());
 
     return LocalCellProviderFactory.create(
             filesystem,

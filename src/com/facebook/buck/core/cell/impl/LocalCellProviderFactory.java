@@ -73,7 +73,7 @@ public class LocalCellProviderFactory {
     ImmutableSet<Path> allRoots = ImmutableSet.copyOf(cellPathMapping.values());
 
     NewCellPathResolver newCellPathResolver =
-        CellMappingsFactory.create(rootFilesystem.getRootPath(), rootConfig);
+        CellMappingsFactory.create(rootFilesystem.getRootPath(), rootConfig.getConfig());
 
     return new CellProvider(
         cellProvider ->
@@ -119,10 +119,13 @@ public class LocalCellProviderFactory {
                             path);
                       }
                     });
+                CellNameResolver cellNameResolver =
+                    CellMappingsFactory.createCellNameResolver(
+                        cellPath, config, newCellPathResolver);
 
                 CellPathResolver cellPathResolver =
                     new CellPathResolverView(
-                        rootCellCellPathResolver, cellMapping.keySet(), cellPath);
+                        rootCellCellPathResolver, cellNameResolver, cellMapping.keySet(), cellPath);
 
                 Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo = Optional.empty();
                 Optional<String> canonicalCellName =
@@ -157,10 +160,6 @@ public class LocalCellProviderFactory {
                 ToolchainProvider toolchainProvider =
                     toolchainProviderFactory.create(
                         buckConfig, cellFilesystem, ruleKeyConfiguration);
-
-                CellNameResolver cellNameResolver =
-                    CellMappingsFactory.createCellNameResolver(
-                        cellPath, buckConfig, newCellPathResolver);
 
                 // TODO(13777679): cells in other watchman roots do not work correctly.
 

@@ -18,6 +18,8 @@ package com.facebook.buck.core.cell.impl;
 
 import com.facebook.buck.core.cell.AbstractCellPathResolver;
 import com.facebook.buck.core.cell.CellName;
+import com.facebook.buck.core.cell.CellNameResolver;
+import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.util.config.Config;
@@ -48,6 +50,14 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
   @Override
   @Value.Parameter
   public abstract ImmutableMap<String, Path> getCellPathsByRootCellExternalName();
+
+  @Override
+  @Value.Parameter
+  public abstract CellNameResolver getCellNameResolver();
+
+  @Override
+  @Value.Parameter
+  public abstract NewCellPathResolver getNewCellPathResolver();
 
   /** This gives the names as they are specified in the root cell. */
   @Value.Lazy
@@ -80,15 +90,29 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
         .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
-  public static DefaultCellPathResolver of(Path root, Map<String, ? extends Path> cellPaths) {
-    return ImmutableDefaultCellPathResolver.of(root, sortCellPaths(cellPaths));
+  public static DefaultCellPathResolver create(
+      Path root,
+      Map<String, ? extends Path> cellPaths,
+      CellNameResolver cellNameResolver,
+      NewCellPathResolver newCellPathResolver) {
+    return ImmutableDefaultCellPathResolver.of(
+        root, sortCellPaths(cellPaths), cellNameResolver, newCellPathResolver);
   }
 
-  public static DefaultCellPathResolver of(Path root, Config config) {
-    return ImmutableDefaultCellPathResolver.of(
+  /**
+   * Creates a DefaultCellPathResolver using the mappings in the provided {@link Config}. This is
+   * the preferred way to create a DefaultCellPathResolver.
+   */
+  public static DefaultCellPathResolver create(Path root, Config config) {
+    NewCellPathResolver newCellPathResolver = CellMappingsFactory.create(root, config);
+    CellNameResolver cellNameResolver =
+        CellMappingsFactory.createCellNameResolver(root, config, newCellPathResolver);
+    return ImmutableDefaultCellPathResolver.create(
         root,
         sortCellPaths(
-            getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION))));
+            getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION))),
+        cellNameResolver,
+        newCellPathResolver);
   }
 
   static ImmutableMap<String, Path> getCellPathsFromConfigRepositoriesSection(

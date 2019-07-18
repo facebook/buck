@@ -34,10 +34,15 @@ public final class CellPathResolverView extends AbstractCellPathResolver {
   private final CellPathResolver delegate;
   private final ImmutableSet<String> declaredCellNames;
   private final Path cellPath;
+  private final CellNameResolver cellNameResolver;
 
   public CellPathResolverView(
-      CellPathResolver delegate, ImmutableSet<String> declaredCellNames, Path cellPath) {
+      CellPathResolver delegate,
+      CellNameResolver cellNameResolver,
+      ImmutableSet<String> declaredCellNames,
+      Path cellPath) {
     this.delegate = delegate;
+    this.cellNameResolver = cellNameResolver;
     Optional<String> thisName = delegate.getCanonicalCellName(cellPath);
     if (thisName.isPresent()) {
       // A cell should be able to view into itself even if it doesn't explicitly specify it.
@@ -47,6 +52,16 @@ public final class CellPathResolverView extends AbstractCellPathResolver {
       this.declaredCellNames = declaredCellNames;
     }
     this.cellPath = cellPath;
+  }
+
+  @Override
+  public CellNameResolver getCellNameResolver() {
+    return cellNameResolver;
+  }
+
+  @Override
+  public NewCellPathResolver getNewCellPathResolver() {
+    return delegate.getNewCellPathResolver();
   }
 
   @Override

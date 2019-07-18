@@ -95,7 +95,7 @@ public class RecordingFileHashLoaderTest {
             ImmutableMap.of(symlinkRelPath, EXAMPLE_HASHCODE, fileRelPath, EXAMPLE_HASHCODE));
 
     DefaultCellPathResolver cellPathResolver =
-        DefaultCellPathResolver.of(projectFilesystem.getRootPath(), new Config());
+        DefaultCellPathResolver.create(projectFilesystem.getRootPath(), new Config());
 
     RecordingProjectFileHashCache recordingLoader =
         RecordingProjectFileHashCache.createForCellRoot(
@@ -154,7 +154,7 @@ public class RecordingFileHashLoaderTest {
             ImmutableMap.of(symlinkRelPath, EXAMPLE_HASHCODE, fileRelPath, EXAMPLE_HASHCODE));
 
     DefaultCellPathResolver cellPathResolver =
-        DefaultCellPathResolver.of(
+        DefaultCellPathResolver.create(
             projectFilesystem.getRootPath(),
             new Config(
                 RawConfig.builder()
@@ -223,7 +223,7 @@ public class RecordingFileHashLoaderTest {
                 symlinkRelPath, EXAMPLE_HASHCODE, intermediateSymLinkRelPath, EXAMPLE_HASHCODE));
 
     DefaultCellPathResolver cellPathResolver =
-        DefaultCellPathResolver.of(
+        DefaultCellPathResolver.create(
             projectFilesystem.getRootPath(),
             new Config(
                 RawConfig.builder()
@@ -271,7 +271,7 @@ public class RecordingFileHashLoaderTest {
             projectFilesystem, ImmutableMap.of(symlinkRelPath, EXAMPLE_HASHCODE));
 
     DefaultCellPathResolver cellPathResolver =
-        DefaultCellPathResolver.of(projectFilesystem.getRootPath(), new Config());
+        DefaultCellPathResolver.create(projectFilesystem.getRootPath(), new Config());
 
     RecordingProjectFileHashCache recordingLoader =
         RecordingProjectFileHashCache.createForCellRoot(
@@ -317,7 +317,7 @@ public class RecordingFileHashLoaderTest {
             projectFilesystem, ImmutableMap.of(fileWithinSymlink, EXAMPLE_HASHCODE));
 
     DefaultCellPathResolver cellPathResolver =
-        DefaultCellPathResolver.of(projectFilesystem.getRootPath(), new Config());
+        DefaultCellPathResolver.create(projectFilesystem.getRootPath(), new Config());
 
     RecordingProjectFileHashCache recordingLoader =
         RecordingProjectFileHashCache.createForCellRoot(
@@ -361,7 +361,7 @@ public class RecordingFileHashLoaderTest {
             projectFilesystem, ImmutableMap.of()); // Hash lookup for non-existent target will fail.
 
     DefaultCellPathResolver cellPathResolver =
-        DefaultCellPathResolver.of(projectFilesystem.getRootPath(), new Config());
+        DefaultCellPathResolver.create(projectFilesystem.getRootPath(), new Config());
 
     RecordingProjectFileHashCache.createForCellRoot(
         delegateCache,
@@ -420,7 +420,7 @@ public class RecordingFileHashLoaderTest {
             projectFilesystem, ImmutableMap.of(relPathToRecord, EXAMPLE_HASHCODE));
 
     DefaultCellPathResolver cellPathResolver =
-        DefaultCellPathResolver.of(projectFilesystem.getRootPath(), new Config());
+        DefaultCellPathResolver.create(projectFilesystem.getRootPath(), new Config());
 
     RecordingProjectFileHashCache recordingLoader =
         RecordingProjectFileHashCache.createForCellRoot(
@@ -471,7 +471,7 @@ public class RecordingFileHashLoaderTest {
     replay(delegateCacheMock);
 
     DefaultCellPathResolver cellPathResolver =
-        DefaultCellPathResolver.of(projectFilesystem.getRootPath(), new Config());
+        DefaultCellPathResolver.create(projectFilesystem.getRootPath(), new Config());
 
     RecordingProjectFileHashCache recordingLoader =
         RecordingProjectFileHashCache.createForCellRoot(

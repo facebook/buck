@@ -22,6 +22,19 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 public interface CellPathResolver {
+
+  /**
+   * Provides access to the {@link CellNameResolver} for this cell. This is to assist in migration
+   * to the new name/path resolvers.
+   */
+  CellNameResolver getCellNameResolver();
+
+  /**
+   * Provides access to the {@link NewCellPathResolver}. This is to assist in migration to the new
+   * name/path resolvers.
+   */
+  NewCellPathResolver getNewCellPathResolver();
+
   /**
    * @param cellName name of cell, Optional.empty() for root cell.
    * @return Absolute path to the physical location of the cell, or {@code Optional.empty()} if the

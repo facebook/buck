@@ -713,7 +713,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
     Config config = filesystemAndConfig.config;
 
     DefaultCellPathResolver rootCellCellPathResolver =
-        DefaultCellPathResolver.of(filesystem.getRootPath(), config);
+        DefaultCellPathResolver.create(filesystem.getRootPath(), config);
 
     ImmutableMap<String, String> env = EnvVariablesProvider.getSystemEnv();
     BuckConfig buckConfig =
