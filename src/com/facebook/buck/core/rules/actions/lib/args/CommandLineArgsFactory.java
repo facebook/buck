@@ -27,29 +27,6 @@ import com.google.devtools.build.lib.actions.CommandLineItem;
  * <p>This should be the public way to construct {@link CommandLineArgs} objects.
  */
 public class CommandLineArgsFactory {
-
-  // TODO(pjameson): Do all of this validation outside of the factory, and make from() the only
-  //                 valid function. Also accept CommandLineArg in from(), and for things that do
-  //                 not accept that (e.g. skylark's add(), add_all(), just reject there
-
-  /**
-   * Validates that an object is of a valid type to be a command line argument
-   *
-   * @param arg the command line argument, one of {@link String}, {@link Integer}, {@link
-   *     CommandLineItem}, or {@link Artifact}
-   * @return the original arg if it is a valid type
-   * @throws CommandLineArgException if {@code arg} is not of a valid types
-   */
-  private static Object requireCorrectType(Object arg) {
-    if (arg instanceof String
-        || arg instanceof Integer
-        || arg instanceof CommandLineItem
-        || arg instanceof Artifact) {
-      return arg;
-    }
-    throw new CommandLineArgException(arg);
-  }
-
   /**
    * Create a {@link CommandLineArgs} instance for a list of arguments
    *
@@ -57,53 +34,52 @@ public class CommandLineArgsFactory {
    * @return A {@link CommandLineArgs} object for this collection of args
    * @throws CommandLineArgException if {@code args} contains an arg with an invalid type
    */
+  @SuppressWarnings("unchecked")
   public static CommandLineArgs from(ImmutableList<Object> args) throws CommandLineArgException {
-    for (Object object : args) {
-      requireCorrectType(object);
+    boolean foundCommandLineArg = false;
+    boolean foundNonCommandLineArg = false;
+
+    // Yes, this means we loop over args.size() more than necessary sometimes. However, it also
+    // allows us to do some quick conversions below. Worst case is 2N iterations, but best case is
+    // just N for type checking, then passing the list into the right constructor, with no extra
+    // allocations/copies/conversions
+    for (Object arg : args) {
+      if (arg instanceof String
+          || arg instanceof Integer
+          || arg instanceof CommandLineItem
+          || arg instanceof Artifact) {
+        foundNonCommandLineArg = true;
+      } else if (arg instanceof CommandLineArgs) {
+        foundCommandLineArg = true;
+      } else {
+        throw new CommandLineArgException(arg);
+      }
     }
+
+    if (foundCommandLineArg) {
+      if (foundNonCommandLineArg) {
+        ImmutableList.Builder<CommandLineArgs> builder =
+            ImmutableList.builderWithExpectedSize(args.size());
+        args.stream()
+            .map(
+                arg -> {
+                  if (arg instanceof CommandLineArgs) {
+                    return (CommandLineArgs) arg;
+                  } else {
+                    return new ListCommandLineArgs(ImmutableList.of(arg));
+                  }
+                })
+            .forEach(builder::add);
+        return new AggregateCommandLineArgs(builder.build());
+      } else {
+        // We only have CommandLineArgs objects, so we should be fine to cast this to a more
+        // specific ImmutableList type. If this were a mutable list, we wouldn't be able to do this
+        ImmutableList<CommandLineArgs> commandLineArgs =
+            (ImmutableList<CommandLineArgs>) (ImmutableList<?>) args;
+        return new AggregateCommandLineArgs(commandLineArgs);
+      }
+    }
+
     return new ListCommandLineArgs(args);
-  }
-
-  /**
-   * @return a {@link CommandLineArgs} instance that is backed by a list of other {@link
-   *     CommandLineArgs} objects
-   */
-  public static CommandLineArgs fromArgs(ImmutableList<CommandLineArgs> args) {
-    return new AggregateCommandLineArgs(args);
-  }
-
-  /**
-   * Create a {@link CommandLineArgs} instance for a list of {@link String} or {@link
-   * CommandLineArgs}
-   *
-   * <p>This is generally helpful for accepting lists from users in their user defined rules where
-   * they may be adding a single argument to another set of args passed in via a {@link
-   * com.facebook.buck.core.rules.providers.ProviderInfo}
-   *
-   * @param args A list of {@link String} or {@link CommandLineArgs}
-   * @return A {@link CommandLineArgs} object that returns a flattened list of args from {@code
-   *     args}
-   * @throws CommandLineArgException If one of the objects was not a string or {@link
-   *     CommandLineArgs} instance
-   */
-  public static CommandLineArgs fromListOfStringsOrArgs(ImmutableList<Object> args)
-      throws CommandLineArgException {
-    if (args.stream().allMatch(arg -> arg instanceof String)) {
-      return new ListCommandLineArgs(args);
-    } else {
-      return new AggregateCommandLineArgs(
-          args.stream()
-              .map(
-                  arg -> {
-                    if (arg instanceof String) {
-                      return from(ImmutableList.of(arg));
-                    } else if (arg instanceof CommandLineArgs) {
-                      return (CommandLineArgs) arg;
-                    } else {
-                      throw new CommandLineArgException(arg);
-                    }
-                  })
-              .collect(ImmutableList.toImmutableList()));
-    }
   }
 }

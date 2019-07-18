@@ -1,4 +1,4 @@
-load("//:defs.bzl", "test_script", "my_rule")
+load("//:defs.bzl", "test_script", "my_rule", "invalid_types")
 
 test_script(name = "exe")
 
@@ -28,4 +28,24 @@ my_rule(
     srcs = [":exe"],
     exit_code = 1,
     use_env = True,
+)
+
+invalid_types(
+    name = "invalid_outputs",
+    type = "outputs",
+)
+
+invalid_types(
+    name = "invalid_inputs",
+    type = "inputs",
+)
+
+invalid_types(
+    name = "invalid_arguments",
+    type = "arguments",
+)
+
+invalid_types(
+    name = "invalid_env",
+    type = "env",
 )

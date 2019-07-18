@@ -15,10 +15,12 @@
  */
 package com.facebook.buck.core.starlark.rule.args;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgException;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsFactory;
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.build.lib.actions.CommandLineItem;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import com.google.devtools.build.lib.syntax.EvalException;
@@ -28,10 +30,31 @@ import com.google.devtools.build.lib.syntax.SkylarkList;
 /** Struct exposed to skylark to create {@link CommandLineArgs} instances. */
 public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
 
-  ImmutableList.Builder<CommandLineArgs> argsBuilder = ImmutableList.builder();
+  ImmutableList.Builder<Object> argsBuilder = ImmutableList.builder();
 
   public CommandLineArgs build() {
-    return CommandLineArgsFactory.fromArgs(argsBuilder.build());
+    return CommandLineArgsFactory.from(argsBuilder.build());
+  }
+
+  /**
+   * Validates that an object is of a valid type to be a command line argument
+   *
+   * @param arg the command line argument, one of {@link String}, {@link Integer}, {@link
+   *     CommandLineItem}, or {@link Artifact}
+   * @return the original arg if it is a valid type
+   * @throws CommandLineArgException if {@code arg} is not of a valid type
+   */
+  private static Object requireCorrectType(Object arg) {
+    // This is mostly adhering to the Bazel API. We could also allow
+    // CommandLineArgsBuilder instances here and call .build() on them, but we just don't
+    // right now
+    if (arg instanceof String
+        || arg instanceof Integer
+        || arg instanceof CommandLineItem
+        || arg instanceof Artifact) {
+      return arg;
+    }
+    throw new CommandLineArgException(arg);
   }
 
   @Override
@@ -41,10 +64,9 @@ public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
     try {
       ImmutableList<Object> args;
       if (value == Runtime.UNBOUND) {
-        args = ImmutableList.of(argNameOrValue);
-
+        args = ImmutableList.of(requireCorrectType(argNameOrValue));
       } else {
-        args = ImmutableList.of(argNameOrValue, value);
+        args = ImmutableList.of(requireCorrectType(argNameOrValue), requireCorrectType(value));
       }
       argsBuilder.add(CommandLineArgsFactory.from(args));
     } catch (CommandLineArgException e) {
@@ -59,6 +81,9 @@ public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
       throws EvalException {
 
     try {
+      for (Object value : values) {
+        requireCorrectType(value);
+      }
       argsBuilder.add(CommandLineArgsFactory.from(values.getImmutableList()));
     } catch (CommandLineArgException e) {
       throw new EvalException(location, e.getHumanReadableErrorMessage());

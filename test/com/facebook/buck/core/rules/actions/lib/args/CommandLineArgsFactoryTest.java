@@ -16,6 +16,7 @@
 package com.facebook.buck.core.rules.actions.lib.args;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
@@ -28,6 +29,7 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -35,59 +37,78 @@ import org.junit.rules.ExpectedException;
 public class CommandLineArgsFactoryTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
+  private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
+  private final Path source = Paths.get("src", "main.cpp");
+  private ArtifactFilesystem artifactFilesystem;
+
+  @Before
+  public void setUp() {
+    artifactFilesystem = new ArtifactFilesystem(filesystem);
+  }
+
   @Test
-  public void createsCommandLineArgsForArgList() throws LabelSyntaxException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path source = Paths.get("src", "main.cpp");
+  public void handlesEmptyList() {
+    CommandLineArgs args = CommandLineArgsFactory.from(ImmutableList.of());
+
+    assertTrue(args instanceof ListCommandLineArgs);
+    assertEquals(
+        ImmutableList.of(),
+        args.getStrings(artifactFilesystem).collect(ImmutableList.toImmutableList()));
+  }
+
+  @Test
+  public void createsListArgsIfNoCommandLineArgs() throws LabelSyntaxException {
+    CommandLineArgs args =
+        CommandLineArgsFactory.from(
+            ImmutableList.of(
+                1,
+                "foo",
+                Label.parseAbsolute("//foo:bar", ImmutableMap.of()),
+                ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, source))));
+
+    assertTrue(args instanceof ListCommandLineArgs);
     assertEquals(
         ImmutableList.of("1", "foo", "//foo:bar", filesystem.resolve(source).toString()),
-        CommandLineArgsFactory.from(
-                ImmutableList.of(
-                    1,
-                    "foo",
-                    Label.parseAbsolute("//foo:bar", ImmutableMap.of()),
-                    ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, source))))
-            .getStrings(new ArtifactFilesystem(filesystem))
-            .collect(ImmutableList.toImmutableList()));
+        args.getStrings(artifactFilesystem).collect(ImmutableList.toImmutableList()));
   }
 
   @Test
-  public void rejectsInvalidCommandLineArgsForArgList() throws LabelSyntaxException {
+  public void createsAggregateArgsIfGivenOnlyCommandLineArgs() {
+    CommandLineArgs args =
+        CommandLineArgsFactory.from(
+            ImmutableList.of(
+                CommandLineArgsFactory.from(ImmutableList.of(1)),
+                CommandLineArgsFactory.from(ImmutableList.of("2")),
+                CommandLineArgsFactory.from(ImmutableList.of(3)),
+                CommandLineArgsFactory.from(ImmutableList.of("4"))));
+
+    assertTrue(args instanceof AggregateCommandLineArgs);
+    assertEquals(
+        ImmutableList.of("1", "2", "3", "4"),
+        args.getStrings(artifactFilesystem).collect(ImmutableList.toImmutableList()));
+  }
+
+  @Test
+  public void createsAggregateArgsIfGivenMix() throws LabelSyntaxException {
+    CommandLineArgs args =
+        CommandLineArgsFactory.from(
+            ImmutableList.of(
+                1,
+                "foo",
+                Label.parseAbsolute("//foo:bar", ImmutableMap.of()),
+                ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, source)),
+                CommandLineArgsFactory.from(ImmutableList.of(2, "bar"))));
+
+    assertTrue(args instanceof AggregateCommandLineArgs);
+    assertEquals(
+        ImmutableList.of(
+            "1", "foo", "//foo:bar", filesystem.resolve(source).toString(), "2", "bar"),
+        args.getStrings(artifactFilesystem).collect(ImmutableList.toImmutableList()));
+  }
+
+  @Test
+  public void rejectsInvalidCommandLineArgsForArgList() {
     thrown.expect(CommandLineArgException.class);
     CommandLineArgsFactory.from(ImmutableList.of(ImmutableList.of()));
-  }
-
-  @Test
-  public void createsCommandLineArgsForListOfOtherArgs() {
-    assertEquals(
-        ImmutableList.of("1", "foo", "bar"),
-        CommandLineArgsFactory.fromArgs(
-                ImmutableList.of(
-                    CommandLineArgsFactory.from(ImmutableList.of(1)),
-                    CommandLineArgsFactory.from(ImmutableList.of("foo", "bar"))))
-            .getStrings(new ArtifactFilesystem(new FakeProjectFilesystem()))
-            .collect(ImmutableList.toImmutableList()));
-  }
-
-  @Test
-  public void createsCommandLineArgsForListOfStringsOrStringsAndArgs() {
-    assertEquals(
-        ImmutableList.of("1", "foo"),
-        CommandLineArgsFactory.fromListOfStringsOrArgs(ImmutableList.of("1", "foo"))
-            .getStrings(new ArtifactFilesystem(new FakeProjectFilesystem()))
-            .collect(ImmutableList.toImmutableList()));
-
-    assertEquals(
-        ImmutableList.of("1", "foo"),
-        CommandLineArgsFactory.fromListOfStringsOrArgs(
-                ImmutableList.of(CommandLineArgsFactory.from(ImmutableList.of(1)), "foo"))
-            .getStrings(new ArtifactFilesystem(new FakeProjectFilesystem()))
-            .collect(ImmutableList.toImmutableList()));
-  }
-
-  @Test
-  public void failsIfInvalidTypePassedToListOfStringsOrStringsAndArgs() {
-    thrown.expect(CommandLineArgException.class);
-    CommandLineArgsFactory.fromListOfStringsOrArgs(ImmutableList.of(1));
   }
 }

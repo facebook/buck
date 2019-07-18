@@ -39,6 +39,19 @@ fi
 exit 0
 """
 
+def _invalid_types_impl(ctx):
+    t = ctx.attr.type
+    if t == "outputs":
+        ctx.actions.run(outputs=[1], inputs=[], executable="echo", arguments=[],short_name=None,env=None)
+    elif t == "inputs":
+        ctx.actions.run(outputs=[], inputs=[1], executable="echo", arguments=[],short_name=None,env=None)
+    elif t == "arguments":
+        ctx.actions.run(outputs=[], inputs=[], executable="echo", arguments=[1],short_name=None,env=None)
+    elif t == "env":
+        ctx.actions.run(outputs=[], inputs=[], executable="echo", arguments=[],short_name=None,env={"foo": 1})
+    else:
+        fail("invalid failure type")
+
 def _test_file_impl(ctx):
     f = ctx.actions.declare_file(ctx.attr.script_name)
     ctx.actions.write(f, ctx.attr.script, is_executable=True)
@@ -89,6 +102,11 @@ test_file = rule(
         "script_name": attr.string(),
     },
     implementation = _test_file_impl,
+)
+
+invalid_types = rule(
+    attrs = {"type": attr.string()},
+    implementation = _invalid_types_impl,
 )
 
 def test_script(**kwargs):

@@ -21,6 +21,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.lib.RunAction;
 import com.facebook.buck.core.rules.actions.lib.WriteAction;
+import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgException;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsFactory;
 import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilder;
@@ -78,6 +79,16 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
     return new CommandLineArgsBuilder();
   }
 
+  private static Object validateStringOrArg(Object arg) throws CommandLineArgException {
+    if (arg instanceof CommandLineArgsBuilder) {
+      return ((CommandLineArgsBuilder) arg).build();
+    } else if (arg instanceof CommandLineArgs || arg instanceof String) {
+      return arg;
+    } else {
+      throw new CommandLineArgException(arg);
+    }
+  }
+
   @Override
   public void run(
       SkylarkList<Artifact> outputs,
@@ -90,10 +101,8 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
       throws EvalException {
     // TODO(pjameson): If no inputs are specified (NONE), extract them from the command line
     // parameters. Also convert 'executable' to an input
-    List<Artifact> outputsValidated =
-        outputs.getContents(Artifact.class, "outputs must be a list of Artifacts");
-    List<Artifact> inputsValidated =
-        inputs.getContents(Artifact.class, "inputs must be a list of Artifacts");
+    List<Artifact> outputsValidated = outputs.getContents(Artifact.class, "outputs");
+    List<Artifact> inputsValidated = inputs.getContents(Artifact.class, "inputs");
 
     Map<String, String> userEnvValidated =
         SkylarkDict.castSkylarkDictOrNoneToDict(userEnv, String.class, String.class, null);
@@ -101,18 +110,11 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
     CommandLineArgs argumentsValidated;
     try {
       argumentsValidated =
-          CommandLineArgsFactory.fromListOfStringsOrArgs(
+          CommandLineArgsFactory.from(
               Stream.concat(
                       Stream.of(CommandLineArgsFactory.from(ImmutableList.of(executable))),
                       arguments.stream())
-                  .map(
-                      arg -> {
-                        if (arg instanceof CommandLineArgsBuilder) {
-                          return ((CommandLineArgsBuilder) arg).build();
-                        } else {
-                          return arg;
-                        }
-                      })
+                  .map(SkylarkRuleContextActions::validateStringOrArg)
                   .collect(ImmutableList.toImmutableList()));
     } catch (CommandLineException e) {
       throw new EvalException(

@@ -12,6 +12,12 @@ def _add_failure_impl(ctx):
 def _add_all_failure_impl(ctx):
     ctx.actions.args().add_all([{}])
 
+def _add_args_failure_impl(ctx):
+    ctx.actions.args().add(ctx.actions.args())
+
+def _add_all_args_failure_impl(ctx):
+    ctx.actions.args().add_all([ctx.actions.args()])
+
 add = rule(
     attrs = {},
     implementation = _add_impl,
@@ -30,4 +36,14 @@ add_failure = rule(
 add_all_failure = rule(
     attrs = {},
     implementation = _add_all_failure_impl,
+)
+
+add_args_failure = rule(
+    attrs = {},
+    implementation = _add_args_failure_impl,
+)
+
+add_all_args_failure = rule(
+    attrs = {},
+    implementation = _add_all_args_failure_impl,
 )

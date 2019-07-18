@@ -293,6 +293,12 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     assertThat(
         workspace.runBuckBuild("//:add_all_failure").assertFailure().getStderr(),
         Matchers.containsString("Invalid command line argument type"));
+    assertThat(
+        workspace.runBuckBuild("//:add_args_failure").assertFailure().getStderr(),
+        Matchers.containsString("expected value of type"));
+    assertThat(
+        workspace.runBuckBuild("//:add_all_args_failure").assertFailure().getStderr(),
+        Matchers.containsString("Invalid command line argument type"));
   }
 
   private static ImmutableList<String> splitStderr(ProcessResult result) {
@@ -358,5 +364,29 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     // Make sure we're not spuriously printing output from the program on success
     assertFalse(zeroResult.getStderr().contains("CUSTOM_ENV"));
     assertFalse(zeroWithEnvResult.getStderr().contains("CUSTOM_ENV"));
+  }
+
+  @Test
+  public void runActionFailsForInvalidParamTypes() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_runs_actions", tmp);
+
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckBuild("//foo:invalid_outputs").assertFailure().getStderr().trim(),
+        Matchers.containsString("expected type 'Artifact' for 'outputs'"));
+
+    assertThat(
+        workspace.runBuckBuild("//foo:invalid_inputs").assertFailure().getStderr(),
+        Matchers.containsString("expected type 'Artifact' for 'inputs'"));
+
+    assertThat(
+        workspace.runBuckBuild("//foo:invalid_arguments").assertFailure().getStderr(),
+        Matchers.containsString("Invalid command line argument"));
+
+    assertThat(
+        workspace.runBuckBuild("//foo:invalid_env").assertFailure().getStderr(),
+        Matchers.containsString("expected type"));
   }
 }
