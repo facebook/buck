@@ -22,7 +22,6 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
-import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.impl.TestActionExecutionRunner;
@@ -40,24 +39,25 @@ import org.junit.Test;
 public class WriteActionTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   ProjectFilesystem projectFilesystem;
+  private TestActionExecutionRunner runner;
 
   @Before
   public void setUp() {
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     projectFilesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    runner = new TestActionExecutionRunner(projectFilesystem, target);
   }
 
   @Test
   public void writesContentsToFile() throws ActionCreationException, IOException {
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
 
-    ActionRegistryForTests registry = new ActionRegistryForTests(target, projectFilesystem);
-    TestActionExecutionRunner runner = new TestActionExecutionRunner(projectFilesystem, target);
     Artifact output1 = runner.declareArtifact(Paths.get("bar1"));
     Artifact output2 = runner.declareArtifact(Paths.get("bar2"));
     ImmutableSet<Artifact> outputs = ImmutableSet.of(output1, output2);
 
     TestActionExecutionRunner.ExecutionDetails<WriteAction> result =
-        runner.runAction(new WriteAction(registry, ImmutableSet.of(), outputs, "foobar", false));
+        runner.runAction(
+            new WriteAction(runner.getRegistry(), ImmutableSet.of(), outputs, "foobar", false));
 
     Path outputPath1 =
         Objects.requireNonNull(output1.asBound().asBuildArtifact())
@@ -81,16 +81,13 @@ public class WriteActionTest {
 
   @Test
   public void writesContentsToNestedFile() throws ActionCreationException, IOException {
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-
-    ActionRegistryForTests registry = new ActionRegistryForTests(target, projectFilesystem);
-    TestActionExecutionRunner runner = new TestActionExecutionRunner(projectFilesystem, target);
     Artifact output1 = runner.declareArtifact(Paths.get("foo").resolve("bar1"));
     Artifact output2 = runner.declareArtifact(Paths.get("foo").resolve("bar2"));
     ImmutableSet<Artifact> outputs = ImmutableSet.of(output1, output2);
 
     TestActionExecutionRunner.ExecutionDetails<WriteAction> result =
-        runner.runAction(new WriteAction(registry, ImmutableSet.of(), outputs, "foobar", false));
+        runner.runAction(
+            new WriteAction(runner.getRegistry(), ImmutableSet.of(), outputs, "foobar", false));
 
     Path outputPath1 =
         Objects.requireNonNull(output1.asBound().asBuildArtifact())
@@ -114,16 +111,13 @@ public class WriteActionTest {
 
   @Test
   public void setsFileExecutable() throws ActionCreationException, IOException {
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-
-    ActionRegistryForTests registry = new ActionRegistryForTests(target, projectFilesystem);
-    TestActionExecutionRunner runner = new TestActionExecutionRunner(projectFilesystem, target);
     Artifact output1 = runner.declareArtifact(Paths.get("foo").resolve("bar1"));
     Artifact output2 = runner.declareArtifact(Paths.get("foo").resolve("bar2"));
     ImmutableSet<Artifact> outputs = ImmutableSet.of(output1, output2);
 
     TestActionExecutionRunner.ExecutionDetails<WriteAction> result =
-        runner.runAction(new WriteAction(registry, ImmutableSet.of(), outputs, "foobar", true));
+        runner.runAction(
+            new WriteAction(runner.getRegistry(), ImmutableSet.of(), outputs, "foobar", true));
 
     Path outputPath1 =
         Objects.requireNonNull(output1.asBound().asBuildArtifact())
