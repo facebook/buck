@@ -25,6 +25,7 @@ private static final long serialVersionUID = 0L;
     buildId_ = "";
     ruleName_ = "";
     auxiliaryBuildTag_ = "";
+    projectPrefix_ = "";
   }
 
   @java.lang.Override
@@ -67,6 +68,12 @@ private static final long serialVersionUID = 0L;
             java.lang.String s = input.readStringRequireUtf8();
 
             auxiliaryBuildTag_ = s;
+            break;
+          }
+          case 34: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            projectPrefix_ = s;
             break;
           }
           default: {
@@ -227,6 +234,54 @@ private static final long serialVersionUID = 0L;
     }
   }
 
+  public static final int PROJECT_PREFIX_FIELD_NUMBER = 4;
+  private volatile java.lang.Object projectPrefix_;
+  /**
+   * <pre>
+   * Prefix for the top level target that was passed to 'buck build'
+   * If multiple targets were passed, this is the common prefix (if there is one)
+   * Note: project_prefix is not necessarily the same as the prefix for the specific action
+   * that is being executed right now
+   * </pre>
+   *
+   * <code>string project_prefix = 4;</code>
+   */
+  public java.lang.String getProjectPrefix() {
+    java.lang.Object ref = projectPrefix_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      projectPrefix_ = s;
+      return s;
+    }
+  }
+  /**
+   * <pre>
+   * Prefix for the top level target that was passed to 'buck build'
+   * If multiple targets were passed, this is the common prefix (if there is one)
+   * Note: project_prefix is not necessarily the same as the prefix for the specific action
+   * that is being executed right now
+   * </pre>
+   *
+   * <code>string project_prefix = 4;</code>
+   */
+  public com.google.protobuf.ByteString
+      getProjectPrefixBytes() {
+    java.lang.Object ref = projectPrefix_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      projectPrefix_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -250,6 +305,9 @@ private static final long serialVersionUID = 0L;
     if (!getAuxiliaryBuildTagBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 3, auxiliaryBuildTag_);
     }
+    if (!getProjectPrefixBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 4, projectPrefix_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -267,6 +325,9 @@ private static final long serialVersionUID = 0L;
     }
     if (!getAuxiliaryBuildTagBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, auxiliaryBuildTag_);
+    }
+    if (!getProjectPrefixBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, projectPrefix_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -290,6 +351,8 @@ private static final long serialVersionUID = 0L;
         .equals(other.getRuleName());
     result = result && getAuxiliaryBuildTag()
         .equals(other.getAuxiliaryBuildTag());
+    result = result && getProjectPrefix()
+        .equals(other.getProjectPrefix());
     result = result && unknownFields.equals(other.unknownFields);
     return result;
   }
@@ -307,6 +370,8 @@ private static final long serialVersionUID = 0L;
     hash = (53 * hash) + getRuleName().hashCode();
     hash = (37 * hash) + AUXILIARY_BUILD_TAG_FIELD_NUMBER;
     hash = (53 * hash) + getAuxiliaryBuildTag().hashCode();
+    hash = (37 * hash) + PROJECT_PREFIX_FIELD_NUMBER;
+    hash = (53 * hash) + getProjectPrefix().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -450,6 +515,8 @@ private static final long serialVersionUID = 0L;
 
       auxiliaryBuildTag_ = "";
 
+      projectPrefix_ = "";
+
       return this;
     }
 
@@ -479,6 +546,7 @@ private static final long serialVersionUID = 0L;
       result.buildId_ = buildId_;
       result.ruleName_ = ruleName_;
       result.auxiliaryBuildTag_ = auxiliaryBuildTag_;
+      result.projectPrefix_ = projectPrefix_;
       onBuilt();
       return result;
     }
@@ -537,6 +605,10 @@ private static final long serialVersionUID = 0L;
       }
       if (!other.getAuxiliaryBuildTag().isEmpty()) {
         auxiliaryBuildTag_ = other.auxiliaryBuildTag_;
+        onChanged();
+      }
+      if (!other.getProjectPrefix().isEmpty()) {
+        projectPrefix_ = other.projectPrefix_;
         onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
@@ -831,6 +903,110 @@ private static final long serialVersionUID = 0L;
   checkByteStringIsUtf8(value);
       
       auxiliaryBuildTag_ = value;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object projectPrefix_ = "";
+    /**
+     * <pre>
+     * Prefix for the top level target that was passed to 'buck build'
+     * If multiple targets were passed, this is the common prefix (if there is one)
+     * Note: project_prefix is not necessarily the same as the prefix for the specific action
+     * that is being executed right now
+     * </pre>
+     *
+     * <code>string project_prefix = 4;</code>
+     */
+    public java.lang.String getProjectPrefix() {
+      java.lang.Object ref = projectPrefix_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        projectPrefix_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <pre>
+     * Prefix for the top level target that was passed to 'buck build'
+     * If multiple targets were passed, this is the common prefix (if there is one)
+     * Note: project_prefix is not necessarily the same as the prefix for the specific action
+     * that is being executed right now
+     * </pre>
+     *
+     * <code>string project_prefix = 4;</code>
+     */
+    public com.google.protobuf.ByteString
+        getProjectPrefixBytes() {
+      java.lang.Object ref = projectPrefix_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        projectPrefix_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <pre>
+     * Prefix for the top level target that was passed to 'buck build'
+     * If multiple targets were passed, this is the common prefix (if there is one)
+     * Note: project_prefix is not necessarily the same as the prefix for the specific action
+     * that is being executed right now
+     * </pre>
+     *
+     * <code>string project_prefix = 4;</code>
+     */
+    public Builder setProjectPrefix(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  
+      projectPrefix_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * Prefix for the top level target that was passed to 'buck build'
+     * If multiple targets were passed, this is the common prefix (if there is one)
+     * Note: project_prefix is not necessarily the same as the prefix for the specific action
+     * that is being executed right now
+     * </pre>
+     *
+     * <code>string project_prefix = 4;</code>
+     */
+    public Builder clearProjectPrefix() {
+      
+      projectPrefix_ = getDefaultInstance().getProjectPrefix();
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * Prefix for the top level target that was passed to 'buck build'
+     * If multiple targets were passed, this is the common prefix (if there is one)
+     * Note: project_prefix is not necessarily the same as the prefix for the specific action
+     * that is being executed right now
+     * </pre>
+     *
+     * <code>string project_prefix = 4;</code>
+     */
+    public Builder setProjectPrefixBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+      
+      projectPrefix_ = value;
       onChanged();
       return this;
     }

@@ -71,6 +71,7 @@ import com.facebook.buck.counters.CounterBuckConfig;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
 import com.facebook.buck.distributed.DistBuildConfig;
+import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.doctor.DefaultDefectReporter;
 import com.facebook.buck.doctor.config.ImmutableDoctorConfig;
 import com.facebook.buck.event.BuckEventBus;
@@ -724,6 +725,7 @@ public final class MainRunner {
       // Remote Execution is in use. All RE builds should not use distributed build.
       final boolean isRemoteExecutionBuild =
           isRemoteExecutionBuild(command, buckConfig, executionEnvironment.getUsername());
+      Optional<String> projectPrefix = Optional.empty();
       if (command.subcommand instanceof BuildCommand) {
         BuildCommand subcommand = (BuildCommand) command.subcommand;
         isUsingDistributedBuild = subcommand.isUsingDistributedBuild();
@@ -741,6 +743,8 @@ public final class MainRunner {
         } else if (!isUsingDistributedBuild && shouldUseDistributedBuild) {
           isUsingDistributedBuild = subcommand.tryConvertingToStampede(distBuildConfig);
         }
+
+        projectPrefix = DistBuildUtil.getCommonProjectPrefix(subcommand.getArguments(), buckConfig);
       }
 
       // Switch to async file logging, if configured. A few log samples will have already gone
@@ -956,7 +960,8 @@ public final class MainRunner {
               cacheBuckConfig.getScheduleType(),
               remoteExecutionConfig.getReSessionLabel(),
               remoteExecutionConfig.getTenantId(),
-              remoteExecutionConfig.getAuxiliaryBuildTag());
+              remoteExecutionConfig.getAuxiliaryBuildTag(),
+              projectPrefix.orElse(""));
 
       LogBuckConfig logBuckConfig = buckConfig.getView(LogBuckConfig.class);
 

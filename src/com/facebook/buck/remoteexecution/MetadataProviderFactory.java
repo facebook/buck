@@ -66,7 +66,8 @@ public class MetadataProviderFactory {
       String scheduleType,
       String reSessionLabel,
       String tenantId,
-      String auxiliaryBuildTag) {
+      String auxiliaryBuildTag,
+      String projectPrefix) {
     return new MetadataProvider() {
       final RemoteExecutionMetadata metadata;
       RemoteExecutionMetadata.Builder builder;
@@ -80,6 +81,7 @@ public class MetadataProviderFactory {
             BuckInfo.newBuilder()
                 .setBuildId(buildId.toString())
                 .setAuxiliaryBuildTag(auxiliaryBuildTag)
+                .setProjectPrefix(projectPrefix)
                 .build();
         CreatorInfo creatorInfo =
             CreatorInfo.newBuilder()
