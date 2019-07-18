@@ -23,7 +23,7 @@ object IndexFactory {
         val indexGenerationData = DefaultMutableIndexGenerationData()
         val buildTargetCache = AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>()
         val index = Index(indexGenerationData, buildTargetCache)
-        val indexAppender = IndexAppender(indexGenerationData, buildTargetCache)
+        val indexAppender = DefaultIndexAppender(indexGenerationData, buildTargetCache)
         return Pair(index, indexAppender)
     }
 }
