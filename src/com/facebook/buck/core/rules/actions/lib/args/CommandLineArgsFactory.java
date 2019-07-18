@@ -28,6 +28,10 @@ import com.google.devtools.build.lib.actions.CommandLineItem;
  */
 public class CommandLineArgsFactory {
 
+  // TODO(pjameson): Do all of this validation outside of the factory, and make from() the only
+  //                 valid function. Also accept CommandLineArg in from(), and for things that do
+  //                 not accept that (e.g. skylark's add(), add_all(), just reject there
+
   /**
    * Validates that an object is of a valid type to be a command line argument
    *
@@ -66,5 +70,40 @@ public class CommandLineArgsFactory {
    */
   public static CommandLineArgs fromArgs(ImmutableList<CommandLineArgs> args) {
     return new AggregateCommandLineArgs(args);
+  }
+
+  /**
+   * Create a {@link CommandLineArgs} instance for a list of {@link String} or {@link
+   * CommandLineArgs}
+   *
+   * <p>This is generally helpful for accepting lists from users in their user defined rules where
+   * they may be adding a single argument to another set of args passed in via a {@link
+   * com.facebook.buck.core.rules.providers.ProviderInfo}
+   *
+   * @param args A list of {@link String} or {@link CommandLineArgs}
+   * @return A {@link CommandLineArgs} object that returns a flattened list of args from {@code
+   *     args}
+   * @throws CommandLineArgException If one of the objects was not a string or {@link
+   *     CommandLineArgs} instance
+   */
+  public static CommandLineArgs fromListOfStringsOrArgs(ImmutableList<Object> args)
+      throws CommandLineArgException {
+    if (args.stream().allMatch(arg -> arg instanceof String)) {
+      return new ListCommandLineArgs(args);
+    } else {
+      return new AggregateCommandLineArgs(
+          args.stream()
+              .map(
+                  arg -> {
+                    if (arg instanceof String) {
+                      return from(ImmutableList.of(arg));
+                    } else if (arg instanceof CommandLineArgs) {
+                      return (CommandLineArgs) arg;
+                    } else {
+                      throw new CommandLineArgException(arg);
+                    }
+                  })
+              .collect(ImmutableList.toImmutableList()));
+    }
   }
 }

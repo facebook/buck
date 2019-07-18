@@ -68,4 +68,26 @@ public class CommandLineArgsFactoryTest {
             .getStrings(new ArtifactFilesystem(new FakeProjectFilesystem()))
             .collect(ImmutableList.toImmutableList()));
   }
+
+  @Test
+  public void createsCommandLineArgsForListOfStringsOrStringsAndArgs() {
+    assertEquals(
+        ImmutableList.of("1", "foo"),
+        CommandLineArgsFactory.fromListOfStringsOrArgs(ImmutableList.of("1", "foo"))
+            .getStrings(new ArtifactFilesystem(new FakeProjectFilesystem()))
+            .collect(ImmutableList.toImmutableList()));
+
+    assertEquals(
+        ImmutableList.of("1", "foo"),
+        CommandLineArgsFactory.fromListOfStringsOrArgs(
+                ImmutableList.of(CommandLineArgsFactory.from(ImmutableList.of(1)), "foo"))
+            .getStrings(new ArtifactFilesystem(new FakeProjectFilesystem()))
+            .collect(ImmutableList.toImmutableList()));
+  }
+
+  @Test
+  public void failsIfInvalidTypePassedToListOfStringsOrStringsAndArgs() {
+    thrown.expect(CommandLineArgException.class);
+    CommandLineArgsFactory.fromListOfStringsOrArgs(ImmutableList.of(1));
+  }
 }
