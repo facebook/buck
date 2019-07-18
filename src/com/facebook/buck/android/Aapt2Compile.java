@@ -16,37 +16,29 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.common.BuildableSupport;
-import com.facebook.buck.core.rules.impl.AbstractBuildRule;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
+import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.ModernBuildRule;
+import com.facebook.buck.rules.modern.OutputPath;
+import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
-import java.util.SortedSet;
 import javax.annotation.Nullable;
 
 /** Perform the "aapt2 compile" step of a single Android resource. */
-public class Aapt2Compile extends AbstractBuildRule {
-
-  @AddToRuleKey private final Impl buildable;
-  private final BuildableSupport.DepsSupplier depsSupplier;
+public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
 
   public Aapt2Compile(
       BuildTarget buildTarget,
@@ -54,45 +46,29 @@ public class Aapt2Compile extends AbstractBuildRule {
       SourcePathRuleFinder ruleFinder,
       Tool aapt2ExecutableTool,
       SourcePath resDir) {
-    super(buildTarget, projectFilesystem);
-    this.buildable = new Impl(aapt2ExecutableTool, resDir);
-    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
-  }
-
-  @Override
-  public SortedSet<BuildRule> getBuildDeps() {
-    return depsSupplier.get();
-  }
-
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
-    return buildable.getBuildSteps(
-        context, buildableContext, getProjectFilesystem(), getOutputPath());
+    super(buildTarget, projectFilesystem, ruleFinder, new Impl(aapt2ExecutableTool, resDir));
   }
 
   /** internal buildable implementation */
-  static class Impl implements AddsToRuleKey {
+  static class Impl implements Buildable {
 
     @AddToRuleKey private final Tool aapt2ExecutableTool;
     @AddToRuleKey private final SourcePath resDir;
+    @AddToRuleKey private final OutputPath output = new OutputPath("resources.flata");
 
     private Impl(Tool aapt2ExecutableTool, SourcePath resDir) {
       this.aapt2ExecutableTool = aapt2ExecutableTool;
       this.resDir = resDir;
     }
 
+    @Override
     public ImmutableList<Step> getBuildSteps(
         BuildContext buildContext,
-        BuildableContext buildableContext,
         ProjectFilesystem filesystem,
-        Path outputPath) {
-      ImmutableList.Builder<Step> steps = ImmutableList.builder();
-      steps.addAll(
-          MakeCleanDirectoryStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  buildContext.getBuildCellRootPath(), filesystem, outputPath.getParent())));
+        OutputPathResolver outputPathResolver,
+        BuildCellRelativePathFactory buildCellPathFactory) {
 
+      Path outputPath = outputPathResolver.resolvePath(output);
       SourcePathResolver sourcePathResolver = buildContext.getSourcePathResolver();
 
       Aapt2CompileStep aapt2CompileStep =
@@ -101,12 +77,8 @@ public class Aapt2Compile extends AbstractBuildRule {
               aapt2ExecutableTool.getCommandPrefix(sourcePathResolver),
               sourcePathResolver.getAbsolutePath(resDir),
               outputPath);
-      steps.add(aapt2CompileStep);
       ZipScrubberStep zipScrubberStep = ZipScrubberStep.of(filesystem.resolve(outputPath));
-      steps.add(zipScrubberStep);
-      buildableContext.recordArtifact(outputPath);
-
-      return steps.build();
+      return ImmutableList.of(aapt2CompileStep, zipScrubberStep);
     }
   }
 
@@ -145,14 +117,9 @@ public class Aapt2Compile extends AbstractBuildRule {
     }
   }
 
-  private Path getOutputPath() {
-    return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "%s/resources.flata");
-  }
-
   @Nullable
   @Override
   public SourcePath getSourcePathToOutput() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getOutputPath());
+    return getSourcePath(getBuildable().output);
   }
 }
