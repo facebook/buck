@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>3.8.0</version>
+  <version>3.8.1-SNAPSHOT</version>
   <category>Build</category>
   <vendor email="fb-plugins@fb.com" url="www.facebook.com">Facebook, Inc.</vendor>
 
@@ -10,6 +10,11 @@
   ]]></description>
 
   <change-notes><![CDATA[
+<h3>3.8.1</h3>
+<ul>
+  <li></li>
+</ul>
+</h3>
 <h3>3.8.0</h3>
 <ul>
   <li>Use <code>buildifier</code> for the "Reformat Code" action</li>
