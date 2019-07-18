@@ -162,7 +162,7 @@ public abstract class FileBundler {
       BuildCellRelativePathFactory buildCellRelativePathFactory,
       ImmutableList.Builder<Step> steps,
       Path destinationDir,
-      ImmutableSortedSet<SourcePath> toCopy,
+      Iterable<SourcePath> toCopy,
       SourcePathResolver pathResolver,
       PatternsMatcher entriesToExclude) {
 

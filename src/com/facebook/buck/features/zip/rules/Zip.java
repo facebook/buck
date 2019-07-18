@@ -45,7 +45,7 @@ import java.util.regex.Pattern;
 
 public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildable {
   @AddToRuleKey private final String name;
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
+  @AddToRuleKey private final ImmutableSet<SourcePath> sources;
   @AddToRuleKey private final ImmutableList<SourcePath> zipSources;
   @AddToRuleKey private final OutputPath output;
   @AddToRuleKey private final boolean flatten;
@@ -57,7 +57,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       String outputName,
-      ImmutableSortedSet<SourcePath> sources,
+      ImmutableSet<SourcePath> sources,
       ImmutableList<SourcePath> zipSources,
       boolean flatten,
       Optional<Boolean> mergeSourceZips,

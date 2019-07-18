@@ -17,7 +17,6 @@
 package com.facebook.buck.features.zip.rules;
 
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
-import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -73,7 +72,7 @@ public class ZipFileDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractZipFileDescriptionArg extends CommonDescriptionArg, HasSrcs {
+  interface AbstractZipFileDescriptionArg extends CommonDescriptionArg {
     @Value.Default
     default String getOut() {
       return getName() + ".zip";
@@ -83,6 +82,8 @@ public class ZipFileDescription
     default boolean getFlatten() {
       return false;
     }
+
+    ImmutableSet<SourcePath> getSrcs();
 
     Optional<Boolean> getMergeSourceZips();
 
