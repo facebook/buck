@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.AbstractAction;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
+import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEventBus;
@@ -33,8 +34,10 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -49,6 +52,7 @@ public class TestActionExecutionRunner {
   private final ProjectFilesystem projectFilesystem;
   private final ActionRegistryForTests actionFactory;
   private final ProjectFilesystemFactory projectFilesystemFactory;
+  private final ProcessExecutor processExecutor;
 
   public TestActionExecutionRunner(
       ProjectFilesystemFactory projectFilesystemFactory,
@@ -57,10 +61,15 @@ public class TestActionExecutionRunner {
     this.projectFilesystemFactory = projectFilesystemFactory;
     this.projectFilesystem = projectFilesystem;
     this.actionFactory = new ActionRegistryForTests(buildTarget);
+    this.processExecutor = new DefaultProcessExecutor(TestConsole.createNullConsole());
   }
 
   public TestActionExecutionRunner(ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
     this(new DefaultProjectFilesystemFactory(), projectFilesystem, buildTarget);
+  }
+
+  public ActionRegistry getRegistry() {
+    return actionFactory;
   }
 
   public Artifact declareArtifact(Path path) {
@@ -101,7 +110,7 @@ public class TestActionExecutionRunner {
                 Optional.empty(),
                 TestCellPathResolver.get(projectFilesystem),
                 projectFilesystem.getRootPath(),
-                new FakeProcessExecutor(),
+                processExecutor,
                 projectFilesystemFactory));
 
     return new ImmutableExecutionDetails<>(action, consoleEventListener, executionResult);
