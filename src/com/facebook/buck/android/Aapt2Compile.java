@@ -28,6 +28,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.HasBrokenInputBasedRuleKey;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
@@ -52,7 +53,10 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
   }
 
   /** internal buildable implementation */
-  static class Impl implements Buildable {
+  static class Impl
+      implements Buildable,
+          // more details in the task: T47360608
+          HasBrokenInputBasedRuleKey {
 
     @AddToRuleKey private final Tool aapt2ExecutableTool;
     @AddToRuleKey private final SourcePath resDir;
