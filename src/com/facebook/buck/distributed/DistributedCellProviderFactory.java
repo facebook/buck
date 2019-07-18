@@ -16,9 +16,12 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.core.cell.CellNameResolver;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.CellPathResolverView;
 import com.facebook.buck.core.cell.CellProvider;
+import com.facebook.buck.core.cell.NewCellPathResolver;
+import com.facebook.buck.core.cell.impl.CellMappingsFactory;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.ImmutableCell;
 import com.facebook.buck.core.cell.impl.RootCellFactory;
@@ -46,7 +49,6 @@ public class DistributedCellProviderFactory {
   public static CellProvider create(
       DistBuildCellParams rootCell,
       ImmutableMap<Path, DistBuildCellParams> cellParams,
-      CellPathResolver rootCellPathResolver,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       Supplier<TargetConfiguration> targetConfiguration) {
     Map<String, Path> cellPaths =
@@ -73,6 +75,9 @@ public class DistributedCellProviderFactory {
     ImmutableSet<String> declaredCellNames = ImmutableSet.copyOf(cellPaths.keySet());
     Path rootCellPath = rootCell.getFilesystem().getRootPath();
     DefaultCellPathResolver rootCellResolver = DefaultCellPathResolver.of(rootCellPath, cellPaths);
+
+    NewCellPathResolver newCellPathResolver =
+        CellMappingsFactory.create(rootCell.getFilesystem().getRootPath(), rootCell.getConfig());
 
     return new CellProvider(
         cellProvider ->
@@ -116,6 +121,10 @@ public class DistributedCellProviderFactory {
                           ruleKeyConfiguration,
                           targetConfiguration);
 
+                  CellNameResolver cellNameResolver =
+                      CellMappingsFactory.createCellNameResolver(
+                          cellPath, cellParam.getConfig(), newCellPathResolver);
+
                   return ImmutableCell.of(
                       ImmutableSortedSet.copyOf(cellParams.keySet()),
                       // Distributed builds don't care about cell names, use a sentinel value that
@@ -125,13 +134,15 @@ public class DistributedCellProviderFactory {
                       configWithResolver,
                       cellProvider,
                       toolchainProvider,
-                      currentCellResolver);
+                      currentCellResolver,
+                      newCellPathResolver,
+                      cellNameResolver);
                 }),
         cellProvider ->
             RootCellFactory.create(
                 cellProvider,
+                newCellPathResolver,
                 rootCellResolver,
-                rootCellPathResolver,
                 rootCell.getFilesystem(),
                 rootCell.getBuckModuleManager(),
                 rootCell.getPluginManager(),

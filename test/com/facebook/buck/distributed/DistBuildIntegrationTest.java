@@ -50,7 +50,8 @@ public class DistBuildIntegrationTest {
     Path destinationFolderPath = temporaryFolder.newFolder("destination");
 
     ProjectWorkspace sourceWorkspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, scenario, sourceFolderPath);
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, scenario, sourceFolderPath);
     sourceWorkspace.setUp();
 
     sourceWorkspace
@@ -59,7 +60,8 @@ public class DistBuildIntegrationTest {
         .assertSuccess();
 
     ProjectWorkspace destinationWorkspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "empty", destinationFolderPath);
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "empty", destinationFolderPath);
     destinationWorkspace.setUp();
 
     FrontendServer.runDistBuildWithFakeFrontend(

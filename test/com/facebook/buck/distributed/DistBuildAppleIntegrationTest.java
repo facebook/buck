@@ -48,7 +48,8 @@ public class DistBuildAppleIntegrationTest {
 
     String scenario = "apple_bundle";
     ProjectWorkspace sourceWorkspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, scenario, sourceFolderPath);
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, scenario, sourceFolderPath);
     sourceWorkspace.setUp();
 
     sourceWorkspace
@@ -60,7 +61,8 @@ public class DistBuildAppleIntegrationTest {
         .assertSuccess();
 
     ProjectWorkspace destinationWorkspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "empty", destinationFolderPath);
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "empty", destinationFolderPath);
     destinationWorkspace.setUp();
 
     FrontendServer.runDistBuildWithFakeFrontend(

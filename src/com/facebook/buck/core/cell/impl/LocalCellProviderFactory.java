@@ -20,10 +20,12 @@ import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellName;
+import com.facebook.buck.core.cell.CellNameResolver;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.CellPathResolverView;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.InvalidCellOverrideException;
+import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.module.BuckModuleManager;
@@ -69,6 +71,10 @@ public class LocalCellProviderFactory {
     }
 
     ImmutableSet<Path> allRoots = ImmutableSet.copyOf(cellPathMapping.values());
+
+    NewCellPathResolver newCellPathResolver =
+        CellMappingsFactory.create(rootFilesystem.getRootPath(), rootConfig);
+
     return new CellProvider(
         cellProvider ->
             new CacheLoader<Path, Cell>() {
@@ -152,6 +158,10 @@ public class LocalCellProviderFactory {
                     toolchainProviderFactory.create(
                         buckConfig, cellFilesystem, ruleKeyConfiguration);
 
+                CellNameResolver cellNameResolver =
+                    CellMappingsFactory.createCellNameResolver(
+                        cellPath, buckConfig, newCellPathResolver);
+
                 // TODO(13777679): cells in other watchman roots do not work correctly.
 
                 return ImmutableCell.of(
@@ -161,12 +171,15 @@ public class LocalCellProviderFactory {
                     buckConfig,
                     cellProvider,
                     toolchainProvider,
-                    cellPathResolver);
+                    cellPathResolver,
+                    newCellPathResolver,
+                    cellNameResolver);
               }
             },
         cellProvider ->
             RootCellFactory.create(
                 cellProvider,
+                newCellPathResolver,
                 rootCellCellPathResolver,
                 toolchainProviderFactory,
                 rootFilesystem,

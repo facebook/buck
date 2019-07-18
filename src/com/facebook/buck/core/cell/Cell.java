@@ -84,4 +84,16 @@ public interface Cell {
   ImmutableMap<Path, Cell> getLoadedCells();
 
   CellPathResolver getCellPathResolver();
+
+  /**
+   * Return the {@link com.facebook.buck.core.cell.NewCellPathResolver}. This can be used to map
+   * between canonical names and cell root paths.
+   */
+  NewCellPathResolver getNewCellPathResolver();
+
+  /**
+   * Return the {@link com.facebook.buck.core.cell.CellNameResolver} for this cell. This can be used
+   * to resolve user-provided cell aliases to their canonical names.
+   */
+  CellNameResolver getCellNameResolver();
 }

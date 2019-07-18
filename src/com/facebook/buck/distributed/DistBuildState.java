@@ -168,7 +168,6 @@ public class DistBuildState {
     Path uniqueBuildRoot = Files.createTempDirectory(sandboxPath, "build");
 
     DistBuildCellParams rootCellParams = null;
-    CellPathResolver rootCellPathResolver = null;
     for (Map.Entry<Integer, BuildJobStateCell> remoteCellEntry : jobState.getCells().entrySet()) {
       BuildJobStateCell remoteCell = remoteCellEntry.getValue();
 
@@ -207,7 +206,6 @@ public class DistBuildState {
 
       if (remoteCellEntry.getKey() == DistBuildCellIndexer.ROOT_CELL_INDEX) {
         rootCellParams = currentCellParams;
-        rootCellPathResolver = cellPathResolver;
       }
     }
 
@@ -215,7 +213,6 @@ public class DistBuildState {
         DistributedCellProviderFactory.create(
             Objects.requireNonNull(rootCellParams),
             cellParams.build(),
-            rootCellPathResolver,
             unconfiguredBuildTargetFactory,
             targetConfiguration);
 

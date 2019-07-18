@@ -322,7 +322,10 @@ public class DistBuildStateTest {
     Config config =
         new Config(
             ConfigBuilder.rawFromLines(
-                "[cache]", "repository=somerepo", "[repositories]", "cell2 = " + cell2Root));
+                "[cache]",
+                "repository=somerepo",
+                "[repositories]",
+                "cell2 = " + cell1Root.relativize(cell2Root)));
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
             .setEnvironment(
