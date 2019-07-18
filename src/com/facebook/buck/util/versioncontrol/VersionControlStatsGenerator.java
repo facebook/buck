@@ -209,7 +209,7 @@ public class VersionControlStatsGenerator {
         LOG.warn("Failed to gather some source control stats.");
       }
       versionControlStats = versionControlStatsBuilder.build();
-      LOG.info("Stats generated successfully. \n%s", versionControlStats);
+      LOG.info("Version Control Stats generated successfully.");
     }
     return Optional.ofNullable(versionControlStats);
   }
