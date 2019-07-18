@@ -17,12 +17,12 @@
 package com.facebook.buck.features.project.intellij.lang.java;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaFileParser;
-import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;

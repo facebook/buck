@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.util.Optionals;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import org.junit.Test;
