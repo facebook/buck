@@ -16,9 +16,6 @@
 
 package com.facebook.buck.intellij.ideabuck.ui;
 
-import com.facebook.buck.intellij.ideabuck.actions.BuckInstallDebugAction;
-import com.facebook.buck.intellij.ideabuck.config.BuckExecutableSettingsProvider;
-import com.facebook.buck.intellij.ideabuck.debugger.AndroidDebugger;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckFileErrorNode;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTextNode;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTextNode.TextType;
@@ -44,7 +41,6 @@ import com.facebook.buck.intellij.ideabuck.ws.buckevents.parts.TestResults;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.parts.TestResultsSummary;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.messages.MessageBusConnection;
 import java.util.ArrayList;
@@ -531,25 +527,5 @@ public class BuckEventsConsumer
   }
 
   @Override
-  public void consumeInstallFinished(long timestamp, final String packageName) {
-    if (BuckInstallDebugAction.shouldDebug()) {
-      ApplicationManager.getApplication()
-          .executeOnPooledThread(
-              new Runnable() {
-                @Override
-                public void run() {
-                  try {
-                    String adbExecutable =
-                        BuckExecutableSettingsProvider.getInstance(mProject).resolveAdbExecutable();
-                    AndroidDebugger.init(adbExecutable);
-                    AndroidDebugger.attachDebugger(packageName, mProject);
-                    BuckInstallDebugAction.setDebug(false);
-                  } catch (InterruptedException | RuntimeException e) {
-                    // Display the error on our console
-                    consumeConsoleEvent(e.toString());
-                  }
-                }
-              });
-    }
-  }
+  public void consumeInstallFinished(long timestamp, final String packageName) {}
 }

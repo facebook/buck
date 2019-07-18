@@ -14,6 +14,7 @@
 <ul>
   <li>Use <code>buildifier</code> for the "Reformat Code" action</li>
   <li>Support auto-formatting build files on save</li>
+  <li>Remove Android <code>ddmlib</code> dependency.</li>
 </ul>
 <h3>3.7.5</h3>
 <ul>
@@ -252,8 +253,6 @@
   <depends>com.intellij.modules.platform</depends>
   <depends>com.intellij.modules.lang</depends>
 
-  <depends optional="true">org.jetbrains.android</depends>
-
   <extensions defaultExtensionNs="com.intellij">
     <fileTypeFactory implementation="com.facebook.buck.intellij.ideabuck.lang.BuckFileTypeFactory"/>
     <fileTypeFactory implementation="com.facebook.buck.intellij.ideabuck.lang.BcfgFileTypeFactory"/>
@@ -403,10 +402,6 @@
       <action class="com.facebook.buck.intellij.ideabuck.actions.BuckInstallAction"
         id="buck.Install">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift X"/>
-      </action>
-      <action class="com.facebook.buck.intellij.ideabuck.actions.BuckInstallDebugAction"
-        id="buck.InstallDebug">
-        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift D"/>
       </action>
       <action class="com.facebook.buck.intellij.ideabuck.actions.BuckUninstallAction"
         id="buck.Uninstall">

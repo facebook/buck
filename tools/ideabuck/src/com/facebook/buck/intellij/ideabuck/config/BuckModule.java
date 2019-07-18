@@ -16,7 +16,6 @@
 
 package com.facebook.buck.intellij.ideabuck.config;
 
-import com.facebook.buck.intellij.ideabuck.debugger.AndroidDebugger;
 import com.facebook.buck.intellij.ideabuck.ui.BuckEventsConsumer;
 import com.facebook.buck.intellij.ideabuck.ui.BuckUIManager;
 import com.facebook.buck.intellij.ideabuck.ui.utils.BuckPluginNotifications;
@@ -75,7 +74,6 @@ public final class BuckModule implements ProjectComponent {
   public void projectClosed() {
     projectClosed.set(true);
     BuckClientManager.getOrCreateClient(mProject, mEventHandler).disconnectWithoutRetry();
-    AndroidDebugger.disconnect();
     if (mBuckEventsConsumer != null) {
       mBuckEventsConsumer.detach();
     }
