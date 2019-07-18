@@ -20,9 +20,12 @@ import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilderApi;
 import com.facebook.buck.core.starlark.rule.artifact.SkylarkArtifactApi;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.Param;
+import com.google.devtools.build.lib.skylarkinterface.ParamType;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.SkylarkList;
 
 /**
  * Struct containing methods that create actions within the implementation function of a user
@@ -83,4 +86,60 @@ public interface SkylarkRuleContextActionsApi {
       name = "args",
       doc = "Get an instance of Args to construct command lines for actions")
   CommandLineArgsBuilderApi args();
+
+  @SkylarkCallable(
+      name = "run",
+      doc =
+          "Creates a run action. When the action is executed it will run the specified executable with the given arguments and environment",
+      useLocation = true,
+      parameters = {
+        @Param(
+            name = "outputs",
+            doc = "The files that will be written by this action",
+            named = true,
+            type = SkylarkList.class,
+            noneable = false,
+            generic1 = Artifact.class),
+        @Param(
+            name = "inputs",
+            doc = "A list of files that will be used by this action",
+            named = true,
+            type = SkylarkList.class,
+            defaultValue = "[]"),
+        @Param(
+            name = "executable",
+            doc = "The executable to run",
+            named = true,
+            allowedTypes = {@ParamType(type = String.class), @ParamType(type = Artifact.class)}),
+        @Param(
+            name = "arguments",
+            doc =
+                "The list of arguments to pass to executable. This must be a list containing only strings or objects from ctx.actions.args()",
+            named = true,
+            type = SkylarkList.class,
+            defaultValue = "[]"),
+        @Param(
+            name = "short_name",
+            doc = "The short name to display for this action in logs and the console",
+            named = true,
+            noneable = true,
+            type = String.class,
+            defaultValue = "None"),
+        @Param(
+            name = "env",
+            doc = "Environment variables that should be set when this action is executed",
+            named = true,
+            noneable = true,
+            type = SkylarkDict.class,
+            defaultValue = "None")
+      })
+  void run(
+      SkylarkList<Artifact> outputs,
+      SkylarkList<Artifact> inputs,
+      Object executable,
+      SkylarkList<Object> arguments,
+      Object shortName,
+      Object userEnv,
+      Location location)
+      throws EvalException;
 }

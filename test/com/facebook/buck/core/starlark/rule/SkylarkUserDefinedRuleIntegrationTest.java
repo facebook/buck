@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
@@ -30,6 +31,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
 import com.sun.jna.Platform;
@@ -291,5 +293,70 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     assertThat(
         workspace.runBuckBuild("//:add_all_failure").assertFailure().getStderr(),
         Matchers.containsString("Invalid command line argument type"));
+  }
+
+  private static ImmutableList<String> splitStderr(ProcessResult result) {
+    return Splitter.on(System.lineSeparator()).splitToList(result.getStderr().trim()).stream()
+        .map(String::trim)
+        .collect(ImmutableList.toImmutableList());
+  }
+
+  @Test
+  public void implementationCanRunCommands() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_runs_actions", tmp);
+
+    workspace.setUp();
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+
+    ProcessResult zeroResult = workspace.runBuckBuild("//foo:returning_zero").assertSuccess();
+    ProcessResult oneResult = workspace.runBuckBuild("//foo:returning_one").assertFailure();
+    ProcessResult zeroWithEnvResult =
+        workspace.runBuckBuild("//foo:returning_zero_with_env").assertSuccess();
+    ProcessResult oneWithEnvResult =
+        workspace.runBuckBuild("//foo:returning_one_with_env").assertFailure();
+
+    String[] expectedOneResult =
+        new String[] {
+          "Message on stderr",
+          "arg[--out]",
+          String.format(
+              "arg[%s]",
+              filesystem.resolve(
+                  BuildPaths.getGenDir(
+                          filesystem, BuildTargetFactory.newInstance("//foo:returning_one"))
+                      .resolve("out.txt"))),
+          "arg[--bar]",
+          "arg[some]",
+          "arg[arg]",
+          "arg[here]",
+          String.format("PWD: %s", filesystem.getRootPath().toString())
+        };
+
+    String[] expectedOneWithEnvResult =
+        new String[] {
+          "Message on stderr",
+          "arg[--out]",
+          String.format(
+              "arg[%s]",
+              filesystem.resolve(
+                  BuildPaths.getGenDir(
+                          filesystem,
+                          BuildTargetFactory.newInstance("//foo:returning_one_with_env"))
+                      .resolve("out.txt"))),
+          "arg[--bar]",
+          "arg[some]",
+          "arg[arg]",
+          "arg[here]",
+          String.format("PWD: %s", filesystem.getRootPath().toString()),
+          "CUSTOM_ENV: CUSTOM"
+        };
+
+    assertThat(splitStderr(oneResult), Matchers.containsInRelativeOrder(expectedOneResult));
+    assertThat(
+        splitStderr(oneWithEnvResult), Matchers.containsInRelativeOrder(expectedOneWithEnvResult));
+    // Make sure we're not spuriously printing output from the program on success
+    assertFalse(zeroResult.getStderr().contains("CUSTOM_ENV"));
+    assertFalse(zeroWithEnvResult.getStderr().contains("CUSTOM_ENV"));
   }
 }

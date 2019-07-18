@@ -1,0 +1,31 @@
+load("//:defs.bzl", "test_script", "my_rule")
+
+test_script(name = "exe")
+
+my_rule(
+    name = "returning_zero",
+    srcs = [":exe"],
+    exit_code = 0,
+    use_env = False,
+)
+
+my_rule(
+    name = "returning_one",
+    srcs = [":exe"],
+    exit_code = 1,
+    use_env = False,
+)
+
+my_rule(
+    name = "returning_zero_with_env",
+    srcs = [":exe"],
+    exit_code = 0,
+    use_env = True,
+)
+
+my_rule(
+    name = "returning_one_with_env",
+    srcs = [":exe"],
+    exit_code = 1,
+    use_env = True,
+)

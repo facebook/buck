@@ -19,14 +19,26 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactDeclarationException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
+import com.facebook.buck.core.rules.actions.lib.RunAction;
 import com.facebook.buck.core.rules.actions.lib.WriteAction;
+import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
+import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsFactory;
 import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilder;
 import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilderApi;
+import com.facebook.buck.util.CommandLineException;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.EvalUtils;
+import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.SkylarkList;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * Container for all methods that create actions within the implementation function of a user
@@ -64,5 +76,61 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
   @Override
   public CommandLineArgsBuilderApi args() {
     return new CommandLineArgsBuilder();
+  }
+
+  @Override
+  public void run(
+      SkylarkList<Artifact> outputs,
+      SkylarkList<Artifact> inputs,
+      Object executable,
+      SkylarkList<Object> arguments,
+      Object shortName,
+      Object userEnv,
+      Location location)
+      throws EvalException {
+    // TODO(pjameson): If no inputs are specified (NONE), extract them from the command line
+    // parameters. Also convert 'executable' to an input
+    List<Artifact> outputsValidated =
+        outputs.getContents(Artifact.class, "outputs must be a list of Artifacts");
+    List<Artifact> inputsValidated =
+        inputs.getContents(Artifact.class, "inputs must be a list of Artifacts");
+
+    Map<String, String> userEnvValidated =
+        SkylarkDict.castSkylarkDictOrNoneToDict(userEnv, String.class, String.class, null);
+
+    CommandLineArgs argumentsValidated;
+    try {
+      argumentsValidated =
+          CommandLineArgsFactory.fromListOfStringsOrArgs(
+              Stream.concat(
+                      Stream.of(CommandLineArgsFactory.from(ImmutableList.of(executable))),
+                      arguments.stream())
+                  .map(
+                      arg -> {
+                        if (arg instanceof CommandLineArgsBuilder) {
+                          return ((CommandLineArgsBuilder) arg).build();
+                        } else {
+                          return arg;
+                        }
+                      })
+                  .collect(ImmutableList.toImmutableList()));
+    } catch (CommandLineException e) {
+      throw new EvalException(
+          location,
+          String.format(
+              "Invalid type for %s. Must be one of string, int, Artifact, Label, or the result of ctx.actions.args()",
+              e.getHumanReadableErrorMessage()));
+    }
+    // TODO(pjameson): This name needs to be changed to something more reasonable if not provided
+    //                 probably something like run action: %s
+    String shortNameValidated = EvalUtils.isNullOrNone(shortName) ? "" : (String) shortName;
+
+    new RunAction(
+        registry,
+        ImmutableSet.copyOf(inputsValidated),
+        ImmutableSet.copyOf(outputsValidated),
+        shortNameValidated,
+        argumentsValidated,
+        ImmutableMap.copyOf(userEnvValidated));
   }
 }
