@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Streams;
+import java.util.stream.Stream;
 
 /**
  * Factory that parses a string into {@link com.facebook.buck.core.model.UnconfiguredBuildTarget}.
@@ -93,12 +94,18 @@ public class UnconfiguredBuildTargetParser {
       flavors = UnconfiguredBuildTarget.NO_FLAVORS;
     } else {
       String flavorsString = target.substring(flavorSymbolPos + 1);
-      flavors =
+      Stream<String> stream =
           Streams.stream(
-                  Splitter.on(BuildTargetLanguageConstants.FLAVOR_DELIMITER)
-                      .omitEmptyStrings()
-                      .trimResults()
-                      .split(flavorsString))
+              Splitter.on(BuildTargetLanguageConstants.FLAVOR_DELIMITER)
+                  .omitEmptyStrings()
+                  .trimResults()
+                  .split(flavorsString));
+      if (intern) {
+        stream = stream.map(String::intern);
+      }
+      flavors =
+          stream
+              // potentially we could intern InternalFlavor object as well
               .map(flavor -> (Flavor) InternalFlavor.of(flavor))
               .collect(
                   ImmutableSortedSet.toImmutableSortedSet(UnconfiguredBuildTarget.FLAVOR_ORDERING));
@@ -129,7 +136,8 @@ public class UnconfiguredBuildTargetParser {
         BuildTargetLanguageConstants.TARGET_SYMBOL);
 
     if (intern) {
-      return ImmutableInternedUnconfiguredBuildTarget.of(cellName, baseName, targetName, flavors);
+      return ImmutableInternedUnconfiguredBuildTarget.of(
+          cellName.intern(), baseName.intern(), targetName, flavors);
     }
     return ImmutableUnconfiguredBuildTarget.of(cellName, baseName, targetName, flavors);
   }
