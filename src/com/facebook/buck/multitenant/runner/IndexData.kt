@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
+@file:Suppress("MatchingDeclarationName")
 package com.facebook.buck.multitenant.runner
 
 import com.facebook.buck.multitenant.importer.populateIndexFromStream
@@ -35,6 +35,6 @@ fun createIndex(stream: InputStream): IndexComponents {
     return IndexComponents(index, appender, changeTranslator, cellToBuildFileName)
 }
 
-private class FakeFsToBuildPackageChangeTranslator : FsToBuildPackageChangeTranslator {
+class FakeFsToBuildPackageChangeTranslator : FsToBuildPackageChangeTranslator {
     override fun translateChanges(fsChanges: FsChanges): BuildPackageChanges = BuildPackageChanges()
 }
