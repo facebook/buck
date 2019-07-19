@@ -33,6 +33,8 @@ import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactor
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.pf4j.PluginManager;
@@ -47,6 +49,7 @@ import org.pf4j.PluginManager;
 public class RootCellFactory {
 
   public static Cell create(
+      ImmutableSortedSet<Path> knownRoots,
       CellProvider cellProvider,
       NewCellPathResolver newCellPathResolver,
       CellPathResolver rootCellCellPathResolver,
@@ -58,23 +61,32 @@ public class RootCellFactory {
       ProcessExecutor processExecutor,
       ExecutableFinder executableFinder,
       Supplier<TargetConfiguration> targetConfiguration) {
-    return create(
-        cellProvider,
-        newCellPathResolver,
-        rootCellCellPathResolver,
-        (buckConfig, projectFilesystem, ruleKeyConfiguration) ->
-            new DefaultToolchainProvider(
-                pluginManager,
-                environment,
-                rootConfig,
-                rootFilesystem,
-                processExecutor,
-                executableFinder,
-                ruleKeyConfiguration,
-                targetConfiguration),
+    Preconditions.checkState(
+        !rootCellCellPathResolver.getCanonicalCellName(rootFilesystem.getRootPath()).isPresent(),
+        "Root cell should be nameless");
+    RuleKeyConfiguration ruleKeyConfiguration =
+        ConfigRuleKeyConfigurationFactory.create(rootConfig, moduleManager);
+    ToolchainProvider toolchainProvider =
+        new DefaultToolchainProvider(
+            pluginManager,
+            environment,
+            rootConfig,
+            rootFilesystem,
+            processExecutor,
+            executableFinder,
+            ruleKeyConfiguration,
+            targetConfiguration);
+
+    return ImmutableCell.of(
+        knownRoots,
+        Optional.empty(),
         rootFilesystem,
-        moduleManager,
-        rootConfig);
+        rootConfig,
+        cellProvider,
+        toolchainProvider,
+        rootCellCellPathResolver,
+        newCellPathResolver,
+        rootCellCellPathResolver.getCellNameResolver());
   }
 
   static Cell create(
@@ -102,7 +114,6 @@ public class RootCellFactory {
         toolchainProvider,
         rootCellCellPathResolver,
         newCellPathResolver,
-        CellMappingsFactory.createCellNameResolver(
-            rootFilesystem.getRootPath(), rootConfig.getConfig(), newCellPathResolver));
+        rootCellCellPathResolver.getCellNameResolver());
   }
 }

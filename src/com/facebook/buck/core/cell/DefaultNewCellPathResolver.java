@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
+import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 /**
@@ -52,7 +53,13 @@ public abstract class DefaultNewCellPathResolver implements NewCellPathResolver 
   public CanonicalCellName getCanonicalCellName(Path path) {
     CanonicalCellName canonicalCellName = getPathToNameMap().get(path);
     if (canonicalCellName == null) {
-      throw new RuntimeException(String.format("No known cell with path %s.", path));
+      throw new RuntimeException(
+          String.format(
+              "No known cell with path %s. Known cells are {%s}",
+              path,
+              getCellToPathMap().entrySet().stream()
+                  .map(e -> String.format("%s: %s", e.getKey(), e.getValue()))
+                  .collect(Collectors.joining(", "))));
     }
     return canonicalCellName;
   }

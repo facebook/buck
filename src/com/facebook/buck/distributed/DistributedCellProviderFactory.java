@@ -26,6 +26,7 @@ import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.ImmutableCell;
 import com.facebook.buck.core.cell.impl.RootCellFactory;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.ImmutableCanonicalCellName;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -49,6 +50,7 @@ public class DistributedCellProviderFactory {
   public static CellProvider create(
       DistBuildCellParams rootCell,
       ImmutableMap<Path, DistBuildCellParams> cellParams,
+      CellPathResolver rootCellPathResolver,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       Supplier<TargetConfiguration> targetConfiguration) {
     Map<String, Path> cellPaths =
@@ -76,11 +78,15 @@ public class DistributedCellProviderFactory {
     Path rootCellPath = rootCell.getFilesystem().getRootPath();
     NewCellPathResolver newCellPathResolver =
         CellMappingsFactory.create(rootCellPath, rootCell.getConfig().getConfig());
+
     CellNameResolver rootCellNameResolver =
         CellMappingsFactory.createCellNameResolver(
             rootCellPath, rootCell.getConfig().getConfig(), newCellPathResolver);
 
-    DefaultCellPathResolver rootCellResolver =
+    // TODO(cjhopman): I have no idea how this is supposed to work. We don't actually use this
+    // resolver in the Cell, but we do use it in secondary cells... This doesn't match the resolver
+    // that is passed in to this function.
+    DefaultCellPathResolver overriddenCellPathResolver =
         DefaultCellPathResolver.create(
             rootCellPath, cellPaths, rootCellNameResolver, newCellPathResolver);
 
@@ -94,20 +100,27 @@ public class DistributedCellProviderFactory {
                           "This should only be called for secondary cells.");
                   Path currentCellRoot = cellParam.getFilesystem().getRootPath();
                   Preconditions.checkState(!currentCellRoot.equals(rootCellPath));
-                  CellPathResolver currentCellResolver = rootCellResolver;
+                  CellPathResolver currentCellResolver;
                   // The CellPathResolverView is required because it makes the
                   // [RootPath<->CanonicalName] resolver methods non-symmetrical to handle the
                   // fact
                   // that relative main cell from inside a secondary cell resolves actually to
                   // secondary cell. If the DefaultCellPathResolver is used, then it would return
                   // a BuildTarget as if it belonged to the main cell.
+
                   CellNameResolver cellNameResolver =
                       CellMappingsFactory.createCellNameResolver(
-                          cellPath, cellParam.getConfig().getConfig(), newCellPathResolver);
+                          newCellPathResolver.getCellPath(
+                              new ImmutableCanonicalCellName(cellParam.getCanonicalName())),
+                          cellParam.getConfig().getConfig(),
+                          newCellPathResolver);
 
                   currentCellResolver =
                       new CellPathResolverView(
-                          rootCellResolver, cellNameResolver, declaredCellNames, currentCellRoot);
+                          overriddenCellPathResolver,
+                          cellNameResolver,
+                          declaredCellNames,
+                          currentCellRoot);
                   CellPathResolver cellPathResolverForParser = currentCellResolver;
                   BuckConfig configWithResolver =
                       cellParam
@@ -145,9 +158,10 @@ public class DistributedCellProviderFactory {
                 }),
         cellProvider ->
             RootCellFactory.create(
+                overriddenCellPathResolver.getKnownRoots(),
                 cellProvider,
                 newCellPathResolver,
-                rootCellResolver,
+                rootCellPathResolver,
                 rootCell.getFilesystem(),
                 rootCell.getBuckModuleManager(),
                 rootCell.getPluginManager(),
