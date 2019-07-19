@@ -77,6 +77,11 @@ abstract class AbstractBuckPaths {
   }
 
   @Value.Derived
+  public Path getJournalDir() {
+    return getLogDir().resolve("journal");
+  }
+
+  @Value.Derived
   public Path getTraceDir() {
     return getLogDir().resolve("traces");
   }
