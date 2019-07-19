@@ -347,4 +347,16 @@ public class ZipRuleIntegrationTest {
       assertThat(inspector.getZipFileEntries().size(), greaterThan(0));
     }
   }
+
+  @Test
+  public void emptyDirectoryIsCopiedFromZip() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
+    workspace.setUp();
+    Path zip = workspace.buildAndReturnOutput("//example:copy-zip-with-empty-dir");
+    try (ZipFile ignored = new ZipFile(zip.toFile())) {
+      ZipInspector inspector = new ZipInspector(zip);
+      inspector.assertFileExists("empty/");
+    }
+  }
 }

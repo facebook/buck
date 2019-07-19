@@ -155,3 +155,10 @@ zip_file(
         ":zip1",
     ],
 )
+
+zip_file(
+    name = "copy-zip-with-empty-dir",
+    zip_srcs = [
+        "zip-with-empty-dir.zip",
+    ],
+)
