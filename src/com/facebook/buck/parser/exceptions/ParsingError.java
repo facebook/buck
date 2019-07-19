@@ -19,6 +19,7 @@ package com.facebook.buck.parser.exceptions;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
+import java.util.Arrays;
 import org.immutables.value.Value;
 
 /** Holds information about error occurred during parsing a build file */
@@ -34,4 +35,13 @@ public abstract class ParsingError {
   @Value.Parameter
   @JsonProperty("stacktrace")
   public abstract ImmutableList<String> getStackTrace();
+
+  /** Transform regular Exception to parsing error object */
+  public static ParsingError from(Exception ex) {
+    return ImmutableParsingError.of(
+        ex.getMessage(),
+        Arrays.stream(ex.getStackTrace())
+            .map(element -> element.toString())
+            .collect(ImmutableList.toImmutableList()));
+  }
 }

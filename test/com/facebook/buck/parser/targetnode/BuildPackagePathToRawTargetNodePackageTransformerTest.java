@@ -125,7 +125,7 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
 
     BuildPackagePathToRawTargetNodePackageComputation transformer =
         BuildPackagePathToRawTargetNodePackageComputation.of(
-            rawTargetNodeToTargetNodeFactory, cell);
+            rawTargetNodeToTargetNodeFactory, cell, false);
     RawTargetNodeWithDepsPackage rawTargetNodeWithDepsPackage =
         transformer.transform(
             ImmutableBuildPackagePathToRawTargetNodePackageKey.of(Paths.get("")),

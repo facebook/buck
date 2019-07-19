@@ -25,13 +25,12 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.parser.exceptions.ImmutableParsingError;
+import com.facebook.buck.parser.exceptions.ParsingError;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Optional;
 
 /** Parses build file to {@link BuildFileManifest} structure */
@@ -87,12 +86,7 @@ public class BuildPackagePathToBuildFileManifestComputation
           ImmutableMap.of(),
           Optional.empty(),
           ImmutableList.of(),
-          ImmutableList.of(
-              ImmutableParsingError.of(
-                  ex.getMessage(),
-                  Arrays.stream(ex.getStackTrace())
-                      .map(element -> element.toString())
-                      .collect(ImmutableList.toImmutableList()))));
+          ImmutableList.of(ParsingError.from(ex)));
     }
   }
 

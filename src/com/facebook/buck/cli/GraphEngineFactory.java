@@ -199,7 +199,7 @@ public class GraphEngineFactory {
     BuildPackagePathToRawTargetNodePackageComputation
         buildPackagePathToRawTargetNodePackageComputation =
             BuildPackagePathToRawTargetNodePackageComputation.of(
-                rawTargetNodeToTargetNodeFactory, cell);
+                rawTargetNodeToTargetNodeFactory, cell, false);
 
     // COMPOSITION: build target pattern to raw target node package
     ComposedComputation<BuildTargetPatternToBuildPackagePathKey, RawTargetNodeWithDepsPackage>
