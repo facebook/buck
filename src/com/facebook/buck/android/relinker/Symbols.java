@@ -194,7 +194,7 @@ public class Symbols {
             .setRedirectError(ProcessBuilder.Redirect.INHERIT)
             .build();
     ProcessExecutor.LaunchedProcess p = executor.launchProcess(params);
-    BufferedReader output = new BufferedReader(new InputStreamReader(p.getInputStream()));
+    BufferedReader output = new BufferedReader(new InputStreamReader(p.getStdout()));
     CharStreams.readLines(output, lineProcessor);
     ProcessExecutor.Result result = executor.waitForLaunchedProcess(p);
 

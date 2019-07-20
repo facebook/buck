@@ -242,8 +242,8 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       LOG.debug("Started process %s successfully", buckPyProcess);
       buckPyProcessInput =
           createParserInputStream(
-              Objects.requireNonNull(buckPyProcess).getInputStream(), processedBytes.isPresent());
-      buckPyProcessJsonGenerator = ObjectMappers.createGenerator(buckPyProcess.getOutputStream());
+              Objects.requireNonNull(buckPyProcess).getStdout(), processedBytes.isPresent());
+      buckPyProcessJsonGenerator = ObjectMappers.createGenerator(buckPyProcess.getStdin());
       // We have to wait to create the JsonParser until after we write our
       // first request, because Jackson "helpfully" synchronously reads
       // from the InputStream trying to detect whether the encoding is
@@ -254,7 +254,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       // Since buck.py doesn't write any data until after it receives
       // a query, creating the JsonParser here would hang indefinitely.
 
-      InputStream stderr = buckPyProcess.getErrorStream();
+      InputStream stderr = buckPyProcess.getStderr();
 
       AtomicInteger numberOfLines = new AtomicInteger(0);
       AtomicReference<Path> lastPath = new AtomicReference<Path>();
@@ -603,10 +603,10 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       // setting it on the JsonGenerator, but it doesn't seem to
       // actually write a newline after each element.
       Objects.requireNonNull(buckPyProcess);
-      buckPyProcess.getOutputStream().write('\n');
+      buckPyProcess.getStdin().write('\n');
       // I tried enabling JsonGenerator.Feature.FLUSH_PASSED_TO_STREAM,
       // but it doesn't actually flush.
-      buckPyProcess.getOutputStream().flush();
+      buckPyProcess.getStdin().flush();
     } catch (IOException e) {
       // https://issues.apache.org/jira/browse/EXEC-101 -- Java 8 throws
       // IOException if the child process exited before writing/flushing

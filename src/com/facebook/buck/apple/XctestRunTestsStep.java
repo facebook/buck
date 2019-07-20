@@ -122,7 +122,7 @@ class XctestRunTestsStep implements Step {
     int exitCode;
     try (OutputStream outputStream = filesystem.newFileOutputStream(outputPath);
         TeeInputStream outputWrapperStream =
-            new TeeInputStream(launchedProcess.getInputStream(), outputStream)) {
+            new TeeInputStream(launchedProcess.getStdout(), outputStream)) {
       if (outputReadingCallback.isPresent()) {
         // The caller is responsible for reading all the data, which TeeInputStream will
         // copy to outputStream.
@@ -131,7 +131,7 @@ class XctestRunTestsStep implements Step {
         // Nobody's going to read from outputWrapperStream, so close it and copy
         // the process's stdout and stderr to outputPath directly.
         outputWrapperStream.close();
-        ByteStreams.copy(launchedProcess.getInputStream(), outputStream);
+        ByteStreams.copy(launchedProcess.getStdout(), outputStream);
       }
       exitCode = executor.waitForLaunchedProcess(launchedProcess).getExitCode();
 

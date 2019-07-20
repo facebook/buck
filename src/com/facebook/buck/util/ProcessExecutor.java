@@ -116,13 +116,13 @@ public interface ProcessExecutor {
     /**
      * Output stream that maps into stdin of the process. You'd write into process' stdin using it.
      */
-    OutputStream getOutputStream();
+    OutputStream getStdin();
 
     /** Input stream that maps into stdout of the process. You'd read process' stdout from it. */
-    InputStream getInputStream();
+    InputStream getStdout();
 
     /** Input stream that maps into stderr of the process. You'd read process' stderr from it. */
-    InputStream getErrorStream();
+    InputStream getStderr();
   }
 
   /**
@@ -143,17 +143,17 @@ public interface ProcessExecutor {
     }
 
     @Override
-    public OutputStream getOutputStream() {
+    public OutputStream getStdin() {
       return process.getOutputStream();
     }
 
     @Override
-    public InputStream getInputStream() {
+    public InputStream getStdout() {
       return process.getInputStream();
     }
 
     @Override
-    public InputStream getErrorStream() {
+    public InputStream getStderr() {
       return process.getErrorStream();
     }
   }

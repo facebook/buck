@@ -352,7 +352,7 @@ class XctoolRunTestsStep implements Step {
     public void run() {
       try (OutputStream outputStream = filesystem.newFileOutputStream(outputPath);
           TeeInputStream stdoutWrapperStream =
-              new TeeInputStream(launchedProcess.getInputStream(), outputStream)) {
+              new TeeInputStream(launchedProcess.getStdout(), outputStream)) {
         if (stdoutReadingCallback.isPresent()) {
           // The caller is responsible for reading all the data, which TeeInputStream will
           // copy to outputStream.
@@ -361,7 +361,7 @@ class XctoolRunTestsStep implements Step {
           // Nobody's going to read from stdoutWrapperStream, so close it and copy
           // the process's stdout to outputPath directly.
           stdoutWrapperStream.close();
-          ByteStreams.copy(launchedProcess.getInputStream(), outputStream);
+          ByteStreams.copy(launchedProcess.getStdout(), outputStream);
         }
       } catch (IOException e) {
         exception = Optional.of(e);
@@ -385,7 +385,7 @@ class XctoolRunTestsStep implements Step {
     @Override
     public void run() {
       try (InputStreamReader stderrReader =
-              new InputStreamReader(launchedProcess.getErrorStream(), StandardCharsets.UTF_8);
+              new InputStreamReader(launchedProcess.getStderr(), StandardCharsets.UTF_8);
           BufferedReader bufferedStderrReader = new BufferedReader(stderrReader)) {
         stderr = CharStreams.toString(bufferedStderrReader).trim();
       } catch (IOException e) {
@@ -421,10 +421,10 @@ class XctoolRunTestsStep implements Step {
     String stderr;
     int listTestsResult;
     try (InputStreamReader isr =
-            new InputStreamReader(launchedProcess.getInputStream(), StandardCharsets.UTF_8);
+            new InputStreamReader(launchedProcess.getStdout(), StandardCharsets.UTF_8);
         BufferedReader br = new BufferedReader(isr);
         InputStreamReader esr =
-            new InputStreamReader(launchedProcess.getErrorStream(), StandardCharsets.UTF_8);
+            new InputStreamReader(launchedProcess.getStderr(), StandardCharsets.UTF_8);
         BufferedReader ebr = new BufferedReader(esr)) {
       XctoolOutputParsing.streamOutputFromReader(br, listTestsOnlyHandler);
       stderr = CharStreams.toString(ebr).trim();

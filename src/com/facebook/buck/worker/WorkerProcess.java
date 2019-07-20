@@ -89,8 +89,8 @@ public class WorkerProcess implements Closeable {
     launchedProcess = executor.launchProcess(processParams);
     protocol =
         new WorkerProcessProtocolZero.CommandSender(
-            launchedProcess.getOutputStream(),
-            launchedProcess.getInputStream(),
+            launchedProcess.getStdin(),
+            launchedProcess.getStdout(),
             stdErr,
             () -> {
               if (launchedProcess != null) {
