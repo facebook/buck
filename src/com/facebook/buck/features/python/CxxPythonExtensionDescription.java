@@ -31,7 +31,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -56,9 +55,10 @@ import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
-import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkTargetGroup;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetInfo;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
@@ -485,33 +485,16 @@ public class CxxPythonExtensionDescription
       }
 
       @Override
-      public NativeLinkTargetGroup getNativeLinkTarget(PythonPlatform pythonPlatform) {
-        return new LegacyNativeLinkTargetGroup() {
-
-          @Override
-          public BuildTarget getBuildTarget() {
-            return buildTarget.withAppendedFlavors(pythonPlatform.getFlavor());
-          }
-
-          @Override
-          public NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform) {
-            return NativeLinkTargetMode.library();
-          }
-
-          @Override
-          public Iterable<? extends NativeLinkableGroup> getNativeLinkTargetDeps(
-              CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-            return RichStream.from(getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args))
+      public NativeLinkTarget getNativeLinkTarget(
+          PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+        ImmutableList<NativeLinkable> linkTargetDeps =
+            RichStream.from(getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args))
                 .filter(NativeLinkableGroup.class)
+                .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
                 .toImmutableList();
-          }
 
-          @Override
-          public NativeLinkableInput getNativeLinkTargetInput(
-              CxxPlatform cxxPlatform,
-              ActionGraphBuilder graphBuilder,
-              SourcePathResolver pathResolver) {
-            return NativeLinkableInput.builder()
+        NativeLinkableInput linkableInput =
+            NativeLinkableInput.builder()
                 .addAllArgs(
                     getExtensionArgs(
                         buildTarget.withAppendedFlavors(
@@ -524,13 +507,11 @@ public class CxxPythonExtensionDescription
                         getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args)))
                 .addAllFrameworks(args.getFrameworks())
                 .build();
-          }
-
-          @Override
-          public Optional<Path> getNativeLinkTargetOutputPath() {
-            return Optional.empty();
-          }
-        };
+        return new NativeLinkTargetInfo(
+            buildTarget.withAppendedFlavors(pythonPlatform.getFlavor()),
+            NativeLinkTargetMode.library(),
+            linkTargetDeps,
+            linkableInput);
       }
 
       @Override

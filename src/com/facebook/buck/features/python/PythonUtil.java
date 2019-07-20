@@ -208,8 +208,7 @@ public class PythonUtil {
           CxxPythonExtension extension = (CxxPythonExtension) rule;
           NativeLinkTarget target =
               ((CxxPythonExtension) rule)
-                  .getNativeLinkTarget(pythonPlatform)
-                  .getTargetForPlatform(cxxPlatform);
+                  .getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder);
           extensions.put(target.getBuildTarget(), extension);
           omnibusRoots.addIncludedRoot(target);
           List<BuildRule> cxxpydeps = new ArrayList<>();
@@ -306,8 +305,7 @@ public class PythonUtil {
             Maps.uniqueIndex(
                 entry
                     .getValue()
-                    .getNativeLinkTarget(pythonPlatform)
-                    .getTargetForPlatform(cxxPlatform)
+                    .getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder)
                     .getNativeLinkTargetDeps(graphBuilder),
                 NativeLinkable::getBuildTarget));
       }
