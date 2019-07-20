@@ -24,14 +24,12 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInfo;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformMappedCache;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
@@ -42,7 +40,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /** Pseudo linkable for representing Swift runtime library's linker arguments. */
-public final class SwiftRuntimeNativeLinkableGroup implements LegacyNativeLinkableGroup {
+public final class SwiftRuntimeNativeLinkableGroup implements NativeLinkableGroup {
 
   private static final String SWIFT_RUNTIME = "_swift_runtime";
 
@@ -53,8 +51,7 @@ public final class SwiftRuntimeNativeLinkableGroup implements LegacyNativeLinkab
   private final SwiftPlatform swiftPlatform;
   private final BuildTarget buildTarget;
 
-  private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
-      LegacyNativeLinkableGroup.getNativeLinkableCache(this);
+  private final PlatformMappedCache<NativeLinkableInfo> linkableCache = new PlatformMappedCache<>();
 
   public SwiftRuntimeNativeLinkableGroup(
       SwiftPlatform swiftPlatform, TargetConfiguration targetConfiguration) {
@@ -68,56 +65,45 @@ public final class SwiftRuntimeNativeLinkableGroup implements LegacyNativeLinkab
   }
 
   @Override
-  public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
-    return linkableCache;
+  public NativeLinkableInfo getNativeLinkable(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return linkableCache.get(
+        cxxPlatform,
+        () ->
+            new NativeLinkableInfo(
+                getBuildTarget(),
+                ImmutableList.of(),
+                ImmutableList.of(),
+                getPreferredLinkage(cxxPlatform),
+                ImmutableMap.of(),
+                new NativeLinkableInfo.Delegate() {
+                  @Override
+                  public NativeLinkableInput computeInput(
+                      ActionGraphBuilder graphBuilder,
+                      Linker.LinkableDepType type,
+                      boolean forceLinkWhole,
+                      TargetConfiguration targetConfiguration) {
+                    return getNativeLinkableInput(type);
+                  }
+                },
+                NativeLinkableInfo.defaults().setShouldBeLinkedInAppleTestAndHost(true)));
   }
 
-  @Override
-  public Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(
-      BuildRuleResolver ruleResolver) {
-    return ImmutableSet.of();
-  }
-
-  @Override
-  public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
-      BuildRuleResolver ruleResolver) {
-    return ImmutableSet.of();
-  }
-
-  @Override
-  public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type,
-      boolean forceLinkWhole,
-      ActionGraphBuilder graphBuilder,
-      TargetConfiguration targetConfiguration) {
+  private NativeLinkableInput getNativeLinkableInput(Linker.LinkableDepType type) {
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
-
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
     populateLinkerArguments(linkerArgsBuilder, swiftPlatform, type);
     inputBuilder.addAllArgs(linkerArgsBuilder.build());
-
-    return inputBuilder.build();
+    NativeLinkableInput linkableInput = inputBuilder.build();
+    return linkableInput;
   }
 
-  @Override
-  public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+  private Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
     ApplePlatformType type = ApplePlatformType.of(cxxPlatform.getFlavor().getName());
     if (type == ApplePlatformType.MAC) {
       return Linkage.ANY;
     }
     return Linkage.SHARED;
-  }
-
-  @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    return ImmutableMap.of();
-  }
-
-  @Override
-  public boolean shouldBeLinkedInAppleTestAndHost() {
-    return true;
   }
 
   public static void populateLinkerArguments(

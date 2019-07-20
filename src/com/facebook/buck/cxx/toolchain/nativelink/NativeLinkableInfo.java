@@ -37,7 +37,6 @@ import java.util.concurrent.ExecutionException;
 public final class NativeLinkableInfo implements NativeLinkable {
   private final Cache<LinkableInputCacheKey, NativeLinkableInput> nativeLinkableCache =
       CacheBuilder.newBuilder().build();
-
   // TODO(cjhopman): We should remove this delegate, everything should be fixed when this is
   // created.
   /**
@@ -62,6 +61,7 @@ public final class NativeLinkableInfo implements NativeLinkable {
    * NativeLinkableInfo}. Most cases can just use the default values.
    */
   public static class Configuration {
+
     private Configuration() {}
 
     private ImmutableList<? extends Arg> exportedLinkerFlags = ImmutableList.of();
@@ -69,6 +69,7 @@ public final class NativeLinkableInfo implements NativeLinkable {
     private boolean supportsOmnibusLinking = true;
     private boolean supportsOmnibusLinkingForHaskell = false;
     private boolean isPrebuiltSOForHaskellOmnibus = false;
+    private boolean shouldBeLinkedInAppleTestAndHost = false;
     private Optional<? extends NativeLinkTarget> nativeLinkTarget = Optional.empty();
 
     public Configuration setExportedLinkerFlags(ImmutableList<? extends Arg> exportedLinkerFlags) {
@@ -103,6 +104,12 @@ public final class NativeLinkableInfo implements NativeLinkable {
       this.nativeLinkTarget = nativeLinkTarget;
       return this;
     }
+
+    public Configuration setShouldBeLinkedInAppleTestAndHost(
+        boolean shouldBeLinkedInAppleTestAndHost) {
+      this.shouldBeLinkedInAppleTestAndHost = shouldBeLinkedInAppleTestAndHost;
+      return this;
+    }
   }
 
   /**
@@ -123,6 +130,7 @@ public final class NativeLinkableInfo implements NativeLinkable {
   private final boolean supportsOmnibusLinking;
   private final boolean supportsOmnibusLinkingForHaskell;
   private final boolean isPrebuiltSOForHaskellOmnibus;
+  private final boolean shouldBeLinkedInAppleTestAndHost;
   private final Optional<? extends NativeLinkTarget> nativeLinkTarget;
   private final Delegate delegate;
 
@@ -144,6 +152,7 @@ public final class NativeLinkableInfo implements NativeLinkable {
     this.supportsOmnibusLinking = config.supportsOmnibusLinking;
     this.supportsOmnibusLinkingForHaskell = config.supportsOmnibusLinkingForHaskell;
     this.isPrebuiltSOForHaskellOmnibus = config.isPrebuiltSOForHaskellOmnibus;
+    this.shouldBeLinkedInAppleTestAndHost = config.shouldBeLinkedInAppleTestAndHost;
     this.nativeLinkTarget = config.nativeLinkTarget;
     this.delegate = delegate;
   }
@@ -232,6 +241,6 @@ public final class NativeLinkableInfo implements NativeLinkable {
 
   @Override
   public boolean shouldBeLinkedInAppleTestAndHost() {
-    return false;
+    return shouldBeLinkedInAppleTestAndHost;
   }
 }
