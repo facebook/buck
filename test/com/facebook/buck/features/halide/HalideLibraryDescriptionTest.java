@@ -104,11 +104,9 @@ public class HalideLibraryDescriptionTest {
 
     // Check that the library rule has the correct native linkable input.
     NativeLinkableInput input =
-        lib.getNativeLinkableInput(
-            cxxPlatform,
-            Linker.LinkableDepType.STATIC,
-            graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+        lib.getNativeLinkable(cxxPlatform, graphBuilder)
+            .getNativeLinkableInput(
+                Linker.LinkableDepType.STATIC, graphBuilder, EmptyTargetConfiguration.INSTANCE);
     BuildRule buildRule =
         FluentIterable.from(input.getArgs())
             .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, graphBuilder))
@@ -130,11 +128,9 @@ public class HalideLibraryDescriptionTest {
         (HalideLibrary) halideLibraryBuilder.build(graphBuilder1, filesystem, targetGraph1);
     assertThat(
         halideLibrary
+            .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder1)
             .getNativeLinkableInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                Linker.LinkableDepType.STATIC,
-                graphBuilder1,
-                EmptyTargetConfiguration.INSTANCE)
+                Linker.LinkableDepType.STATIC, graphBuilder1, EmptyTargetConfiguration.INSTANCE)
             .getArgs(),
         not(Matchers.empty()));
 
@@ -146,11 +142,9 @@ public class HalideLibraryDescriptionTest {
         (HalideLibrary) halideLibraryBuilder.build(graphBuilder2, filesystem, targetGraph2);
     assertThat(
         halideLibrary
+            .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder1)
             .getNativeLinkableInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                Linker.LinkableDepType.STATIC,
-                graphBuilder2,
-                EmptyTargetConfiguration.INSTANCE)
+                Linker.LinkableDepType.STATIC, graphBuilder2, EmptyTargetConfiguration.INSTANCE)
             .getArgs(),
         Matchers.empty());
   }
