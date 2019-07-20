@@ -384,7 +384,7 @@ public class LuaBinaryDescription
       // If we're using a native starter, include it in omnibus linking.
       if (starter instanceof NativeExecutableStarter) {
         NativeExecutableStarter nativeStarter = (NativeExecutableStarter) starter;
-        omnibusRoots.addIncludedRoot(nativeStarter.getTargetForPlatform(cxxPlatform));
+        omnibusRoots.addIncludedRoot(nativeStarter.getNativeLinkTargetInfo());
       }
 
       // Build the omnibus libraries.

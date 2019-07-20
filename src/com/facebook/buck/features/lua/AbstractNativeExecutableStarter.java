@@ -43,9 +43,8 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
-import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkTargetGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetInfo;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -70,7 +69,7 @@ import org.immutables.value.Value;
 /** {@link Starter} implementation which builds a starter as a native executable. */
 @Value.Immutable
 @BuckStyleTuple
-abstract class AbstractNativeExecutableStarter implements Starter, LegacyNativeLinkTargetGroup {
+abstract class AbstractNativeExecutableStarter implements Starter {
 
   private static final String NATIVE_STARTER_CXX_SOURCE = "native-starter.cpp.in";
 
@@ -278,30 +277,14 @@ abstract class AbstractNativeExecutableStarter implements Starter, LegacyNativeL
     return linkRule.getSourcePathToOutput();
   }
 
-  @Override
-  public BuildTarget getBuildTarget() {
-    return getBaseTarget();
-  }
-
-  @Override
-  public NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform) {
-    return NativeLinkTargetMode.executable();
-  }
-
-  @Override
-  public Iterable<? extends NativeLinkableGroup> getNativeLinkTargetDeps(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    return getNativeStarterDeps();
-  }
-
-  @Override
-  public NativeLinkableInput getNativeLinkTargetInput(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder, SourcePathResolver pathResolver) {
-    return getNativeLinkableInput();
-  }
-
-  @Override
-  public Optional<Path> getNativeLinkTargetOutputPath() {
-    return Optional.of(getOutput());
+  @Value.Derived
+  public NativeLinkTargetInfo getNativeLinkTargetInfo() {
+    return new NativeLinkTargetInfo(
+        getBaseTarget(),
+        NativeLinkTargetMode.executable(),
+        Iterables.transform(
+            getNativeStarterDeps(),
+            g -> g.getNativeLinkable(getLuaPlatform().getCxxPlatform(), getActionGraphBuilder())),
+        getNativeLinkableInput());
   }
 }
