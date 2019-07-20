@@ -385,6 +385,28 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     } catch (IOException e) {
       MoreThrowables.propagateIfInterrupt(e);
       throw BuildFileParseException.createForBuildFileParseError(buildFile, e);
+    } catch (BuildFileParseException ex) {
+
+      // When buck.py encounters parsing error, it writes diagnostics and then crashes the process
+      // which renders the parser object unable to serve any further requests.
+      // So in case of a parsing error we want to properly close underlying Process object
+      // without closing corresponding PythonDslProjectBuildFileParser object, letting it
+      // reinitialize itself by opening new buck.py process for any further requests, which is
+      // safe but remarkably slow.
+
+      // This scenario is only legit for resilient parser, when parsing errors do not interrupt
+      // the workflow.
+
+      // Potentially the better way to address this would be to have buck.py to be more resilient as
+      // well and does not crash the process, but at this moment it is unclear of all the
+      // consequences if we made it such.
+
+      try {
+        shutdown();
+      } catch (Throwable tex) {
+        ex.addSuppressed(tex);
+      }
+      throw ex;
     } finally {
       LOG.verbose("Finished parsing build file %s", buildFile);
     }
@@ -839,73 +861,76 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     }
 
     try {
-      if (isInitialized) {
-
-        // Check isInitialized implications (to avoid Eradicate warnings).
-        Objects.requireNonNull(buckPyProcess);
-
-        // Allow buck.py to terminate gracefully.
-        if (buckPyProcessJsonGenerator != null) {
-          try {
-            LOG.debug("Closing buck.py process stdin");
-            // Closing the JSON generator has the side effect of closing stdin,
-            // which lets buck.py terminate gracefully.
-            buckPyProcessJsonGenerator.close();
-          } catch (IOException e) {
-            // Safe to ignore since we've already flushed everything we wanted
-            // to write.
-          } finally {
-            buckPyProcessJsonGenerator = null;
-          }
-        }
-
-        if (buckPyProcessJsonParser != null) {
-          try {
-            buckPyProcessJsonParser.close();
-          } catch (IOException e) {
-          } finally {
-            buckPyProcessJsonParser = null;
-          }
-        }
-
-        if (stderrConsumerThread != null) {
-          stderrConsumerThread.join();
-          stderrConsumerThread = null;
-          try {
-            Objects.requireNonNull(stderrConsumerTerminationFuture).get();
-          } catch (ExecutionException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof IOException) {
-              throw (IOException) cause;
-            } else {
-              throw new RuntimeException(e);
-            }
-          }
-          stderrConsumerTerminationFuture = null;
-        }
-
-        LOG.debug("Waiting for process %s to exit...", buckPyProcess);
-        ProcessExecutor.Result result = processExecutor.waitForLaunchedProcess(buckPyProcess);
-        if (result.getExitCode() != 0) {
-          LOG.warn(result.getMessageForUnexpectedResult(buckPyProcess.toString()));
-          throw BuildFileParseException.createForUnknownParseError(
-              result.getMessageForResult("Parser did not exit cleanly"));
-        }
-        LOG.debug("Process %s exited cleanly.", buckPyProcess);
-
-        try {
-          synchronized (this) {
-            if (buckPythonProgram != null) {
-              buckPythonProgram.close();
-            }
-          }
-        } catch (IOException e) {
-          // Eat any exceptions from deleting the temporary buck.py file.
-        }
-      }
+      shutdown();
     } finally {
       isClosed = true;
     }
+  }
+
+  private void shutdown() throws InterruptedException, IOException {
+    if (!isInitialized) {
+      return;
+    }
+
+    // Check isInitialized implications (to avoid Eradicate warnings).
+    Objects.requireNonNull(buckPyProcess);
+
+    // Allow buck.py to terminate gracefully.
+    if (buckPyProcessJsonGenerator != null) {
+      try {
+        LOG.debug("Closing buck.py process stdin");
+        // Closing the JSON generator has the side effect of closing stdin,
+        // which lets buck.py terminate gracefully.
+        buckPyProcessJsonGenerator.close();
+      } catch (IOException e) {
+        // Safe to ignore since we've already flushed everything we wanted
+        // to write.
+      } finally {
+        buckPyProcessJsonGenerator = null;
+      }
+    }
+
+    if (buckPyProcessJsonParser != null) {
+      try {
+        buckPyProcessJsonParser.close();
+      } catch (IOException e) {
+      } finally {
+        buckPyProcessJsonParser = null;
+      }
+    }
+
+    if (stderrConsumerThread != null) {
+      stderrConsumerThread.join();
+      stderrConsumerThread = null;
+      try {
+        Objects.requireNonNull(stderrConsumerTerminationFuture).get();
+      } catch (ExecutionException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof IOException) {
+          throw (IOException) cause;
+        } else {
+          throw new RuntimeException(e);
+        }
+      }
+      stderrConsumerTerminationFuture = null;
+    }
+
+    LOG.debug("Waiting for process %s to exit...", buckPyProcess);
+    ProcessExecutor.Result result = processExecutor.waitForLaunchedProcess(buckPyProcess);
+    LOG.debug("Process %s exited with status code %d", buckPyProcess, result.getExitCode());
+
+    try {
+      synchronized (this) {
+        if (buckPythonProgram != null) {
+          buckPythonProgram.close();
+          buckPythonProgram = null;
+        }
+      }
+    } catch (IOException e) {
+      // Eat any exceptions from deleting the temporary buck.py file.
+    }
+
+    isInitialized = false;
   }
 
   private synchronized Path getPathToBuckPy(ImmutableSet<BaseDescription<?>> descriptions)

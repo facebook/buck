@@ -120,15 +120,15 @@ public class PythonDslProjectBuildFileParserTest {
     }
   }
 
-  @Test(expected = BuildFileParseException.class)
-  public void whenSubprocessReturnsFailureThenProjectBuildFileParserThrowsOnClose()
+  @Test
+  public void whenSubprocessReturnsFailureThenProjectBuildFileParserDoesNotThrowOnClose()
       throws IOException, BuildFileParseException, InterruptedException {
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRoot(), knownNativeRuleTypes);
     try (PythonDslProjectBuildFileParser buildFileParser =
         buildFileParserFactory.createNoopParserThatAlwaysReturnsError()) {
       buildFileParser.initIfNeeded();
-      // close() is called implicitly at the end of this block. It must throw.
+      // close() is called implicitly at the end of this block. It must not throw.
     }
   }
 
