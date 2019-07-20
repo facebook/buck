@@ -627,7 +627,10 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       buckPyProcessJsonParser =
           ObjectMappers.createParser(Objects.requireNonNull(buckPyProcessInput).getInputStream());
     }
-    LOG.verbose("Parsing output of process %s...", buckPyProcess);
+    if (LOG.isVerboseEnabled()) {
+      LOG.verbose(
+          "Parsing output of buck.py for %s...", request.getOrDefault("buildFile", "[unknown]"));
+    }
     return buckPyProcessJsonParser.readValueAs(BuildFilePythonResult.class);
   }
 
