@@ -71,7 +71,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
   private static final String REL_LIB_MACRO = "rel-lib";
 
   /** If the arg contains a library reference, parse it and return it's name and argument. */
-  private Optional<Pair<String, String>> getLibRef(ImmutableSet<String> macros, String arg) {
+  private static Optional<Pair<String, String>> getLibRef(ImmutableSet<String> macros, String arg) {
     Optional<MacroMatchResult> result;
     try {
       result = MacroFinder.match(macros, arg);
@@ -100,7 +100,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
    * @return the link args formed from the user-provided static link line after resolving library
    *     macro references.
    */
-  private Iterable<Arg> getStaticLinkArgs(
+  private static Iterable<Arg> getStaticLinkArgs(
       BuildTarget target, ImmutableList<SourcePath> libs, ImmutableList<String> args) {
     ImmutableList.Builder<Arg> builder = ImmutableList.builder();
     for (String arg : args) {
@@ -127,7 +127,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
    * @return the link args formed from the user-provided shared link line after resolving library
    *     macro references.
    */
-  private Iterable<Arg> getSharedLinkArgs(
+  private static Iterable<Arg> getSharedLinkArgs(
       BuildTarget target, ImmutableMap<String, SourcePath> libs, ImmutableList<String> args) {
     ImmutableList.Builder<Arg> builder = ImmutableList.builder();
     for (String arg : args) {
@@ -166,179 +166,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       PrebuiltCxxLibraryGroupDescriptionArg args) {
-    return new CustomPrebuiltCxxLibrary(buildTarget, context.getProjectFilesystem(), params) {
-
-      private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
-          new TransitiveCxxPreprocessorInputCache(this);
-
-      @Override
-      public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
-        return AndroidPackageableCollector.getPackageableRules(params.getBuildDeps());
-      }
-
-      @Override
-      public void addToCollector(AndroidPackageableCollector collector) {
-        collector.addNativeLinkable(this);
-      }
-
-      @Override
-      public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(
-          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-        if (!isPlatformSupported(cxxPlatform)) {
-          return ImmutableList.of();
-        }
-        return FluentIterable.from(getBuildDeps()).filter(CxxPreprocessorDep.class);
-      }
-
-      @Override
-      public CxxPreprocessorInput getCxxPreprocessorInput(
-          CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-        CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
-        builder.putAllPreprocessorFlags(
-            ImmutableListMultimap.copyOf(
-                Multimaps.transformValues(
-                    CxxFlags.getLanguageFlags(
-                        args.getExportedPreprocessorFlags(),
-                        PatternMatchedCollection.of(),
-                        ImmutableMap.of(),
-                        cxxPlatform),
-                    StringArg::of)));
-        for (SourcePath includeDir : args.getIncludeDirs()) {
-          builder.addIncludes(CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, includeDir));
-        }
-        return builder.build();
-      }
-
-      @Override
-      public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-          CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-        return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, graphBuilder);
-      }
-
-      @Override
-      public Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(
-          BuildRuleResolver ruleResolver) {
-        return FluentIterable.from(params.getDeclaredDeps().get())
-            .filter(NativeLinkableGroup.class);
-      }
-
-      @Override
-      public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
-          BuildRuleResolver ruleResolver) {
-        return FluentIterable.from(args.getExportedDeps())
-            .transform(ruleResolver::getRule)
-            .filter(NativeLinkableGroup.class);
-      }
-
-      @Override
-      public NativeLinkableInput getNativeLinkableInput(
-          CxxPlatform cxxPlatform,
-          Linker.LinkableDepType type,
-          boolean forceLinkWhole,
-          ActionGraphBuilder graphBuilder,
-          TargetConfiguration targetConfiguration) {
-
-        if (!isPlatformSupported(cxxPlatform)) {
-          return NativeLinkableInput.of();
-        }
-        NativeLinkableInput.Builder builder = NativeLinkableInput.builder();
-        switch (type) {
-          case STATIC:
-            builder.addAllArgs(
-                getStaticLinkArgs(
-                    getBuildTarget(),
-                    CxxGenruleDescription.fixupSourcePaths(
-                        graphBuilder, cxxPlatform, args.getStaticLibs()),
-                    args.getStaticLink()));
-            break;
-          case STATIC_PIC:
-            builder.addAllArgs(
-                getStaticLinkArgs(
-                    getBuildTarget(),
-                    CxxGenruleDescription.fixupSourcePaths(
-                        graphBuilder, cxxPlatform, args.getStaticPicLibs()),
-                    args.getStaticPicLink()));
-            break;
-          case SHARED:
-            builder.addAllArgs(
-                getSharedLinkArgs(
-                    getBuildTarget(),
-                    CxxGenruleDescription.fixupSourcePaths(
-                        graphBuilder,
-                        cxxPlatform,
-                        ImmutableMap.<String, SourcePath>builder()
-                            .putAll(args.getSharedLibs())
-                            .putAll(args.getProvidedSharedLibs())
-                            .build()),
-                    args.getSharedLink()));
-            break;
-        }
-        return builder.build();
-      }
-
-      @Override
-      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-
-        // If we both shared and static libs, we support any linkage.
-        if (!args.getSharedLink().isEmpty()
-            && !(args.getStaticLink().isEmpty() && args.getStaticPicLink().isEmpty())) {
-          return Linkage.ANY;
-        }
-
-        // Otherwise, if we have a shared library, we only support shared linkage.
-        if (!args.getSharedLink().isEmpty()) {
-          return Linkage.SHARED;
-        }
-
-        // Otherwise, if we have a static library, we only support static linkage.
-        if (!(args.getStaticLink().isEmpty() && args.getStaticPicLink().isEmpty())) {
-          return Linkage.STATIC;
-        }
-
-        // Otherwise, header only libs use any linkage.
-        return Linkage.ANY;
-      }
-
-      @Override
-      public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
-        return getPreferredLinkage(cxxPlatform) != Linkage.SHARED;
-      }
-
-      @Override
-      public Iterable<? extends NativeLinkableGroup> getNativeLinkableDepsForPlatform(
-          CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-        if (!isPlatformSupported(cxxPlatform)) {
-          return ImmutableList.of();
-        }
-        return getNativeLinkableDeps(ruleResolver);
-      }
-
-      @Override
-      public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDepsForPlatform(
-          CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-        if (!isPlatformSupported(cxxPlatform)) {
-          return ImmutableList.of();
-        }
-        return getNativeLinkableExportedDeps(graphBuilder);
-      }
-
-      @Override
-      public ImmutableMap<String, SourcePath> getSharedLibraries(
-          CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-        if (!isPlatformSupported(cxxPlatform)) {
-          return ImmutableMap.of();
-        }
-        return args.getSharedLibs();
-      }
-
-      private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
-        return !args.getSupportedPlatformsRegex().isPresent()
-            || args.getSupportedPlatformsRegex()
-                .get()
-                .matcher(cxxPlatform.getFlavor().toString())
-                .find();
-      }
-    };
+    return new CustomPrebuiltCxxLibrary(buildTarget, context.getProjectFilesystem(), params, args);
   }
 
   @Override
@@ -346,15 +174,28 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
     return true;
   }
 
-  public abstract static class CustomPrebuiltCxxLibrary
-      extends NoopBuildRuleWithDeclaredAndExtraDeps
+  /**
+   * An action graph representation of a custom prebuilt C/C++ library from the target graph,
+   * providing the various interfaces to make it consumable by C/C++ preprocessing and native
+   * linkable rules.
+   */
+  public static class CustomPrebuiltCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       implements AbstractCxxLibraryGroup, LegacyNativeLinkableGroup {
+
+    private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
+        new TransitiveCxxPreprocessorInputCache(this);
     private PlatformLockedNativeLinkableGroup.Cache linkableCache =
         LegacyNativeLinkableGroup.getNativeLinkableCache(this);
 
+    private final PrebuiltCxxLibraryGroupDescriptionArg args;
+
     public CustomPrebuiltCxxLibrary(
-        BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+        BuildTarget buildTarget,
+        ProjectFilesystem projectFilesystem,
+        BuildRuleParams params,
+        PrebuiltCxxLibraryGroupDescriptionArg args) {
       super(buildTarget, projectFilesystem, params);
+      this.args = args;
     }
 
     @Override
@@ -366,6 +207,173 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
     @Override
     public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
       return linkableCache;
+    }
+
+    @Override
+    public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
+      return AndroidPackageableCollector.getPackageableRules(getBuildDeps());
+    }
+
+    @Override
+    public void addToCollector(AndroidPackageableCollector collector) {
+      collector.addNativeLinkable(this);
+    }
+
+    @Override
+    public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(
+        CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+      if (!isPlatformSupported(cxxPlatform)) {
+        return ImmutableList.of();
+      }
+      return FluentIterable.from(getBuildDeps()).filter(CxxPreprocessorDep.class);
+    }
+
+    @Override
+    public CxxPreprocessorInput getCxxPreprocessorInput(
+        CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+      CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
+      builder.putAllPreprocessorFlags(
+          ImmutableListMultimap.copyOf(
+              Multimaps.transformValues(
+                  CxxFlags.getLanguageFlags(
+                      args.getExportedPreprocessorFlags(),
+                      PatternMatchedCollection.of(),
+                      ImmutableMap.of(),
+                      cxxPlatform),
+                  StringArg::of)));
+      for (SourcePath includeDir : args.getIncludeDirs()) {
+        builder.addIncludes(CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, includeDir));
+      }
+      return builder.build();
+    }
+
+    @Override
+    public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+        CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+      return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, graphBuilder);
+    }
+
+    @Override
+    public Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(
+        BuildRuleResolver ruleResolver) {
+      return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkableGroup.class);
+    }
+
+    @Override
+    public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
+        BuildRuleResolver ruleResolver) {
+      return FluentIterable.from(args.getExportedDeps())
+          .transform(ruleResolver::getRule)
+          .filter(NativeLinkableGroup.class);
+    }
+
+    @Override
+    public NativeLinkableInput getNativeLinkableInput(
+        CxxPlatform cxxPlatform,
+        Linker.LinkableDepType type,
+        boolean forceLinkWhole,
+        ActionGraphBuilder graphBuilder,
+        TargetConfiguration targetConfiguration) {
+
+      if (!isPlatformSupported(cxxPlatform)) {
+        return NativeLinkableInput.of();
+      }
+      NativeLinkableInput.Builder builder = NativeLinkableInput.builder();
+      switch (type) {
+        case STATIC:
+          builder.addAllArgs(
+              getStaticLinkArgs(
+                  getBuildTarget(),
+                  CxxGenruleDescription.fixupSourcePaths(
+                      graphBuilder, cxxPlatform, args.getStaticLibs()),
+                  args.getStaticLink()));
+          break;
+        case STATIC_PIC:
+          builder.addAllArgs(
+              getStaticLinkArgs(
+                  getBuildTarget(),
+                  CxxGenruleDescription.fixupSourcePaths(
+                      graphBuilder, cxxPlatform, args.getStaticPicLibs()),
+                  args.getStaticPicLink()));
+          break;
+        case SHARED:
+          builder.addAllArgs(
+              getSharedLinkArgs(
+                  getBuildTarget(),
+                  CxxGenruleDescription.fixupSourcePaths(
+                      graphBuilder,
+                      cxxPlatform,
+                      ImmutableMap.<String, SourcePath>builder()
+                          .putAll(args.getSharedLibs())
+                          .putAll(args.getProvidedSharedLibs())
+                          .build()),
+                  args.getSharedLink()));
+          break;
+      }
+      return builder.build();
+    }
+
+    @Override
+    public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+
+      // If we both shared and static libs, we support any linkage.
+      if (!args.getSharedLink().isEmpty()
+          && !(args.getStaticLink().isEmpty() && args.getStaticPicLink().isEmpty())) {
+        return Linkage.ANY;
+      }
+
+      // Otherwise, if we have a shared library, we only support shared linkage.
+      if (!args.getSharedLink().isEmpty()) {
+        return Linkage.SHARED;
+      }
+
+      // Otherwise, if we have a static library, we only support static linkage.
+      if (!(args.getStaticLink().isEmpty() && args.getStaticPicLink().isEmpty())) {
+        return Linkage.STATIC;
+      }
+
+      // Otherwise, header only libs use any linkage.
+      return Linkage.ANY;
+    }
+
+    @Override
+    public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
+      return getPreferredLinkage(cxxPlatform) != Linkage.SHARED;
+    }
+
+    @Override
+    public Iterable<? extends NativeLinkableGroup> getNativeLinkableDepsForPlatform(
+        CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+      if (!isPlatformSupported(cxxPlatform)) {
+        return ImmutableList.of();
+      }
+      return getNativeLinkableDeps(ruleResolver);
+    }
+
+    @Override
+    public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDepsForPlatform(
+        CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+      if (!isPlatformSupported(cxxPlatform)) {
+        return ImmutableList.of();
+      }
+      return getNativeLinkableExportedDeps(graphBuilder);
+    }
+
+    @Override
+    public ImmutableMap<String, SourcePath> getSharedLibraries(
+        CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+      if (!isPlatformSupported(cxxPlatform)) {
+        return ImmutableMap.of();
+      }
+      return args.getSharedLibs();
+    }
+
+    private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
+      return !args.getSupportedPlatformsRegex().isPresent()
+          || args.getSupportedPlatformsRegex()
+              .get()
+              .matcher(cxxPlatform.getFlavor().toString())
+              .find();
     }
   }
 
