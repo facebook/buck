@@ -88,7 +88,7 @@ public class SmartDexingStepTest {
             EnumSet.of(DxStep.Option.NO_OPTIMIZE),
             XzStep.DEFAULT_COMPRESSION_LEVEL,
             Optional.empty(),
-            DxStep.DX,
+            DxStep.D8,
             null,
             false);
     assertFalse("'dummy' is not a matching input hash", rule.checkIsCached());
@@ -122,7 +122,7 @@ public class SmartDexingStepTest {
         dxOptions,
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         Optional.empty(),
-        DxStep.DX,
+        DxStep.D8,
         null,
         false);
 
@@ -166,7 +166,7 @@ public class SmartDexingStepTest {
         dxOptions,
         9,
         Optional.empty(),
-        DxStep.DX,
+        DxStep.D8,
         null,
         false);
 
@@ -210,7 +210,7 @@ public class SmartDexingStepTest {
         dxOptions,
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         Optional.empty(),
-        DxStep.DX,
+        DxStep.D8,
         null,
         false);
 
@@ -248,7 +248,7 @@ public class SmartDexingStepTest {
         dxOptions,
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         Optional.empty(),
-        DxStep.DX,
+        DxStep.D8,
         null,
         false);
 
@@ -290,7 +290,7 @@ public class SmartDexingStepTest {
         dxOptions,
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         Optional.empty(),
-        DxStep.DX,
+        DxStep.D8,
         null,
         false);
   }

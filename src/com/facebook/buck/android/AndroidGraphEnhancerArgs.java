@@ -159,7 +159,7 @@ public interface AndroidGraphEnhancerArgs extends HasDuplicateAndroidResourceTyp
 
   @Value.Default
   default String getDexTool() {
-    return DxStep.DX;
+    return DxStep.D8;
   }
 
   Optional<SourcePath> getDexReorderToolFile();

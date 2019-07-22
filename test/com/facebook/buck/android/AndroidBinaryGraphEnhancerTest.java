@@ -581,7 +581,7 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
-            DxStep.DX,
+            DxStep.D8,
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet::of,
@@ -622,19 +622,19 @@ public class AndroidBinaryGraphEnhancerTest {
 
     BuildRule preDexMergeRule = graphEnhancer.createPreDexMergeRule(preDexedLibraries);
     BuildTarget dexMergeTarget =
-        BuildTargetFactory.newInstance("//java/com/example:apk#dex,dex_merge");
+        BuildTargetFactory.newInstance("//java/com/example:apk#d8,dex_merge");
     BuildRule dexMergeRule = graphBuilder.getRule(dexMergeTarget);
 
     assertEquals(dexMergeRule, preDexMergeRule);
 
     BuildTarget javaDep1DexBuildTarget =
-        javaDep1BuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR);
+        javaDep1BuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.D8_FLAVOR);
     BuildTarget javaDep2DexBuildTarget =
-        javaDep2BuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR);
+        javaDep2BuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.D8_FLAVOR);
     BuildTarget javaLibDexBuildTarget =
-        javaLibBuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR);
+        javaLibBuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.D8_FLAVOR);
     assertThat(
-        "There should be a #dex rule for dep1 and lib, but not dep2 because it is in the no_dx "
+        "There should be a #d8 rule for dep1 and lib, but not dep2 because it is in the no_dx "
             + "list.  And we should depend on uber_r_dot_java",
         Iterables.transform(dexMergeRule.getBuildDeps(), BuildRule::getBuildTarget),
         allOf(
@@ -733,7 +733,7 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
-            DxStep.DX,
+            DxStep.D8,
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet::of,
@@ -869,7 +869,7 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
-            DxStep.DX,
+            DxStep.D8,
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet::of,
@@ -952,7 +952,7 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
-            DxStep.DX,
+            DxStep.D8,
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet::of,
@@ -1063,7 +1063,7 @@ public class AndroidBinaryGraphEnhancerTest {
             CxxPlatformUtils.DEFAULT_CONFIG,
             new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty()),
             new DxConfig(FakeBuckConfig.builder().build()),
-            DxStep.DX,
+            DxStep.D8,
             Optional.empty(),
             defaultNonPredexedArgs(),
             ImmutableSortedSet::of,

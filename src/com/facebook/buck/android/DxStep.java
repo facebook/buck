@@ -123,7 +123,7 @@ public class DxStep extends ShellStep {
         outputDexFile,
         filesToDex,
         EnumSet.noneOf(DxStep.Option.class),
-        DX);
+        D8);
   }
 
   /**
