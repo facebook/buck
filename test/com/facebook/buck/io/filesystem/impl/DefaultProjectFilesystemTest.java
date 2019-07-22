@@ -518,7 +518,7 @@ public class DefaultProjectFilesystemTest {
         filesystem, ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")), output);
 
     ZipInspector zipInspector = new ZipInspector(output);
-    assertEquals(ImmutableSet.of("foo/bar.txt", "foo/baz.txt"), zipInspector.getZipFileEntries());
+    assertEquals(ImmutableList.of("foo/bar.txt", "foo/baz.txt"), zipInspector.getZipFileEntries());
   }
 
   @Test
@@ -537,7 +537,7 @@ public class DefaultProjectFilesystemTest {
 
     ZipInspector zipInspector = new ZipInspector(output);
     assertEquals(
-        ImmutableSet.of("foo/bar.txt", "foo/baz.txt", "empty/"), zipInspector.getZipFileEntries());
+        ImmutableList.of("foo/bar.txt", "foo/baz.txt", "empty/"), zipInspector.getZipFileEntries());
   }
 
   @Test

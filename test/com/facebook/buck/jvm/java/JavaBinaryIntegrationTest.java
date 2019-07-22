@@ -170,10 +170,10 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
     assertEquals(
         "com.example.Alligator, com.example.A and any inner classes should be removed.",
         commonEntries,
-        new ZipInspector(binaryJarWithBlacklist).getZipFileEntries());
+        ImmutableSet.copyOf(new ZipInspector(binaryJarWithBlacklist).getZipFileEntries()));
     assertEquals(
         ImmutableSet.builder().addAll(commonEntries).addAll(blacklistedEntries).build(),
-        new ZipInspector(binaryJarWithoutBlacklist).getZipFileEntries());
+        ImmutableSet.copyOf(new ZipInspector(binaryJarWithoutBlacklist).getZipFileEntries()));
   }
 
   @Test

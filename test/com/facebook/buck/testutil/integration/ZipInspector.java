@@ -25,7 +25,7 @@ import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.MoreStringsForTests;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -37,12 +37,12 @@ import org.hamcrest.Matchers;
 public class ZipInspector {
 
   private final Path zipFile;
-  private final ImmutableSet<String> zipFileEntries;
+  private final ImmutableList<String> zipFileEntries;
 
   public ZipInspector(Path zip) throws IOException {
     this.zipFile = Preconditions.checkNotNull(zip);
 
-    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
     try (ZipFile zipFile = new ZipFile(zip.toFile())) {
       Enumeration<? extends ZipEntry> entries = zipFile.entries();
       while (entries.hasMoreElements()) {
@@ -94,7 +94,7 @@ public class ZipInspector {
     }
   }
 
-  public ImmutableSet<String> getZipFileEntries() {
+  public ImmutableList<String> getZipFileEntries() {
     return zipFileEntries;
   }
 
