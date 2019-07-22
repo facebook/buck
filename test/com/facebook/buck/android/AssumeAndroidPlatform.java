@@ -112,20 +112,18 @@ public class AssumeAndroidPlatform {
   }
 
   /**
-   * Checks that Android SDK has build tools with aapt that supports `--output-test-symbols`.
+   * Checks that Android SDK has build tools with aapt2 that supports `--output-test-symbols`.
    *
    * <p>It seems that this option appeared in build-tools 26.0.2 and the check only verifies the
    * version of build tools, it doesn't run aapt2 to verify it actually supports the option.
    */
   public static void assumeAapt2WithOutputTextSymbolsIsAvailable() {
-    AndroidSdkLocation androidSdkLocation = getAndroidSdkLocation();
-
-    assumeBuildToolsIsNewer(androidSdkLocation, "26.0.2");
-
-    assumeAapt2IsAvailable(androidSdkLocation);
+    verifyAndroidSkdVersionIsAboveSpecified("26.0.2");
+    assumeAapt2IsAvailable();
   }
 
-  private static void assumeAapt2IsAvailable(AndroidSdkLocation androidSdkLocation) {
+  private static void assumeAapt2IsAvailable() {
+    AndroidSdkLocation androidSdkLocation = getAndroidSdkLocation();
     AndroidBuildToolsResolver buildToolsResolver =
         new AndroidBuildToolsResolver(
             AndroidNdkHelper.DEFAULT_CONFIG,
@@ -188,10 +186,11 @@ public class AssumeAndroidPlatform {
   }
 
   public static void assumeBundleBuildIsSupported() {
-    AndroidSdkLocation androidSdkLocation = getAndroidSdkLocation();
+    verifyAndroidSkdVersionIsAboveSpecified("28.0.0");
+    assumeAapt2IsAvailable();
+  }
 
-    assumeBuildToolsIsNewer(androidSdkLocation, "28.0.0");
-
-    assumeAapt2IsAvailable(androidSdkLocation);
+  private static void verifyAndroidSkdVersionIsAboveSpecified(String expectedBuildToolsVersion) {
+    assumeBuildToolsIsNewer(getAndroidSdkLocation(), expectedBuildToolsVersion);
   }
 }
