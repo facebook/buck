@@ -44,6 +44,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -100,6 +101,10 @@ public class ObjectMappers {
 
   public static JsonParser createParser(InputStream stream) throws IOException {
     return jsonFactory.createParser(stream);
+  }
+
+  public static JsonParser createParser(Reader reader) throws IOException {
+    return jsonFactory.createParser(reader);
   }
 
   public static JsonGenerator createGenerator(OutputStream stream) throws IOException {

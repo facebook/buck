@@ -55,6 +55,7 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -68,6 +69,7 @@ import com.google.devtools.build.lib.syntax.Runtime;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -244,15 +246,14 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
           createParserInputStream(
               Objects.requireNonNull(buckPyProcess).getStdout(), processedBytes.isPresent());
       buckPyProcessJsonGenerator = ObjectMappers.createGenerator(buckPyProcess.getStdin());
-      // We have to wait to create the JsonParser until after we write our
-      // first request, because Jackson "helpfully" synchronously reads
-      // from the InputStream trying to detect whether the encoding is
-      // UTF-8 or UTF-16 as soon as you create a JsonParser:
-      //
-      // https://git.io/vSgnA
-      //
-      // Since buck.py doesn't write any data until after it receives
-      // a query, creating the JsonParser here would hang indefinitely.
+
+      // Explicitly use Reader instead of InputStream because in case if InputStream is provided
+      // Jackson tries to detect encoding be reading first bytes; because the process may not
+      // output anything at this moment yet this can hang indefinitely.
+      buckPyProcessJsonParser =
+          ObjectMappers.createParser(
+              new InputStreamReader(
+                  Objects.requireNonNull(buckPyProcessInput).getInputStream(), Charsets.UTF_8));
 
       InputStream stderr = buckPyProcess.getStderr();
 
@@ -613,20 +614,6 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       LOG.debug(e, "Swallowing exception on flush");
     }
 
-    if (buckPyProcessJsonParser == null) {
-      // We have to wait to create the JsonParser until after we write our
-      // first request, because Jackson "helpfully" synchronously reads
-      // from the InputStream trying to detect whether the encoding is
-      // UTF-8 or UTF-16 as soon as you create a JsonParser:
-      //
-      // https://git.io/vSgnA
-      //
-      // Since buck.py doesn't write any data until after it receives
-      // a query, creating the JsonParser any earlier than this would
-      // hang indefinitely.
-      buckPyProcessJsonParser =
-          ObjectMappers.createParser(Objects.requireNonNull(buckPyProcessInput).getInputStream());
-    }
     if (LOG.isVerboseEnabled()) {
       LOG.verbose(
           "Parsing output of buck.py for %s...", request.getOrDefault("buildFile", "[unknown]"));
