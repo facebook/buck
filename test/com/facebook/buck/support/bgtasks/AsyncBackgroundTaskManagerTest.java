@@ -363,6 +363,7 @@ public class AsyncBackgroundTaskManagerTest {
   @Test
   public void testCancellableTasks() throws InterruptedException, ExecutionException {
     manager = AsyncBackgroundTaskManager.of(NTHREADS);
+    manager.notify(Notification.COMMAND_START);
 
     CountDownLatch blocker = new CountDownLatch(1);
     CountDownLatch waiter = new CountDownLatch(2);
