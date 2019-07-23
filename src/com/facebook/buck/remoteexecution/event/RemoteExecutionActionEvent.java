@@ -40,10 +40,11 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
   /** The current state of a Remote Execution Actions. */
   public enum State {
     WAITING("wait"),
-    DELETING_STALE_OUTPUTS("del"),
     COMPUTING_ACTION("comp"),
-    UPLOADING_INPUTS("upl"),
+    UPLOADING_INPUTS("upl_in"),
+    UPLOADING_ACTION("upl_act"),
     EXECUTING("exec"),
+    DELETING_STALE_OUTPUTS("del"),
     MATERIALIZING_OUTPUTS("dwl"),
     ACTION_SUCCEEDED("suc"),
     ACTION_FAILED("fail"),
