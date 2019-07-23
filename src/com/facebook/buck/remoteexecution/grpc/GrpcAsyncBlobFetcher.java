@@ -29,13 +29,16 @@ import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.util.Scope;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.ByteString;
 import io.grpc.Status;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.security.MessageDigest;
@@ -111,7 +114,8 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
 
   @Override
   public ListenableFuture<Void> batchFetchBlobs(
-      ImmutableMultimap<Protocol.Digest, WritableByteChannel> requests) {
+      ImmutableMultimap<Protocol.Digest, WritableByteChannel> requests,
+      ImmutableMultimap<Protocol.Digest, SettableFuture<Void>> futures) {
     Scope scope =
         CasBlobDownloadEvent.sendEvent(
             buckEventBus,
@@ -145,33 +149,15 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
 
                 for (BatchReadBlobsResponse.Response batchResponse : responses) {
                   Protocol.Digest digest = new GrpcProtocol.GrpcDigest(batchResponse.getDigest());
-                  // TODO(rajy): We should treat these as individual errors
                   Preconditions.checkState(
-                      Status.fromCodeValue(batchResponse.getStatus().getCode()).isOk()
-                          && requests.containsKey(digest),
-                      "Invalid batchResponse from CAS server for digest: [%s], code: [%s] message: [%s].",
-                      digest,
-                      batchResponse.getStatus().getCode(),
-                      batchResponse.getStatus().getMessage());
-                  MessageDigest messageDigest = protocol.getMessageDigest();
-                  for (ByteBuffer dataByteBuffer :
-                      batchResponse.getData().asReadOnlyByteBufferList()) {
-                    messageDigest.update(dataByteBuffer.duplicate());
-                    for (WritableByteChannel channel : requests.get(digest)) {
-                      // Reset buffer position for each channel that's written to
-                      channel.write(dataByteBuffer.duplicate());
-                    }
-                  }
-                  String receivedHash = HashCode.fromBytes(messageDigest.digest()).toString();
-                  if (digest.getSize() != batchResponse.getData().size()
-                      || !digest.getHash().equals(receivedHash)) {
-                    throw new BuckUncheckedExecutionException(
-                        "Digest of received bytes: "
-                            + receivedHash
-                            + ":"
-                            + batchResponse.getData().size()
-                            + " doesn't match expected digest: "
-                            + digest);
+                      requests.containsKey(digest),
+                      "Unknown digest: [%s] wasn't in requests.",
+                      digest);
+                  try {
+                    handleResult(digest, batchResponse, requests.get(digest));
+                    futures.get(digest).forEach(future -> future.set(null));
+                  } catch (Exception e) {
+                    futures.get(digest).forEach(future -> future.setException(e));
                   }
                 }
               } catch (Exception e) {
@@ -181,6 +167,38 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
               return null;
             },
             MoreExecutors.directExecutor()));
+  }
+
+  private void handleResult(
+      Protocol.Digest digest,
+      BatchReadBlobsResponse.Response batchResponse,
+      ImmutableCollection<WritableByteChannel> writableByteChannels)
+      throws IOException {
+    if (!Status.fromCodeValue(batchResponse.getStatus().getCode()).isOk()) {
+      throw new BuckUncheckedExecutionException(
+          String.format(
+              "Invalid batchResponse from CAS server for digest: [%s], code: [%s] message: [%s].",
+              digest, batchResponse.getStatus().getCode(), batchResponse.getStatus().getMessage()));
+    }
+    MessageDigest messageDigest = protocol.getMessageDigest();
+    for (ByteBuffer dataByteBuffer : batchResponse.getData().asReadOnlyByteBufferList()) {
+      messageDigest.update(dataByteBuffer.duplicate());
+      for (WritableByteChannel channel : writableByteChannels) {
+        // Reset buffer position for each channel that's written to
+        channel.write(dataByteBuffer.duplicate());
+      }
+    }
+    String receivedHash = HashCode.fromBytes(messageDigest.digest()).toString();
+    if (digest.getSize() != batchResponse.getData().size()
+        || !digest.getHash().equals(receivedHash)) {
+      throw new BuckUncheckedExecutionException(
+          "Digest of received bytes: "
+              + receivedHash
+              + ":"
+              + batchResponse.getData().size()
+              + " doesn't match expected digest: "
+              + digest);
+    }
   }
 
   private <T> ListenableFuture<T> closeScopeWhenFutureCompletes(

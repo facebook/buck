@@ -43,6 +43,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.io.InputStream;
@@ -417,13 +418,16 @@ public class OutputsMaterializerTest {
 
     @Override
     public ListenableFuture<Void> batchFetchBlobs(
-        ImmutableMultimap<Digest, WritableByteChannel> requests) throws IOException {
+        ImmutableMultimap<Digest, WritableByteChannel> requests,
+        ImmutableMultimap<Digest, SettableFuture<Void>> futures)
+        throws IOException {
       for (Digest digest : requests.keySet()) {
         try {
           ByteBuffer b = fetch(digest).get();
           for (WritableByteChannel channel : requests.get(digest)) {
             channel.write(b.duplicate());
           }
+          futures.get(digest).forEach(future -> future.set(null));
         } catch (InterruptedException | ExecutionException e) {
           throw new RuntimeException(e);
         }

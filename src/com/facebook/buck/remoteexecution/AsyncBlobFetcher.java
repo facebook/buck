@@ -20,6 +20,7 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
@@ -30,6 +31,8 @@ public interface AsyncBlobFetcher {
 
   ListenableFuture<Void> fetchToStream(Digest digest, WritableByteChannel channel);
 
-  ListenableFuture<Void> batchFetchBlobs(ImmutableMultimap<Digest, WritableByteChannel> requests)
+  ListenableFuture<Void> batchFetchBlobs(
+      ImmutableMultimap<Digest, WritableByteChannel> requests,
+      ImmutableMultimap<Digest, SettableFuture<Void>> futures)
       throws IOException;
 }

@@ -43,6 +43,7 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.MoreFiles;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.devtools.build.lib.concurrent.KeyedLocker.AutoUnlocker;
 import com.google.devtools.build.lib.concurrent.StripedKeyedLocker;
 import java.io.BufferedInputStream;
@@ -133,13 +134,16 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
 
           @Override
           public ListenableFuture<Void> batchFetchBlobs(
-              ImmutableMultimap<Digest, WritableByteChannel> requests) throws IOException {
+              ImmutableMultimap<Digest, WritableByteChannel> requests,
+              ImmutableMultimap<Digest, SettableFuture<Void>> futures)
+              throws IOException {
             for (Digest digest : requests.keySet()) {
               FileInputStream stream = getFileInputStream(digest);
               FileChannel input = stream.getChannel();
               for (WritableByteChannel channel : requests.get(digest)) {
                 input.transferTo(0, input.size(), channel);
               }
+              futures.get(digest).forEach(future -> future.set(null));
             }
             return Futures.immediateFuture(null);
           }

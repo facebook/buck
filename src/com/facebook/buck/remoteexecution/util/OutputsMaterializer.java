@@ -246,7 +246,7 @@ public class OutputsMaterializer {
     ImmutableList<PendingMaterialization> pending = builder.build();
 
     if (!pending.isEmpty()) {
-      try (SimplePerfEvent.Scope perfEvent =
+      try (SimplePerfEvent.Scope ignored =
           SimplePerfEvent.scope(
               buckEventBus,
               PerfEventId.of("outputs-materializer"),
@@ -264,6 +264,7 @@ public class OutputsMaterializer {
           ListenableFuture<Void> fetchToStream = fetcher.fetchToStream(large.digest, channel);
           try {
             // Wait for the stream to finish downloading before picking up more work
+            large.future.setFuture(fetchToStream);
             fetchToStream.get();
           } finally {
             tryCloseChannel(channel);
@@ -273,23 +274,25 @@ public class OutputsMaterializer {
           // Download batches of small objects
           ImmutableMultimap.Builder<Digest, WritableByteChannel> digestMap =
               ImmutableMultimap.builder();
+          ImmutableMultimap.Builder<Digest, SettableFuture<Void>> futureMap =
+              ImmutableMultimap.builder();
           for (PendingMaterialization p : pending) {
             WritableByteChannel channel = p.materializer.getOutputChannel(p.path, p.isExecutable);
             digestMap.put(p.digest, channel);
+            futureMap.put(p.digest, p.future);
           }
 
           ImmutableMultimap<Digest, WritableByteChannel> batch = digestMap.build();
+          ImmutableMultimap<Digest, SettableFuture<Void>> futures = futureMap.build();
           try {
-            fetcher.batchFetchBlobs(batch).get();
+            fetcher.batchFetchBlobs(batch, futures).get();
           } finally {
             for (WritableByteChannel channel : batch.values()) {
               tryCloseChannel(channel);
             }
           }
         }
-        pending.forEach(materialization -> materialization.future.set(null));
         LOG.debug("Finished materializing: " + pending.size() + " requests, size: " + size);
-
       } catch (Exception e) {
         pending.forEach(materialization -> materialization.future.setException(e));
       }
