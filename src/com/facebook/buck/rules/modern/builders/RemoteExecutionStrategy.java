@@ -620,10 +620,10 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
 
       return () -> {
         if (actionState != State.WAITING) {
-          prevState = actionState;
-          actionState = State.WAITING;
           timeMsInState.put(
               actionState, TimeUnit.NANOSECONDS.toMillis(System.nanoTime()) - startMs);
+          prevState = actionState;
+          actionState = State.WAITING;
         }
         inner.close();
       };
