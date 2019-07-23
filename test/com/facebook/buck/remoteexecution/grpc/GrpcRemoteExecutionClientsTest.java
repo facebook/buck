@@ -22,6 +22,7 @@ import build.bazel.remote.execution.v2.ActionResult;
 import build.bazel.remote.execution.v2.ExecuteRequest;
 import build.bazel.remote.execution.v2.ExecuteResponse;
 import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionImplBase;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionHandle;
@@ -161,7 +162,8 @@ public class GrpcRemoteExecutionClientsTest {
     Path workDir = root.resolve("work");
     Files.createDirectories(workDir);
     LocalContentAddressedStorage storage =
-        new LocalContentAddressedStorage(cacheDir, new GrpcProtocol());
+        new LocalContentAddressedStorage(
+            cacheDir, new GrpcProtocol(), BuckEventBusForTests.newInstance());
     services.add(new LocalBackedCasServer(storage));
     services.add(new LocalBackedByteStreamServer(storage));
 

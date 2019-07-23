@@ -58,7 +58,9 @@ public class GrpcExecutionFactory {
     GrpcRemoteExecutionServiceServer remoteExecution =
         new GrpcRemoteExecutionServiceServer(
             new LocalContentAddressedStorage(
-                workDir.getPath().resolve("__cache__"), GrpcRemoteExecutionClients.PROTOCOL),
+                workDir.getPath().resolve("__cache__"),
+                GrpcRemoteExecutionClients.PROTOCOL,
+                buckEventBus),
             workDir.getPath().resolve("__work__"));
 
     InProcessServerBuilder builder = InProcessServerBuilder.forName("unique");

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient.FileMaterializer;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
@@ -96,7 +97,8 @@ public class OutputsMaterializerTest {
         new SimpleSingleThreadedBlobFetcher(
             ImmutableMap.of(digest1, data1, digest2, data2, digest3, data3, digest4, data4));
 
-    new OutputsMaterializer(SIZE_LIMIT, service, fetcher, protocol)
+    new OutputsMaterializer(
+            SIZE_LIMIT, service, fetcher, protocol, BuckEventBusForTests.newInstance())
         .materialize(
             ImmutableList.of(),
             ImmutableList.of(outputFile1, outputFile2, outputFile3, outputFile4),
@@ -149,7 +151,8 @@ public class OutputsMaterializerTest {
     AsyncBlobFetcher fetcher =
         new SimpleSingleThreadedBlobFetcher(ImmutableMap.of(digest1, data1, digest2, data2));
 
-    new OutputsMaterializer(SIZE_LIMIT, service, fetcher, protocol)
+    new OutputsMaterializer(
+            SIZE_LIMIT, service, fetcher, protocol, BuckEventBusForTests.newInstance())
         .materialize(
             ImmutableList.of(), ImmutableList.of(outputFile1, outputFile2), recordingMaterializer)
         .get();
@@ -199,7 +202,8 @@ public class OutputsMaterializerTest {
                           }
                         })));
 
-    new OutputsMaterializer(SIZE_LIMIT, service, fetcher, protocol)
+    new OutputsMaterializer(
+            SIZE_LIMIT, service, fetcher, protocol, BuckEventBusForTests.newInstance())
         .materialize(
             collectedOutputs.outputDirectories, collectedOutputs.outputFiles, recordingMaterializer)
         .get();

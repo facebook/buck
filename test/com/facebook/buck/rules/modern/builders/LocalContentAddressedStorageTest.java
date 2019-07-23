@@ -18,6 +18,7 @@ package com.facebook.buck.rules.modern.builders;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
@@ -54,7 +55,8 @@ public class LocalContentAddressedStorageTest {
   @Before
   public void setUp() {
     storageDir = tmp.getRoot().resolve("__storage__");
-    storage = new LocalContentAddressedStorage(storageDir, protocol);
+    storage =
+        new LocalContentAddressedStorage(storageDir, protocol, BuckEventBusForTests.newInstance());
   }
 
   @Test

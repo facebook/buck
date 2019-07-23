@@ -17,6 +17,7 @@
 package com.facebook.buck.remoteexecution.util;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
@@ -78,7 +79,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
   private final Protocol protocol;
   private final AsyncBlobFetcher fetcher;
 
-  public LocalContentAddressedStorage(Path cacheDir, Protocol protocol) {
+  public LocalContentAddressedStorage(Path cacheDir, Protocol protocol, BuckEventBus buckEventBus) {
     this.cacheDir = cacheDir;
     this.protocol = protocol;
     ExecutorService uploadService = MostExecutors.newMultiThreadExecutor("local-cas-write", 4);
@@ -148,7 +149,8 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
             SIZE_LIMIT,
             MostExecutors.newMultiThreadExecutor("output-materializer", 4),
             fetcher,
-            protocol);
+            protocol,
+            buckEventBus);
     this.inputsMaterializer =
         new InputsMaterializer(
             protocol,

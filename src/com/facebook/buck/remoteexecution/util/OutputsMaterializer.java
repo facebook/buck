@@ -17,6 +17,9 @@
 package com.facebook.buck.remoteexecution.util;
 
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.PerfEventId;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient.FileMaterializer;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
@@ -61,6 +64,7 @@ public class OutputsMaterializer {
   private final Protocol protocol;
   private final int sizeLimit;
   private final ExecutorService materializerService;
+  private final BuckEventBus buckEventBus;
   private final BlockingDeque<PendingMaterialization> waitingMaterialization =
       new LinkedBlockingDeque<>();
 
@@ -128,11 +132,13 @@ public class OutputsMaterializer {
       int sizeLimit,
       ExecutorService materializerService,
       AsyncBlobFetcher fetcher,
-      Protocol protocol) {
+      Protocol protocol,
+      BuckEventBus buckEventBus) {
     this.sizeLimit = sizeLimit;
     this.fetcher = fetcher;
     this.protocol = protocol;
     this.materializerService = materializerService;
+    this.buckEventBus = buckEventBus;
   }
 
   /** Materialize the outputs of an action into a directory. */
@@ -240,7 +246,14 @@ public class OutputsMaterializer {
     ImmutableList<PendingMaterialization> pending = builder.build();
 
     if (!pending.isEmpty()) {
-      try {
+      try (SimplePerfEvent.Scope perfEvent =
+          SimplePerfEvent.scope(
+              buckEventBus,
+              PerfEventId.of("outputs-materializer"),
+              "size",
+              size,
+              "items",
+              pending.size())) {
         if (size > sizeLimit) {
           LOG.debug("Starting stream request for: " + pending.size() + " requests, size: " + size);
           PendingMaterialization large = Iterables.getOnlyElement(pending);

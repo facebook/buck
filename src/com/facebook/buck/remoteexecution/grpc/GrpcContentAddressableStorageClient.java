@@ -76,7 +76,8 @@ public class GrpcContentAddressableStorageClient implements ContentAddressedStor
             SIZE_LIMIT,
             MostExecutors.newMultiThreadExecutor("output-materializer", EXECUTOR_THREADS),
             fetcher,
-            protocol);
+            protocol,
+            buckEventBus);
   }
 
   @Override

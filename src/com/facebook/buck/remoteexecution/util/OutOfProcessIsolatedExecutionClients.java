@@ -65,7 +65,8 @@ public class OutOfProcessIsolatedExecutionClients implements RemoteExecutionClie
       throws IOException {
     this.workDir = new NamedTemporaryDirectory("__work__");
     this.storage =
-        new LocalContentAddressedStorage(workDir.getPath().resolve("__cache__"), protocol);
+        new LocalContentAddressedStorage(
+            workDir.getPath().resolve("__cache__"), protocol, eventBus);
     this.protocol = protocol;
     this.executionService =
         (actionDigest, ruleName, metadataProvider) -> {
