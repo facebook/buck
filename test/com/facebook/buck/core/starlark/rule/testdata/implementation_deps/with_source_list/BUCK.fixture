@@ -8,6 +8,13 @@ write_file(
 )
 
 write_file(
+    name = "hidden",
+    content = "hidden_file_contents",
+    executable = False,
+    filename = "hidden_file",
+)
+
+write_file(
     name = "other",
     content = "other_file_contents",
     executable = False,

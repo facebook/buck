@@ -77,6 +77,16 @@ public interface ParamInfo extends Comparable<ParamInfo> {
    */
   void traverse(CellPathResolver cellPathResolver, Traversal traversal, Object dto);
 
+  /**
+   * @return The value for this parameter if it is an "implicit" attribute, otherwise {@code null}
+   *     <p>This is used for parameters that have a default value and need to be accessed by users'
+   *     rule implementations, but should not be set directly by users. e.g. underscore prefixed
+   *     attributes in user defined rules. These values are pre-coercion and may be user provided.
+   *     If this parameter is not an implicit parameter, this method should return {@code null}
+   */
+  @Nullable
+  Object getImplicitPreCoercionValue();
+
   /** @return the value of this param as set on dto. */
   Object get(Object dto);
 

@@ -165,6 +165,12 @@ public class ReflectionParamInfo extends AbstractParamInfo {
     return this.closestGetterOnAbstractClassOrInterface.get().getAnnotation(Hint.class);
   }
 
+  @Nullable
+  @Override
+  public Object getImplicitPreCoercionValue() {
+    return null;
+  }
+
   public Method getSetter() {
     return setter;
   }

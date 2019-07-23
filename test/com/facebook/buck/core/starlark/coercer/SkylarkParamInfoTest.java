@@ -283,4 +283,15 @@ public class SkylarkParamInfoTest {
 
     assertEquals("foo", info.get(arg));
   }
+
+  @Test
+  public void returnsImplicitDefaultValue() throws LabelSyntaxException, EvalException {
+    SkylarkUserDefinedRule rule = FakeSkylarkUserDefinedRuleFactory.createSimpleRule();
+    SkylarkParamInfo info = new SkylarkParamInfo("baz", rule.getAttrs().get("baz"));
+    SkylarkParamInfo implicitInfo =
+        new SkylarkParamInfo("_implicit_baz", rule.getAttrs().get("baz"));
+
+    assertNull(info.getImplicitPreCoercionValue());
+    assertEquals("default", implicitInfo.getImplicitPreCoercionValue());
+  }
 }

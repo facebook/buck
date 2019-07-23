@@ -243,20 +243,28 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     assertThat(
         toList.apply(deps, "//with_source_list:with_default_srcs"),
         Matchers.containsInAnyOrder(
-            "//with_source_list:default", "//with_source_list:with_default_srcs"));
+            "//with_source_list:default",
+            "//with_source_list:with_default_srcs",
+            "//with_source_list:hidden"));
 
     assertThat(
         toList.apply(deps, "//with_source_list:with_explicit_srcs"),
         Matchers.containsInAnyOrder(
-            "//with_source_list:other", "//with_source_list:with_explicit_srcs"));
+            "//with_source_list:other",
+            "//with_source_list:with_explicit_srcs",
+            "//with_source_list:hidden"));
 
     assertThat(
         toList.apply(inputs, "//with_source_list:with_default_srcs"),
-        Matchers.containsInAnyOrder(Paths.get("with_source_list", "default_src.txt").toString()));
+        Matchers.containsInAnyOrder(
+            Paths.get("with_source_list", "default_src.txt").toString(),
+            Paths.get("with_source_list", "hidden_src.txt").toString()));
 
     assertThat(
         toList.apply(inputs, "//with_source_list:with_explicit_srcs"),
-        Matchers.containsInAnyOrder(Paths.get("with_source_list", "some_src.txt").toString()));
+        Matchers.containsInAnyOrder(
+            Paths.get("with_source_list", "some_src.txt").toString(),
+            Paths.get("with_source_list", "hidden_src.txt").toString()));
   }
 
   @Test

@@ -19,9 +19,17 @@ write_file = rule(
 )
 
 noop = rule(
-    attrs = {"srcs": attr.source_list(default = [
-        "//with_source_list:default",
-        "default_src.txt",
-    ])},
+    attrs = {
+        "srcs": attr.source_list(default = [
+            "//with_source_list:default",
+            "default_src.txt",
+        ]),
+        # Ensure that these values are actually used for deps, not just
+        # made available to users' implementation functions
+        "_hidden_srcs": attr.source_list(default = [
+            "//with_source_list:hidden",
+            "hidden_src.txt",
+        ]),
+    },
     implementation = _noop_impl,
 )

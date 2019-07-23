@@ -111,7 +111,19 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
     for (ParamInfo info : allParamInfo.values()) {
       Object attribute = attributes.get(info.getName());
       if (attribute == null) {
-        continue;
+        /**
+         * Rather than doing this logic in the parser, we do it here. This is to save on the amount
+         * of raw JSON that would otherwise be used constantly duplicating common values between
+         * different instances of a given rule. See {@link
+         * com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule#call(Object[],
+         * FuncallExpression, Environment)} where we create a dictionary of attributes. If this
+         * shortcut in the coercion becomes an issue, we can move the logic to the parser, but it
+         * may result in slower parse times.
+         */
+        attribute = info.getImplicitPreCoercionValue();
+        if (attribute == null) {
+          continue;
+        }
       }
       Object attributeValue;
       if (info.splitConfiguration()

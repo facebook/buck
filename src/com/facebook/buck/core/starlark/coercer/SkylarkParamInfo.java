@@ -55,6 +55,12 @@ public class SkylarkParamInfo extends AbstractParamInfo {
     return null;
   }
 
+  @Nullable
+  @Override
+  public Object getImplicitPreCoercionValue() {
+    return this.getName().startsWith("_") ? attr.getPreCoercionDefaultValue() : null;
+  }
+
   @Override
   public Object get(Object dto) {
     Preconditions.checkArgument(dto instanceof SkylarkDescriptionArgBuilder);
