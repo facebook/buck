@@ -18,9 +18,7 @@ package com.facebook.buck.features.js;
 
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
@@ -70,9 +68,7 @@ public class JsBundleGenrule extends Genrule
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
       Optional<String> environmentExpansionSeparator,
-      Optional<AndroidPlatformTarget> androidPlatformTarget,
-      Optional<AndroidNdk> androidNdk,
-      Optional<AndroidSdkLocation> androidSdkLocation,
+      Optional<AndroidTools> androidTools,
       JsBundleOutputs jsBundle,
       JsDependenciesOutputs jsDependencies,
       String bundleName) {
@@ -91,9 +87,7 @@ public class JsBundleGenrule extends Genrule
         false,
         true,
         environmentExpansionSeparator,
-        androidPlatformTarget,
-        androidNdk,
-        androidSdkLocation,
+        androidTools,
         false);
     this.jsBundle = jsBundle;
     this.jsDependencies = jsDependencies;

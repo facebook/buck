@@ -110,6 +110,7 @@ genrule(
     # Ideally, we'd have a special genrule that made the Android
     # tools available.
     bash = "`dirname $DX`/aapt dump strings $(location :app_with_res_overrides) > $OUT",
+    need_android_tools = True,
 )
 
 android_binary(
@@ -821,6 +822,7 @@ genrule(
     name = "check_for_aapt2",
     out = "does-aapt2-exist",
     bash = "test -x `dirname $DX`/aapt2 > $OUT",
+    need_android_tools = True,
 )
 
 android_binary(
@@ -853,6 +855,7 @@ genrule(
         "$(exe //third-party/smali:baksmali) d -o $TMP $(location :app_with_aapt2)",
         "cat $TMP/com/*/R*.smali > $OUT",
     ]),
+    need_android_tools = True,
 )
 
 genrule(
@@ -862,6 +865,7 @@ genrule(
     # Ideally, we'd have a special genrule that made the Android
     # tools available.
     bash = "`dirname $DX`/aapt dump resources $(location :app_with_aapt2) > $OUT",
+    need_android_tools = True,
 )
 
 android_instrumentation_apk(
@@ -1134,6 +1138,7 @@ genrule(
     # Ideally, we'd have a special genrule that made the Android
     # tools available.
     bash = "`dirname $DX`/aapt dump xmltree $(location :app_with_merged_manifest) AndroidManifest.xml > $OUT",
+    need_android_tools = True,
 )
 
 android_binary(
@@ -1155,6 +1160,7 @@ genrule(
     # Ideally, we'd have a special genrule that made the Android
     # tools available.
     bash = "`dirname $DX`/aapt dump xmltree $(location :app_with_invalid_merged_manifest) AndroidManifest.xml > $OUT",
+    need_android_tools = True,
 )
 
 genrule(

@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
@@ -157,9 +158,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path pathToTmpDirectory;
   private final Path pathToSrcDirectory;
   private final boolean isWorkerGenrule;
-  private final Optional<AndroidPlatformTarget> androidPlatformTarget;
-  private final Optional<AndroidNdk> androidNdk;
-  private final Optional<AndroidSdkLocation> androidSdkLocation;
+  private final Optional<AndroidTools> androidTools;
 
   protected Genrule(
       BuildTarget buildTarget,
@@ -176,13 +175,10 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean enableSandboxingInGenrule,
       boolean isCacheable,
       Optional<String> environmentExpansionSeparator,
-      Optional<AndroidPlatformTarget> androidPlatformTarget,
-      Optional<AndroidNdk> androidNdk,
-      Optional<AndroidSdkLocation> androidSdkLocation,
+      Optional<AndroidTools> androidTools,
       boolean noRemote) {
     super(buildTarget, projectFilesystem, params);
-    this.androidPlatformTarget = androidPlatformTarget;
-    this.androidNdk = androidNdk;
+    this.androidTools = androidTools;
     this.buildRuleResolver = buildRuleResolver;
     this.sandboxExecutionStrategy = sandboxExecutionStrategy;
     this.srcs = srcs;
@@ -196,7 +192,6 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.pathToOutFile = this.pathToOutDirectory.resolve(out);
     this.isCacheable = isCacheable;
     this.environmentExpansionSeparator = environmentExpansionSeparator.orElse(" ");
-    this.androidSdkLocation = androidSdkLocation;
     if (!pathToOutFile.startsWith(pathToOutDirectory) || pathToOutFile.equals(pathToOutDirectory)) {
       throw new HumanReadableException(
           "The 'out' parameter of genrule %s is '%s', which is not a valid file name.",
@@ -254,19 +249,27 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // TODO(mbolin): This entire hack needs to be removed. The [tools] section of .buckconfig
     // should be generalized to specify local paths to tools that can be used in genrules.
 
-    androidSdkLocation.ifPresent(
-        sdk -> environmentVariablesBuilder.put("ANDROID_HOME", sdk.getSdkRootPath().toString()));
-    androidNdk.ifPresent(
-        ndk -> environmentVariablesBuilder.put("NDK_HOME", ndk.getNdkRootPath().toString()));
-    androidPlatformTarget.ifPresent(
-        target -> {
-          environmentVariablesBuilder.put("DX", target.getDxExecutable().toString());
-          environmentVariablesBuilder.put("ZIPALIGN", target.getZipalignExecutable().toString());
+    androidTools.ifPresent(
+        tools -> {
+          AndroidSdkLocation androidSdkLocation = tools.getAndroidSdkLocation();
+          Optional<AndroidNdk> androidNdk = tools.getAndroidNdk();
+          AndroidPlatformTarget androidPlatformTarget = tools.getAndroidPlatformTarget();
+
+          environmentVariablesBuilder.put(
+              "ANDROID_HOME", androidSdkLocation.getSdkRootPath().toString());
+          environmentVariablesBuilder.put("DX", androidPlatformTarget.getDxExecutable().toString());
+          environmentVariablesBuilder.put(
+              "ZIPALIGN", androidPlatformTarget.getZipalignExecutable().toString());
           environmentVariablesBuilder.put(
               "AAPT",
-              String.join(" ", target.getAaptExecutable().get().getCommandPrefix(pathResolver)));
+              String.join(
+                  " ",
+                  androidPlatformTarget.getAaptExecutable().get().getCommandPrefix(pathResolver)));
           environmentVariablesBuilder.put(
-              "AAPT2", String.join(" ", getAapt2Tool(target).getCommandPrefix(pathResolver)));
+              "AAPT2",
+              String.join(" ", getAapt2Tool(androidPlatformTarget).getCommandPrefix(pathResolver)));
+          androidNdk.ifPresent(
+              ndk -> environmentVariablesBuilder.put("NDK_HOME", ndk.getNdkRootPath().toString()));
         });
 
     // TODO(t5302074): This shouldn't be necessary. Speculatively disabling.

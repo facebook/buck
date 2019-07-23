@@ -21,7 +21,7 @@ import static com.facebook.buck.android.AndroidBinaryResourcesGraphEnhancer.PACK
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.android.exopackage.ExopackageMode;
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
@@ -263,12 +263,8 @@ public class AndroidBinaryDescription
         .map(platform -> platform.getParseTimeDeps(targetConfiguration))
         .forEach(extraDepsBuilder::addAll);
 
-    toolchainProvider
-        .getByNameIfPresent(AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class)
-        .ifPresent(
-            androidPlatformTarget ->
-                androidPlatformTarget.addParseTimeDeps(
-                    targetGraphOnlyDepsBuilder, targetConfiguration));
+    AndroidTools.addParseTimeDepsToAndroidTools(
+        toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
   }
 
   @Override

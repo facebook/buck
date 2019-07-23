@@ -594,6 +594,7 @@ public class GenruleTest {
         GenruleBuilder.newGenruleBuilder(target, toolchainProvider)
             .setBash("echo something > $OUT")
             .setOut("file")
+            .setNeedAndroidTools(true)
             .build(graphBuilder);
 
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();

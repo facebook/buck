@@ -16,9 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.core.cell.CellPathResolver;
@@ -105,11 +103,9 @@ public class ApplePackageDescription
           Objects.requireNonNull(bundle.getSourcePathToOutput()),
           bundle.isCacheable(),
           Optional.empty(),
-          toolchainProvider.getByNameIfPresent(
-              AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
-          toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class),
-          toolchainProvider.getByNameIfPresent(
-              AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class));
+          args.isNeedAndroidTools()
+              ? Optional.of(AndroidTools.getAndroidTools(toolchainProvider))
+              : Optional.empty());
     } else {
       return new BuiltinApplePackage(
           buildTarget, projectFilesystem, params, bundle, config.getZipCompressionLevel());
@@ -133,6 +129,10 @@ public class ApplePackageDescription
       AbstractApplePackageDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    if (constructorArg.isNeedAndroidTools()) {
+      AndroidTools.addParseTimeDepsToAndroidTools(
+          toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
+    }
     extraDepsBuilder.add(propagateFlavorsToTarget(buildTarget, constructorArg.getBundle()));
   }
 
@@ -151,6 +151,12 @@ public class ApplePackageDescription
   interface AbstractApplePackageDescriptionArg extends CommonDescriptionArg {
     @Hint(isDep = false)
     BuildTarget getBundle();
+
+    /** This argument allows to specify if it needs android tools (like dex, aapt, ndk, sdk). */
+    @Value.Default
+    default boolean isNeedAndroidTools() {
+      return false;
+    }
   }
 
   /**

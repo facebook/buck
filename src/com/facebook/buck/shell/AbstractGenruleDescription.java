@@ -16,11 +16,11 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.AndroidTools;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasTests;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -54,6 +54,7 @@ import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.util.RichStream;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Comparator;
@@ -63,7 +64,7 @@ import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescription.CommonArg>
-    implements DescriptionWithTargetGraph<T> {
+    implements DescriptionWithTargetGraph<T>, ImplicitDepsInferringDescription<T> {
 
   protected final ToolchainProvider toolchainProvider;
   protected final SandboxExecutionStrategy sandboxExecutionStrategy;
@@ -113,12 +114,18 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         args.getEnableSandbox().orElse(enableSandbox),
         args.getCacheable().orElse(true),
         args.getEnvironmentExpansionSeparator(),
-        toolchainProvider.getByNameIfPresent(
-            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
-        toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class),
-        toolchainProvider.getByNameIfPresent(
-            AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
+        getAndroidToolsOptional(args),
         false);
+  }
+
+  /**
+   * Returns android tools if {@code args} has need_android_tools option set or empty optional
+   * otherwise.
+   */
+  protected Optional<AndroidTools> getAndroidToolsOptional(T args) {
+    return args.isNeedAndroidTools()
+        ? Optional.of(AndroidTools.getAndroidTools(toolchainProvider))
+        : Optional.empty();
   }
 
   /**
@@ -202,6 +209,19 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         Optional.empty(),
         Optional.empty(),
         Optional.empty());
+  }
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      T constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    if (constructorArg.isNeedAndroidTools()) {
+      AndroidTools.addParseTimeDepsToAndroidTools(
+          toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
+    }
   }
 
   @SuppressFieldNotInitialized

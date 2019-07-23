@@ -16,9 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -74,9 +72,7 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
       SourcePath apk,
       boolean isCacheable,
       Optional<String> environmentExpansionSeparator,
-      Optional<AndroidPlatformTarget> androidPlatformTarget,
-      Optional<AndroidNdk> androidNdk,
-      Optional<AndroidSdkLocation> androidSdkLocation) {
+      Optional<AndroidTools> androidTools) {
     super(
         buildTarget,
         projectFilesystem,
@@ -92,9 +88,7 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
         false,
         isCacheable,
         environmentExpansionSeparator,
-        androidPlatformTarget,
-        androidNdk,
-        androidSdkLocation,
+        androidTools,
         false);
     // TODO(cjhopman): Disallow apk_genrule depending on an apk with exopackage enabled.
     Preconditions.checkState(apk instanceof BuildTargetSourcePath);

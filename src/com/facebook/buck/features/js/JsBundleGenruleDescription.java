@@ -16,9 +16,7 @@
 
 package com.facebook.buck.features.js;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.apple.AppleBundleResources;
 import com.facebook.buck.apple.HasAppleBundleResourcesDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -152,11 +150,9 @@ public class JsBundleGenruleDescription
         bash,
         cmdExe,
         args.getEnvironmentExpansionSeparator(),
-        toolchainProvider.getByNameIfPresent(
-            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
-        toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class),
-        toolchainProvider.getByNameIfPresent(
-            AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
+        args.isNeedAndroidTools()
+            ? Optional.of(AndroidTools.getAndroidTools(toolchainProvider))
+            : Optional.empty(),
         bundleOutputs,
         jsDepsFileRule,
         args.computeBundleName(buildTarget.getFlavors(), bundleOutputs::getBundleName));
