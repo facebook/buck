@@ -68,10 +68,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -230,7 +233,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                   buildTarget,
                   Optional.ofNullable(actionInfo.get())
                       .map(RemoteExecutionActionInfo::getActionDigest),
-                  Optional.empty());
+                  Optional.empty(),
+                  Optional.of(ruleContext.timeMsInState));
             } else {
               // actionInfo and executionInfo must be set at this point
               Preconditions.checkState(actionInfo.get() != null);
@@ -242,7 +246,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                   buildTarget,
                   Optional.ofNullable(actionInfo.get())
                       .map(RemoteExecutionActionInfo::getActionDigest),
-                  Optional.ofNullable(executionInfo.get()).map(ExecutionResult::getActionMetadata));
+                  Optional.ofNullable(executionInfo.get()).map(ExecutionResult::getActionMetadata),
+                  Optional.of(ruleContext.timeMsInState));
             }
           }
 
@@ -254,7 +259,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                 buildTarget,
                 Optional.ofNullable(actionInfo.get())
                     .map(RemoteExecutionActionInfo::getActionDigest),
-                Optional.empty());
+                Optional.empty(),
+                Optional.of(ruleContext.timeMsInState));
           }
         },
         MoreExecutors.directExecutor());
@@ -551,16 +557,18 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     State prevState;
     final BuildTarget buildTarget;
     final BuckEventBus eventBus;
-
-    public boolean isCancelled() {
-      return guard.get() != null && guard.get().isLeft();
-    }
+    Map<State, Long> timeMsInState;
 
     public RuleContext(BuckEventBus eventBus, BuildTarget target) {
       this.buildTarget = target;
       this.eventBus = eventBus;
       this.actionState = State.WAITING;
       this.prevState = State.WAITING;
+      this.timeMsInState = new ConcurrentHashMap<>();
+    }
+
+    public boolean isCancelled() {
+      return guard.get() != null && guard.get().isLeft();
     }
 
     public Throwable getCancelReason() {
@@ -606,6 +614,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
           state.ordinal() > prevState.ordinal(),
           "Cannot Enter State: " + state + " from: " + actionState);
       actionState = state;
+      long startMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
       Scope inner =
           RemoteExecutionActionEvent.sendEvent(eventBus, state, buildTarget, actionDigest);
 
@@ -613,6 +622,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         if (actionState != State.WAITING) {
           prevState = actionState;
           actionState = State.WAITING;
+          timeMsInState.put(
+              actionState, TimeUnit.NANOSECONDS.toMillis(System.nanoTime()) - startMs);
         }
         inner.close();
       };
