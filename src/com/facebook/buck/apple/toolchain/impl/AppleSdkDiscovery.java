@@ -211,6 +211,9 @@ public class AppleSdkDiscovery {
       String version = sdkSettings.objectForKey("Version").toString();
       NSDictionary defaultProperties = (NSDictionary) sdkSettings.objectForKey("DefaultProperties");
       NSString platformName = (NSString) defaultProperties.objectForKey("PLATFORM_NAME");
+      if (name.startsWith("driverkit")) {
+        platformName = new NSString("driverkit");
+      }
 
       Optional<ImmutableList<String>> toolchains =
           appleConfig.getToolchainsOverrideForSDKName(platformName.toString());
