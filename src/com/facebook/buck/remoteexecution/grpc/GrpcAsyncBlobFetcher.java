@@ -64,7 +64,7 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
       Protocol protocol,
       int casDeadline) {
     this.instanceName = instanceName;
-    this.storageStub = storageStub;
+    this.storageStub = GrpcHeaderHandler.wrapStubToSendMetadata(storageStub, metadata);
     this.byteStreamStub = GrpcHeaderHandler.wrapStubToSendMetadata(byteStreamStub, metadata);
     this.buckEventBus = buckEventBus;
     this.protocol = protocol;
