@@ -3,6 +3,16 @@ cxx_library(
     srcs = [
         "bar.cpp",
     ],
+    deps = [
+        ":lib",
+    ],
+)
+
+cxx_library(
+    name = "lib",
+    srcs = ["lib.cpp"],
+    exported_headers = ["lib.h"],
+    preferred_linkage = "static",
 )
 
 genrule(
@@ -22,4 +32,7 @@ prebuilt_cxx_library(
     header_dirs = [":gen_prebuilt_foo_headers"],
     static_lib = ":gen_prebuilt_foo",
     visibility = ["PUBLIC"],
+    deps = [
+        ":lib",
+    ],
 )
