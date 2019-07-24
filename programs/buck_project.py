@@ -71,11 +71,11 @@ class BuckProject:
             self._buck_out_dirname = self.prefix + "-" + self._buck_out_dirname
 
         self._buck_out = os.path.join(self.root, self._buck_out_dirname)
-        buck_out_tmp = os.path.join(self._buck_out, "tmp")
-        makedirs(buck_out_tmp)
+        self._buck_out_tmp = os.path.join(self._buck_out, "tmp")
+        makedirs(self._buck_out_tmp)
         self._buck_out_log = os.path.join(self._buck_out, "log")
         makedirs(self._buck_out_log)
-        self.tmp_dir = tempfile.mkdtemp(prefix="buck_run.", dir=buck_out_tmp)
+        self.tmp_dir = tempfile.mkdtemp(prefix="buck_run.", dir=self._buck_out_tmp)
 
         # Only created if buckd is used.
         self.buckd_tmp_dir = None
@@ -140,12 +140,15 @@ class BuckProject:
             if os.path.exists(self.buckd_dir):
                 file_locks.rmtree_if_can_lock(self.buckd_dir)
 
+    def create_buckd_dir(self):
+        makedirs(self.buckd_dir)
+
     def create_buckd_tmp_dir(self):
         if self.buckd_tmp_dir is not None:
             return self.buckd_tmp_dir
-        tmp_dir_parent = os.path.join(self.buckd_dir, "tmp")
-        makedirs(tmp_dir_parent)
-        self.buckd_tmp_dir = tempfile.mkdtemp(prefix="buck_run.", dir=tmp_dir_parent)
+        self.buckd_tmp_dir = tempfile.mkdtemp(
+            prefix="buck_run.", dir=self._buck_out_tmp
+        )
         return self.buckd_tmp_dir
 
     def save_buckd_version(self, version):
