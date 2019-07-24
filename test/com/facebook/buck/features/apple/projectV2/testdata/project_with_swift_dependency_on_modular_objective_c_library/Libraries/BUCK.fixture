@@ -1,0 +1,25 @@
+EMPTY_CONFIGS = {
+    "Debug": {},
+    "Release": {},
+}
+
+apple_library(
+    name = "SwiftDep",
+    srcs = ["SwiftDep.swift"],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    swift_version = "4.2",
+    visibility = ["PUBLIC"],
+    deps = [":ObjCDep"],
+)
+
+apple_library(
+    name = "ObjCDep",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    exported_headers = ["ObjCDep.h"],
+    frameworks = [],
+    modular = True,
+    visibility = ["PUBLIC"],
+    deps = [],
+)

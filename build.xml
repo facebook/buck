@@ -785,10 +785,13 @@
   <target name="build-module-xcode" depends="compile, build-module-halide, build-module-js">
     <build-buck-module-jar-with-resources module-name="xcode">
       <module-javac-params>
+        <include name="com/facebook/buck/features/apple/common/*.java" />
         <include name="com/facebook/buck/features/apple/project/*.java" />
+        <include name="com/facebook/buck/features/apple/projectV2/*.java" />
       </module-javac-params>
       <module-resources>
         <include name="com/facebook/buck/features/apple/project/*.st"/>
+        <include name="com/facebook/buck/features/apple/projectV2/*.st"/>
       </module-resources>
       <additional-classpath-entries>
         <include name="js.jar"/>

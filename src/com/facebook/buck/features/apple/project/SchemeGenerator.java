@@ -20,6 +20,7 @@ import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.XCScheme.AdditionalActions;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.features.apple.common.SchemeActionType;
 import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;

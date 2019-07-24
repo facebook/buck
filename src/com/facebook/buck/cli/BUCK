@@ -20,6 +20,7 @@ java_immutables_library(
     visibility = [
         "//src/com/facebook/buck/event:dependencies-for-external-projects-inner",
         "//src/com/facebook/buck/features/apple/project:",
+        "//src/com/facebook/buck/features/apple/projectV2:",
         "//src/com/facebook/buck/features/go:",
         "//src/com/facebook/buck/features/project/intellij:",
         "//test/com/facebook/buck/...",

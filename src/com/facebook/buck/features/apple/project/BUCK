@@ -72,4 +72,8 @@ buck_module(
         "//test/com/facebook/buck/features/apple/project:project",
     ],
     visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/features/apple/common:common",
+        "//src/com/facebook/buck/features/apple/projectV2:projectV2",
+    ],
 )
