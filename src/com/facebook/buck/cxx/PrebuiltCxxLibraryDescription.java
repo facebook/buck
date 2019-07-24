@@ -649,36 +649,8 @@ public class PrebuiltCxxLibraryDescription
               ImmutableList.of(),
               ImmutableList.of(),
               Linkage.ANY,
-              ImmutableMap.of(),
-              NativeLinkableInfo.fixedDelegate(NativeLinkableInput.of()),
+              NativeLinkableInfo.fixedDelegate(NativeLinkableInput.of(), ImmutableMap.of()),
               NativeLinkableInfo.defaults());
-        }
-
-        boolean isPrebuiltSOForHaskellOmnibus = true;
-
-        Optional<SourcePath> sharedLibraryFromArgs =
-            paths.getSharedLibrary(
-                getProjectFilesystem(), graphBuilder, cellRoots, cxxPlatform, selectedVersions);
-
-        // TODO(cjhopman): Why does this use the non-versioned static libs for creating a shared
-        // library?
-        boolean supportsBuiltSharedLibrary =
-            getStaticPicLibraryForSelectedVersions(cxxPlatform, graphBuilder, Optional.empty())
-                .isPresent();
-
-        boolean hasSharedLibraries =
-            supportsBuiltSharedLibrary || sharedLibraryFromArgs.isPresent();
-
-        ImmutableMap<String, SourcePath> sharedLibraries =
-            hasSharedLibraries ? getSharedLibraries(cxxPlatform, graphBuilder) : ImmutableMap.of();
-
-        // TODO(cjhopman): This behavior doesn't seem to make sense. Someone who understands what it
-        // is trying to do should document  it.
-        for (Map.Entry<String, SourcePath> ent : sharedLibraries.entrySet()) {
-          if (!(ent.getValue() instanceof PathSourcePath)) {
-            isPrebuiltSOForHaskellOmnibus = false;
-            break;
-          }
         }
 
         ImmutableList<NativeLinkable> deps =
@@ -711,7 +683,6 @@ public class PrebuiltCxxLibraryDescription
             deps,
             exportedDeps,
             getPreferredLinkage(cxxPlatform),
-            sharedLibraries,
             new NativeLinkableInfo.Delegate() {
               @Override
               public NativeLinkableInput computeInput(
@@ -722,13 +693,29 @@ public class PrebuiltCxxLibraryDescription
                 return computeNativeLinkableInputUncached(
                     graphBuilder, cxxPlatform, type, forceLinkWhole);
               }
+
+              @Override
+              public ImmutableMap<String, SourcePath> getSharedLibraries(
+                  ActionGraphBuilder graphBuilder) {
+                return resolveSharedLibraries(cxxPlatform, graphBuilder);
+              }
+
+              @Override
+              public boolean isPrebuiltSOForHaskellOmnibus() {
+                ImmutableMap<String, SourcePath> sharedLibraries = getSharedLibraries(graphBuilder);
+                for (Map.Entry<String, SourcePath> ent : sharedLibraries.entrySet()) {
+                  if (!(ent.getValue() instanceof PathSourcePath)) {
+                    return false;
+                  }
+                }
+                return true;
+              }
             },
             NativeLinkableInfo.defaults()
                 .setExportedLinkerFlags(exportedLinkerFlags)
                 .setExportedPostLinkerFlags(exportedPostLinkerFlags)
                 .setSupportsOmnibusLinking(supportsOmnibusLinking(cxxPlatform))
                 .setSupportsOmnibusLinkingForHaskell(true)
-                .setPrebuiltSOForHaskellOmnibus(isPrebuiltSOForHaskellOmnibus)
                 .setNativeLinkTarget(linkTargetInfo));
       }
 
@@ -828,7 +815,7 @@ public class PrebuiltCxxLibraryDescription
         }
       }
 
-      public ImmutableMap<String, SourcePath> getSharedLibraries(
+      public ImmutableMap<String, SourcePath> resolveSharedLibraries(
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         Verify.verify(isPlatformSupported(cxxPlatform));
 

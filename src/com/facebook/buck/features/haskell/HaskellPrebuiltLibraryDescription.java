@@ -171,7 +171,6 @@ public class HaskellPrebuiltLibraryDescription
                   ImmutableList.of(),
                   exportedDeps,
                   Linkage.ANY,
-                  args.getSharedLibs(),
                   new NativeLinkableInfo.Delegate() {
                     @Override
                     public NativeLinkableInput computeInput(
@@ -181,6 +180,12 @@ public class HaskellPrebuiltLibraryDescription
                         TargetConfiguration targetConfiguration) {
                       return getNativeLinkableInput(
                           cxxPlatform, type, forceLinkWhole, graphBuilder, targetConfiguration);
+                    }
+
+                    @Override
+                    public ImmutableMap<String, SourcePath> getSharedLibraries(
+                        ActionGraphBuilder graphBuilder) {
+                      return args.getSharedLibs();
                     }
                   },
                   NativeLinkableInfo.defaults());

@@ -23,6 +23,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -115,21 +116,27 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
         () -> {
           boolean platformSupported = isPlatformSupported(cxxPlatform);
           NativeLinkableInfo.Delegate delegate =
-              !platformSupported
-                  ? NativeLinkableInfo.fixedDelegate(NativeLinkableInput.of())
-                  : new NativeLinkableInfo.Delegate() {
-                    @Override
-                    public NativeLinkableInput computeInput(
-                        ActionGraphBuilder graphBuilder,
-                        Linker.LinkableDepType type,
-                        boolean forceLinkWhole,
-                        TargetConfiguration targetConfiguration) {
-                      return NativeLinkableInput.of(
+              new NativeLinkableInfo.Delegate() {
+                @Override
+                public NativeLinkableInput computeInput(
+                    ActionGraphBuilder graphBuilder1,
+                    Linker.LinkableDepType type,
+                    boolean forceLinkWhole,
+                    TargetConfiguration targetConfiguration) {
+                  return !platformSupported
+                      ? NativeLinkableInput.of()
+                      : NativeLinkableInput.of(
                           ImmutableList.of(requireLibraryArg(cxxPlatform, type)),
                           ImmutableSet.of(),
                           ImmutableSet.of());
-                    }
-                  };
+                }
+
+                @Override
+                public ImmutableMap<String, SourcePath> getSharedLibraries(
+                    ActionGraphBuilder graphBuilder1) {
+                  return ImmutableMap.of();
+                }
+              };
           ImmutableList<NativeLinkable> deps =
               platformSupported
                   ? FluentIterable.from(getDeclaredDeps())
@@ -142,7 +149,6 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
               deps,
               ImmutableList.of(),
               Linkage.STATIC,
-              ImmutableMap.of(),
               delegate,
               NativeLinkableInfo.defaults());
         });

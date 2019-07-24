@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
@@ -75,7 +76,6 @@ public final class SwiftRuntimeNativeLinkableGroup implements NativeLinkableGrou
                 ImmutableList.of(),
                 ImmutableList.of(),
                 getPreferredLinkage(cxxPlatform),
-                ImmutableMap.of(),
                 new NativeLinkableInfo.Delegate() {
                   @Override
                   public NativeLinkableInput computeInput(
@@ -84,6 +84,12 @@ public final class SwiftRuntimeNativeLinkableGroup implements NativeLinkableGrou
                       boolean forceLinkWhole,
                       TargetConfiguration targetConfiguration) {
                     return getNativeLinkableInput(type);
+                  }
+
+                  @Override
+                  public ImmutableMap<String, SourcePath> getSharedLibraries(
+                      ActionGraphBuilder graphBuilder) {
+                    return ImmutableMap.of();
                   }
                 },
                 NativeLinkableInfo.defaults().setShouldBeLinkedInAppleTestAndHost(true)));

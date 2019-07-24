@@ -22,6 +22,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.util.Memoizer;
 import com.google.common.base.Throwables;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -49,11 +50,32 @@ public final class NativeLinkableInfo implements NativeLinkable {
         Linker.LinkableDepType type,
         boolean forceLinkWhole,
         TargetConfiguration targetConfiguration);
+
+    ImmutableMap<String, SourcePath> getSharedLibraries(ActionGraphBuilder graphBuilder);
+
+    default boolean isPrebuiltSOForHaskellOmnibus() {
+      return false;
+    }
   }
 
   /** Creates a delegate that always returns a fixed instance. */
-  public static Delegate fixedDelegate(NativeLinkableInput instance) {
-    return (graphBuilder, type, forceLinkWhole, targetConfiguration) -> instance;
+  public static Delegate fixedDelegate(
+      NativeLinkableInput instance, final ImmutableMap<String, SourcePath> sharedLibraries) {
+    return new Delegate() {
+      @Override
+      public NativeLinkableInput computeInput(
+          ActionGraphBuilder graphBuilder,
+          Linker.LinkableDepType type,
+          boolean forceLinkWhole,
+          TargetConfiguration targetConfiguration) {
+        return instance;
+      }
+
+      @Override
+      public ImmutableMap<String, SourcePath> getSharedLibraries(ActionGraphBuilder graphBuilder) {
+        return sharedLibraries;
+      }
+    };
   }
 
   /**
@@ -68,7 +90,6 @@ public final class NativeLinkableInfo implements NativeLinkable {
     private ImmutableList<? extends Arg> exportedPostLinkerFlags = ImmutableList.of();
     private boolean supportsOmnibusLinking = true;
     private boolean supportsOmnibusLinkingForHaskell = false;
-    private boolean isPrebuiltSOForHaskellOmnibus = false;
     private boolean shouldBeLinkedInAppleTestAndHost = false;
     private Optional<? extends NativeLinkTarget> nativeLinkTarget = Optional.empty();
 
@@ -91,11 +112,6 @@ public final class NativeLinkableInfo implements NativeLinkable {
     public Configuration setSupportsOmnibusLinkingForHaskell(
         boolean supportsOmnibusLinkingForHaskell) {
       this.supportsOmnibusLinkingForHaskell = supportsOmnibusLinkingForHaskell;
-      return this;
-    }
-
-    public Configuration setPrebuiltSOForHaskellOmnibus(boolean prebuiltSOForHaskellOmnibus) {
-      isPrebuiltSOForHaskellOmnibus = prebuiltSOForHaskellOmnibus;
       return this;
     }
 
@@ -124,22 +140,22 @@ public final class NativeLinkableInfo implements NativeLinkable {
   private final ImmutableList<NativeLinkable> deps;
   private final ImmutableList<NativeLinkable> exportedDeps;
   private final NativeLinkableGroup.Linkage preferredLinkage;
-  private final ImmutableMap<String, SourcePath> sharedLibraries;
   private final ImmutableList<? extends Arg> exportedLinkerFlags;
   private final ImmutableList<? extends Arg> exportedPostLinkerFlags;
   private final boolean supportsOmnibusLinking;
   private final boolean supportsOmnibusLinkingForHaskell;
-  private final boolean isPrebuiltSOForHaskellOmnibus;
   private final boolean shouldBeLinkedInAppleTestAndHost;
   private final Optional<? extends NativeLinkTarget> nativeLinkTarget;
   private final Delegate delegate;
+
+  private final Memoizer<ImmutableMap<String, SourcePath>> sharedLibrariesMemoizer =
+      new Memoizer<>();
 
   public NativeLinkableInfo(
       BuildTarget buildTarget,
       ImmutableList<NativeLinkable> deps,
       ImmutableList<NativeLinkable> exportedDeps,
       NativeLinkableGroup.Linkage preferredLinkage,
-      ImmutableMap<String, SourcePath> sharedLibraries,
       Delegate delegate,
       Configuration config) {
     this.buildTarget = buildTarget;
@@ -148,10 +164,8 @@ public final class NativeLinkableInfo implements NativeLinkable {
     this.exportedLinkerFlags = config.exportedLinkerFlags;
     this.exportedPostLinkerFlags = config.exportedPostLinkerFlags;
     this.preferredLinkage = preferredLinkage;
-    this.sharedLibraries = sharedLibraries;
     this.supportsOmnibusLinking = config.supportsOmnibusLinking;
     this.supportsOmnibusLinkingForHaskell = config.supportsOmnibusLinkingForHaskell;
-    this.isPrebuiltSOForHaskellOmnibus = config.isPrebuiltSOForHaskellOmnibus;
     this.shouldBeLinkedInAppleTestAndHost = config.shouldBeLinkedInAppleTestAndHost;
     this.nativeLinkTarget = config.nativeLinkTarget;
     this.delegate = delegate;
@@ -174,7 +188,7 @@ public final class NativeLinkableInfo implements NativeLinkable {
 
   @Override
   public boolean isPrebuiltSOForHaskellOmnibus(ActionGraphBuilder graphBuilder) {
-    return isPrebuiltSOForHaskellOmnibus;
+    return delegate.isPrebuiltSOForHaskellOmnibus();
   }
 
   @Override
@@ -226,7 +240,7 @@ public final class NativeLinkableInfo implements NativeLinkable {
 
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(ActionGraphBuilder graphBuilder) {
-    return sharedLibraries;
+    return sharedLibrariesMemoizer.get(() -> delegate.getSharedLibraries(graphBuilder));
   }
 
   @Override
