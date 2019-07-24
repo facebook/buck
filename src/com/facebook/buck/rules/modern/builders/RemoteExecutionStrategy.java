@@ -234,7 +234,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                   Optional.ofNullable(actionInfo.get())
                       .map(RemoteExecutionActionInfo::getActionDigest),
                   Optional.empty(),
-                  Optional.of(ruleContext.timeMsInState));
+                  Optional.of(ruleContext.timeMsInState),
+                  Optional.of(ruleContext.timeMsAfterState));
             } else {
               // actionInfo and executionInfo must be set at this point
               Preconditions.checkState(actionInfo.get() != null);
@@ -247,7 +248,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                   Optional.ofNullable(actionInfo.get())
                       .map(RemoteExecutionActionInfo::getActionDigest),
                   Optional.ofNullable(executionInfo.get()).map(ExecutionResult::getActionMetadata),
-                  Optional.of(ruleContext.timeMsInState));
+                  Optional.of(ruleContext.timeMsInState),
+                  Optional.of(ruleContext.timeMsAfterState));
             }
           }
 
@@ -260,7 +262,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                 Optional.ofNullable(actionInfo.get())
                     .map(RemoteExecutionActionInfo::getActionDigest),
                 Optional.empty(),
-                Optional.of(ruleContext.timeMsInState));
+                Optional.of(ruleContext.timeMsInState),
+                Optional.of(ruleContext.timeMsAfterState));
           }
         },
         MoreExecutors.directExecutor());
@@ -558,6 +561,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     final BuildTarget buildTarget;
     final BuckEventBus eventBus;
     Map<State, Long> timeMsInState;
+    Map<State, Long> timeMsAfterState;
+    long prevStateTime;
 
     public RuleContext(BuckEventBus eventBus, BuildTarget target) {
       this.buildTarget = target;
@@ -565,6 +570,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       this.actionState = State.WAITING;
       this.prevState = State.WAITING;
       this.timeMsInState = new ConcurrentHashMap<>();
+      this.timeMsAfterState = new ConcurrentHashMap<>();
+      this.prevStateTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
     }
 
     public boolean isCancelled() {
@@ -613,6 +620,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       Preconditions.checkState(
           state.ordinal() > prevState.ordinal(),
           "Cannot Enter State: " + state + " from: " + actionState);
+      timeMsAfterState.put(
+          prevState, TimeUnit.NANOSECONDS.toMillis(System.nanoTime()) - prevStateTime);
       actionState = state;
       long startMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
       Scope inner =
@@ -623,6 +632,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
           timeMsInState.put(
               actionState, TimeUnit.NANOSECONDS.toMillis(System.nanoTime()) - startMs);
           prevState = actionState;
+          prevStateTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
           actionState = State.WAITING;
         }
         inner.close();

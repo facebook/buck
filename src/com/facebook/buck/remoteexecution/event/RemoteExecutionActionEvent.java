@@ -82,9 +82,16 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
       BuildTarget buildTarget,
       Optional<Digest> actionDigest,
       Optional<ExecutedActionMetadata> executedActionMetadata,
-      Optional<Map<State, Long>> stateMetadata) {
+      Optional<Map<State, Long>> stateMetadata,
+      Optional<Map<State, Long>> stateWaitingMetadata) {
     final Terminal event =
-        new Terminal(state, buildTarget, actionDigest, executedActionMetadata, stateMetadata);
+        new Terminal(
+            state,
+            buildTarget,
+            actionDigest,
+            executedActionMetadata,
+            stateMetadata,
+            stateWaitingMetadata);
     eventBus.post(event);
   }
 
@@ -105,6 +112,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     private final Optional<Digest> actionDigest;
     private final Optional<ExecutedActionMetadata> executedActionMetadata;
     private final Optional<Map<State, Long>> stateMetadata;
+    private final Optional<Map<State, Long>> stateWaitingMetadata;
 
     @VisibleForTesting
     Terminal(
@@ -112,7 +120,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
         BuildTarget buildTarget,
         Optional<Digest> actionDigest,
         Optional<ExecutedActionMetadata> executedActionMetadata,
-        Optional<Map<State, Long>> stateMetadata) {
+        Optional<Map<State, Long>> stateMetadata,
+        Optional<Map<State, Long>> stateWaitingMetadata) {
       super(EventKey.unique());
       Preconditions.checkArgument(
           RemoteExecutionActionEvent.isTerminalState(state),
@@ -123,6 +132,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
       this.actionDigest = actionDigest;
       this.executedActionMetadata = executedActionMetadata;
       this.stateMetadata = stateMetadata;
+      this.stateWaitingMetadata = stateWaitingMetadata;
     }
 
     public State getState() {
@@ -143,6 +153,10 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
 
     public Optional<Map<State, Long>> getStateMetadata() {
       return stateMetadata;
+    }
+
+    public Optional<Map<State, Long>> getStateWaitingMetadata() {
+      return stateWaitingMetadata;
     }
 
     @Override
