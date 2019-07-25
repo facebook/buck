@@ -130,7 +130,7 @@ public class AndroidBinaryRDotJavaIntegrationTest {
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//apps/multidex:app#compile_uber_r_dot_java");
     buildLog.assertTargetBuiltLocally(
-        "//apps/multidex:app#d8,dexing,rtype__primarydex,split_uber_r_dot_java_jar");
+        "//apps/multidex:app#dex,dexing,rtype__primarydex,split_uber_r_dot_java_jar");
     verifyTrimmedRDotJava(ImmutableSet.of("title"));
 
     // Turn off trimming and turn on exopackage, and rebuilt.
@@ -172,7 +172,7 @@ public class AndroidBinaryRDotJavaIntegrationTest {
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//apps/multidex:app#compile_uber_r_dot_java");
     buildLog.assertTargetBuiltLocally(
-        "//apps/multidex:app#d8,dexing,rtype__primarydex,split_uber_r_dot_java_jar");
+        "//apps/multidex:app#dex,dexing,rtype__primarydex,split_uber_r_dot_java_jar");
     verifyTrimmedRDotJava(ImmutableSet.of("app_icon", "app_name", "title"));
   }
 

@@ -90,7 +90,7 @@ public class DxStepTest {
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
               EnumSet.of(Option.NO_OPTIMIZE),
-              DxStep.D8);
+              DxStep.DX);
 
       String expected =
           String.format(
@@ -142,7 +142,7 @@ public class DxStepTest {
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
               EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO),
-              DxStep.D8);
+              DxStep.DX);
 
       String expected =
           String.format(
@@ -229,7 +229,7 @@ public class DxStepTest {
               SAMPLE_FILES_TO_DEX,
               EnumSet.noneOf(DxStep.Option.class),
               Optional.of("2g"),
-              DxStep.D8,
+              DxStep.DX,
               false);
 
       String expected =
