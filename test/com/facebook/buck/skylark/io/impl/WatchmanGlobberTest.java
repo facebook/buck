@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
@@ -30,6 +31,7 @@ import com.facebook.buck.io.watchman.StubWatchmanClient;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanFactory;
+import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
 import com.facebook.buck.testutil.AssumePath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -43,12 +45,16 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import org.apache.commons.lang.NotImplementedException;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class WatchmanGlobberTest {
+  private static final Logger LOG = Logger.get(WatchmanGlobberTest.class);
+
   private Path root;
   private WatchmanGlobber globber;
 
@@ -294,6 +300,47 @@ public class WatchmanGlobberTest {
     globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false);
 
     assertTrue(watchmanClient.syncDisabled());
+  }
+
+  @Test
+  public void throwsIfWatchmanReturnsError() throws IOException, InterruptedException {
+    WatchmanClient client =
+        new WatchmanClient() {
+          @Override
+          public Optional<? extends Map<String, ?>> queryWithTimeout(
+              long timeoutNanos, Object... query) {
+            LOG.info("Processing query: %s", query);
+            if (query.length >= 2 && query[0].equals("query")) {
+              return Optional.of(
+                  ImmutableMap.of(
+                      "version",
+                      "4.9.4",
+                      "error",
+                      String.format(
+                          "RootResolveError: unable to resolve root %s: directory %s not watched",
+                          query[1], query[1])));
+
+            } else {
+              throw new NotImplementedException("Watchman query not implemented");
+            }
+          }
+
+          @Override
+          public void close() {}
+        };
+
+    String queryRoot = root.toString();
+    globber = WatchmanGlobber.create(client, new SyncCookieState(), "", queryRoot);
+
+    thrown.expect(WatchmanQueryFailedException.class);
+    thrown.expect(
+        Matchers.hasProperty(
+            "watchmanErrorMessage",
+            Matchers.equalTo(
+                String.format(
+                    "RootResolveError: unable to resolve root %s: directory %s not watched",
+                    queryRoot, queryRoot))));
+    globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false);
   }
 
   private static class CapturingWatchmanClient implements WatchmanClient {

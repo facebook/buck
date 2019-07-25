@@ -17,6 +17,7 @@
 package com.facebook.buck.skylark.io.impl;
 
 import com.facebook.buck.io.watchman.WatchmanClient;
+import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -25,9 +26,11 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 /**
  * An implementation of globbing functionality that allows resolving file paths based on include
@@ -136,20 +139,26 @@ public class WatchmanGlobber {
    * @param options Customizations for matching behavior.
    * @return The set of paths resolved using include patterns minus paths excluded by exclude
    *     patterns.
+   * @throws WatchmanQueryFailedException Watchman returned an error response.
    */
   public Optional<ImmutableSet<String>> run(
       Collection<String> include, Collection<String> exclude, EnumSet<Option> options)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     ImmutableMap<String, ?> watchmanQuery = createWatchmanQuery(include, exclude, options);
 
-    return watchmanClient
-        .queryWithTimeout(TIMEOUT_NANOS, "query", watchmanWatchRoot, watchmanQuery)
-        .map(
-            result -> {
-              @SuppressWarnings("unchecked")
-              List<String> files = (List<String>) result.get("files");
-              return ImmutableSet.copyOf(files);
-            });
+    Optional<? extends Map<String, ?>> result =
+        watchmanClient.queryWithTimeout(TIMEOUT_NANOS, "query", watchmanWatchRoot, watchmanQuery);
+    if (!result.isPresent()) {
+      return Optional.empty();
+    }
+
+    @Nullable Object error = result.get().get("error");
+    if (error != null) {
+      throw new WatchmanQueryFailedException(error.toString());
+    }
+    @SuppressWarnings("unchecked")
+    List<String> files = (List<String>) result.get().get("files");
+    return Optional.of(ImmutableSet.copyOf(files));
   }
 
   /**
