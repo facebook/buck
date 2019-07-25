@@ -23,7 +23,7 @@ import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -55,11 +55,11 @@ public class MultiThreadedBlobUploaderTest {
             MISSING_CHECK_LIMIT, UPLOAD_SIZE_LIMT, service, casBlobUploader);
 
     // Setup EasyMock
-    EasyMock.expect(casBlobUploader.getMissingHashes(Lists.newArrayList(digest)))
+    EasyMock.expect(casBlobUploader.getMissingHashes(Sets.newHashSet(digest)))
         .andThrow(new StatusRuntimeException(Status.INTERNAL))
         .once();
 
-    EasyMock.expect(casBlobUploader.getMissingHashes(Lists.newArrayList(digest)))
+    EasyMock.expect(casBlobUploader.getMissingHashes(Sets.newHashSet(digest)))
         .andReturn(ImmutableSet.of(digest.getHash()))
         .once();
 

@@ -43,7 +43,7 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -71,7 +71,7 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
   }
 
   @Override
-  public ImmutableSet<String> getMissingHashes(List<Digest> requiredDigests) throws IOException {
+  public ImmutableSet<String> getMissingHashes(Set<Digest> requiredDigests) throws IOException {
     try {
       FindMissingBlobsRequest.Builder requestBuilder = FindMissingBlobsRequest.newBuilder();
       requiredDigests.forEach(digest -> requestBuilder.addBlobDigests((GrpcProtocol.get(digest))));
