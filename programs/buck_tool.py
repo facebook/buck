@@ -786,6 +786,7 @@ class BuckTool(object):
             setup_watchman_watch()
             if buck_version_uid is None:
                 buck_version_uid = self._get_buck_version_uid()
+            self._buck_project.create_buckd_dir()
             # Override self._tmp_dir to a long lived directory.
             buckd_tmp_dir = self._buck_project.create_buckd_tmp_dir()
             ngserver_output_path = os.path.join(buckd_tmp_dir, "ngserver-out")
