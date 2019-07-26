@@ -50,8 +50,9 @@ def makedirs(path):
         # should just swallow the error.
         # This is mostly equivalent to os.makedirs(path, exist_ok=True) in
         # Python 3.
-        if e.errno != errno.EEXIST and os.path.isdir(path):
-            raise
+        if e.errno == errno.EEXIST and os.path.isdir(path):
+            return
+        raise
 
 
 class BuckProject:
