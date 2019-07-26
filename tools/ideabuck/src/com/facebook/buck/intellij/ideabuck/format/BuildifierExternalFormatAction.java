@@ -21,13 +21,17 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.actionSystem.Presentation;
+import com.intellij.openapi.command.CommandProcessor;
+import com.intellij.openapi.command.UndoConfirmationPolicy;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /** Action to invoke {@code buildifier} on the current selection. */
 public class BuildifierExternalFormatAction extends DumbAwareAction {
@@ -41,58 +45,58 @@ public class BuildifierExternalFormatAction extends DumbAwareAction {
   @Override
   public void update(@NotNull AnActionEvent anActionEvent) {
     Presentation presentation = anActionEvent.getPresentation();
+    Runnable action = selectAction(anActionEvent);
+    presentation.setEnabledAndVisible(action != null);
+  }
+
+  @Override
+  public void actionPerformed(@NotNull AnActionEvent anActionEvent) {
+    Runnable action = selectAction(anActionEvent);
+    if (action != null) {
+      action.run();
+    } else {
+      LOGGER.warn("No action to perform.");
+    }
+  }
+
+  @Nullable
+  private Runnable selectAction(@NotNull AnActionEvent anActionEvent) {
     Project project = anActionEvent.getProject();
     if (project == null || project.isDefault()) {
-      presentation.setEnabledAndVisible(false);
-      return;
+      return null;
     }
     BuckExecutableSettingsProvider executableSettings =
         BuckExecutableSettingsProvider.getInstance(project);
     String buildifierExecutable = executableSettings.resolveBuildifierExecutable();
     if (buildifierExecutable == null) {
-      presentation.setEnabledAndVisible(false);
-      return;
-    }
-
-    DataContext dataContext = anActionEvent.getDataContext();
-    PsiFile psiFile = dataContext.getData(CommonDataKeys.PSI_FILE);
-    if (psiFile != null && BuckFileType.INSTANCE.equals(psiFile.getFileType())) {
-      presentation.setEnabledAndVisible(true);
-      return;
-    }
-
-    VirtualFile virtualFile = dataContext.getData(CommonDataKeys.VIRTUAL_FILE);
-    if (virtualFile != null
-        && virtualFile.isWritable()
-        && BuckFileType.INSTANCE.equals(virtualFile.getFileType())) {
-      presentation.setEnabledAndVisible(true);
-      return;
-    }
-    presentation.setEnabledAndVisible(false);
-  }
-
-  @Override
-  public void actionPerformed(@NotNull AnActionEvent anActionEvent) {
-    Project project = anActionEvent.getProject();
-    if (project == null || project.isDefault()) {
-      return;
+      return null;
     }
     DataContext dataContext = anActionEvent.getDataContext();
-    Document document = dataContext.getData(CommonDataKeys.EDITOR).getDocument();
-    if (document != null) {
-      BuildifierUtil.doReformat(project, document);
-      return;
+    Editor editor = dataContext.getData(CommonDataKeys.EDITOR);
+    if (editor == null) {
+      return null;
     }
+    Document document = editor.getDocument();
     PsiFile psiFile = dataContext.getData(CommonDataKeys.PSI_FILE);
-    if (psiFile != null) {
-      BuildifierUtil.doReformat(psiFile);
-      return;
+    if (psiFile == null) {
+      psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
     }
-    VirtualFile virtualFile = dataContext.getData(CommonDataKeys.VIRTUAL_FILE);
-    if (virtualFile != null) {
-      BuildifierUtil.doReformat(project, virtualFile);
-      return;
+    if (psiFile == null) {
+      return null;
     }
-    LOGGER.warn("Could not perform action.");
+    if (!BuckFileType.INSTANCE.equals(psiFile.getFileType())) {
+      return null;
+    }
+    return () -> {
+      Runnable runnable = () -> BuildifierUtil.doReformat(project, document);
+      CommandProcessor.getInstance()
+          .executeCommand(
+              project,
+              runnable,
+              null,
+              null,
+              UndoConfirmationPolicy.DO_NOT_REQUEST_CONFIRMATION,
+              document);
+    };
   }
 }

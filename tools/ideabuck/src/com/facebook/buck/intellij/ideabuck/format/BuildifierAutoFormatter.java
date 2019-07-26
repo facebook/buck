@@ -15,49 +15,69 @@
  */
 package com.facebook.buck.intellij.ideabuck.format;
 
-import com.facebook.buck.intellij.ideabuck.config.BuckExecutableSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
-import com.intellij.AppTopics;
+import com.facebook.buck.intellij.ideabuck.lang.BuckFileType;
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.components.ProjectComponent;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.command.CommandProcessor;
+import com.intellij.openapi.command.UndoConfirmationPolicy;
+import com.intellij.openapi.components.BaseComponent;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.fileEditor.FileDocumentManagerListener;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.fileEditor.FileEditor;
+import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
+import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiDocumentManager;
+import com.intellij.psi.PsiFile;
 import com.intellij.util.messages.MessageBusConnection;
 import org.jetbrains.annotations.NotNull;
 
 /** Reformats build files using {@code buildifier} before saving. */
-public class BuildifierAutoFormatter implements ProjectComponent, Disposable {
+public class BuildifierAutoFormatter implements BaseComponent, Disposable {
 
   private static final Logger LOGGER = Logger.getInstance(BuildifierAutoFormatter.class);
 
-  private final Project mProject;
-  private final BuckProjectSettingsProvider mProjectSettingsProvider;
-  private final BuckExecutableSettingsProvider mExecutableSettingsProvider;
   private MessageBusConnection mMessageBusConnection;
-
-  public BuildifierAutoFormatter(
-      Project project,
-      BuckProjectSettingsProvider projectSettingsProvider,
-      BuckExecutableSettingsProvider executableSettingsProvider) {
-    mProject = project;
-    mProjectSettingsProvider = projectSettingsProvider;
-    mExecutableSettingsProvider = executableSettingsProvider;
-  }
 
   @Override
   public void initComponent() {
-    mMessageBusConnection = mProject.getMessageBus().connect(this);
+    mMessageBusConnection = ApplicationManager.getApplication().getMessageBus().connect(this);
     mMessageBusConnection.subscribe(
-        AppTopics.FILE_DOCUMENT_SYNC,
-        new FileDocumentManagerListener() {
+        FileEditorManagerListener.FILE_EDITOR_MANAGER,
+        new FileEditorManagerListener() {
           @Override
-          public void beforeDocumentSaving(@NotNull Document document) {
-            if (mProjectSettingsProvider.isAutoFormatOnSave()) {
-              BuildifierUtil.reformatText(mProject, document.getText())
-                  .ifPresent(document::setText);
+          public void selectionChanged(@NotNull FileEditorManagerEvent event) {
+            Project project = event.getManager().getProject();
+            if (!BuckProjectSettingsProvider.getInstance(project).isAutoFormatOnBlur()) {
+              return;
             }
+            FileEditor newFileEditor = event.getNewEditor();
+            FileEditor oldFileEditor = event.getOldEditor();
+            if (oldFileEditor == null || oldFileEditor.equals(newFileEditor)) {
+              return; // still editing same file
+            }
+            VirtualFile virtualFile = oldFileEditor.getFile();
+            Document document = FileDocumentManager.getInstance().getDocument(virtualFile);
+            if (document == null) {
+              return; // couldn't find document
+            }
+            PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
+            if (!BuckFileType.INSTANCE.equals(psiFile.getFileType())) {
+              return; // file type isn't a Buck file
+            }
+            Runnable runnable = () -> BuildifierUtil.doReformat(project, virtualFile);
+            LOGGER.info("Autoformatting " + virtualFile.getPath());
+            CommandProcessor.getInstance()
+                .executeCommand(
+                    project,
+                    runnable,
+                    null,
+                    null,
+                    UndoConfirmationPolicy.DO_NOT_REQUEST_CONFIRMATION,
+                    document);
           }
         });
   }

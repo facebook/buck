@@ -12,9 +12,8 @@
   <change-notes><![CDATA[
 <h3>3.8.1</h3>
 <ul>
-  <li></li>
+  <li>Change trigger for auto-formatting build files from save to editor blur.</li>
 </ul>
-</h3>
 <h3>3.8.0</h3>
 <ul>
   <li>Use <code>buildifier</code> for the "Reformat Code" action</li>
@@ -33,7 +32,6 @@
     </ul>
   </li>
 </ul>
-</h3>
 <h3>3.7.4</h3>
 <ul>
   <li>Support buck commands as "Before Run" tasks/</li>
@@ -44,7 +42,6 @@
   invoking it from the command-line.</li>
   <li>Improved cell discovery in prefs.</li>
 </ul>
-</h3>
 <h3>3.7.2</h3>
 <ul>
   <li>Make grammar fully Starlark-compatible.</li>
@@ -438,6 +435,12 @@
 
   </actions>
 
+  <application-components>
+    <component>
+      <implementation-class>com.facebook.buck.intellij.ideabuck.format.BuildifierAutoFormatter</implementation-class>
+    </component>
+  </application-components>
+
   <project-components>
     <component>
       <implementation-class>com.facebook.buck.intellij.ideabuck.config.BuckModule
@@ -464,11 +467,6 @@
         com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider
       </implementation-class>
     </component>
-    <component>
-      <implementation-class>com.facebook.buck.intellij.ideabuck.format.BuildifierAutoFormatter
-      </implementation-class>
-    </component>
-
     <!--
       Components in the package com.facebook.buck.intellij.ideabuck.api have
       stable APIs that are intended for use by other plugins.

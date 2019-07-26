@@ -16,6 +16,7 @@
 package com.facebook.buck.intellij.ideabuck.format;
 
 import com.facebook.buck.intellij.ideabuck.lang.BuckFile;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -25,6 +26,8 @@ import org.jetbrains.annotations.NotNull;
 
 /** Makes {@code buildifer} available as an external formatter. */
 public class BuildifierPostFormatProcessor implements PostFormatProcessor {
+
+  private static final Logger LOGGER = Logger.getInstance(BuildifierPostFormatProcessor.class);
 
   @Override
   public PsiElement processElement(
@@ -43,6 +46,7 @@ public class BuildifierPostFormatProcessor implements PostFormatProcessor {
       @NotNull CodeStyleSettings codeStyleSettings) {
     if (source instanceof BuckFile) {
       BuildifierUtil.doReformat(source);
+      return source.getTextRange();
     }
     return rangeToReformat;
   }
