@@ -23,7 +23,6 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.function.Supplier;
 
 abstract class AbstractDefaultDepsAwareExecutor<T>
     extends AbstractDepsAwareExecutor<T, DefaultDepsAwareTask<T>> {
@@ -33,13 +32,6 @@ abstract class AbstractDefaultDepsAwareExecutor<T>
       Future<?>[] workers,
       ExecutorService executorService) {
     super(workQueue, workers, executorService);
-  }
-
-  @Override
-  public DefaultDepsAwareTask<T> createTask(
-      Callable<T> callable, Supplier<ImmutableSet<DefaultDepsAwareTask<T>>> depsSupplier) {
-    return DefaultDepsAwareTask.of(
-        callable, DepsSupplier.of(ThrowingSupplier.fromSupplier(depsSupplier)));
   }
 
   @Override

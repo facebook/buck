@@ -24,7 +24,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.function.Supplier;
 
 /**
  * A specialized Executor that executes. This executor will attempt to maintain maximum concurrency,
@@ -50,13 +49,6 @@ public class ToposortBasedDepsAwareExecutor<T>
         new ToposortBasedDepsAwareExecutor<>(workQueue, workers, executorService);
 
     return executor;
-  }
-
-  @Override
-  public ToposortBasedDepsAwareTask<T> createTask(
-      Callable<T> callable, Supplier<ImmutableSet<ToposortBasedDepsAwareTask<T>>> depsSupplier) {
-    return ToposortBasedDepsAwareTask.of(
-        callable, DepsSupplier.of(ThrowingSupplier.fromSupplier(depsSupplier)));
   }
 
   @Override
