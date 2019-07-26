@@ -219,6 +219,11 @@ class ListenableFileManager extends ForwardingStandardJavaFileManager {
       super(fileObject);
     }
 
+    @Override
+    public String toString() {
+      return fileObject.getName();
+    }
+
     public JavaFileObject getJavaFileObject() {
       return fileObject;
     }
