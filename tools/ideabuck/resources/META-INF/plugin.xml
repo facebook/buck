@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>3.8.1</version>
+  <version>3.8.2-SNAPSHOT</version>
   <category>Build</category>
   <vendor email="fb-plugins@fb.com" url="www.facebook.com">Facebook, Inc.</vendor>
 
@@ -10,6 +10,10 @@
   ]]></description>
 
   <change-notes><![CDATA[
+<h3>3.8.2</h3>
+<ul>
+  <li></li>
+</ul>
 <h3>3.8.1</h3>
 <ul>
   <li>Change trigger for auto-formatting build files from save to editor blur.</li>
