@@ -23,7 +23,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeNoException;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -46,13 +45,9 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -283,100 +278,5 @@ public class ActionGraphBuilderTest {
     second.get();
 
     assertEquals("transform() should be called exactly twice", 2, transformCalls.size());
-  }
-
-  @Test(timeout = 10000)
-  public void deadLockOnDependencyTest() throws ExecutionException, InterruptedException {
-    // TODO(cjhopman): This test probably doesn't make sense anymore.
-
-    /**
-     * create a graph of the following
-     *
-     * <pre>foo:bar0 foo:bar1   foo:bar2   foo:bar3
-     *          \        \         /         /
-     *                    foo:bar4
-     * </pre>
-     *
-     * <p>such that when the ThreadPool has all 4 threads executing bar0,...bar3, we block waiting
-     * completion of bar4, but have no additional threads for bar4
-     *
-     * <p>proper behaviour is to use one of the threads blocked on bar0,...bar3 to execute bar4.
-     */
-    BuildTarget target4 = BuildTargetFactory.newInstance("//foo:bar4");
-    TargetNode<?> library4 = JavaLibraryBuilder.createBuilder(target4).build();
-
-    BuildTarget target3 = BuildTargetFactory.newInstance("//foo:bar3");
-    TargetNode<?> library3 =
-        JavaLibraryBuilder.createBuilder(target3).addExportedDep(target4).build();
-
-    BuildTarget target2 = BuildTargetFactory.newInstance("//foo:bar2");
-    TargetNode<?> library2 =
-        JavaLibraryBuilder.createBuilder(target2).addExportedDep(target4).build();
-
-    BuildTarget target1 = BuildTargetFactory.newInstance("//foo:bar1");
-    TargetNode<?> library1 =
-        JavaLibraryBuilder.createBuilder(target1).addExportedDep(target4).build();
-
-    BuildTarget target0 = BuildTargetFactory.newInstance("//foo:bar0");
-    TargetNode<?> library0 =
-        JavaLibraryBuilder.createBuilder(target0).addExportedDep(target4).build();
-
-    TargetGraph targetGraph =
-        TargetGraphFactory.newInstance(library0, library1, library2, library3, library4);
-
-    // Ensure the race condition occurs, where we have all of foo:bar0...foo:bar3
-    // running, but not called requireRule(foo:bar4) yet.
-    CountDownLatch jobsStarted = new CountDownLatch(4);
-
-    // run this with ThreadLimited FJP like our actual parallel implementation
-    ListeningExecutorService executorService =
-        MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(4));
-    try {
-      ActionGraphBuilder graphBuilder =
-          new MultiThreadedActionGraphBuilder(
-              executorService,
-              targetGraph,
-              ConfigurationRuleRegistryFactory.createRegistry(TargetGraph.EMPTY),
-              new TargetNodeToBuildRuleTransformer() {
-                @Override
-                public <T> BuildRule transform(
-                    ToolchainProvider toolchainProvider,
-                    TargetGraph targetGraph,
-                    ConfigurationRuleRegistry configurationRuleRegistry,
-                    ActionGraphBuilder graphBuilder,
-                    TargetNode<T> targetNode) {
-
-                  jobsStarted.countDown();
-
-                  if (!targetNode.getExtraDeps().isEmpty()) {
-                    try {
-                      // this waits until all of bar0,...bar3 has executed up to this point before
-                      // requiring bar4, to create the situation where all 4 threads in executor
-                      // are blocked waiting for one dependency that has yet to be executed.
-                      jobsStarted.await();
-                    } catch (InterruptedException e) {
-                      // stop the test if we've been interrupted
-                      assumeNoException(e);
-                    }
-
-                    targetNode.getExtraDeps().forEach(graphBuilder::requireRule);
-                  }
-                  return new FakeBuildRule(targetNode.getBuildTarget());
-                }
-              },
-              new TestCellBuilder().build().getCellProvider());
-
-      // mimic our actual parallel action graph construction, in which we call requireRule with
-      // threads outside the executor, which will then fork tasks to the queue.
-
-      ListenableFuture<?> first = executorService.submit(() -> graphBuilder.requireRule(target0));
-      ListenableFuture<?> second = executorService.submit(() -> graphBuilder.requireRule(target1));
-      ListenableFuture<?> third = executorService.submit(() -> graphBuilder.requireRule(target2));
-      ListenableFuture<?> fourth = executorService.submit(() -> graphBuilder.requireRule(target3));
-
-      Futures.allAsList(first, second, third, fourth).get();
-    } finally {
-      executorService.shutdownNow();
-    }
   }
 }
