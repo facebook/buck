@@ -90,6 +90,7 @@ public final class NativeLinkableInfo implements NativeLinkable {
     private ImmutableList<? extends Arg> exportedPostLinkerFlags = ImmutableList.of();
     private boolean supportsOmnibusLinking = true;
     private boolean supportsOmnibusLinkingForHaskell = false;
+    private Optional<Boolean> forceLinkWholeForHaskellOmnibus = Optional.empty();
     private boolean shouldBeLinkedInAppleTestAndHost = false;
     private Optional<? extends NativeLinkTarget> nativeLinkTarget = Optional.empty();
 
@@ -109,9 +110,10 @@ public final class NativeLinkableInfo implements NativeLinkable {
       return this;
     }
 
-    public Configuration setSupportsOmnibusLinkingForHaskell(
-        boolean supportsOmnibusLinkingForHaskell) {
+    public Configuration setHaskellOmnibusLinkingOptions(
+        boolean supportsOmnibusLinkingForHaskell, boolean forceLinkWholeForHaskellOmnibus) {
       this.supportsOmnibusLinkingForHaskell = supportsOmnibusLinkingForHaskell;
+      this.forceLinkWholeForHaskellOmnibus = Optional.of(forceLinkWholeForHaskellOmnibus);
       return this;
     }
 
@@ -144,6 +146,7 @@ public final class NativeLinkableInfo implements NativeLinkable {
   private final ImmutableList<? extends Arg> exportedPostLinkerFlags;
   private final boolean supportsOmnibusLinking;
   private final boolean supportsOmnibusLinkingForHaskell;
+  private final Optional<Boolean> forceLinkWholeForHaskellOmnibus;
   private final boolean shouldBeLinkedInAppleTestAndHost;
   private final Optional<? extends NativeLinkTarget> nativeLinkTarget;
   private final Delegate delegate;
@@ -166,6 +169,7 @@ public final class NativeLinkableInfo implements NativeLinkable {
     this.preferredLinkage = preferredLinkage;
     this.supportsOmnibusLinking = config.supportsOmnibusLinking;
     this.supportsOmnibusLinkingForHaskell = config.supportsOmnibusLinkingForHaskell;
+    this.forceLinkWholeForHaskellOmnibus = config.forceLinkWholeForHaskellOmnibus;
     this.shouldBeLinkedInAppleTestAndHost = config.shouldBeLinkedInAppleTestAndHost;
     this.nativeLinkTarget = config.nativeLinkTarget;
     this.delegate = delegate;
@@ -194,6 +198,15 @@ public final class NativeLinkableInfo implements NativeLinkable {
   @Override
   public boolean supportsOmnibusLinkingForHaskell() {
     return supportsOmnibusLinkingForHaskell;
+  }
+
+  @Override
+  public boolean forceLinkWholeForHaskellOmnibus() {
+    if (!forceLinkWholeForHaskellOmnibus.isPresent()) {
+      throw new IllegalStateException(
+          String.format("Unexpected rule type in omnibus link %s.", getBuildTarget()));
+    }
+    return forceLinkWholeForHaskellOmnibus.get();
   }
 
   @Override

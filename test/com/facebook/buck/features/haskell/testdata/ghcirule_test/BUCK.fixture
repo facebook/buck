@@ -34,7 +34,7 @@ haskell_ghci(
 
 prebuilt_cxx_library(
     name = "prebuilt_c",
-    static_lib = ":c#static,default",
+    static_lib = ":c#static-pic,default",
     visibility = ["PUBLIC"],
 )
 

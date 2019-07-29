@@ -715,7 +715,7 @@ public class PrebuiltCxxLibraryDescription
                 .setExportedLinkerFlags(exportedLinkerFlags)
                 .setExportedPostLinkerFlags(exportedPostLinkerFlags)
                 .setSupportsOmnibusLinking(supportsOmnibusLinking(cxxPlatform))
-                .setSupportsOmnibusLinkingForHaskell(true)
+                .setHaskellOmnibusLinkingOptions(true, true)
                 .setNativeLinkTarget(linkTargetInfo));
       }
 
