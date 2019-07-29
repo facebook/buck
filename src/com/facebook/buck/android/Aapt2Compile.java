@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -31,6 +32,7 @@ import com.facebook.buck.rules.modern.HasBrokenInputBasedRuleKey;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
+import com.facebook.buck.rules.modern.RemoteExecutionEnabled;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.zip.ZipScrubberStep;
@@ -59,6 +61,10 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
     @AddToRuleKey private final Tool aapt2ExecutableTool;
     @AddToRuleKey private final SourcePath resDir;
     @AddToRuleKey private final OutputPath output = new OutputPath("resources.flata");
+
+    // TODO : msemko enable after switching aapt2 configuration to a build target in repos
+    @CustomFieldBehavior(RemoteExecutionEnabled.class)
+    private final boolean enabled = false;
 
     private Impl(Tool aapt2ExecutableTool, SourcePath resDir) {
       this.aapt2ExecutableTool = aapt2ExecutableTool;
