@@ -32,14 +32,39 @@
 {/template}
 
 /***/
+{template .abs_path_note}
+  <p>
+    Note that the paths returned by these macros are <em>absolute</em>{sp}
+    paths. You should convert these paths to be relative paths before
+    embedding them in, for example, a shell script or batch file. Using
+    relative paths ensures that your builds are <em>hermetic</em>, that 
+    is, they are reproducible across different machine environments.
+  </p>
+
+  <p>
+  Additionally, if you embed these paths in a shell script, you should
+  execute that script using the {call buck.sh_binary /} rule and include
+  the targets for these paths in the <code>resources</code> argument of
+  that <code>sh_binary</code> rule. These are the same targets that you 
+  pass to the string parameter macros.
+  </p>
+{/template}
+
+
+/***/
 {template .cmd_arg}
 {call buck.arg}
   {param name: 'cmd' /}
   {param default: 'None' /}
   {param desc}
-  The shell command to run to generate the output file. It is the fallback of <code>bash</code>
-  {sp}and <code>cmd_exe</code>.
-  It will be subject to the following environment variable substitutions:
+
+    <p>
+      The shell command to run to generate the output file. 
+      It is the fallback of <code>bash</code> {sp}and <code>cmd_exe</code>.
+      The following environment variables are populated by Buck and
+      available to the shell command:
+    </p>
+
     <dl>
       <dt><code>SRCS</code><dt>
       <dd>A string expansion of the <code>srcs</code> argument delimited by 
@@ -71,10 +96,15 @@
     </dl>
     <br>
 
+    <h5>String parameter macros</h5>
+    <p>
     It is also possible to expand references to other rules within the
-    {sp}<code>cmd</code>, using builtin {call buck.string_parameter_macros /}.
-    Note that all build rules expanded in the command will be automatically
-    considered to be dependencies of the <code>genrule()</code>.
+    {sp}<code>cmd</code>, using builtin {call buck.string_parameter_macros /}.  
+    All build rules expanded in the command are automatically considered
+    to be dependencies of the <code>genrule()</code>.
+    </p>
+
+   {call genrule_common.abs_path_note /}
 
     <dl>
       <dt><code>$(classpath /&#x2F;path/to:target)</code></dt>
@@ -110,6 +140,7 @@
   {/param}
 {/call}
 {/template}
+
 
 /***/
 {template .bash_arg}
