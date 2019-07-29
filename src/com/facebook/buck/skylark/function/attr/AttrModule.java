@@ -17,6 +17,7 @@ package com.facebook.buck.skylark.function.attr;
 
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableBoolAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableDepAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableIntAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableSourceAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableSourceListAttribute;
@@ -68,5 +69,10 @@ public class AttrModule implements AttrModuleApi {
   @Override
   public AttributeHolder sourceAttribute(Object defaultValue, String doc, boolean mandatory) {
     return new ImmutableSourceAttribute(defaultValue, doc, mandatory);
+  }
+
+  @Override
+  public AttributeHolder depAttribute(Object defaultValue, String doc, boolean mandatory) {
+    return new ImmutableDepAttribute(defaultValue, doc, mandatory);
   }
 }

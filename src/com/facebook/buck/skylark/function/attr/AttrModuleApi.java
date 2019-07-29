@@ -233,4 +233,42 @@ public interface AttrModuleApi extends SkylarkValue {
       })
   AttributeHolder sourceAttribute(Object defaultValue, String doc, boolean mandatory)
       throws EvalException;
+
+  @SkylarkCallable(
+      name = "dep",
+      doc =
+          "Create a parameter for user defined rules that is a build target.\nThis is exposed to "
+              + "rule implementations via ctx.attr.{@code name} as a single ProviderInfoCollection "
+              + "object.",
+      parameters = {
+        @Param(
+            name = AttributeConstants.DEFAULT_PARAM_NAME,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC,
+            defaultValue = "None",
+            noneable = true,
+            positional = false,
+            named = true,
+            type = String.class,
+            generic1 = String.class),
+        @Param(
+            name = AttributeConstants.DOC_PARAM_NAME,
+            doc =
+                "The default value for this parameter. Note that `None` is not valid and is "
+                    + "only used as there is no universal default value that is applicable.",
+            defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = String.class),
+        @Param(
+            name = AttributeConstants.MANDATORY_PARAM_NAME,
+            doc = AttributeConstants.MANDATORY_PARAM_DOC,
+            defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = Boolean.class)
+      })
+  AttributeHolder depAttribute(Object defaultValue, String doc, boolean mandatory)
+      throws EvalException;
 }

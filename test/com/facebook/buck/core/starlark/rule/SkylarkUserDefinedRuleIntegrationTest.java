@@ -17,6 +17,7 @@ package com.facebook.buck.core.starlark.rule;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -220,7 +221,9 @@ public class SkylarkUserDefinedRuleIntegrationTest {
                 "//with_source_list:with_default_srcs",
                 "//with_source_list:with_explicit_srcs",
                 "//with_source:with_default_src",
-                "//with_source:with_explicit_src")
+                "//with_source:with_explicit_src",
+                "//with_dep:with_default_dep",
+                "//with_dep:with_explicit_dep")
             .assertSuccess();
 
     ProcessResult inputsQueryRes =
@@ -232,7 +235,9 @@ public class SkylarkUserDefinedRuleIntegrationTest {
                 "//with_source_list:with_default_srcs",
                 "//with_source_list:with_explicit_srcs",
                 "//with_source:with_default_src",
-                "//with_source:with_explicit_src")
+                "//with_source:with_explicit_src",
+                "//with_dep:with_default_dep",
+                "//with_dep:with_explicit_dep")
             .assertSuccess();
 
     BiFunction<JsonNode, String, ImmutableList<String>> toList =
@@ -269,6 +274,16 @@ public class SkylarkUserDefinedRuleIntegrationTest {
             "//with_source:other", "//with_source:with_explicit_src", "//with_source:hidden"));
 
     assertThat(
+        toList.apply(deps, "//with_dep:with_default_dep"),
+        Matchers.containsInAnyOrder(
+            "//with_dep:default", "//with_dep:with_default_dep", "//with_dep:hidden"));
+
+    assertThat(
+        toList.apply(deps, "//with_dep:with_explicit_dep"),
+        Matchers.containsInAnyOrder(
+            "//with_dep:other", "//with_dep:with_explicit_dep", "//with_dep:hidden"));
+
+    assertThat(
         toList.apply(inputs, "//with_source_list:with_default_srcs"),
         Matchers.containsInAnyOrder(
             Paths.get("with_source_list", "default_src.txt").toString(),
@@ -291,6 +306,9 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         Matchers.containsInAnyOrder(
             Paths.get("with_source", "some_src.txt").toString(),
             Paths.get("with_source", "hidden_src.txt").toString()));
+
+    assertNull(inputs.get("//with_dep:with_default_dep"));
+    assertNull(inputs.get("//with_dep:with_explicit_dep"));
   }
 
   @Test
@@ -317,6 +335,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "implementation_gets_artifacts_from_source", tmp);
+
     DefaultProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
@@ -328,6 +347,26 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         "contents2",
         workspace.getFileContents(
             BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:with_source"))
+                .resolve("out2.txt")));
+  }
+
+  @Test
+  public void implementationGetsDepFromDepAttribute() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "implementation_gets_dep_from_dep", tmp);
+
+    DefaultProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:with_dep").assertSuccess();
+
+    assertEquals(
+        "contents2",
+        workspace.getFileContents(
+            BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:with_dep"))
                 .resolve("out2.txt")));
   }
 

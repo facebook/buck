@@ -236,12 +236,35 @@ public class SkylarkUserDefinedRulesParserTest {
   }
 
   @Test
+  public void enablesAttrsDepIfConfigured() throws IOException, InterruptedException {
+    setupWorkspace("attr");
+    Path buildFile = projectFilesystem.resolve("dep").resolve("well_formed").resolve("BUCK");
+
+    parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
+
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
   public void attrsSourceThrowsExceptionOnInvalidTypes() throws IOException, InterruptedException {
 
     setupWorkspace("attr");
 
     EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
     Path buildFile = projectFilesystem.resolve("source").resolve("malformed").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(eventCollector, parser, buildFile, "expected value of type 'string");
+  }
+
+  @Test
+  public void attrsDepThrowsExceptionOnInvalidTypes() throws IOException, InterruptedException {
+
+    setupWorkspace("attr");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile = projectFilesystem.resolve("dep").resolve("malformed").resolve("BUCK");
 
     parser = createParser(eventCollector);
 
