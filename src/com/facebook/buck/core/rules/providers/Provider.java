@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.core.rules.providers;
 
+import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
+
 /**
  * Declared Provider (a constructor for {@link ProviderInfo}).
  *
@@ -23,7 +25,7 @@ package com.facebook.buck.core.rules.providers;
  * "providers" and "provider infos"; the former is a Java instance of this class, and the latter is
  * a Java instance of {@link ProviderInfo}.
  */
-public interface Provider<T extends ProviderInfo<T>> {
+public interface Provider<T extends ProviderInfo<T>> extends SkylarkValue {
 
   /**
    * Returns a serializable representation of this {@link
