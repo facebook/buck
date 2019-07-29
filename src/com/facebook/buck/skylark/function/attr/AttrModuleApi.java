@@ -271,4 +271,49 @@ public interface AttrModuleApi extends SkylarkValue {
       })
   AttributeHolder depAttribute(Object defaultValue, String doc, boolean mandatory)
       throws EvalException;
+
+  @SkylarkCallable(
+      name = "dep_list",
+      doc =
+          "Create a parameter for user defined rules that is a list of build targets that are "
+              + "dependencies of this target\nThis is exposed to rule implementations via "
+              + "ctx.attr.{@code name} as a list of ProviderInfoCollection objects, that provide "
+              + "access to various metadata about the dependency.",
+      parameters = {
+        @Param(
+            name = AttributeConstants.DEFAULT_PARAM_NAME,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC,
+            defaultValue = "[]",
+            noneable = false,
+            positional = false,
+            named = true,
+            type = SkylarkList.class,
+            generic1 = String.class),
+        @Param(
+            name = AttributeConstants.DOC_PARAM_NAME,
+            doc = AttributeConstants.DOC_PARAM_DOC,
+            defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = String.class),
+        @Param(
+            name = AttributeConstants.MANDATORY_PARAM_NAME,
+            doc = AttributeConstants.MANDATORY_PARAM_DOC,
+            defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = Boolean.class),
+        @Param(
+            name = "allow_empty",
+            doc = "Whether the dep list may be empty",
+            defaultValue = "False",
+            positional = false,
+            named = true,
+            type = Boolean.class)
+      })
+  AttributeHolder depListAttribute(
+      SkylarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      throws EvalException;
 }
