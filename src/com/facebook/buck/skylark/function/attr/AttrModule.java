@@ -18,6 +18,7 @@ package com.facebook.buck.skylark.function.attr;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableBoolAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableIntAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableSourceAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableSourceListAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
@@ -62,5 +63,10 @@ public class AttrModule implements AttrModuleApi {
     List<String> validatedDefaultValues = defaultValue.getContents(String.class, null);
 
     return new ImmutableSourceListAttribute(validatedDefaultValues, doc, mandatory, allowEmpty);
+  }
+
+  @Override
+  public AttributeHolder sourceAttribute(Object defaultValue, String doc, boolean mandatory) {
+    return new ImmutableSourceAttribute(defaultValue, doc, mandatory);
   }
 }

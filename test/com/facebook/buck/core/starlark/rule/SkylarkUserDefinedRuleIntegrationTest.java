@@ -218,7 +218,9 @@ public class SkylarkUserDefinedRuleIntegrationTest {
                 "--json",
                 "deps(%s)",
                 "//with_source_list:with_default_srcs",
-                "//with_source_list:with_explicit_srcs")
+                "//with_source_list:with_explicit_srcs",
+                "//with_source:with_default_src",
+                "//with_source:with_explicit_src")
             .assertSuccess();
 
     ProcessResult inputsQueryRes =
@@ -228,7 +230,9 @@ public class SkylarkUserDefinedRuleIntegrationTest {
                 "--json",
                 "inputs(%s)",
                 "//with_source_list:with_default_srcs",
-                "//with_source_list:with_explicit_srcs")
+                "//with_source_list:with_explicit_srcs",
+                "//with_source:with_default_src",
+                "//with_source:with_explicit_src")
             .assertSuccess();
 
     BiFunction<JsonNode, String, ImmutableList<String>> toList =
@@ -255,6 +259,16 @@ public class SkylarkUserDefinedRuleIntegrationTest {
             "//with_source_list:hidden"));
 
     assertThat(
+        toList.apply(deps, "//with_source:with_default_src"),
+        Matchers.containsInAnyOrder(
+            "//with_source:default", "//with_source:with_default_src", "//with_source:hidden"));
+
+    assertThat(
+        toList.apply(deps, "//with_source:with_explicit_src"),
+        Matchers.containsInAnyOrder(
+            "//with_source:other", "//with_source:with_explicit_src", "//with_source:hidden"));
+
+    assertThat(
         toList.apply(inputs, "//with_source_list:with_default_srcs"),
         Matchers.containsInAnyOrder(
             Paths.get("with_source_list", "default_src.txt").toString(),
@@ -265,6 +279,18 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         Matchers.containsInAnyOrder(
             Paths.get("with_source_list", "some_src.txt").toString(),
             Paths.get("with_source_list", "hidden_src.txt").toString()));
+
+    assertThat(
+        toList.apply(inputs, "//with_source:with_default_src"),
+        Matchers.containsInAnyOrder(
+            Paths.get("with_source", "default_src.txt").toString(),
+            Paths.get("with_source", "hidden_src.txt").toString()));
+
+    assertThat(
+        toList.apply(inputs, "//with_source:with_explicit_src"),
+        Matchers.containsInAnyOrder(
+            Paths.get("with_source", "some_src.txt").toString(),
+            Paths.get("with_source", "hidden_src.txt").toString()));
   }
 
   @Test
@@ -283,6 +309,25 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         "contents2",
         workspace.getFileContents(
             BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:with_sources"))
+                .resolve("out2.txt")));
+  }
+
+  @Test
+  public void implementationGetsArtifactFromSourceAttribute() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "implementation_gets_artifacts_from_source", tmp);
+    DefaultProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:with_source").assertSuccess();
+
+    assertEquals(
+        "contents2",
+        workspace.getFileContents(
+            BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:with_source"))
                 .resolve("out2.txt")));
   }
 

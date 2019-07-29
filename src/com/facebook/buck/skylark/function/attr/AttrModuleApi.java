@@ -193,4 +193,44 @@ public interface AttrModuleApi extends SkylarkValue {
   AttributeHolder sourceListAttribute(
       SkylarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException;
+
+  @SkylarkCallable(
+      name = "source",
+      doc =
+          "Create a parameter for user defined rules that is a source file on disk "
+              + "or a build target.\nThis is exposed to rule implementations via "
+              + "ctx.attr.{@code name}  as a single artifact, not as a ProviderInfoCollection "
+              + "object.\nIf only a dependency is required, or ProviderInfo objects "
+              + "are needed, this is not the correct attribute to use.",
+      parameters = {
+        @Param(
+            name = AttributeConstants.DEFAULT_PARAM_NAME,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC,
+            defaultValue = "None",
+            noneable = true,
+            positional = false,
+            named = true,
+            type = String.class,
+            generic1 = String.class),
+        @Param(
+            name = AttributeConstants.DOC_PARAM_NAME,
+            doc =
+                "The default value for this parameter. Note that `None` is not valid and is "
+                    + "only used as there is no universal default value that is applicable.",
+            defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = String.class),
+        @Param(
+            name = AttributeConstants.MANDATORY_PARAM_NAME,
+            doc = AttributeConstants.MANDATORY_PARAM_DOC,
+            defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = Boolean.class)
+      })
+  AttributeHolder sourceAttribute(Object defaultValue, String doc, boolean mandatory)
+      throws EvalException;
 }

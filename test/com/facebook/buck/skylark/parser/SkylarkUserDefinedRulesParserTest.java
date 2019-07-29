@@ -226,6 +226,29 @@ public class SkylarkUserDefinedRulesParserTest {
   }
 
   @Test
+  public void enablesAttrsSourceIfConfigured() throws IOException, InterruptedException {
+    setupWorkspace("attr");
+    Path buildFile = projectFilesystem.resolve("source").resolve("well_formed").resolve("BUCK");
+
+    parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
+
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void attrsSourceThrowsExceptionOnInvalidTypes() throws IOException, InterruptedException {
+
+    setupWorkspace("attr");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile = projectFilesystem.resolve("source").resolve("malformed").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(eventCollector, parser, buildFile, "expected value of type 'string");
+  }
+
+  @Test
   public void ruleFailsIfWrongImplTypeProvided() throws IOException, InterruptedException {
     setupWorkspace("rule_with_wrong_impl_type");
 
