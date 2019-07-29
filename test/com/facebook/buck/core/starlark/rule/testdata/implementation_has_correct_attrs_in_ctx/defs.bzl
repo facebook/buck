@@ -6,22 +6,30 @@ def _impl(ctx):
     if ctx.attr._hidden[0].short_path.replace("\\", "/") != "foo/main.cpp":
         fail("expected attr._hidden to equal 'foo/main.cpp'")
     if ctx.label.name == "no_defaults":
-        if ctx.attr.a != 1:
-            fail("expected attr.a to equal '1'")
-        if ctx.attr.b != "foo_value":
-            fail("expected attr.b to equal 'foo_value'")
+        if ctx.attr.int != 1:
+            fail("expected attr.int to equal '1'")
+        if ctx.attr.string != "foo_value":
+            fail("expected attr.string to equal 'foo_value'")
+        if ctx.attr.string_list != ["foo", "baz"]:
+            fail("expected attr.string_list to equal ['foo', 'baz']")
     elif ctx.label.name == "defaults":
-        if ctx.attr.a != 0:
-            fail("expected attr.a to equal '0'")
-        if ctx.attr.b != "":
-            fail("expected attr.b to equal ''")
+        if ctx.attr.int != 0:
+            fail("expected attr.int to equal '0'")
+        if ctx.attr.string != "":
+            fail("expected attr.string to equal ''")
+        if ctx.attr.string_list != ["foo", "bar"]:
+            fail("expected attr.string_list to equal ['foo', 'bar']")
     else:
         fail("invalid target name")
 
 my_rule = rule(
     attrs = {
-        "a": attr.int(),
-        "b": attr.string(),
+        "int": attr.int(),
+        "string": attr.string(),
+        "string_list": attr.string_list(default = [
+            "foo",
+            "bar",
+        ]),
         "_hidden": attr.source_list(default = ["main.cpp"]),
     },
     implementation = _impl,

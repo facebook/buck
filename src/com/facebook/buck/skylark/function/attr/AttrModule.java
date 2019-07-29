@@ -23,6 +23,8 @@ import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableIntAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableSourceAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableSourceListAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringListAttribute;
+import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.SkylarkList;
@@ -51,6 +53,16 @@ public class AttrModule implements AttrModuleApi {
     List<String> validatedValues = SkylarkList.castList(values, String.class, null);
 
     return new ImmutableStringAttribute(defaultValue, doc, mandatory, validatedValues);
+  }
+
+  @Override
+  public AttributeHolder stringListAttribute(
+      SkylarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      throws EvalException {
+    ImmutableList<String> validatedDefaultValue =
+        ImmutableList.copyOf(defaultValue.getContents(String.class, null));
+
+    return new ImmutableStringListAttribute(validatedDefaultValue, doc, mandatory, allowEmpty);
   }
 
   @Override
