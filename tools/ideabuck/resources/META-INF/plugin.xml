@@ -12,7 +12,7 @@
   <change-notes><![CDATA[
 <h3>3.8.2</h3>
 <ul>
-  <li>Fix rendering of BuckToolWindow</li>
+  <li>Fix rendering of BuckToolWindow, remove non-useful buttons.</li>
 </ul>
 <h3>3.8.1</h3>
 <ul>
@@ -412,10 +412,6 @@
       <action class="com.facebook.buck.intellij.ideabuck.actions.BuckUninstallAction"
         id="buck.Uninstall">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift M"/>
-      </action>
-      <action class="com.facebook.buck.intellij.ideabuck.actions.BuckProjectGenerationAction"
-        id="buck.ProjectGeneration">
-        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift B"/>
       </action>
       <action class="com.facebook.buck.intellij.ideabuck.actions.BuckKillAction" id="buck.Kill">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift L"/>
