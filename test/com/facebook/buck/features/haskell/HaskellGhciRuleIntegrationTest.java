@@ -30,6 +30,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -87,5 +88,12 @@ public class HaskellGhciRuleIntegrationTest {
   public void enableProfiling() throws IOException {
     workspace.runBuckBuild("//:foo_prof").assertSuccess();
     workspace.verify(Paths.get("foo_prof_output.expected"), genPath);
+  }
+
+  @Test
+  @Ignore
+  public void foreign() throws IOException {
+    workspace.runBuckBuild("//:prebuilt_foreign").assertSuccess();
+    workspace.verify(Paths.get("prebuilt_foreign_output.expected"), genPath);
   }
 }
