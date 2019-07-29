@@ -94,4 +94,16 @@ public class ProviderInfoCollectionImplTest {
     assertEquals(
         fakeInfo2, providerInfoCollection.getIndex(builtInProvider2, Location.BUILTIN, ctx));
   }
+
+  @Test
+  public void containsIsCorrect() {
+    Provider<FakeInfo> provider = new FakeBuiltInProvider("fake");
+    Provider<FakeInfo> missingProvider = new FakeBuiltInProvider("fake");
+    ProviderInfo<?> info = new FakeInfo(provider);
+    ProviderInfoCollection providerInfoCollection =
+        ProviderInfoCollectionImpl.builder().put(info).build();
+
+    assertTrue(providerInfoCollection.contains(provider));
+    assertFalse(providerInfoCollection.contains(missingProvider));
+  }
 }

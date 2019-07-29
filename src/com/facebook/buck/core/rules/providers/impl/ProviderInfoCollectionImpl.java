@@ -52,7 +52,7 @@ public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
       throws EvalException {
     verifyKeyIsProvider(
         key, loc, "Type Target only supports querying by object constructors, got %s instead");
-    return getNullable(((Provider<?>) key)) != null;
+    return contains((Provider<?>) key);
   }
 
   public static Builder builder() {
@@ -66,6 +66,11 @@ public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
   @Override
   public <T extends ProviderInfo<T>> Optional<T> get(Provider<T> provider) {
     return Optional.ofNullable(getNullable(provider));
+  }
+
+  @Override
+  public <T extends ProviderInfo<T>> boolean contains(Provider<T> provider) {
+    return infoMap.containsKey(provider.getKey());
   }
 
   @SuppressWarnings("unchecked")

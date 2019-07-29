@@ -32,6 +32,12 @@ public interface ProviderInfoCollection extends SkylarkIndexable {
   /** @return the {@link ProviderInfo} of the specific type given the {@link Provider} */
   <T extends ProviderInfo<T>> Optional<T> get(Provider<T> provider);
 
+  /**
+   * @return whether collection contains a {@link ProviderInfo} of the specific type given by the
+   *     {@link Provider}
+   */
+  <T extends ProviderInfo<T>> boolean contains(Provider<T> provider);
+
   interface Builder {
 
     /**
