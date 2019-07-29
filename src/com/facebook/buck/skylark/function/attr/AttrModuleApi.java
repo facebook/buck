@@ -75,6 +75,47 @@ public interface AttrModuleApi extends SkylarkValue {
       throws EvalException;
 
   @SkylarkCallable(
+      name = "int_list",
+      doc = "Create a parameter for user defined rules that is a list of ints",
+      parameters = {
+        @Param(
+            name = AttributeConstants.DEFAULT_PARAM_NAME,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC,
+            defaultValue = "[]",
+            noneable = false,
+            positional = false,
+            named = true,
+            type = SkylarkList.class,
+            generic1 = Integer.class),
+        @Param(
+            name = AttributeConstants.DOC_PARAM_NAME,
+            doc = AttributeConstants.DOC_PARAM_DOC,
+            defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = String.class),
+        @Param(
+            name = AttributeConstants.MANDATORY_PARAM_NAME,
+            doc = AttributeConstants.MANDATORY_PARAM_DOC,
+            defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = Boolean.class),
+        @Param(
+            name = "allow_empty",
+            doc = "Whether the list may be empty",
+            defaultValue = "False",
+            positional = false,
+            named = true,
+            type = Boolean.class)
+      })
+  AttributeHolder intListAttribute(
+      SkylarkList<Integer> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      throws EvalException;
+
+  @SkylarkCallable(
       name = "string",
       doc = "Create a parameter for user defined rules that is a string",
       parameters = {

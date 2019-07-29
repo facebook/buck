@@ -20,6 +20,7 @@ import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableBoolAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableDepAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableDepListAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableIntAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableIntListAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableSourceAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableSourceListAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
@@ -44,6 +45,16 @@ public class AttrModule implements AttrModuleApi {
       throws EvalException {
     List<Integer> validatedValues = SkylarkList.castList(values, Integer.class, null);
     return new ImmutableIntAttribute(defaultValue, doc, mandatory, validatedValues);
+  }
+
+  @Override
+  public AttributeHolder intListAttribute(
+      SkylarkList<Integer> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      throws EvalException {
+    ImmutableList<Integer> validatedDefaultValue =
+        ImmutableList.copyOf(defaultValue.getContents(Integer.class, null));
+
+    return new ImmutableIntListAttribute(validatedDefaultValue, doc, mandatory, allowEmpty);
   }
 
   @Override

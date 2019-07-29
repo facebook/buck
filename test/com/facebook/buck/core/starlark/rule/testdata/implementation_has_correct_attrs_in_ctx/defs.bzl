@@ -12,6 +12,8 @@ def _impl(ctx):
             fail("expected attr.string to equal 'foo_value'")
         if ctx.attr.string_list != ["foo", "baz"]:
             fail("expected attr.string_list to equal ['foo', 'baz']")
+        if ctx.attr.int_list != [3, 4]:
+            fail("expected attr.int_list to equal [3, 4]")
     elif ctx.label.name == "defaults":
         if ctx.attr.int != 0:
             fail("expected attr.int to equal '0'")
@@ -19,6 +21,8 @@ def _impl(ctx):
             fail("expected attr.string to equal ''")
         if ctx.attr.string_list != ["foo", "bar"]:
             fail("expected attr.string_list to equal ['foo', 'bar']")
+        if ctx.attr.int_list != [1, 2]:
+            fail("expected attr.int_list to equal [1, 2]")
     else:
         fail("invalid target name")
 
@@ -29,6 +33,10 @@ my_rule = rule(
         "string_list": attr.string_list(default = [
             "foo",
             "bar",
+        ]),
+        "int_list": attr.int_list(default = [
+            1,
+            2,
         ]),
         "_hidden": attr.source_list(default = ["main.cpp"]),
     },
