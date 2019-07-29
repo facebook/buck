@@ -159,7 +159,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
               sem.release();
               return null;
             },
-            DepsSupplier.of(() -> ImmutableSet.of(depsAwareTask1)));
+            DepsSupplier.of(() -> ImmutableSet.of(depsAwareTask1), ImmutableSet::of));
     depsAwareTask2.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED);
     workQueue.put(depsAwareTask2);
 
@@ -246,7 +246,8 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
             DepsSupplier.of(
                 () -> {
                   throw ex;
-                }));
+                },
+                ImmutableSet::of));
 
     Verify.verify(
         depsAwareTask.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
@@ -294,7 +295,8 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
             DepsSupplier.of(
                 () -> {
                   throw ex;
-                }));
+                },
+                ImmutableSet::of));
 
     Verify.verify(
         depsAwareTask1.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
@@ -303,7 +305,8 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     startWorkerThread(worker1);
 
     TaskType depsAwareTask2 =
-        createTask(() -> null, DepsSupplier.of(() -> ImmutableSet.of(depsAwareTask1)));
+        createTask(
+            () -> null, DepsSupplier.of(() -> ImmutableSet.of(depsAwareTask1), ImmutableSet::of));
 
     Verify.verify(
         depsAwareTask2.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
@@ -432,7 +435,8 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
                 () -> {
                   getDepsRan.release();
                   return ImmutableSet.of(task1);
-                }));
+                },
+                ImmutableSet::of));
 
     // pretend task1 is scheduled
     Verify.verify(task1.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
@@ -445,7 +449,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
   }
 
   TaskType createTask(Callable<?> callable) {
-    return createTask(callable, DepsSupplier.of(ImmutableSet::of));
+    return createTask(callable, DepsSupplier.of());
   }
 
   TaskType createTask(Callable<?> callable, DepsSupplier<TaskType> depsSupplier) {

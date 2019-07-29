@@ -17,7 +17,6 @@
 package com.facebook.buck.core.graph.transformation.executor.impl;
 
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
-import com.google.common.collect.ImmutableSet;
 import java.util.concurrent.Callable;
 
 /**
@@ -37,7 +36,7 @@ class DefaultDepsAwareTask<T> extends AbstractDepsAwareTask<T, DefaultDepsAwareT
 
   /** @return a new Task to be ran without any dependencies */
   static <U> DefaultDepsAwareTask<U> of(Callable<U> callable) {
-    return of(callable, DepsAwareTask.DepsSupplier.of(ImmutableSet::of));
+    return of(callable, DepsAwareTask.DepsSupplier.of());
   }
 
   /** @return a new Task to be ran */
