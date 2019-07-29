@@ -24,7 +24,9 @@ import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask.DepsSu
 import com.facebook.buck.core.graph.transformation.executor.impl.AbstractDepsAwareTask.TaskStatus;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -33,6 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -100,11 +103,23 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
   private AbstractDepsAwareWorker<?> worker1;
   private AbstractDepsAwareWorker<?> worker2;
 
+  private List<Thread> workerThreads = new ArrayList<>();
+
   @Before
   public void setUp() {
     workQueue = new LinkedBlockingDeque<>();
     worker1 = workerConstructor.apply(workQueue);
     worker2 = workerConstructor.apply(workQueue);
+  }
+
+  @After
+  public void cleanUpWorkerThreads() throws InterruptedException {
+    for (Thread thread : workerThreads) {
+      thread.interrupt();
+    }
+    for (Thread thread : workerThreads) {
+      thread.join(1000);
+    }
   }
 
   @Test(timeout = 5000)
@@ -120,10 +135,9 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     Verify.verify(task.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
     workQueue.put(task);
 
-    Thread testThread = startWorkerThread(worker1);
+    startWorkerThread(worker1);
 
     sem.acquire();
-    testThread.interrupt();
   }
 
   @Test(timeout = 5000)
@@ -149,11 +163,10 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     depsAwareTask2.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED);
     workQueue.put(depsAwareTask2);
 
-    Thread testThread = startWorkerThread(worker1);
+    startWorkerThread(worker1);
 
     sem.acquire();
     depsAwareTask2.getFuture().get();
-    testThread.interrupt();
   }
 
   @Test(timeout = 5000)
@@ -179,11 +192,10 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     depsAwareTask2.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED);
     workQueue.put(depsAwareTask2);
 
-    Thread testThread = startWorkerThread(worker1);
+    startWorkerThread(worker1);
 
     sem.acquire();
     depsAwareTask2.getFuture().get();
-    testThread.interrupt();
   }
 
   @Test(timeout = 5000)
@@ -215,11 +227,10 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     depsAwareTask2.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED);
     workQueue.put(depsAwareTask2);
 
-    Thread testThread = startWorkerThread(worker1);
+    startWorkerThread(worker1);
 
     sem.acquire();
     depsAwareTask2.getFuture().get();
-    testThread.interrupt();
   }
 
   @Test(timeout = 5000)
@@ -241,10 +252,9 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
         depsAwareTask.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
     workQueue.put(depsAwareTask);
 
-    Thread testThread = startWorkerThread(worker1);
+    startWorkerThread(worker1);
 
     depsAwareTask.getResultFuture().get();
-    testThread.interrupt();
   }
 
   @Test(timeout = 5000)
@@ -266,10 +276,9 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
         depsAwareTask.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
     workQueue.put(depsAwareTask);
 
-    Thread testThread = startWorkerThread(worker1);
+    startWorkerThread(worker1);
 
     depsAwareTask.getResultFuture().get();
-    testThread.interrupt();
   }
 
   @Test(timeout = 5000)
@@ -291,7 +300,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
         depsAwareTask1.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
     workQueue.put(depsAwareTask1);
 
-    Thread testThread = startWorkerThread(worker1);
+    startWorkerThread(worker1);
 
     TaskType depsAwareTask2 =
         createTask(() -> null, DepsSupplier.of(() -> ImmutableSet.of(depsAwareTask1)));
@@ -301,7 +310,6 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     workQueue.put(depsAwareTask2);
 
     depsAwareTask2.getResultFuture().get();
-    testThread.interrupt();
   }
 
   @Test(timeout = 5000)
@@ -344,9 +352,6 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     testThread2.start();
 
     semDone.acquire();
-
-    testThread1.interrupt();
-    testThread2.interrupt();
   }
 
   @Test(timeout = 5000)
@@ -456,13 +461,16 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
   }
 
   private Thread createWorkerThread(AbstractDepsAwareWorker<?> worker) {
-    return new Thread(
-        () -> {
-          try {
-            worker.loopForever();
-          } catch (InterruptedException e) {
-            return;
-          }
-        });
+    Thread thread =
+        new Thread(
+            () -> {
+              try {
+                worker.loopForever();
+              } catch (InterruptedException e) {
+                return;
+              }
+            });
+    workerThreads.add(thread);
+    return thread;
   }
 }
