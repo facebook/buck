@@ -49,7 +49,10 @@ public class RustToolchainFactory implements ToolchainFactory<RustToolchain> {
                 // TODO: Allow overlaying flavor-specific section configuration.
                 .map(
                     cxxPlatform ->
-                        platformFactory.getPlatform(cxxPlatform.getFlavor().getName(), cxxPlatform))
+                        platformFactory.getPlatform(
+                            cxxPlatform.getFlavor().getName(),
+                            cxxPlatform,
+                            context.getProcessExecutor()))
                 .toImmutableList());
     UnresolvedRustPlatform defaultRustPlatform =
         rustPlatforms.getValue(defaultCxxPlatform.getFlavor());

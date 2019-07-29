@@ -23,16 +23,26 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor.Option;
+import com.facebook.buck.util.ProcessExecutor.Result;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.EnumSet;
 import java.util.Optional;
+import java.util.Set;
+import javax.annotation.Nullable;
 
 /** An {@link UnresolvedRustPlatform} based on .buckconfig values. */
 public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform {
@@ -43,12 +53,16 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
   private final ToolProvider rustCompiler;
   private final Optional<ToolProvider> linkerOverride;
   private final UnresolvedCxxPlatform unresolvedCxxPlatform;
+  private final @Nullable ProcessExecutor processExecutor;
+
+  private static final Logger LOG = Logger.get(RustBuckConfig.class);
 
   ConfigBasedUnresolvedRustPlatform(
       String name,
       BuckConfig buckConfig,
       ExecutableFinder executableFinder,
-      UnresolvedCxxPlatform unresolvedCxxPlatform) {
+      UnresolvedCxxPlatform unresolvedCxxPlatform,
+      @Nullable ProcessExecutor processExecutor) {
     this.rustBuckConfig = new RustBuckConfig(buckConfig);
     this.name = name;
     this.unresolvedCxxPlatform = unresolvedCxxPlatform;
@@ -67,6 +81,7 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
                 });
 
     this.linkerOverride = rustBuckConfig.getRustLinker(name);
+    this.processExecutor = processExecutor;
   }
 
   @Override
@@ -96,6 +111,7 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
         .addAllLinkerArgs(
             !linkerOverride.isPresent() ? cxxPlatform.getLdflags() : ImmutableList.of())
         .setCxxPlatform(cxxPlatform)
+        .setXcrunSdkPath(computeXcrunSdkPath(cxxPlatform.getFlavor()))
         .build();
   }
 
@@ -112,5 +128,79 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
     deps.addAll(rustCompiler.getParseTimeDeps(targetConfiguration));
     linkerOverride.ifPresent(l -> deps.addAll(l.getParseTimeDeps(targetConfiguration)));
     return deps.build();
+  }
+
+  private Optional<Path> computeXcrunSdkPath(Flavor flavor) {
+    Optional<String> xcrunSdk = getXcrunSdk(flavor);
+    if (processExecutor == null) {
+      if (xcrunSdk.isPresent()) {
+        LOG.warn(
+            "No processExecutor while trying to get Apple SDK path for rustc. This is unlikely to work.");
+      }
+      return Optional.empty();
+    }
+    return xcrunSdk.flatMap(
+        (sdk) -> {
+          Optional<Path> developerDir = rustBuckConfig.getAppleDeveloperDirIfSet();
+          ImmutableMap<String, String> environment;
+          if (developerDir.isPresent()) {
+            environment = ImmutableMap.of("DEVELOPER_DIR", developerDir.get().toString());
+          } else {
+            environment = ImmutableMap.of();
+          }
+          ProcessExecutorParams processExecutorParams =
+              ProcessExecutorParams.builder()
+                  .setCommand(
+                      ImmutableList.of(
+                          rustBuckConfig
+                              .getAppleXcrunPath()
+                              .map((path) -> path.toString())
+                              .orElse("xcrun"),
+                          "--sdk",
+                          sdk,
+                          "--show-sdk-path"))
+                  .setEnvironment(environment)
+                  .build();
+          // Must specify that stdout is expected or else output may be wrapped in Ansi escape
+          // chars.
+          Set<Option> options = EnumSet.of(Option.EXPECTING_STD_OUT);
+          Result result;
+          try {
+            result =
+                processExecutor.launchAndExecute(
+                    processExecutorParams,
+                    options,
+                    /* stdin */ Optional.empty(),
+                    /* timeOutMs */ Optional.empty(),
+                    /* timeOutHandler */ Optional.empty());
+          } catch (InterruptedException | IOException e) {
+            LOG.warn("Could not execute xcrun, continuing without sdk path.");
+            return Optional.empty();
+          }
+
+          if (result.getExitCode() != 0) {
+            throw new RuntimeException(
+                result.getMessageForUnexpectedResult("xcrun --print-sdk-path"));
+          }
+
+          return Optional.of(Paths.get(result.getStdout().get().trim()));
+        });
+  }
+
+  private static Optional<String> getXcrunSdk(Flavor platformFlavor) {
+    String platformFlavorName = platformFlavor.getName();
+    if (platformFlavorName.startsWith("iphoneos-")) {
+      return Optional.of("iphoneos");
+    }
+    if (platformFlavorName.startsWith("iphonesimulator-")) {
+      return Optional.of("iphonesimulator");
+    }
+    if (platformFlavorName.startsWith("appletvos")) {
+      return Optional.of("appletvos");
+    }
+    if (platformFlavorName.startsWith("watchos")) {
+      return Optional.of("watchos");
+    }
+    return Optional.empty();
   }
 }

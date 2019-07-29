@@ -23,6 +23,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -80,4 +81,6 @@ interface AbstractRustPlatform extends FlavorConvertible {
 
   /** @return the {@link CxxPlatform} to use for C/C++ dependencies. */
   CxxPlatform getCxxPlatform();
+
+  Optional<Path> getXcrunSdkPath();
 }

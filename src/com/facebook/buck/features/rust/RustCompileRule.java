@@ -70,6 +70,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final Path scratchDir;
   private final Optional<String> filename;
+  private final Optional<Path> xcrunSdkPath;
 
   /**
    * Work out how to invoke the Rust compiler, rustc.
@@ -101,7 +102,8 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<Arg> linkerArgs,
       ImmutableSortedSet<SourcePath> srcs,
       SourcePath rootModule,
-      RemapSrcPaths remapSrcPaths) {
+      RemapSrcPaths remapSrcPaths,
+      Optional<Path> xcrunSdkPath) {
     super(buildTarget, projectFilesystem, buildRuleParams);
 
     this.filename = filename;
@@ -115,6 +117,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.scratchDir =
         BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s-container");
     this.remapSrcPaths = remapSrcPaths;
+    this.xcrunSdkPath = xcrunSdkPath;
   }
 
   public static RustCompileRule from(
@@ -130,7 +133,8 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<Arg> linkerArgs,
       ImmutableSortedSet<SourcePath> sources,
       SourcePath rootModule,
-      RemapSrcPaths remapSrcPaths) {
+      RemapSrcPaths remapSrcPaths,
+      Optional<Path> xcrunSdkPath) {
     return new RustCompileRule(
         buildTarget,
         projectFilesystem,
@@ -159,7 +163,8 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         linkerArgs,
         sources,
         rootModule,
-        remapSrcPaths);
+        remapSrcPaths,
+        xcrunSdkPath);
   }
 
   protected static Path getOutputDir(BuildTarget target, ProjectFilesystem filesystem) {
@@ -296,7 +301,9 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 env.put(
                     "RUSTC_BUILD_CONTAINER_BASE_PATH",
                     root.resolve(scratchDir.resolve(basePath)) + "/");
-
+                if (xcrunSdkPath.isPresent()) {
+                  env.put("SDKROOT", xcrunSdkPath.get().toString());
+                }
                 return env.build();
               }
 

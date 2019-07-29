@@ -19,9 +19,12 @@ package com.facebook.buck.features.rust;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -228,5 +231,21 @@ public class RustBuckConfig {
   /** Default edition when not specified in a rule. Use "2015" if not specified. */
   String getEdition() {
     return delegate.getValue(SECTION, DEFAULT_EDITION).orElse("2015");
+  }
+
+  private Optional<Path> getOptionalPath(String sectionName, String propertyName) {
+    Optional<String> pathString = delegate.getValue(sectionName, propertyName);
+    return pathString.map(
+        path -> delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(path)));
+  }
+
+  public Optional<Path> getAppleXcrunPath() {
+    Optional<Path> xcrunPath = getOptionalPath("apple", "xcrun_path");
+    return xcrunPath.flatMap(
+        path -> new ExecutableFinder().getOptionalExecutable(path, delegate.getEnvironment()));
+  }
+
+  public Optional<Path> getAppleDeveloperDirIfSet() {
+    return getOptionalPath("apple", "xcode_developer_dir");
   }
 }

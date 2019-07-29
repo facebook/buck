@@ -279,7 +279,8 @@ public class RustCompileUtils {
         linkerArgs.build(),
         CxxGenruleDescription.fixupSourcePaths(graphBuilder, cxxPlatform, sources),
         CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform, rootModule),
-        rustConfig.getRemapSrcPaths());
+        rustConfig.getRemapSrcPaths(),
+        rustPlatform.getXcrunSdkPath());
   }
 
   public static RustCompileRule requireBuild(
