@@ -18,10 +18,7 @@ package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.io.file.MorePaths;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
@@ -106,27 +103,6 @@ public class InMemoryBuildFileTree implements BuildFileTree {
       return Optional.of(parent.basePath);
     } else {
       return Optional.empty();
-    }
-  }
-
-  /**
-   * @return Iterable of relative paths to the BuildTarget's directory that contain their own build
-   *     files. No element in the Iterable is a prefix of any other element in the Iterable.
-   */
-  @Override
-  public Collection<Path> getChildPaths(BuildTarget buildTarget) {
-    return getChildPaths(buildTarget.getBasePath());
-  }
-
-  @VisibleForTesting
-  Collection<Path> getChildPaths(Path path) {
-    Node node = Objects.requireNonNull(basePathToNodeIndex.get(path));
-    if (node.children == null) {
-      return ImmutableList.of();
-    } else {
-      return node.children.stream()
-          .map(child -> MorePaths.relativize(path, child.basePath))
-          .collect(ImmutableList.toImmutableList());
     }
   }
 
