@@ -211,18 +211,34 @@ public class SkylarkUserDefinedRulesParserTest {
   }
 
   @Test
-  public void attrsSourceListThrowsExceptionOnInvalidTypes()
+  public void attrsSourceListThrowsExceptionOnInvalidDefaultValueType()
       throws IOException, InterruptedException {
 
     setupWorkspace("attr");
 
     EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
-    Path buildFile = projectFilesystem.resolve("source_list").resolve("malformed").resolve("BUCK");
+    Path buildFile =
+        projectFilesystem.resolve("source_list").resolve("malformed_default").resolve("BUCK");
 
     parser = createParser(eventCollector);
 
     assertParserFails(
         eventCollector, parser, buildFile, "expected value of type 'sequence of strings'");
+  }
+
+  @Test
+  public void attrsSourceListThrowsExceptionOnInvalidProvidersType()
+      throws IOException, InterruptedException {
+
+    setupWorkspace("attr");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile =
+        projectFilesystem.resolve("source_list").resolve("malformed_providers").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(eventCollector, parser, buildFile, "expected type 'Provider'");
   }
 
   @Test
@@ -246,12 +262,14 @@ public class SkylarkUserDefinedRulesParserTest {
   }
 
   @Test
-  public void attrsSourceThrowsExceptionOnInvalidTypes() throws IOException, InterruptedException {
+  public void attrsSourceThrowsExceptionOnInvalidDefaultValueType()
+      throws IOException, InterruptedException {
 
     setupWorkspace("attr");
 
     EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
-    Path buildFile = projectFilesystem.resolve("source").resolve("malformed").resolve("BUCK");
+    Path buildFile =
+        projectFilesystem.resolve("source").resolve("malformed_default").resolve("BUCK");
 
     parser = createParser(eventCollector);
 
@@ -259,16 +277,47 @@ public class SkylarkUserDefinedRulesParserTest {
   }
 
   @Test
-  public void attrsDepThrowsExceptionOnInvalidTypes() throws IOException, InterruptedException {
+  public void attrsSourceThrowsExceptionOnInvalidProvidersType()
+      throws IOException, InterruptedException {
 
     setupWorkspace("attr");
 
     EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
-    Path buildFile = projectFilesystem.resolve("dep").resolve("malformed").resolve("BUCK");
+    Path buildFile =
+        projectFilesystem.resolve("source").resolve("malformed_providers").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(eventCollector, parser, buildFile, "expected type 'Provider'");
+  }
+
+  @Test
+  public void attrsDepThrowsExceptionOnInvalidDefaultValueType()
+      throws IOException, InterruptedException {
+
+    setupWorkspace("attr");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile = projectFilesystem.resolve("dep").resolve("malformed_default").resolve("BUCK");
 
     parser = createParser(eventCollector);
 
     assertParserFails(eventCollector, parser, buildFile, "expected value of type 'string");
+  }
+
+  @Test
+  public void attrsDepThrowsExceptionOnInvalidProvidersType()
+      throws IOException, InterruptedException {
+
+    setupWorkspace("attr");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile =
+        projectFilesystem.resolve("dep").resolve("malformed_providers").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(eventCollector, parser, buildFile, "expected type 'Provider'");
   }
 
   @Test
@@ -282,17 +331,34 @@ public class SkylarkUserDefinedRulesParserTest {
   }
 
   @Test
-  public void attrsDepListThrowsExceptionOnInvalidTypes() throws IOException, InterruptedException {
+  public void attrsDepListThrowsExceptionOnInvalidDefaultValueType()
+      throws IOException, InterruptedException {
 
     setupWorkspace("attr");
 
     EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
-    Path buildFile = projectFilesystem.resolve("dep_list").resolve("malformed").resolve("BUCK");
+    Path buildFile =
+        projectFilesystem.resolve("dep_list").resolve("malformed_default").resolve("BUCK");
 
     parser = createParser(eventCollector);
 
     assertParserFails(
         eventCollector, parser, buildFile, "expected value of type 'sequence of strings'");
+  }
+
+  @Test
+  public void attrsDepListThrowsExceptionOnInvalidProvidersType()
+      throws IOException, InterruptedException {
+
+    setupWorkspace("attr");
+
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+    Path buildFile =
+        projectFilesystem.resolve("dep_list").resolve("malformed_providers").resolve("BUCK");
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(eventCollector, parser, buildFile, "expected type 'Provider'");
   }
 
   @Test

@@ -27,6 +27,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
+import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
+import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
@@ -35,6 +37,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
+import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
@@ -47,6 +50,8 @@ public class SourceListAttributeTest {
 
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
   private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
+  private final SourceListAttribute attr =
+      new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true, ImmutableList.of());
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -58,7 +63,6 @@ public class SourceListAttributeTest {
             PathSourcePath.of(filesystem, Paths.get("foo", "bar.cpp")),
             DefaultBuildTargetSourcePath.of(target));
 
-    SourceListAttribute attr = new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true);
     ImmutableList<SourcePath> coerced =
         attr.getValue(
             cellRoots,
@@ -74,16 +78,12 @@ public class SourceListAttributeTest {
   public void failsMandatoryCoercionProperly() throws CoerceFailedException {
     thrown.expect(CoerceFailedException.class);
 
-    SourceListAttribute attr = new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true);
-
     attr.getValue(cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "foo");
   }
 
   @Test
   public void failsMandatoryCoercionWithWrongListType() throws CoerceFailedException {
     thrown.expect(CoerceFailedException.class);
-
-    SourceListAttribute attr = new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true);
 
     attr.getValue(
         cellRoots,
@@ -99,7 +99,7 @@ public class SourceListAttributeTest {
     thrown.expectMessage("may not be empty");
 
     SourceListAttribute attr =
-        new ImmutableSourceListAttribute(ImmutableList.of(), "", true, false);
+        new ImmutableSourceListAttribute(ImmutableList.of(), "", true, false, ImmutableList.of());
 
     attr.getValue(
         cellRoots,
@@ -111,9 +111,6 @@ public class SourceListAttributeTest {
 
   @Test
   public void succeedsIfEmptyListProvidedAndAllowed() throws CoerceFailedException {
-
-    SourceListAttribute attr = new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true);
-
     ImmutableList<SourcePath> value =
         attr.getValue(
             cellRoots,
@@ -131,8 +128,6 @@ public class SourceListAttributeTest {
 
     String absolutePathString = filesystem.resolve("foo").toAbsolutePath().toString();
 
-    SourceListAttribute attr = new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true);
-
     attr.getValue(
         cellRoots,
         filesystem,
@@ -143,8 +138,6 @@ public class SourceListAttributeTest {
 
   @Test
   public void failsTransformIfInvalidCoercedTypeProvided() {
-    SourceListAttribute attr = new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true);
-
     thrown.expect(IllegalArgumentException.class);
 
     attr.getPostCoercionTransform().postCoercionTransform("invalid", ImmutableMap.of());
@@ -152,8 +145,6 @@ public class SourceListAttributeTest {
 
   @Test
   public void failsTransformIfInvalidElementInList() {
-    SourceListAttribute attr = new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true);
-
     thrown.expect(IllegalArgumentException.class);
 
     attr.getPostCoercionTransform()
@@ -162,8 +153,6 @@ public class SourceListAttributeTest {
 
   @Test
   public void failsTransformIfElementMissingFromDeps() throws CoerceFailedException {
-
-    SourceListAttribute attr = new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true);
     ImmutableList<SourcePath> coerced =
         attr.getValue(
             cellRoots,
@@ -178,7 +167,6 @@ public class SourceListAttributeTest {
 
   @Test
   public void failsTransformIfMissingDefaultInfo() throws CoerceFailedException {
-    SourceListAttribute attr = new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true);
     ImmutableList<SourcePath> coerced =
         attr.getValue(
             cellRoots,
@@ -197,6 +185,33 @@ public class SourceListAttributeTest {
   }
 
   @Test
+  public void failsTransformIfMissingRequiredProvider() throws CoerceFailedException {
+    FakeBuiltInProvider expectedProvider = new FakeBuiltInProvider("expected");
+    SourceListAttribute attr =
+        new ImmutableSourceListAttribute(
+            ImmutableList.of(), "", true, true, ImmutableList.of(expectedProvider));
+    FakeBuiltInProvider presentProvider = new FakeBuiltInProvider("present");
+
+    FakeInfo info = new FakeInfo(presentProvider);
+
+    ImmutableList<SourcePath> coerced =
+        attr.getValue(
+            cellRoots,
+            filesystem,
+            Paths.get(""),
+            EmptyTargetConfiguration.INSTANCE,
+            ImmutableList.of("//foo:bar", "src/main.cpp"));
+
+    thrown.expect(VerifyException.class);
+    attr.getPostCoercionTransform()
+        .postCoercionTransform(
+            coerced,
+            ImmutableMap.of(
+                BuildTargetFactory.newInstance("//foo:bar"),
+                ProviderInfoCollectionImpl.builder().put(info).build()));
+  }
+
+  @Test
   public void transformsToListOfArtifacts() throws CoerceFailedException {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
@@ -211,7 +226,6 @@ public class SourceListAttributeTest {
     ImmutableMap<BuildTarget, ProviderInfoCollection> deps =
         ImmutableMap.of(target, ProviderInfoCollectionImpl.builder().put(defaultInfo).build());
 
-    SourceListAttribute attr = new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true);
     ImmutableList<SourcePath> coerced =
         attr.getValue(
             cellRoots,

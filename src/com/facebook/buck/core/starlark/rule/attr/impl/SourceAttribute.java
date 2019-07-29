@@ -19,6 +19,7 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -32,6 +33,7 @@ import com.facebook.buck.rules.coercer.PathTypeCoercer;
 import com.facebook.buck.rules.coercer.SourcePathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
@@ -63,6 +65,8 @@ public abstract class SourceAttribute extends Attribute<SourcePath> {
   @Override
   public abstract boolean getMandatory();
 
+  public abstract ImmutableList<Provider<?>> getProviders();
+
   @Override
   public void repr(SkylarkPrinter printer) {
     printer.append("<attr.source>");
@@ -76,17 +80,19 @@ public abstract class SourceAttribute extends Attribute<SourcePath> {
   @Override
   public PostCoercionTransform<ImmutableMap<BuildTarget, ProviderInfoCollection>, Artifact>
       getPostCoercionTransform() {
-    return SourceAttribute::postCoercionTransform;
+    return this::postCoercionTransform;
   }
 
-  private static Artifact postCoercionTransform(
+  private Artifact postCoercionTransform(
       Object src, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
 
     if (src instanceof BuildTargetSourcePath) {
-      ProviderInfoCollection providerInfos = deps.get(((BuildTargetSourcePath) src).getTarget());
+      BuildTarget target = ((BuildTargetSourcePath) src).getTarget();
+      ProviderInfoCollection providerInfos = deps.get(target);
       if (providerInfos == null) {
         throw new IllegalStateException(String.format("Deps %s did not contain %s", deps, src));
       }
+      validateProvidersPresent(getProviders(), target, providerInfos);
       Set<Artifact> outputs =
           providerInfos
               .get(DefaultInfo.PROVIDER)

@@ -1,0 +1,3 @@
+load("//dep_list:defs.bzl", "malformed_providers")
+
+malformed_providers()

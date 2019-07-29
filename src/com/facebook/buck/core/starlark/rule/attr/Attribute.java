@@ -18,11 +18,14 @@ package com.facebook.buck.core.starlark.rule.attr;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.rules.providers.Provider;
+import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.base.Joiner;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableMap;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -160,5 +163,36 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
     throw new CoerceFailedException(
         String.format(
             "must be one of '%s' instead of '%s'", Joiner.on("', '").join(values), value));
+  }
+
+  /**
+   * Ensures that all of the {@link Provider}s in {@code expectedProviders} are present in {@code
+   * providerInfos}
+   *
+   * <p>Note that it is enforced that all build rules return at least {@link
+   * com.facebook.buck.core.rules.providers.lib.DefaultInfo}, so that is not required to be
+   * specified
+   *
+   * @param expectedProviders The providers that ALL MUST be present. If empty, no providers are
+   *     required, and all {@code providerInfos} will be considered valid.
+   * @param target the target that {@code providerInfos} is associated with. Used in errors.
+   * @param providerInfos The {@link ProviderInfo}s for a given dependency
+   * @throws com.google.common.base.VerifyException if a provider is missing in {@code
+   *     providerInfos}
+   */
+  protected static void validateProvidersPresent(
+      List<Provider<?>> expectedProviders,
+      BuildTarget target,
+      ProviderInfoCollection providerInfos) {
+    if (expectedProviders.isEmpty()) {
+      return;
+    }
+    for (Provider<?> provider : expectedProviders) {
+      Verify.verify(
+          providerInfos.contains(provider),
+          "expected provider %s to be present for %s, but it was not",
+          provider,
+          target);
+    }
   }
 }

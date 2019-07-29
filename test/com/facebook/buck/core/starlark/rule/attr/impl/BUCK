@@ -11,6 +11,7 @@ java_test(
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/rules/actions:testutil",
+        "//test/com/facebook/buck/core/rules/analysis/impl:testutil",
         "//third-party/java/junit:junit",
     ],
 )

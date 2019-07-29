@@ -1,3 +1,0 @@
-load("//dep:defs.bzl", "malformed")
-
-malformed()

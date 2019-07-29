@@ -19,6 +19,7 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -68,6 +69,8 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
   /** Whether or not the list can be empty */
   public abstract boolean getAllowEmpty();
 
+  public abstract ImmutableList<Provider<?>> getProviders();
+
   @Override
   public void repr(SkylarkPrinter printer) {
     printer.append("<attr.source_list>");
@@ -88,10 +91,10 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
   @Override
   public PostCoercionTransform<ImmutableMap<BuildTarget, ProviderInfoCollection>, List<Artifact>>
       getPostCoercionTransform() {
-    return SourceListAttribute::postCoercionTransform;
+    return this::postCoercionTransform;
   }
 
-  private static ImmutableList<Artifact> postCoercionTransform(
+  private ImmutableList<Artifact> postCoercionTransform(
       Object coercedValue, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
     if (!(coercedValue instanceof List<?>)) {
       throw new IllegalArgumentException(String.format("Value %s must be a list", coercedValue));
@@ -103,11 +106,13 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
         ImmutableList.builderWithExpectedSize(listValue.size());
     for (Object src : listValue) {
       if (src instanceof BuildTargetSourcePath) {
-        ProviderInfoCollection providerInfos = deps.get(((BuildTargetSourcePath) src).getTarget());
+        BuildTarget target = ((BuildTargetSourcePath) src).getTarget();
+        ProviderInfoCollection providerInfos = deps.get(target);
         if (providerInfos == null) {
           throw new IllegalArgumentException(
               String.format("Deps %s did not contain %s", deps, src));
         }
+        validateProvidersPresent(getProviders(), target, providerInfos);
         builder.addAll(
             providerInfos
                 .get(DefaultInfo.PROVIDER)

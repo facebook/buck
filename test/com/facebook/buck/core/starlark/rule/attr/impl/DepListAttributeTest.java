@@ -25,6 +25,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
+import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
+import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
@@ -47,7 +49,7 @@ public class DepListAttributeTest {
   private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
 
   private final DepListAttribute attr =
-      new ImmutableDepListAttribute(ImmutableList.of(), "", true, true);
+      new ImmutableDepListAttribute(ImmutableList.of(), "", true, true, ImmutableList.of());
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -88,7 +90,8 @@ public class DepListAttributeTest {
 
   @Test
   public void failsIfEmptyListProvidedAndNotAllowed() throws CoerceFailedException {
-    DepListAttribute attr = new ImmutableDepListAttribute(ImmutableList.of(), "", true, false);
+    DepListAttribute attr =
+        new ImmutableDepListAttribute(ImmutableList.of(), "", true, false, ImmutableList.of());
 
     thrown.expect(CoerceFailedException.class);
     thrown.expectMessage("may not be empty");
@@ -144,6 +147,33 @@ public class DepListAttributeTest {
 
     thrown.expect(NullPointerException.class);
     attr.getPostCoercionTransform().postCoercionTransform(coerced, ImmutableMap.of());
+  }
+
+  @Test
+  public void failsTransformIfMissingRequiredProvider() throws CoerceFailedException {
+    FakeBuiltInProvider expectedProvider = new FakeBuiltInProvider("expected");
+    DepListAttribute attr =
+        new ImmutableDepListAttribute(
+            ImmutableList.of(), "", true, true, ImmutableList.of(expectedProvider));
+    FakeBuiltInProvider presentProvider = new FakeBuiltInProvider("present");
+
+    FakeInfo info = new FakeInfo(presentProvider);
+
+    ImmutableList<BuildTarget> coerced =
+        attr.getValue(
+            cellRoots,
+            filesystem,
+            Paths.get(""),
+            EmptyTargetConfiguration.INSTANCE,
+            ImmutableList.of("//foo:bar"));
+
+    thrown.expect(VerifyException.class);
+    attr.getPostCoercionTransform()
+        .postCoercionTransform(
+            coerced,
+            ImmutableMap.of(
+                BuildTargetFactory.newInstance("//foo:bar"),
+                ProviderInfoCollectionImpl.builder().put(info).build()));
   }
 
   @Test

@@ -17,6 +17,7 @@ package com.facebook.buck.core.starlark.rule.attr.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
@@ -56,6 +57,8 @@ public abstract class DepListAttribute extends Attribute<ImmutableList<BuildTarg
   /** Whether or not the list can be empty */
   public abstract boolean getAllowEmpty();
 
+  public abstract ImmutableList<Provider<?>> getProviders();
+
   @Override
   public void repr(SkylarkPrinter printer) {
     printer.append("<attr.dep_list>");
@@ -77,16 +80,19 @@ public abstract class DepListAttribute extends Attribute<ImmutableList<BuildTarg
   public PostCoercionTransform<
           ImmutableMap<BuildTarget, ProviderInfoCollection>, List<ProviderInfoCollection>>
       getPostCoercionTransform() {
-    return DepListAttribute::postCoercionTransform;
+    return this::postCoercionTransform;
   }
 
-  private static ImmutableList<ProviderInfoCollection> postCoercionTransform(
+  private ImmutableList<ProviderInfoCollection> postCoercionTransform(
       Object coercedValue, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
     Verify.verify(coercedValue instanceof List<?>, "Value %s must be a list", coercedValue);
     List<?> listValue = (List<?>) coercedValue;
     ImmutableList.Builder<ProviderInfoCollection> builder =
         ImmutableList.builderWithExpectedSize(listValue.size());
     for (Object target : listValue) {
+      ProviderInfoCollection providerInfos =
+          DepAttribute.getProviderInfoCollectionForDep(target, deps);
+      validateProvidersPresent(getProviders(), (BuildTarget) target, providerInfos);
       builder.add(DepAttribute.getProviderInfoCollectionForDep(target, deps));
     }
     return builder.build();

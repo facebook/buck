@@ -24,6 +24,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
+import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
+import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
@@ -46,7 +48,8 @@ public class DepAttributeTest {
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
   private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
 
-  private final DepAttribute attr = new ImmutableDepAttribute(Runtime.NONE, "", true);
+  private final DepAttribute attr =
+      new ImmutableDepAttribute(Runtime.NONE, "", true, ImmutableList.of());
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -105,6 +108,28 @@ public class DepAttributeTest {
 
     thrown.expect(NullPointerException.class);
     attr.getPostCoercionTransform().postCoercionTransform(coerced, ImmutableMap.of());
+  }
+
+  @Test
+  public void failsTransformIfMissingRequiredProvider() throws CoerceFailedException {
+    FakeBuiltInProvider expectedProvider = new FakeBuiltInProvider("expected");
+    DepAttribute attr =
+        new ImmutableDepAttribute(Runtime.NONE, "", true, ImmutableList.of(expectedProvider));
+    FakeBuiltInProvider presentProvider = new FakeBuiltInProvider("present");
+
+    FakeInfo info = new FakeInfo(presentProvider);
+
+    BuildTarget coerced =
+        attr.getValue(
+            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "//foo:bar");
+
+    thrown.expect(VerifyException.class);
+    attr.getPostCoercionTransform()
+        .postCoercionTransform(
+            coerced,
+            ImmutableMap.of(
+                BuildTargetFactory.newInstance("//foo:bar"),
+                ProviderInfoCollectionImpl.builder().put(info).build()));
   }
 
   @Test

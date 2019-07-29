@@ -15,6 +15,10 @@ def well_formed():
     if repr(a) != "<attr.source>":
         fail("Expected attr.source instance")
 
-def malformed():
+def malformed_default():
     """ Function docstring """
     _a = attr.source(mandatory=True, doc="Some source", default=3)
+
+def malformed_providers():
+    """ Function docstring """
+    _a = attr.source(mandatory=True, doc="Some source", default="BUCK", providers=[1])

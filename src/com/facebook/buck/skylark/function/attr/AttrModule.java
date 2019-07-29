@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.skylark.function.attr;
 
+import com.facebook.buck.core.rules.providers.Provider;
+import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableBoolAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableDepAttribute;
@@ -83,29 +85,53 @@ public class AttrModule implements AttrModuleApi {
 
   @Override
   public AttributeHolder sourceListAttribute(
-      SkylarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      SkylarkList<String> defaultValue,
+      String doc,
+      boolean mandatory,
+      boolean allowEmpty,
+      SkylarkList<Provider<?>> providers)
       throws EvalException {
     List<String> validatedDefaultValues = defaultValue.getContents(String.class, null);
+    ImmutableList<Provider<?>> validatedProviders =
+        BuckSkylarkTypes.toJavaList(providers, Provider.class, null);
 
-    return new ImmutableSourceListAttribute(validatedDefaultValues, doc, mandatory, allowEmpty);
+    return new ImmutableSourceListAttribute(
+        validatedDefaultValues, doc, mandatory, allowEmpty, validatedProviders);
   }
 
   @Override
-  public AttributeHolder sourceAttribute(Object defaultValue, String doc, boolean mandatory) {
-    return new ImmutableSourceAttribute(defaultValue, doc, mandatory);
+  public AttributeHolder sourceAttribute(
+      Object defaultValue, String doc, boolean mandatory, SkylarkList<Provider<?>> providers)
+      throws EvalException {
+    ImmutableList<Provider<?>> validatedProviders =
+        BuckSkylarkTypes.toJavaList(providers, Provider.class, null);
+
+    return new ImmutableSourceAttribute(defaultValue, doc, mandatory, validatedProviders);
   }
 
   @Override
-  public AttributeHolder depAttribute(Object defaultValue, String doc, boolean mandatory) {
-    return new ImmutableDepAttribute(defaultValue, doc, mandatory);
+  public AttributeHolder depAttribute(
+      Object defaultValue, String doc, boolean mandatory, SkylarkList<Provider<?>> providers)
+      throws EvalException {
+    ImmutableList<Provider<?>> validatedProviders =
+        BuckSkylarkTypes.toJavaList(providers, Provider.class, null);
+
+    return new ImmutableDepAttribute(defaultValue, doc, mandatory, validatedProviders);
   }
 
   @Override
   public AttributeHolder depListAttribute(
-      SkylarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      SkylarkList<String> defaultValue,
+      String doc,
+      boolean mandatory,
+      boolean allowEmpty,
+      SkylarkList<Provider<?>> providers)
       throws EvalException {
     List<String> validatedDefaultValues = defaultValue.getContents(String.class, null);
+    ImmutableList<Provider<?>> validatedProviders =
+        BuckSkylarkTypes.toJavaList(providers, Provider.class, null);
 
-    return new ImmutableDepListAttribute(validatedDefaultValues, doc, mandatory, allowEmpty);
+    return new ImmutableDepListAttribute(
+        validatedDefaultValues, doc, mandatory, allowEmpty, validatedProviders);
   }
 }
