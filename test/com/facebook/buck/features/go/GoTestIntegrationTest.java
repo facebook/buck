@@ -255,6 +255,12 @@ public class GoTestIntegrationTest {
   }
 
   @Test
+  public void showOutputOfTestBinary() {
+    Path output = workspace.buildAndReturnOutput("//:test-success");
+    assertTrue(Files.isExecutable(output));
+  }
+
+  @Test
   public void testGoTestWithSystemEnv() throws IOException {
     workspace
         .runBuckdCommand(ImmutableMap.of(), "test", "//:test-with-system-env")

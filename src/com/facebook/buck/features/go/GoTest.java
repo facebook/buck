@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
@@ -70,6 +70,7 @@ import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
@@ -294,8 +295,13 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  @Nullable
   public SourcePath getSourcePathToOutput() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToTestOutputDirectory());
+    SourcePath sourcePath = testMain.getSourcePathToOutput();
+    if (sourcePath == null) {
+      return null;
+    }
+    return ForwardingBuildTargetSourcePath.of(getBuildTarget(), sourcePath);
   }
 
   protected Path getPathToTestResults() {
