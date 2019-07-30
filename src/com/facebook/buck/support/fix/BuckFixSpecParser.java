@@ -16,6 +16,7 @@
 package com.facebook.buck.support.fix;
 
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.doctor.BuildLogHelper;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.util.ExitCode;
@@ -36,6 +37,7 @@ import java.util.OptionalInt;
  * com.facebook.buck.doctor.config.BuildLogEntry}
  */
 public class BuckFixSpecParser {
+  private static Logger LOG = Logger.get(BuckFixSpecParser.class);
 
   /** The various ways that trying to parse a FixSpec can fail */
   public enum FixSpecFailure {
@@ -185,6 +187,17 @@ public class BuckFixSpecParser {
       Optional<Exception> runException) {
     if (!buildLogEntry.getBuildId().isPresent()) {
       return Either.ofRight(FixSpecFailure.MISSING_BUILD_ID);
+    }
+
+    if (buildLogEntry.getBuckFixSpecFile().isPresent()) {
+      try {
+        return parseFromFixSpecFile(buildLogEntry.getBuckFixSpecFile().get());
+      } catch (IOException e) {
+        LOG.warn(
+            e,
+            "Tried to parse from fix spec file: %s because file is present, but failed.",
+            buildLogEntry.getBuckFixSpecFile().get());
+      }
     }
 
     OptionalInt maybeExitCode =

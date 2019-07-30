@@ -266,21 +266,7 @@ public class BuckFixSpecParserTest {
         Optional.of(
             new Exception("outer exception message", new Exception("inner exception message")));
 
-    BuckFixSpec expectedSpec =
-        new ImmutableBuckFixSpec(
-            buildCommandId,
-            "build",
-            ExitCode.FATAL_GENERIC.getCode(),
-            ImmutableList.of("@file", "buck"),
-            ImmutableList.of("-c", "foo.bar=baz", "buck"),
-            false,
-            BuckFixSpecParser.commandDataObject(expectedException),
-            ImmutableMap.of("jasabi_fix", ImmutableList.of("legacy/script/location")),
-            BuckFixSpec.getLogsMapping(
-                Optional.of(logDir.resolve("buck.log")),
-                Optional.of(logDir.resolve("buck-machine-log")),
-                Optional.of(logDir.resolve(buildCommandTrace)),
-                Optional.of(logDir.resolve("buckconfig.json"))));
+    BuckFixSpec expectedSpec = expectedSpecWithException(expectedException, logDir);
 
     BuildLogHelper helper = new BuildLogHelper(filesystem);
     BuckFixSpec spec =
@@ -288,5 +274,76 @@ public class BuckFixSpecParserTest {
                 helper, fixConfig, buildCommandId, ExitCode.FATAL_GENERIC, false, expectedException)
             .getLeft();
     assertEquals(expectedSpec, spec);
+  }
+
+  @Test
+  public void returnsWithFixSpecFile() throws IOException {
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "report", tempFolder);
+    workspace.setUp();
+
+    Path logDir = filesystem.getBuckPaths().getLogDir().resolve(buildCommandDir);
+
+    Optional<Exception> expectedException = Optional.of(new Exception("exception message"));
+
+    BuckFixSpec expectedSpec = expectedSpecWithException(expectedException, logDir);
+
+    Path fixSpecPath = filesystem.getRootPath().resolve(logDir).resolve("buck_fix_spec.json");
+
+    BuckFixSpecWriter.writeSpec(fixSpecPath, expectedSpec);
+
+    BuckFixSpec spec = BuckFixSpecParser.parseFromFixSpecFile(fixSpecPath).getLeft();
+
+    /**
+     * type information gets lost in the type Object of {@linkplain BuckFixSpec#getCommandData()},
+     * therefore when deserializing the json spec even though we get two equivalent objects json
+     * wise, they are not equal in Java. (the expected has Exception, and the actual spec has a map)
+     */
+    assertEquals(expectedSpec.getBuildId(), spec.getBuildId());
+    assertEquals(expectedSpec.getCommand(), spec.getCommand());
+    assertEquals(expectedSpec.getExitCode(), spec.getExitCode());
+    assertEquals(expectedSpec.getUserArgs(), spec.getUserArgs());
+    assertEquals(expectedSpec.getExpandedArgs(), spec.getExpandedArgs());
+    assertEquals(expectedSpec.getManuallyInvoked(), spec.getManuallyInvoked());
+    assertEquals(expectedSpec.getBuckProvidedScripts(), spec.getBuckProvidedScripts());
+    assertEquals(expectedSpec.getLogs(), spec.getLogs());
+  }
+
+  @Test
+  public void returnsFailureWhenFixSpecFileIsMissing() throws IOException {
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "report", tempFolder);
+    workspace.setUp();
+
+    Path fixSpecPath =
+        filesystem
+            .getRootPath()
+            .resolve(filesystem.getBuckPaths().getLogDir())
+            .resolve(buildCommandDir)
+            .resolve("buck_fix_spec.json");
+
+    BuckFixSpecParser.FixSpecFailure failure =
+        BuckFixSpecParser.parseFromFixSpecFile(fixSpecPath).getRight();
+
+    assertEquals(BuckFixSpecParser.FixSpecFailure.MISSING_FIX_SPEC_FILE_IN_LOGS, failure);
+  }
+
+  private BuckFixSpec expectedSpecWithException(Optional<Exception> e, Path logDir) {
+    return new ImmutableBuckFixSpec(
+        buildCommandId,
+        "build",
+        ExitCode.FATAL_GENERIC.getCode(),
+        ImmutableList.of("@file", "buck"),
+        ImmutableList.of("-c", "foo.bar=baz", "buck"),
+        false,
+        BuckFixSpecParser.commandDataObject(e),
+        ImmutableMap.of("jasabi_fix", ImmutableList.of("legacy/script/location")),
+        BuckFixSpec.getLogsMapping(
+            Optional.of(logDir.resolve("buck.log")),
+            Optional.of(logDir.resolve("buck-machine-log")),
+            Optional.of(logDir.resolve(buildCommandTrace)),
+            Optional.of(logDir.resolve("buckconfig.json"))));
   }
 }
