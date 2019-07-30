@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.eden;
+package com.facebook.buck.edenfs;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;

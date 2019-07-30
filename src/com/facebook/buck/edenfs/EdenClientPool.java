@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.eden;
+package com.facebook.buck.edenfs;
 
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;

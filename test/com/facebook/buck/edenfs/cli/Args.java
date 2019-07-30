@@ -14,9 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.eden.cli;
+package com.facebook.buck.edenfs.cli;
 
-import com.facebook.buck.eden.EdenClientPool;
+import com.facebook.buck.edenfs.EdenClientPool;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.facebook.thrift.TException;

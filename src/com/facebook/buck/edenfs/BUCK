@@ -1,5 +1,5 @@
 java_library(
-    name = "eden",
+    name = "edenfs",
     srcs = glob(["*.java"]),
     exported_deps = [
         # EdenProjectFilesystemDelegate constructor takes this as a param.
@@ -7,7 +7,7 @@ java_library(
         "//src/com/facebook/buck/io/filesystem:filesystem",
     ],
     tests = [
-        "//test/com/facebook/buck/eden:eden",
+        "//test/com/facebook/buck/edenfs:edenfs",
     ],
     visibility = ["PUBLIC"],
     deps = [

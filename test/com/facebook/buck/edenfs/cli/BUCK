@@ -3,7 +3,7 @@ java_library(
     srcs = glob(["*.java"]),
     deps = [
         "//src/com/facebook/buck/core/util/immutables:immutables",
-        "//src/com/facebook/buck/eden:eden",
+        "//src/com/facebook/buck/edenfs:edenfs",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/io/watchman:transport",
@@ -25,7 +25,7 @@ java_library(
 
 java_binary(
     name = "cli_bin",
-    main_class = "com.facebook.buck.eden.cli.Main",
+    main_class = "com.facebook.buck.edenfs.cli.Main",
     deps = [
         ":cli",
         "//src/com/facebook/buck/core/util/immutables:immutables",

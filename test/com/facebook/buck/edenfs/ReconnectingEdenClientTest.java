@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.eden;
+package com.facebook.buck.edenfs;
 
 import static org.easymock.EasyMock.expect;
 import static org.junit.Assert.assertEquals;

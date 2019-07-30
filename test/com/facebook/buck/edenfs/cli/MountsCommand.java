@@ -14,39 +14,34 @@
  * under the License.
  */
 
-package com.facebook.buck.eden.cli;
+package com.facebook.buck.edenfs.cli;
 
-import com.facebook.buck.eden.EdenClientPool;
-import com.facebook.buck.eden.EdenMount;
-import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.facebook.buck.edenfs.EdenClient;
+import com.facebook.buck.edenfs.EdenClientPool;
+import com.facebook.buck.edenfs.EdenMount;
 import com.facebook.eden.thrift.EdenError;
+import com.facebook.eden.thrift.MountInfo;
 import com.facebook.thrift.TException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.Option;
 
-public class Sha1Command implements Command {
-
-  @Option(
-      name = "mount",
-      aliases = {"-m"})
-  private String mountPoint;
-
-  @Argument private List<String> paths = new ArrayList<>();
-
+public class MountsCommand implements Command {
   @Override
   public int run(EdenClientPool pool) throws EdenError, IOException, TException {
-    Path mountPoint = Paths.get(this.mountPoint);
-    EdenMount mount = EdenMount.createEdenMountForProjectRoot(mountPoint, pool).get();
-
-    for (String path : paths) {
-      Path entry = mountPoint.relativize(Paths.get(path));
-      Sha1HashCode sha1 = mount.getSha1(entry);
-      System.out.printf("%s %s\n", entry, sha1);
+    EdenClient client = pool.getClient();
+    List<MountInfo> mountInfos = client.listMounts();
+    System.out.printf("Number of mounts: %d\n", mountInfos.size());
+    for (MountInfo info : mountInfos) {
+      System.out.println(info.mountPoint);
+      EdenMount mount =
+          EdenMount.createEdenMountForProjectRoot(Paths.get(info.mountPoint), pool).get();
+      List<Path> bindMounts = mount.getBindMounts();
+      System.out.printf("    Number of bind mounts: %d\n", bindMounts.size());
+      for (Path bindMount : bindMounts) {
+        System.out.printf("    %s\n", bindMount);
+      }
     }
 
     return 0;

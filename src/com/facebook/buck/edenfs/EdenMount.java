@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.eden;
+package com.facebook.buck.edenfs;
 
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
