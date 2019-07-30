@@ -149,8 +149,8 @@ public class MultiThreadedBlobUploader {
               directExecutor());
           uploadService.submit(this::processUploads);
         }
-        futures.add(future);
       }
+      futures.add(Objects.requireNonNull(pendingUploads.get(digest.getHash())));
     }
     return Futures.whenAllSucceed(futures.build()).call(() -> null, directExecutor());
   }

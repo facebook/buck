@@ -33,6 +33,8 @@ import java.io.InputStream;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Test;
@@ -82,6 +84,52 @@ public class MultiThreadedBlobUploaderTest {
     // Does not throw.
     ListenableFuture<Void> successfulFuture = uploader.addMissing(data.values().stream());
     successfulFuture.get();
+
+    // Make sure all calls were exactly correctly.
+    EasyMock.verify(casBlobUploader);
+  }
+
+  @Test
+  public void testMultipleHashes() throws IOException, ExecutionException, InterruptedException {
+    ExecutorService service = Executors.newSingleThreadExecutor();
+    CasBlobUploader casBlobUploader = EasyMock.createMock(CasBlobUploader.class);
+    ImmutableMap<Digest, UploadDataSupplier> data = createUploadData();
+    Digest digest = data.keySet().asList().get(0);
+    MultiThreadedBlobUploader uploader =
+        new MultiThreadedBlobUploader(
+            MISSING_CHECK_LIMIT, UPLOAD_SIZE_LIMT, service, casBlobUploader);
+
+    final ReentrantLock lock = new ReentrantLock();
+    lock.lock();
+    // Setup EasyMock
+    EasyMock.expect(casBlobUploader.getMissingHashes(Sets.newHashSet(digest)))
+        .andAnswer(
+            () -> {
+              lock.tryLock(2, TimeUnit.SECONDS);
+              return ImmutableSet.of(digest.getHash());
+            })
+        .andReturn(ImmutableSet.of(digest.getHash()))
+        .anyTimes();
+
+    UploadResult uploadResult = new UploadResult(digest, 0, "slicespin");
+    EasyMock.expect(casBlobUploader.uploadFromStream(EasyMock.anyObject()))
+        .andReturn(uploadResult)
+        .once();
+    EasyMock.replay(casBlobUploader);
+
+    // Run the test case.
+    ListenableFuture<Void> firstFuture = uploader.addMissing(data.values().stream());
+    ListenableFuture<Void> secondFuture = uploader.addMissing(data.values().stream());
+
+    // Ensure secondFuture is still waiting
+    Assert.assertFalse(firstFuture.isDone());
+    Assert.assertFalse(secondFuture.isDone());
+    lock.unlock();
+
+    firstFuture.get();
+    secondFuture.get();
+    Assert.assertTrue(firstFuture.isDone());
+    Assert.assertTrue(secondFuture.isDone());
 
     // Make sure all calls were exactly correctly.
     EasyMock.verify(casBlobUploader);
