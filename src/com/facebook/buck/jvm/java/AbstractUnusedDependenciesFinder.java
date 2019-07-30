@@ -123,13 +123,6 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
         messageHandler, usedJars, javaLibraryDeps.getDepTargets(), "deps");
     findUnusedDependenciesAndProcessMessages(
         messageHandler, usedJars, javaLibraryDeps.getProvidedDepTargets(), "provided_deps");
-    findUnusedDependenciesAndProcessMessages(
-        messageHandler, usedJars, javaLibraryDeps.getExportedDepTargets(), "exported_deps");
-    findUnusedDependenciesAndProcessMessages(
-        messageHandler,
-        usedJars,
-        javaLibraryDeps.getExportedProvidedDepTargets(),
-        "exported_provided_deps");
   }
 
   private void findUnusedDependenciesAndProcessMessages(

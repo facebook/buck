@@ -140,35 +140,23 @@ public class UnusedDependenciesFinderIntegrationTest {
   }
 
   @Test
-  public void testShowWarningAboutExportedDeps() {
+  public void testDoNotFailForExportedDeps() {
     ProcessResult processResult =
         workspace.runBuckCommand(
-            "build", "-c", "java.unused_dependencies_action=warn", ":bar_with_exported_dep");
+            "build", "-c", "java.unused_dependencies_action=fail", ":bar_with_exported_dep");
 
     processResult.assertSuccess();
-    assertThat(
-        processResult.getStderr(),
-        Matchers.allOf(
-            Matchers.containsString(
-                "Target //:bar_with_exported_dep is declared with unused targets in exported_deps:"),
-            Matchers.containsString("buck//third-party/java/jsr:jsr305")));
   }
 
   @Test
-  public void testShowWarningAboutExportedProvidedDeps() {
+  public void testDoNotFailForExportedProvidedDeps() {
     ProcessResult processResult =
         workspace.runBuckCommand(
             "build",
             "-c",
-            "java.unused_dependencies_action=warn",
+            "java.unused_dependencies_action=fail",
             ":bar_with_exported_provided_dep");
 
     processResult.assertSuccess();
-    assertThat(
-        processResult.getStderr(),
-        Matchers.allOf(
-            Matchers.containsString(
-                "Target //:bar_with_exported_provided_dep is declared with unused targets in exported_provided_deps:"),
-            Matchers.containsString("buck//third-party/java/jsr:jsr305")));
   }
 }
