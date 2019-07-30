@@ -17,6 +17,7 @@ package com.facebook.buck.core.artifact;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTarget;
@@ -142,5 +143,53 @@ public class ArtifactImplTest {
     assertEquals(expectedShortPath, artifact.getShortPath());
     assertFalse(artifact.isSource());
     assertEquals(String.format("<generated file '%s'>", expectedShortPath), Printer.repr(artifact));
+  }
+
+  @Test
+  public void equalsArtifactHasEqualsTrueAndSameHashCode() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path packagePath = Paths.get("my/foo__");
+    ArtifactImpl artifact1 = ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"));
+    ArtifactImpl artifact2 = ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"));
+
+    assertEquals(artifact1, artifact2);
+    assertEquals(artifact1.hashCode(), artifact2.hashCode());
+
+    ImmutableActionAnalysisDataKey key =
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
+
+    artifact1 = (ArtifactImpl) artifact1.materialize(key);
+    artifact2 = (ArtifactImpl) artifact2.materialize(key);
+
+    assertEquals(artifact1, artifact2);
+    assertEquals(artifact1.hashCode(), artifact2.hashCode());
+  }
+
+  @Test
+  public void differentPathsAreNotEqual() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path packagePath = Paths.get("my/foo__");
+    ArtifactImpl artifact1 = ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path1"));
+    ArtifactImpl artifact2 = ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path2"));
+
+    assertNotEquals(artifact1, artifact2);
+  }
+
+  @Test
+  public void differentActionKeysAreNotEqual() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path packagePath = Paths.get("my/foo__");
+    ArtifactImpl artifact1 = ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"));
+    ArtifactImpl artifact2 = ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"));
+
+    ImmutableActionAnalysisDataKey key1 =
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
+    ImmutableActionAnalysisDataKey key2 =
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
+
+    artifact1 = (ArtifactImpl) artifact1.materialize(key1);
+    artifact2 = (ArtifactImpl) artifact2.materialize(key2);
+
+    assertNotEquals(artifact1, artifact2);
   }
 }

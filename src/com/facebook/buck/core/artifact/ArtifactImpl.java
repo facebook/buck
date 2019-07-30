@@ -195,4 +195,28 @@ class ArtifactImpl extends AbstractArtifact
     printer.append(getShortPath());
     printer.append("'>");
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof ArtifactImpl)) {
+      return false;
+    }
+    ArtifactImpl artifact = (ArtifactImpl) o;
+    if (isBound()) {
+      return Objects.equals(actionAnalysisDataKey, artifact.actionAnalysisDataKey)
+          && Objects.equals(sourcePath, artifact.sourcePath);
+    }
+    return target.equals(artifact.target)
+        && genDir.equals(artifact.genDir)
+        && basePath.equals(artifact.basePath)
+        && outputPath.equals(artifact.outputPath);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(actionAnalysisDataKey, sourcePath, target, genDir, basePath, outputPath);
+  }
 }
