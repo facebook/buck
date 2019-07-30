@@ -91,6 +91,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       @Nullable BuildTarget sourceOnlyAbiJar,
       Optional<String> mavenCoords,
       Optional<SourcePath> manifestFile,
+      Optional<AndroidLibraryDescription.JvmLanguage> jvmLanguage,
       ImmutableSortedSet<BuildTarget> tests,
       boolean requiredForSourceOnlyAbi,
       UnusedDependenciesAction unusedDependenciesAction,
@@ -119,6 +120,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         isDesugarEnabled,
         isInterfaceMethodsDesugarEnabled);
     this.manifestFile = manifestFile;
+    this.jvmLanguage = jvmLanguage;
   }
 
   /**
@@ -127,8 +129,20 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
    */
   private final Optional<SourcePath> manifestFile;
 
+  private final Optional<AndroidLibraryDescription.JvmLanguage> jvmLanguage;
+
   public Optional<SourcePath> getManifestFile() {
     return manifestFile;
+  }
+
+  @Override
+  public String getType() {
+    String prefix =
+        jvmLanguage.isPresent()
+                && !jvmLanguage.get().equals(AndroidLibraryDescription.JvmLanguage.JAVA)
+            ? jvmLanguage.get().toString().toLowerCase() + "_"
+            : "";
+    return prefix + super.getType();
   }
 
   @Override
@@ -205,6 +219,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   sourceOnlyAbiJar,
                   mavenCoords,
                   args.getManifest(),
+                  args.getLanguage(),
                   tests,
                   requiredForSourceOnlyAbi,
                   unusedDependenciesAction,

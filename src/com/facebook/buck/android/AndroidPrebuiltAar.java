@@ -93,6 +93,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         Optional.of(
             ExplicitBuildTargetSourcePath.of(
                 unzipAar.getBuildTarget(), unzipAar.getAndroidManifest())),
+        Optional.empty(),
         /* tests */ ImmutableSortedSet.of(),
         /* requiredForSourceAbi */ requiredForSourceAbi,
         UnusedDependenciesAction.IGNORE,
