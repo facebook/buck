@@ -107,6 +107,48 @@ public class MavenUrlDecoderTest {
   }
 
   @Test
+  public void parseMvnUrlWithDefaultDomainAndSoType() throws URISyntaxException {
+    URI seen =
+        MavenUrlDecoder.toHttpUrl(
+            Optional.of("http://foo.bar"),
+            new URI("mvn:com.almworks.sqlite4java:libsqlite4java-linux-amd64:so:1.0.392"));
+
+    URI expected =
+        new URI(
+            "http://foo.bar/com/almworks/sqlite4java/libsqlite4java-linux-amd64/1.0.392/libsqlite4java-linux-amd64-1.0.392.so");
+
+    assertEquals(expected, seen);
+  }
+
+  @Test
+  public void parseMvnUrlWithDefaultDomainAndDylibType() throws URISyntaxException {
+    URI seen =
+        MavenUrlDecoder.toHttpUrl(
+            Optional.of("http://foo.bar"),
+            new URI("mvn:com.almworks.sqlite4java:libsqlite4java-osx:dylib:1.0.392"));
+
+    URI expected =
+        new URI(
+            "http://foo.bar/com/almworks/sqlite4java/libsqlite4java-osx/1.0.392/libsqlite4java-osx-1.0.392.dylib");
+
+    assertEquals(expected, seen);
+  }
+
+  @Test
+  public void parseMvnUrlWithDefaultDomainAndDllType() throws URISyntaxException {
+    URI seen =
+        MavenUrlDecoder.toHttpUrl(
+            Optional.of("http://foo.bar"),
+            new URI("mvn:com.almworks.sqlite4java:sqlite4java-win32-x64:dll:1.0.392"));
+
+    URI expected =
+        new URI(
+            "http://foo.bar/com/almworks/sqlite4java/sqlite4java-win32-x64/1.0.392/sqlite4java-win32-x64-1.0.392.dll");
+
+    assertEquals(expected, seen);
+  }
+
+  @Test
   public void parseMvnUrlWithCustomDomain() throws URISyntaxException {
     URI seen =
         MavenUrlDecoder.toHttpUrl(
