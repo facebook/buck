@@ -228,4 +228,17 @@ public class BuildLogHelper {
 
     return logfiles;
   }
+
+  /**
+   * Given a build id, return the corresponding {@link BuildLogEntry} of that build
+   *
+   * @param buildId the buildId corresponding to the {@link BuildLogEntry} to retrieve
+   * @return An optional BuildLogEntry
+   * @throws IOException If interacting with the filesystem fails
+   */
+  public Optional<BuildLogEntry> getBuildLogEntryFromId(BuildId buildId) throws IOException {
+    return getBuildLogs().stream()
+        .filter(e -> e.getBuildId().map(id -> id.equals(buildId)).orElse(false))
+        .findFirst();
+  }
 }

@@ -99,10 +99,7 @@ public class BuckFixSpecParser {
       BuildLogHelper helper, FixBuckConfig fixConfig, BuildId buildId, boolean manuallyInvoked)
       throws IOException {
 
-    Optional<BuildLogEntry> entry =
-        helper.getBuildLogs().stream()
-            .filter(e -> e.getBuildId().map(id -> id.equals(buildId)).orElse(false))
-            .findFirst();
+    Optional<BuildLogEntry> entry = helper.getBuildLogEntryFromId(buildId);
     return entry
         .map(
             e ->
@@ -140,10 +137,7 @@ public class BuckFixSpecParser {
       Optional<Exception> runException)
       throws IOException {
 
-    Optional<BuildLogEntry> entry =
-        helper.getBuildLogs().stream()
-            .filter(e -> e.getBuildId().map(id -> id.equals(buildId)).orElse(false))
-            .findFirst();
+    Optional<BuildLogEntry> entry = helper.getBuildLogEntryFromId(buildId);
     return entry
         .map(
             e ->
