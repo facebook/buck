@@ -63,13 +63,6 @@ public abstract class AbstractContainerCommand extends CommandWithPluginManager 
       hidden = true)
   protected String commandArgsFile;
 
-  @Nullable
-  @Option(
-      name = GlobalCliOptions.FIX_SPEC_FILE_LONG_ARG,
-      usage = GlobalCliOptions.FIX_SPEC_FILE_HELP,
-      hidden = true)
-  protected String fixSpecFile;
-
   protected String getSubcommandsFieldName() {
     return "subcommand";
   }

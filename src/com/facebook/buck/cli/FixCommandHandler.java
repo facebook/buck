@@ -27,6 +27,7 @@ import com.facebook.buck.support.fix.BuckFixSpecWriter;
 import com.facebook.buck.support.fix.BuckRunSpec;
 import com.facebook.buck.support.fix.FixBuckConfig;
 import com.facebook.buck.support.fix.ImmutableBuckRunSpec;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -67,7 +68,7 @@ public class FixCommandHandler {
   private final ImmutableMap<String, String> environment;
   private final FixBuckConfig fixConfig;
   private final Optional<Path> commandArgsPath;
-  private final Optional<Path> fixSpecPath;
+  private final InvocationInfo invocationInfo;
 
   FixCommandHandler(
       ProjectFilesystem filesystem,
@@ -75,24 +76,19 @@ public class FixCommandHandler {
       ImmutableMap<String, String> environment,
       FixBuckConfig fixConfig,
       @Nullable String commandArgsFile,
-      @Nullable String fixSpecFile) {
+      InvocationInfo invocationInfo) {
     this.filesystem = filesystem;
     this.console = console;
     this.environment = environment;
     this.fixConfig = fixConfig;
     this.commandArgsPath = Optional.ofNullable(commandArgsFile).map(Paths::get);
-    this.fixSpecPath = Optional.ofNullable(fixSpecFile).map(Paths::get);
+    this.invocationInfo = invocationInfo;
   }
 
   private void validateCanRunFixScript() throws FixCommandHandlerException {
     if (!commandArgsPath.isPresent()) {
       throw new IllegalStateException(
           "--command-args-file was not provided by the buck wrapper script");
-    }
-
-    if (!fixSpecPath.isPresent()) {
-      throw new IllegalStateException(
-          "--fix-spec-file was not provided by the buck wrapper script");
     }
 
     if (!fixConfig.getFixScript().isPresent()) {
@@ -174,7 +170,10 @@ public class FixCommandHandler {
   void run(BuckFixSpec fixSpec) throws FixCommandHandlerException, IOException {
     validateCanRunFixScript();
 
-    Path fixPath = fixSpecPath.get();
+    Path fixPath =
+        filesystem
+            .resolve(invocationInfo.getLogDirectoryPath())
+            .resolve(BuckConstant.BUCK_FIX_SPEC_FILE_NAME);
     if (!Files.exists(fixPath) || Files.size(fixPath) == 0) {
       BuckFixSpecWriter.writeSpec(fixPath, fixSpec);
     }
@@ -205,7 +204,6 @@ public class FixCommandHandler {
   }
 
   /**
-   * @param invocationInfo current run Invocation Info to derive log dir location
    * @param buildId current BuildId
    * @param exitCode current ExitCode
    * @param exceptionForFix an Optional Exception to add to the buck fix spec
@@ -213,10 +211,7 @@ public class FixCommandHandler {
    *     exceptions to avoid altering the error code of code invocation.
    */
   Optional<BuckFixSpec> writeFixSpec(
-      InvocationInfo invocationInfo,
-      BuildId buildId,
-      ExitCode exitCode,
-      Optional<Exception> exceptionForFix) {
+      BuildId buildId, ExitCode exitCode, Optional<Exception> exceptionForFix) {
 
     try {
       // Because initially there's no fix spec file in the log dir, build a Buck Fix Spec from logs

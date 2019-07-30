@@ -47,7 +47,7 @@ JAVA_MAX_HEAP_SIZE_MB = 1000
 
 # Files that are used to invoke programs after running buck. Used for buck run, and
 # to automatically invoke buck fix scripts
-PostRunFiles = namedtuple("PostRunFiles", ["command_args_file", "fix_spec_file"])
+PostRunFiles = namedtuple("PostRunFiles", ["command_args_file"])
 
 
 class MovableTemporaryFile(object):
@@ -238,9 +238,8 @@ class ExecuteFixScript(ExitCodeCallable):
     if the fix script fails
     """
 
-    def __init__(self, exit_code, fix_spec_file, path, argv, envp, cwd):
+    def __init__(self, exit_code, path, argv, envp, cwd):
         super(ExecuteFixScript, self).__init__(exit_code)
-        self._fix_spec_file = fix_spec_file
         self._path = path
         self._argv = argv
         self._envp = envp
@@ -261,31 +260,28 @@ class ExecuteFixScript(ExitCodeCallable):
     def __call__(self):
         exit_code = self.exit_code
 
-        with self._fix_spec_file:
-            extra_kwargs = {}
-            if os.name != "nt":
-                # Restore default handling of SIGPIPE.  See https://bugs.python.org/issue1652.
-                extra_kwargs["preexec_fn"] = lambda: signal.signal(
-                    signal.SIGPIPE, signal.SIG_DFL
-                )
+        extra_kwargs = {}
+        if os.name != "nt":
+            # Restore default handling of SIGPIPE.  See https://bugs.python.org/issue1652.
+            extra_kwargs["preexec_fn"] = lambda: signal.signal(
+                signal.SIGPIPE, signal.SIG_DFL
+            )
 
-            # Do not respond to ctrl-c while this is running. Users will expect this to go
-            # to the fix script. Make sure we restore the signal handler afterward
-            # We could have done this with tcsetpgrp and the like, but it also leads to
-            # weird behavior with ctrl-z when the processes are in different pgroups
-            # (to set the foreground job) and both processes don't suspend.
-            with self._disable_signal_handlers():
-                args = [self._path]
-                args.extend(self._argv[1:])
-                proc = subprocess.Popen(
-                    args, env=self._envp, cwd=self._cwd, **extra_kwargs
-                )
-                proc.wait()
+        # Do not respond to ctrl-c while this is running. Users will expect this to go
+        # to the fix script. Make sure we restore the signal handler afterward
+        # We could have done this with tcsetpgrp and the like, but it also leads to
+        # weird behavior with ctrl-z when the processes are in different pgroups
+        # (to set the foreground job) and both processes don't suspend.
+        with self._disable_signal_handlers():
+            args = [self._path]
+            args.extend(self._argv[1:])
+            proc = subprocess.Popen(args, env=self._envp, cwd=self._cwd, **extra_kwargs)
+            proc.wait()
 
-            # If the script failed, return a different code to indicate that
-            if proc.returncode != ExitCode.SUCCESS:
-                exit_code = ExitCode.FIX_FAILED
-            return exit_code
+        # If the script failed, return a different code to indicate that
+        if proc.returncode != ExitCode.SUCCESS:
+            exit_code = ExitCode.FIX_FAILED
+        return exit_code
 
 
 class BuckStatusReporter(object):
@@ -479,12 +475,7 @@ class BuckTool(object):
             return args
 
     def _handle_buck_fix_args(self, argv, post_run_files):
-        additional_args = [
-            "--command-args-file",
-            post_run_files.command_args_file,
-            "--fix-spec-file",
-            post_run_files.fix_spec_file,
-        ]
+        additional_args = ["--command-args-file", post_run_files.command_args_file]
         insert_idx = 1
         # Cover the case where someone runs `buck --isolation_prefix foo`, which would
         # make the first arg `--config`, not a subcommand
@@ -649,15 +640,10 @@ class BuckTool(object):
             # the fix spec file needs to be somewhere else, as we cleanup the tmpdir
             # before we run the actual fix script, and we need to make sure that the
             # build details are not deleted before that.
-            with MovableTemporaryFile(
-                dir=self._tmp_dir
-            ) as argsfile, MovableTemporaryFile() as fix_spec_file:
+            with MovableTemporaryFile(dir=self._tmp_dir) as argsfile:
                 argsfile.close()
-                fix_spec_file.close()
 
-                post_run_files = PostRunFiles(
-                    command_args_file=argsfile.name, fix_spec_file=fix_spec_file.name
-                )
+                post_run_files = PostRunFiles(command_args_file=argsfile.name)
                 exit_code = run_fn(java_path, argv, env, post_run_files)
                 if os.path.getsize(argsfile.name) == 0:
                     # No file was requested to be run by the daemon. Exit normally.
@@ -673,9 +659,7 @@ class BuckTool(object):
                 }
                 cwd = cmd["cwd"].encode("utf8")
                 if cmd["is_fix_script"]:
-                    return ExecuteFixScript(
-                        exit_code, fix_spec_file.move(), path, argv, envp, cwd
-                    )
+                    return ExecuteFixScript(exit_code, path, argv, envp, cwd)
                 else:
                     return ExecuteTarget(exit_code, path, argv, envp, cwd)
 

@@ -39,12 +39,9 @@ public class GlobalCliOptions {
       "--exclude-incompatible-targets";
   public static final String REUSE_CURRENT_CONFIG_ARG = "--reuse-current-config";
   public static final String COMMAND_ARGS_FILE_LONG_ARG = "--command-args-file";
-  public static final String FIX_SPEC_FILE_LONG_ARG = "--fix-spec-file";
 
   public static final String COMMAND_ARGS_FILE_HELP =
       "Serialize any commands that need to be run by the python wrapper to this file.";
-  public static final String FIX_SPEC_FILE_HELP =
-      "Serialize information about a given build to this file for use by buck fix scripts.";
 
   /**
    * Contains all options defined in this class. These options are considered global since they are

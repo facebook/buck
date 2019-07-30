@@ -62,7 +62,7 @@ public class FixCommand extends AbstractCommand {
             params.getEnvironment(),
             config,
             commandArgsFile,
-            fixSpecFile);
+            params.getInvocationInfo().get());
     if (buildId == null) {
       fixCommandHandler.runWithLatestCommand(true);
     } else {

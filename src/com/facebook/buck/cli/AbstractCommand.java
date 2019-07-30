@@ -184,13 +184,6 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       hidden = true)
   protected String commandArgsFile;
 
-  @Nullable
-  @Option(
-      name = GlobalCliOptions.FIX_SPEC_FILE_LONG_ARG,
-      usage = GlobalCliOptions.FIX_SPEC_FILE_HELP,
-      hidden = true)
-  protected String fixSpecFile;
-
   /** @return {code true} if the {@code [cache]} in {@code .buckconfig} should be ignored. */
   public boolean isNoCache() {
     return noCache;
@@ -203,11 +196,6 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   @Nullable
   public String getCommandArgsFile() {
     return commandArgsFile;
-  }
-
-  @Nullable
-  public String getFixSpecFile() {
-    return fixSpecFile;
   }
 
   public Optional<Path> getEventsOutputPath() {

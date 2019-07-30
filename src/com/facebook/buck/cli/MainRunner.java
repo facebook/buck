@@ -1507,8 +1507,7 @@ public final class MainRunner {
     ImmutableList.Builder<String> builder = ImmutableList.builderWithExpectedSize(args.size());
     for (int i = 0; i < args.size(); i++) {
       String arg = args.get(i);
-      if (arg.equals(GlobalCliOptions.COMMAND_ARGS_FILE_LONG_ARG)
-          || arg.equals(GlobalCliOptions.FIX_SPEC_FILE_LONG_ARG)) {
+      if (arg.equals(GlobalCliOptions.COMMAND_ARGS_FILE_LONG_ARG)) {
         // Skip --command-args-file and its argument. These are added by the python wrapper
         // and aren't useful to users.
         i++;
@@ -1580,10 +1579,10 @@ public final class MainRunner {
             environment,
             config,
             subcommand.getCommandArgsFile(),
-            subcommand.getFixSpecFile());
+            invocationInfo);
 
     Optional<BuckFixSpec> fixSpec =
-        fixCommandHandler.writeFixSpec(invocationInfo, buildId, exitCode, exceptionForFix);
+        fixCommandHandler.writeFixSpec(buildId, exitCode, exceptionForFix);
 
     if (!config.shouldRunAutofix(
         console.getAnsi().isAnsiTerminal(), command.getDeclaredSubCommandName())) {
