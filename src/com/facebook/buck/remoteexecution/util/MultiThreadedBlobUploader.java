@@ -221,6 +221,13 @@ public class MultiThreadedBlobUploader {
 
     if (!data.isEmpty()) {
       try {
+        LOG.debug(
+            "Starting Uploading: "
+                + data.size()
+                + " requests, size: "
+                + size
+                + ". "
+                + String.join(", ", data.keySet()));
         if (size > uploadSizeLimit) {
           // This should only happen when we're trying to upload a single large object
           Preconditions.checkState(data.size() == 1);
@@ -244,6 +251,7 @@ public class MultiThreadedBlobUploader {
               });
           data.forEach((k, pending) -> pending.future.setException(new RuntimeException("idk")));
         }
+        LOG.debug("Finished Uploading: " + data.size() + " requests, size: " + size);
       } catch (Exception e) {
         data.forEach((k, pending) -> pending.future.setException(e));
       }
