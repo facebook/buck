@@ -138,6 +138,10 @@ public class BuildLogHelper {
         Optional.of(logFile.resolveSibling(BuckConstant.CONFIG_JSON_FILE_NAME))
             .filter(projectFilesystem::isFile);
 
+    Optional<Path> fixSpecFile =
+        Optional.of(logFile.resolveSibling(BuckConstant.BUCK_FIX_SPEC_FILE_NAME))
+            .filter(projectFilesystem::isFile);
+
     return ImmutableBuildLogEntry.of(
         logFile,
         buildId,
@@ -151,6 +155,7 @@ public class BuildLogHelper {
         ruleKeyDiagGraphFile,
         traceFile,
         configJsonFile,
+        fixSpecFile,
         projectFilesystem.getFileSize(logFile),
         Date.from(projectFilesystem.getLastModifiedTime(logFile).toInstant()));
   }

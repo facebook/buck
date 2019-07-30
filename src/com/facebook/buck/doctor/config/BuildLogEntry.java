@@ -64,6 +64,9 @@ public interface BuildLogEntry {
   Optional<Path> getConfigJsonFile();
 
   @Value.Parameter
+  Optional<Path> getBuckFixSpecFile();
+
+  @Value.Parameter
   long getSize();
 
   @Value.Parameter

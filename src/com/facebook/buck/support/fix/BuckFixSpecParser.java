@@ -19,10 +19,14 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.doctor.BuildLogHelper;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.types.Either;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -39,7 +43,8 @@ public class BuckFixSpecParser {
     MISSING_BUILD_ID("Fix spec was missing a build id"),
     MISSING_EXIT_CODE("Fix spec was missing an exit code"),
     MISSING_COMMAND_ARGS("Fix spec was missing command args"),
-    MISSING_EXPANDED_COMMAND_ARGS("Fix spec was missing expanded command args");
+    MISSING_EXPANDED_COMMAND_ARGS("Fix spec was missing expanded command args"),
+    MISSING_FIX_SPEC_FILE_IN_LOGS("Fix spec file in logs was missing");
 
     private final String message;
 
@@ -148,6 +153,28 @@ public class BuckFixSpecParser {
                     manuallyInvoked,
                     runException))
         .orElse(Either.ofRight(FixSpecFailure.MISSING));
+  }
+
+  /**
+   * Tries to parse a {@link BuckFixSpec} from a file already with the information of a fix spec.
+   * This differs from other parse... methods in that it doesn't try to construct a fix spec from
+   * various different log files, only from a single spec file.
+   *
+   * @param fixSpecPath the absolute path to the fix spec file
+   * @return Either a {@link BuckFixSpec} or a Failure if the spec file is missing in the given path
+   * @throws IOException for any other error in the process of reading the file
+   */
+  public static Either<BuckFixSpec, FixSpecFailure> parseFromFixSpecFile(Path fixSpecPath)
+      throws IOException {
+    try {
+      BuckFixSpec buckFixSpec =
+          ObjectMappers.READER.readValue(
+              ObjectMappers.createParser(fixSpecPath), BuckFixSpec.class);
+
+      return Either.ofLeft(buckFixSpec);
+    } catch (FileNotFoundException | NoSuchFileException e) {
+      return Either.ofRight(FixSpecFailure.MISSING_FIX_SPEC_FILE_IN_LOGS);
+    }
   }
 
   private static Either<BuckFixSpec, FixSpecFailure> specFromBuildLogEntry(

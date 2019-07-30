@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -56,9 +56,9 @@ public class BuckFixSpecWriterTest {
 
     assertTrue(Files.exists(fixSpecPath));
 
-    BuckFixSpec fixSpec =
-        ObjectMappers.READER.readValue(ObjectMappers.createParser(fixSpecPath), BuckFixSpec.class);
+    Either<BuckFixSpec, BuckFixSpecParser.FixSpecFailure> parsedFixSpec =
+        BuckFixSpecParser.parseFromFixSpecFile(fixSpecPath);
 
-    assertEquals(specWithPaths, fixSpec);
+    assertEquals(specWithPaths, parsedFixSpec.getLeft());
   }
 }
