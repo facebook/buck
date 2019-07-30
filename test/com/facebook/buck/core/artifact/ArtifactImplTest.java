@@ -132,8 +132,7 @@ public class ArtifactImplTest {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     Path packagePath = Paths.get("my/foo__");
 
-    ArtifactImpl artifact =
-        (ArtifactImpl) ArtifactImpl.of(target, genDir, packagePath, Paths.get("bar/baz.cpp"));
+    ArtifactImpl artifact = ArtifactImpl.of(target, genDir, packagePath, Paths.get("bar/baz.cpp"));
 
     String expectedShortPath = Paths.get("my", "foo__", "bar", "baz.cpp").toString();
 
