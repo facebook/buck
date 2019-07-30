@@ -150,18 +150,21 @@ public final class NativeLinkableInfo implements NativeLinkable {
   private final boolean shouldBeLinkedInAppleTestAndHost;
   private final Optional<? extends NativeLinkTarget> nativeLinkTarget;
   private final Delegate delegate;
+  private final String ruleType;
 
   private final Memoizer<ImmutableMap<String, SourcePath>> sharedLibrariesMemoizer =
       new Memoizer<>();
 
   public NativeLinkableInfo(
       BuildTarget buildTarget,
+      String ruleType,
       ImmutableList<NativeLinkable> deps,
       ImmutableList<NativeLinkable> exportedDeps,
       NativeLinkableGroup.Linkage preferredLinkage,
       Delegate delegate,
       Configuration config) {
     this.buildTarget = buildTarget;
+    this.ruleType = ruleType;
     this.deps = deps;
     this.exportedDeps = exportedDeps;
     this.exportedLinkerFlags = config.exportedLinkerFlags;
@@ -173,6 +176,11 @@ public final class NativeLinkableInfo implements NativeLinkable {
     this.shouldBeLinkedInAppleTestAndHost = config.shouldBeLinkedInAppleTestAndHost;
     this.nativeLinkTarget = config.nativeLinkTarget;
     this.delegate = delegate;
+  }
+
+  @Override
+  public String getRuleType() {
+    return ruleType;
   }
 
   /** This is just used internally as a key for caching. */

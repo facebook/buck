@@ -137,6 +137,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
                   .toList();
           return new NativeLinkableInfo(
               getBuildTarget(),
+              getType(),
               deps,
               exportedDeps,
               Linkage.ANY,

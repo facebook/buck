@@ -646,6 +646,7 @@ public class PrebuiltCxxLibraryDescription
         if (!isPlatformSupported(cxxPlatform)) {
           return new NativeLinkableInfo(
               getBuildTarget(),
+              getType(),
               ImmutableList.of(),
               ImmutableList.of(),
               Linkage.ANY,
@@ -680,6 +681,7 @@ public class PrebuiltCxxLibraryDescription
 
         return new NativeLinkableInfo(
             getBuildTarget(),
+            getType(),
             deps,
             exportedDeps,
             getPreferredLinkage(cxxPlatform),

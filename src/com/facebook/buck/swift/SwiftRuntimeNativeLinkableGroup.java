@@ -73,6 +73,7 @@ public final class SwiftRuntimeNativeLinkableGroup implements NativeLinkableGrou
         () ->
             new NativeLinkableInfo(
                 getBuildTarget(),
+                "swift_runtime",
                 ImmutableList.of(),
                 ImmutableList.of(),
                 getPreferredLinkage(cxxPlatform),

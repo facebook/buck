@@ -168,6 +168,7 @@ public class HaskellPrebuiltLibraryDescription
                       .toList();
               return new NativeLinkableInfo(
                   buildTarget,
+                  getType(),
                   ImmutableList.of(),
                   exportedDeps,
                   Linkage.ANY,

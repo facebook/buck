@@ -58,6 +58,14 @@ public class CxxGenruleIntegrationTest {
   }
 
   @Test
+  public void ldflagsfilter() throws IOException {
+    workspace.replaceFileContents(
+        "BUCK", "@CMD@", "echo -- $(ldflags-static-filter ^.*prebuilt_c.* :dep_on_prebuilt_c)");
+    Path output = workspace.buildAndReturnOutput("//:rule#default");
+    assertThat(workspace.getFileContents(output), Matchers.containsString("dep_on_prebuilt_c"));
+  }
+
+  @Test
   public void cppflagsTransitiveDeps() throws IOException {
     workspace.replaceFileContents("BUCK", "@CMD@", "echo -- $(cppflags :a)");
     Path output = workspace.buildAndReturnOutput("//:rule#default");

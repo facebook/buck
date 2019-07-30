@@ -47,6 +47,7 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibraryGroup, NativeLinka
     this.linkableInfo =
         new NativeLinkableInfo(
             getBuildTarget(),
+            "system_lua_cxx_library",
             ImmutableList.of(),
             ImmutableList.of(),
             Linkage.SHARED,

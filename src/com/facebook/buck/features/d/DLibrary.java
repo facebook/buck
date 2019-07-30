@@ -74,6 +74,7 @@ public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements N
                   ImmutableList.of(archive.toArg()), ImmutableSet.of(), ImmutableSet.of());
           return new NativeLinkableInfo(
               getBuildTarget(),
+              getType(),
               ImmutableList.of(),
               exportedDeps,
               Linkage.STATIC,

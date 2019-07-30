@@ -146,6 +146,7 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
                   : ImmutableList.of();
           return new NativeLinkableInfo(
               getBuildTarget(),
+              getType(),
               deps,
               ImmutableList.of(),
               Linkage.STATIC,
