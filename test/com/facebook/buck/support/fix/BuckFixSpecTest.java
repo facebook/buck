@@ -29,23 +29,24 @@ import org.junit.Test;
 
 public class BuckFixSpecTest {
 
+  public static BuckFixSpec specWithPaths =
+      new ImmutableBuckFixSpec(
+          new BuildId("foo-bar-baz"),
+          "run",
+          ExitCode.FATAL_GENERIC.getCode(),
+          ImmutableList.of("arg1", "@argfile"),
+          ImmutableList.of("arg1", "arg2", "arg3"),
+          true,
+          Optional.empty(),
+          ImmutableMap.of("foo", ImmutableList.of("bar/baz.py")),
+          BuckFixSpec.getLogsMapping(
+              Optional.of(Paths.get("log.log")),
+              Optional.of(Paths.get("machine-log.log")),
+              Optional.of(Paths.get("out.trace")),
+              Optional.of(Paths.get("buckconfig.json"))));
+
   @Test
   public void seralizesAsExpected() throws IOException {
-    BuckFixSpec specWithPaths =
-        new ImmutableBuckFixSpec(
-            new BuildId("foo-bar-baz"),
-            "run",
-            ExitCode.FATAL_GENERIC.getCode(),
-            ImmutableList.of("arg1", "@argfile"),
-            ImmutableList.of("arg1", "arg2", "arg3"),
-            true,
-            Optional.empty(),
-            ImmutableMap.of("foo", ImmutableList.of("bar/baz.py")),
-            BuckFixSpec.getLogsMapping(
-                Optional.of(Paths.get("log.log")),
-                Optional.of(Paths.get("machine-log.log")),
-                Optional.of(Paths.get("out.trace")),
-                Optional.of(Paths.get("buckconfig.json"))));
 
     BuckFixSpec specWithoutPaths =
         new ImmutableBuckFixSpec(

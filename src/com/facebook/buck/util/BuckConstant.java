@@ -38,6 +38,8 @@ public class BuckConstant {
 
   public static final String CONFIG_JSON_FILE_NAME = "buckconfig.json";
 
+  public static final String BUCK_FIX_SPEC_FILE_NAME = "buck_fix_spec.json";
+
   private BuckConstant() {}
 
   /**

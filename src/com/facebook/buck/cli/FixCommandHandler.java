@@ -21,6 +21,7 @@ import com.facebook.buck.doctor.BuildLogHelper;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.support.fix.BuckFixSpec;
 import com.facebook.buck.support.fix.BuckFixSpecParser;
+import com.facebook.buck.support.fix.BuckFixSpecWriter;
 import com.facebook.buck.support.fix.BuckRunSpec;
 import com.facebook.buck.support.fix.FixBuckConfig;
 import com.facebook.buck.support.fix.ImmutableBuckRunSpec;
@@ -32,6 +33,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -169,8 +171,12 @@ public class FixCommandHandler {
   void run(BuckFixSpec fixSpec) throws FixCommandHandlerException, IOException {
     validateCanRunFixScript();
 
-    Path runPath = commandArgsPath.get();
     Path fixPath = fixSpecPath.get();
+    if (!Files.exists(fixPath) || Files.size(fixPath) == 0) {
+      BuckFixSpecWriter.writeSpec(fixPath, fixSpec);
+    }
+
+    Path runPath = commandArgsPath.get();
     Path repositoryRoot = filesystem.getRootPath();
 
     ImmutableList<String> fixScript =
@@ -189,14 +195,9 @@ public class FixCommandHandler {
     }
 
     filesystem.mkdirs(runPath.getParent());
-    filesystem.mkdirs(fixPath.getParent());
 
     try (OutputStream specOutput = filesystem.newFileOutputStream(runPath)) {
       ObjectMappers.WRITER.writeValue(specOutput, runSpec);
-    }
-
-    try (OutputStream specOutput = filesystem.newFileOutputStream(fixPath)) {
-      ObjectMappers.WRITER.writeValue(specOutput, fixSpec);
     }
   }
 }

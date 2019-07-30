@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -31,6 +32,7 @@ import java.util.Optional;
 @BuckStyleValue
 @JsonInclude(Include.ALWAYS)
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+@JsonDeserialize(as = ImmutableBuckFixSpec.class)
 public abstract class BuckFixSpec {
 
   private static final String MAIN_LOG_KEY = "main_log";
