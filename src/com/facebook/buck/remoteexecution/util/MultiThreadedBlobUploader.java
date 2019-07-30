@@ -129,7 +129,9 @@ public class MultiThreadedBlobUploader {
     for (UploadDataSupplier data : dataSupplier) {
       Digest digest = data.getDigest();
       SettableFuture<Void> future = SettableFuture.create();
-      if (pendingUploads.putIfAbsent(digest.getHash(), future) == null) {
+      ListenableFuture<Void> pendingFuture = pendingUploads.putIfAbsent(digest.getHash(), future);
+      if (pendingFuture == null) {
+        pendingFuture = future;
         if (containsDigest(digest)) {
           future.set(null);
         } else {
@@ -150,7 +152,7 @@ public class MultiThreadedBlobUploader {
           uploadService.submit(this::processUploads);
         }
       }
-      futures.add(Objects.requireNonNull(pendingUploads.get(digest.getHash())));
+      futures.add(pendingFuture);
     }
     return Futures.whenAllSucceed(futures.build()).call(() -> null, directExecutor());
   }
