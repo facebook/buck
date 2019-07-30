@@ -197,6 +197,14 @@ class ArtifactImpl extends AbstractArtifact
   }
 
   @Override
+  public String toString() {
+    return String.format(
+        "Artifact<%s, %s>",
+        getShortPath(),
+        isBound() ? String.format("bound to %s", actionAnalysisDataKey) : "declared");
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
