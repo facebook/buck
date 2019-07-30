@@ -17,8 +17,10 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.doctor.BuildLogHelper;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.support.fix.BuckFixSpec;
 import com.facebook.buck.support.fix.BuckFixSpecParser;
 import com.facebook.buck.support.fix.BuckFixSpecWriter;
@@ -46,6 +48,7 @@ import javax.annotation.Nullable;
  * {@link BuildCommand}
  */
 public class FixCommandHandler {
+  private static final Logger LOG = Logger.get(FixCommandHandler.class);
 
   /** Simple wrapper class signalling that something failed while trying to run BuckFix */
   class FixCommandHandlerException extends HumanReadableException {
@@ -199,5 +202,44 @@ public class FixCommandHandler {
     try (OutputStream specOutput = filesystem.newFileOutputStream(runPath)) {
       ObjectMappers.WRITER.writeValue(specOutput, runSpec);
     }
+  }
+
+  /**
+   * @param invocationInfo current run Invocation Info to derive log dir location
+   * @param buildId current BuildId
+   * @param exitCode current ExitCode
+   * @param exceptionForFix an Optional Exception to add to the buck fix spec
+   * @return an optional BuckFixSpec, if empty means an error happened, but we don't want to throw
+   *     exceptions to avoid altering the error code of code invocation.
+   */
+  Optional<BuckFixSpec> writeFixSpec(
+      InvocationInfo invocationInfo,
+      BuildId buildId,
+      ExitCode exitCode,
+      Optional<Exception> exceptionForFix) {
+
+    try {
+      // Because initially there's no fix spec file in the log dir, build a Buck Fix Spec from logs
+      Either<BuckFixSpec, BuckFixSpecParser.FixSpecFailure> fixSpec =
+          BuckFixSpecParser.parseFromBuildIdWithExitCode(
+              new BuildLogHelper(filesystem), fixConfig, buildId, exitCode, false, exceptionForFix);
+
+      if (fixSpec.isRight()) {
+        LOG.warn(
+            "Error fetching logs for build %s: %s",
+            buildId, fixSpec.getRight().humanReadableError());
+        return Optional.empty();
+      }
+
+      Path specPath =
+          BuckFixSpecWriter.writeSpecToLogDir(
+              filesystem.getRootPath(), invocationInfo, fixSpec.getLeft());
+      LOG.info("wrote fix spec file to: %s", specPath);
+
+      return Optional.of(fixSpec.getLeft());
+    } catch (IOException e) {
+      LOG.warn(e, "Error while writing fix spec file to log directory");
+    }
+    return Optional.empty();
   }
 }

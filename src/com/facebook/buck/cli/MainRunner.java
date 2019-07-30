@@ -163,6 +163,7 @@ import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.support.cli.config.BuckConfigWriter;
 import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.support.exceptions.handler.ExceptionHandlerRegistryFactory;
+import com.facebook.buck.support.fix.BuckFixSpec;
 import com.facebook.buck.support.fix.FixBuckConfig;
 import com.facebook.buck.support.log.LogBuckConfig;
 import com.facebook.buck.support.state.BuckGlobalState;
@@ -1460,7 +1461,8 @@ public final class MainRunner {
                 buckConfig,
                 buildId,
                 exitCode,
-                exceptionForFix);
+                exceptionForFix,
+                invocationInfo);
           }
 
           // signal nailgun that we are not interested in client disconnect events anymore
@@ -1563,12 +1565,25 @@ public final class MainRunner {
       BuckConfig buckConfig,
       BuildId buildId,
       ExitCode exitCode,
-      Optional<Exception> exceptionForFix) {
+      Optional<Exception> exceptionForFix,
+      InvocationInfo invocationInfo) {
     if (!(command.subcommand instanceof AbstractCommand)) {
       return;
     }
     AbstractCommand subcommand = (AbstractCommand) command.subcommand;
     FixBuckConfig config = buckConfig.getView(FixBuckConfig.class);
+
+    FixCommandHandler fixCommandHandler =
+        new FixCommandHandler(
+            filesystem,
+            console,
+            environment,
+            config,
+            subcommand.getCommandArgsFile(),
+            subcommand.getFixSpecFile());
+
+    Optional<BuckFixSpec> fixSpec =
+        fixCommandHandler.writeFixSpec(invocationInfo, buildId, exitCode, exceptionForFix);
 
     if (!config.shouldRunAutofix(
         console.getAnsi().isAnsiTerminal(), command.getDeclaredSubCommandName())) {
@@ -1578,16 +1593,11 @@ public final class MainRunner {
 
     // Only log here so that we still return with the correct top level exit code
     try {
-      FixCommandHandler fixCommandHandler =
-          new FixCommandHandler(
-              filesystem,
-              console,
-              environment,
-              config,
-              subcommand.getCommandArgsFile(),
-              subcommand.getFixSpecFile());
-
-      fixCommandHandler.runWithBuildIdWithExitCode(buildId, exitCode, false, exceptionForFix);
+      if (fixSpec.isPresent()) {
+        fixCommandHandler.run(fixSpec.get());
+      } else {
+        LOG.warn("Failed to run autofix because fix spec is missing");
+      }
     } catch (IOException e) {
       console.printErrorText(
           "Failed to write fix script information to %s", subcommand.getCommandArgsFile());
