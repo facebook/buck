@@ -418,8 +418,6 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
   @Test(timeout = 5000)
   @SuppressWarnings("PMD.EmptyWhileStmt")
   public void workerIsNotDuplicateScheduled() throws InterruptedException {
-    // This tests that if we schedule multiple works, and one worker is occupied, the other worker
-    // will pick start the other tasks
     startWorkerThread(worker1);
 
     Semaphore getDepsRan = new Semaphore(0);
