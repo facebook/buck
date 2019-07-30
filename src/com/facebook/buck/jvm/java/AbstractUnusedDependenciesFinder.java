@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
@@ -144,22 +145,40 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
     ImmutableSet.Builder<UnflavoredBuildTargetView> unusedDependencies = ImmutableSet.builder();
 
     for (BuildRule dependency : buildRuleResolver.getAllRules(targets)) {
-      SourcePath dependencyOutput = dependency.getSourcePathToOutput();
-      if (dependencyOutput == null) {
-        continue;
-      }
-
-      Path dependencyOutputPath = sourcePathResolver.getAbsolutePath(dependencyOutput);
-      if (!usedJars.contains(dependencyOutputPath)) {
-        Optional<Path> abiJarPath = getAbiJarPath(sourcePathResolver, dependency);
-        if (abiJarPath.isPresent() && usedJars.contains(abiJarPath.get())) {
-          continue;
-        }
+      if (isUnusedDependency(dependency, usedJars, sourcePathResolver)) {
         unusedDependencies.add(dependency.getBuildTarget().getUnflavoredBuildTarget());
       }
     }
 
     return unusedDependencies.build();
+  }
+
+  private boolean isUnusedDependency(
+      BuildRule dependency, ImmutableSet<Path> usedJars, SourcePathResolver sourcePathResolver) {
+    final SourcePath dependencyOutput = dependency.getSourcePathToOutput();
+    if (dependencyOutput == null) {
+      return false;
+    }
+
+    final Path dependencyOutputPath = sourcePathResolver.getAbsolutePath(dependencyOutput);
+    if (usedJars.contains(dependencyOutputPath)) {
+      return false;
+    }
+
+    final Optional<Path> abiJarPath = getAbiJarPath(sourcePathResolver, dependency);
+    if (abiJarPath.isPresent() && usedJars.contains(abiJarPath.get())) {
+      return false;
+    }
+
+    if (dependency instanceof ExportDependencies) {
+      for (BuildRule exportedDependency : ((ExportDependencies) dependency).getExportedDeps()) {
+        if (!isUnusedDependency(exportedDependency, usedJars, sourcePathResolver)) {
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 
   private Optional<BuildTarget> getAbiJarTarget(BuildRule dependency) {
