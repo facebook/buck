@@ -155,6 +155,10 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
 
   private boolean isUnusedDependency(
       BuildRule dependency, ImmutableSet<Path> usedJars, SourcePathResolver sourcePathResolver) {
+    if (!(dependency instanceof HasJavaAbi)) {
+      return false;
+    }
+
     final SourcePath dependencyOutput = dependency.getSourcePathToOutput();
     if (dependencyOutput == null) {
       return false;
@@ -165,7 +169,7 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
       return false;
     }
 
-    final Optional<Path> abiJarPath = getAbiJarPath(sourcePathResolver, dependency);
+    final Optional<Path> abiJarPath = getAbiJarPath(sourcePathResolver, (HasJavaAbi) dependency);
     if (abiJarPath.isPresent() && usedJars.contains(abiJarPath.get())) {
       return false;
     }
@@ -181,20 +185,16 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
     return true;
   }
 
-  private Optional<BuildTarget> getAbiJarTarget(BuildRule dependency) {
-    if (!(dependency instanceof HasJavaAbi)) {
-      return Optional.empty();
-    }
-    HasJavaAbi hasAbi = (HasJavaAbi) dependency;
-    Optional<BuildTarget> abiJarTarget = hasAbi.getSourceOnlyAbiJar();
+  private Optional<BuildTarget> getAbiJarTarget(HasJavaAbi dependency) {
+    Optional<BuildTarget> abiJarTarget = dependency.getSourceOnlyAbiJar();
     if (!abiJarTarget.isPresent()) {
-      abiJarTarget = hasAbi.getAbiJar();
+      abiJarTarget = dependency.getAbiJar();
     }
     return abiJarTarget;
   }
 
   private Optional<Path> getAbiJarPath(
-      SourcePathResolver sourcePathResolver, BuildRule dependency) {
+      SourcePathResolver sourcePathResolver, HasJavaAbi dependency) {
     Optional<BuildTarget> abiJarTarget = getAbiJarTarget(dependency);
     if (!abiJarTarget.isPresent()) {
       return Optional.empty();

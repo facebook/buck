@@ -159,4 +159,12 @@ public class UnusedDependenciesFinderIntegrationTest {
 
     processResult.assertSuccess();
   }
+
+  @Test
+  public void testDoNotFailForNonJavaLibraryDeps() {
+    ProcessResult processResult =
+        workspace.runBuckCommand("build", "-c", "java.unused_dependencies_action=fail", ":res_dep");
+
+    processResult.assertSuccess();
+  }
 }

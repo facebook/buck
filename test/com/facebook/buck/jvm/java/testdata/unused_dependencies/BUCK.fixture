@@ -106,3 +106,19 @@ java_library(
         "PUBLIC",
     ],
 )
+
+java_library(
+    name = "res_dep",
+    srcs = [],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [":res"],
+)
+
+android_resource(
+    name = "res",
+    visibility = [
+        "PUBLIC",
+    ],
+)
