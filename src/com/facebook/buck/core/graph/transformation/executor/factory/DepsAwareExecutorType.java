@@ -25,12 +25,12 @@ public enum DepsAwareExecutorType implements WithProbability {
   /**
    * use {@link com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor}
    */
-  DEFAULT(0),
+  DEFAULT(1),
   /**
    * use {@link
    * com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutorWithLocalStack}
    */
-  DEFAULT_WITH_LS(1),
+  DEFAULT_WITH_LS(0),
   /**
    * use {@link
    * com.facebook.buck.core.graph.transformation.executor.impl.JavaExecutorBackedDefaultDepsAwareExecutor}
