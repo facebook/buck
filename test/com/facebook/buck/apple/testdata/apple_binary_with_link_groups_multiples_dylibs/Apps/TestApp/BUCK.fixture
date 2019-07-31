@@ -1,0 +1,74 @@
+apple_binary(
+    name = "TestApp",
+    srcs = ["main.c"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    link_group_map = [
+        (
+            "dylib1",
+            [("//Apps/Libs:B", "node")],
+        ),
+        (
+            "dylib2",
+            [("//Apps/Libs:A", "tree")],
+        ),
+    ],
+    deps = [
+        ":Dylib1",
+        ":Dylib2",
+        "//Apps/Libs:A",
+    ],
+)
+
+apple_library(
+    name = "Dylib1",
+    srcs = ["dummy.c"],
+    link_group = "dylib1",
+    link_group_map = [
+        (
+            "dylib1",
+            [("//Apps/Libs:B", "node")],
+        ),
+        (
+            "dylib2",
+            [("//Apps/Libs:A", "tree")],
+        ),
+    ],
+    link_style = "static",
+    linker_flags = [
+        "-Wl,-all_load",
+        "-Wl,-undefined,dynamic_lookup",
+    ],
+    preferred_linkage = "shared",
+    soname = "Dylib1.dylib",
+    deps = [
+        "//Apps/Libs:A",
+    ],
+)
+
+apple_library(
+    name = "Dylib2",
+    srcs = ["dummy.c"],
+    link_group = "dylib2",
+    link_group_map = [
+        (
+            "dylib1",
+            [("//Apps/Libs:B", "node")],
+        ),
+        (
+            "dylib2",
+            [("//Apps/Libs:A", "tree")],
+        ),
+    ],
+    link_style = "static",
+    linker_flags = [
+        "-Wl,-all_load",
+        "-Wl,-undefined,dynamic_lookup",
+    ],
+    preferred_linkage = "shared",
+    soname = "Dylib2.dylib",
+    deps = [
+        "//Apps/Libs:A",
+    ],
+)

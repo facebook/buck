@@ -173,6 +173,7 @@ public class CxxTestDescription
     if (buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
       CxxLinkAndCompileRules cxxLinkAndCompileRules =
           CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
+              context.getTargetGraph(),
               buildTarget.withoutFlavors(CxxCompilationDatabase.COMPILATION_DATABASE),
               projectFilesystem,
               graphBuilder,
@@ -199,6 +200,7 @@ public class CxxTestDescription
     // Generate the link rule that builds the test binary.
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
+            context.getTargetGraph(),
             buildTarget,
             projectFilesystem,
             graphBuilder,

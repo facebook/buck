@@ -213,6 +213,7 @@ public class CxxLibraryDescription
       BuildRuleParams params,
       CxxLibraryDescriptionArg args) {
     return cxxLibraryFactory.createBuildRule(
+        context.getTargetGraph(),
         buildTarget,
         context.getProjectFilesystem(),
         params,

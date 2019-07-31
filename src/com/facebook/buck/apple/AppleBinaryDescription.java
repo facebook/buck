@@ -546,6 +546,7 @@ public class AppleBinaryDescription
             }
 
             return cxxBinaryFactory.createBuildRule(
+                context.getTargetGraph(),
                 buildTarget,
                 projectFilesystem,
                 graphBuilder,

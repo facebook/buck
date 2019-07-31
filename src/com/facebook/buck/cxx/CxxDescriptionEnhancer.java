@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -970,6 +971,7 @@ public class CxxDescriptionEnhancer {
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinaryDescriptionArg(
+      TargetGraph targetGraph,
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
@@ -1005,6 +1007,10 @@ public class CxxDescriptionEnhancer {
             args.getThinLto(),
             args.getFatLto()
             );
+
+    Optional<LinkableListFilter> linkableListFilter =
+        LinkableListFilterFactory.from(cxxBuckConfig, args, targetGraph);
+
     return createBuildRulesForCxxBinary(
         target,
         projectFilesystem,
@@ -1021,7 +1027,7 @@ public class CxxDescriptionEnhancer {
         stripStyle,
         flavoredLinkerMapMode,
         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
-        Optional.empty(),
+        linkableListFilter,
         linkOptions,
         args.getPreprocessorFlags(),
         args.getPlatformPreprocessorFlags(),

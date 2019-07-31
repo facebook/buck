@@ -654,6 +654,7 @@ public class AppleLibraryDescription
                   ? CxxLibraryDescriptionDelegate.noop()
                   : this.cxxDescriptionDelegate;
           return cxxLibraryFactory.createBuildRule(
+              context.getTargetGraph(),
               unstrippedTarget1,
               context.getProjectFilesystem(),
               newParams,

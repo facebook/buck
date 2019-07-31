@@ -85,6 +85,7 @@ public class CxxBinaryDescription
       BuildRuleParams params,
       CxxBinaryDescriptionArg args) {
     return cxxBinaryFactory.createBuildRule(
+        context.getTargetGraph(),
         buildTarget,
         context.getProjectFilesystem(),
         context.getActionGraphBuilder(),

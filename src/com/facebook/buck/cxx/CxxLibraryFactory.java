@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -40,6 +41,7 @@ import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkType;
+import com.facebook.buck.cxx.toolchain.nativelink.LinkableListFilter;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
@@ -84,6 +86,7 @@ public class CxxLibraryFactory {
   }
 
   public BuildRule createBuildRule(
+      TargetGraph targetGraph,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams metadataRuleParams,
@@ -199,6 +202,7 @@ public class CxxLibraryFactory {
               cxxDeps.get(graphBuilder, platform.get()),
               Linker.LinkType.SHARED,
               linkableDepType.orElse(Linker.LinkableDepType.SHARED),
+              makeLinkableListFilter(args, targetGraph),
               Optional.empty(),
               blacklist,
               transitiveCxxPreprocessorInputFunction,
@@ -222,6 +226,7 @@ public class CxxLibraryFactory {
               cxxDeps.get(graphBuilder, platform.get()),
               Linker.LinkType.MACH_O_BUNDLE,
               linkableDepType.orElse(Linker.LinkableDepType.SHARED),
+              makeLinkableListFilter(args, targetGraph),
               bundleLoader,
               blacklist,
               transitiveCxxPreprocessorInputFunction,
@@ -351,6 +356,11 @@ public class CxxLibraryFactory {
             .orElse(cxxBuckConfig.getDefaultReexportAllHeaderDependencies()),
         args.getSupportsMergedLinking().orElse(true),
         delegate);
+  }
+
+  private Optional<LinkableListFilter> makeLinkableListFilter(
+      CxxLibraryDescriptionArg args, TargetGraph targetGraph) {
+    return LinkableListFilterFactory.from(cxxBuckConfig, args, targetGraph);
   }
 
   /**
@@ -553,6 +563,7 @@ public class CxxLibraryFactory {
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Linker.LinkType linkType,
       Linker.LinkableDepType linkableDepType,
+      Optional<LinkableListFilter> linkableListFilter,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction
@@ -619,7 +630,7 @@ public class CxxLibraryFactory {
         sharedLibraryPath,
         args.getLinkerExtraOutputs(),
         linkableDepType,
-        Optional.empty(),
+        linkableListFilter,
         linkOptions,
         allNativeLinkables,
         cxxRuntimeType,
@@ -767,6 +778,7 @@ public class CxxLibraryFactory {
       ImmutableSet<BuildRule> deps,
       LinkType linkType,
       Linker.LinkableDepType linkableDepType,
+      Optional<LinkableListFilter> linkableListFilter,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction
@@ -811,6 +823,7 @@ public class CxxLibraryFactory {
         args.getCxxRuntimeType(),
         linkType,
         linkableDepType,
+        linkableListFilter,
         bundleLoader,
         blacklist,
         transitiveCxxPreprocessorInputFunction,
