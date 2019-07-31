@@ -17,6 +17,8 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
+import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -132,6 +134,15 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     TypeCoercer<Query> queryTypeCoercer = new QueryCoercer(this, unconfiguredBuildTargetFactory);
     TypeCoercer<ImmutableList<BuildTarget>> buildTargetsTypeCoercer =
         new ListTypeCoercer<>(buildTargetTypeCoercer);
+    TypeCoercer<CxxLinkGroupMappingTarget.Traversal> linkGroupMappingTraversalCoercer =
+        new CxxLinkGroupMappingTargetTraversalCoercer();
+    TypeCoercer<CxxLinkGroupMappingTarget> linkGroupMappingTargetCoercer =
+        new CxxLinkGroupMappingTargetCoercer(
+            buildTargetTypeCoercer, linkGroupMappingTraversalCoercer);
+    TypeCoercer<ImmutableList<CxxLinkGroupMappingTarget>> linkGroupMappingTargetsCoercer =
+        new ListTypeCoercer<>(linkGroupMappingTargetCoercer);
+    TypeCoercer<CxxLinkGroupMapping> linkGroupMappingCoercer =
+        new CxxLinkGroupMappingCoercer(stringTypeCoercer, linkGroupMappingTargetsCoercer);
     nonParameterizedTypeCoercers =
         new TypeCoercer<?>[] {
           // special classes
@@ -141,6 +152,9 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
           unconfiguredBuildTargetTypeCoercer,
           buildTargetTypeCoercer,
           buildTargetPatternTypeCoercer,
+
+          // apple link groups
+          linkGroupMappingCoercer,
 
           // identity
           stringTypeCoercer,
