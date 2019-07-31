@@ -467,7 +467,7 @@ public class AppleBinaryIntegrationTest {
     // Check binary contains statically linked Swift runtime
     assertThat(
         workspace.runCommand("nm", outputPath.toString()).getStdout().get(),
-        containsString("U _swift_bridgeObjectRetainclear"));
+        containsString("U _swift_bridgeObjectRetain"));
   }
 
   @Test
