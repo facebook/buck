@@ -18,6 +18,8 @@ package com.facebook.buck.jvm.java.runner;
 
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -27,8 +29,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * This class handles extra large classpaths by allowing the client to pass the classpath via file
@@ -108,12 +112,21 @@ public class FileClassPathRunner {
     if (JavaVersion.getMajorVersion() <= 8) {
       URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
       try {
-        Method addURL = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-        addURL.setAccessible(true);
-        for (URL entry : classpath) {
-          addURL.invoke(urlClassLoader, entry);
-        }
-      } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+        Field ucp = URLClassLoader.class.getDeclaredField("ucp");
+        ucp.setAccessible(true);
+        Class<?> clazz = Class.forName("com.facebook.buck.jvm.java.runner.java8.CachingClassPath");
+        Constructor<?> constructor = clazz.getDeclaredConstructor(URL[].class);
+        URL[] fullClasspath =
+            Stream.concat(Arrays.stream(urlClassLoader.getURLs()), Arrays.stream(classpath))
+                .toArray(URL[]::new);
+        Object replacementUcp = constructor.newInstance(new Object[] {fullClasspath});
+        ucp.set(urlClassLoader, replacementUcp);
+      } catch (IllegalAccessException
+          | NoSuchFieldException
+          | ClassNotFoundException
+          | NoSuchMethodException
+          | InstantiationException
+          | InvocationTargetException e) {
         throw new RuntimeException(
             String.format(
                 "Couldn't add classpath URLs to (URLClassLoader) ClassLoader.getSystemClassLoader() on java version %d",

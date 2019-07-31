@@ -354,6 +354,7 @@
       <include name="com/facebook/buck/util/concurrent/MoreExecutors.java" />
       <include name="com/facebook/buck/jvm/java/runner/**" />
       <include name="com/facebook/buck/jvm/java/version/JavaVersion.java" />
+      <include name="com/facebook/buck/jvm/java/runner/java8/CachingClassPath.java" />
       <compilerarg value="-Xlint:rawtypes" />
       <compilerarg value="-Xlint:unchecked" />
       <compilerarg value="-Werror" />
@@ -596,7 +597,7 @@
           <exclude name="com/facebook/buck/testrunner/**" />
 
           <!-- Conditional compilation so we can simultaneously build against Java 8 and 11. -->
-          <exclude name="com/facebook/buck/jvm/java/abi/java8/**" if="jdk11_or_higher"/>
+          <exclude name="com/facebook/buck/**/java8/**" if="jdk11_or_higher"/>
           <exclude name="com/facebook/buck/jvm/java/abi/java11/**" unless="jdk11_or_higher"/>
         </patternset>
       </javac-params>
