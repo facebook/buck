@@ -26,7 +26,6 @@ import pkg_resources
 
 ALLOWED_ENTRIES = """
 com/facebook/buck/core/util/log/appendablelogrecord/AppendableLogRecord.class
-com/facebook/buck/jvm/java/runner/java8/CachingClassPath.class
 com/facebook/buck/jvm/java/runner/FileClassPathRunner.class
 com/facebook/buck/jvm/java/version/JavaVersion.class
 com/facebook/buck/test/result/type/ResultType.class
