@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.remoteexecution.grpc;
 
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
@@ -22,6 +23,7 @@ import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.util.timing.DefaultClock;
 import io.grpc.BindableService;
@@ -60,7 +62,11 @@ public class TestRemoteExecutionClients implements RemoteExecutionClients {
             channel,
             100,
             MetadataProviderFactory.emptyMetadataProvider(),
-            eventBus);
+            eventBus,
+            FakeBuckConfig.builder()
+                .build()
+                .getView(RemoteExecutionConfig.class)
+                .getStrategyConfig());
   }
 
   @Override

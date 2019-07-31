@@ -27,6 +27,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.util.function.ThrowingConsumer;
@@ -69,7 +70,8 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
       ManagedChannel casChannel,
       int casDeadline,
       MetadataProvider metadataProvider,
-      BuckEventBus buckEventBus) {
+      BuckEventBus buckEventBus,
+      RemoteExecutionStrategyConfig strategyConfig) {
     this.executionEngineChannel = executionEngineChannel;
     this.casChannel = casChannel;
     this.metadataProvider = metadataProvider;
@@ -82,7 +84,8 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
             casDeadline,
             instanceName,
             PROTOCOL,
-            buckEventBus);
+            buckEventBus,
+            strategyConfig);
     ExecutionStub executionStub = ExecutionGrpc.newStub(executionEngineChannel);
     this.executionService =
         new GrpcRemoteExecutionServiceClient(
@@ -183,7 +186,8 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
       int casDeadline,
       String instanceName,
       Protocol protocol,
-      BuckEventBus buckEventBus) {
+      BuckEventBus buckEventBus,
+      RemoteExecutionStrategyConfig strategyConfig) {
     return new GrpcContentAddressableStorageClient(
         storageStub,
         byteStreamStub,
@@ -191,6 +195,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
         instanceName,
         protocol,
         buckEventBus,
-        metadataProvider.get());
+        metadataProvider.get(),
+        strategyConfig);
   }
 }

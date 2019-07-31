@@ -19,6 +19,7 @@ package com.facebook.buck.remoteexecution.grpc;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
 import com.facebook.buck.remoteexecution.grpc.retry.Backoff;
 import com.facebook.buck.remoteexecution.grpc.retry.RetryClientInterceptor;
 import com.facebook.buck.remoteexecution.grpc.retry.RetryPolicy;
@@ -52,8 +53,8 @@ public class GrpcExecutionFactory {
    * The in-process strategy starts up a grpc remote execution service in process and connects to it
    * directly.
    */
-  public static RemoteExecutionClients createInProcess(BuckEventBus buckEventBus)
-      throws IOException {
+  public static RemoteExecutionClients createInProcess(
+      BuckEventBus buckEventBus, RemoteExecutionStrategyConfig strategyConfig) throws IOException {
     NamedTemporaryDirectory workDir = new NamedTemporaryDirectory("__remote__");
     GrpcRemoteExecutionServiceServer remoteExecution =
         new GrpcRemoteExecutionServiceServer(
@@ -74,7 +75,8 @@ public class GrpcExecutionFactory {
         channel,
         CAS_DEADLINE_S,
         MetadataProviderFactory.emptyMetadataProvider(),
-        buckEventBus) {
+        buckEventBus,
+        strategyConfig) {
       @Override
       public void close() throws IOException {
         try (Closer closer = Closer.create()) {
@@ -103,6 +105,7 @@ public class GrpcExecutionFactory {
       Optional<Path> certPath,
       Optional<Path> keyPath,
       Optional<Path> caPath,
+      RemoteExecutionStrategyConfig strategyConfig,
       MetadataProvider metadataProvider,
       BuckEventBus buckEventBus)
       throws SSLException {
@@ -123,7 +126,13 @@ public class GrpcExecutionFactory {
     }
 
     return new GrpcRemoteExecutionClients(
-        "buck", executionEngineChannel, casChannel, casDeadline, metadataProvider, buckEventBus);
+        "buck",
+        executionEngineChannel,
+        casChannel,
+        casDeadline,
+        metadataProvider,
+        buckEventBus,
+        strategyConfig);
   }
 
   private static ManagedChannel createInsecureChannel(String host, int port) {

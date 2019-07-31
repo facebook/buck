@@ -59,12 +59,14 @@ public class RemoteExecutionClientsFactory {
             remoteExecutionConfig.getCertFile(),
             remoteExecutionConfig.getKeyFile(),
             remoteExecutionConfig.getCertificateAuthoritiesFile(),
+            remoteExecutionConfig.getStrategyConfig(),
             metadataProvider,
             eventBus);
       case DEBUG_GRPC_IN_PROCESS:
         return OutOfProcessIsolatedExecutionClients.create(new GrpcProtocol(), eventBus);
       case DEBUG_GRPC_LOCAL:
-        return GrpcExecutionFactory.createInProcess(eventBus);
+        return GrpcExecutionFactory.createInProcess(
+            eventBus, remoteExecutionConfig.getStrategyConfig());
     }
     throw new IllegalStateException(String.format("Something went wrong (%s).", type));
   }
