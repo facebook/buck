@@ -56,7 +56,6 @@ import java.util.Optional;
 import org.immutables.value.Value;
 import org.junit.Before;
 import org.junit.Test;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class TargetCompatibilityCheckerTest {
 
@@ -266,7 +265,7 @@ public class TargetCompatibilityCheckerTest {
     public ProviderInfoCollection ruleImpl(
         RuleAnalysisContext context, BuildTarget target, AbstractTestDescriptionArg args)
         throws ActionCreationException {
-      throw new NotImplementedException();
+      throw new UnsupportedOperationException();
     }
 
     @Override
