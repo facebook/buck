@@ -29,12 +29,6 @@ interface AbstractProjectGeneratorOptions {
     return false;
   }
 
-  /** Put targets into groups reflecting directory structure of their BUCK files */
-  @Value.Default
-  default boolean shouldCreateDirectoryStructure() {
-    return false;
-  }
-
   /** Create schemes for each project's contained build and test targets. */
   @Value.Default
   default boolean shouldGenerateProjectSchemes() {

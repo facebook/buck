@@ -35,7 +35,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
@@ -98,7 +97,6 @@ public class WorkspaceAndProjectGenerator {
   private final BuildTarget workspaceBuildTarget;
   private final FocusedModuleTargetMatcher focusModules;
   private final ProjectGeneratorOptions projectGeneratorOptions;
-  private final boolean combinedProject;
   private final boolean parallelizeBuild;
   private final CxxPlatform defaultCxxPlatform;
   private final ImmutableSet<Flavor> appleCxxFlavors;
@@ -129,7 +127,6 @@ public class WorkspaceAndProjectGenerator {
       XcodeWorkspaceConfigDescriptionArg workspaceArguments,
       BuildTarget workspaceBuildTarget,
       ProjectGeneratorOptions projectGeneratorOptions,
-      boolean combinedProject,
       FocusedModuleTargetMatcher focusModules,
       boolean parallelizeBuild,
       CxxPlatform defaultCxxPlatform,
@@ -152,7 +149,6 @@ public class WorkspaceAndProjectGenerator {
     this.workspaceArguments = workspaceArguments;
     this.workspaceBuildTarget = workspaceBuildTarget;
     this.projectGeneratorOptions = projectGeneratorOptions;
-    this.combinedProject = combinedProject;
     this.parallelizeBuild = parallelizeBuild;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.appleCxxFlavors = appleCxxFlavors;
@@ -211,20 +207,10 @@ public class WorkspaceAndProjectGenerator {
 
     String workspaceName =
         XcodeWorkspaceConfigDescription.getWorkspaceNameFromArg(workspaceArguments);
-    Path outputDirectory;
-    if (combinedProject) {
-      workspaceName += "-Combined";
-      outputDirectory =
-          BuildTargetPaths.getGenPath(rootCell.getFilesystem(), workspaceBuildTarget, "%s")
-              .getParent()
-              .resolve(workspaceName + ".xcodeproj");
-    } else {
-      outputDirectory = workspaceBuildTarget.getBasePath();
-    }
+    Path outputDirectory = workspaceBuildTarget.getBasePath();
 
     WorkspaceGenerator workspaceGenerator =
-        new WorkspaceGenerator(
-            rootCell.getFilesystem(), combinedProject ? "project" : workspaceName, outputDirectory);
+        new WorkspaceGenerator(rootCell.getFilesystem(), workspaceName, outputDirectory);
 
     ImmutableMap.Builder<String, XcodeWorkspaceConfigDescriptionArg> schemeConfigsBuilder =
         ImmutableMap.builder();
@@ -265,11 +251,9 @@ public class WorkspaceAndProjectGenerator {
     ImmutableSetMultimap.Builder<PBXProject, PBXTarget> generatedProjectToPbxTargetsBuilder =
         ImmutableSetMultimap.builder();
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
-    generateProjects(
+    generateProject(
         projectGenerators,
         listeningExecutorService,
-        workspaceName,
-        outputDirectory,
         workspaceGenerator,
         targetsInRequiredProjects,
         generatedProjectToPbxTargetsBuilder,
@@ -383,8 +367,7 @@ public class WorkspaceAndProjectGenerator {
 
   private void writeWorkspaceMetaData(Path outputDirectory, String workspaceName)
       throws IOException {
-    Path path =
-        combinedProject ? outputDirectory : outputDirectory.resolve(workspaceName + ".xcworkspace");
+    Path path = outputDirectory.resolve(workspaceName + ".xcworkspace");
     rootCell.getFilesystem().mkdirs(path);
     ImmutableList<String> requiredTargetsStrings =
         getRequiredBuildTargets().stream()
@@ -403,38 +386,6 @@ public class WorkspaceAndProjectGenerator {
     rootCell
         .getFilesystem()
         .writeContentsToPath(jsonString, path.resolve("buck-project.meta.json"));
-  }
-
-  private void generateProjects(
-      Map<Path, ProjectGenerator> projectGenerators,
-      ListeningExecutorService listeningExecutorService,
-      String workspaceName,
-      Path outputDirectory,
-      WorkspaceGenerator workspaceGenerator,
-      ImmutableSet<BuildTarget> targetsInRequiredProjects,
-      ImmutableSetMultimap.Builder<PBXProject, PBXTarget> generatedProjectToPbxTargetsBuilder,
-      ImmutableMap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder,
-      ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder)
-      throws IOException, InterruptedException {
-    if (combinedProject) {
-      generateCombinedProject(
-          workspaceName,
-          outputDirectory,
-          workspaceGenerator,
-          targetsInRequiredProjects,
-          generatedProjectToPbxTargetsBuilder,
-          buildTargetToPbxTargetMapBuilder,
-          targetToProjectPathMapBuilder);
-    } else {
-      generateProject(
-          projectGenerators,
-          listeningExecutorService,
-          workspaceGenerator,
-          targetsInRequiredProjects,
-          generatedProjectToPbxTargetsBuilder,
-          buildTargetToPbxTargetMapBuilder,
-          targetToProjectPathMapBuilder);
-    }
   }
 
   private void generateProject(
@@ -622,62 +573,6 @@ public class WorkspaceAndProjectGenerator {
         generator.getFilesToCopyInXcode(),
         buildTargetToGeneratedTargetMap,
         generatedProjectToGeneratedTargets);
-  }
-
-  private void generateCombinedProject(
-      String workspaceName,
-      Path outputDirectory,
-      WorkspaceGenerator workspaceGenerator,
-      ImmutableSet<BuildTarget> targetsInRequiredProjects,
-      ImmutableSetMultimap.Builder<PBXProject, PBXTarget> generatedProjectToPbxTargetsBuilder,
-      ImmutableMap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder,
-      ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder)
-      throws IOException {
-    LOG.debug("Generating a combined project");
-    ProjectGenerator generator =
-        new ProjectGenerator(
-            xcodeDescriptions,
-            projectGraph,
-            dependenciesCache,
-            projGenerationStateCache,
-            targetsInRequiredProjects,
-            rootCell,
-            outputDirectory.getParent(),
-            workspaceName,
-            buildFileName,
-            projectGeneratorOptions,
-            ruleKeyConfiguration,
-            true,
-            workspaceArguments.getSrcTarget(),
-            targetsInRequiredProjects,
-            focusModules,
-            defaultCxxPlatform,
-            appleCxxFlavors,
-            graphBuilderForNode,
-            buckEventBus,
-            halideBuckConfig,
-            cxxBuckConfig,
-            appleConfig,
-            swiftBuckConfig,
-            sharedLibraryToBundle);
-    combinedProjectGenerator = Optional.of(generator);
-    generator.createXcodeProjects();
-
-    GenerationResult result =
-        GenerationResult.of(
-            generator.getProjectPath(),
-            generator.isProjectGenerated(),
-            generator.getRequiredBuildTargets(),
-            generator.getXcconfigPaths(),
-            generator.getFilesToCopyInXcode(),
-            generator.getBuildTargetToGeneratedTargetMap(),
-            generator.getGeneratedProjectToGeneratedTargets());
-    workspaceGenerator.addFilePath(result.getProjectPath(), Optional.empty());
-    processGenerationResult(
-        generatedProjectToPbxTargetsBuilder,
-        buildTargetToPbxTargetMapBuilder,
-        targetToProjectPathMapBuilder,
-        result);
   }
 
   private void buildWorkspaceSchemes(
@@ -1207,10 +1102,7 @@ public class WorkspaceAndProjectGenerator {
         remoteRunnablePath = Optional.empty();
       }
 
-      Path schemeOutputDirectory =
-          combinedProject
-              ? outputDirectory
-              : outputDirectory.resolve(workspaceName + ".xcworkspace");
+      Path schemeOutputDirectory = outputDirectory.resolve(workspaceName + ".xcworkspace");
 
       SchemeGenerator schemeGenerator =
           buildSchemeGenerator(

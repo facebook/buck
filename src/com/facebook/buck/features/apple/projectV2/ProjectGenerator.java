@@ -1408,11 +1408,6 @@ public class ProjectGenerator {
 
       mutator.setBridgingHeader(arg.getBridgingHeader());
 
-      if (options.shouldCreateDirectoryStructure() && isFocusedOnTarget) {
-        mutator.setTargetGroupPath(
-            RichStream.from(buildTarget.getBasePath()).map(Object::toString).toImmutableList());
-      }
-
       if (!recursiveAssetCatalogs.isEmpty() && isFocusedOnTarget) {
         mutator.setRecursiveAssetCatalogs(recursiveAssetCatalogs);
       }

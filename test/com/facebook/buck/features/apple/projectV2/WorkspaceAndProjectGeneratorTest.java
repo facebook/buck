@@ -25,7 +25,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleBinaryBuilder;
@@ -259,7 +258,6 @@ public class WorkspaceAndProjectGeneratorTest {
                 .setShouldIncludeTests(true)
                 .setShouldIncludeDependenciesTests(true)
                 .build(),
-            false /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
@@ -305,61 +303,6 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void combinedProjectShouldDiscoverDependenciesAndTests()
-      throws IOException, InterruptedException {
-    WorkspaceAndProjectGenerator generator =
-        new WorkspaceAndProjectGenerator(
-            xcodeDescriptions,
-            rootCell,
-            targetGraph,
-            workspaceNode.getConstructorArg(),
-            workspaceNode.getBuildTarget(),
-            ProjectGeneratorOptions.builder()
-                .setShouldIncludeTests(true)
-                .setShouldIncludeDependenciesTests(true)
-                .build(),
-            true /* combinedProject */,
-            FocusedModuleTargetMatcher.noFocus(),
-            false /* parallelizeBuild */,
-            DEFAULT_PLATFORM,
-            ImmutableSet.of(),
-            "BUCK",
-            getActionGraphBuilderForNodeFunction(targetGraph),
-            getFakeBuckEventBus(),
-            TestRuleKeyConfigurationFactory.create(),
-            halideBuckConfig,
-            cxxBuckConfig,
-            appleConfig,
-            swiftBuckConfig,
-            Optional.empty());
-    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(
-        projectGenerators, MoreExecutors.newDirectExecutorService());
-
-    assertTrue(
-        "Combined project generation should not populate the project generators map",
-        projectGenerators.isEmpty());
-
-    Optional<ProjectGenerator> projectGeneratorOptional = generator.getCombinedProjectGenerator();
-    assertTrue(
-        "Combined project generator should be present", projectGeneratorOptional.isPresent());
-    ProjectGenerator projectGenerator = projectGeneratorOptional.get();
-
-    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        projectGenerator.getGeneratedProject(), "//foo:bin");
-    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        projectGenerator.getGeneratedProject(), "//foo:lib");
-    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        projectGenerator.getGeneratedProject(), "//foo:bin-xctest");
-    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        projectGenerator.getGeneratedProject(), "//foo:lib-xctest");
-    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        projectGenerator.getGeneratedProject(), "//bar:libbar");
-    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        projectGenerator.getGeneratedProject(), "//baz:lib");
-  }
-
-  @Test
   public void workspaceAndProjectsWithoutTests() throws IOException, InterruptedException {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
@@ -369,7 +312,6 @@ public class WorkspaceAndProjectGeneratorTest {
             workspaceNode.getConstructorArg(),
             workspaceNode.getBuildTarget(),
             ProjectGeneratorOptions.builder().build(),
-            false /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
@@ -422,7 +364,6 @@ public class WorkspaceAndProjectGeneratorTest {
                 .setShouldIncludeTests(true)
                 .setShouldGenerateProjectSchemes(true)
                 .build(),
-            false /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
@@ -557,58 +498,6 @@ public class WorkspaceAndProjectGeneratorTest {
             workspaceNode.getConstructorArg(),
             workspaceNode.getBuildTarget(),
             ProjectGeneratorOptions.builder().build(),
-            false /* combinedProject */,
-            FocusedModuleTargetMatcher.noFocus(),
-            false /* parallelizeBuild */,
-            DEFAULT_PLATFORM,
-            ImmutableSet.of(),
-            "BUCK",
-            getActionGraphBuilderForNodeFunction(targetGraph),
-            getFakeBuckEventBus(),
-            TestRuleKeyConfigurationFactory.create(),
-            halideBuckConfig,
-            cxxBuckConfig,
-            appleConfig,
-            swiftBuckConfig,
-            Optional.empty());
-    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(
-        projectGenerators, MoreExecutors.newDirectExecutorService());
-
-    assertEquals(generator.getRequiredBuildTargets(), ImmutableSet.of(genruleTarget));
-  }
-
-  @Test
-  public void requiredBuildTargetsForCombinedProject() throws IOException, InterruptedException {
-    BuildTarget genruleTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "gen");
-    TargetNode<GenruleDescriptionArg> genrule =
-        GenruleBuilder.newGenruleBuilder(genruleTarget).setOut("source.m").build();
-
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "lib");
-    TargetNode<AppleLibraryDescriptionArg> library =
-        AppleLibraryBuilder.createBuilder(libraryTarget)
-            .setSrcs(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(DefaultBuildTargetSourcePath.of(genruleTarget))))
-            .build();
-
-    TargetNode<XcodeWorkspaceConfigDescriptionArg> workspaceNode =
-        XcodeWorkspaceConfigBuilder.createBuilder(
-                BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "workspace"))
-            .setSrcTarget(Optional.of(libraryTarget))
-            .build();
-
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(genrule, library, workspaceNode);
-
-    WorkspaceAndProjectGenerator generator =
-        new WorkspaceAndProjectGenerator(
-            xcodeDescriptions,
-            rootCell,
-            targetGraph,
-            workspaceNode.getConstructorArg(),
-            workspaceNode.getBuildTarget(),
-            ProjectGeneratorOptions.builder().build(),
-            true /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
@@ -763,7 +652,6 @@ public class WorkspaceAndProjectGeneratorTest {
                 .setShouldIncludeTests(true)
                 .setShouldIncludeDependenciesTests(true)
                 .build(),
-            false /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
@@ -887,7 +775,6 @@ public class WorkspaceAndProjectGeneratorTest {
                 .setShouldIncludeTests(true)
                 .setShouldIncludeDependenciesTests(true)
                 .build(),
-            false /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
@@ -992,7 +879,6 @@ public class WorkspaceAndProjectGeneratorTest {
                 .setShouldIncludeTests(true)
                 .setShouldIncludeDependenciesTests(true)
                 .build(),
-            false /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             true /* parallelizeBuild */,
             DEFAULT_PLATFORM,
@@ -1075,7 +961,6 @@ public class WorkspaceAndProjectGeneratorTest {
                 .setShouldIncludeTests(true)
                 .setShouldIncludeDependenciesTests(true)
                 .build(),
-            false /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             true /* parallelizeBuild */,
             DEFAULT_PLATFORM,
@@ -1135,7 +1020,6 @@ public class WorkspaceAndProjectGeneratorTest {
                 .setShouldIncludeTests(true)
                 .setShouldIncludeDependenciesTests(true)
                 .build(),
-            false /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             true /* parallelizeBuild */,
             DEFAULT_PLATFORM,
@@ -1200,7 +1084,6 @@ public class WorkspaceAndProjectGeneratorTest {
                 .setShouldIncludeTests(true)
                 .setShouldIncludeDependenciesTests(true)
                 .build(),
-            false /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             true /* parallelizeBuild */,
             DEFAULT_PLATFORM,

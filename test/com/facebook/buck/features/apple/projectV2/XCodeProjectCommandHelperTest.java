@@ -513,12 +513,10 @@ public class XCodeProjectCommandHelperTest {
             .setShouldGenerateHeaderSymlinkTreesOnly(false)
             .setShouldGenerateMissingUmbrellaHeader(false)
             .setShouldUseShortNamesForTargets(true)
-            .setShouldCreateDirectoryStructure(false)
             .build(),
         ImmutableSet.of(),
         FocusedModuleTargetMatcher.noFocus(),
         projectGenerators,
-        false,
         new NullPathOutputPresenter(),
         Optional.empty());
     return projectGenerators;

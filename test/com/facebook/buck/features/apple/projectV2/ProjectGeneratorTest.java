@@ -700,53 +700,6 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testCreateDirectoryStructure() throws IOException {
-    BuildTarget buildTarget1 = BuildTargetFactory.newInstance(rootPath, "//foo/bar", "target1");
-    TargetNode<?> node1 = AppleLibraryBuilder.createBuilder(buildTarget1).build();
-
-    BuildTarget buildTarget2 = BuildTargetFactory.newInstance(rootPath, "//foo/foo", "target2");
-    TargetNode<?> node2 = AppleLibraryBuilder.createBuilder(buildTarget2).build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(node1, node2),
-            ProjectGeneratorOptions.builder()
-                .setShouldCreateDirectoryStructure(true)
-                .setShouldUseShortNamesForTargets(true)
-                .build());
-
-    projectGenerator.createXcodeProjects();
-
-    PBXProject project = projectGenerator.getGeneratedProject();
-    PBXGroup mainGroup = project.getMainGroup();
-
-    PBXGroup groupFoo = null;
-    for (PBXReference reference : mainGroup.getChildren()) {
-      if (reference instanceof PBXGroup && "foo".equals(reference.getName())) {
-        groupFoo = (PBXGroup) reference;
-      }
-    }
-    assertNotNull("Project should have a group called foo", groupFoo);
-
-    assertEquals("foo", groupFoo.getName());
-    assertThat(groupFoo.getChildren(), hasSize(2));
-
-    PBXGroup groupFooBar = (PBXGroup) Iterables.get(groupFoo.getChildren(), 0);
-    assertEquals("bar", groupFooBar.getName());
-    assertThat(groupFooBar.getChildren(), hasSize(1));
-
-    PBXGroup groupFooFoo = (PBXGroup) Iterables.get(groupFoo.getChildren(), 1);
-    assertEquals("foo", groupFooFoo.getName());
-    assertThat(groupFooFoo.getChildren(), hasSize(1));
-
-    PBXGroup groupFooBarTarget1 = (PBXGroup) Iterables.get(groupFooBar.getChildren(), 0);
-    assertEquals("target1", groupFooBarTarget1.getName());
-
-    PBXGroup groupFooFooTarget2 = (PBXGroup) Iterables.get(groupFooFoo.getChildren(), 0);
-    assertEquals("target2", groupFooFooTarget2.getName());
-  }
-
-  @Test
   public void testModularLibraryInterfaceMapInclusionAsDependency() throws IOException {
     BuildTarget frameworkBundleTarget =
         BuildTargetFactory.newInstance(rootPath, "//foo", "framework");

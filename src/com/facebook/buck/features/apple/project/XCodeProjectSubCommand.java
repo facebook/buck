@@ -176,7 +176,6 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
                   projectGeneratorParameters.isWithoutTests(),
                   projectGeneratorParameters.isWithoutDependenciesTests(),
                   modulesToFocusOn,
-                  combinedProject,
                   getProjectSchemes(params.getBuckConfig()),
                   projectGeneratorParameters.isDryRun(),
                   getReadOnly(params.getBuckConfig()),

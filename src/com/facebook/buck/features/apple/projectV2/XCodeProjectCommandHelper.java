@@ -139,7 +139,6 @@ public class XCodeProjectCommandHelper {
   private final boolean withoutTests;
   private final boolean withoutDependenciesTests;
   private final String modulesToFocusOn;
-  private final boolean combinedProject;
   private final boolean createProjectSchemes;
   private final boolean dryRun;
   private final boolean readOnly;
@@ -175,7 +174,6 @@ public class XCodeProjectCommandHelper {
       boolean withoutTests,
       boolean withoutDependenciesTests,
       String modulesToFocusOn,
-      boolean combinedProject,
       boolean createProjectSchemes,
       boolean dryRun,
       boolean readOnly,
@@ -206,7 +204,6 @@ public class XCodeProjectCommandHelper {
     this.withoutTests = withoutTests;
     this.withoutDependenciesTests = withoutDependenciesTests;
     this.modulesToFocusOn = modulesToFocusOn;
-    this.combinedProject = combinedProject;
     this.createProjectSchemes = createProjectSchemes;
     this.dryRun = dryRun;
     this.readOnly = readOnly;
@@ -376,7 +373,6 @@ public class XCodeProjectCommandHelper {
             .setShouldGenerateMissingUmbrellaHeader(
                 appleConfig.shouldGenerateMissingUmbrellaHeaders())
             .setShouldUseShortNamesForTargets(true)
-            .setShouldCreateDirectoryStructure(combinedProject)
             .setShouldGenerateProjectSchemes(createProjectSchemes)
             .build();
 
@@ -395,7 +391,6 @@ public class XCodeProjectCommandHelper {
             appleCxxFlavors,
             getFocusModules(),
             new HashMap<>(),
-            combinedProject,
             outputPresenter,
             sharedLibraryToBundle);
     if (!requiredBuildTargets.isEmpty()) {
@@ -446,7 +441,6 @@ public class XCodeProjectCommandHelper {
       ImmutableSet<Flavor> appleCxxFlavors,
       FocusedModuleTargetMatcher focusModules,
       Map<Path, ProjectGenerator> projectGenerators,
-      boolean combinedProject,
       PathOutputPresenter presenter,
       Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle)
       throws IOException, InterruptedException {
@@ -495,7 +489,6 @@ public class XCodeProjectCommandHelper {
               workspaceArgs,
               inputTarget,
               options,
-              combinedProject,
               focusModules,
               !appleConfig.getXcodeDisableParallelizeBuild(),
               defaultCxxPlatform,
