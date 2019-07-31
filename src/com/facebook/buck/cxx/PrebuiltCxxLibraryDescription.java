@@ -247,6 +247,7 @@ public class PrebuiltCxxLibraryDescription
         builtSharedLibraryPath,
         ImmutableList.of(),
         Linker.LinkableDepType.SHARED,
+        Optional.empty(),
         CxxLinkOptions.of(),
         FluentIterable.from(params.getBuildDeps())
             .filter(NativeLinkableGroup.class)

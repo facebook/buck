@@ -36,6 +36,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 /** Utility functions for interacting with {@link NativeLinkable} objects. */
@@ -99,13 +100,30 @@ public class NativeLinkables {
       ActionGraphBuilder graphBuilder,
       Iterable<? extends NativeLinkable> inputs,
       Linker.LinkableDepType linkStyle,
+      Predicate<? super NativeLinkable> traverse,
+      Optional<LinkableListFilter> filter) {
+    ImmutableList<? extends NativeLinkable> allLinkables =
+        getTopoSortedNativeLinkables(
+            inputs,
+            nativeLinkable ->
+                FluentIterable.from(getDepsForLink(graphBuilder, nativeLinkable, linkStyle))
+                    .filter(traverse::test)
+                    .iterator());
+
+    if (filter.isPresent()) {
+      return filter.get().process(allLinkables, linkStyle);
+    }
+
+    return allLinkables;
+  }
+
+  /** Extract from the dependency graph all the libraries which must be considered for linking. */
+  public static ImmutableList<? extends NativeLinkable> getNativeLinkables(
+      ActionGraphBuilder graphBuilder,
+      Iterable<? extends NativeLinkable> inputs,
+      Linker.LinkableDepType linkStyle,
       Predicate<? super NativeLinkable> traverse) {
-    return getTopoSortedNativeLinkables(
-        inputs,
-        nativeLinkable ->
-            FluentIterable.from(getDepsForLink(graphBuilder, nativeLinkable, linkStyle))
-                .filter(traverse::test)
-                .iterator());
+    return getNativeLinkables(graphBuilder, inputs, linkStyle, traverse, Optional.empty());
   }
 
   /** Extract from the dependency graph all the libraries which must be considered for linking. */
@@ -114,6 +132,15 @@ public class NativeLinkables {
       Iterable<? extends NativeLinkable> inputs,
       Linker.LinkableDepType linkStyle) {
     return getNativeLinkables(graphBuilder, inputs, linkStyle, x -> true);
+  }
+
+  /** Extract from the dependency graph all the libraries which must be considered for linking. */
+  public static ImmutableList<? extends NativeLinkable> getNativeLinkables(
+      ActionGraphBuilder graphBuilder,
+      Iterable<? extends NativeLinkable> inputs,
+      Linker.LinkableDepType linkStyle,
+      Optional<LinkableListFilter> filter) {
+    return getNativeLinkables(graphBuilder, inputs, linkStyle, x -> true, filter);
   }
 
   /**

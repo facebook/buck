@@ -390,6 +390,7 @@ public class SwiftLibraryDescription
             sharedLibOutput,
             ImmutableList.of(),
             Linker.LinkableDepType.SHARED,
+            Optional.empty(),
             CxxLinkOptions.of(),
             RichStream.from(params.getBuildDeps())
                 .filter(NativeLinkableGroup.class)

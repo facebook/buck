@@ -381,6 +381,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
             Optional.empty(),
             Optional.empty(),
             args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC_PIC),
+            Optional.empty(),
             CxxLinkOptions.of(),
             args.getPreprocessorFlags(),
             args.getPlatformPreprocessorFlags(),

@@ -54,6 +54,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.CxxRuntimeType;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
+import com.facebook.buck.cxx.toolchain.nativelink.LinkableListFilter;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -798,6 +799,7 @@ public class CxxDescriptionEnhancer {
                         thinIndexTarget,
                         indexOutput,
                         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+                        Optional.empty(),
                         RichStream.from(deps)
                             .filter(NativeLinkableGroup.class)
                             .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
@@ -906,6 +908,7 @@ public class CxxDescriptionEnhancer {
                         linkOutput,
                         args.getLinkerExtraOutputs(),
                         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+                        Optional.empty(),
                         CxxLinkOptions.of(
                             args.getThinLto(),
                             args.getFatLto()
@@ -1018,6 +1021,7 @@ public class CxxDescriptionEnhancer {
         stripStyle,
         flavoredLinkerMapMode,
         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+        Optional.empty(),
         linkOptions,
         args.getPreprocessorFlags(),
         args.getPlatformPreprocessorFlags(),
@@ -1315,6 +1319,7 @@ public class CxxDescriptionEnhancer {
       Optional<StripStyle> stripStyle,
       Optional<LinkerMapMode> flavoredLinkerMapMode,
       LinkableDepType linkStyle,
+      Optional<LinkableListFilter> linkableListFilter,
       CxxLinkOptions linkOptions,
       ImmutableList<StringWithMacros> preprocessorFlags,
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformPreprocessorFlags,
@@ -1416,6 +1421,7 @@ public class CxxDescriptionEnhancer {
                         linkOutput,
                         linkerExtraOutputs,
                         linkStyle,
+                        linkableListFilter,
                         linkOptions,
                         RichStream.from(deps)
                             .filter(NativeLinkableGroup.class)

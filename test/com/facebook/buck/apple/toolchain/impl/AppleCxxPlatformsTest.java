@@ -903,6 +903,7 @@ public class AppleCxxPlatformsTest {
               projectFilesystem.getPath("output"),
               ImmutableList.of(),
               Linker.LinkableDepType.SHARED,
+              Optional.empty(),
               CxxLinkOptions.of(),
               ImmutableList.of(),
               Optional.empty(),

@@ -231,6 +231,7 @@ public class CxxLuaExtensionDescription
         extensionPath,
         args.getLinkerExtraOutputs(),
         Linker.LinkableDepType.SHARED,
+        Optional.empty(),
         CxxLinkOptions.of(),
         RichStream.from(args.getCxxDeps().get(graphBuilder, cxxPlatform))
             .filter(NativeLinkableGroup.class)

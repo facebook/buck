@@ -991,6 +991,7 @@ class NativeLibraryMergeEnhancer {
                       ImmutableList.of(),
                       // Android Binaries will use share deps by default.
                       Linker.LinkableDepType.SHARED,
+                      Optional.empty(),
                       CxxLinkOptions.of(),
                       Iterables.concat(
                           getNativeLinkableDeps(graphBuilder),

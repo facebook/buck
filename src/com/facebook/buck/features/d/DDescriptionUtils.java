@@ -148,6 +148,7 @@ abstract class DDescriptionUtils {
             projectFilesystem, buildTarget, "%s/" + buildTarget.getShortName()),
         ImmutableList.of(),
         Linker.LinkableDepType.STATIC,
+        Optional.empty(),
         CxxLinkOptions.of(),
         FluentIterable.from(params.getBuildDeps())
             .filter(NativeLinkableGroup.class)

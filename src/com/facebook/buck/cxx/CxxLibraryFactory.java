@@ -619,6 +619,7 @@ public class CxxLibraryFactory {
         sharedLibraryPath,
         args.getLinkerExtraOutputs(),
         linkableDepType,
+        Optional.empty(),
         linkOptions,
         allNativeLinkables,
         cxxRuntimeType,

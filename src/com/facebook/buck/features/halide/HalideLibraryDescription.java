@@ -159,6 +159,7 @@ public class HalideLibraryDescription
             flavoredStripStyle,
             flavoredLinkerMapMode,
             Linker.LinkableDepType.STATIC,
+            Optional.empty(),
             CxxLinkOptions.of(),
             ImmutableList.of(),
             PatternMatchedCollection.of(),

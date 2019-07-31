@@ -261,6 +261,7 @@ abstract class AbstractNativeExecutableStarter implements Starter {
                     getOutput(),
                     ImmutableList.of(),
                     Linker.LinkableDepType.SHARED,
+                    Optional.empty(),
                     CxxLinkOptions.of(),
                     Iterables.transform(
                         getNativeStarterDeps(),

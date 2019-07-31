@@ -447,6 +447,7 @@ public class CxxPrecompiledHeaderRuleTest {
             Paths.get("tmp/bin.prog"),
             ImmutableList.of(),
             Linker.LinkableDepType.STATIC,
+            Optional.empty(),
             CxxLinkOptions.of(),
             Iterables.transform(
                 nativeLinkableGroupDeps,

@@ -328,6 +328,7 @@ public class CxxPythonExtensionDescription
         extensionPath,
         args.getLinkerExtraOutputs(),
         Linker.LinkableDepType.SHARED,
+        Optional.empty(),
         CxxLinkOptions.of(),
         RichStream.from(deps)
             .filter(NativeLinkableGroup.class)
