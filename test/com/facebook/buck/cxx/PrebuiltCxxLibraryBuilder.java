@@ -159,6 +159,12 @@ public class PrebuiltCxxLibraryBuilder
     return this;
   }
 
+  public PrebuiltCxxLibraryBuilder setExportedPlatformDeps(
+      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> exportedPlatformDeps) {
+    getArgForPopulating().setExportedPlatformDeps(exportedPlatformDeps);
+    return this;
+  }
+
   public PrebuiltCxxLibraryBuilder setSupportedPlatformsRegex(Pattern supportedPlatformsRegex) {
     getArgForPopulating().setSupportedPlatformsRegex(Optional.of(supportedPlatformsRegex));
     return this;

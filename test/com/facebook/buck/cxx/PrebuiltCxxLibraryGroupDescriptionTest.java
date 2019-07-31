@@ -35,10 +35,12 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -171,6 +173,45 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                     .getNativeLinkableExportedDeps(graphBuilder))
             .transform(d -> d.getBuildTarget()),
         Matchers.contains(dep.getBuildTarget()));
+  }
+
+  @Test
+  public void exportedPlatformDeps() {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    BuildTarget target = BuildTargetFactory.newInstance("//:lib");
+    CxxLibraryGroup dep =
+        (CxxLibraryGroup)
+            new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep")).build(graphBuilder);
+    CxxLibraryGroup otherDep =
+        (CxxLibraryGroup)
+            new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:other_dep"))
+                .build(graphBuilder);
+    NativeLinkableGroup lib =
+        (NativeLinkableGroup)
+            new PrebuiltCxxLibraryGroupBuilder(target)
+                .setExportedPlatformDeps(
+                    PatternMatchedCollection.<ImmutableSortedSet<BuildTarget>>builder()
+                        .add(
+                            Pattern.compile(
+                                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString()),
+                            ImmutableSortedSet.of(dep.getBuildTarget()))
+                        .add(
+                            Pattern.compile("other"),
+                            ImmutableSortedSet.of(otherDep.getBuildTarget()))
+                        .build())
+                .build(graphBuilder);
+    assertThat(
+        FluentIterable.from(
+                lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+                    .getNativeLinkableExportedDeps(graphBuilder))
+            .transform(d -> d.getBuildTarget()),
+        Matchers.contains(dep.getBuildTarget()));
+    assertThat(
+        FluentIterable.from(
+                lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+                    .getNativeLinkableExportedDeps(graphBuilder))
+            .transform(d -> d.getBuildTarget()),
+        Matchers.everyItem(Matchers.not(Matchers.in(Arrays.asList((otherDep.getBuildTarget()))))));
   }
 
   @Test

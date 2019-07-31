@@ -48,6 +48,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.FluentIterable;
@@ -188,6 +189,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
         LegacyNativeLinkableGroup.getNativeLinkableCache(this);
 
     private final PrebuiltCxxLibraryGroupDescriptionArg args;
+    private final CxxDeps allExportedDeps;
 
     public CustomPrebuiltCxxLibrary(
         BuildTarget buildTarget,
@@ -196,6 +198,11 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
         PrebuiltCxxLibraryGroupDescriptionArg args) {
       super(buildTarget, projectFilesystem, params);
       this.args = args;
+      this.allExportedDeps =
+          CxxDeps.builder()
+              .addDeps(args.getExportedDeps())
+              .addPlatformDeps(args.getExportedPlatformDeps())
+              .build();
     }
 
     @Override
@@ -356,7 +363,9 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       if (!isPlatformSupported(cxxPlatform)) {
         return ImmutableList.of();
       }
-      return getNativeLinkableExportedDeps(graphBuilder);
+      return RichStream.from(allExportedDeps.get(graphBuilder, cxxPlatform))
+          .filter(NativeLinkableGroup.class)
+          .toImmutableList();
     }
 
     @Override
@@ -407,6 +416,11 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
 
     @Value.NaturalOrder
     ImmutableSortedSet<BuildTarget> getExportedDeps();
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getExportedPlatformDeps() {
+      return PatternMatchedCollection.of();
+    }
 
     Optional<Pattern> getSupportedPlatformsRegex();
   }

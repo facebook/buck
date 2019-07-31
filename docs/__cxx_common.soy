@@ -365,7 +365,7 @@
   {param default : '[]' /}
   {param desc}
   Flags to add to the linker command line whenever the output from this
-  rule is used in a link operation, such as linked into an executable 
+  rule is used in a link operation, such as linked into an executable
   or a shared library.
   {/param}
 {/call}
@@ -378,11 +378,11 @@
   {param default : '[]' /}
   {param desc}
   Platform-specific linker flags. This argument is specified as a list of pairs where the first
-  element in each pair is an un-anchored regex against which the platform name is matched. 
+  element in each pair is an un-anchored regex against which the platform name is matched.
   The regex should use <code>java.util.regex.Pattern</code> syntax.
   The second element in each pair is a list of linker flags. If the regex matches the
-  platform, these flags are added to the linker command line when the 
-  output from this rule is used in a link operation. 
+  platform, these flags are added to the linker command line when the
+  output from this rule is used in a link operation.
   {/param}
 {/call}
 {/template}
@@ -393,9 +393,9 @@
   {param name : 'exported_linker_flags' /}
   {param default : '[]' /}
   {param desc}
-  Flags to add to the linker command line when the output from this 
+  Flags to add to the linker command line when the output from this
   rule, or the output from any rule that transitively depends on this
-  rule, is used in a link operation. 
+  rule, is used in a link operation.
   {/param}
 {/call}
 {/template}
@@ -406,11 +406,11 @@
   {param name : 'exported_post_linker_flags' /}
   {param default : '[]' /}
   {param desc}
-  Flags to add to the linker command line when the output from this 
+  Flags to add to the linker command line when the output from this
   rule, or the output from any rule that transitively depends on this
   rule, is used in a link operation&mdash;with the additional feature
-  that these flags are guaranteed to be placed <em>after</em> the compiled 
-  object (<code>.o</code>) files on the linker command line. 
+  that these flags are guaranteed to be placed <em>after</em> the compiled
+  object (<code>.o</code>) files on the linker command line.
   {/param}
 {/call}
 {/template}
@@ -421,15 +421,15 @@
   {param name : 'exported_platform_linker_flags' /}
   {param default : '[]' /}
   {param desc}
-  Platform-specific linker flags for this rule and for all rules that 
-  transitively depend on this rule. This argument is specified 
-  as a list of pairs where the first element in each pair is an un-anchored regex 
-  against which the platform name is matched. 
+  Platform-specific linker flags for this rule and for all rules that
+  transitively depend on this rule. This argument is specified
+  as a list of pairs where the first element in each pair is an un-anchored regex
+  against which the platform name is matched.
   The regex should use <code>java.util.regex.Pattern</code> syntax.
   The second element in each pair is a list of linker flags. If the regex matches the
-  platform, these flags are added to the linker command line when the output from 
+  platform, these flags are added to the linker command line when the output from
   this rule, or the output from any rule that transitively depends on
-  this rule, is used in a link operation. 
+  this rule, is used in a link operation.
   {/param}
 {/call}
 {/template}
@@ -440,11 +440,11 @@
   {param name : 'exported_post_platform_linker_flags' /}
   {param default : '[]' /}
   {param desc}
-  Platform-specific linker flags for this rule and for all 
-  rules that transitively depend on this rule&mdash;and that 
-  are guaranteed to be placed <em>after</em> the compiled object 
-  (<code>.o</code>) files on the linker command line. In other respects, 
-  the syntax and semantics of this argument are the same as 
+  Platform-specific linker flags for this rule and for all
+  rules that transitively depend on this rule&mdash;and that
+  are guaranteed to be placed <em>after</em> the compiled object
+  (<code>.o</code>) files on the linker command line. In other respects,
+  the syntax and semantics of this argument are the same as
   for the <code>exported_platform_linker_flags</code> argument.
   {/param}
 {/call}
@@ -519,6 +519,24 @@
       headers of the rules specified here are re-exported.
     </li>
   </ul>
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .exported_platform_deps_arg}
+{call buck.arg}
+  {param name : 'exported_platform_deps' /}
+  {param default: '[]' /}
+  {param desc}
+  Platform specific dependencies that will also appear to belong to any rules
+  that depend on this one.
+  These should be specified as a list of pairs where the first element is an
+  un-anchored regex (in java.util.regex.Pattern syntax) against which the
+  platform name is matched, and the second element is a list of external
+  dependencies (same format as <code>exported_deps</code>) that are exported
+  if the platform matches the regex.
+  See <code>exported_deps</code> for more information.
   {/param}
 {/call}
 {/template}

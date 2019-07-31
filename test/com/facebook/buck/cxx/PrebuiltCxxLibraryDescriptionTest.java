@@ -74,6 +74,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -653,6 +654,60 @@ public class PrebuiltCxxLibraryDescriptionTest {
         rule.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getNativeLinkableExportedDeps(graphBuilder),
         contains(dep.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)));
+  }
+
+  @Test
+  public void nativeLinkableExportedPlatformDeps() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    PrebuiltCxxLibraryBuilder depBuilder =
+        new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
+            .setStaticLib(FakeSourcePath.of(filesystem, "dep.a"));
+
+    PrebuiltCxxLibraryBuilder otherBuilder =
+        new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:other"))
+            .setStaticLib(FakeSourcePath.of(filesystem, "other.a"));
+
+    PrebuiltCxxLibraryBuilder ruleBuilder =
+        new PrebuiltCxxLibraryBuilder(BuildTargetFactory.newInstance("//:r"))
+            .setExportedPlatformDeps(
+                PatternMatchedCollection.<ImmutableSortedSet<BuildTarget>>builder()
+                    .add(
+                        Pattern.compile(CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString()),
+                        ImmutableSortedSet.of(depBuilder.getTarget()))
+                    .add(Pattern.compile("other"), ImmutableSortedSet.of(otherBuilder.getTarget()))
+                    .build())
+            .setStaticLib(FakeSourcePath.of(filesystem, "r.a"));
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            depBuilder.build(), otherBuilder.build(), ruleBuilder.build());
+
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    PrebuiltCxxLibrary dep =
+        (PrebuiltCxxLibrary) depBuilder.build(graphBuilder, filesystem, targetGraph);
+    PrebuiltCxxLibrary other =
+        (PrebuiltCxxLibrary) otherBuilder.build(graphBuilder, filesystem, targetGraph);
+    PrebuiltCxxLibrary rule =
+        (PrebuiltCxxLibrary) ruleBuilder.build(graphBuilder, filesystem, targetGraph);
+    assertThat(
+        ImmutableList.copyOf(
+            rule.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+                .getNativeLinkableDeps(graphBuilder)),
+        empty());
+    assertThat(
+        rule.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .getNativeLinkableExportedDeps(graphBuilder),
+        contains(dep.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)));
+
+    assertThat(
+        rule.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .getNativeLinkableExportedDeps(graphBuilder),
+        Matchers.everyItem(
+            Matchers.not(
+                Matchers.in(
+                    Arrays.asList(
+                        other.getNativeLinkable(
+                            CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder))))));
   }
 
   @Test

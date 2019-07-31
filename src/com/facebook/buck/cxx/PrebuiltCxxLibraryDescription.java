@@ -65,6 +65,7 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Preconditions;
@@ -473,6 +474,12 @@ public class PrebuiltCxxLibraryDescription
       private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
           new TransitiveCxxPreprocessorInputCache(this);
 
+      CxxDeps allExportedDeps =
+          CxxDeps.builder()
+              .addDeps(args.getExportedDeps())
+              .addPlatformDeps(args.getExportedPlatformDeps())
+              .build();
+
       private boolean hasHeaders(CxxPlatform cxxPlatform) {
         if (!args.getExportedHeaders().isEmpty()) {
           return true;
@@ -661,11 +668,10 @@ public class PrebuiltCxxLibraryDescription
                 .toList();
 
         ImmutableList<NativeLinkable> exportedDeps =
-            FluentIterable.from(args.getExportedDeps())
-                .transform(graphBuilder::getRule)
+            RichStream.from(allExportedDeps.get(graphBuilder, cxxPlatform))
                 .filter(NativeLinkableGroup.class)
-                .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
-                .toList();
+                .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+                .toImmutableList();
 
         ImmutableList<Arg> exportedLinkerFlags = getExportedLinkerFlags(cxxPlatform, graphBuilder);
         ImmutableList<Arg> exportedPostLinkerFlags = getExportedPostLinkerFlags(cxxPlatform);
@@ -1064,6 +1070,11 @@ public class PrebuiltCxxLibraryDescription
 
     @Value.NaturalOrder
     ImmutableSortedSet<BuildTarget> getExportedDeps();
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getExportedPlatformDeps() {
+      return PatternMatchedCollection.of();
+    }
 
     Optional<Pattern> getSupportedPlatformsRegex();
 

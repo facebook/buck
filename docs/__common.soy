@@ -423,7 +423,7 @@ docsearch({
 
 /**
  * @param? rendered_text  Optionally, specify the rendered text for the
- *                        link. If not specified, the rendered text is 
+ *                        link. If not specified, the rendered text is
  *                        "Key Concepts".
  */
 {template .key_concepts_link}
@@ -662,14 +662,14 @@ docsearch({
 /**
  * @param name            Specify the name of the function to link to.
  * @param? rendered_text  Optionally, specify the rendered text for the
- *                        link. If not specified, the rendered text is 
+ *                        link. If not specified, the rendered text is
  *                        the name of the function.
  *
  *   Examples
- *   
- *   {call buck.function_link}{param name: 'allow_unsafe_import' /}{/call} 
  *
- *   {call buck.function_link}{param name: 'allow_unsafe_import' /}{param rendered_text: 'a bad function' /}{/call} 
+ *   {call buck.function_link}{param name: 'allow_unsafe_import' /}{/call}
+ *
+ *   {call buck.function_link}{param name: 'allow_unsafe_import' /}{param rendered_text: 'a bad function' /}{/call}
  *
  */
 {template .function_link}
@@ -947,6 +947,23 @@ docsearch({
   using <code>$declared</code> are the provided deps of the target, and the results of the query
   are appended to the declared provided deps.
   {/param}
+{/call}
+{/template}
+
+/***/
+{template .platform_deps_arg}
+{call buck.arg}
+  {param name : 'platform_deps' /}
+  {param default : '[]' /}
+  {param desc}
+  Platform specific dependencies.
+  These should be specified as a list of pairs where the first element is an
+  un-anchored regex (in java.util.regex.Pattern syntax) against which the
+  platform name is matched, and the second element is a list of
+  dependencies (same format as <code>deps</code>) that are exported
+  if the platform matches the regex.
+  See <code>deps</code> for more information.
+ {/param}
 {/call}
 {/template}
 
