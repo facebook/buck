@@ -53,7 +53,8 @@ public final class NativeLinkableInfo implements NativeLinkable {
 
     ImmutableMap<String, SourcePath> getSharedLibraries(ActionGraphBuilder graphBuilder);
 
-    default boolean isPrebuiltSOForHaskellOmnibus() {
+    @SuppressWarnings("unused")
+    default boolean isPrebuiltSOForHaskellOmnibus(ActionGraphBuilder graphBuilder) {
       return false;
     }
   }
@@ -200,7 +201,7 @@ public final class NativeLinkableInfo implements NativeLinkable {
 
   @Override
   public boolean isPrebuiltSOForHaskellOmnibus(ActionGraphBuilder graphBuilder) {
-    return delegate.isPrebuiltSOForHaskellOmnibus();
+    return delegate.isPrebuiltSOForHaskellOmnibus(graphBuilder);
   }
 
   @Override

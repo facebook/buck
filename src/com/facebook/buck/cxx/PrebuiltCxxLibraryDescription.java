@@ -710,7 +710,7 @@ public class PrebuiltCxxLibraryDescription
               }
 
               @Override
-              public boolean isPrebuiltSOForHaskellOmnibus() {
+              public boolean isPrebuiltSOForHaskellOmnibus(ActionGraphBuilder graphBuilder) {
                 ImmutableMap<String, SourcePath> sharedLibraries = getSharedLibraries(graphBuilder);
                 for (Map.Entry<String, SourcePath> ent : sharedLibraries.entrySet()) {
                   if (!(ent.getValue() instanceof PathSourcePath)) {
