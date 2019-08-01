@@ -77,8 +77,11 @@ abstract class AbstractBuckGlobals {
       Runtime.setupSkylarkLibrary(builder, new SkylarkRuleFunctions(getLabelCache()));
       Runtime.setupSkylarkLibrary(builder, new AttrModule());
       builder.putAll(SkylarkBuiltInProviders.PROVIDERS);
+    } else {
+      // TODO(T48021397): provider() has some legacy behavior we'll need to migrate. The more
+      // correct provider() is made available for user-defined rules in
+      Runtime.setupSkylarkLibrary(builder, new SkylarkProviderFunction());
     }
-    Runtime.setupSkylarkLibrary(builder, new SkylarkProviderFunction());
     return GlobalFrame.createForBuiltins(builder.build());
   }
 
