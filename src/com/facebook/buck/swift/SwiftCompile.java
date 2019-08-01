@@ -240,7 +240,8 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           compilerCommand.add("-swift-version", validVersionString(v));
         });
 
-    compilerCommand.addAll(Arg.stringify(compilerFlags, resolver));
+    compilerCommand.addAll(
+        Iterables.filter(Arg.stringify(compilerFlags, resolver), arg -> !arg.equals("-Xfrontend")));
     if (swiftFileListPath.isPresent()) {
       compilerCommand.add("-filelist", swiftFileListPath.get().toString());
     } else {
