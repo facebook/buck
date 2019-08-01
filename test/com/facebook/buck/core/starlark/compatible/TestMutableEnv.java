@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.starlark.compatible;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.Mutability;
 
@@ -24,8 +25,16 @@ public class TestMutableEnv implements AutoCloseable {
   private final Environment env;
 
   public TestMutableEnv() {
+    this(ImmutableMap.of());
+  }
+
+  public TestMutableEnv(ImmutableMap<String, Object> globals) {
     mutability = Mutability.create("testing");
-    env = Environment.builder(mutability).useDefaultSemantics().build();
+    env =
+        Environment.builder(mutability)
+            .setGlobals(Environment.GlobalFrame.createForBuiltins(globals))
+            .useDefaultSemantics()
+            .build();
   }
 
   public Environment getEnv() {

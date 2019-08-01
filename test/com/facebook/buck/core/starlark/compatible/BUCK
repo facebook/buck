@@ -19,6 +19,7 @@ java_library(
     ),
     exported_deps = [
         "//third-party/java/bazel:bazel",
+        "//third-party/java/guava:guava",
     ],
     visibility = ["//test/..."],
 )

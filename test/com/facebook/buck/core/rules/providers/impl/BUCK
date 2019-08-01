@@ -9,6 +9,7 @@ java_test(
     deps = [
         "//src/com/facebook/buck/core/rules/providers/impl:impl",
         "//test/com/facebook/buck/core/rules/analysis/impl:testutil",
+        "//test/com/facebook/buck/core/starlark/compatible:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
     ],
