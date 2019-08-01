@@ -512,7 +512,8 @@ public class CxxPythonExtensionDescription
             buildTarget.withAppendedFlavors(pythonPlatform.getFlavor()),
             NativeLinkTargetMode.library(),
             linkTargetDeps,
-            linkableInput);
+            linkableInput,
+            Optional.empty());
       }
 
       @Override

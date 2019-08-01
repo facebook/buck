@@ -29,16 +29,19 @@ public final class NativeLinkTargetInfo implements NativeLinkTarget {
   private final NativeLinkTargetMode targetMode;
   private final Iterable<NativeLinkable> linkableDeps;
   @Nullable private final NativeLinkableInput linkableInput;
+  private final Optional<Path> targetOutputPath;
 
   public NativeLinkTargetInfo(
       BuildTarget target,
       NativeLinkTargetMode targetMode,
       Iterable<NativeLinkable> linkableDeps,
-      @Nullable NativeLinkableInput linkableInput) {
+      @Nullable NativeLinkableInput linkableInput,
+      Optional<Path> targetOutputPath) {
     this.target = target;
     this.targetMode = targetMode;
     this.linkableDeps = linkableDeps;
     this.linkableInput = linkableInput;
+    this.targetOutputPath = targetOutputPath;
   }
 
   @Override
@@ -67,6 +70,6 @@ public final class NativeLinkTargetInfo implements NativeLinkTarget {
 
   @Override
   public Optional<Path> getNativeLinkTargetOutputPath() {
-    return Optional.empty();
+    return targetOutputPath;
   }
 }

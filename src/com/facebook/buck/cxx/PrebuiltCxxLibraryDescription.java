@@ -879,7 +879,8 @@ public class PrebuiltCxxLibraryDescription
                       getBuildTarget(),
                       NativeLinkTargetMode.library(getSoname(cxxPlatform)),
                       Iterables.concat(deps, exportedDeps),
-                      linkableInput));
+                      linkableInput,
+                      Optional.empty()));
         }
         return linkTargetInfo;
       }

@@ -329,7 +329,11 @@ public class CxxLuaExtensionDescription
                       .addAllFrameworks(args.getFrameworks())
                       .build();
               return new NativeLinkTargetInfo(
-                  getBuildTarget(), NativeLinkTargetMode.library(), nativeLinkables, linkableInput);
+                  getBuildTarget(),
+                  NativeLinkTargetMode.library(),
+                  nativeLinkables,
+                  linkableInput,
+                  Optional.empty());
             });
       }
     };

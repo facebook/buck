@@ -286,6 +286,7 @@ abstract class AbstractNativeExecutableStarter implements Starter {
         Iterables.transform(
             getNativeStarterDeps(),
             g -> g.getNativeLinkable(getLuaPlatform().getCxxPlatform(), getActionGraphBuilder())),
-        getNativeLinkableInput());
+        getNativeLinkableInput(),
+        Optional.of(getOutput()));
   }
 }
