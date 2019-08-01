@@ -16,9 +16,14 @@
 package com.facebook.buck.core.starlark.compatible;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.EvalUtils;
+import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -71,5 +76,89 @@ public class BuckSkylarkTypes {
           SkylarkList<?> list, Class<NonWildcardType> elementClass, @Nullable String description)
           throws EvalException {
     return ImmutableList.copyOf((List<DestType>) list.getContents(elementClass, description));
+  }
+
+  /**
+   * Thrown when trying to construct an Immutable Skylark object from a Mutable one (that cannot be
+   * made immutable. i.e. it is not a list or dictionary)
+   */
+  public static class MutableObjectException extends RuntimeException {
+    private final Object mutableObject;
+
+    MutableObjectException(Object mutableObject) {
+      this.mutableObject = mutableObject;
+    }
+
+    /**
+     * @return the object that is mutable. This can be useful when the mutable object was deep in a
+     *     hierarchy
+     */
+    public Object getMutableObject() {
+      return mutableObject;
+    }
+  }
+
+  /**
+   * Attempt to get a deeply immutable instance of a value passed in from Skylark
+   *
+   * <p>Note that if mutable objects are passed in (namely {@link SkylarkList} or {@link
+   * SkylarkDict}, a copy may be made to get an immutable instance. This may happen in very deeply
+   * nested structures, so the runtime is variable based on how mutable the objects are. For the
+   * best performance, only immutable structures should be passed in, as that turns into a simple
+   * identity function.
+   *
+   * @param arg A value from the skylark interpreter. This should only be primitive objects, or
+   *     {@link com.google.devtools.build.lib.skylarkinterface.SkylarkValue} instances
+   * @return
+   *     <li>The original object if it was already an immutable {@link
+   *         com.google.devtools.build.lib.skylarkinterface.SkylarkValue} or a primitive value
+   *     <li>an immutable {@link SkylarkList} if the original object is a {@link SkylarkList} and
+   *         all values were immutable or could be made immutable. As above, this may be a copy, or
+   *         inner elements may have had to be copied if they were mutable
+   *     <li>An immutable {@link SkylarkDict} if the original object is a {@link SkylarkDict} and
+   *         all keys and values were immutable, or could be made so. Again, note that copies may be
+   *         made in order to make mutable objects immutable
+   * @throws MutableObjectException If a nested or top level object was mutable, and could not be
+   *     made immutable. This generally only applies to incorrectly implemented native data types
+   *     that are exported to Skylark.
+   */
+  public static Object asDeepImmutable(Object arg) throws MutableObjectException {
+    // NOTE: For most built in types, this should be reliable. However, if isImmutable is improperly
+    // implemented on our custom types (that is, it returns "true" when a sub-object is not actually
+    // immutable), this has the potential to allow an immutable SkylarkList/Dict that contains
+    // mutable objects. We would rather not pay to iterate and double check for immutability here,
+    // so for now, just assume things are implemented correctly. The number of user-accessible
+    // custom objects should be vanishingly small.
+
+    // Grab frozen objects and primitives
+    if (EvalUtils.isImmutable(arg)) {
+      return arg;
+    }
+
+    if (arg instanceof SkylarkList) {
+      SkylarkList<?> listArg = ((SkylarkList<?>) arg);
+      return listArg.stream()
+          .filter(a -> !EvalUtils.isImmutable(a))
+          .findFirst()
+          // if we have a mutable element, like a sub list, try to make it immutable
+          .map(
+              mutableElement ->
+                  SkylarkList.createImmutable(
+                      Iterables.transform(listArg, element -> asDeepImmutable(element))))
+          // Else just copy the list elements into a list with an immutable mutability
+          // We can't just freeze the list, as it may be mutated elsewhere, but this at least
+          // elides a copy.
+          .orElseGet(() -> SkylarkList.createImmutable(listArg));
+    } else if (arg instanceof SkylarkDict) {
+      SkylarkDict<?, ?> dictArg = (SkylarkDict<?, ?>) arg;
+      ImmutableMap.Builder<Object, Object> tempBuilder =
+          ImmutableMap.builderWithExpectedSize(dictArg.size());
+      for (Map.Entry<?, ?> entry : dictArg.entrySet()) {
+        tempBuilder.put(asDeepImmutable(entry.getKey()), asDeepImmutable(entry.getValue()));
+      }
+      return SkylarkDict.copyOf(null, tempBuilder.build());
+    } else {
+      throw new MutableObjectException(arg);
+    }
   }
 }
