@@ -23,11 +23,13 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.packages.SkylarkInfo;
 import com.google.devtools.build.lib.packages.StructProvider;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.vfs.PathFragment;
 import java.util.Objects;
 import org.junit.Rule;
 import org.junit.Test;
@@ -238,5 +240,28 @@ public class BuckSkylarkTypesTest {
   public void asDeepImmutableFailsIfNonSkylarkValueNonPrimitiveTypeIsPassed() {
     thrown.expect(BuckSkylarkTypes.MutableObjectException.class);
     BuckSkylarkTypes.asDeepImmutable(ImmutableList.of());
+  }
+
+  @Test
+  public void validateKwargNameHandlesValidNames() throws EvalException {
+    Location location = Location.fromPathFragment(PathFragment.create("foo"));
+    BuckSkylarkTypes.validateKwargName(location, "foo");
+    BuckSkylarkTypes.validateKwargName(location, "foo_bar");
+    BuckSkylarkTypes.validateKwargName(location, "foo_bar1");
+    BuckSkylarkTypes.validateKwargName(location, "_foo");
+    BuckSkylarkTypes.validateKwargName(location, "_foo_bar2");
+  }
+
+  @Test
+  public void validateKwargNameRejectsEmpty() throws EvalException {
+    thrown.expect(EvalException.class);
+    BuckSkylarkTypes.validateKwargName(Location.fromPathFragment(PathFragment.create("foo")), "");
+  }
+
+  @Test
+  public void validateKwargNameRejectsHyphenated() throws EvalException {
+    thrown.expect(EvalException.class);
+    BuckSkylarkTypes.validateKwargName(
+        Location.fromPathFragment(PathFragment.create("foo")), "foo-bar");
   }
 }

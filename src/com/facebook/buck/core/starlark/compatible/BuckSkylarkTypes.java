@@ -18,12 +18,14 @@ package com.facebook.buck.core.starlark.compatible;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -31,6 +33,10 @@ import javax.annotation.Nullable;
  * utilities that supplement the built in helpers.
  */
 public class BuckSkylarkTypes {
+
+  /** Matches python identifiers in the parser */
+  private static final Pattern VALID_IDENTIFIER_REGEX = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
+
   private BuckSkylarkTypes() {}
 
   /**
@@ -159,6 +165,30 @@ public class BuckSkylarkTypes {
       return SkylarkDict.copyOf(null, tempBuilder.build());
     } else {
       throw new MutableObjectException(arg);
+    }
+  }
+
+  /**
+   * Ensure that a name is a valid kwarg/field identifier
+   *
+   * <p>This is useful as Skylark does not validate these by default when creating a signature
+   *
+   * @param location location of the kwarg currently being evaluated
+   * @param kwarg the name of a kwarg / field
+   */
+  public static void validateKwargName(Location location, String kwarg) throws EvalException {
+    /**
+     * Identifier regex is taken from Bazel's skylark {@link Lexer} line 884 (where @{link
+     * Lexer#identifierOrKeyword} is called.
+     *
+     * <p>Bazel/skylark does not do this validation by default, and allows kwargs to be created that
+     * cannot be used any other way than calling this class with <code>**kwargs</code>, and
+     * accessing the parameter with <code>getattr(ctx.attr, "some attr")</code> We'd rather just
+     * bail out early so typos don't confuse users or allow non-idiomatic usage
+     */
+    if (!VALID_IDENTIFIER_REGEX.matcher(kwarg).matches()) {
+      throw new EvalException(
+          location, String.format("Attribute name '%s' is not a valid identifier", kwarg));
     }
   }
 }

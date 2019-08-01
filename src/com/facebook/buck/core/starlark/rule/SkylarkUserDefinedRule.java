@@ -16,6 +16,7 @@
 package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.starlark.coercer.SkylarkParamInfo;
+import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
@@ -39,7 +40,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -49,8 +49,6 @@ import javax.annotation.Nullable;
  * checked in this class.
  */
 public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExportable {
-  /** Matches python identifiers in the parser */
-  private static final Pattern VALID_IDENTIFIER_REGEX = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
 
   private boolean isExported = false;
   @Nullable private String name = null;
@@ -227,7 +225,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       }
 
       String name = entry.getKey();
-      validateKwargName(location, name);
+      BuckSkylarkTypes.validateKwargName(location, name);
       names[i] = name;
       i++;
     }
@@ -242,23 +240,6 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       return FunctionSignature.WithValues.create(signature, defaultValues, null);
     } catch (Exception e) {
       throw new EvalException(location, "Could not create FunctionSignature");
-    }
-  }
-
-  /** Ensure that the argument is a valid identifier */
-  private static void validateKwargName(Location location, String kwarg) throws EvalException {
-    /**
-     * Identifier regex is taken from Bazel's skylark {@link Lexer} line 884 (where @{link
-     * Lexer#identifierOrKeyword} is called.
-     *
-     * <p>Bazel/skylark does not do this validation by default, and allows kwargs to be created that
-     * cannot be used any other way than calling this class with <code>**kwargs</code>, and
-     * accessing the parameter with <code>getattr(ctx.attr, "some attr")</code> We'd rather just
-     * bail out early so typos don't confuse users or allow non-idiomatic usage
-     */
-    if (!VALID_IDENTIFIER_REGEX.matcher(kwarg).matches()) {
-      throw new EvalException(
-          location, String.format("Attribute name '%s' is not a valid identifier", kwarg));
     }
   }
 
