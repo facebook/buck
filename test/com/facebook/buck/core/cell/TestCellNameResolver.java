@@ -36,20 +36,20 @@ public class TestCellNameResolver extends DefaultCellNameResolver {
             .put(
                 Optional.of(alias),
                 canonical.isEmpty()
-                    ? CanonicalCellName.ROOT_CELL
-                    : new ImmutableCanonicalCellName(Optional.of(canonical)))
+                    ? CanonicalCellName.rootCell()
+                    : ImmutableCanonicalCellName.of(Optional.of(canonical)))
             .build());
   }
 
   public static TestCellNameResolver forRoot(String... names) {
     ImmutableMap.Builder<Optional<String>, CanonicalCellName> mapBuilder =
         ImmutableMap.<Optional<String>, CanonicalCellName>builder()
-            .put(Optional.empty(), CanonicalCellName.ROOT_CELL);
+            .put(Optional.empty(), CanonicalCellName.rootCell());
     Arrays.stream(names)
         .forEach(
             name ->
                 mapBuilder.put(
-                    Optional.of(name), new ImmutableCanonicalCellName(Optional.of(name))));
+                    Optional.of(name), ImmutableCanonicalCellName.of(Optional.of(name))));
     return new TestCellNameResolver(mapBuilder.build());
   }
 
@@ -57,13 +57,13 @@ public class TestCellNameResolver extends DefaultCellNameResolver {
       String selfName, Optional<String> rootName, String... visibleRootNames) {
     ImmutableMap.Builder<Optional<String>, CanonicalCellName> mapBuilder =
         ImmutableMap.<Optional<String>, CanonicalCellName>builder()
-            .put(Optional.empty(), new ImmutableCanonicalCellName(Optional.of(selfName)));
-    rootName.ifPresent(ignored -> mapBuilder.put(rootName, CanonicalCellName.ROOT_CELL));
+            .put(Optional.empty(), ImmutableCanonicalCellName.of(Optional.of(selfName)));
+    rootName.ifPresent(ignored -> mapBuilder.put(rootName, CanonicalCellName.rootCell()));
     Arrays.stream(visibleRootNames)
         .forEach(
             name ->
                 mapBuilder.put(
-                    Optional.of(name), new ImmutableCanonicalCellName(Optional.of(name))));
+                    Optional.of(name), ImmutableCanonicalCellName.of(Optional.of(name))));
     return new TestCellNameResolver(mapBuilder.build());
   }
 

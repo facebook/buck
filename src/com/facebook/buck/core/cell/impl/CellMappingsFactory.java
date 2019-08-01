@@ -47,11 +47,11 @@ public class CellMappingsFactory {
 
     Map<Path, CanonicalCellName> canonicalNameMap = new LinkedHashMap<>();
 
-    canonicalNameMap.put(rootPath, CanonicalCellName.ROOT_CELL);
+    canonicalNameMap.put(rootPath, CanonicalCellName.rootCell());
     cellMapping.forEach(
         (name, path) ->
             canonicalNameMap.computeIfAbsent(
-                path, ignored -> new ImmutableCanonicalCellName(Optional.of(name))));
+                path, ignored -> ImmutableCanonicalCellName.of(Optional.of(name))));
 
     return new ImmutableDefaultNewCellPathResolver(ImmutableMap.copyOf(canonicalNameMap));
   }

@@ -17,6 +17,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -32,7 +33,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -136,7 +136,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
 
   protected abstract BuildTarget getBuildTarget(
       Path root,
-      Optional<String> cellName,
+      CanonicalCellName cellName,
       Path buildFile,
       TargetConfiguration targetConfiguration,
       F from);

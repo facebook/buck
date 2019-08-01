@@ -19,7 +19,6 @@ package com.facebook.buck.core.model;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Optional;
 
 public abstract class AbstractBuildTarget implements BuildTarget {
 
@@ -37,7 +36,7 @@ public abstract class AbstractBuildTarget implements BuildTarget {
   }
 
   @Override
-  public Optional<String> getCell() {
+  public CanonicalCellName getCell() {
     return getUnconfiguredBuildTargetView().getCell();
   }
 

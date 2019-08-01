@@ -25,6 +25,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
@@ -52,7 +53,7 @@ abstract class AbstractImmutableCell implements Cell {
 
   @Override
   @Value.Auxiliary
-  public abstract Optional<String> getCanonicalName();
+  public abstract CanonicalCellName getCanonicalName();
 
   @Override
   @Value.Auxiliary

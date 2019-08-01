@@ -28,6 +28,7 @@ import com.facebook.buck.core.cell.InvalidCellOverrideException;
 import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -128,16 +129,18 @@ public class LocalCellProviderFactory {
                         rootCellCellPathResolver, cellNameResolver, cellMapping.keySet(), cellPath);
 
                 Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo = Optional.empty();
-                Optional<String> canonicalCellName =
-                    cellPathResolver.getCanonicalCellName(normalizedCellPath);
+                CanonicalCellName canonicalCellName =
+                    cellPathResolver
+                        .getNewCellPathResolver()
+                        .getCanonicalCellName(normalizedCellPath);
                 if (rootConfig.getView(BuildBuckConfig.class).isEmbeddedCellBuckOutEnabled()
-                    && canonicalCellName.isPresent()) {
+                    && canonicalCellName.getLegacyName().isPresent()) {
                   embeddedCellBuckOutInfo =
                       Optional.of(
                           EmbeddedCellBuckOutInfo.of(
                               rootFilesystem.resolve(rootFilesystem.getRootPath()),
                               rootFilesystem.getBuckPaths(),
-                              canonicalCellName.get()));
+                              canonicalCellName.getName()));
                 }
                 ProjectFilesystem cellFilesystem =
                     projectFilesystemFactory.createProjectFilesystem(

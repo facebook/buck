@@ -21,11 +21,11 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.WrapsException;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
@@ -80,7 +80,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -115,17 +114,17 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
   /** Gets the shared path prefix of all the cells. */
   private static Path getCellPathPrefix(
-      CellPathResolver cellResolver, ImmutableSet<Optional<String>> cellNames) {
+      CellPathResolver cellResolver, ImmutableSet<CanonicalCellName> cellNames) {
     return MorePaths.splitOnCommonPrefix(
             cellNames.stream()
-                .map(name -> cellResolver.getCellPath(name).get())
+                .map(name -> cellResolver.getNewCellPathResolver().getCellPath(name))
                 .collect(ImmutableList.toImmutableList()))
         .get()
         .getFirst();
   }
 
   /** Gets all the canonical cell names. */
-  private static ImmutableSet<Optional<String>> getCellNames(Cell rootCell) {
+  private static ImmutableSet<CanonicalCellName> getCellNames(Cell rootCell) {
     return rootCell.getCellProvider().getLoadedCells().values().stream()
         .map(Cell::getCanonicalName)
         .collect(ImmutableSet.toImmutableSet());
@@ -192,7 +191,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
       SourcePathRuleFinder ruleFinder,
       Cell rootCell,
       ThrowingFunction<Path, HashCode, IOException> fileHasher) {
-    ImmutableSet<Optional<String>> cellNames = getCellNames(rootCell);
+    ImmutableSet<CanonicalCellName> cellNames = getCellNames(rootCell);
     this.cellResolver = rootCell.getCellPathResolver();
     this.cellPathPrefix = getCellPathPrefix(cellResolver, cellNames);
 
@@ -271,13 +270,14 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
         MoreSuppliers.memoize(
             () -> {
               ImmutableList.Builder<RequiredFile> filesBuilder = ImmutableList.builder();
-              for (Optional<String> cellName : cellNames) {
+              for (CanonicalCellName cellName : cellNames) {
                 Path configPath = getPrefixRelativeCellPath(cellName).resolve(".buckconfig");
                 byte[] bytes =
                     serializeConfig(
                         rootCell
                             .getCellProvider()
-                            .getCellByPath(cellResolver.getCellPath(cellName).get())
+                            .getCellByPath(
+                                cellResolver.getNewCellPathResolver().getCellPath(cellName))
                             .getBuckConfig());
                 Digest digest = protocol.computeDigest(bytes);
                 filesBuilder.add(
@@ -299,7 +299,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                           public String describe() {
                             return String.format(
                                 "Serialized .buckconfig (cell: %s size:%s).",
-                                cellName.orElse("root"), bytes.length);
+                                cellName.getLegacyName().orElse("root"), bytes.length);
                           }
                         }));
               }
@@ -574,8 +574,8 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
     return pathsBuilder.build();
   }
 
-  private Path getPrefixRelativeCellPath(Optional<String> name) {
-    return cellPathPrefix.relativize(Optionals.require(cellResolver.getCellPath(name)));
+  private Path getPrefixRelativeCellPath(CanonicalCellName name) {
+    return cellPathPrefix.relativize(cellResolver.getNewCellPathResolver().getCellPath(name));
   }
 
   private static byte[] serializeConfig(BuckConfig config) {

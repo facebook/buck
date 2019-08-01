@@ -82,7 +82,7 @@ public class DistBuildCellIndexer {
     BuildJobStateCell cellState = new BuildJobStateCell();
     cellState.setConfig(dumpConfig(cell.getBuckConfig()));
     cellState.setNameHint(cell.getRoot().getFileName().toString());
-    cellState.setCanonicalName(cell.getCanonicalName().orElse(""));
+    cellState.setCanonicalName(cell.getCanonicalName().getName());
     return cellState;
   }
 

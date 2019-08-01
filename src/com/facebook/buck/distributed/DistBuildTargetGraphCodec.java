@@ -18,6 +18,7 @@ package com.facebook.buck.distributed;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ImmutableCanonicalCellName;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.impl.HostTargetConfiguration;
@@ -125,8 +126,8 @@ public class DistBuildTargetGraphCodec {
     BuildJobStateBuildTarget remoteTarget = new BuildJobStateBuildTarget();
     remoteTarget.setShortName(buildTarget.getShortName());
     remoteTarget.setBaseName(buildTarget.getBaseName());
-    if (buildTarget.getCell().isPresent()) {
-      remoteTarget.setCellName(buildTarget.getCell().get());
+    if (buildTarget.getCell().getLegacyName().isPresent()) {
+      remoteTarget.setCellName(buildTarget.getCell().getLegacyName().get());
     }
     remoteTarget.setFlavors(
         buildTarget.getFlavors().stream().map(Object::toString).collect(Collectors.toSet()));
@@ -138,7 +139,7 @@ public class DistBuildTargetGraphCodec {
     UnflavoredBuildTargetView unflavoredBuildTargetView =
         ImmutableUnflavoredBuildTargetView.of(
             cell.getRoot(),
-            Optional.ofNullable(remoteTarget.getCellName()),
+            ImmutableCanonicalCellName.of(Optional.ofNullable(remoteTarget.getCellName())),
             remoteTarget.getBaseName(),
             remoteTarget.getShortName());
 
@@ -202,7 +203,7 @@ public class DistBuildTargetGraphCodec {
         () -> {
           Cell cell = cellLookup.apply(remoteNode.getCellIndex());
           if (remoteNode.getCellIndex() == DistBuildCellIndexer.ROOT_CELL_INDEX) {
-            Verify.verify(!cell.getCanonicalName().isPresent());
+            Verify.verify(!cell.getCanonicalName().getLegacyName().isPresent());
           }
 
           ProjectFilesystem projectFilesystem = cell.getFilesystem();

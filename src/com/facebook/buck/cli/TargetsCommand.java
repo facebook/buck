@@ -454,7 +454,7 @@ public class TargetsCommand extends AbstractCommand {
       // TODO(buck_team): add a method to resolve cell by name from the context
       Cell cell =
           params.getCell().getAllCells().stream()
-              .filter(name -> name.getCanonicalName().orElse("").equals(cellName))
+              .filter(name -> name.getCanonicalName().getName().equals(cellName))
               .findFirst()
               .orElseThrow(() -> new BuckUncheckedExecutionException("Unknown cell " + cellName));
 

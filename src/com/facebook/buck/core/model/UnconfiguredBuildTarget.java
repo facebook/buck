@@ -61,7 +61,7 @@ public abstract class UnconfiguredBuildTarget
   /** Name of the cell that current build target belongs to */
   @Value.Parameter
   @JsonProperty("cell")
-  public abstract String getCell();
+  public abstract CanonicalCellName getCell();
 
   /**
    * Base name of build target, i.e. part of fully qualified name before the colon If this build

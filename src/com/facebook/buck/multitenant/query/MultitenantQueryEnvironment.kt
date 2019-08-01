@@ -44,15 +44,12 @@ import com.google.common.collect.ImmutableList
 import java.util.function.Predicate
 import java.util.function.Supplier
 
-val QUERY_FUNCTIONS: List<QueryEnvironment.QueryFunction<out QueryTarget, UnconfiguredBuildTarget>> = listOf(
-        AllPathsFunction<UnconfiguredBuildTarget>(),
-        BuildFileFunction<UnconfiguredBuildTarget>(),
-        DepsFunction<UnconfiguredBuildTarget>(),
+val QUERY_FUNCTIONS: List<QueryEnvironment.QueryFunction<out QueryTarget, UnconfiguredBuildTarget>> =
+    listOf(AllPathsFunction<UnconfiguredBuildTarget>(),
+        BuildFileFunction<UnconfiguredBuildTarget>(), DepsFunction<UnconfiguredBuildTarget>(),
         DepsFunction.FirstOrderDepsFunction<UnconfiguredBuildTarget>(),
-        InputsFunction<UnconfiguredBuildTarget>(),
-        KindFunction<UnconfiguredBuildTarget>(),
-        OwnerFunction<UnconfiguredBuildTarget>(),
-        RdepsFunction<UnconfiguredBuildTarget>(),
+        InputsFunction<UnconfiguredBuildTarget>(), KindFunction<UnconfiguredBuildTarget>(),
+        OwnerFunction<UnconfiguredBuildTarget>(), RdepsFunction<UnconfiguredBuildTarget>(),
         TestsOfFunction<UnconfiguredBuildTarget>())
 
 /**
@@ -63,8 +60,10 @@ val QUERY_FUNCTIONS: List<QueryEnvironment.QueryFunction<out QueryTarget, Unconf
 class MultitenantQueryEnvironment(
     private val index: Index,
     private val generation: Generation,
+    // TODO(cjhopman, sergeyb): I think this should be Map<CanonicalCellName, String>.
     private val cellToBuildFileName: Map<String, String>
-) : QueryEnvironment<UnconfiguredBuildTarget> {
+) :
+    QueryEnvironment<UnconfiguredBuildTarget> {
     private val targetEvaluator: Supplier<TargetEvaluator> = Suppliers.memoize {
         TargetEvaluator(index, generation)
     }
@@ -89,18 +88,22 @@ class MultitenantQueryEnvironment(
 
     override fun getFwdDeps(
         targets: Iterable<UnconfiguredBuildTarget>
-    ): Set<UnconfiguredBuildTarget> = index.getFwdDeps(generation, targets)
+    ): Set<UnconfiguredBuildTarget> =
+        index.getFwdDeps(generation, targets)
 
     override fun getReverseDeps(
         targets: Iterable<UnconfiguredBuildTarget>
-    ): Set<UnconfiguredBuildTarget> = index.getReverseDeps(generation, targets)
+    ): Set<UnconfiguredBuildTarget> =
+        index.getReverseDeps(generation, targets)
 
     override fun getInputs(target: UnconfiguredBuildTarget): Set<QueryFileTarget> {
         val targetNode = index.getTargetNodeUnsafe(generation, target).targetNode
         return extractInputs(targetNode)
     }
 
-    override fun getTransitiveClosure(targets: Set<UnconfiguredBuildTarget>): Set<UnconfiguredBuildTarget> {
+    override fun getTransitiveClosure(
+        targets: Set<UnconfiguredBuildTarget>
+    ): Set<UnconfiguredBuildTarget> {
         return index.getTransitiveDeps(generation, targets.asSequence())
     }
 
@@ -117,9 +120,7 @@ class MultitenantQueryEnvironment(
         return rawBuildRule.targetNode.ruleType.toString()
     }
 
-    override fun getTestsForTarget(
-        target: UnconfiguredBuildTarget
-    ): Set<UnconfiguredBuildTarget> {
+    override fun getTestsForTarget(target: UnconfiguredBuildTarget): Set<UnconfiguredBuildTarget> {
         val targetNode = index.getTargetNodeUnsafe(generation, target).targetNode
         return extractTests(targetNode)
     }
@@ -127,7 +128,7 @@ class MultitenantQueryEnvironment(
     override fun getBuildFiles(targets: Set<UnconfiguredBuildTarget>): Set<QueryFileTarget> =
         targets.map { target ->
             val path = FsAgnosticSourcePath(FsAgnosticPath.of(
-                    "${target.baseName.substring(2)}/${cellToBuildFileName[target.cell]!!}"))
+                "${target.baseName.substring(2)}/${cellToBuildFileName[target.cell.name]!!}"))
             QueryFileTarget.of(path)
         }.toSet()
 
@@ -166,7 +167,10 @@ class MultitenantQueryEnvironment(
         return out
     }
 
-    override fun getTargetsInAttribute(target: UnconfiguredBuildTarget?, attribute: String?): Set<QueryTarget> {
+    override fun getTargetsInAttribute(
+        target: UnconfiguredBuildTarget?,
+        attribute: String?
+    ): Set<QueryTarget> {
         TODO("getTargetsInAttribute() not implemented")
     }
 
@@ -179,7 +183,8 @@ class MultitenantQueryEnvironment(
     }
 
     /** @see Index.getRefs */
-    fun getRefs(target: UnconfiguredBuildTarget): List<UnconfiguredBuildTarget> = index.getRefs(generation, target)
+    fun getRefs(target: UnconfiguredBuildTarget): List<UnconfiguredBuildTarget> =
+        index.getRefs(generation, target)
 
     /** Get the rules defined in the build file in the specified directory. */
     fun getRulesInBasePath(basePath: FsAgnosticPath): List<RawBuildRule> {
@@ -189,8 +194,10 @@ class MultitenantQueryEnvironment(
     }
 }
 
-private class TargetEvaluator(private val index: Index, private val generation: Generation) : QueryEnvironment.TargetEvaluator {
-    override fun getType(): QueryEnvironment.TargetEvaluator.Type = QueryEnvironment.TargetEvaluator.Type.IMMEDIATE
+private class TargetEvaluator(private val index: Index, private val generation: Generation) :
+    QueryEnvironment.TargetEvaluator {
+    override fun getType(): QueryEnvironment.TargetEvaluator.Type =
+        QueryEnvironment.TargetEvaluator.Type.IMMEDIATE
 
     override fun evaluateTarget(target: String): Set<QueryTarget> {
         // TODO: We should probably also support aliases specified via .buckconfig here?
@@ -203,16 +210,14 @@ private class TargetEvaluator(private val index: Index, private val generation: 
         // TODO: Cells (and flavors?) need to be supported.
         return when (buildTargetPattern.kind!!) {
             Kind.SINGLE -> {
-                val buildTarget = BuildTargets.createBuildTargetFromParts(
-                        buildTargetPattern.cell,
-                        FsAgnosticPath.of(buildTargetPattern.basePath),
-                        buildTargetPattern.targetName)
+                val buildTarget = BuildTargets.createBuildTargetFromParts(buildTargetPattern.cell,
+                    FsAgnosticPath.of(buildTargetPattern.basePath), buildTargetPattern.targetName)
                 setOf(buildTarget)
             }
             Kind.PACKAGE -> {
                 val basePath = buildTargetPattern.basePath
                 val targets = index.getTargetsInBasePath(generation, FsAgnosticPath.of(basePath))
-                        ?: return setOf()
+                    ?: return setOf()
                 targets.toSet()
             }
             Kind.RECURSIVE -> {

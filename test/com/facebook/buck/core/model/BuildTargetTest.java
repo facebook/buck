@@ -29,7 +29,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -137,7 +136,8 @@ public class BuildTargetTest {
   @Test
   public void testGetUnflavoredTarget() {
     UnflavoredBuildTargetView unflavoredTarget =
-        ImmutableUnflavoredBuildTargetView.of(ROOT, Optional.empty(), "//foo/bar", "baz");
+        ImmutableUnflavoredBuildTargetView.of(
+            ROOT, CanonicalCellName.rootCell(), "//foo/bar", "baz");
 
     BuildTarget flavoredTarget =
         BuildTargetFactory.newInstance(ROOT, "//foo/bar", "baz", InternalFlavor.of("biz"));
@@ -166,10 +166,10 @@ public class BuildTargetTest {
   @Test
   public void unflavoredBuildTargetsAreInterned() {
     UnflavoredBuildTargetView target1 =
-        ImmutableUnflavoredBuildTargetView.of(ROOT, Optional.empty(), "//foo", "bar");
+        ImmutableUnflavoredBuildTargetView.of(ROOT, CanonicalCellName.rootCell(), "//foo", "bar");
 
     UnflavoredBuildTargetView target2 =
-        ImmutableUnflavoredBuildTargetView.of(ROOT, Optional.empty(), "//foo", "bar");
+        ImmutableUnflavoredBuildTargetView.of(ROOT, CanonicalCellName.rootCell(), "//foo", "bar");
 
     assertSame(target1, target2);
   }

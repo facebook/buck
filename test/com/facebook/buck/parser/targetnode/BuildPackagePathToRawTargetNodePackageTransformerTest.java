@@ -86,10 +86,7 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
             ImmutableSortedSet.of(":target2"));
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
         ImmutableUnconfiguredBuildTarget.of(
-            cell.getCanonicalName().orElse(""),
-            "//",
-            "target1",
-            UnconfiguredBuildTarget.NO_FLAVORS);
+            cell.getCanonicalName(), "//", "target1", UnconfiguredBuildTarget.NO_FLAVORS);
     RawTargetNode rawTargetNode1 =
         ImmutableRawTargetNode.of(
             unconfiguredBuildTarget1,
@@ -102,10 +99,7 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
         ImmutableMap.of("name", "target2", "buck.type", "java_library", "buck.base_path", "");
     UnconfiguredBuildTarget unconfiguredBuildTarget2 =
         ImmutableUnconfiguredBuildTarget.of(
-            cell.getCanonicalName().orElse(""),
-            "//",
-            "target2",
-            UnconfiguredBuildTarget.NO_FLAVORS);
+            cell.getCanonicalName(), "//", "target2", UnconfiguredBuildTarget.NO_FLAVORS);
     RawTargetNode rawTargetNode2 =
         ImmutableRawTargetNode.of(
             unconfiguredBuildTarget2,

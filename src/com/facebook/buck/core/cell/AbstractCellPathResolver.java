@@ -43,6 +43,6 @@ public abstract class AbstractCellPathResolver implements CellPathResolver {
 
   @Override
   public Path getCellPathOrThrow(UnflavoredBuildTargetView buildTarget) {
-    return getCellPathOrThrow(buildTarget.getCell());
+    return getNewCellPathResolver().getCellPath(buildTarget.getCell());
   }
 }

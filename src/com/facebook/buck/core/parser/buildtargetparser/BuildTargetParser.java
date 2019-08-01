@@ -132,7 +132,10 @@ class BuildTargetParser {
     // owning cell.
     UnflavoredBuildTargetView unflavoredBuildTargetView =
         ImmutableUnflavoredBuildTargetView.of(
-            cellPath, cellPathResolver.getCanonicalCellName(cellPath), baseName, shortName);
+            cellPath,
+            cellPathResolver.getNewCellPathResolver().getCanonicalCellName(cellPath),
+            baseName,
+            shortName);
     return flavoredTargetCache.intern(
         ImmutableUnconfiguredBuildTargetView.of(
             unflavoredBuildTargetView, RichStream.from(flavorNames).map(InternalFlavor::of)));

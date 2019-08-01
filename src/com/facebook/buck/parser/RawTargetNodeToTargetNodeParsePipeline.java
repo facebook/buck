@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
@@ -35,7 +36,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.function.Function;
 
 public class RawTargetNodeToTargetNodeParsePipeline
@@ -70,7 +70,7 @@ public class RawTargetNodeToTargetNodeParsePipeline
   @Override
   protected BuildTarget getBuildTarget(
       Path root,
-      Optional<String> cellName,
+      CanonicalCellName cellName,
       Path buildFile,
       TargetConfiguration targetConfiguration,
       RawTargetNode from) {

@@ -195,10 +195,7 @@ public class BuildPackagePathToRawTargetNodePackageComputation
       BuildTargetToRawTargetNodeKey depkey =
           ImmutableBuildTargetToRawTargetNodeKey.of(
               ImmutableUnconfiguredBuildTarget.of(
-                  cell.getCanonicalName().orElse(""),
-                  baseName,
-                  target,
-                  UnconfiguredBuildTarget.NO_FLAVORS),
+                  cell.getCanonicalName(), baseName, target, UnconfiguredBuildTarget.NO_FLAVORS),
               key.getPath());
       builder.add(depkey);
     }

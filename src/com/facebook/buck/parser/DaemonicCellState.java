@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -82,7 +83,7 @@ class DaemonicCellState {
   }
 
   private final Path cellRoot;
-  private final Optional<String> cellCanonicalName;
+  private final CanonicalCellName cellCanonicalName;
   private final AtomicReference<Cell> cell;
 
   /**

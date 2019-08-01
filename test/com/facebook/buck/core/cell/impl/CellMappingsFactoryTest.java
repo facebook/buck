@@ -80,13 +80,13 @@ public class CellMappingsFactoryTest {
     NewCellPathResolver newCellPathResolver =
         CellMappingsFactory.create(root, rootConfig.getConfig());
 
-    assertEquals(root, newCellPathResolver.getCellPath(CanonicalCellName.ROOT_CELL));
+    assertEquals(root, newCellPathResolver.getCellPath(CanonicalCellName.rootCell()));
     assertEquals(
         root.resolve("repo1"),
-        newCellPathResolver.getCellPath(new ImmutableCanonicalCellName(Optional.of("cell1"))));
+        newCellPathResolver.getCellPath(ImmutableCanonicalCellName.of(Optional.of("cell1"))));
     assertEquals(
         root.resolve("repo2"),
-        newCellPathResolver.getCellPath(new ImmutableCanonicalCellName(Optional.of("cell2"))));
+        newCellPathResolver.getCellPath(ImmutableCanonicalCellName.of(Optional.of("cell2"))));
   }
 
   @Test
@@ -107,16 +107,16 @@ public class CellMappingsFactoryTest {
         CellMappingsFactory.createCellNameResolver(
             root, rootConfig.getConfig(), newCellPathResolver);
 
-    assertEquals(CanonicalCellName.ROOT_CELL, rootNameResolver.getName(Optional.empty()));
+    assertEquals(CanonicalCellName.rootCell(), rootNameResolver.getName(Optional.empty()));
     assertEquals(
-        new ImmutableCanonicalCellName(Optional.of("cell1")),
+        ImmutableCanonicalCellName.of(Optional.of("cell1")),
         rootNameResolver.getName(Optional.of("cell1")));
     assertEquals(
-        new ImmutableCanonicalCellName(Optional.of("cell2")),
+        ImmutableCanonicalCellName.of(Optional.of("cell2")),
         rootNameResolver.getName(Optional.of("cell2")));
-    assertEquals(CanonicalCellName.ROOT_CELL, rootNameResolver.getName(Optional.of("self")));
+    assertEquals(CanonicalCellName.rootCell(), rootNameResolver.getName(Optional.of("self")));
     assertEquals(
-        new ImmutableCanonicalCellName(Optional.of("cell2")),
+        ImmutableCanonicalCellName.of(Optional.of("cell2")),
         rootNameResolver.getName(Optional.of("cell2_alias")));
   }
 
@@ -147,17 +147,17 @@ public class CellMappingsFactoryTest {
             root.resolve("repo1"), otherConfig.getConfig(), newCellPathResolver);
 
     assertEquals(
-        new ImmutableCanonicalCellName(Optional.of("cell1")),
+        ImmutableCanonicalCellName.of(Optional.of("cell1")),
         otherNameResolver.getName(Optional.empty()));
-    assertEquals(CanonicalCellName.ROOT_CELL, otherNameResolver.getName(Optional.of("root")));
+    assertEquals(CanonicalCellName.rootCell(), otherNameResolver.getName(Optional.of("root")));
     assertEquals(
-        new ImmutableCanonicalCellName(Optional.of("cell2")),
+        ImmutableCanonicalCellName.of(Optional.of("cell2")),
         otherNameResolver.getName(Optional.of("cell2")));
     assertEquals(
-        new ImmutableCanonicalCellName(Optional.of("cell1")),
+        ImmutableCanonicalCellName.of(Optional.of("cell1")),
         otherNameResolver.getName(Optional.of("self")));
     assertEquals(
-        new ImmutableCanonicalCellName(Optional.of("cell1")),
+        ImmutableCanonicalCellName.of(Optional.of("cell1")),
         otherNameResolver.getName(Optional.of("other_self")));
   }
 }

@@ -178,7 +178,7 @@ public class BuildTargetParserTest {
 
     UnconfiguredBuildTargetView buildTarget = parser.parse(cellRoots, targetStr, "", false);
     assertEquals("localreponame//foo/bar:baz", buildTarget.getFullyQualifiedName());
-    assertTrue(buildTarget.getCell().isPresent());
+    assertTrue(buildTarget.getCell().getLegacyName().isPresent());
     assertEquals(localRepoRoot, buildTarget.getCellPath());
   }
 
@@ -192,7 +192,7 @@ public class BuildTargetParserTest {
 
     UnconfiguredBuildTargetView buildTarget = parser.parse(cellRoots, targetStr, "", false);
     assertEquals("localreponame//foo/bar:baz", buildTarget.getFullyQualifiedName());
-    assertTrue(buildTarget.getCell().isPresent());
+    assertTrue(buildTarget.getCell().getLegacyName().isPresent());
     assertEquals(localRepoRoot, buildTarget.getCellPath());
   }
 

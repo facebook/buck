@@ -18,7 +18,6 @@ package com.facebook.buck.core.model;
 
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.Set;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -33,7 +32,7 @@ public interface BuildTarget extends Comparable<BuildTarget> {
 
   TargetConfiguration getTargetConfiguration();
 
-  Optional<String> getCell();
+  CanonicalCellName getCell();
 
   Path getCellPath();
 

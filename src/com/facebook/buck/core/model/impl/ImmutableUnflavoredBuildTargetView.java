@@ -17,16 +17,15 @@
 package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.AbstractUnflavoredBuildTargetView;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
-import com.google.common.primitives.Booleans;
 import java.nio.file.Path;
 import java.util.Objects;
-import java.util.Optional;
 
 /** Immutable implementation of {@link UnflavoredBuildTargetView} */
 public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildTargetView {
@@ -58,8 +57,8 @@ public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildT
   }
 
   @Override
-  public Optional<String> getCell() {
-    return data.getCell() == "" ? Optional.empty() : Optional.of(data.getCell());
+  public CanonicalCellName getCell() {
+    return data.getCell();
   }
 
   @Override
@@ -86,11 +85,11 @@ public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildT
    * @param shortName Last part of build target name after colon
    */
   public static ImmutableUnflavoredBuildTargetView of(
-      Path cellPath, Optional<String> cellName, String baseName, String shortName) {
+      Path cellPath, CanonicalCellName cellName, String baseName, String shortName) {
     return of(
         cellPath,
         ImmutableUnconfiguredBuildTarget.of(
-            cellName.orElse(""), baseName, shortName, UnconfiguredBuildTarget.NO_FLAVORS));
+            cellName, baseName, shortName, UnconfiguredBuildTarget.NO_FLAVORS));
   }
 
   /**
@@ -108,15 +107,10 @@ public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildT
     if (this == o) {
       return 0;
     }
-    int cmp = Booleans.compare(o.getCell().isPresent(), getCell().isPresent());
+
+    int cmp = getCell().compareTo(o.getCell());
     if (cmp != 0) {
       return cmp;
-    }
-    if (getCell().isPresent() && o.getCell().isPresent()) {
-      cmp = MoreStrings.compareStrings(getCell().get(), o.getCell().get());
-      if (cmp != 0) {
-        return cmp;
-      }
     }
     cmp = MoreStrings.compareStrings(getBaseName(), o.getBaseName());
     if (cmp != 0) {

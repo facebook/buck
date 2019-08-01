@@ -19,6 +19,7 @@ package com.facebook.buck.core.cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -39,7 +40,7 @@ public interface Cell {
 
   ImmutableSortedSet<Path> getKnownRoots();
 
-  Optional<String> getCanonicalName();
+  CanonicalCellName getCanonicalName();
 
   ProjectFilesystem getFilesystem();
 

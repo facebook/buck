@@ -26,7 +26,7 @@ import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.ImmutableCell;
 import com.facebook.buck.core.cell.impl.RootCellFactory;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.model.ImmutableCanonicalCellName;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -111,7 +111,7 @@ public class DistributedCellProviderFactory {
                   CellNameResolver cellNameResolver =
                       CellMappingsFactory.createCellNameResolver(
                           newCellPathResolver.getCellPath(
-                              new ImmutableCanonicalCellName(cellParam.getCanonicalName())),
+                              CanonicalCellName.unsafeOf(cellParam.getCanonicalName())),
                           cellParam.getConfig().getConfig(),
                           newCellPathResolver);
 
@@ -147,7 +147,7 @@ public class DistributedCellProviderFactory {
                       ImmutableSortedSet.copyOf(cellParams.keySet()),
                       // Distributed builds don't care about cell names, use a sentinel value that
                       // will show up if it actually does care about them.
-                      cellParam.getCanonicalName(),
+                      CanonicalCellName.unsafeOf(cellParam.getCanonicalName()),
                       cellParam.getFilesystem(),
                       configWithResolver,
                       cellProvider,

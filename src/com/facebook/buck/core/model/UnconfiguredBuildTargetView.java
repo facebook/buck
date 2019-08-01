@@ -18,7 +18,6 @@ package com.facebook.buck.core.model;
 
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Optional;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -46,7 +45,7 @@ public interface UnconfiguredBuildTargetView extends Comparable<UnconfiguredBuil
    * <p>Note that this name can be different from the name specified on the name. See {@link
    * com.facebook.buck.core.cell.CellPathResolver#getCanonicalCellName} for more information.
    */
-  Optional<String> getCell();
+  CanonicalCellName getCell();
 
   /**
    * The path to the root of the cell where this build target is used.

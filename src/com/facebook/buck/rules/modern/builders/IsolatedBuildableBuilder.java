@@ -221,7 +221,7 @@ public abstract class IsolatedBuildableBuilder {
                       BuildTargetSourcePath sourcePath) {
                     Preconditions.checkState(sourcePath instanceof ExplicitBuildTargetSourcePath);
                     BuildTarget target = sourcePath.getTarget();
-                    return filesystemFunction.apply(target.getCell());
+                    return filesystemFunction.apply(target.getCell().getLegacyName());
                   }
 
                   @Override
@@ -316,7 +316,8 @@ public abstract class IsolatedBuildableBuilder {
 
     try (Scope ignored = LeafEvents.scope(eventBus, "steps");
         CloseableWrapper<BuckEventBus> eventBusWrapper = getWaitEventsWrapper(eventBus)) {
-      ProjectFilesystem filesystem = filesystemFunction.apply(reconstructed.target.getCell());
+      ProjectFilesystem filesystem =
+          filesystemFunction.apply(reconstructed.target.getCell().getLegacyName());
       ModernBuildRule.injectFieldsIfNecessary(
           filesystem,
           reconstructed.target,

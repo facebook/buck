@@ -43,7 +43,7 @@ class BuildTargetsTest {
     @Test
     fun parseFullyQualifiedTarget() {
         val fooBar = BuildTargets.parseOrThrow("//foo/bar:baz")
-        assertEquals("", fooBar.cell)
+        assertEquals("", fooBar.cell.name)
         assertEquals("//foo/bar", fooBar.baseName)
         assertEquals("baz", fooBar.name)
         assertEquals(ImmutableSortedSet.of<Flavor>(), fooBar.flavors)

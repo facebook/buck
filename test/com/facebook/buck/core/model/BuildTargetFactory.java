@@ -24,7 +24,6 @@ import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
@@ -50,7 +49,7 @@ public class BuildTargetFactory {
     root = root == null ? new FakeProjectFilesystem().getRootPath() : root;
 
     BuckCellArg arg = BuckCellArg.of(fullyQualifiedName);
-    Optional<String> cellName = arg.getCellName();
+    ImmutableCanonicalCellName cellName = ImmutableCanonicalCellName.of(arg.getCellName());
     String[] parts = arg.getBasePath().split(":");
     Preconditions.checkArgument(parts.length == 2);
     String[] nameAndFlavor = parts[1].split("#");
@@ -70,7 +69,10 @@ public class BuildTargetFactory {
     BuckCellArg arg = BuckCellArg.of(baseName);
     return ImmutableUnconfiguredBuildTargetView.of(
             ImmutableUnflavoredBuildTargetView.of(
-                cellPath, arg.getCellName(), arg.getBasePath(), shortName))
+                cellPath,
+                ImmutableCanonicalCellName.of(arg.getCellName()),
+                arg.getBasePath(),
+                shortName))
         .configure(EmptyTargetConfiguration.INSTANCE);
   }
 
@@ -79,7 +81,10 @@ public class BuildTargetFactory {
     BuckCellArg arg = BuckCellArg.of(baseName);
     return ImmutableUnconfiguredBuildTargetView.of(
             ImmutableUnflavoredBuildTargetView.of(
-                cellPath, arg.getCellName(), arg.getBasePath(), shortName),
+                cellPath,
+                ImmutableCanonicalCellName.of(arg.getCellName()),
+                arg.getBasePath(),
+                shortName),
             RichStream.from(flavors))
         .configure(EmptyTargetConfiguration.INSTANCE);
   }

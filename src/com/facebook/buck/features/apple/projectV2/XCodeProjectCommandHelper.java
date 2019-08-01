@@ -28,10 +28,12 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
@@ -399,18 +401,21 @@ public class XCodeProjectCommandHelper {
               .map(
                   target -> {
                     if (!target.getCellPath().equals(cell.getRoot())) {
-                      Optional<String> cellName =
-                          cell.getCellPathResolver().getCanonicalCellName(target.getCellPath());
-                      if (cellName.isPresent()) {
+                      try {
+                        CanonicalCellName cellName =
+                            cell.getNewCellPathResolver()
+                                .getCanonicalCellName(target.getCellPath());
+
                         return target.withUnflavoredBuildTarget(
                             ImmutableUnflavoredBuildTargetView.of(
                                 target.getCellPath(),
                                 cellName,
                                 target.getBaseName(),
                                 target.getShortName()));
-                      } else {
-                        throw new IllegalStateException(
-                            "Failed to find cell name for cell path while constructing parameters to "
+                      } catch (Exception e) {
+                        throw new BuckUncheckedExecutionException(
+                            e,
+                            "When trying to find cell name for cell path while constructing parameters to "
                                 + "build dependencies for project generation. "
                                 + "Build target: "
                                 + target

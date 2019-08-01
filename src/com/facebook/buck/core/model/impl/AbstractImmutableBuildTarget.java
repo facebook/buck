@@ -18,6 +18,7 @@ package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.AbstractBuildTarget;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -32,7 +33,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-import java.util.Optional;
 import java.util.Set;
 import org.immutables.value.Value;
 
@@ -59,7 +59,7 @@ abstract class AbstractImmutableBuildTarget extends AbstractBuildTarget {
 
   @JsonProperty("cell")
   @Override
-  public Optional<String> getCell() {
+  public CanonicalCellName getCell() {
     return super.getCell();
   }
 

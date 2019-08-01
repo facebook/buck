@@ -19,6 +19,7 @@ package com.facebook.buck.core.model.targetgraph.raw;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -51,7 +52,7 @@ public class RawTargetNodeWithDepsPackageTest {
 
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
         ImmutableUnconfiguredBuildTarget.of(
-            "", "//base", "target1", UnconfiguredBuildTarget.NO_FLAVORS);
+            CanonicalCellName.rootCell(), "//base", "target1", UnconfiguredBuildTarget.NO_FLAVORS);
     RawTargetNode rawTargetNode1 =
         ImmutableRawTargetNode.of(
             unconfiguredBuildTarget1,
@@ -65,7 +66,7 @@ public class RawTargetNodeWithDepsPackageTest {
 
     UnconfiguredBuildTarget unconfiguredBuildTarget2 =
         ImmutableUnconfiguredBuildTarget.of(
-            "", "//base", "target2", UnconfiguredBuildTarget.NO_FLAVORS);
+            CanonicalCellName.rootCell(), "//base", "target2", UnconfiguredBuildTarget.NO_FLAVORS);
     RawTargetNode rawTargetNode2 =
         ImmutableRawTargetNode.of(
             unconfiguredBuildTarget2,

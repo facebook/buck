@@ -22,7 +22,7 @@ public abstract class AbstractUnflavoredBuildTargetView implements UnflavoredBui
 
   @Override
   public String getFullyQualifiedName() {
-    return (getCell().isPresent() ? getCell().get() : "") + getBaseName() + ":" + getShortName();
+    return getCell().getName() + getBaseName() + ":" + getShortName();
   }
 
   @Override

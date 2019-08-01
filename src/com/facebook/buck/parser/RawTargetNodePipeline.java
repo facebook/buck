@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
@@ -36,7 +37,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 
 /** Converts nodes in a raw form (taken from build file parsers) into {@link RawTargetNode}. */
@@ -67,7 +67,7 @@ public class RawTargetNodePipeline extends ConvertingPipeline<Map<String, Object
   @Override
   protected BuildTarget getBuildTarget(
       Path root,
-      Optional<String> cellName,
+      CanonicalCellName cellName,
       Path buildFile,
       TargetConfiguration targetConfiguration,
       Map<String, Object> from) {

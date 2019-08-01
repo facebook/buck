@@ -129,7 +129,7 @@ public class EventSerializationTest {
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,"
-            + "\"buildTargets\":[{\"baseName\":\"//base\","
+            + "\"buildTargets\":[{\"cell\":{},\"baseName\":\"//base\","
             + "\"shortName\":\"short\",\"flavor\":\"flv\"}],\"type\":\"ParseFinished\","
             + "\"eventKey\":{\"value\":4242}, \"processedBytes\": 10}",
         message);
@@ -243,7 +243,7 @@ public class EventSerializationTest {
             + "\"success\":false}],"
             + "\"failureCount\":1,\"contacts\":[],\"labels\":[],"
             + "\"dependenciesPassTheirTests\":true,\"sequenceNumber\":0,\"totalNumberOfTests\":0,"
-            + "\"buildTarget\":{\"shortName\":\"baz\",\"baseName\":\"//foo/bar\","
+            + "\"buildTarget\":{\"cell\":{},\"shortName\":\"baz\",\"baseName\":\"//foo/bar\","
             + "\"flavor\":\"\"},"
             + "\"success\":false}],\"type\":\"RunComplete\", \"eventKey\":"
             + "{\"value\":-624576559}}",
@@ -330,7 +330,7 @@ public class EventSerializationTest {
             + "\"success\":false}],"
             + "\"failureCount\":1,\"contacts\":[],\"labels\":[],"
             + "\"dependenciesPassTheirTests\":true,\"sequenceNumber\":0,\"totalNumberOfTests\":0,"
-            + "\"buildTarget\":{\"shortName\":\"baz\",\"baseName\":\"//foo/bar\","
+            + "\"buildTarget\":{\"cell\":{},\"shortName\":\"baz\",\"baseName\":\"//foo/bar\","
             + "\"flavor\":\"\"},"
             + "\"success\":false},\"type\":\"ResultsAvailable\"}",
         message);

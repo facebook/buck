@@ -79,10 +79,7 @@ public class RawTargetNodeToRawTargetNodeWithDepsComputationTest {
             ImmutableSortedSet.of(":target2"));
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
         ImmutableUnconfiguredBuildTarget.of(
-            cell.getCanonicalName().orElse(""),
-            "//",
-            "target1",
-            UnconfiguredBuildTarget.NO_FLAVORS);
+            cell.getCanonicalName(), "//", "target1", UnconfiguredBuildTarget.NO_FLAVORS);
     RawTargetNode rawTargetNode1 =
         ImmutableRawTargetNode.of(
             unconfiguredBuildTarget1,
