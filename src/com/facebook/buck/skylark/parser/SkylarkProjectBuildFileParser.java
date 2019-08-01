@@ -58,10 +58,12 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.EventHandler;
+import com.google.devtools.build.lib.packages.SkylarkExportable;
 import com.google.devtools.build.lib.syntax.AssignmentStatement;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.Environment.Extension;
+import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Identifier;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInputSource;
@@ -774,7 +776,13 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
               load.getLabel(), load.getParentLabel());
         }
         if (stmt.kind() == Statement.Kind.ASSIGNMENT) {
-          ensureExportedIfExportable(extensionEnv, (AssignmentStatement) stmt);
+          try {
+            ensureExportedIfExportable(extensionEnv, (AssignmentStatement) stmt);
+          } catch (EvalException e) {
+            throw BuildFileParseException.createForUnknownParseError(
+                "Could evaluate extension %s referenced from %s: %s",
+                load.getLabel(), load.getParentLabel(), e.getMessage());
+          }
         }
       }
       loadedExtension = new Extension(extensionEnv);
@@ -792,28 +800,33 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * Call {@link com.google.devtools.build.lib.packages.SkylarkExportable#export(Label, String)} on
    * any objects that are assigned to
    *
-   * <p>This is primarily used to make sure that {@link SkylarkUserDefinedRule} instances set their
-   * name properly upon assignment
+   * <p>This is primarily used to make sure that {@link SkylarkUserDefinedRule} and {@link
+   * com.facebook.buck.core.rules.providers.impl.UserDefinedProvider} instances set their name
+   * properly upon assignment
    *
    * @param extensionEnv The environment where an exportable variable with the name in {@code stmt}
    *     is bound
    * @param stmt The assignment statement used to lookup the variable in the environment
    */
   private void ensureExportedIfExportable(Environment extensionEnv, AssignmentStatement stmt)
-      throws BuildFileParseException {
+      throws BuildFileParseException, EvalException {
     ImmutableSet<Identifier> identifiers = stmt.getLValue().boundIdentifiers();
     if (identifiers.size() != 1) {
       return;
     }
     String identifier = Iterables.getOnlyElement(identifiers).getName();
     Object lookedUp = extensionEnv.moduleLookup(identifier);
-    if (lookedUp instanceof SkylarkUserDefinedRule) {
-      SkylarkUserDefinedRule exportable = (SkylarkUserDefinedRule) lookedUp;
+    if (lookedUp instanceof SkylarkExportable) {
+      SkylarkExportable exportable = (SkylarkExportable) lookedUp;
       if (!exportable.isExported()) {
         Label extensionLabel = extensionEnv.getGlobals().getLabel();
         if (extensionLabel != null) {
           exportable.export(extensionLabel, identifier);
-          this.buckGlobals.getKnownUserDefinedRuleTypes().addRule(exportable);
+          if (lookedUp instanceof SkylarkUserDefinedRule) {
+            this.buckGlobals
+                .getKnownUserDefinedRuleTypes()
+                .addRule((SkylarkUserDefinedRule) exportable);
+          }
         }
       }
     }
