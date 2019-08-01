@@ -243,6 +243,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.nio.channels.ClosedByInterruptException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -1867,6 +1868,19 @@ public final class MainRunner {
             .getStdErr()
             .format("Atomic moves not supported, falling back to synchronous delete: %s", e);
         MostFiles.deleteRecursivelyIfExists(pathToMove);
+      } catch (AccessDeniedException e) {
+        String moveFrom = pathToMove.toAbsolutePath().toString();
+        String moveTo = trashPath.resolve(pathToMove.getFileName()).toAbsolutePath().toString();
+        if (Platform.detect() == Platform.WINDOWS) {
+          throw new HumanReadableException(
+              "Can't move %s to %s: Access Denied.\n"
+                  + "Usually this happens because some process is holding open file in %s.\n"
+                  + "You can use Handle (https://docs.microsoft.com/en-us/sysinternals/downloads/handle) to know which process is it.\n"
+                  + "Run it with: 'handle.exe /accepteula %s'",
+              moveFrom, moveTo, pathToMove, pathToMove);
+        } else {
+          throw new HumanReadableException("Can't move %s to %s: Access Denied", moveFrom, moveTo);
+        }
       }
     }
   }
