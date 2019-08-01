@@ -16,7 +16,9 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.CellNameResolver;
+import com.facebook.buck.core.cell.NewCellPathResolver;
+import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableMap;
@@ -53,14 +55,26 @@ public class AuditCellCommand extends AbstractCommand {
 
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
+    // TODO(cjhopman): This command doesn't really seem to make sense. I think it needs to be
+    // changed or better documented what it's doing if that's what's intended. I think it would make
+    // more sense for it to print either a map of canonicalname -> path or to include the empty
+    // alias in the map that it prints (then it's an alias -> path map).
     ImmutableMap<String, Path> cellMap;
+    CellNameResolver rootCellNameResolver = params.getCell().getCellNameResolver();
+    NewCellPathResolver pathResolver = params.getCell().getNewCellPathResolver();
+
     if (getArguments().isEmpty()) {
-      cellMap = params.getCell().getCellPathResolver().getCellPathsByRootCellExternalName();
+      cellMap =
+          rootCellNameResolver.getKnownCells().entrySet().stream()
+              .filter(e -> e.getKey().isPresent())
+              .collect(
+                  ImmutableMap.toImmutableMap(
+                      e -> e.getKey().get(), e -> pathResolver.getCellPath(e.getValue())));
     } else {
-      CellPathResolver cellPathResolver = params.getCell().getCellPathResolver();
       ImmutableMap.Builder<String, Path> outputBuilder = ImmutableMap.builder();
       for (String arg : getArguments()) {
-        Path cellPath = cellPathResolver.getCellPathOrThrow(Optional.of(arg));
+        CanonicalCellName cellName = rootCellNameResolver.getName(Optional.of(arg));
+        Path cellPath = pathResolver.getCellPath(cellName);
         outputBuilder.put(arg, cellPath);
       }
       cellMap = outputBuilder.build();
