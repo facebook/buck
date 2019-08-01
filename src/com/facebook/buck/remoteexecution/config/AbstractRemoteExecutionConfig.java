@@ -55,6 +55,7 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final int DEFAULT_REMOTE_CONCURRENT_PENDING_UPLOADS = 100;
   public static final int DEFAULT_REMOTE_CONCURRENT_EXECUTIONS = 80;
   public static final int DEFAULT_REMOTE_CONCURRENT_RESULT_HANDLING = 6;
+  public static final int DEFAULT_REMOTE_OUTPUT_MATERIALIZATION_THREADS = 4;
   public static final boolean DEFAULT_IS_LOCAL_FALLBACK_ENABLED = false;
 
   private static final String CONFIG_CERT = "cert";
@@ -72,11 +73,10 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
    * Number of actions to compute at a time. These should be <25ms average, but require I/O and cpu.
    */
   public static final String CONCURRENT_ACTION_COMPUTATIONS_KEY = "concurrent_action_computations";
-  /**
-   * Number of results to concurrently handle at a time. This is mostly just downloading outputs
-   * which is currently a blocking operation.
-   */
+  /** Number of results to concurrently handle at a time. */
   public static final String CONCURRENT_RESULT_HANDLING_KEY = "concurrent_result_handling";
+  /** Number of threads to handle output materialization. */
+  public static final String OUTPUT_MATERIALIZATION_THREADS_KEY = "output_materialization_threads";
   /** Whether failed remote executions are retried locally. */
   public static final String IS_LOCAL_FALLBACK_ENABLED_KEY = "is_local_fallback_enabled";
   /** The maximum size of inputs allowed on remote execution, if unset, no maximum. */
@@ -285,6 +285,11 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
             .getInteger(SECTION, CONCURRENT_RESULT_HANDLING_KEY)
             .orElse(DEFAULT_REMOTE_CONCURRENT_RESULT_HANDLING);
 
+    int outputMaterializationThreads =
+        getDelegate()
+            .getInteger(SECTION, OUTPUT_MATERIALIZATION_THREADS_KEY)
+            .orElse(DEFAULT_REMOTE_OUTPUT_MATERIALIZATION_THREADS);
+
     boolean isLocalFallbackEnabled =
         getDelegate()
             .getBooleanValue(
@@ -312,17 +317,6 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
           SECTION,
           CONCURRENT_ACTION_COMPUTATIONS_KEY,
           concurrentActionComputations,
-          SECTION,
-          STRATEGY_WORKER_THREADS_KEY,
-          workerThreads);
-    }
-
-    if (workerThreads < concurrentResultHandling) {
-      LOG.error(
-          "%s.%s=%d will be limited by %s.%s=%d",
-          SECTION,
-          CONCURRENT_ACTION_COMPUTATIONS_KEY,
-          concurrentResultHandling,
           SECTION,
           STRATEGY_WORKER_THREADS_KEY,
           workerThreads);
@@ -363,6 +357,11 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
       @Override
       public int getMaxConcurrentResultHandling() {
         return concurrentResultHandling;
+      }
+
+      @Override
+      public int getOutputMaterializationThreads() {
+        return outputMaterializationThreads;
       }
 
       @Override

@@ -77,7 +77,7 @@ public class GrpcContentAddressableStorageClient implements ContentAddressedStor
         new OutputsMaterializer(
             SIZE_LIMIT,
             MostExecutors.newMultiThreadExecutor(
-                "output-materializer", strategyConfig.getMaxConcurrentResultHandling()),
+                "output-materializer", strategyConfig.getOutputMaterializationThreads()),
             fetcher,
             protocol,
             buckEventBus);

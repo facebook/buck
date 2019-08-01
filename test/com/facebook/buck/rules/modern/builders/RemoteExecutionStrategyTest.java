@@ -260,6 +260,11 @@ public class RemoteExecutionStrategyTest {
     }
 
     @Override
+    public int getOutputMaterializationThreads() {
+      return 1;
+    }
+
+    @Override
     public int getMaxConcurrentPendingUploads() {
       return 1;
     }
