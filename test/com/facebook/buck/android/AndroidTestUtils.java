@@ -21,7 +21,18 @@ import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import java.nio.file.Paths;
 import java.util.Collections;
 
-class AndroidTestUtils {
+public class AndroidTestUtils {
+
+  /**
+   * Keep this variable in sync with repo configured value. In case of change: update all {@code
+   * .buckconfig} files in test resources. Search for a configuration like this:
+   *
+   * <pre>
+   *  [ndk]
+   *    ndk_version = 17
+   * </pre>
+   */
+  public static final String TARGET_NDK_VERSION = "17";
 
   private AndroidTestUtils() {}
 

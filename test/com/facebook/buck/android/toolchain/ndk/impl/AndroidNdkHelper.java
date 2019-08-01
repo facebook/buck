@@ -19,6 +19,7 @@ package com.facebook.buck.android.toolchain.ndk.impl;
 import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.android.AndroidBuckConfig;
+import com.facebook.buck.android.AndroidTestUtils;
 import com.facebook.buck.android.relinker.Symbols;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
@@ -48,6 +49,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.BufferedReader;
 import java.io.File;
@@ -66,31 +68,31 @@ public class AndroidNdkHelper {
 
   private static final Logger LOG = Logger.get(AndroidNdkHelper.class);
 
+  private static final ImmutableMap<String, ImmutableMap<String, String>> NDK_SETTING =
+      ImmutableMap.of("ndk", ImmutableMap.of("ndk_version", AndroidTestUtils.TARGET_NDK_VERSION));
+
   private AndroidNdkHelper() {}
 
   public static final AndroidBuckConfig DEFAULT_CONFIG =
       new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect());
 
   public static Optional<AndroidNdk> detectAndroidNdk(ProjectFilesystem filesystem) {
-    Optional<AndroidNdk> androidNdk;
     try {
-      androidNdk =
-          new AndroidNdkFactory()
-              .createToolchain(
-                  new ToolchainProviderBuilder().build(),
-                  ToolchainCreationContext.of(
-                      EnvVariablesProvider.getSystemEnv(),
-                      FakeBuckConfig.builder().build(),
-                      filesystem,
-                      new DefaultProcessExecutor(new TestConsole()),
-                      new ExecutableFinder(),
-                      TestRuleKeyConfigurationFactory.create(),
-                      () -> EmptyTargetConfiguration.INSTANCE));
+      return new AndroidNdkFactory()
+          .createToolchain(
+              new ToolchainProviderBuilder().build(),
+              ToolchainCreationContext.of(
+                  EnvVariablesProvider.getSystemEnv(),
+                  FakeBuckConfig.builder().setSections(NDK_SETTING).build(),
+                  filesystem,
+                  new DefaultProcessExecutor(new TestConsole()),
+                  new ExecutableFinder(),
+                  TestRuleKeyConfigurationFactory.create(),
+                  () -> EmptyTargetConfiguration.INSTANCE));
     } catch (HumanReadableException e) {
       LOG.info(e, "Cannot detect Android NDK");
-      androidNdk = Optional.empty();
+      return Optional.empty();
     }
-    return androidNdk;
   }
 
   public static NdkCxxPlatform getNdkCxxPlatform(ProjectFilesystem filesystem) {

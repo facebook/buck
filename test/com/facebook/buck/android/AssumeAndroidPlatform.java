@@ -35,13 +35,15 @@ import java.util.Optional;
 
 public class AssumeAndroidPlatform {
 
+  private static final VersionStringComparator VERSION_STRING_COMPARATOR =
+      new VersionStringComparator();
+
   private AssumeAndroidPlatform() {}
 
   public static void assumeNdkIsAvailable() {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(projectFilesystem);
-
     assumeTrue(androidNdk.isPresent());
   }
 
@@ -53,14 +55,10 @@ public class AssumeAndroidPlatform {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(projectFilesystem);
-
     if (!androidNdk.isPresent()) {
       return false;
     }
-
-    VersionStringComparator comparator = new VersionStringComparator();
-
-    return comparator.compare(androidNdk.get().getNdkVersion(), "17") < 0;
+    return VERSION_STRING_COMPARATOR.compare(androidNdk.get().getNdkVersion(), "17") < 0;
   }
 
   public static void assumeGnuStlIsAvailable() {
@@ -75,26 +73,23 @@ public class AssumeAndroidPlatform {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(projectFilesystem);
-
     if (!androidNdk.isPresent()) {
       return false;
     }
 
-    VersionStringComparator comparator = new VersionStringComparator();
-
-    return comparator.compare(androidNdk.get().getNdkVersion(), "18") < 0;
+    return VERSION_STRING_COMPARATOR.compare(androidNdk.get().getNdkVersion(), "18") < 0;
   }
 
   public static void assumeUnifiedHeadersAvailable() {
+    assumeTrue(isUnifiedHeadersAvailable());
+  }
+
+  public static boolean isUnifiedHeadersAvailable() {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(projectFilesystem);
-
     assumeTrue(androidNdk.isPresent());
-
-    VersionStringComparator comparator = new VersionStringComparator();
-
-    assumeTrue(comparator.compare(androidNdk.get().getNdkVersion(), "14") >= 0);
+    return VERSION_STRING_COMPARATOR.compare(androidNdk.get().getNdkVersion(), "14") >= 0;
   }
 
   public static void assumeSdkIsAvailable() {
