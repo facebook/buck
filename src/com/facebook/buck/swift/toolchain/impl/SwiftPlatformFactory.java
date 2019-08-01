@@ -18,8 +18,11 @@ package com.facebook.buck.swift.toolchain.impl;
 
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -27,6 +30,8 @@ import java.util.Optional;
 import java.util.Set;
 
 public class SwiftPlatformFactory {
+
+  private static final Logger LOG = Logger.get(SwiftPlatformFactory.class);
 
   // Utility class, do not instantiate.
   private SwiftPlatformFactory() {}
@@ -40,10 +45,11 @@ public class SwiftPlatformFactory {
             .setSwiftSharedLibraryRunPaths(buildSharedRunPaths(platformName));
 
     for (Path toolchainPath : toolchainPaths) {
-      Path swiftRuntimePath = toolchainPath.resolve("usr/lib/swift").resolve(platformName);
-      if (Files.isDirectory(swiftRuntimePath)) {
-        builder.addSwiftRuntimePaths(swiftRuntimePath);
+      Optional<Path> foundSwiftRuntimePath = findSwiftRuntimePath(toolchainPath, platformName);
+      if (foundSwiftRuntimePath.isPresent()) {
+        builder.addSwiftRuntimePaths(foundSwiftRuntimePath.get());
       }
+
       Path swiftStaticRuntimePath =
           toolchainPath.resolve("usr/lib/swift_static").resolve(platformName);
       if (Files.isDirectory(swiftStaticRuntimePath)) {
@@ -51,6 +57,52 @@ public class SwiftPlatformFactory {
       }
     }
     return builder.build();
+  }
+
+  public static Optional<Path> findSwiftRuntimePath(Path toolchainPath, String platformName) {
+    if (platformName == "driverkit") {
+      return Optional.empty();
+    }
+
+    // The location of the Swift stdlib changed in Xcode 11, and swift-stdlib-tool wasn't updated to
+    // accommodate, so we need to manually find and supply the new path.
+    Path swiftRuntimePath = toolchainPath.resolve("usr/lib/swift").resolve(platformName);
+    String libSwiftCoreDylibName = "libSwiftCore.dylib";
+    LOG.debug("Searching for swift toolchain in: %s", toolchainPath.toString());
+    if (Files.exists(swiftRuntimePath.resolve(libSwiftCoreDylibName))) {
+      LOG.debug("Found swift toolchain at %s", swiftRuntimePath.toString());
+      return Optional.of(swiftRuntimePath);
+    } else {
+      Path toolchainUsrLib = toolchainPath.resolve("usr/lib");
+      try (DirectoryStream<Path> toolchainUsrLibDirectoryStream =
+          Files.newDirectoryStream(toolchainUsrLib, "swift*")) {
+        // Go through all swift* folders inside toolchain/usr/lib and find the first that contains
+        // libSwiftCore.dylib.
+        Path swiftStdLibRoot = null;
+        for (Path swiftFolder : toolchainUsrLibDirectoryStream) {
+          if (Files.exists(swiftFolder.resolve(platformName).resolve(libSwiftCoreDylibName))) {
+            swiftStdLibRoot = swiftFolder.resolve(platformName);
+          }
+
+          if (swiftStdLibRoot != null) {
+            break;
+          }
+        }
+        if (swiftStdLibRoot != null) {
+          return Optional.of(swiftStdLibRoot);
+        }
+      } catch (IOException x) {
+        LOG.error(
+            "Unable to find swift libraries in toolchain: %s for platform: %s. Exception: %s.",
+            toolchainPath, platformName, x.getLocalizedMessage());
+        return Optional.empty();
+      }
+
+      LOG.error(
+          "Unable to find swift libraries in toolchain: %s for platform: %s",
+          toolchainPath, platformName);
+      return Optional.empty();
+    }
   }
 
   private static ImmutableList<Path> buildSharedRunPaths(String platformName) {

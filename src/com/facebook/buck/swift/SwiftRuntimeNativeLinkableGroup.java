@@ -18,7 +18,6 @@ package com.facebook.buck.swift;
 
 import static com.facebook.buck.core.model.UnflavoredBuildTargetView.BUILD_TARGET_PREFIX;
 
-import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -76,7 +75,7 @@ public final class SwiftRuntimeNativeLinkableGroup implements NativeLinkableGrou
                 "swift_runtime",
                 ImmutableList.of(),
                 ImmutableList.of(),
-                getPreferredLinkage(cxxPlatform),
+                Linkage.SHARED,
                 new NativeLinkableInfo.Delegate() {
                   @Override
                   public NativeLinkableInput computeInput(
@@ -103,14 +102,6 @@ public final class SwiftRuntimeNativeLinkableGroup implements NativeLinkableGrou
     inputBuilder.addAllArgs(linkerArgsBuilder.build());
     NativeLinkableInput linkableInput = inputBuilder.build();
     return linkableInput;
-  }
-
-  private Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
-    ApplePlatformType type = ApplePlatformType.of(cxxPlatform.getFlavor().getName());
-    if (type == ApplePlatformType.MAC) {
-      return Linkage.ANY;
-    }
-    return Linkage.SHARED;
   }
 
   public static void populateLinkerArguments(

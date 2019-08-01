@@ -2488,7 +2488,11 @@ public class ProjectGenerator {
       // we have a plain apple_binary that has Swift deps. So we're manually doing exactly what
       // Xcode does to make sure binaries link successfully if they use Swift directly or
       // transitively.
+
+      // I'm not sure how to look for the correct folder here, so just adding both for now, if the
+      // folder changes in a future release this can be revisited.
       librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift/$PLATFORM_NAME");
+      librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift-5.0/$PLATFORM_NAME");
     }
 
     if (swiftDeps.size() > 0 || projGenerationStateCache.targetContainsSwiftSourceCode(node)) {

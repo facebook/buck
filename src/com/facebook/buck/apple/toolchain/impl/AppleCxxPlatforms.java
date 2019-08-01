@@ -526,6 +526,7 @@ public class AppleCxxPlatforms {
         .add(platformName);
     for (Path toolchainPath : sdkPaths.getToolchainPaths()) {
       swiftStdlibToolParamsBuilder.add("--toolchain").add(toolchainPath.toString());
+      applySourceLibrariesParamIfNeeded(swiftStdlibToolParamsBuilder, toolchainPath, platformName);
     }
 
     Optional<Tool> swiftc =
@@ -544,6 +545,23 @@ public class AppleCxxPlatforms {
         tool ->
             SwiftPlatformFactory.build(
                 platformName, sdkPaths.getToolchainPaths(), tool, swiftStdLibTool));
+  }
+
+  private static void applySourceLibrariesParamIfNeeded(
+      ImmutableList.Builder<String> swiftStdlibToolParamsBuilder,
+      Path toolchainPath,
+      String platformName) {
+    Optional<Path> foundSwiftRuntimePath =
+        SwiftPlatformFactory.findSwiftRuntimePath(toolchainPath, platformName);
+    if (foundSwiftRuntimePath.isPresent()) {
+      swiftStdlibToolParamsBuilder
+          .add("--source-libraries")
+          .add(foundSwiftRuntimePath.get().toString());
+    } else {
+      if (platformName != "driverkit") {
+        LOG.error("Swift stdlib missing from: %s for platform: %s", toolchainPath, platformName);
+      }
+    }
   }
 
   private static Optional<Tool> getOptionalTool(
