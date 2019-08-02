@@ -27,6 +27,7 @@ import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.packages.SkylarkInfo;
 import com.google.devtools.build.lib.packages.StructProvider;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.vfs.PathFragment;
@@ -263,5 +264,16 @@ public class BuckSkylarkTypesTest {
     thrown.expect(EvalException.class);
     BuckSkylarkTypes.validateKwargName(
         Location.fromPathFragment(PathFragment.create("foo")), "foo-bar");
+  }
+
+  @Test
+  public void skylarkValueFromNullableReturnsNoneOnNull() {
+    assertSame(Runtime.NONE, BuckSkylarkTypes.skylarkValueFromNullable(null));
+  }
+
+  @Test
+  public void skylarkValueFromNullableReturnsOriginalObjectOnNonNull() {
+    String someString = "foo";
+    assertSame(someString, BuckSkylarkTypes.skylarkValueFromNullable(someString));
   }
 }

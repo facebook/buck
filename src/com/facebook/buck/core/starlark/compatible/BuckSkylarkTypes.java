@@ -21,6 +21,7 @@ import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
+import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import java.util.List;
@@ -190,5 +191,14 @@ public class BuckSkylarkTypes {
       throw new EvalException(
           location, String.format("Attribute name '%s' is not a valid identifier", kwarg));
     }
+  }
+
+  /**
+   * @return {@code None} if {@code object} is {@code null}, else return {@code object}. This is
+   *     just a central place ot make sure things we return from internal implementations into
+   *     Skylark are properly turned into None
+   */
+  public static Object skylarkValueFromNullable(@Nullable Object object) {
+    return object == null ? Runtime.NONE : object;
   }
 }
