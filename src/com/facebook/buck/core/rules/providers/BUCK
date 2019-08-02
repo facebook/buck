@@ -2,6 +2,7 @@ java_library(
     name = "providers",
     srcs = glob(["*.java"]),
     exported_deps = [
+        "//src/com/facebook/buck/core/model:model",
         "//third-party/java/bazel:bazel",
     ],
     visibility = ["PUBLIC"],
