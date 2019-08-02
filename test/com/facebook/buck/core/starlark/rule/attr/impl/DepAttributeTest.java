@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
 import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.SkylarkDependency;
 import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
@@ -147,12 +148,13 @@ public class DepAttributeTest {
         attr.getValue(
             cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "//foo:bar");
 
-    ProviderInfoCollection transformedTarget =
+    SkylarkDependency dependency =
         attr.getPostCoercionTransform().postCoercionTransform(coerced, deps);
 
     assertEquals(
         buildArtifact,
         Iterables.getOnlyElement(
-            transformedTarget.get(DefaultInfo.PROVIDER).get().defaultOutputs()));
+            dependency.getProviderInfos().get(DefaultInfo.PROVIDER).get().defaultOutputs()));
+    assertEquals("//foo:bar", dependency.label().getCanonicalForm());
   }
 }

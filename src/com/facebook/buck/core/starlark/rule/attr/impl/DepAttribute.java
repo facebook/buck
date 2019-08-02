@@ -19,6 +19,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.SkylarkDependency;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -61,32 +62,34 @@ public abstract class DepAttribute extends Attribute<BuildTarget> {
   public abstract ImmutableList<Provider<?>> getProviders();
 
   @Override
-  public PostCoercionTransform<
-          ImmutableMap<BuildTarget, ProviderInfoCollection>, ProviderInfoCollection>
+  public PostCoercionTransform<ImmutableMap<BuildTarget, ProviderInfoCollection>, SkylarkDependency>
       getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
 
   /**
-   * Gets the ProviderInfoCollection for a specific dependency, or throws if the target is invalid
+   * Gets the {@link SkylarkDependency} for a specific dependency, or throws if the target is
+   * invalid
    *
    * @param target A post-coercion object that should be a {@link BuildTarget}
    * @param deps The map to lookup the provided build target in
-   * @return The {@link ProviderInfoCollection} for the target given in {@code target}
+   * @return The {@link SkylarkDependency} for the target given in {@code target}
    * @throws com.google.common.base.VerifyException if {@code target} is not a {@link BuildTarget}
    * @throws NullPointerException if provider information could not be found for the given target
    */
-  static ProviderInfoCollection getProviderInfoCollectionForDep(
+  static SkylarkDependency getDependencyForTargetFromDeps(
       Object target, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
     Verify.verify(target instanceof BuildTarget, "%s must be a BuildTarget", target);
 
-    return Preconditions.checkNotNull(deps.get(target), "Deps %s did not contain %s", deps, target);
+    return new SkylarkDependency(
+        (BuildTarget) target,
+        Preconditions.checkNotNull(deps.get(target), "Deps %s did not contain %s", deps, target));
   }
 
-  private ProviderInfoCollection postCoercionTransform(
+  private SkylarkDependency postCoercionTransform(
       Object dep, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
-    ProviderInfoCollection providerInfos = getProviderInfoCollectionForDep(dep, deps);
-    validateProvidersPresent(getProviders(), (BuildTarget) dep, providerInfos);
-    return providerInfos;
+    SkylarkDependency dependency = getDependencyForTargetFromDeps(dep, deps);
+    validateProvidersPresent(getProviders(), (BuildTarget) dep, dependency.getProviderInfos());
+    return dependency;
   }
 }

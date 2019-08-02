@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
 import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.SkylarkDependency;
 import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
@@ -211,11 +212,15 @@ public class DepListAttributeTest {
             EmptyTargetConfiguration.INSTANCE,
             ImmutableList.of("//foo:bar", "//foo:baz"));
 
-    List<ProviderInfoCollection> transformed =
+    List<SkylarkDependency> transformed =
         attr.getPostCoercionTransform().postCoercionTransform(coerced, deps);
 
     assertEquals(2, transformed.size());
-    assertEquals(defaultInfo1, transformed.get(0).get(DefaultInfo.PROVIDER).get());
-    assertEquals(defaultInfo2, transformed.get(1).get(DefaultInfo.PROVIDER).get());
+    assertEquals(
+        defaultInfo1, transformed.get(0).getProviderInfos().get(DefaultInfo.PROVIDER).get());
+    assertEquals(
+        defaultInfo2, transformed.get(1).getProviderInfos().get(DefaultInfo.PROVIDER).get());
+    assertEquals("//foo:bar", transformed.get(0).label().getCanonicalForm());
+    assertEquals("//foo:baz", transformed.get(1).label().getCanonicalForm());
   }
 }

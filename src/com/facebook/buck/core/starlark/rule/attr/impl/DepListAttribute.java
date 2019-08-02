@@ -19,6 +19,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.SkylarkDependency;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -78,22 +79,21 @@ public abstract class DepListAttribute extends Attribute<ImmutableList<BuildTarg
 
   @Override
   public PostCoercionTransform<
-          ImmutableMap<BuildTarget, ProviderInfoCollection>, List<ProviderInfoCollection>>
+          ImmutableMap<BuildTarget, ProviderInfoCollection>, List<SkylarkDependency>>
       getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
 
-  private ImmutableList<ProviderInfoCollection> postCoercionTransform(
+  private ImmutableList<SkylarkDependency> postCoercionTransform(
       Object coercedValue, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
     Verify.verify(coercedValue instanceof List<?>, "Value %s must be a list", coercedValue);
     List<?> listValue = (List<?>) coercedValue;
-    ImmutableList.Builder<ProviderInfoCollection> builder =
+    ImmutableList.Builder<SkylarkDependency> builder =
         ImmutableList.builderWithExpectedSize(listValue.size());
     for (Object target : listValue) {
-      ProviderInfoCollection providerInfos =
-          DepAttribute.getProviderInfoCollectionForDep(target, deps);
-      validateProvidersPresent(getProviders(), (BuildTarget) target, providerInfos);
-      builder.add(DepAttribute.getProviderInfoCollectionForDep(target, deps));
+      SkylarkDependency dependency = DepAttribute.getDependencyForTargetFromDeps(target, deps);
+      validateProvidersPresent(getProviders(), (BuildTarget) target, dependency.getProviderInfos());
+      builder.add(DepAttribute.getDependencyForTargetFromDeps(target, deps));
     }
     return builder.build();
   }

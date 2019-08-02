@@ -7,6 +7,12 @@ def _write_file_impl(ctx):
 def _dep_list_rule_impl(ctx):
     if len(ctx.attr.deps) != 2:
         fail("Expected two deps")
+
+    if str(ctx.attr.deps[0].label) != "//:file1":
+        fail("expected label //:file1, got {}".format(ctx.attr.deps[0].label))
+    if str(ctx.attr.deps[1].label) != "//:file2":
+        fail("expected label //:file2, got {}".format(ctx.attr.deps[1].label))
+
     first_dep = ctx.attr.deps[0][DefaultInfo]
     second_dep = ctx.attr.deps[1][DefaultInfo]
 
