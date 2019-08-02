@@ -71,7 +71,7 @@ public class SwiftPlatformFactoryIntegrationTest {
   @Test
   public void testBuildSwiftPlatformWithNonEmptyLookupPathWithTools() throws IOException {
     tmp.newFolder("foo/usr/lib/swift/iphoneos");
-    tmp.newFile("foo/usr/lib/swift/iphoneos/libSwiftCore.dylib");
+    tmp.newFile("foo/usr/lib/swift/iphoneos/libswiftCore.dylib");
     tmp.newFolder("foo2/usr/lib/swift_static/iphoneos");
     tmp.newFolder("foo3/usr/lib/swift_static/iphoneos");
     SwiftPlatform swiftPlatform =

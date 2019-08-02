@@ -67,7 +67,7 @@ public class SwiftPlatformFactory {
     // The location of the Swift stdlib changed in Xcode 11, and swift-stdlib-tool wasn't updated to
     // accommodate, so we need to manually find and supply the new path.
     Path swiftRuntimePath = toolchainPath.resolve("usr/lib/swift").resolve(platformName);
-    String libSwiftCoreDylibName = "libSwiftCore.dylib";
+    String libSwiftCoreDylibName = "libswiftCore.dylib";
     LOG.debug("Searching for swift toolchain in: %s", toolchainPath.toString());
     if (Files.exists(swiftRuntimePath.resolve(libSwiftCoreDylibName))) {
       LOG.debug("Found swift toolchain at %s", swiftRuntimePath.toString());
