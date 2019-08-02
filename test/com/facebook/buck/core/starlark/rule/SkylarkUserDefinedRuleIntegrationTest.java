@@ -30,6 +30,7 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Splitter;
@@ -515,5 +516,45 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     assertThat(
         workspace.runBuckBuild("//foo:invalid_env").assertFailure().getStderr(),
         Matchers.containsString("expected type"));
+  }
+
+  @Test
+  public void userDefinedProvidersCanBeUsedInProviderRestrictions() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "user_defined_providers", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//foo:does_not_require_content_info_missing").assertSuccess();
+    workspace.runBuckBuild("//foo:does_not_require_content_info").assertSuccess();
+    workspace.runBuckBuild("//foo:requires_content_info").assertSuccess();
+    assertThat(
+        workspace
+            .runBuckBuild("//foo:requires_content_info_missing")
+            // TODO(T47757795): Currently this causes fatal generic because we don't turn
+            //                  VerifyException into an EvalException. Get logging / exceptions
+            //                  working and tidy this up
+            .assertExitCode(ExitCode.FATAL_GENERIC)
+            .getStderr()
+            .trim(),
+        Matchers.containsString("expected provider ContentInfo to be present"));
+  }
+
+  @Test
+  public void userDefinedProvidersArePassedBetweenDeps() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "user_defined_providers", tmp);
+    workspace.setUp();
+
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+
+    Path expectedLeafPath =
+        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//foo:leaf"))
+            .resolve("leaf");
+
+    workspace.runBuckBuild("//foo:leaf").assertSuccess();
+
+    assertEquals(
+        "from_root content + from_middle content",
+        filesystem.readFileIfItExists(expectedLeafPath).get());
   }
 }

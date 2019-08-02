@@ -696,4 +696,80 @@ public class SkylarkUserDefinedRulesParserTest {
         collector,
         e -> e.getKind() == EventKind.DEBUG && e.getMessage().contains("in bzl: DefaultInfo("));
   }
+
+  @Test
+  public void providerFunctionFailsIfInvalidFieldNameProvided()
+      throws IOException, InterruptedException {
+    setupWorkspace("user_defined_providers");
+    Path buildFile = projectFilesystem.resolve("invalid_field").resolve("BUCK");
+
+    EventCollector collector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(collector);
+
+    thrown.expect(BuildFileParseException.class);
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void providerFunctionFailsIfInvalidTypeProvidedForFields()
+      throws IOException, InterruptedException {
+    setupWorkspace("user_defined_providers");
+    Path buildFile = projectFilesystem.resolve("invalid_type").resolve("BUCK");
+
+    EventCollector collector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(collector);
+
+    thrown.expect(BuildFileParseException.class);
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void providerFunctionFailsIfInvalidListType() throws IOException, InterruptedException {
+    setupWorkspace("user_defined_providers");
+    Path buildFile = projectFilesystem.resolve("invalid_list_type").resolve("BUCK");
+
+    EventCollector collector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(collector);
+
+    thrown.expect(BuildFileParseException.class);
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void providerFunctionFailsIfInvalidDictType() throws IOException, InterruptedException {
+    setupWorkspace("user_defined_providers");
+    Path buildFile = projectFilesystem.resolve("invalid_dict_type").resolve("BUCK");
+
+    EventCollector collector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(collector);
+
+    thrown.expect(BuildFileParseException.class);
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void providerInfoFromProviderFunctionHasCorrectFields()
+      throws IOException, InterruptedException {
+    setupWorkspace("user_defined_providers");
+    Path buildFile = projectFilesystem.resolve("valid_provider").resolve("BUCK");
+
+    EventCollector collector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(collector);
+
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void providerCannotBeUsedIfNotAssigned() throws IOException, InterruptedException {
+    setupWorkspace("user_defined_providers");
+    Path buildFile = projectFilesystem.resolve("not_assigned").resolve("BUCK");
+
+    EventCollector collector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(collector);
+
+    // TODO(T48080142): When we wrap up all of these validation errors into something human
+    // friendly, this will become a build file error
+    thrown.expect(NullPointerException.class);
+    parser.getBuildFileManifest(buildFile);
+  }
 }
