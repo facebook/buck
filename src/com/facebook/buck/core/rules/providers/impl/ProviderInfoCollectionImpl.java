@@ -18,6 +18,7 @@ package com.facebook.buck.core.rules.providers.impl;
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
+import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.StarlarkContext;
@@ -40,11 +41,7 @@ public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
   public Object getIndex(Object key, Location loc, StarlarkContext context) throws EvalException {
     verifyKeyIsProvider(
         key, loc, "Type Target only supports indexing by object constructors, got %s instead");
-    Object result = getNullable(((Provider<?>) key));
-    if (result == null) {
-      throw new EvalException(loc, String.format("Provider of %s is not found", key));
-    }
-    return result;
+    return BuckSkylarkTypes.skylarkValueFromNullable(getNullable(((Provider<?>) key)));
   }
 
   @Override

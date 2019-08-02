@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.StarlarkContext;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Runtime;
 import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
@@ -105,5 +106,21 @@ public class ProviderInfoCollectionImplTest {
 
     assertTrue(providerInfoCollection.contains(provider));
     assertFalse(providerInfoCollection.contains(missingProvider));
+  }
+
+  @Test
+  public void returnsCorrectSkylarkValues() throws EvalException {
+    FakeBuiltInProvider builtinProvider1 = new FakeBuiltInProvider("fake1");
+    FakeInfo fakeInfo1 = new FakeInfo(builtinProvider1);
+
+    FakeBuiltInProvider builtinProvider2 = new FakeBuiltInProvider("fake2");
+
+    ProviderInfoCollection providerInfoCollection =
+        ProviderInfoCollectionImpl.builder().put(fakeInfo1).build();
+
+    assertEquals(
+        fakeInfo1, providerInfoCollection.getIndex(builtinProvider1, Location.BUILTIN, ctx));
+    assertEquals(
+        Runtime.NONE, providerInfoCollection.getIndex(builtinProvider2, Location.BUILTIN, ctx));
   }
 }
