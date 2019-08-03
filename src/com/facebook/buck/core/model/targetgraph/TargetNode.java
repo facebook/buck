@@ -79,6 +79,7 @@ public interface TargetNode<T>
    */
   ImmutableSortedSet<BuildTarget> getConfigurationDeps();
 
+  // TODO(cjhopman): This should be a CellNameResolver.
   CellPathResolver getCellNames();
 
   ImmutableSet<VisibilityPattern> getVisibilityPatterns();
