@@ -49,6 +49,7 @@ public final class CellProvider {
     }
   }
 
+  // TODO(cjhopman): Shouldn't this be based on CanonicalCellName instead?
   public Cell getCellByPath(Path path) {
     try {
       return cells.get(path);

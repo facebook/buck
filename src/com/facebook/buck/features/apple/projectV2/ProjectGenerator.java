@@ -2926,11 +2926,7 @@ public class ProjectGenerator {
 
     Path basePath;
     if (shouldCreateHeadersSymlinks) {
-      basePath =
-          projectFilesystem
-              .getRootPath()
-              .resolve(targetNode.getBuildTarget().getCellPath())
-              .resolve(headerSymlinkTreeRoot);
+      basePath = getCellPathForTarget(targetNode.getBuildTarget()).resolve(headerSymlinkTreeRoot);
     } else {
       basePath = projectFilesystem.getRootPath();
     }
@@ -2949,6 +2945,10 @@ public class ProjectGenerator {
     for (Map.Entry<Path, Path> entry : swiftHeaderMapEntries.entrySet()) {
       headerMapBuilder.add(entry.getKey().toString(), entry.getValue());
     }
+  }
+
+  private Path getCellPathForTarget(BuildTarget buildTarget) {
+    return projectCell.getNewCellPathResolver().getCellPath(buildTarget.getCell());
   }
 
   /** Generates the merged header maps and write it to the public header symlink tree location. */
@@ -3562,7 +3562,8 @@ public class ProjectGenerator {
   private Path getRelativePathToMergedHeaderMap() {
     Path treeRoot = getPathToMergedHeaderMap();
     Path cellRoot =
-        MorePaths.relativize(projectFilesystem.getRootPath(), workspaceTarget.get().getCellPath());
+        MorePaths.relativize(
+            projectFilesystem.getRootPath(), getCellPathForTarget(workspaceTarget.get()));
     return pathRelativizer.outputDirToRootRelative(cellRoot.resolve(treeRoot));
   }
 
@@ -4647,8 +4648,7 @@ public class ProjectGenerator {
     Optional<SourcePath> src = exportFileNode.get().getConstructorArg().getSrc();
     if (!src.isPresent()) {
       Path output =
-          buildTarget
-              .getCellPath()
+          getCellPathForTarget(buildTarget)
               .resolve(buildTarget.getBasePath())
               .resolve(buildTarget.getShortNameAndFlavorPostfix());
       return projectFilesystem.relativize(output);
@@ -4746,6 +4746,7 @@ public class ProjectGenerator {
 
   private ProjectFilesystem getFilesystemForTarget(Optional<BuildTarget> target) {
     if (target.isPresent()) {
+      // TODO(T47190884): Look the path up with the cell name.
       Path cellPath = target.get().getCellPath();
       Cell cell = projectCell.getCellProvider().getCellByPath(cellPath);
       return cell.getFilesystem();
