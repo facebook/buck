@@ -47,10 +47,7 @@ public class CxxLocationMacroExpanderTest {
     String expanded =
         Arg.stringify(
             expander.expandFrom(
-                node.getBuildTarget(),
-                node.getCellNames(),
-                graphBuilder,
-                LocationMacro.of(node.getBuildTarget())),
+                node.getBuildTarget(), graphBuilder, LocationMacro.of(node.getBuildTarget())),
             pathResolver);
     assertThat(
         expanded,

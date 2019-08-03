@@ -102,8 +102,7 @@ abstract class AbstractStringWithMacrosConverter {
       getPrecomputedWorkCache().put(macro, precomputedWork);
     }
 
-    return expander.expandFrom(
-        getBuildTarget(), getCellPathResolver(), getActionGraphBuilder(), macro, precomputedWork);
+    return expander.expandFrom(getBuildTarget(), getActionGraphBuilder(), macro, precomputedWork);
   }
 
   /**

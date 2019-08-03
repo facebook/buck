@@ -16,11 +16,9 @@
 
 package com.facebook.buck.rules.macros;
 
-import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -136,10 +134,8 @@ public class ClasspathMacroExpanderTest {
     BuildRule dep = graphBuilder.requireRule(depNode.getBuildTarget());
 
     BuildTarget forTarget = BuildTargetFactory.newInstance("//:rule");
-    CellPathResolver cellRoots = createCellRoots(filesystem);
     Arg ruleKeyAppendables =
-        expander.expandFrom(
-            forTarget, cellRoots, graphBuilder, ClasspathMacro.of(rule.getBuildTarget()));
+        expander.expandFrom(forTarget, graphBuilder, ClasspathMacro.of(rule.getBuildTarget()));
 
     ImmutableList<BuildRule> deps =
         BuildableSupport.deriveDeps(ruleKeyAppendables, graphBuilder)

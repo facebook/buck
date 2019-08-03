@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -32,11 +31,7 @@ import java.util.function.Consumer;
 /** Handles '$(output ...)' macro which expands to the path of a named supplementary output. */
 public class OutputMacroExpander extends AbstractMacroExpanderWithoutPrecomputedWork<OutputMacro> {
   @Override
-  public Arg expandFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ActionGraphBuilder graphBuilder,
-      OutputMacro input) {
+  public Arg expandFrom(BuildTarget target, ActionGraphBuilder graphBuilder, OutputMacro input) {
     return new OutputArg(input, graphBuilder, target);
   }
 

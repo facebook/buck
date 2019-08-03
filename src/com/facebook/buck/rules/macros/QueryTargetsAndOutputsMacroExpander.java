@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -68,7 +67,6 @@ public class QueryTargetsAndOutputsMacroExpander
   @Override
   public Arg expandFrom(
       BuildTarget target,
-      CellPathResolver cellNames,
       ActionGraphBuilder graphBuilder,
       QueryTargetsAndOutputsMacro input,
       QueryResults precomputedWork) {

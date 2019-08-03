@@ -339,8 +339,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     @Override
-    public Arg expandFrom(
-        BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver) {
+    public Arg expandFrom(BuildTarget target, BuildRuleResolver resolver) {
       return ToolArg.of(tool);
     }
   }
@@ -368,8 +367,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         Optional<Pattern> filter);
 
     @Override
-    public Arg expandFrom(
-        BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, M input)
+    public Arg expandFrom(BuildTarget target, ActionGraphBuilder graphBuilder, M input)
         throws MacroException {
       return expand(
           graphBuilder,

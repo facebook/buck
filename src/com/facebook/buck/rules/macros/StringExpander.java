@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.rules.args.Arg;
@@ -39,8 +38,7 @@ public class StringExpander<M extends Macro> extends SimpleMacroExpander<M> {
   }
 
   @Override
-  public Arg expandFrom(
-      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver) {
+  public Arg expandFrom(BuildTarget target, BuildRuleResolver resolver) {
     return toReturn;
   }
 }

@@ -34,16 +34,11 @@ public abstract class AbstractMacroExpanderWithoutPrecomputedWork<T>
 
   @Override
   public final Arg expandFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ActionGraphBuilder graphBuilder,
-      T input,
-      Object precomputedWork)
+      BuildTarget target, ActionGraphBuilder graphBuilder, T input, Object precomputedWork)
       throws MacroException {
-    return expandFrom(target, cellNames, graphBuilder, input);
+    return expandFrom(target, graphBuilder, input);
   }
 
-  public abstract Arg expandFrom(
-      BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, T input)
+  public abstract Arg expandFrom(BuildTarget target, ActionGraphBuilder graphBuilder, T input)
       throws MacroException;
 }

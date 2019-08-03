@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -91,10 +90,7 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
 
   @Override
   public Arg expandFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ActionGraphBuilder graphBuilder,
-      ClasspathAbiMacro input)
+      BuildTarget target, ActionGraphBuilder graphBuilder, ClasspathAbiMacro input)
       throws MacroException {
 
     BuildRule inputRule = resolve(graphBuilder, input);

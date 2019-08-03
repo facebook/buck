@@ -183,11 +183,9 @@ public class ExecutableMacroExpanderTest {
 
     // Verify that the correct cmd was created.
     ExecutableMacroExpander expander = new ExecutableMacroExpander();
-    CellPathResolver cellRoots = TestCellBuilder.createCellRoots(filesystem);
     ExecutableMacro executableMacro = ExecutableMacro.of(target);
-    assertEquals(
-        ToolArg.of(tool), expander.expandFrom(target, cellRoots, graphBuilder, executableMacro));
-    Arg expanded = expander.expandFrom(target, cellRoots, graphBuilder, executableMacro);
+    assertEquals(ToolArg.of(tool), expander.expandFrom(target, graphBuilder, executableMacro));
+    Arg expanded = expander.expandFrom(target, graphBuilder, executableMacro);
     assertThat(expanded, Matchers.instanceOf(ToolArg.class));
     assertEquals(tool, ((ToolArg) expanded).getTool());
   }
@@ -199,9 +197,8 @@ public class ExecutableMacroExpanderTest {
     Tool tool = new CommandTool.Builder().addArg("command").build();
     graphBuilder.addToIndex(new NoopBinaryBuildRule(target, filesystem, params, tool));
     ExecutableMacroExpander expander = new ExecutableMacroExpander();
-    CellPathResolver cellRoots = TestCellBuilder.createCellRoots(filesystem);
     assertThat(
-        expander.expandFrom(target, cellRoots, graphBuilder, ExecutableMacro.of(target)),
+        expander.expandFrom(target, graphBuilder, ExecutableMacro.of(target)),
         Matchers.equalTo(ToolArg.of(tool)));
   }
 

@@ -76,7 +76,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -1040,10 +1039,7 @@ public class ProjectGenerator {
         new LocationMacroExpander() {
           @Override
           public Arg expandFrom(
-              BuildTarget target,
-              CellPathResolver cellNames,
-              ActionGraphBuilder graphBuilder,
-              LocationMacro input)
+              BuildTarget target, ActionGraphBuilder graphBuilder, LocationMacro input)
               throws MacroException {
             BuildTarget locationMacroTarget = input.getTarget();
 
@@ -1061,7 +1057,7 @@ public class ProjectGenerator {
             requiredBuildTargetsBuilder.add(locationMacroTarget);
             return StringArg.of(
                 Arg.stringify(
-                    super.expandFrom(target, cellNames, builderFromNode, input),
+                    super.expandFrom(target, builderFromNode, input),
                     builderFromNode.getSourcePathResolver()));
           }
         };

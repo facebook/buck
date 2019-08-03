@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.rules.args.StringArg;
@@ -42,10 +41,7 @@ public class EnvironmentVariableMacroExpander
 
   @Override
   public StringArg expandFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ActionGraphBuilder graphBuilder,
-      EnvMacro envMacro) {
+      BuildTarget target, ActionGraphBuilder graphBuilder, EnvMacro envMacro) {
     if (platform == Platform.WINDOWS) {
       String var = "pwd".equalsIgnoreCase(envMacro.getVar()) ? "cd" : envMacro.getVar();
       return StringArg.of("%" + var + "%");

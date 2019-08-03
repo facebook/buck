@@ -32,11 +32,6 @@ public interface MacroExpander<T, P> {
       BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, T input)
       throws MacroException;
 
-  Arg expandFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ActionGraphBuilder graphBuilder,
-      T input,
-      P precomputedWork)
+  Arg expandFrom(BuildTarget target, ActionGraphBuilder graphBuilder, T input, P precomputedWork)
       throws MacroException;
 }
