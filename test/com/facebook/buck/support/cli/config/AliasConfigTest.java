@@ -99,7 +99,9 @@ public class AliasConfigTest {
       buckConfig.getAliases();
       fail("Should have thrown HumanReadableException.");
     } catch (HumanReadableException e) {
-      assertEquals("Path in :app_release must start with //", e.getHumanReadableErrorMessage());
+      assertEquals(
+          "When parsing :app_release: Path in :app_release must start with //.",
+          e.getHumanReadableErrorMessage());
     }
   }
 

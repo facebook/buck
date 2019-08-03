@@ -32,6 +32,7 @@ import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.FileSystem;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Rule;
@@ -128,7 +129,7 @@ public class BuildTargetMatcherParserTest {
     CellPathResolver otherCellPathResolver =
         new CellPathResolverView(
             rootCellPathResolver,
-            TestCellNameResolver.forRoot("other").withAlias("root", ""),
+            TestCellNameResolver.forSecondary("other", Optional.of("root")),
             ImmutableSet.of("root"),
             filesystem.resolve("other").normalize());
     UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory =

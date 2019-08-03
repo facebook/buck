@@ -21,4 +21,8 @@ public class BuildTargetParseException extends HumanReadableException {
   public BuildTargetParseException(String humanReadableErrorMessage) {
     super(humanReadableErrorMessage);
   }
+
+  public BuildTargetParseException(Exception cause, String humanReadableErrorMessage) {
+    super(cause, humanReadableErrorMessage);
+  }
 }
