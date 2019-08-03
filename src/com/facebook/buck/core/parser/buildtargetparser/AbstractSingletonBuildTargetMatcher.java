@@ -54,6 +54,7 @@ abstract class AbstractSingletonBuildTargetMatcher implements BuildTargetMatcher
   @Override
   public boolean matches(BuildTarget target) {
     // No need to check the cell name.
+    // TODO(T47190884): Check the name instead of the path.
     return this.getTarget().getCellPath().equals(target.getCellPath())
         && this.getTarget().getBaseName().equals(target.getBaseName())
         && this.getTarget().getShortName().equals(target.getShortName());

@@ -452,9 +452,7 @@ public class RustCompileUtils {
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
       Path absBinaryDir =
-          buildTarget
-              .getCellPath()
-              .resolve(RustCompileRule.getOutputDir(binaryTarget, projectFilesystem));
+          projectFilesystem.resolve(RustCompileRule.getOutputDir(binaryTarget, projectFilesystem));
 
       linkerArgs.addAll(
           Linkers.iXlinker(

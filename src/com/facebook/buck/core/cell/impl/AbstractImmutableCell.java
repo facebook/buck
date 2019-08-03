@@ -120,6 +120,7 @@ abstract class AbstractImmutableCell implements Cell {
 
   @Override
   public Cell getCell(BuildTarget target) {
+    // TODO(T47190884): implement getCell(CanonicalCellName) and use that instead.
     return getCell(target.getCellPath());
   }
 

@@ -99,6 +99,7 @@ public class RawTargetNodeToTargetNodeParsePipeline
       executorService.submit(
           () -> {
             for (BuildTarget depTarget : targetNode.getParseDeps()) {
+              // TODO(T47190884): Figure out how to do this with CanonicalCellName instead.
               Cell depCell = cell.getCellIgnoringVisibilityCheck(depTarget.getCellPath());
               try {
                 if (depTarget.isFlavored()) {

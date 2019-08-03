@@ -403,6 +403,7 @@ public class XCodeProjectCommandHelper {
           RichStream.from(requiredBuildTargets)
               .map(
                   target -> {
+                    // TODO(T47190884): Use our NewCellPathResolver to look up the path.
                     if (!target.getCellPath().equals(cell.getRoot())) {
                       try {
                         CanonicalCellName cellName =

@@ -197,7 +197,7 @@ public class HaskellBinaryDescription
     Path outputDir = BuildTargetPaths.getGenPath(projectFilesystem, binaryTarget, "%s").getParent();
     Path outputPath = outputDir.resolve(binaryTarget.getShortName());
 
-    Path absBinaryDir = buildTarget.getCellPath().resolve(outputDir);
+    Path absBinaryDir = projectFilesystem.resolve(outputDir);
 
     // Special handling for dynamically linked binaries.
     if (depType == Linker.LinkableDepType.SHARED) {

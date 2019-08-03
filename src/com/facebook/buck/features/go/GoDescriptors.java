@@ -379,9 +379,8 @@ abstract class GoDescriptors {
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
       Path absBinaryDir =
-          buildTarget
-              .getCellPath()
-              .resolve(BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s"));
+          projectFilesystem.resolve(
+              BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s"));
 
       extraFlags.addAll(
           Linkers.iXlinker(

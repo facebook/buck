@@ -4769,6 +4769,7 @@ public class ProjectGenerator {
 
   private ProjectFilesystem getFilesystemForTarget(Optional<BuildTarget> target) {
     if (target.isPresent()) {
+      // TODO(T47190884): Look the path up with the cell name.
       Path cellPath = target.get().getCellPath();
       Cell cell = projectCell.getCellProvider().getCellByPath(cellPath);
       return cell.getFilesystem();

@@ -533,7 +533,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
       Path linkOutput = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").resolve(out);
-      Path absLinkOut = buildTarget.getCellPath().resolve(linkOutput);
+      Path absLinkOut = filesystem.resolve(linkOutput);
       SymlinkTree symlinkTree = requireSymlinkTree(graphBuilder, rules);
       return RichStream.from(
               StringArg.from(

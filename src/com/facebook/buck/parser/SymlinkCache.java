@@ -57,6 +57,7 @@ class SymlinkCache {
    */
   private final Map<Path, Optional<Path>> symlinkExistenceCache = new ConcurrentHashMap<>();
 
+  // TODO(T47190884): This should use CanonicalCellName
   private final Map<Path, ParserConfig.AllowSymlinks> cellSymlinkAllowability =
       new ConcurrentHashMap<>();
 

@@ -228,7 +228,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 output,
                 linkerArgs,
                 linker,
-                getBuildTarget().getCellPath(),
+                getProjectFilesystem().getRootPath(),
                 resolver))
         .add(
             new ShellStep(getProjectFilesystem().getRootPath()) {

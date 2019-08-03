@@ -538,6 +538,7 @@ class NativeLibraryMergeEnhancer {
       if (!constituents.isActuallyMerged()) {
         // There is only one target
         BuildTarget target = preMergeLibs.iterator().next().getBuildTarget();
+        // TODO(T47190884): Compare cell name with the one from baseBuildTarget instead.
         if (!target.getCellPath().equals(projectFilesystem.getRootPath())) {
           // Switch the target project filesystem
           targetProjectFilesystem = graphBuilder.getRule(target).getProjectFilesystem();

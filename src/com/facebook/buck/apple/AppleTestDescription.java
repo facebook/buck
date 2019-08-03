@@ -399,8 +399,7 @@ public class AppleTestDescription
       // in order to get a different rule for each cell the tests are from.
       String relativeRootPathString =
           xctoolZipBuildRule
-              .getBuildTarget()
-              .getCellPath()
+              .getProjectFilesystem()
               .relativize(projectFilesystem.getRootPath())
               .toString();
       Hasher hasher = Hashing.sha1().newHasher();
