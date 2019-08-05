@@ -51,6 +51,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Consumer;
@@ -272,25 +273,18 @@ public class OutputsMaterializer {
         } else {
           LOG.debug("Starting batch request for: " + pending.size() + " items, size: " + size);
           // Download batches of small objects
-          ImmutableMultimap.Builder<Digest, WritableByteChannel> digestMap =
+          ImmutableMultimap.Builder<Digest, Callable<WritableByteChannel>> digestMap =
               ImmutableMultimap.builder();
           ImmutableMultimap.Builder<Digest, SettableFuture<Void>> futureMap =
               ImmutableMultimap.builder();
           for (PendingMaterialization p : pending) {
-            WritableByteChannel channel = p.materializer.getOutputChannel(p.path, p.isExecutable);
-            digestMap.put(p.digest, channel);
+            digestMap.put(p.digest, () -> p.materializer.getOutputChannel(p.path, p.isExecutable));
             futureMap.put(p.digest, p.future);
           }
 
-          ImmutableMultimap<Digest, WritableByteChannel> batch = digestMap.build();
+          ImmutableMultimap<Digest, Callable<WritableByteChannel>> batch = digestMap.build();
           ImmutableMultimap<Digest, SettableFuture<Void>> futures = futureMap.build();
-          try {
-            fetcher.batchFetchBlobs(batch, futures).get();
-          } finally {
-            for (WritableByteChannel channel : batch.values()) {
-              tryCloseChannel(channel);
-            }
-          }
+          fetcher.batchFetchBlobs(batch, futures).get();
         }
         LOG.debug("Finished materializing: " + pending.size() + " requests, size: " + size);
       } catch (Exception e) {

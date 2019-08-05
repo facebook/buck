@@ -43,6 +43,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.security.MessageDigest;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 /** GRPC implementation of the AsyncBlobFetcher. */
@@ -114,7 +115,7 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
 
   @Override
   public ListenableFuture<Void> batchFetchBlobs(
-      ImmutableMultimap<Protocol.Digest, WritableByteChannel> requests,
+      ImmutableMultimap<Protocol.Digest, Callable<WritableByteChannel>> requests,
       ImmutableMultimap<Protocol.Digest, SettableFuture<Void>> futures) {
     Scope scope =
         CasBlobDownloadEvent.sendEvent(
@@ -172,7 +173,7 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
   private void handleResult(
       Protocol.Digest digest,
       BatchReadBlobsResponse.Response batchResponse,
-      ImmutableCollection<WritableByteChannel> writableByteChannels)
+      ImmutableCollection<Callable<WritableByteChannel>> writableByteChannels)
       throws IOException {
     if (!Status.fromCodeValue(batchResponse.getStatus().getCode()).isOk()) {
       throw new BuckUncheckedExecutionException(
@@ -183,9 +184,13 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
     MessageDigest messageDigest = protocol.getMessageDigest();
     for (ByteBuffer dataByteBuffer : batchResponse.getData().asReadOnlyByteBufferList()) {
       messageDigest.update(dataByteBuffer.duplicate());
-      for (WritableByteChannel channel : writableByteChannels) {
+      for (Callable<WritableByteChannel> callable : writableByteChannels) {
         // Reset buffer position for each channel that's written to
-        channel.write(dataByteBuffer.duplicate());
+        try (WritableByteChannel channel = callable.call()) {
+          channel.write(dataByteBuffer.duplicate());
+        } catch (Exception e) {
+          throw new BuckUncheckedExecutionException("Unable to write " + digest + " to channel");
+        }
       }
     }
     String receivedHash = HashCode.fromBytes(messageDigest.digest()).toString();

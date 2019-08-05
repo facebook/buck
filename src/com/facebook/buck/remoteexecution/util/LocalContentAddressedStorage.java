@@ -63,6 +63,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -135,14 +136,19 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
 
           @Override
           public ListenableFuture<Void> batchFetchBlobs(
-              ImmutableMultimap<Digest, WritableByteChannel> requests,
+              ImmutableMultimap<Digest, Callable<WritableByteChannel>> requests,
               ImmutableMultimap<Digest, SettableFuture<Void>> futures)
               throws IOException {
             for (Digest digest : requests.keySet()) {
               FileInputStream stream = getFileInputStream(digest);
               FileChannel input = stream.getChannel();
-              for (WritableByteChannel channel : requests.get(digest)) {
-                input.transferTo(0, input.size(), channel);
+              for (Callable<WritableByteChannel> callable : requests.get(digest)) {
+                try (WritableByteChannel channel = callable.call()) {
+                  input.transferTo(0, input.size(), channel);
+                } catch (Exception e) {
+                  throw new BuckUncheckedExecutionException(
+                      "Unable to write " + digest + " to channel");
+                }
               }
               futures.get(digest).forEach(future -> future.set(null));
             }

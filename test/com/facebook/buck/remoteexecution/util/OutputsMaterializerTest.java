@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient.FileMaterializer;
@@ -55,6 +56,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -418,14 +420,19 @@ public class OutputsMaterializerTest {
 
     @Override
     public ListenableFuture<Void> batchFetchBlobs(
-        ImmutableMultimap<Digest, WritableByteChannel> requests,
+        ImmutableMultimap<Digest, Callable<WritableByteChannel>> requests,
         ImmutableMultimap<Digest, SettableFuture<Void>> futures)
         throws IOException {
       for (Digest digest : requests.keySet()) {
         try {
           ByteBuffer b = fetch(digest).get();
-          for (WritableByteChannel channel : requests.get(digest)) {
-            channel.write(b.duplicate());
+          for (Callable<WritableByteChannel> callable : requests.get(digest)) {
+            try (WritableByteChannel channel = callable.call()) {
+              channel.write(b.duplicate());
+            } catch (Exception e) {
+              throw new BuckUncheckedExecutionException(
+                  "Unable to write " + digest + " to channel");
+            }
           }
           futures.get(digest).forEach(future -> future.set(null));
         } catch (InterruptedException | ExecutionException e) {
