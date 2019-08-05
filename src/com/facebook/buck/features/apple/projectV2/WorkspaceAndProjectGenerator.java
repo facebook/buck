@@ -34,7 +34,6 @@ import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
@@ -95,7 +94,7 @@ public class WorkspaceAndProjectGenerator {
   private final ProjectGenerationStateCache projGenerationStateCache;
   private final XcodeWorkspaceConfigDescriptionArg workspaceArguments;
   private final BuildTarget workspaceBuildTarget;
-  private final FocusedModuleTargetMatcher focusModules;
+  private final FocusedTargetMatcher focusedTargetMatcher; // @audited (chatatap)
   private final ProjectGeneratorOptions projectGeneratorOptions;
   private final boolean parallelizeBuild;
   private final CxxPlatform defaultCxxPlatform;
@@ -127,7 +126,7 @@ public class WorkspaceAndProjectGenerator {
       XcodeWorkspaceConfigDescriptionArg workspaceArguments,
       BuildTarget workspaceBuildTarget,
       ProjectGeneratorOptions projectGeneratorOptions,
-      FocusedModuleTargetMatcher focusModules,
+      FocusedTargetMatcher focusedTargetMatcher,
       boolean parallelizeBuild,
       CxxPlatform defaultCxxPlatform,
       ImmutableSet<Flavor> appleCxxFlavors,
@@ -162,19 +161,11 @@ public class WorkspaceAndProjectGenerator {
     this.appleConfig = appleConfig;
     this.sharedLibraryToBundle = sharedLibraryToBundle;
 
-    this.focusModules =
-        focusModules.map(
-            inputs ->
-                // Update the focused modules list (if present) to contain srcTarget (if present).
-                workspaceArguments
-                    .getSrcTarget()
-                    .map(
-                        srcTarget ->
-                            ImmutableSet.<UnflavoredBuildTargetView>builder()
-                                .addAll(inputs)
-                                .add(srcTarget.getUnflavoredBuildTarget())
-                                .build())
-                    .orElse(inputs));
+    this.focusedTargetMatcher = focusedTargetMatcher;
+    // Add the workspace target to the focused target matcher.
+    workspaceArguments
+        .getSrcTarget()
+        .ifPresent(buildTarget -> this.focusedTargetMatcher.addTarget(buildTarget));
   }
 
   @VisibleForTesting
@@ -537,7 +528,7 @@ public class WorkspaceAndProjectGenerator {
                 isMainProject,
                 workspaceArguments.getSrcTarget(),
                 targetsInRequiredProjects,
-                focusModules,
+                focusedTargetMatcher,
                 defaultCxxPlatform,
                 appleCxxFlavors,
                 graphBuilderForNode,
@@ -869,10 +860,10 @@ public class WorkspaceAndProjectGenerator {
           ImmutableList<BuildTarget> focusedTests =
               ((HasTests) node.getConstructorArg())
                   .getTests().stream()
-                      .filter(t -> focusModules.isFocusedOn(t))
+                      .filter(t -> focusedTargetMatcher.matches(t))
                       .collect(ImmutableList.toImmutableList());
           // Show a warning if the target is not focused but the tests are.
-          if (focusedTests.size() > 0 && !focusModules.isFocusedOn(node.getBuildTarget())) {
+          if (focusedTests.size() > 0 && !focusedTargetMatcher.matches(node.getBuildTarget())) {
             buckEventBus.post(
                 ConsoleEvent.warning(
                     "Skipping tests of %s since it's not focused", node.getBuildTarget()));
@@ -1078,7 +1069,7 @@ public class WorkspaceAndProjectGenerator {
       String schemeName = schemeConfigEntry.getKey();
       XcodeWorkspaceConfigDescriptionArg schemeConfigArg = schemeConfigEntry.getValue();
       if (schemeConfigArg.getSrcTarget().isPresent()
-          && !focusModules.isFocusedOn(schemeConfigArg.getSrcTarget().get())) {
+          && !focusedTargetMatcher.matches(schemeConfigArg.getSrcTarget().get())) {
         continue;
       }
 

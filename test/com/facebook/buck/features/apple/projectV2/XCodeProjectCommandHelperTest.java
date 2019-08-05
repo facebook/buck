@@ -471,7 +471,7 @@ public class XCodeProjectCommandHelperTest {
               graphRootsOrSourceTargets,
               projectGraph,
               withDependenciesTests,
-              FocusedModuleTargetMatcher.noFocus());
+              FocusedTargetMatcher.noFocus());
       associatedTests = projectGraph.getAll(explicitTests);
     }
 
@@ -515,7 +515,7 @@ public class XCodeProjectCommandHelperTest {
             .setShouldUseShortNamesForTargets(true)
             .build(),
         ImmutableSet.of(),
-        FocusedModuleTargetMatcher.noFocus(),
+        FocusedTargetMatcher.noFocus(),
         projectGenerators,
         new NullPathOutputPresenter(),
         Optional.empty());

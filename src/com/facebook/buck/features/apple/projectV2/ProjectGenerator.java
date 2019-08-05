@@ -285,7 +285,7 @@ public class ProjectGenerator {
   private final ImmutableMap<Flavor, CxxBuckConfig> platformCxxBuckConfigs;
   private final SwiftBuckConfig swiftBuckConfig;
   private final AppleConfig appleConfig;
-  private final FocusedModuleTargetMatcher focusModules;
+  private final FocusedTargetMatcher focusedTargetMatcher;
   private final boolean isMainProject;
   private final Optional<BuildTarget> workspaceTarget;
   private final ImmutableSet<BuildTarget> targetsInRequiredProjects;
@@ -316,7 +316,7 @@ public class ProjectGenerator {
       boolean isMainProject,
       Optional<BuildTarget> workspaceTarget,
       ImmutableSet<BuildTarget> targetsInRequiredProjects,
-      FocusedModuleTargetMatcher focusModules,
+      FocusedTargetMatcher focusedTargetMatcher,
       CxxPlatform defaultCxxPlatform,
       ImmutableSet<Flavor> appleCxxFlavors,
       Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode,
@@ -395,7 +395,7 @@ public class ProjectGenerator {
     this.platformCxxBuckConfigs = cxxBuckConfig.getFlavoredConfigs();
     this.appleConfig = appleConfig;
     this.swiftBuckConfig = swiftBuckConfig;
-    this.focusModules = focusModules;
+    this.focusedTargetMatcher = focusedTargetMatcher;
 
     gidGenerator = new GidGenerator();
   }
@@ -485,7 +485,7 @@ public class ProjectGenerator {
           LOG.debug("Including rule %s in project", targetNode);
           projectTargetsBuilder.add(targetNode);
 
-          if (focusModules.isFocusedOn(targetNode.getBuildTarget())) {
+          if (focusedTargetMatcher.matches(targetNode.getBuildTarget())) {
             // If the target is not included, we still need to do other operations to generate
             // the required header maps.
             hasAtLeastOneTarget = true;
@@ -513,7 +513,7 @@ public class ProjectGenerator {
 
       addGenruleFiles();
 
-      if (!hasAtLeastOneTarget && focusModules.hasFocus()) {
+      if (!hasAtLeastOneTarget && focusedTargetMatcher.hasEntries) {
         return;
       }
 
@@ -688,7 +688,7 @@ public class ProjectGenerator {
   private Optional<PBXTarget> generateHalideLibraryTarget(
       PBXProject project, TargetNode<HalideLibraryDescriptionArg> targetNode) throws IOException {
     BuildTarget buildTarget = targetNode.getBuildTarget();
-    boolean isFocusedOnTarget = focusModules.isFocusedOn(buildTarget);
+    boolean isFocusedOnTarget = focusedTargetMatcher.matches(buildTarget);
     String productName = getProductNameForBuildTargetNode(targetNode);
     Path outputPath = getHalideOutputPath(targetNode.getFilesystem(), buildTarget);
 
@@ -1305,7 +1305,7 @@ public class ProjectGenerator {
     ImmutableSet<SourcePath> headers = headersBuilder.build();
     ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> langPreprocessorFlags =
         targetNode.getConstructorArg().getLangPreprocessorFlags();
-    boolean isFocusedOnTarget = focusModules.isFocusedOn(buildTarget);
+    boolean isFocusedOnTarget = focusedTargetMatcher.matches(buildTarget);
 
     Optional<String> swiftVersion = getSwiftVersionForTargetNode(targetNode);
     boolean hasSwiftVersionArg = swiftVersion.isPresent();
@@ -4194,7 +4194,7 @@ public class ProjectGenerator {
 
   private boolean isLibraryFocused(TargetNode<?> targetNode) {
     BuildTarget buildTarget = targetNode.getBuildTarget();
-    return focusModules.isFocusedOn(buildTarget);
+    return focusedTargetMatcher.matches(buildTarget);
   }
 
   boolean isFrameworkTarget(TargetNode<?> targetNode) {
@@ -4444,7 +4444,7 @@ public class ProjectGenerator {
 
   private Optional<String> getForceLoadLinkerFlag(TargetNode<? extends CommonArg> targetNode) {
     BuildTarget buildTarget = targetNode.getBuildTarget();
-    boolean isFocusedOnTarget = focusModules.isFocusedOn(buildTarget);
+    boolean isFocusedOnTarget = focusedTargetMatcher.matches(buildTarget);
     CommonArg arg = targetNode.getConstructorArg();
     if (arg.getLinkWhole().orElse(false)) {
       String flag =

@@ -258,7 +258,7 @@ public class WorkspaceAndProjectGeneratorTest {
                 .setShouldIncludeTests(true)
                 .setShouldIncludeDependenciesTests(true)
                 .build(),
-            FocusedModuleTargetMatcher.noFocus(),
+            FocusedTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
@@ -312,7 +312,7 @@ public class WorkspaceAndProjectGeneratorTest {
             workspaceNode.getConstructorArg(),
             workspaceNode.getBuildTarget(),
             ProjectGeneratorOptions.builder().build(),
-            FocusedModuleTargetMatcher.noFocus(),
+            FocusedTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
@@ -364,7 +364,7 @@ public class WorkspaceAndProjectGeneratorTest {
                 .setShouldIncludeTests(true)
                 .setShouldGenerateProjectSchemes(true)
                 .build(),
-            FocusedModuleTargetMatcher.noFocus(),
+            FocusedTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
@@ -498,7 +498,7 @@ public class WorkspaceAndProjectGeneratorTest {
             workspaceNode.getConstructorArg(),
             workspaceNode.getBuildTarget(),
             ProjectGeneratorOptions.builder().build(),
-            FocusedModuleTargetMatcher.noFocus(),
+            FocusedTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
@@ -652,7 +652,7 @@ public class WorkspaceAndProjectGeneratorTest {
                 .setShouldIncludeTests(true)
                 .setShouldIncludeDependenciesTests(true)
                 .build(),
-            FocusedModuleTargetMatcher.noFocus(),
+            FocusedTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
@@ -775,7 +775,7 @@ public class WorkspaceAndProjectGeneratorTest {
                 .setShouldIncludeTests(true)
                 .setShouldIncludeDependenciesTests(true)
                 .build(),
-            FocusedModuleTargetMatcher.noFocus(),
+            FocusedTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
@@ -879,7 +879,7 @@ public class WorkspaceAndProjectGeneratorTest {
                 .setShouldIncludeTests(true)
                 .setShouldIncludeDependenciesTests(true)
                 .build(),
-            FocusedModuleTargetMatcher.noFocus(),
+            FocusedTargetMatcher.noFocus(),
             true /* parallelizeBuild */,
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
@@ -961,7 +961,7 @@ public class WorkspaceAndProjectGeneratorTest {
                 .setShouldIncludeTests(true)
                 .setShouldIncludeDependenciesTests(true)
                 .build(),
-            FocusedModuleTargetMatcher.noFocus(),
+            FocusedTargetMatcher.noFocus(),
             true /* parallelizeBuild */,
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
@@ -1020,7 +1020,7 @@ public class WorkspaceAndProjectGeneratorTest {
                 .setShouldIncludeTests(true)
                 .setShouldIncludeDependenciesTests(true)
                 .build(),
-            FocusedModuleTargetMatcher.noFocus(),
+            FocusedTargetMatcher.noFocus(),
             true /* parallelizeBuild */,
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
@@ -1084,7 +1084,7 @@ public class WorkspaceAndProjectGeneratorTest {
                 .setShouldIncludeTests(true)
                 .setShouldIncludeDependenciesTests(true)
                 .build(),
-            FocusedModuleTargetMatcher.noFocus(),
+            FocusedTargetMatcher.noFocus(),
             true /* parallelizeBuild */,
             DEFAULT_PLATFORM,
             ImmutableSet.of(),

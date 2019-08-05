@@ -36,7 +36,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -84,7 +83,6 @@ import com.facebook.buck.versions.VersionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -96,7 +94,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -140,7 +137,6 @@ public class XCodeProjectCommandHelper {
   private final boolean withTests;
   private final boolean withoutTests;
   private final boolean withoutDependenciesTests;
-  private final String modulesToFocusOn;
   private final boolean createProjectSchemes;
   private final boolean dryRun;
   private final boolean readOnly;
@@ -150,6 +146,8 @@ public class XCodeProjectCommandHelper {
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
   private final Function<ImmutableList<String>, ExitCode> buildRunner;
   private final Supplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutorSupplier;
+
+  private final FocusedTargetMatcher focusedTargetMatcher;
 
   public XCodeProjectCommandHelper(
       BuckEventBus buckEventBus,
@@ -175,7 +173,7 @@ public class XCodeProjectCommandHelper {
       boolean withTests,
       boolean withoutTests,
       boolean withoutDependenciesTests,
-      String modulesToFocusOn,
+      String focus,
       boolean createProjectSchemes,
       boolean dryRun,
       boolean readOnly,
@@ -205,7 +203,6 @@ public class XCodeProjectCommandHelper {
     this.withTests = withTests;
     this.withoutTests = withoutTests;
     this.withoutDependenciesTests = withoutDependenciesTests;
-    this.modulesToFocusOn = modulesToFocusOn;
     this.createProjectSchemes = createProjectSchemes;
     this.dryRun = dryRun;
     this.readOnly = readOnly;
@@ -219,6 +216,8 @@ public class XCodeProjectCommandHelper {
             .setApplyDefaultFlavorsMode(
                 buckConfig.getView(ParserConfig.class).getDefaultFlavorsMode())
             .build();
+
+    this.focusedTargetMatcher = new FocusedTargetMatcher(focus, cell.getCanonicalName().getName());
   }
 
   public ExitCode parseTargetsAndRunXCodeGenerator() throws IOException, InterruptedException {
@@ -391,7 +390,7 @@ public class XCodeProjectCommandHelper {
             targetGraphCreationResult,
             options,
             appleCxxFlavors,
-            getFocusModules(),
+            focusedTargetMatcher,
             new HashMap<>(),
             outputPresenter,
             sharedLibraryToBundle);
@@ -445,7 +444,7 @@ public class XCodeProjectCommandHelper {
       TargetGraphCreationResult targetGraphCreationResult,
       ProjectGeneratorOptions options,
       ImmutableSet<Flavor> appleCxxFlavors,
-      FocusedModuleTargetMatcher focusModules,
+      FocusedTargetMatcher focusedTargetMatcher, // @audited(chatatap)
       Map<Path, ProjectGenerator> projectGenerators,
       PathOutputPresenter presenter,
       Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle)
@@ -495,7 +494,7 @@ public class XCodeProjectCommandHelper {
               workspaceArgs,
               inputTarget,
               options,
-              focusModules,
+              focusedTargetMatcher,
               !appleConfig.getXcodeDisableParallelizeBuild(),
               defaultCxxPlatform,
               appleCxxFlavors,
@@ -526,42 +525,6 @@ public class XCodeProjectCommandHelper {
     }
 
     return requiredBuildTargetsBuilder.build();
-  }
-
-  private FocusedModuleTargetMatcher getFocusModules() throws InterruptedException {
-    if (modulesToFocusOn == null) {
-      return FocusedModuleTargetMatcher.noFocus();
-    }
-
-    Iterable<String> patterns = Splitter.onPattern("\\s+").split(modulesToFocusOn);
-    // Parse patterns with the following syntax:
-    // https://buck.build/concept/build_target_pattern.html
-    ImmutableList<TargetNodeSpec> specs = argsParser.apply(patterns);
-
-    // Resolve the list of targets matching the patterns.
-    ImmutableSet<BuildTarget> passedInTargetsSet;
-    try {
-      passedInTargetsSet =
-          parser
-              .resolveTargetSpecs(
-                  parsingContext.withSpeculativeParsing(SpeculativeParsing.DISABLED),
-                  specs,
-                  targetConfiguration)
-              .stream()
-              .flatMap(Collection::stream)
-              .collect(ImmutableSet.toImmutableSet());
-    } catch (HumanReadableException e) {
-      buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return FocusedModuleTargetMatcher.noFocus();
-    }
-    LOG.debug("Selected targets: %s", passedInTargetsSet.toString());
-
-    ImmutableSet<UnflavoredBuildTargetView> passedInUnflavoredTargetsSet =
-        RichStream.from(passedInTargetsSet)
-            .map(BuildTarget::getUnflavoredBuildTarget)
-            .toImmutableSet();
-    LOG.debug("Selected unflavored targets: %s", passedInUnflavoredTargetsSet.toString());
-    return FocusedModuleTargetMatcher.focusedOn(passedInUnflavoredTargetsSet);
   }
 
   @SuppressWarnings(value = "unchecked")
@@ -689,8 +652,6 @@ public class XCodeProjectCommandHelper {
     ImmutableSet<BuildTarget> originalBuildTargets = targetGraphCreationResult.getBuildTargets();
 
     if (isWithTests) {
-      FocusedModuleTargetMatcher focusedModules = getFocusModules();
-
       ImmutableSet<BuildTarget> graphRootsOrSourceTargets =
           replaceWorkspacesWithSourceTargetsIfPossible(targetGraphCreationResult);
 
@@ -699,7 +660,7 @@ public class XCodeProjectCommandHelper {
               graphRootsOrSourceTargets,
               targetGraphCreationResult.getTargetGraph(),
               isWithDependenciesTests,
-              focusedModules);
+              focusedTargetMatcher);
 
       targetGraphCreationResult =
           parser.buildTargetGraph(
@@ -780,7 +741,7 @@ public class XCodeProjectCommandHelper {
       ImmutableSet<BuildTarget> buildTargets,
       TargetGraph projectGraph,
       boolean shouldIncludeDependenciesTests,
-      FocusedModuleTargetMatcher focusedModules) {
+      FocusedTargetMatcher focusedTargetMatcher) {
     Iterable<TargetNode<?>> projectRoots = projectGraph.getAll(buildTargets);
     Iterable<TargetNode<?>> nodes;
     if (shouldIncludeDependenciesTests) {
@@ -791,7 +752,7 @@ public class XCodeProjectCommandHelper {
 
     return TargetNodes.getTestTargetsForNodes(
         RichStream.from(nodes)
-            .filter(node -> focusedModules.isFocusedOn(node.getBuildTarget()))
+            .filter(node -> focusedTargetMatcher.matches(node.getBuildTarget()))
             .iterator());
   }
 
