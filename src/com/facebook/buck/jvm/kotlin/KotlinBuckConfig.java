@@ -37,6 +37,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
   private static final Logger LOG = Logger.get(KotlinBuckConfig.class);
 
   private static final String SECTION = "kotlin";
+  public static final String PROPERTY_COMPILE_AGAINST_ABIS = "compile_against_abis";
 
   private static final Path DEFAULT_KOTLIN_COMPILER = Paths.get("kotlinc");
 
@@ -70,6 +71,10 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
             getPathToReflectJar(),
             getPathToScriptRuntimeJar(),
             getPathToCompilerJar()));
+  }
+
+  public boolean shouldCompileAgainstAbis() {
+    return delegate.getBooleanValue(SECTION, PROPERTY_COMPILE_AGAINST_ABIS, false);
   }
 
   Path getPathToCompilerBinary() {

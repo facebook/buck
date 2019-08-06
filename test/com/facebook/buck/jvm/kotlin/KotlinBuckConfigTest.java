@@ -330,4 +330,15 @@ public class KotlinBuckConfigTest {
     assertNotNull(runtimeJar);
     assertTrue(runtimeJar.endsWith("faux_kotlin_home/libexec/lib/kotlin-stdlib.jar"));
   }
+
+  @Test
+  public void compileAgainstAbis() {
+    KotlinBuckConfig config =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("compile_against_abis", "true")))
+            .build()
+            .getView(KotlinBuckConfig.class);
+
+    assertTrue(config.shouldCompileAgainstAbis());
+  }
 }

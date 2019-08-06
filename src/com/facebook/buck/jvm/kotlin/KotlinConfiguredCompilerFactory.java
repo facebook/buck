@@ -83,4 +83,9 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
     // Enable desugaring for kotlin libraries by default
     return true;
   }
+
+  @Override
+  public boolean shouldCompileAgainstAbis() {
+    return kotlinBuckConfig.shouldCompileAgainstAbis();
+  }
 }
