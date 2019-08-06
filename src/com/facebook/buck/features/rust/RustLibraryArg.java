@@ -38,7 +38,8 @@ public class RustLibraryArg implements Arg, HasSourcePath {
 
   @Override
   public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
-    Path path = pathResolver.getRelativePath(rlib);
+    // Use absolute path to make sure cross-cell references work.
+    Path path = pathResolver.getAbsolutePath(rlib);
     // NOTE: each of these logical args must be put on the command line as a single parameter
     // (otherwise dedup might just remove one piece of it)
     if (direct) {

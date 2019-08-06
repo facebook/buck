@@ -865,4 +865,21 @@ public class RustBinaryIntegrationTest {
         // Make sure we get a working executable
         containsString("Hello"));
   }
+
+  @Test
+  public void simpleBinaryCrossCell() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "multi_cell", tmp);
+    workspace.setUp();
+
+    workspace
+        .runBuckCommand("build", "--config", "rust.unflavored_binaries=true", "cell//:thinguser")
+        .assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("cell//:thinguser");
+    workspace.resetBuildLogFile();
+
+    workspace.runCommand(
+        workspace.resolve("cell/buck-out/gen/thinguser#binary/thinguser").toString());
+  }
 }
