@@ -8,6 +8,7 @@
       <module fileurl="file://$PROJECT_DIR$/tools/build/modules/modules.iml" filepath="$PROJECT_DIR$/tools/build/modules/modules.iml" />
       <module fileurl="file://$PROJECT_DIR$/src/com/facebook/buck/multitenant/multitenant.iml" filepath="$PROJECT_DIR$/src/com/facebook/buck/multitenant/multitenant.iml" />
       <module fileurl="file://$PROJECT_DIR$/programs/programs.iml" filepath="$PROJECT_DIR$/programs/programs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/skunkworks/protobuck/protobuck.iml" filepath="$PROJECT_DIR$/skunkworks/protobuck/protobuck.iml" />
       <module fileurl="file://$PROJECT_DIR$/python-dsl/python-dsl.iml" filepath="$PROJECT_DIR$/python-dsl/python-dsl.iml" />
       <module fileurl="file://$PROJECT_DIR$/scripts/scripts.iml" filepath="$PROJECT_DIR$/scripts/scripts.iml" />
     </modules>
