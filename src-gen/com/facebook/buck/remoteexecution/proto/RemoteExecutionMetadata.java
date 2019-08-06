@@ -166,7 +166,7 @@ private static final long serialVersionUID = 0L;
             break;
           }
           default: {
-            if (!parseUnknownFieldProto3(
+            if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
               done = true;
             }
@@ -499,54 +499,53 @@ private static final long serialVersionUID = 0L;
     }
     com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata other = (com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata) obj;
 
-    boolean result = true;
-    result = result && (hasReSessionId() == other.hasReSessionId());
+    if (hasReSessionId() != other.hasReSessionId()) return false;
     if (hasReSessionId()) {
-      result = result && getReSessionId()
-          .equals(other.getReSessionId());
+      if (!getReSessionId()
+          .equals(other.getReSessionId())) return false;
     }
-    result = result && (hasBuckInfo() == other.hasBuckInfo());
+    if (hasBuckInfo() != other.hasBuckInfo()) return false;
     if (hasBuckInfo()) {
-      result = result && getBuckInfo()
-          .equals(other.getBuckInfo());
+      if (!getBuckInfo()
+          .equals(other.getBuckInfo())) return false;
     }
-    result = result && (hasTraceInfo() == other.hasTraceInfo());
+    if (hasTraceInfo() != other.hasTraceInfo()) return false;
     if (hasTraceInfo()) {
-      result = result && getTraceInfo()
-          .equals(other.getTraceInfo());
+      if (!getTraceInfo()
+          .equals(other.getTraceInfo())) return false;
     }
-    result = result && (hasCreatorInfo() == other.hasCreatorInfo());
+    if (hasCreatorInfo() != other.hasCreatorInfo()) return false;
     if (hasCreatorInfo()) {
-      result = result && getCreatorInfo()
-          .equals(other.getCreatorInfo());
+      if (!getCreatorInfo()
+          .equals(other.getCreatorInfo())) return false;
     }
-    result = result && (hasEngineInfo() == other.hasEngineInfo());
+    if (hasEngineInfo() != other.hasEngineInfo()) return false;
     if (hasEngineInfo()) {
-      result = result && getEngineInfo()
-          .equals(other.getEngineInfo());
+      if (!getEngineInfo()
+          .equals(other.getEngineInfo())) return false;
     }
-    result = result && (hasWorkerInfo() == other.hasWorkerInfo());
+    if (hasWorkerInfo() != other.hasWorkerInfo()) return false;
     if (hasWorkerInfo()) {
-      result = result && getWorkerInfo()
-          .equals(other.getWorkerInfo());
+      if (!getWorkerInfo()
+          .equals(other.getWorkerInfo())) return false;
     }
-    result = result && (hasCasClientInfo() == other.hasCasClientInfo());
+    if (hasCasClientInfo() != other.hasCasClientInfo()) return false;
     if (hasCasClientInfo()) {
-      result = result && getCasClientInfo()
-          .equals(other.getCasClientInfo());
+      if (!getCasClientInfo()
+          .equals(other.getCasClientInfo())) return false;
     }
-    result = result && (hasWorkerRequirements() == other.hasWorkerRequirements());
+    if (hasWorkerRequirements() != other.hasWorkerRequirements()) return false;
     if (hasWorkerRequirements()) {
-      result = result && getWorkerRequirements()
-          .equals(other.getWorkerRequirements());
+      if (!getWorkerRequirements()
+          .equals(other.getWorkerRequirements())) return false;
     }
-    result = result && (hasClientActionInfo() == other.hasClientActionInfo());
+    if (hasClientActionInfo() != other.hasClientActionInfo()) return false;
     if (hasClientActionInfo()) {
-      result = result && getClientActionInfo()
-          .equals(other.getClientActionInfo());
+      if (!getClientActionInfo()
+          .equals(other.getClientActionInfo())) return false;
     }
-    result = result && unknownFields.equals(other.unknownFields);
-    return result;
+    if (!unknownFields.equals(other.unknownFields)) return false;
+    return true;
   }
 
   @java.lang.Override
@@ -860,35 +859,35 @@ private static final long serialVersionUID = 0L;
 
     @java.lang.Override
     public Builder clone() {
-      return (Builder) super.clone();
+      return super.clone();
     }
     @java.lang.Override
     public Builder setField(
         com.google.protobuf.Descriptors.FieldDescriptor field,
         java.lang.Object value) {
-      return (Builder) super.setField(field, value);
+      return super.setField(field, value);
     }
     @java.lang.Override
     public Builder clearField(
         com.google.protobuf.Descriptors.FieldDescriptor field) {
-      return (Builder) super.clearField(field);
+      return super.clearField(field);
     }
     @java.lang.Override
     public Builder clearOneof(
         com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-      return (Builder) super.clearOneof(oneof);
+      return super.clearOneof(oneof);
     }
     @java.lang.Override
     public Builder setRepeatedField(
         com.google.protobuf.Descriptors.FieldDescriptor field,
         int index, java.lang.Object value) {
-      return (Builder) super.setRepeatedField(field, index, value);
+      return super.setRepeatedField(field, index, value);
     }
     @java.lang.Override
     public Builder addRepeatedField(
         com.google.protobuf.Descriptors.FieldDescriptor field,
         java.lang.Object value) {
-      return (Builder) super.addRepeatedField(field, value);
+      return super.addRepeatedField(field, value);
     }
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -958,7 +957,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
-    private com.facebook.buck.remoteexecution.proto.RESessionID reSessionId_ = null;
+    private com.facebook.buck.remoteexecution.proto.RESessionID reSessionId_;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.remoteexecution.proto.RESessionID, com.facebook.buck.remoteexecution.proto.RESessionID.Builder, com.facebook.buck.remoteexecution.proto.RESessionIDOrBuilder> reSessionIdBuilder_;
     /**
@@ -1075,7 +1074,7 @@ private static final long serialVersionUID = 0L;
       return reSessionIdBuilder_;
     }
 
-    private com.facebook.buck.remoteexecution.proto.BuckInfo buckInfo_ = null;
+    private com.facebook.buck.remoteexecution.proto.BuckInfo buckInfo_;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.remoteexecution.proto.BuckInfo, com.facebook.buck.remoteexecution.proto.BuckInfo.Builder, com.facebook.buck.remoteexecution.proto.BuckInfoOrBuilder> buckInfoBuilder_;
     /**
@@ -1192,7 +1191,7 @@ private static final long serialVersionUID = 0L;
       return buckInfoBuilder_;
     }
 
-    private com.facebook.buck.remoteexecution.proto.TraceInfo traceInfo_ = null;
+    private com.facebook.buck.remoteexecution.proto.TraceInfo traceInfo_;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.remoteexecution.proto.TraceInfo, com.facebook.buck.remoteexecution.proto.TraceInfo.Builder, com.facebook.buck.remoteexecution.proto.TraceInfoOrBuilder> traceInfoBuilder_;
     /**
@@ -1309,7 +1308,7 @@ private static final long serialVersionUID = 0L;
       return traceInfoBuilder_;
     }
 
-    private com.facebook.buck.remoteexecution.proto.CreatorInfo creatorInfo_ = null;
+    private com.facebook.buck.remoteexecution.proto.CreatorInfo creatorInfo_;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.remoteexecution.proto.CreatorInfo, com.facebook.buck.remoteexecution.proto.CreatorInfo.Builder, com.facebook.buck.remoteexecution.proto.CreatorInfoOrBuilder> creatorInfoBuilder_;
     /**
@@ -1426,7 +1425,7 @@ private static final long serialVersionUID = 0L;
       return creatorInfoBuilder_;
     }
 
-    private com.facebook.buck.remoteexecution.proto.ExecutionEngineInfo engineInfo_ = null;
+    private com.facebook.buck.remoteexecution.proto.ExecutionEngineInfo engineInfo_;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.remoteexecution.proto.ExecutionEngineInfo, com.facebook.buck.remoteexecution.proto.ExecutionEngineInfo.Builder, com.facebook.buck.remoteexecution.proto.ExecutionEngineInfoOrBuilder> engineInfoBuilder_;
     /**
@@ -1543,7 +1542,7 @@ private static final long serialVersionUID = 0L;
       return engineInfoBuilder_;
     }
 
-    private com.facebook.buck.remoteexecution.proto.WorkerInfo workerInfo_ = null;
+    private com.facebook.buck.remoteexecution.proto.WorkerInfo workerInfo_;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.remoteexecution.proto.WorkerInfo, com.facebook.buck.remoteexecution.proto.WorkerInfo.Builder, com.facebook.buck.remoteexecution.proto.WorkerInfoOrBuilder> workerInfoBuilder_;
     /**
@@ -1660,7 +1659,7 @@ private static final long serialVersionUID = 0L;
       return workerInfoBuilder_;
     }
 
-    private com.facebook.buck.remoteexecution.proto.CasClientInfo casClientInfo_ = null;
+    private com.facebook.buck.remoteexecution.proto.CasClientInfo casClientInfo_;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.remoteexecution.proto.CasClientInfo, com.facebook.buck.remoteexecution.proto.CasClientInfo.Builder, com.facebook.buck.remoteexecution.proto.CasClientInfoOrBuilder> casClientInfoBuilder_;
     /**
@@ -1777,7 +1776,7 @@ private static final long serialVersionUID = 0L;
       return casClientInfoBuilder_;
     }
 
-    private com.facebook.buck.remoteexecution.proto.WorkerRequirements workerRequirements_ = null;
+    private com.facebook.buck.remoteexecution.proto.WorkerRequirements workerRequirements_;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.remoteexecution.proto.WorkerRequirements, com.facebook.buck.remoteexecution.proto.WorkerRequirements.Builder, com.facebook.buck.remoteexecution.proto.WorkerRequirementsOrBuilder> workerRequirementsBuilder_;
     /**
@@ -1894,7 +1893,7 @@ private static final long serialVersionUID = 0L;
       return workerRequirementsBuilder_;
     }
 
-    private com.facebook.buck.remoteexecution.proto.ClientActionInfo clientActionInfo_ = null;
+    private com.facebook.buck.remoteexecution.proto.ClientActionInfo clientActionInfo_;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.remoteexecution.proto.ClientActionInfo, com.facebook.buck.remoteexecution.proto.ClientActionInfo.Builder, com.facebook.buck.remoteexecution.proto.ClientActionInfoOrBuilder> clientActionInfoBuilder_;
     /**
@@ -2049,7 +2048,7 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public final Builder setUnknownFields(
         final com.google.protobuf.UnknownFieldSet unknownFields) {
-      return super.setUnknownFieldsProto3(unknownFields);
+      return super.setUnknownFields(unknownFields);
     }
 
     @java.lang.Override

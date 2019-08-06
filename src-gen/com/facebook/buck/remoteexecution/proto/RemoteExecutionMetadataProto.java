@@ -52,6 +52,11 @@ public final class RemoteExecutionMetadataProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_facebook_remote_execution_CasClientInfo_fieldAccessorTable;
   static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_facebook_remote_execution_CapabilityValue_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_facebook_remote_execution_CapabilityValue_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
     internal_static_facebook_remote_execution_WorkerRequirements_descriptor;
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -86,36 +91,38 @@ public final class RemoteExecutionMetadataProto {
       "\n\023ExecutionEngineInfo\022\020\n\010hostname\030\001 \001(\t\"" +
       "6\n\nWorkerInfo\022\020\n\010hostname\030\001 \001(\t\022\026\n\016execu" +
       "tion_path\030\002 \001(\t\"\035\n\rCasClientInfo\022\014\n\004name" +
-      "\030\001 \001(\t\"\345\002\n\022WorkerRequirements\022M\n\013worker_" +
-      "size\030\001 \001(\01628.facebook.remote_execution.W" +
-      "orkerRequirements.WorkerSize\022W\n\rplatform" +
-      "_type\030\002 \001(\0162@.facebook.remote_execution." +
-      "WorkerRequirements.WorkerPlatformType\022\'\n" +
-      "\037should_try_larger_worker_on_oom\030\003 \001(\010\"5" +
-      "\n\022WorkerPlatformType\022\t\n\005LINUX\020\000\022\024\n\020ANDRO" +
-      "ID_EMULATOR\020\001\"G\n\nWorkerSize\022\t\n\005SMALL\020\000\022\n" +
-      "\n\006MEDIUM\020\001\022\t\n\005LARGE\020\002\022\n\n\006XLARGE\020\003\022\013\n\007XXL" +
-      "ARGE\020\004\"j\n\020ClientActionInfo\022\022\n\nrepository" +
-      "\030\001 \001(\t\022\025\n\rschedule_type\030\002 \001(\t\022\030\n\020re_sess" +
-      "ion_label\030\003 \001(\t\022\021\n\ttenant_id\030\004 \001(\t\"\341\004\n\027R" +
-      "emoteExecutionMetadata\022=\n\rre_session_id\030" +
-      "\001 \001(\0132&.facebook.remote_execution.RESess" +
-      "ionID\0226\n\tbuck_info\030\002 \001(\0132#.facebook.remo" +
-      "te_execution.BuckInfo\0228\n\ntrace_info\030\003 \001(" +
-      "\0132$.facebook.remote_execution.TraceInfo\022" +
-      "<\n\014creator_info\030\004 \001(\0132&.facebook.remote_" +
-      "execution.CreatorInfo\022C\n\013engine_info\030\005 \001" +
-      "(\0132..facebook.remote_execution.Execution" +
-      "EngineInfo\022:\n\013worker_info\030\006 \001(\0132%.facebo" +
-      "ok.remote_execution.WorkerInfo\022A\n\017cas_cl" +
-      "ient_info\030\007 \001(\0132(.facebook.remote_execut" +
-      "ion.CasClientInfo\022J\n\023worker_requirements" +
-      "\030\010 \001(\0132-.facebook.remote_execution.Worke" +
-      "rRequirements\022G\n\022client_action_info\030\n \001(" +
-      "\0132+.facebook.remote_execution.ClientActi" +
-      "onInfoBI\n\'com.facebook.buck.remoteexecut" +
-      "ion.protoB\034RemoteExecutionMetadataProtoP" +
-      "\001b\006proto3"
+      "\030\001 \001(\t\" \n\017CapabilityValue\022\r\n\005value\030\001 \001(\t" +
+      "\"\242\003\n\022WorkerRequirements\022M\n\013worker_size\030\001" +
+      " \001(\01628.facebook.remote_execution.WorkerR" +
+      "equirements.WorkerSize\022W\n\rplatform_type\030" +
+      "\002 \001(\0162@.facebook.remote_execution.Worker" +
+      "Requirements.WorkerPlatformType\022\'\n\037shoul" +
+      "d_try_larger_worker_on_oom\030\003 \001(\010\022;\n\007test" +
+      "ing\030\004 \001(\0132*.facebook.remote_execution.Ca" +
+      "pabilityValue\"5\n\022WorkerPlatformType\022\t\n\005L" +
+      "INUX\020\000\022\024\n\020ANDROID_EMULATOR\020\001\"G\n\nWorkerSi" +
+      "ze\022\t\n\005SMALL\020\000\022\n\n\006MEDIUM\020\001\022\t\n\005LARGE\020\002\022\n\n\006" +
+      "XLARGE\020\003\022\013\n\007XXLARGE\020\004\"j\n\020ClientActionInf" +
+      "o\022\022\n\nrepository\030\001 \001(\t\022\025\n\rschedule_type\030\002" +
+      " \001(\t\022\030\n\020re_session_label\030\003 \001(\t\022\021\n\ttenant" +
+      "_id\030\004 \001(\t\"\341\004\n\027RemoteExecutionMetadata\022=\n" +
+      "\rre_session_id\030\001 \001(\0132&.facebook.remote_e" +
+      "xecution.RESessionID\0226\n\tbuck_info\030\002 \001(\0132" +
+      "#.facebook.remote_execution.BuckInfo\0228\n\n" +
+      "trace_info\030\003 \001(\0132$.facebook.remote_execu" +
+      "tion.TraceInfo\022<\n\014creator_info\030\004 \001(\0132&.f" +
+      "acebook.remote_execution.CreatorInfo\022C\n\013" +
+      "engine_info\030\005 \001(\0132..facebook.remote_exec" +
+      "ution.ExecutionEngineInfo\022:\n\013worker_info" +
+      "\030\006 \001(\0132%.facebook.remote_execution.Worke" +
+      "rInfo\022A\n\017cas_client_info\030\007 \001(\0132(.faceboo" +
+      "k.remote_execution.CasClientInfo\022J\n\023work" +
+      "er_requirements\030\010 \001(\0132-.facebook.remote_" +
+      "execution.WorkerRequirements\022G\n\022client_a" +
+      "ction_info\030\n \001(\0132+.facebook.remote_execu" +
+      "tion.ClientActionInfoBI\n\'com.facebook.bu" +
+      "ck.remoteexecution.protoB\034RemoteExecutio" +
+      "nMetadataProtoP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -171,20 +178,26 @@ public final class RemoteExecutionMetadataProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_CasClientInfo_descriptor,
         new java.lang.String[] { "Name", });
-    internal_static_facebook_remote_execution_WorkerRequirements_descriptor =
+    internal_static_facebook_remote_execution_CapabilityValue_descriptor =
       getDescriptor().getMessageTypes().get(7);
+    internal_static_facebook_remote_execution_CapabilityValue_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_facebook_remote_execution_CapabilityValue_descriptor,
+        new java.lang.String[] { "Value", });
+    internal_static_facebook_remote_execution_WorkerRequirements_descriptor =
+      getDescriptor().getMessageTypes().get(8);
     internal_static_facebook_remote_execution_WorkerRequirements_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_WorkerRequirements_descriptor,
-        new java.lang.String[] { "WorkerSize", "PlatformType", "ShouldTryLargerWorkerOnOom", });
+        new java.lang.String[] { "WorkerSize", "PlatformType", "ShouldTryLargerWorkerOnOom", "Testing", });
     internal_static_facebook_remote_execution_ClientActionInfo_descriptor =
-      getDescriptor().getMessageTypes().get(8);
+      getDescriptor().getMessageTypes().get(9);
     internal_static_facebook_remote_execution_ClientActionInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_ClientActionInfo_descriptor,
         new java.lang.String[] { "Repository", "ScheduleType", "ReSessionLabel", "TenantId", });
     internal_static_facebook_remote_execution_RemoteExecutionMetadata_descriptor =
-      getDescriptor().getMessageTypes().get(9);
+      getDescriptor().getMessageTypes().get(10);
     internal_static_facebook_remote_execution_RemoteExecutionMetadata_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_RemoteExecutionMetadata_descriptor,

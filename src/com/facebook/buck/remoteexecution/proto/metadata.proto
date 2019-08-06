@@ -78,6 +78,10 @@ message CasClientInfo {
   string name = 1;
 }
 
+message CapabilityValue {
+  string value = 1;
+}
+
 // minimal worker requirements which should be satisfied to execute a given action
 message WorkerRequirements {
   enum WorkerPlatformType {
@@ -97,6 +101,9 @@ message WorkerRequirements {
   WorkerPlatformType platform_type = 2;
   // Indicates if execution engine should try to execute current action with more powerful requirements
   bool should_try_larger_worker_on_oom = 3;
+
+  // Needed when aiming for a testing/canaried worker
+  CapabilityValue testing = 4;
 }
 
 // Optional context for an Action. May change between Actions from same RE Session if multiple jobs

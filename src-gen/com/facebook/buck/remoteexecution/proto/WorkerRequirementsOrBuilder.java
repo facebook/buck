@@ -35,4 +35,29 @@ public interface WorkerRequirementsOrBuilder extends
    * <code>bool should_try_larger_worker_on_oom = 3;</code>
    */
   boolean getShouldTryLargerWorkerOnOom();
+
+  /**
+   * <pre>
+   * Needed when aiming for a testing/canaried worker
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
+   */
+  boolean hasTesting();
+  /**
+   * <pre>
+   * Needed when aiming for a testing/canaried worker
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.CapabilityValue getTesting();
+  /**
+   * <pre>
+   * Needed when aiming for a testing/canaried worker
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.CapabilityValueOrBuilder getTestingOrBuilder();
 }
