@@ -829,43 +829,42 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private void addStepsToCopyResources(
       BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
+    boolean hasNoResourceToCopy =
+        resources.getResourceDirs().isEmpty()
+            && resources.getDirsContainingResourceDirs().isEmpty()
+            && resources.getResourceFiles().isEmpty();
+    if (hasNoResourceToCopy) {
+      return;
+    }
+    if (verifyResources) {
+      verifyResourceConflicts(resources, context.getSourcePathResolver());
+    }
     Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
-    if (!Iterables.isEmpty(
-        Iterables.concat(
-            resources.getResourceDirs(),
-            resources.getDirsContainingResourceDirs(),
-            resources.getResourceFiles()))) {
-      if (verifyResources) {
-        verifyResourceConflicts(resources, context.getSourcePathResolver());
-      }
+    stepsBuilder.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), resourcesDestinationPath)));
+    for (SourcePath dir : resources.getResourceDirs()) {
       stepsBuilder.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(),
-                  getProjectFilesystem(),
-                  resourcesDestinationPath)));
-      for (SourcePath dir : resources.getResourceDirs()) {
-        stepsBuilder.add(
-            CopyStep.forDirectory(
-                getProjectFilesystem(),
-                context.getSourcePathResolver().getAbsolutePath(dir),
-                resourcesDestinationPath,
-                CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
-      }
-      for (SourcePath dir : resources.getDirsContainingResourceDirs()) {
-        stepsBuilder.add(
-            CopyStep.forDirectory(
-                getProjectFilesystem(),
-                context.getSourcePathResolver().getAbsolutePath(dir),
-                resourcesDestinationPath,
-                CopyStep.DirectoryMode.CONTENTS_ONLY));
-      }
-      for (SourcePath file : resources.getResourceFiles()) {
-        Path resolvedFilePath = context.getSourcePathResolver().getAbsolutePath(file);
-        Path destinationPath = resourcesDestinationPath.resolve(resolvedFilePath.getFileName());
-        addResourceProcessingSteps(
-            context.getSourcePathResolver(), resolvedFilePath, destinationPath, stepsBuilder);
-      }
+          CopyStep.forDirectory(
+              getProjectFilesystem(),
+              context.getSourcePathResolver().getAbsolutePath(dir),
+              resourcesDestinationPath,
+              CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+    }
+    for (SourcePath dir : resources.getDirsContainingResourceDirs()) {
+      stepsBuilder.add(
+          CopyStep.forDirectory(
+              getProjectFilesystem(),
+              context.getSourcePathResolver().getAbsolutePath(dir),
+              resourcesDestinationPath,
+              CopyStep.DirectoryMode.CONTENTS_ONLY));
+    }
+    for (SourcePath file : resources.getResourceFiles()) {
+      Path resolvedFilePath = context.getSourcePathResolver().getAbsolutePath(file);
+      Path destinationPath = resourcesDestinationPath.resolve(resolvedFilePath.getFileName());
+      addResourceProcessingSteps(
+          context.getSourcePathResolver(), resolvedFilePath, destinationPath, stepsBuilder);
     }
   }
 
