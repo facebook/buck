@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.log.Logger;
@@ -30,7 +31,8 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
-public class KotlinBuckConfig {
+/** A kotlin-specific "view" of BuckConfig. */
+public class KotlinBuckConfig implements ConfigView<BuckConfig> {
 
   private static final Logger LOG = Logger.get(KotlinBuckConfig.class);
 
@@ -246,5 +248,10 @@ public class KotlinBuckConfig {
       throw new HumanReadableException(
           "Could not resolve kotlin home directory, Consider setting KOTLIN_HOME.", io);
     }
+  }
+
+  @Override
+  public BuckConfig getDelegate() {
+    return delegate;
   }
 }
