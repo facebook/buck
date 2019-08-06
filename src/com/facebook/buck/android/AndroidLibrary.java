@@ -50,6 +50,7 @@ import java.util.SortedSet;
 import javax.annotation.Nullable;
 
 public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackageable {
+
   public static Builder builder(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -120,7 +121,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         isDesugarEnabled,
         isInterfaceMethodsDesugarEnabled);
     this.manifestFile = manifestFile;
-    this.jvmLanguage = jvmLanguage;
+    this.type = jvmLanguage.isPresent() ? evalType(jvmLanguage.get()) : super.getType();
   }
 
   /**
@@ -129,20 +130,22 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
    */
   private final Optional<SourcePath> manifestFile;
 
-  private final Optional<AndroidLibraryDescription.JvmLanguage> jvmLanguage;
+  private final String type;
 
   public Optional<SourcePath> getManifestFile() {
     return manifestFile;
   }
 
+  private String evalType(AndroidLibraryDescription.JvmLanguage jvmLanguage) {
+    if (!jvmLanguage.equals(AndroidLibraryDescription.JvmLanguage.JAVA)) {
+      return super.getType();
+    }
+    return jvmLanguage.toString().toLowerCase() + "_" + super.getType();
+  }
+
   @Override
   public String getType() {
-    String prefix =
-        jvmLanguage.isPresent()
-                && !jvmLanguage.get().equals(AndroidLibraryDescription.JvmLanguage.JAVA)
-            ? jvmLanguage.get().toString().toLowerCase() + "_"
-            : "";
-    return prefix + super.getType();
+    return type;
   }
 
   @Override
