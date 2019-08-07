@@ -18,7 +18,6 @@ package com.facebook.buck.multitenant.importer
 
 import java.io.Closeable
 import java.io.InputStream
-import java.lang.IllegalArgumentException
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
@@ -83,13 +82,15 @@ sealed class InputSource : Closeable {
     /**
      * Reads index data from HTTP url
      */
-    data class Http(val url: URL) : InputSource() {
+    data class Http(val url: URL, val readTimeout: Int? = null, val connectTimeout: Int? = null) : InputSource() {
         private val connection: HttpURLConnection
         private var connected = false
 
         init {
             @Suppress("UnsafeCast")
             connection = url.openConnection() as HttpURLConnection
+            connectTimeout?.let { connection.connectTimeout = it }
+            readTimeout?.let { connection.readTimeout = it }
         }
 
         private fun ensureConnected() {
