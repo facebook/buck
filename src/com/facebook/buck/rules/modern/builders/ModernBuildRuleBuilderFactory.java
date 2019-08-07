@@ -91,7 +91,7 @@ public class ModernBuildRuleBuilderFactory {
           return Optional.of(
               RemoteExecutionStrategy.createRemoteExecutionStrategy(
                   eventBus,
-                  remoteExecutionConfig.getStrategyConfig(),
+                  remoteExecutionConfig,
                   remoteExecutionFactory.create(eventBus, metadataProvider),
                   resolver,
                   rootCell,
@@ -135,7 +135,8 @@ public class ModernBuildRuleBuilderFactory {
         hybridLocalConfig.getDelegateJobs(),
         delegate,
         workerRequirementsProvider,
-        remoteExecutionConfig.getMaxWorkerSizeToStealFrom());
+        remoteExecutionConfig.getMaxWorkerSizeToStealFrom(),
+        remoteExecutionConfig.getAuxiliaryBuildTag());
   }
 
   /** The passthrough strategy just forwards to executorRunner.runWithDefaultExecutor. */

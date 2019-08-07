@@ -136,7 +136,8 @@ public class RemoteExecutionStrategyTest {
             MetadataProviderFactory.emptyMetadataProvider(),
             mbrHelper,
             new NoOpWorkerRequirementsProvider(),
-            service);
+            service,
+            "" /* auxiliaryBuildTag */);
 
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();

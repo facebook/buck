@@ -77,6 +77,8 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
 
   private final WorkerRequirementsProvider workerRequirementsProvider;
 
+  private final String auxiliaryBuildTag;
+
   // If this is non-null, we've hit some unexpected unrecoverable condition.
   @Nullable private volatile Throwable hardFailure;
 
@@ -120,10 +122,12 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
       int numDelegateJobs,
       BuildRuleStrategy delegate,
       WorkerRequirementsProvider workerRequirementsProvider,
-      Optional<WorkerRequirements.WorkerSize> maxWorkerSizeToStealFrom) {
+      Optional<WorkerRequirements.WorkerSize> maxWorkerSizeToStealFrom,
+      String auxiliaryBuildTag) {
     this.delegate = delegate;
     this.workerRequirementsProvider = workerRequirementsProvider;
     this.maxWorkerSizeToStealFrom = maxWorkerSizeToStealFrom;
+    this.auxiliaryBuildTag = auxiliaryBuildTag;
     this.localSemaphore = new Semaphore(numLocalJobs);
     this.localDelegateSemaphore = new Semaphore(numLocalDelegateJobs);
     this.delegateSemaphore = new Semaphore(numDelegateJobs);
@@ -140,7 +144,9 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
     }
 
     WorkerRequirements.WorkerSize workerSizeRequirement =
-        workerRequirementsProvider.resolveRequirements(job.rule.getBuildTarget()).getWorkerSize();
+        workerRequirementsProvider
+            .resolveRequirements(job.rule.getBuildTarget(), auxiliaryBuildTag)
+            .getWorkerSize();
 
     return workerSizeRequirement.getNumber() <= maxWorkerSizeToStealFrom.get().getNumber();
   }

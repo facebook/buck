@@ -35,6 +35,7 @@ import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionHandle;
 import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionResult;
 import com.facebook.buck.remoteexecution.WorkerRequirementsProvider;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
 import com.facebook.buck.remoteexecution.event.RemoteBuildRuleExecutionEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
@@ -103,6 +104,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private final OptionalLong maxInputSizeBytes;
   private final WorkerRequirementsProvider requirementsProvider;
   private final MetadataProvider metadataProvider;
+  private final String auxiliaryBuildTag;
   private final RemoteExecutionSessionEvent.Started remoteExecutionSessionStartedEvent;
 
   RemoteExecutionStrategy(
@@ -112,7 +114,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       MetadataProvider metadataProvider,
       RemoteExecutionHelper mbrHelper,
       WorkerRequirementsProvider requirementsProvider,
-      ListeningExecutorService service) {
+      ListeningExecutorService service,
+      String auxiliaryBuildTag) {
     this.executionClients = executionClients;
     this.service = service;
     this.computeActionLimiter = new JobLimiter(strategyConfig.getMaxConcurrentActionComputations());
@@ -124,6 +127,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     this.metadataProvider = metadataProvider;
     this.mbrHelper = mbrHelper;
     this.requirementsProvider = requirementsProvider;
+    this.auxiliaryBuildTag = auxiliaryBuildTag;
     this.remoteExecutionSessionStartedEvent = RemoteExecutionSessionEvent.started();
     this.eventBus.post(remoteExecutionSessionStartedEvent);
   }
@@ -135,13 +139,14 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
    */
   static LocalFallbackStrategy createRemoteExecutionStrategy(
       BuckEventBus eventBus,
-      RemoteExecutionStrategyConfig strategyConfig,
+      RemoteExecutionConfig remoteExecutionConfig,
       RemoteExecutionClients clients,
       SourcePathRuleFinder ruleFinder,
       Cell rootCell,
       ThrowingFunction<Path, HashCode, IOException> fileHasher,
       MetadataProvider metadataProvider,
       WorkerRequirementsProvider workerRequirementsProvider) {
+    RemoteExecutionStrategyConfig strategyConfig = remoteExecutionConfig.getStrategyConfig();
     return new LocalFallbackStrategy(
         new RemoteExecutionStrategy(
             eventBus,
@@ -152,7 +157,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                 eventBus, clients.getProtocol(), ruleFinder, rootCell, fileHasher),
             workerRequirementsProvider,
             MoreExecutors.listeningDecorator(
-                MostExecutors.newMultiThreadExecutor("remote-exec", strategyConfig.getThreads()))),
+                MostExecutors.newMultiThreadExecutor("remote-exec", strategyConfig.getThreads())),
+            remoteExecutionConfig.getAuxiliaryBuildTag()),
         eventBus,
         strategyConfig.isLocalFallbackEnabled());
   }
@@ -380,7 +386,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
             mbrHelper.prepareRemoteExecution(
                 (ModernBuildRule<?>) rule,
                 digest -> !executionClients.getContentAddressedStorage().containsDigest(digest),
-                requirementsProvider.resolveRequirements(rule.getBuildTarget()));
+                requirementsProvider.resolveRequirements(rule.getBuildTarget(), auxiliaryBuildTag));
       }
       return actionInfo;
     }
@@ -397,7 +403,9 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     MetadataProvider metadataProvider =
         MetadataProviderFactory.wrapForRuleWithWorkerRequirements(
             this.metadataProvider,
-            () -> requirementsProvider.resolveRequirements(buildRule.getBuildTarget()));
+            () ->
+                requirementsProvider.resolveRequirements(
+                    buildRule.getBuildTarget(), auxiliaryBuildTag));
     ListenableFuture<ExecutionResult> executionResult =
         executionLimiter.schedule(
             service,

@@ -47,6 +47,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class HybridLocalStrategyTest {
+  private final String NO_AUXILIARY_BUILD_TAG = "";
+
   @Test
   public void testLocalJobsLimited() throws Exception {
     int maxJobs = 1;
@@ -60,7 +62,13 @@ public class HybridLocalStrategyTest {
 
       try (HybridLocalStrategy strategy =
           new HybridLocalStrategy(
-              1, 1, 0, delegate, new NoOpWorkerRequirementsProvider(), Optional.empty())) {
+              1,
+              1,
+              0,
+              delegate,
+              new NoOpWorkerRequirementsProvider(),
+              Optional.empty(),
+              NO_AUXILIARY_BUILD_TAG)) {
         List<ListenableFuture<Optional<BuildResult>>> results = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
           FakeBuildRule rule = new FakeBuildRule("//:target-" + i);
@@ -107,7 +115,13 @@ public class HybridLocalStrategyTest {
 
       try (HybridLocalStrategy strategy =
           new HybridLocalStrategy(
-              1, 1, 0, delegate, new NoOpWorkerRequirementsProvider(), Optional.empty())) {
+              1,
+              1,
+              0,
+              delegate,
+              new NoOpWorkerRequirementsProvider(),
+              Optional.empty(),
+              NO_AUXILIARY_BUILD_TAG)) {
         List<ListenableFuture<Optional<BuildResult>>> delegateResults = new ArrayList<>();
         List<ListenableFuture<Optional<BuildResult>>> localResults = new ArrayList<>();
 
@@ -157,7 +171,13 @@ public class HybridLocalStrategyTest {
 
       try (HybridLocalStrategy strategy =
           new HybridLocalStrategy(
-              0, 0, 1, delegate, new NoOpWorkerRequirementsProvider(), Optional.empty())) {
+              0,
+              0,
+              1,
+              delegate,
+              new NoOpWorkerRequirementsProvider(),
+              Optional.empty(),
+              NO_AUXILIARY_BUILD_TAG)) {
         List<ListenableFuture<Optional<BuildResult>>> results = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
           FakeBuildRule rule = new FakeBuildRule("//:target-" + i);
@@ -207,7 +227,13 @@ public class HybridLocalStrategyTest {
 
       try (HybridLocalStrategy strategy =
           new HybridLocalStrategy(
-              10, 0, 0, delegate, new NoOpWorkerRequirementsProvider(), Optional.empty())) {
+              10,
+              0,
+              0,
+              delegate,
+              new NoOpWorkerRequirementsProvider(),
+              Optional.empty(),
+              NO_AUXILIARY_BUILD_TAG)) {
         List<ListenableFuture<Optional<BuildResult>>> delegateResults = new ArrayList<>();
         List<ListenableFuture<Optional<BuildResult>>> localResults = new ArrayList<>();
 
@@ -282,7 +308,13 @@ public class HybridLocalStrategyTest {
 
       try (HybridLocalStrategy strategy =
           new HybridLocalStrategy(
-              1, 1, 10, delegate, new NoOpWorkerRequirementsProvider(), Optional.empty())) {
+              1,
+              1,
+              10,
+              delegate,
+              new NoOpWorkerRequirementsProvider(),
+              Optional.empty(),
+              NO_AUXILIARY_BUILD_TAG)) {
         List<ListenableFuture<Optional<BuildResult>>> results = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
           FakeBuildRule rule = new FakeBuildRule("//:target-" + i);
@@ -355,7 +387,13 @@ public class HybridLocalStrategyTest {
 
       try (HybridLocalStrategy strategy =
           new HybridLocalStrategy(
-              1, 1, 100, delegate, new NoOpWorkerRequirementsProvider(), Optional.empty())) {
+              1,
+              1,
+              100,
+              delegate,
+              new NoOpWorkerRequirementsProvider(),
+              Optional.empty(),
+              NO_AUXILIARY_BUILD_TAG)) {
         List<ListenableFuture<?>> futures = new ArrayList<>();
         // We don't want any local jobs to finish before we've scheduled everything (if they did,
         // it's possible that some hybrid implementation could just chew through them without really
@@ -451,7 +489,13 @@ public class HybridLocalStrategyTest {
 
       try (HybridLocalStrategy strategy =
           new HybridLocalStrategy(
-              1, 1, 10, delegate, new NoOpWorkerRequirementsProvider(), Optional.empty())) {
+              1,
+              1,
+              10,
+              delegate,
+              new NoOpWorkerRequirementsProvider(),
+              Optional.empty(),
+              NO_AUXILIARY_BUILD_TAG)) {
         List<ListenableFuture<Optional<BuildResult>>> results = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
           FakeBuildRule rule = new FakeBuildRule("//:target-" + i);

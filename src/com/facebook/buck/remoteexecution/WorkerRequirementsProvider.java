@@ -21,5 +21,5 @@ import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 
 /** Provides rule's RE worker requirements for given target */
 public interface WorkerRequirementsProvider {
-  WorkerRequirements resolveRequirements(BuildTarget target);
+  WorkerRequirements resolveRequirements(BuildTarget target, String auxiliaryBuildTag);
 }

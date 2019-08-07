@@ -16,11 +16,9 @@
 package com.facebook.buck.remoteexecution;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerSize;
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.FileWriteMode;
 import com.google.common.io.Files;
 import java.io.File;
@@ -38,6 +36,21 @@ public class FileBasedWorkerRequirementsProviderTest {
   private static final String FILENAME = "file.txt";
   private static final String SHORT_NAME = "name";
   private static final String FULL_NAME = "//fullName:" + SHORT_NAME;
+  private static final String OTHER_SHORT_NAME = "other_rule";
+
+  private static final String ACTION_TAGS =
+      "\"{\\\"ruleName\\\": \\\"name\\\", \\\"auxiliaryBuildTag\\\": \\\"tag::tag2\\\"}\"";
+  private static final String AUXILIARY_BUILD_TAG = "tag::tag2";
+  private static final String ACTION_TAGS_NO_AUX_TAG =
+      "\"{\\\"ruleName\\\": \\\"name\\\", \\\"auxiliaryBuildTag\\\": \\\"\\\"}\"";
+
+  private static final String OTHER_RULE_ACTION_TAGS =
+      "\"{\\\"ruleName\\\": \\\"other_rule\\\", \\\"auxiliaryBuildTag\\\": \\\"\\\"}\"";
+  private static final String NO_AUXILIARY_BUILD_TAG = "";
+
+  private static final String SIZE_SMALL = "{\"workerSize\": \"SMALL\"}";
+  private static final String SIZE_LARGE = "{\"workerSize\": \"LARGE\"}";
+  private static final String SIZE_UNKNOWN = "{\"workerSize\": \"UNKNOWN\"}";
 
   private BuildTarget buildTarget;
   private File tmp;
@@ -56,37 +69,17 @@ public class FileBasedWorkerRequirementsProviderTest {
   }
 
   @Test
-  public void testCxxCompileRule() throws IOException {
-    BuildTarget buildTarget = EasyMock.createMock(BuildTarget.class);
-    EasyMock.expect(buildTarget.getShortNameAndFlavorPostfix()).andReturn("some-target").anyTimes();
-    EasyMock.expect(buildTarget.getShortName()).andReturn("someconfig").anyTimes();
-    EasyMock.expect(buildTarget.getBasePath()).andReturn(tmp.toPath()).anyTimes();
-    EasyMock.expect(buildTarget.isFlavored()).andReturn(false).anyTimes();
-    EasyMock.expect(buildTarget.getFlavors())
-        .andReturn(ImmutableSortedSet.<Flavor>naturalOrder().build())
-        .anyTimes();
-    EasyMock.replay(buildTarget);
-    File file = Paths.get(tmp.getPath(), FILENAME).toFile();
-    Assert.assertTrue(file.createNewFile());
-    Files.asCharSink(file, Charsets.UTF_8, FileWriteMode.APPEND)
-        .write("{\"some-target\": {\"workerSize\": \"LARGE\"}}");
-    WorkerRequirementsProvider provider =
-        new FileBasedWorkerRequirementsProvider(FILENAME, false, 1000);
-    WorkerRequirements workerRequirements = provider.resolveRequirements(buildTarget);
-    Assert.assertEquals(WorkerSize.LARGE, workerRequirements.getWorkerSize());
-  }
-
-  @Test
   public void testNoFileExistShouldReturnDefault() {
     WorkerRequirementsProvider provider =
         new FileBasedWorkerRequirementsProvider(FILENAME, true, 1000);
-    WorkerRequirements workerRequirements = provider.resolveRequirements(buildTarget);
+    WorkerRequirements workerRequirements =
+        provider.resolveRequirements(buildTarget, NO_AUXILIARY_BUILD_TAG);
     Assert.assertNotNull(workerRequirements);
     Assert.assertEquals(
         FileBasedWorkerRequirementsProvider.RETRY_ON_OOM_DEFAULT, workerRequirements);
 
     provider = new FileBasedWorkerRequirementsProvider(FILENAME, false, 1000);
-    workerRequirements = provider.resolveRequirements(buildTarget);
+    workerRequirements = provider.resolveRequirements(buildTarget, NO_AUXILIARY_BUILD_TAG);
     Assert.assertNotNull(workerRequirements);
     Assert.assertEquals(
         FileBasedWorkerRequirementsProvider.DONT_RETRY_ON_OOM_DEFAULT, workerRequirements);
@@ -99,7 +92,8 @@ public class FileBasedWorkerRequirementsProviderTest {
 
     WorkerRequirementsProvider provider =
         new FileBasedWorkerRequirementsProvider(FILENAME, true, 1000);
-    WorkerRequirements workerRequirements = provider.resolveRequirements(buildTarget);
+    WorkerRequirements workerRequirements =
+        provider.resolveRequirements(buildTarget, NO_AUXILIARY_BUILD_TAG);
     Assert.assertNotNull(workerRequirements);
     Assert.assertEquals(
         FileBasedWorkerRequirementsProvider.RETRY_ON_OOM_DEFAULT, workerRequirements);
@@ -113,7 +107,8 @@ public class FileBasedWorkerRequirementsProviderTest {
 
     WorkerRequirementsProvider provider =
         new FileBasedWorkerRequirementsProvider(FILENAME, true, 1000);
-    WorkerRequirements workerRequirements = provider.resolveRequirements(buildTarget);
+    WorkerRequirements workerRequirements =
+        provider.resolveRequirements(buildTarget, NO_AUXILIARY_BUILD_TAG);
     Assert.assertNotNull(workerRequirements);
     Assert.assertEquals(
         FileBasedWorkerRequirementsProvider.RETRY_ON_OOM_DEFAULT, workerRequirements);
@@ -124,11 +119,12 @@ public class FileBasedWorkerRequirementsProviderTest {
     File file = Paths.get(tmp.getPath(), FILENAME).toFile();
     Assert.assertTrue(file.createNewFile());
     Files.asCharSink(file, Charsets.UTF_8, FileWriteMode.APPEND)
-        .write("{\"other_rule\": {\"workerSize\": \"SMALL\"}}");
+        .write(String.format("{%s: %s}", OTHER_RULE_ACTION_TAGS, SIZE_SMALL));
 
     WorkerRequirementsProvider provider =
         new FileBasedWorkerRequirementsProvider(FILENAME, true, 1000);
-    WorkerRequirements workerRequirements = provider.resolveRequirements(buildTarget);
+    WorkerRequirements workerRequirements =
+        provider.resolveRequirements(buildTarget, NO_AUXILIARY_BUILD_TAG);
     Assert.assertNotNull(workerRequirements);
     Assert.assertEquals(
         FileBasedWorkerRequirementsProvider.RETRY_ON_OOM_DEFAULT, workerRequirements);
@@ -140,13 +136,31 @@ public class FileBasedWorkerRequirementsProviderTest {
     Assert.assertTrue(file.createNewFile());
     Files.asCharSink(file, Charsets.UTF_8, FileWriteMode.APPEND)
         .write(
-            "{\"other_rule\": {\"workerSize\": \"SMALL\"}, \""
-                + SHORT_NAME
-                + "\": {\"workerSize\": \"LARGE\"}}");
+            String.format(
+                "{%s: %s, %s: %s}", OTHER_RULE_ACTION_TAGS, SIZE_SMALL, ACTION_TAGS, SIZE_LARGE));
 
     WorkerRequirementsProvider provider =
         new FileBasedWorkerRequirementsProvider(FILENAME, true, 1000);
-    WorkerRequirements workerRequirements = provider.resolveRequirements(buildTarget);
+    WorkerRequirements workerRequirements =
+        provider.resolveRequirements(buildTarget, AUXILIARY_BUILD_TAG);
+    Assert.assertNotNull(workerRequirements);
+    Assert.assertEquals(WorkerSize.LARGE, workerRequirements.getWorkerSize());
+  }
+
+  @Test
+  public void testRuleHasCustomRequirementsButOnlyWithoutAuxiliaryTag() throws IOException {
+    File file = Paths.get(tmp.getPath(), FILENAME).toFile();
+    Assert.assertTrue(file.createNewFile());
+    Files.asCharSink(file, Charsets.UTF_8, FileWriteMode.APPEND)
+        .write(
+            String.format(
+                "{%s: %s, %s: %s}",
+                OTHER_RULE_ACTION_TAGS, SIZE_SMALL, ACTION_TAGS_NO_AUX_TAG, SIZE_LARGE));
+
+    WorkerRequirementsProvider provider =
+        new FileBasedWorkerRequirementsProvider(FILENAME, true, 1000);
+    WorkerRequirements workerRequirements =
+        provider.resolveRequirements(buildTarget, AUXILIARY_BUILD_TAG);
     Assert.assertNotNull(workerRequirements);
     Assert.assertEquals(WorkerSize.LARGE, workerRequirements.getWorkerSize());
   }
@@ -157,13 +171,50 @@ public class FileBasedWorkerRequirementsProviderTest {
     Assert.assertTrue(file.createNewFile());
     Files.asCharSink(file, Charsets.UTF_8, FileWriteMode.APPEND)
         .write(
-            "{\"other_rule\": {\"workerSize\": \"SMALL\"}, \""
-                + SHORT_NAME
-                + "\": {\"workerSize\": \"UNKNOWN\"}}");
+            String.format(
+                "{%s: %s, %s: %s}", OTHER_RULE_ACTION_TAGS, SIZE_SMALL, ACTION_TAGS, SIZE_UNKNOWN));
 
     WorkerRequirementsProvider provider =
         new FileBasedWorkerRequirementsProvider(FILENAME, true, 1000);
-    WorkerRequirements workerRequirements = provider.resolveRequirements(buildTarget);
+    WorkerRequirements workerRequirements =
+        provider.resolveRequirements(buildTarget, NO_AUXILIARY_BUILD_TAG);
+    Assert.assertNotNull(workerRequirements);
+    Assert.assertEquals(
+        FileBasedWorkerRequirementsProvider.RETRY_ON_OOM_DEFAULT, workerRequirements);
+  }
+
+  // TODO(msienkiewicz): Remove theses tests once old format is unused.
+  @Test
+  public void testRuleHasCustomRequirementsInOldFormat() throws IOException {
+    File file = Paths.get(tmp.getPath(), FILENAME).toFile();
+    Assert.assertTrue(file.createNewFile());
+    Files.asCharSink(file, Charsets.UTF_8, FileWriteMode.APPEND)
+        .write(
+            String.format(
+                "{\"%s\": %s, \"%s\": %s}", OTHER_SHORT_NAME, SIZE_SMALL, SHORT_NAME, SIZE_LARGE));
+
+    WorkerRequirementsProvider provider =
+        new FileBasedWorkerRequirementsProvider(FILENAME, true, 1000);
+    WorkerRequirements workerRequirements =
+        provider.resolveRequirements(buildTarget, NO_AUXILIARY_BUILD_TAG);
+    Assert.assertNotNull(workerRequirements);
+    Assert.assertEquals(WorkerSize.LARGE, workerRequirements.getWorkerSize());
+  }
+
+  @Test
+  public void testRuleHasInvalidTypeShouldProvideDefaultInOldFormat() throws IOException {
+    File file = Paths.get(tmp.getPath(), FILENAME).toFile();
+    Assert.assertTrue(file.createNewFile());
+    Files.asCharSink(file, Charsets.UTF_8, FileWriteMode.APPEND)
+        .write(
+            String.format(
+                "{\"%s\": %s, \"%s\": %s}",
+                OTHER_SHORT_NAME, SIZE_SMALL, SHORT_NAME, SIZE_UNKNOWN));
+
+    WorkerRequirementsProvider provider =
+        new FileBasedWorkerRequirementsProvider(FILENAME, true, 1000);
+    WorkerRequirements workerRequirements =
+        provider.resolveRequirements(buildTarget, NO_AUXILIARY_BUILD_TAG);
     Assert.assertNotNull(workerRequirements);
     Assert.assertEquals(
         FileBasedWorkerRequirementsProvider.RETRY_ON_OOM_DEFAULT, workerRequirements);
