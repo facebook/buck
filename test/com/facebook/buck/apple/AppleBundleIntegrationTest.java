@@ -1342,6 +1342,90 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void resourcesWithFrameworksDestinationsAreProperlyCopiedOnIosPlatform()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "bundle_with_resource_with_frameworks_destination", tmp);
+    workspace.setUp();
+    Path outputPath = workspace.buildAndReturnOutput("//:bundle#iphonesimulator-x86_64");
+    assertTrue(
+        "Resource file should exist in Frameworks directory.",
+        Files.isRegularFile(outputPath.resolve("Frameworks/file.txt")));
+  }
+
+  @Test
+  public void resourcesWithFrameworksDestinationsAreProperlyCopiedOnMacosxPlatform()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "bundle_with_resource_with_frameworks_destination", tmp);
+    workspace.setUp();
+    Path outputPath =
+        workspace.buildAndReturnOutput(
+            "//:bundle#macosx-x86_64", "--config", "apple.codesign=/usr/bin/true");
+    assertTrue(
+        "Resource file should exist in Frameworks directory.",
+        Files.isRegularFile(outputPath.resolve("Contents/Frameworks/file.txt")));
+  }
+
+  @Test
+  public void resourcesWithExecutablesDestinationsAreProperlyCopiedOnIosPlatform()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "bundle_with_resource_with_executables_destination", tmp);
+    workspace.setUp();
+    Path outputPath = workspace.buildAndReturnOutput("//:bundle#iphonesimulator-x86_64");
+    assertTrue(
+        "Resource file should exist in Executables directory.",
+        Files.isRegularFile(outputPath.resolve("file.txt")));
+  }
+
+  @Test
+  public void resourcesWithExecutablesDestinationsAreProperlyCopiedOnMacosxPlatform()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "bundle_with_resource_with_executables_destination", tmp);
+    workspace.setUp();
+    Path outputPath =
+        workspace.buildAndReturnOutput(
+            "//:bundle#macosx-x86_64", "--config", "apple.codesign=/usr/bin/true");
+    assertTrue(
+        "Resource file should exist in Executables directory.",
+        Files.isRegularFile(outputPath.resolve("Contents/MacOS/file.txt")));
+  }
+
+  @Test
+  public void resourcesWithResourcesDestinationsAreProperlyCopiedOnIosPlatform()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "bundle_with_resource_with_resources_destination", tmp);
+    workspace.setUp();
+    Path outputPath = workspace.buildAndReturnOutput("//:bundle#iphonesimulator-x86_64");
+    assertTrue(
+        "Resource file should exist in Resources directory.",
+        Files.isRegularFile(outputPath.resolve("file.txt")));
+  }
+
+  @Test
+  public void resourcesWithResourcesDestinationsAreProperlyCopiedOnMacosxPlatform()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "bundle_with_resource_with_resources_destination", tmp);
+    workspace.setUp();
+    Path outputPath =
+        workspace.buildAndReturnOutput(
+            "//:bundle#macosx-x86_64", "--config", "apple.codesign=/usr/bin/true");
+    assertTrue(
+        "Resource file should exist in Resources directory.",
+        Files.isRegularFile(outputPath.resolve("Contents/Resources/file.txt")));
+  }
+
+  @Test
   public void bundleTraversesAppleResourceResourcesFromDepsForAdditionalResources()
       throws IOException {
     ProjectWorkspace workspace =

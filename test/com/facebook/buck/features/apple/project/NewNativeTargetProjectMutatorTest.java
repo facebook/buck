@@ -20,10 +20,13 @@ import static com.facebook.buck.features.apple.project.ProjectGeneratorTestUtils
 import static com.facebook.buck.features.apple.project.ProjectGeneratorTestUtils.assertHasSingletonPhaseWithEntries;
 import static com.facebook.buck.features.apple.project.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static com.facebook.buck.features.apple.project.ProjectGeneratorTestUtils.getSingletonPhaseByType;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
 import static org.hamcrest.core.IsNot.not;
@@ -34,6 +37,7 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
+import com.facebook.buck.apple.AppleBundleDestination;
 import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.XcodePostbuildScriptBuilder;
 import com.facebook.buck.apple.XcodePrebuildScriptBuilder;
@@ -72,6 +76,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -254,6 +259,72 @@ public class NewNativeTargetProjectMutatorTest {
 
     assertHasSingletonPhaseWithEntries(
         result.target, PBXResourcesBuildPhase.class, ImmutableList.of("$SOURCE_ROOT/../foo.png"));
+  }
+
+  @Test
+  public void testResourceWithStdDestinationAddedToResourceBuildPhase()
+      throws NoSuchBuildTargetException {
+    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
+
+    AppleResourceDescriptionArg arg =
+        AppleResourceDescriptionArg.builder()
+            .setName("resources")
+            .setFiles(ImmutableSet.of(FakeSourcePath.of("foo.png")))
+            .setDestination(AppleBundleDestination.RESOURCES)
+            .build();
+
+    mutator.setRecursiveResources(ImmutableSet.of(arg));
+    NewNativeTargetProjectMutator.Result result =
+        mutator.buildTargetAndAddToProject(generatedProject, true);
+
+    assertHasSingletonPhaseWithEntries(
+        result.target, PBXResourcesBuildPhase.class, ImmutableList.of("$SOURCE_ROOT/../foo.png"));
+  }
+
+  @Test
+  public void testResourceWithNonStdDestinationIsOnlyAddedToCopyFilesBuildPhase()
+      throws NoSuchBuildTargetException {
+    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
+
+    AppleResourceDescriptionArg arg =
+        AppleResourceDescriptionArg.builder()
+            .setName("resources")
+            .setFiles(ImmutableSet.of(FakeSourcePath.of("foo.png")))
+            .setDestination(AppleBundleDestination.FRAMEWORKS)
+            .build();
+
+    mutator.setRecursiveResources(ImmutableSet.of(arg));
+    NewNativeTargetProjectMutator.Result result =
+        mutator.buildTargetAndAddToProject(generatedProject, true);
+
+    assertThat(
+        "Resource build phase should not exist",
+        result.target.getBuildPhases().stream()
+            .filter(e -> e instanceof PBXResourcesBuildPhase)
+            .collect(Collectors.toSet()),
+        is(emptyIterable()));
+
+    Optional<PBXBuildPhase> maybeBuildPhase =
+        result.target.getBuildPhases().stream()
+            .filter(e -> e instanceof PBXCopyFilesBuildPhase)
+            .findFirst();
+
+    assertThat("Copy files build phase exists", maybeBuildPhase, notNullValue());
+
+    if (maybeBuildPhase.isPresent()) {
+      @SuppressWarnings("unchecked")
+      PBXCopyFilesBuildPhase buildPhase = (PBXCopyFilesBuildPhase) maybeBuildPhase.get();
+      assertThat(
+          "Copy files build phase contains expected file",
+          buildPhase.getFiles().stream()
+              .map(e -> e.getFileRef().getPath())
+              .collect(Collectors.toSet()),
+          contains(containsString("foo.png")));
+      assertThat(
+          "Copy files build phase has expected destination",
+          buildPhase.getDstSubfolderSpec().getDestination(),
+          equalTo(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS));
+    }
   }
 
   @Test

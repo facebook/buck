@@ -465,8 +465,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     addStepsToCopyExtensionBundlesDependencies(context, stepsBuilder, codeSignOnCopyPathsBuilder);
 
-    for (SourcePath variantSourcePath : resources.getResourceVariantFiles()) {
-      Path variantFilePath = context.getSourcePathResolver().getAbsolutePath(variantSourcePath);
+    for (SourcePath path : resources.getResourceVariantFiles()) {
+      Path variantFilePath = context.getSourcePathResolver().getAbsolutePath(path);
 
       Path variantDirectory = variantFilePath.getParent();
       if (variantDirectory == null || !variantDirectory.toString().endsWith(".lproj")) {
@@ -476,8 +476,9 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
             variantFilePath);
       }
 
+      Path bundleDestinationPath = bundleRoot.resolve(destinations.getResourcesPath());
       Path bundleVariantDestinationPath =
-          resourcesDestinationPath.resolve(variantDirectory.getFileName());
+          bundleDestinationPath.resolve(variantDirectory.getFileName());
       stepsBuilder.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
@@ -688,15 +689,19 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       AppleBundleResources resources, SourcePathResolver resolver) {
     // Ensure there are no resources that will overwrite each other
     // TODO: handle ResourceDirsContainingResourceDirs
-    Set<Path> resourcePaths = new HashSet<>();
-    for (SourcePath path :
-        Iterables.concat(resources.getResourceDirs(), resources.getResourceFiles())) {
-      Path pathInBundle = resolver.getRelativePath(path).getFileName();
-      if (resourcePaths.contains(pathInBundle)) {
-        throw new HumanReadableException(
-            "Bundle contains multiple resources with path %s", pathInBundle);
-      } else {
-        resourcePaths.add(pathInBundle);
+    for (AppleBundleDestination destination : resources.getAllDestinations()) {
+      Set<Path> resourcePaths = new HashSet<>();
+      for (SourcePath path :
+          Iterables.concat(
+              resources.getResourceDirsForDestination(destination),
+              resources.getResourceFilesForDestination(destination))) {
+        Path pathInBundle = resolver.getRelativePath(path).getFileName();
+        if (resourcePaths.contains(pathInBundle)) {
+          throw new HumanReadableException(
+              "Bundle contains multiple resources with path %s", pathInBundle);
+        } else {
+          resourcePaths.add(pathInBundle);
+        }
       }
     }
   }
@@ -839,30 +844,44 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     if (verifyResources) {
       verifyResourceConflicts(resources, context.getSourcePathResolver());
     }
-    Path resourcesDestinationPath = bundleRoot.resolve(this.destinations.getResourcesPath());
-    stepsBuilder.add(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), resourcesDestinationPath)));
-    for (SourcePath dir : resources.getResourceDirs()) {
+
+    for (AppleBundleDestination bundleDestination : resources.getAllDestinations()) {
+      Path bundleDestinationPath = bundleRoot.resolve(bundleDestination.getPath(destinations));
+      stepsBuilder.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), bundleDestinationPath)));
+    }
+
+    for (SourcePathWithAppleBundleDestination dirWithDestination : resources.getResourceDirs()) {
+      Path bundleDestinationPath =
+          bundleRoot.resolve(dirWithDestination.getDestination().getPath(destinations));
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
-              context.getSourcePathResolver().getAbsolutePath(dir),
-              resourcesDestinationPath,
+              context.getSourcePathResolver().getAbsolutePath(dirWithDestination.getSourcePath()),
+              bundleDestinationPath,
               CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
     }
-    for (SourcePath dir : resources.getDirsContainingResourceDirs()) {
+
+    for (SourcePathWithAppleBundleDestination dirWithDestination :
+        resources.getDirsContainingResourceDirs()) {
+      Path bundleDestinationPath =
+          bundleRoot.resolve(dirWithDestination.getDestination().getPath(destinations));
       stepsBuilder.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
-              context.getSourcePathResolver().getAbsolutePath(dir),
-              resourcesDestinationPath,
+              context.getSourcePathResolver().getAbsolutePath(dirWithDestination.getSourcePath()),
+              bundleDestinationPath,
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
-    for (SourcePath file : resources.getResourceFiles()) {
-      Path resolvedFilePath = context.getSourcePathResolver().getAbsolutePath(file);
-      Path destinationPath = resourcesDestinationPath.resolve(resolvedFilePath.getFileName());
+
+    for (SourcePathWithAppleBundleDestination fileWithDestination : resources.getResourceFiles()) {
+      Path resolvedFilePath =
+          context.getSourcePathResolver().getAbsolutePath(fileWithDestination.getSourcePath());
+      Path bundleDestinationPath =
+          bundleRoot.resolve(fileWithDestination.getDestination().getPath(destinations));
+      Path destinationPath = bundleDestinationPath.resolve(resolvedFilePath.getFileName());
       addResourceProcessingSteps(
           context.getSourcePathResolver(), resolvedFilePath, destinationPath, stepsBuilder);
     }

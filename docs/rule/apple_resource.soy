@@ -83,6 +83,15 @@ an <a href="{ROOT}rule/apple_bundle.html"><code>apple_bundle()</code> rule</a>.
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'destination' /}
+  {param default : 'resources' /}
+  {param desc}
+  Specifies the destination in the final application bundle where resource will be copied. Possible
+  values: "resources", "frameworks", "executables", "plugins", "xpcservices".
+  {/param}
+{/call}
+
 
 {/param} // args
 

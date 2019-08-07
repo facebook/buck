@@ -31,6 +31,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.apple.AppleBundleResources;
+import com.facebook.buck.apple.SourcePathWithAppleBundleDestination;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
@@ -354,8 +355,10 @@ public class JsBundleGenruleDescriptionTest {
     AppleBundleResources expected =
         AppleBundleResources.builder()
             .addDirsContainingResourceDirs(
-                setup.genrule().getSourcePathToOutput(),
-                setup.jsBundle().getSourcePathToResources())
+                SourcePathWithAppleBundleDestination.of(setup.genrule().getSourcePathToOutput()))
+            .addDirsContainingResourceDirs(
+                SourcePathWithAppleBundleDestination.of(
+                    setup.jsBundle().getSourcePathToResources()))
             .build();
     assertEquals(expected, genruleBuilder.build());
   }
@@ -375,7 +378,8 @@ public class JsBundleGenruleDescriptionTest {
 
     AppleBundleResources expected =
         AppleBundleResources.builder()
-            .addDirsContainingResourceDirs(setup.rule().getSourcePathToOutput())
+            .addDirsContainingResourceDirs(
+                SourcePathWithAppleBundleDestination.of(setup.rule().getSourcePathToOutput()))
             .build();
     assertEquals(expected, resourcesBuilder.build());
   }

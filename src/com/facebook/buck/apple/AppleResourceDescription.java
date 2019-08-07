@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
@@ -31,6 +32,8 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 /** Description for an apple_resource rule which copies resource files to the built bundle. */
@@ -66,9 +69,26 @@ public class AppleResourceDescription
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver) {
     AppleResourceDescriptionArg appleResource = targetNode.getConstructorArg();
-    builder.addAllResourceDirs(appleResource.getDirs());
-    builder.addAllResourceFiles(appleResource.getFiles());
-    builder.addAllResourceVariantFiles(appleResource.getVariants());
+    AppleBundleDestination destination =
+        appleResource.getDestination().orElse(AppleBundleDestination.defaultValue());
+    builder.addAllResourceDirs(
+        appleResource.getDirs().stream()
+            .map(sourcePath -> SourcePathWithAppleBundleDestination.of(sourcePath, destination))
+            .collect(Collectors.toSet()));
+    builder.addAllResourceFiles(
+        appleResource.getFiles().stream()
+            .map(sourcePath -> SourcePathWithAppleBundleDestination.of(sourcePath, destination))
+            .collect(Collectors.toSet()));
+    ImmutableSet<SourcePath> variants = appleResource.getVariants();
+    if (!variants.isEmpty() && destination != AppleBundleDestination.RESOURCES) {
+      throw new HumanReadableException(
+          String.format(
+              ("Resource \"%s\" contains localization variants, but destination \"%s\" is "
+                  + "non-standard. It should have standard \\\"resource\\\" destination\""),
+              appleResource.getName(),
+              destination));
+    }
+    builder.addAllResourceVariantFiles(variants);
   }
 
   @BuckStyleImmutable
@@ -81,5 +101,7 @@ public class AppleResourceDescription
     ImmutableSet<SourcePath> getVariants();
 
     ImmutableSet<BuildTarget> getResourcesFromDeps();
+
+    Optional<AppleBundleDestination> getDestination();
   }
 }

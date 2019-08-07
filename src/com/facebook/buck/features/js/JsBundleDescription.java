@@ -25,6 +25,7 @@ import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.apple.AppleBundleResources;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.HasAppleBundleResourcesDescription;
+import com.facebook.buck.apple.SourcePathWithAppleBundleDestination;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
@@ -332,13 +333,15 @@ public class JsBundleDescription
 
   static void addAppleBundleResourcesJSOutputOnly(
       AppleBundleResources.Builder builder, JsBundleOutputs bundle) {
-    builder.addDirsContainingResourceDirs(bundle.getSourcePathToOutput());
+    builder.addDirsContainingResourceDirs(
+        SourcePathWithAppleBundleDestination.of(bundle.getSourcePathToOutput()));
   }
 
   static void addAppleBundleResources(
       AppleBundleResources.Builder builder, JsBundleOutputs bundle) {
     addAppleBundleResourcesJSOutputOnly(builder, bundle);
-    builder.addDirsContainingResourceDirs(bundle.getSourcePathToResources());
+    builder.addDirsContainingResourceDirs(
+        SourcePathWithAppleBundleDestination.of(bundle.getSourcePathToResources()));
   }
 
   @Override
