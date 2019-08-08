@@ -89,9 +89,7 @@ public class TargetsCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
     workspace.setUp();
 
-    ProcessResult resultAll =
-        workspace.runBuckCommand(
-            "targets", "-c", "parser.enable_configurable_attributes=true", "//:");
+    ProcessResult resultAll = workspace.runBuckCommand("targets", "//:");
     resultAll.assertSuccess();
     assertEquals(
         ImmutableSet.of("//:A", "//:B", "//:C", "//:test-library"),
@@ -123,9 +121,7 @@ public class TargetsCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
     workspace.setUp();
 
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "targets", "-c", "parser.enable_configurable_attributes=true", "--show-output", "//:");
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-output", "//:");
     result.assertSuccess();
     assertEquals(
         linesToText(
@@ -215,9 +211,7 @@ public class TargetsCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
     workspace.setUp();
 
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "targets", "-c", "parser.enable_configurable_attributes=true", "--show-rulekey", "//:");
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-rulekey", "//:");
     result.assertSuccess();
     parseAndVerifyTargetsAndHashes(result.getStdout(), "//:A", "//:B", "//:test-library");
   }
@@ -301,13 +295,7 @@ public class TargetsCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
     workspace.setUp();
 
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "targets",
-            "-c",
-            "parser.enable_configurable_attributes=true",
-            "--show-cell-path",
-            "//:");
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-cell-path", "//:");
     result.assertSuccess();
     assertEquals(
         linesToText(
@@ -416,13 +404,7 @@ public class TargetsCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
     workspace.setUp();
 
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "targets",
-            "-c",
-            "parser.enable_configurable_attributes=true",
-            "--show-target-hash",
-            "//:");
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-target-hash", "//:");
     result.assertSuccess();
     parseAndVerifyTargetsAndHashes(result.getStdout(), "//:A", "//:B", "//:C", "//:test-library");
   }
@@ -729,9 +711,7 @@ public class TargetsCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
     workspace.setUp();
 
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "targets", "-c", "parser.enable_configurable_attributes=true", "--json", "//:");
+    ProcessResult result = workspace.runBuckCommand("targets", "--json", "//:");
     result.assertSuccess();
 
     assertJsonMatches(workspace.getFileContents("output_path_json.js"), result.getStdout());
@@ -993,13 +973,7 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand(
-            "targets",
-            "-c",
-            "parser.enable_configurable_attributes=true",
-            "--dot",
-            "--show-rulekey",
-            "--show-transitive-rulekeys",
-            "//:");
+            "targets", "--dot", "--show-rulekey", "--show-transitive-rulekeys", "//:");
     result.assertSuccess();
     String output = result.getStdout().trim();
 
