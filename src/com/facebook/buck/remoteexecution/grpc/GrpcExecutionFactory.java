@@ -28,7 +28,6 @@ import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
 import com.facebook.buck.util.NamedTemporaryDirectory;
 import com.google.common.io.Closer;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
@@ -112,38 +111,43 @@ public class GrpcExecutionFactory {
 
     ManagedChannel executionEngineChannel;
     if (insecure) {
-      executionEngineChannel = createInsecureChannel(executionEngineHost, executionEnginePort);
+      executionEngineChannel =
+          createInsecureChannel(executionEngineHost, executionEnginePort).build();
     } else {
       executionEngineChannel =
-          createSecureChannel(executionEngineHost, executionEnginePort, certPath, keyPath, caPath);
+          createSecureChannel(executionEngineHost, executionEnginePort, certPath, keyPath, caPath)
+              .build();
     }
 
-    ManagedChannel casChannel;
+    NettyChannelBuilder casChannelBuilder;
     if (casInsecure) {
-      casChannel = createInsecureChannel(casHost, casPort);
+      casChannelBuilder = createInsecureChannel(casHost, casPort);
     } else {
-      casChannel = createSecureChannel(casHost, casPort, certPath, keyPath, caPath);
+      casChannelBuilder = createSecureChannel(casHost, casPort, certPath, keyPath, caPath);
     }
+    casChannelBuilder.flowControlWindow(100 * 1024 * 1024);
 
     return new GrpcRemoteExecutionClients(
         "buck",
         executionEngineChannel,
-        casChannel,
+        casChannelBuilder.build(),
         casDeadline,
         metadataProvider,
         buckEventBus,
         strategyConfig);
   }
 
-  private static ManagedChannel createInsecureChannel(String host, int port) {
-    return ManagedChannelBuilder.forAddress(host, port)
+  private static NettyChannelBuilder channelBuilder(String host, int port) {
+    return NettyChannelBuilder.forAddress(host, port)
         .maxInboundMessageSize(MAX_INBOUND_MESSAGE_SIZE)
-        .usePlaintext(true)
-        .intercept(getRetryInterceptor())
-        .build();
+        .intercept(getRetryInterceptor());
   }
 
-  private static ManagedChannel createSecureChannel(
+  private static NettyChannelBuilder createInsecureChannel(String host, int port) {
+    return channelBuilder(host, port).usePlaintext(true);
+  }
+
+  private static NettyChannelBuilder createSecureChannel(
       String host, int port, Optional<Path> certPath, Optional<Path> keyPath, Optional<Path> caPath)
       throws SSLException {
 
@@ -155,13 +159,9 @@ public class GrpcExecutionFactory {
       contextBuilder.trustManager(caPath.get().toFile());
     }
 
-    return NettyChannelBuilder.forAddress(host, port)
-        .maxInboundMessageSize(MAX_INBOUND_MESSAGE_SIZE)
+    return channelBuilder(host, port)
         .sslContext(contextBuilder.build())
-        .flowControlWindow(100 * 1024 * 1024)
-        .negotiationType(NegotiationType.TLS)
-        .intercept(getRetryInterceptor())
-        .build();
+        .negotiationType(NegotiationType.TLS);
   }
 
   private static RetryClientInterceptor getRetryInterceptor() {
