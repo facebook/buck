@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
-import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
@@ -33,8 +32,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.features.python.PythonTestBuilder;
 import com.facebook.buck.features.python.PythonTestDescriptionArg;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -43,7 +40,6 @@ import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.util.cache.CacheStats;
 import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
-import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -54,9 +50,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class VersionedTargetGraphCacheTest {
-
-  private static final BuckEventBus BUS =
-      new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId());
 
   private UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
 
@@ -85,8 +78,7 @@ public class VersionedTargetGraphCacheTest {
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             graph,
-            ImmutableMap.of(),
-            BUS);
+            ImmutableMap.of());
     assertEmpty(result);
     CacheStats stats = cache.getCacheStats();
     assertEquals(Optional.of(0L), stats.getHitCount());
@@ -107,8 +99,7 @@ public class VersionedTargetGraphCacheTest {
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             graph,
-            ImmutableMap.of(),
-            BUS);
+            ImmutableMap.of());
     assertEmpty(firstResult);
     VersionedTargetGraphCacheResult secondResult =
         cache.getVersionedTargetGraph(
@@ -116,8 +107,7 @@ public class VersionedTargetGraphCacheTest {
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             graph,
-            ImmutableMap.of(),
-            BUS);
+            ImmutableMap.of());
     assertHit(secondResult, firstResult.getTargetGraphCreationResult());
     CacheStats stats = cache.getCacheStats();
     assertEquals(Optional.of(1L), stats.getHitCount());
@@ -138,8 +128,7 @@ public class VersionedTargetGraphCacheTest {
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             graph,
-            ImmutableMap.of(),
-            BUS);
+            ImmutableMap.of());
     assertEmpty(firstResult);
     VersionedTargetGraphCacheResult secondResult =
         cache.getVersionedTargetGraph(
@@ -147,8 +136,7 @@ public class VersionedTargetGraphCacheTest {
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             graph,
-            ImmutableMap.of(),
-            BUS);
+            ImmutableMap.of());
     assertHit(secondResult, firstResult.getTargetGraphCreationResult());
     CacheStats stats = cache.getCacheStats();
     assertEquals(Optional.of(1L), stats.getHitCount());
@@ -168,8 +156,7 @@ public class VersionedTargetGraphCacheTest {
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             firstGraph,
-            ImmutableMap.of(),
-            BUS);
+            ImmutableMap.of());
     assertEmpty(firstResult);
     TargetGraphCreationResult secondGraph = createSimpleGraph("bar");
     VersionedTargetGraphCacheResult secondResult =
@@ -178,8 +165,7 @@ public class VersionedTargetGraphCacheTest {
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             secondGraph,
-            ImmutableMap.of(),
-            BUS);
+            ImmutableMap.of());
     assertMismatch(secondResult, firstResult.getTargetGraphCreationResult());
     CacheStats stats = cache.getCacheStats();
     assertEquals(Optional.of(0L), stats.getHitCount());
@@ -202,8 +188,7 @@ public class VersionedTargetGraphCacheTest {
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             graph,
-            firstVersionUniverses,
-            BUS);
+            firstVersionUniverses);
     assertEmpty(firstResult);
     ImmutableMap<String, VersionUniverse> secondVersionUniverses =
         ImmutableMap.of("foo", VersionUniverse.of(ImmutableMap.of(versionedAlias, version2)));
@@ -213,8 +198,7 @@ public class VersionedTargetGraphCacheTest {
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             graph,
-            secondVersionUniverses,
-            BUS);
+            secondVersionUniverses);
     assertMismatch(secondResult, firstResult.getTargetGraphCreationResult());
     CacheStats stats = cache.getCacheStats();
     assertEquals(Optional.of(0L), stats.getHitCount());
@@ -236,8 +220,7 @@ public class VersionedTargetGraphCacheTest {
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             graph,
-            ImmutableMap.of(),
-            BUS);
+            ImmutableMap.of());
 
     CacheStats stats = cache1.getCacheStats();
     assertEquals(Optional.of(0L), stats.getHitCount());
@@ -253,8 +236,7 @@ public class VersionedTargetGraphCacheTest {
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             graph,
-            ImmutableMap.of(),
-            BUS);
+            ImmutableMap.of());
     assertHit(secondResult, firstResult.getTargetGraphCreationResult());
     stats = cache2.getCacheStats();
     assertEquals(Optional.of(1L), stats.getHitCount());

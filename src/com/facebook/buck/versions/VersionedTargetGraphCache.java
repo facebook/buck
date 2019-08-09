@@ -26,7 +26,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.cache.CacheStatsTracker;
 import com.google.common.base.Joiner;
@@ -52,15 +51,9 @@ public class VersionedTargetGraphCache {
       ImmutableMap<String, VersionUniverse> versionUniverses,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      VersionTargetGraphMode versionTargetGraphMode,
       long timeoutSeconds,
-      BuckEventBus eventBus,
       TargetGraphCreationResult targetGraphCreationResult)
       throws VersionException, TimeoutException, InterruptedException {
-
-    VersionTargetGraphMode resolvedMode = versionTargetGraphMode;
-    eventBus.post(
-        new ExperimentEvent("async_version_tg_builder", resolvedMode.toString(), "", null, null));
 
     TargetGraphCreationResult versionedTargetGraph =
         AsyncVersionedTargetGraphBuilder.transform(
@@ -79,9 +72,7 @@ public class VersionedTargetGraphCache {
       ImmutableMap<String, VersionUniverse> versionUniverses,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      VersionTargetGraphMode versionTargetGraphMode,
       long timeoutSeconds,
-      BuckEventBus eventBus,
       CacheStatsTracker statsTracker,
       TargetGraphCreationResult targetGraphCreationResult)
       throws VersionException, TimeoutException, InterruptedException {
@@ -119,9 +110,7 @@ public class VersionedTargetGraphCache {
             versionUniverses,
             typeCoercerFactory,
             unconfiguredBuildTargetFactory,
-            versionTargetGraphMode,
             timeoutSeconds,
-            eventBus,
             targetGraphCreationResult);
     cachedVersionedTargetGraph = CachedVersionedTargetGraph.of(newInputs, newVersionedTargetGraph);
     VersionedTargetGraphCacheResult result =
@@ -167,9 +156,7 @@ public class VersionedTargetGraphCache {
                   versionUniverses,
                   typeCoercerFactory,
                   unconfiguredBuildTargetFactory,
-                  versionBuckConfig.getVersionTargetGraphMode(),
                   versionBuckConfig.getVersionTargetGraphTimeoutSeconds(),
-                  eventBus,
                   statsTracker,
                   targetGraphCreationResult);
           LOG.info("versioned target graph " + result.getType().getDescription());
@@ -203,17 +190,14 @@ public class VersionedTargetGraphCache {
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetGraphCreationResult targetGraphCreationResult,
-      CacheStatsTracker statsTracker,
-      BuckEventBus eventBus)
+      CacheStatsTracker statsTracker)
       throws VersionException, InterruptedException, TimeoutException {
     return getVersionedTargetGraph(
         depsAwareExecutor,
         versionUniverses,
         typeCoercerFactory,
         unconfiguredBuildTargetFactory,
-        VersionTargetGraphMode.ENABLED,
         20,
-        eventBus,
         statsTracker,
         targetGraphCreationResult);
   }

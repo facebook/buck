@@ -53,8 +53,7 @@ public class InstrumentedVersionedTargetGraphCache {
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetGraphCreationResult targetGraphCreationResult,
-      ImmutableMap<String, VersionUniverse> versionUniverses,
-      BuckEventBus eventBus)
+      ImmutableMap<String, VersionUniverse> versionUniverses)
       throws VersionException, InterruptedException, TimeoutException {
     return cache.toVersionedTargetGraph(
         depsAwareExecutor,
@@ -62,8 +61,7 @@ public class InstrumentedVersionedTargetGraphCache {
         typeCoercerFactory,
         unconfiguredBuildTargetFactory,
         targetGraphCreationResult,
-        statsTracker,
-        eventBus);
+        statsTracker);
   }
 
   /**
