@@ -26,10 +26,16 @@ import com.facebook.buck.core.rules.analysis.action.ImmutableActionAnalysisDataK
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.google.common.base.VerifyException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class BuildArtifactFactoryTest {
+
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
   public void createsBuildArtifact() {
@@ -49,5 +55,69 @@ public class BuildArtifactFactoryTest {
         buildArtifact.getSourcePath());
 
     assertEquals(key, buildArtifact.getActionDataKey());
+  }
+
+  @Test
+  public void multipleOfSameDeclaredArtifactThrows() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    BuildArtifactFactory factory = new BuildArtifactFactory(target, filesystem);
+    Path path = Paths.get("some/output");
+    factory.createDeclaredArtifact(path);
+
+    expectedException.expect(IllegalStateException.class);
+    factory.createDeclaredArtifact(path);
+  }
+
+  @Test
+  public void multipleOfSameDeclaredArtifactAfterBindingThrows() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    BuildArtifactFactory factory = new BuildArtifactFactory(target, filesystem);
+    Path path = Paths.get("some/output");
+    DeclaredArtifact artifact = factory.createDeclaredArtifact(path);
+    factory.bindtoBuildArtifact(
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {}), artifact);
+
+    expectedException.expect(IllegalStateException.class);
+    factory.createDeclaredArtifact(path);
+  }
+
+  @Test
+  public void multipleOfDifferentDeclaredArtifactDoesNotThrows() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    BuildArtifactFactory factory = new BuildArtifactFactory(target, filesystem);
+    factory.createDeclaredArtifact(Paths.get("path1"));
+
+    factory.createDeclaredArtifact(Paths.get("path2"));
+  }
+
+  @Test
+  public void doesNotThrowsOnValidateWhenArtifactsBound() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    BuildArtifactFactory factory = new BuildArtifactFactory(target, filesystem);
+    DeclaredArtifact artifact = factory.createDeclaredArtifact(Paths.get("path1"));
+    factory.bindtoBuildArtifact(
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {}), artifact);
+
+    factory.verifyAllArtifactsBound();
+  }
+
+  @Test
+  public void throwsOnValidateWhenArtifactsNotBound() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    BuildArtifactFactory factory = new BuildArtifactFactory(target, filesystem);
+    factory.createDeclaredArtifact(Paths.get("path1"));
+
+    expectedException.expect(VerifyException.class);
+    factory.verifyAllArtifactsBound();
   }
 }

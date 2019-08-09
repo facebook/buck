@@ -19,7 +19,11 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Factory for managing and creating the various {@link Artifact}s for a specific {@link
@@ -32,10 +36,13 @@ public class BuildArtifactFactory {
   private final Path basePath;
   private final Path genDir;
 
+  private final Set<ArtifactImpl> declaredArtifacts;
+
   protected BuildArtifactFactory(BuildTarget target, ProjectFilesystem filesystem) {
     this.target = target;
     this.genDir = filesystem.getBuckPaths().getGenDir();
     this.basePath = BuildPaths.getBaseDir(target);
+    this.declaredArtifacts = new HashSet<>();
   }
 
   /**
@@ -46,7 +53,10 @@ public class BuildArtifactFactory {
    */
   protected DeclaredArtifact createDeclaredArtifact(Path output)
       throws ArtifactDeclarationException {
-    return ArtifactImpl.of(target, genDir, basePath, output);
+    ArtifactImpl artifact = ArtifactImpl.of(target, genDir, basePath, output);
+    Preconditions.checkState(
+        declaredArtifacts.add(artifact), "Artifact at output %s is already declared.", output);
+    return artifact;
   }
 
   /**
@@ -56,6 +66,18 @@ public class BuildArtifactFactory {
    * @return a {@link BuildArtifact} by binding the action to the given artifact
    */
   protected BuildArtifact bindtoBuildArtifact(ActionAnalysisDataKey key, Artifact artifact) {
-    return artifact.asDeclared().materialize(key);
+    Verify.verify(declaredArtifacts.contains(artifact), "%s was never declared", artifact);
+    BuildArtifact buildArtifact = artifact.asDeclared().materialize(key);
+    return buildArtifact;
+  }
+
+  /**
+   * Validates that all {@link DeclaredArtifact}s have been bound to an {@link
+   * ActionAnalysisDataKey}
+   */
+  protected void verifyAllArtifactsBound() {
+    for (ArtifactImpl artifact : declaredArtifacts) {
+      Verify.verify(artifact.isBound(), "Artifact %s is not bound", artifact);
+    }
   }
 }
