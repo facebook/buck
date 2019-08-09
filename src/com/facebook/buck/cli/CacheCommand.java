@@ -226,6 +226,7 @@ public class CacheCommand extends AbstractCommand {
       ArtifactCacheMode artifactCacheMode = r.cacheResultMode.orElse(ArtifactCacheMode.unknown);
       switch (r.cacheResultType) {
         case ERROR:
+        case SOFT_ERROR:
           if (cacheErrorsPerMode.containsKey(artifactCacheMode)) {
             cacheErrorsPerMode.get(artifactCacheMode).incrementAndGet();
           }
@@ -331,6 +332,7 @@ public class CacheCommand extends AbstractCommand {
     String typeString = type.toString().toLowerCase();
     switch (type) {
       case ERROR:
+      case SOFT_ERROR:
         return String.format("%s %s", typeString, cacheResult.getCacheError());
       case HIT:
       case CONTAINS:

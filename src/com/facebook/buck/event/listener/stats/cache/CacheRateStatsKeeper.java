@@ -60,6 +60,7 @@ public class CacheRateStatsKeeper {
         cacheMisses.incrementAndGet();
         break;
       case ERROR:
+      case SOFT_ERROR:
         cacheErrors.incrementAndGet();
         break;
       case HIT:

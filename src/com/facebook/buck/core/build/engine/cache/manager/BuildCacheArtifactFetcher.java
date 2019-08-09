@@ -19,6 +19,7 @@ package com.facebook.buck.core.build.engine.cache.manager;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfoStore;
 import com.facebook.buck.core.build.engine.buildinfo.OnDiskBuildInfo;
@@ -36,6 +37,7 @@ import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.Futures;
@@ -78,6 +80,40 @@ public class BuildCacheArtifactFetcher {
     return buildRuleScopeManager.scope();
   }
 
+  /**
+   * Converts a failed {@code ListenableFuture<CacheResult>} to a {@code CacheResult} error. Then
+   * logs all {@code CacheResult} of type {@code CacheResultType.ERROR}. Returns a {@code
+   * ListenableFuture<CacheResult>} without an Exception.
+   *
+   * @param cacheResultListenableFuture ListenableFuture input
+   * @param ruleKey rule key associated with that cache result
+   * @return a ListenableFuture that holds a CacheResult without Exception
+   */
+  protected ListenableFuture<CacheResult> convertErrorToSoftError(
+      ListenableFuture<CacheResult> cacheResultListenableFuture, RuleKey ruleKey) {
+    return Futures.transformAsync(
+        Futures.catchingAsync(
+            cacheResultListenableFuture,
+            Exception.class,
+            e ->
+                Futures.immediateFuture(
+                    CacheResult.softError(
+                        "fetch_cache_artifact_exception",
+                        ArtifactCacheMode.unknown,
+                        Throwables.getStackTraceAsString(e))),
+            executorService),
+        cacheResult -> {
+          if (cacheResult.getType() == CacheResultType.ERROR
+              || cacheResult.getType() == CacheResultType.SOFT_ERROR) {
+            LOG.warn(
+                "Cache error from fetching artifact with rule key [%s]: %s",
+                ruleKey, cacheResult.cacheError().get());
+          }
+          return Futures.immediateFuture(cacheResult);
+        },
+        executorService);
+  }
+
   public ListenableFuture<CacheResult>
       tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
           RuleKey ruleKey, ArtifactCache artifactCache, ProjectFilesystem filesystem) {
@@ -100,30 +136,33 @@ public class BuildCacheArtifactFetcher {
     // TODO(mbolin): Change ArtifactCache.fetch() so that it returns a File instead of takes one.
     // Then we could download directly from the remote cache into the on-disk cache and unzip it
     // from there.
-    return Futures.transformAsync(
-        fetch(artifactCache, ruleKey, lazyZipPath),
-        cacheResult -> {
-          try (Scope ignored = buildRuleScope()) {
-            // Verify that the rule key we used to fetch the artifact is one of the rule keys
-            // reported in it's metadata.
-            if (cacheResult.getType().isSuccess()) {
-              ImmutableSet<RuleKey> ruleKeys =
-                  RichStream.from(cacheResult.getMetadata().entrySet())
-                      .filter(e -> BuildInfo.RULE_KEY_NAMES.contains(e.getKey()))
-                      .map(Map.Entry::getValue)
-                      .map(RuleKey::new)
-                      .toImmutableSet();
-              if (!ruleKeys.contains(ruleKey)) {
-                LOG.warn(
-                    "%s: rule keys in artifact don't match rule key used to fetch it: %s not in %s",
-                    rule.getBuildTarget(), ruleKey, ruleKeys);
-              }
-            }
+    return convertErrorToSoftError(
+        Futures.transformAsync(
+            fetch(artifactCache, ruleKey, lazyZipPath),
+            cacheResult -> {
+              try (Scope ignored = buildRuleScope()) {
+                // Verify that the rule key we used to fetch the artifact is one of the rule keys
+                // reported in it's metadata.
+                if (cacheResult.getType().isSuccess()) {
+                  ImmutableSet<RuleKey> ruleKeys =
+                      RichStream.from(cacheResult.getMetadata().entrySet())
+                          .filter(e -> BuildInfo.RULE_KEY_NAMES.contains(e.getKey()))
+                          .map(Map.Entry::getValue)
+                          .map(RuleKey::new)
+                          .toImmutableSet();
+                  if (!ruleKeys.contains(ruleKey)) {
+                    LOG.warn(
+                        "%s: rule keys in artifact don't match rule key used to fetch it: %s not in %s",
+                        rule.getBuildTarget(), ruleKey, ruleKeys);
+                  }
+                }
 
-            return Futures.immediateFuture(
-                extractArtifactFromCacheResult(ruleKey, lazyZipPath, filesystem, cacheResult));
-          }
-        });
+                return Futures.immediateFuture(
+                    extractArtifactFromCacheResult(ruleKey, lazyZipPath, filesystem, cacheResult));
+              }
+            },
+            executorService),
+        ruleKey);
   }
 
   public ListenableFuture<CacheResult> fetch(

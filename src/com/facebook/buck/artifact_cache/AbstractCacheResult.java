@@ -167,6 +167,18 @@ abstract class AbstractCacheResult {
         Optional.empty());
   }
 
+  public static CacheResult softError(
+      String cacheSource, ArtifactCacheMode cacheMode, String cacheError) {
+    return CacheResult.of(
+        CacheResultType.SOFT_ERROR,
+        Optional.of(cacheSource),
+        Optional.of(cacheMode),
+        Optional.of(cacheError),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
+  }
+
   public static CacheResult skipped() {
     return SKIPPED_RESULT;
   }
