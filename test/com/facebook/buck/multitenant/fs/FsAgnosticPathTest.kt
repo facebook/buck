@@ -203,4 +203,20 @@ class FsAgnosticPathTest {
         assertEquals(FsAgnosticPath.of("foo"), FsAgnosticPath.of("foo/bar").dirname())
         assertEquals(FsAgnosticPath.of("foo/bar"), FsAgnosticPath.of("foo/bar/baz").dirname())
     }
+
+    @Test
+    fun nameEmptyPath() {
+        assertEquals(FsAgnosticPath.of(""), FsAgnosticPath.of("").name())
+    }
+
+    @Test
+    fun nameFileInRoot() {
+        assertEquals(FsAgnosticPath.of("foo"), FsAgnosticPath.of("foo").name())
+    }
+
+    @Test
+    fun nameFileBelowRoot() {
+        assertEquals(FsAgnosticPath.of("bar"), FsAgnosticPath.of("foo/bar").name())
+        assertEquals(FsAgnosticPath.of("baz"), FsAgnosticPath.of("foo/bar/baz").name())
+    }
 }

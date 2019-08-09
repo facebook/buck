@@ -93,6 +93,19 @@ class FsAgnosticPath private constructor(private val path: String) : Comparable<
     }
 
     /**
+     * @return the last component of the path, which is either a file name or directory name,
+     * including extension if it has one
+     */
+    fun name(): FsAgnosticPath {
+        val lastIndex = path.lastIndexOf('/')
+        return if (lastIndex == -1) {
+            this
+        } else {
+            createWithoutVerification(path.substring(lastIndex + 1))
+        }
+    }
+
+    /**
      * Similar to [Path.getParent], except it never returns `null`: it will return the empty path
      * if the path does not have a parent.
      */
