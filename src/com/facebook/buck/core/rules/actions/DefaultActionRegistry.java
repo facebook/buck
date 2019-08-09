@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.analysis.action.ImmutableActionAnalysisDataK
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
 
-/** The action registry that should be used throughout Buck to handle registering actions */
+/** The action registry that should be used throughout Buck to handle registering actions. */
 public class DefaultActionRegistry extends BuildArtifactFactory implements ActionRegistry {
 
   private final ActionAnalysisDataRegistry actionRegistry;
@@ -71,5 +71,10 @@ public class DefaultActionRegistry extends BuildArtifactFactory implements Actio
   @Override
   public BuildTarget getOwner() {
     return target;
+  }
+
+  @Override
+  public void verifyAllArtifactsBound() {
+    super.verifyAllArtifactsBound();
   }
 }

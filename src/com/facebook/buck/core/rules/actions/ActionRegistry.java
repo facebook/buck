@@ -60,4 +60,10 @@ public interface ActionRegistry {
    *     factory.
    */
   BuildTarget getOwner();
+
+  /**
+   * Verifies that all the {@link Artifact}s declared via {@link #declareArtifact(Path)} has been
+   * bound with an {@link Action} via {@link #registerActionAnalysisDataForAction(Action)}
+   */
+  void verifyAllArtifactsBound();
 }

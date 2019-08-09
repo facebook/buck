@@ -59,6 +59,11 @@ class CapturingActionRegistry implements ActionRegistry {
     return delegate.getOwner();
   }
 
+  @Override
+  public void verifyAllArtifactsBound() {
+    delegate.verifyAllArtifactsBound();
+  }
+
   public ImmutableSet<Artifact> getOutputs() {
     return outputs.build();
   }
