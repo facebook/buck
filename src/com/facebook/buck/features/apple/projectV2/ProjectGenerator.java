@@ -1789,7 +1789,7 @@ public class ProjectGenerator {
                         recursivePublicSystemIncludeDirectories,
                         recursivePublicIncludeDirectories,
                         includeDirectories)));
-        if (hasSwiftVersionArg && containsSwiftCode && isFocusedOnTarget) {
+        if (hasSwiftVersionArg && isFocusedOnTarget) {
           ImmutableSet<Path> swiftIncludePaths = collectRecursiveSwiftIncludePaths(targetNode);
           Stream<String> allValues =
               Streams.concat(
