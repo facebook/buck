@@ -100,7 +100,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Streams;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
@@ -127,7 +126,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 import org.kohsuke.args4j.Argument;
@@ -528,55 +526,13 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   /**
-   * Removes configuration nodes from a {@link TargetGraph}.
-   *
-   * <p>This method is based on the assumption that configuration nodes can only be top level nodes.
-   * The build nodes cannot depend on configuration node because all the attributes are resolved
-   * during resolution of configurable attribute values.
-   */
-  private TargetGraph getSubgraphWithoutConfigurationNodes(TargetGraph targetGraph) {
-    if (!hasConfigurationRules(targetGraph)) {
-      return targetGraph;
-    }
-    List<TargetNode<?>> nonConfigurationRootNodes =
-        filterNonConfigurationNodes(targetGraph.getNodesWithNoIncomingEdges().stream())
-            .collect(Collectors.toList());
-    return targetGraph.getSubgraph(nonConfigurationRootNodes);
-  }
-
-  /**
-   * Removes configuration nodes from a {@link TargetGraph} and a collection of target nodes.
-   *
-   * @see #getSubgraphWithoutConfigurationNodes
-   */
-  private Pair<TargetGraph, Iterable<TargetNode<?>>> filterNonConfigurationRules(
-      Pair<TargetGraph, Iterable<TargetNode<?>>> targetGraphAndBuildTargets) {
-    TargetGraph originalTargetGraph = targetGraphAndBuildTargets.getFirst();
-    TargetGraph targetGraph = getSubgraphWithoutConfigurationNodes(originalTargetGraph);
-    List<TargetNode<?>> nonConfigurationNodes =
-        filterNonConfigurationNodes(Streams.stream(targetGraphAndBuildTargets.getSecond()))
-            .collect(Collectors.toList());
-    return new Pair<>(targetGraph, nonConfigurationNodes);
-  }
-
-  private Stream<TargetNode<?>> filterNonConfigurationNodes(Stream<TargetNode<?>> nodes) {
-    return nodes.filter(node -> node.getRuleType().getKind() != RuleType.Kind.CONFIGURATION);
-  }
-
-  private boolean hasConfigurationRules(TargetGraph targetGraph) {
-    return targetGraph.getNodesWithNoIncomingEdges().stream()
-        .anyMatch(node -> node.getRuleType().getKind() == RuleType.Kind.CONFIGURATION);
-  }
-
-  /**
    * Output rules along with dependencies as a graph in DOT format As a part of invocation,
    * constructs both target and action graphs
    */
   private void printDotFormat(CommandRunnerParams params, ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
     TargetGraphCreationResult targetGraphAndTargets = buildTargetGraphAndTargets(params, executor);
-    TargetGraph targetGraph =
-        getSubgraphWithoutConfigurationNodes(targetGraphAndTargets.getTargetGraph());
+    TargetGraph targetGraph = targetGraphAndTargets.getTargetGraph();
     ActionGraphAndBuilder result =
         params
             .getActionGraphProvider()
@@ -1071,8 +1027,6 @@ public class TargetsCommand extends AbstractCommand {
       }
       computeShowTargetHash(
           params, executor, targetGraphAndMaybeRecursiveTargetNodes, targetResultBuilders);
-    } else if (!isShowCellPath) {
-      targetGraphAndTargetNodes = filterNonConfigurationRules(targetGraphAndTargetNodes);
     }
 
     // We only need the action graph if we're showing the output or the keys, and the
@@ -1088,8 +1042,7 @@ public class TargetsCommand extends AbstractCommand {
                 .getActionGraphProvider()
                 .getActionGraph(
                     new ImmutableTargetGraphCreationResult(
-                        getSubgraphWithoutConfigurationNodes(targetGraphAndTargetNodes.getFirst()),
-                        ImmutableSet.of()));
+                        targetGraphAndTargetNodes.getFirst(), ImmutableSet.of()));
         actionGraph = Optional.of(result.getActionGraph());
         graphBuilder = Optional.of(result.getActionGraphBuilder());
         if (isShowRuleKey) {
@@ -1124,6 +1077,9 @@ public class TargetsCommand extends AbstractCommand {
       // Start rule calculations in parallel.
       if (actionGraph.isPresent() && isShowRuleKey) {
         for (TargetNode<?> targetNode : targetGraphAndTargetNodes.getSecond()) {
+          if (!targetNode.getRuleType().isBuildRule()) {
+            continue;
+          }
           BuildRule rule = graphBuilder.get().requireRule(targetNode.getBuildTarget());
           ruleKeyCalculator.get().calculate(params.getBuckEventBus(), rule);
         }
@@ -1135,6 +1091,9 @@ public class TargetsCommand extends AbstractCommand {
             targetResultBuilders.getOrCreate(targetNode.getBuildTarget());
         Objects.requireNonNull(builder);
         if (actionGraph.isPresent() && isShowRuleKey) {
+          if (!targetNode.getRuleType().isBuildRule()) {
+            continue;
+          }
           BuildRule rule = graphBuilder.get().requireRule(targetNode.getBuildTarget());
           builder.setRuleKey(
               Futures.getUnchecked(
@@ -1157,9 +1116,10 @@ public class TargetsCommand extends AbstractCommand {
         }
       }
 
+      TargetGraph targetGraph = targetGraphAndTargetNodes.getFirst();
       graphBuilder.ifPresent(
           actionGraphBuilder ->
-              processBuildRules(targetResultBuilders.map, actionGraphBuilder, params));
+              processBuildRules(targetResultBuilders.map, targetGraph, actionGraphBuilder, params));
 
       ImmutableSortedMap.Builder<BuildTarget, TargetResult> builder =
           ImmutableSortedMap.naturalOrder();
@@ -1173,10 +1133,14 @@ public class TargetsCommand extends AbstractCommand {
 
   private void processBuildRules(
       Map<BuildTarget, TargetResult.Builder> buildTargetToTargetBuilderMap,
+      TargetGraph targetGraph,
       ActionGraphBuilder graphBuilder,
       CommandRunnerParams params) {
     buildTargetToTargetBuilderMap.forEach(
         (target, builder) -> {
+          if (!targetGraph.get(target).getRuleType().isBuildRule()) {
+            return;
+          }
           BuildRule rule = graphBuilder.requireRule(target);
           builder.setRuleType(rule.getType());
           if (isShowOutput || isShowFullOutput) {
