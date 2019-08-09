@@ -73,7 +73,7 @@ public class PerfCasDownloadCommand extends AbstractCommand {
 
       List<String> digestLines = Files.readAllLines(digest);
       Verify.verify(digestLines.size() == 1, "Couldn't parse digest input %s.", digest);
-      String[] sections = digestLines.get(0).split(" ");
+      String[] sections = digestLines.get(0).split(":");
       Verify.verify(sections.length == 2, "Couldn't parse digest input %s.", digest);
 
       Digest treeDigest = protocol.newDigest(sections[0], Integer.parseInt(sections[1]));

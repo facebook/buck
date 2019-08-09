@@ -101,7 +101,7 @@ public class PerfCasUploadCommand extends AbstractCommand {
       Digest treeDigest = outputDirectory.getTreeDigest();
       Files.write(
           digest,
-          ImmutableList.of(String.format("%s %d", treeDigest.getHash(), treeDigest.getSize())));
+          ImmutableList.of(String.format("%s:%d", treeDigest.getHash(), treeDigest.getSize())));
 
       return ExitCode.SUCCESS;
     }
