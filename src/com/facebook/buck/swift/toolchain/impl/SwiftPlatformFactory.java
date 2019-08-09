@@ -92,13 +92,12 @@ public class SwiftPlatformFactory {
           return Optional.of(swiftStdLibRoot);
         }
       } catch (IOException x) {
-        LOG.error(
+        LOG.debug(
             "Unable to find swift libraries in toolchain: %s for platform: %s. Exception: %s.",
             toolchainPath, platformName, x.getLocalizedMessage());
         return Optional.empty();
       }
-
-      LOG.error(
+      LOG.debug(
           "Unable to find swift libraries in toolchain: %s for platform: %s",
           toolchainPath, platformName);
       return Optional.empty();
