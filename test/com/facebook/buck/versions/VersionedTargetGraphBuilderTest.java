@@ -384,31 +384,6 @@ public class VersionedTargetGraphBuilderTest {
               TargetGraphCreationResult unversionedTargetGraphAndBuildTargets,
               TypeCoercerFactory typeCoercerFactory,
               UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
-            return new ParallelVersionedTargetGraphBuilder(
-                2,
-                versionSelector,
-                unversionedTargetGraphAndBuildTargets,
-                typeCoercerFactory,
-                unconfiguredBuildTargetFactory,
-                20);
-          }
-
-          @Override
-          public String toString() {
-            return "parallel";
-          }
-        }
-      },
-      new Object[] {
-        new VersionedTargetGraphBuilderFactory() {
-
-          @Override
-          public VersionedTargetGraphBuilder create(
-              DepsAwareExecutor executor,
-              VersionSelector versionSelector,
-              TargetGraphCreationResult unversionedTargetGraphAndBuildTargets,
-              TypeCoercerFactory typeCoercerFactory,
-              UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
             return new AsyncVersionedTargetGraphBuilder(
                 executor,
                 versionSelector,
