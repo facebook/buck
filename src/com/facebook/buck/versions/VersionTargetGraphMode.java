@@ -28,7 +28,7 @@ public enum VersionTargetGraphMode implements WithProbability {
   EXPERIMENT(0.0),
   ;
 
-  public static final VersionTargetGraphMode DEFAULT = DISABLED;
+  public static final VersionTargetGraphMode DEFAULT = ENABLED;
 
   private final double probability;
 
