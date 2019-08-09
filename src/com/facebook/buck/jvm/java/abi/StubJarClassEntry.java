@@ -56,7 +56,7 @@ class StubJarClassEntry extends StubJarEntry {
     if (compatibilityMode != null && compatibilityMode != AbiGenerationMode.CLASS) {
       firstLevelFiltering = new SourceAbiCompatibleVisitor(firstLevelFiltering, compatibilityMode);
     }
-    input.visitClass(path, firstLevelFiltering);
+    input.visitClass(path, firstLevelFiltering, /* skipCode */ true);
 
     // The synthetic package-info class is how package annotations are recorded; that one is
     // actually used by the compiler

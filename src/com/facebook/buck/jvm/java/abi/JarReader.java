@@ -49,8 +49,8 @@ class JarReader implements LibraryReader {
   }
 
   @Override
-  public void visitClass(Path relativePath, ClassVisitor cv) throws IOException {
-    getInner().visitClass(relativePath, cv);
+  public void visitClass(Path relativePath, ClassVisitor cv, boolean skipCode) throws IOException {
+    getInner().visitClass(relativePath, cv, skipCode);
   }
 
   @Override
