@@ -57,7 +57,6 @@ public class VersionedTargetGraphCacheTest {
 
   private static final BuckEventBus BUS =
       new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId());
-  private static final int NUMBER_OF_THREADS = 1;
 
   private UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
 
@@ -87,7 +86,6 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             graph,
             ImmutableMap.of(),
-            NUMBER_OF_THREADS,
             BUS);
     assertEmpty(result);
     CacheStats stats = cache.getCacheStats();
@@ -110,7 +108,6 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             graph,
             ImmutableMap.of(),
-            NUMBER_OF_THREADS,
             BUS);
     assertEmpty(firstResult);
     VersionedTargetGraphCacheResult secondResult =
@@ -120,7 +117,6 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             graph,
             ImmutableMap.of(),
-            NUMBER_OF_THREADS,
             BUS);
     assertHit(secondResult, firstResult.getTargetGraphCreationResult());
     CacheStats stats = cache.getCacheStats();
@@ -143,7 +139,6 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             graph,
             ImmutableMap.of(),
-            NUMBER_OF_THREADS,
             BUS);
     assertEmpty(firstResult);
     VersionedTargetGraphCacheResult secondResult =
@@ -153,7 +148,6 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             graph,
             ImmutableMap.of(),
-            2,
             BUS);
     assertHit(secondResult, firstResult.getTargetGraphCreationResult());
     CacheStats stats = cache.getCacheStats();
@@ -175,7 +169,6 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             firstGraph,
             ImmutableMap.of(),
-            NUMBER_OF_THREADS,
             BUS);
     assertEmpty(firstResult);
     TargetGraphCreationResult secondGraph = createSimpleGraph("bar");
@@ -186,7 +179,6 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             secondGraph,
             ImmutableMap.of(),
-            NUMBER_OF_THREADS,
             BUS);
     assertMismatch(secondResult, firstResult.getTargetGraphCreationResult());
     CacheStats stats = cache.getCacheStats();
@@ -211,7 +203,6 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             graph,
             firstVersionUniverses,
-            NUMBER_OF_THREADS,
             BUS);
     assertEmpty(firstResult);
     ImmutableMap<String, VersionUniverse> secondVersionUniverses =
@@ -223,7 +214,6 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             graph,
             secondVersionUniverses,
-            NUMBER_OF_THREADS,
             BUS);
     assertMismatch(secondResult, firstResult.getTargetGraphCreationResult());
     CacheStats stats = cache.getCacheStats();
@@ -247,7 +237,6 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             graph,
             ImmutableMap.of(),
-            NUMBER_OF_THREADS,
             BUS);
 
     CacheStats stats = cache1.getCacheStats();
@@ -265,7 +254,6 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             graph,
             ImmutableMap.of(),
-            NUMBER_OF_THREADS,
             BUS);
     assertHit(secondResult, firstResult.getTargetGraphCreationResult());
     stats = cache2.getCacheStats();
