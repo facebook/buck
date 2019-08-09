@@ -64,12 +64,6 @@ public class VersionBuckConfig {
     return universes.build();
   }
 
-  public VersionTargetGraphMode getVersionTargetGraphMode() {
-    return delegate
-        .getEnum("build", "async_version_tg_builder", VersionTargetGraphMode.class)
-        .orElse(VersionTargetGraphMode.DEFAULT);
-  }
-
   public long getVersionTargetGraphTimeoutSeconds() {
     return delegate.getLong("build", "version_tg_timeout").orElse(DEFAULT_TIMEOUT);
   }
