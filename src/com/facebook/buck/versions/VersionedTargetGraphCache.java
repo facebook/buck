@@ -230,7 +230,7 @@ public class VersionedTargetGraphCache {
         numberOfThreads,
         typeCoercerFactory,
         unconfiguredBuildTargetFactory,
-        VersionTargetGraphMode.DISABLED,
+        VersionTargetGraphMode.ENABLED,
         20,
         eventBus,
         statsTracker,
