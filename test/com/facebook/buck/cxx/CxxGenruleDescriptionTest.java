@@ -18,6 +18,9 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
@@ -52,10 +55,11 @@ import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroContainer;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.OptionalMatchers;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.versions.AsyncVersionedTargetGraphBuilder;
 import com.facebook.buck.versions.NaiveVersionSelector;
-import com.facebook.buck.versions.ParallelVersionedTargetGraphBuilder;
 import com.facebook.buck.versions.VersionPropagatorBuilder;
 import com.facebook.buck.versions.VersionedAliasBuilder;
 import com.google.common.base.Joiner;
@@ -68,11 +72,14 @@ import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class CxxGenruleDescriptionTest {
 
-  private static final int NUMBER_OF_THREADS = 1;
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
 
   @Test
   public void toolPlatformParseTimeDeps() {
@@ -213,11 +220,11 @@ public class CxxGenruleDescriptionTest {
     TargetGraph graph =
         TargetGraphFactory.newInstance(dep.build(), versionedDep.build(), genruleBuilder.build());
     TargetGraphCreationResult transformed =
-        ParallelVersionedTargetGraphBuilder.transform(
+        AsyncVersionedTargetGraphBuilder.transform(
             new NaiveVersionSelector(),
             new ImmutableTargetGraphCreationResult(
                 graph, ImmutableSet.of(genruleBuilder.getTarget())),
-            NUMBER_OF_THREADS,
+            executor.get(),
             new DefaultTypeCoercerFactory(),
             new ParsingUnconfiguredBuildTargetViewFactory(),
             20);
@@ -251,11 +258,11 @@ public class CxxGenruleDescriptionTest {
         TargetGraphFactory.newInstance(
             transitiveDep.build(), versionedDep.build(), dep.build(), genruleBuilder.build());
     TargetGraphCreationResult transformed =
-        ParallelVersionedTargetGraphBuilder.transform(
+        AsyncVersionedTargetGraphBuilder.transform(
             new NaiveVersionSelector(),
             new ImmutableTargetGraphCreationResult(
                 graph, ImmutableSet.of(genruleBuilder.getTarget())),
-            NUMBER_OF_THREADS,
+            executor.get(),
             new DefaultTypeCoercerFactory(),
             new ParsingUnconfiguredBuildTargetViewFactory(),
             20);

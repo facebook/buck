@@ -5,6 +5,7 @@ standard_java_test(
     with_test_data = True,
     deps = [
         "//src/com/facebook/buck/core/build/engine/impl:impl",
+        "//src/com/facebook/buck/core/graph/transformation/executor/impl:impl",
         "//src/com/facebook/buck/core/model/actiongraph/computation:computation",
         "//src/com/facebook/buck/core/model/platform/impl:impl",
         "//src/com/facebook/buck/core/rules/config/registry/impl:impl",

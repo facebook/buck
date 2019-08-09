@@ -27,6 +27,9 @@ import com.facebook.buck.core.build.engine.RuleDepsCache;
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -89,8 +92,9 @@ import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.versions.ParallelVersionedTargetGraphBuilder;
+import com.facebook.buck.versions.AsyncVersionedTargetGraphBuilder;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionUniverse;
 import com.facebook.buck.versions.VersionUniverseVersionSelector;
@@ -105,7 +109,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
@@ -114,9 +117,11 @@ import org.junit.rules.ExpectedException;
 
 public class IncrementalActionGraphScenarioTest {
 
-  private static final int NUMBER_OF_THREADS = ForkJoinPool.commonPool().getParallelism();
-
   @Rule public ExpectedException expectedException = ExpectedException.none();
+
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
 
   private static final PythonPlatform PY2 = createPy2Platform(Optional.empty());
   private static final PythonPlatform PY3 = createPy3Platform(Optional.empty());
@@ -374,12 +379,12 @@ public class IncrementalActionGraphScenarioTest {
             versionedAliasBuilder.build(filesystem),
             libraryBuilder.build(filesystem));
     TargetGraph versionedTargetGraph =
-        ParallelVersionedTargetGraphBuilder.transform(
+        AsyncVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
                     unversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
                 new ImmutableTargetGraphCreationResult(
                     unversionedTargetGraph, ImmutableSet.of(binaryTarget, binaryTarget2)),
-                NUMBER_OF_THREADS,
+                executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 20)
@@ -549,12 +554,12 @@ public class IncrementalActionGraphScenarioTest {
             versionedAliasBuilder.build(filesystem),
             libraryBuilder.build(filesystem));
     TargetGraph versionedTargetGraph =
-        ParallelVersionedTargetGraphBuilder.transform(
+        AsyncVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
                     unversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
                 new ImmutableTargetGraphCreationResult(
                     unversionedTargetGraph, ImmutableSet.of(compilationDatabaseTarget)),
-                NUMBER_OF_THREADS,
+                executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 20)
@@ -575,12 +580,12 @@ public class IncrementalActionGraphScenarioTest {
             versionedAliasBuilder.build(filesystem),
             libraryBuilder.build(filesystem));
     TargetGraph newVersionedTargetGraph =
-        ParallelVersionedTargetGraphBuilder.transform(
+        AsyncVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
                     newUnversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
                 new ImmutableTargetGraphCreationResult(
                     newUnversionedTargetGraph, ImmutableSet.of(binaryTarget)),
-                NUMBER_OF_THREADS,
+                executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 20)
