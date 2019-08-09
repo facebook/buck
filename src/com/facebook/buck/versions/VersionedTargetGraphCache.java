@@ -57,7 +57,6 @@ public class VersionedTargetGraphCache {
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       VersionTargetGraphMode versionTargetGraphMode,
-      Map<VersionTargetGraphMode, Double> versionTargetGraphModeProbabilities,
       long timeoutSeconds,
       BuckEventBus eventBus,
       TargetGraphCreationResult targetGraphCreationResult)
@@ -65,19 +64,11 @@ public class VersionedTargetGraphCache {
 
     VersionTargetGraphMode resolvedMode = versionTargetGraphMode;
     if (resolvedMode == VersionTargetGraphMode.EXPERIMENT) {
-      if (versionTargetGraphModeProbabilities.isEmpty()) {
-        resolvedMode =
-            RandomizedTrial.getGroup(
-                "async_version_tg_builder",
-                eventBus.getBuildId().toString(),
-                VersionTargetGraphMode.class);
-      } else {
-        resolvedMode =
-            RandomizedTrial.getGroup(
-                "async_version_tg_builder",
-                eventBus.getBuildId().toString(),
-                versionTargetGraphModeProbabilities);
-      }
+      resolvedMode =
+          RandomizedTrial.getGroup(
+              "async_version_tg_builder",
+              eventBus.getBuildId().toString(),
+              VersionTargetGraphMode.class);
     }
     Preconditions.checkState(resolvedMode != VersionTargetGraphMode.EXPERIMENT);
     eventBus.post(
@@ -113,7 +104,6 @@ public class VersionedTargetGraphCache {
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       VersionTargetGraphMode versionTargetGraphMode,
-      Map<VersionTargetGraphMode, Double> versionTargetGraphModeProbabilities,
       long timeoutSeconds,
       BuckEventBus eventBus,
       CacheStatsTracker statsTracker,
@@ -155,7 +145,6 @@ public class VersionedTargetGraphCache {
             typeCoercerFactory,
             unconfiguredBuildTargetFactory,
             versionTargetGraphMode,
-            versionTargetGraphModeProbabilities,
             timeoutSeconds,
             eventBus,
             targetGraphCreationResult);
@@ -206,7 +195,6 @@ public class VersionedTargetGraphCache {
                   typeCoercerFactory,
                   unconfiguredBuildTargetFactory,
                   versionBuckConfig.getVersionTargetGraphMode(),
-                  versionBuckConfig.getVersionTargetGraphModeGroups(),
                   versionBuckConfig.getVersionTargetGraphTimeoutSeconds(),
                   eventBus,
                   statsTracker,
@@ -253,7 +241,6 @@ public class VersionedTargetGraphCache {
         typeCoercerFactory,
         unconfiguredBuildTargetFactory,
         VersionTargetGraphMode.DISABLED,
-        ImmutableMap.of(),
         20,
         eventBus,
         statsTracker,
