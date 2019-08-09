@@ -66,7 +66,7 @@ public class VersionedTargetGraphBuilderTest {
   private static String getVersionedTarget(
       BuildTarget target, ImmutableSortedMap<BuildTarget, Version> versions) {
     return target
-        .withAppendedFlavors(ParallelVersionedTargetGraphBuilder.getVersionedFlavor(versions))
+        .withAppendedFlavors(AbstractVersionedTargetGraphBuilder.getVersionedFlavor(versions))
         .toString();
   }
 

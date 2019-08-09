@@ -17,19 +17,25 @@ package com.facebook.buck.versions;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
+import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
@@ -52,6 +58,17 @@ public abstract class AbstractVersionedTargetGraphBuilder implements VersionedTa
     this.unversionedTargetGraphCreationResult = unversionedTargetGraphCreationResult;
     this.timeout = timeout;
     this.timeUnit = timeUnit;
+  }
+
+  /** @return a flavor to which summarizes the given version selections. */
+  static Flavor getVersionedFlavor(SortedMap<BuildTarget, Version> versions) {
+    Preconditions.checkArgument(!versions.isEmpty());
+    Hasher hasher = Hashing.md5().newHasher();
+    for (Map.Entry<BuildTarget, Version> ent : versions.entrySet()) {
+      hasher.putString(ent.getKey().toString(), Charsets.UTF_8);
+      hasher.putString(ent.getValue().getName(), Charsets.UTF_8);
+    }
+    return InternalFlavor.of("v" + hasher.hash().toString().substring(0, 7));
   }
 
   protected TargetNode<?> getNode(BuildTarget target) {
@@ -101,7 +118,7 @@ public abstract class AbstractVersionedTargetGraphBuilder implements VersionedTa
         versions.put(depTarget, selectedVersions.get(depTarget));
       }
       if (!versions.isEmpty()) {
-        Flavor versionedFlavor = ParallelVersionedTargetGraphBuilder.getVersionedFlavor(versions);
+        Flavor versionedFlavor = getVersionedFlavor(versions);
         newTarget = node.getBuildTarget().withAppendedFlavors(versionedFlavor);
       }
     }
