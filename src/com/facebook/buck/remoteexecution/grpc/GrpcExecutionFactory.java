@@ -158,6 +158,7 @@ public class GrpcExecutionFactory {
     return NettyChannelBuilder.forAddress(host, port)
         .maxInboundMessageSize(MAX_INBOUND_MESSAGE_SIZE)
         .sslContext(contextBuilder.build())
+        .flowControlWindow(100 * 1024 * 1024)
         .negotiationType(NegotiationType.TLS)
         .intercept(getRetryInterceptor())
         .build();
