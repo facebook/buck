@@ -37,7 +37,10 @@ class StubJarClassEntry extends StubJarEntry {
 
   @Nullable
   public static StubJarClassEntry of(
-      LibraryReader input, Path path, @Nullable AbiGenerationMode compatibilityMode)
+      LibraryReader input,
+      Path path,
+      @Nullable AbiGenerationMode compatibilityMode,
+      boolean isKotlinModule)
       throws IOException {
     ClassNode stub = new ClassNode(Opcodes.ASM7);
 

@@ -93,17 +93,23 @@ public class StubJar {
   }
 
   private void writeTo(LibraryReader input, StubJarWriter writer) throws IOException {
+    List<Path> relativePaths = input.getRelativePaths();
     List<Path> paths =
-        input.getRelativePaths().stream()
+        relativePaths.stream()
             .sorted(Comparator.comparing(PathFormatter::pathWithUnixSeparators))
             .collect(Collectors.toList());
 
+    boolean isKotlinModule = isKotlinModule(relativePaths);
     for (Path path : paths) {
-      StubJarEntry entry = StubJarEntry.of(input, path, compatibilityMode);
+      StubJarEntry entry = StubJarEntry.of(input, path, compatibilityMode, isKotlinModule);
       if (entry == null) {
         continue;
       }
       entry.write(writer);
     }
+  }
+
+  private boolean isKotlinModule(List<Path> relativePaths) {
+    return relativePaths.stream().anyMatch(path -> path.endsWith("main.kotlin_module"));
   }
 }
