@@ -16,28 +16,14 @@
 
 package com.facebook.buck.versions;
 
-import com.facebook.buck.util.randomizedtrial.WithProbability;
-
 /**
  * Whether to use the {@link com.facebook.buck.versions.AsyncVersionedTargetGraphBuilder} or {@link
  * com.facebook.buck.versions.ParallelVersionedTargetGraphBuilder}
  */
-public enum VersionTargetGraphMode implements WithProbability {
-  ENABLED(0.5),
-  DISABLED(0.5),
-  EXPERIMENT(0.0),
+public enum VersionTargetGraphMode {
+  ENABLED,
+  DISABLED,
   ;
 
   public static final VersionTargetGraphMode DEFAULT = ENABLED;
-
-  private final double probability;
-
-  VersionTargetGraphMode(double probability) {
-    this.probability = probability;
-  }
-
-  @Override
-  public double getProbability() {
-    return probability;
-  }
 }

@@ -30,9 +30,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.cache.CacheStatsTracker;
-import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -63,14 +61,6 @@ public class VersionedTargetGraphCache {
       throws VersionException, TimeoutException, InterruptedException {
 
     VersionTargetGraphMode resolvedMode = versionTargetGraphMode;
-    if (resolvedMode == VersionTargetGraphMode.EXPERIMENT) {
-      resolvedMode =
-          RandomizedTrial.getGroup(
-              "async_version_tg_builder",
-              eventBus.getBuildId().toString(),
-              VersionTargetGraphMode.class);
-    }
-    Preconditions.checkState(resolvedMode != VersionTargetGraphMode.EXPERIMENT);
     eventBus.post(
         new ExperimentEvent("async_version_tg_builder", resolvedMode.toString(), "", null, null));
 
