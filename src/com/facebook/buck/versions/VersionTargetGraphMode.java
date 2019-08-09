@@ -24,18 +24,6 @@ import com.facebook.buck.util.randomizedtrial.WithProbability;
  */
 public enum VersionTargetGraphMode implements WithProbability {
   ENABLED(0.5),
-  /** uses graph engine with {@link
-   * com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutorWithLocalStack
-   */
-  ENABLED_LS(0),
-  /** uses graph engine with {@link
-   * com.facebook.buck.core.graph.transformation.executor.impl.JavaExecutorBackedDefaultDepsAwareExecutor
-   */
-  ENABLED_JE(0),
-  /** uses graph engine with {@link
-   * com.facebook.buck.core.graph.transformation.executor.impl.ToposortBasedDepsAwareExecutor
-   */
-  ENABLED_TS(0),
   DISABLED(0.5),
   EXPERIMENT(0.0),
   ;
