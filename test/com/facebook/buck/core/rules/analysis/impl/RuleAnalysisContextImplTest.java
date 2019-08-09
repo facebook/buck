@@ -146,6 +146,19 @@ public class RuleAnalysisContextImplTest {
   }
 
   @Test
+  public void throwsWhenGettingActionDataOnNonFinalizedFactory() {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:target");
+
+    RuleAnalysisContextImpl context =
+        new RuleAnalysisContextImpl(buildTarget, ImmutableMap.of(), fakeFilesystem, eventBus);
+
+    context.actionRegistry().declareArtifact(Paths.get("some/path"));
+
+    expectedException.expect(VerifyException.class);
+    context.getRegisteredActionData();
+  }
+
+  @Test
   public void createActionViaFactoryInContext() throws ActionCreationException {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
 

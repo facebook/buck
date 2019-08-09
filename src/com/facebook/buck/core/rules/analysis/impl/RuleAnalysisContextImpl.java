@@ -83,7 +83,13 @@ public class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnaly
         prev);
   }
 
+  /**
+   * Verifies that the {@link ActionRegistry} has been finalized where all {@link
+   * com.facebook.buck.core.artifact.Artifact}s are bound, and then returns all the {@link
+   * ActionAnalysisData} registered.
+   */
   public Map<ActionAnalysisData.ID, ActionAnalysisData> getRegisteredActionData() {
+    actionRegistry.verifyAllArtifactsBound();
     return actionAnalysisDataRegistry;
   }
 }

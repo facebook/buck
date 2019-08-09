@@ -7,6 +7,8 @@ def _impl(ctx):
     if short_path != expected:
         fail("Expected {}, got {} for short_path of declared file".format(expected, short_path))
 
+    ctx.actions.write(output=f, content="", is_executable=False)
+
 my_rule = rule(
     attrs = {"filename": attr.string()},
     implementation = _impl,
