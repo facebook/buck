@@ -99,27 +99,12 @@ public class TypeCoercerTest {
   }
 
   @Test
-  public void coercingSortedSetsShouldThrowOnDuplicates() throws NoSuchFieldException {
-    Type type = TestFields.class.getField("sortedSetOfStrings").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
-
-    ImmutableList<String> input = ImmutableList.of("a", "a");
-    try {
-      coercer.coerce(
-          cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, input);
-      fail();
-    } catch (CoerceFailedException e) {
-      assertEquals("duplicate element \"a\"", e.getMessage());
-    }
-  }
-
-  @Test
   public void coercingSortedSetsShouldActuallyCreateSortedSets()
       throws CoerceFailedException, NoSuchFieldException {
     Type type = TestFields.class.getField("sortedSetOfStrings").getGenericType();
     TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
-    ImmutableList<String> input = ImmutableList.of("c", "a", "d", "b");
+    ImmutableList<String> input = ImmutableList.of("a", "c", "b", "a");
     Object result =
         coercer.coerce(
             cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, input);
