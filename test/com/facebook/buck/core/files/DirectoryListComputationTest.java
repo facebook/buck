@@ -31,7 +31,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class DirectoryListTransformerTest {
+public class DirectoryListComputationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 

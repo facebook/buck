@@ -52,7 +52,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
-public class BuildTargetPatternToBuildPackagePathTransformerTest {
+public class BuildTargetPatternToBuildPackagePathComputationTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
   @Rule public final TemporaryPaths tmp = new TemporaryPaths();
@@ -330,7 +330,7 @@ public class BuildTargetPatternToBuildPackagePathTransformerTest {
         new DefaultGraphTransformationEngine(
             ImmutableList.of(
                 new GraphComputationStage<>(
-                    BuildTargetPatternToBuildPackagePathTransformer.of(buildFileName)),
+                    BuildTargetPatternToBuildPackagePathComputation.of(buildFileName)),
                 new GraphComputationStage<>(DirectoryListComputation.of(filesystem.asView())),
                 new GraphComputationStage<>(FileTreeComputation.of())),
             estimatedNumOps,

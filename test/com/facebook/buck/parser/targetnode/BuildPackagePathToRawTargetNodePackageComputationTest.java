@@ -53,7 +53,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import org.junit.Test;
 
-public class BuildPackagePathToRawTargetNodePackageTransformerTest {
+public class BuildPackagePathToRawTargetNodePackageComputationTest {
 
   @Test
   public void canParseDeps() {

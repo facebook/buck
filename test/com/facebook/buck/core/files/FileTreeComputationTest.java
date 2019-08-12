@@ -29,7 +29,7 @@ import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class FileTreeTransformerTest {
+public class FileTreeComputationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 

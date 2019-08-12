@@ -35,8 +35,8 @@ import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDepsPackage;
 import com.facebook.buck.core.parser.BuildPackagePaths;
+import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathComputation;
 import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathKey;
-import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathTransformer;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
@@ -86,8 +86,8 @@ public class GraphEngineFactory {
 
     // COMPUTATION: discover paths of build files needed to be parsed for provided target
     // patterns
-    BuildTargetPatternToBuildPackagePathTransformer patternToPackagePathComputation =
-        BuildTargetPatternToBuildPackagePathTransformer.of(parserConfig.getBuildFileName());
+    BuildTargetPatternToBuildPackagePathComputation patternToPackagePathComputation =
+        BuildTargetPatternToBuildPackagePathComputation.of(parserConfig.getBuildFileName());
 
     // -- DEP COMPUTATION: listing of a specific directory to search for build file
     DirectoryListComputation directoryListComputation =

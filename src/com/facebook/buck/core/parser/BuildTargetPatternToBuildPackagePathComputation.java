@@ -35,22 +35,22 @@ import java.nio.file.Path;
 /**
  * Discover paths for packages which contain targets that match specification (build target pattern)
  */
-public class BuildTargetPatternToBuildPackagePathTransformer
+public class BuildTargetPatternToBuildPackagePathComputation
     implements GraphComputation<BuildTargetPatternToBuildPackagePathKey, BuildPackagePaths> {
   private final String buildFileName;
 
-  private BuildTargetPatternToBuildPackagePathTransformer(String buildFileName) {
+  private BuildTargetPatternToBuildPackagePathComputation(String buildFileName) {
     this.buildFileName = buildFileName;
   }
 
   /**
-   * Create new instance of {@link BuildTargetPatternToBuildPackagePathTransformer}
+   * Create new instance of {@link BuildTargetPatternToBuildPackagePathComputation}
    *
    * @param buildFileName Name of the build file to determine a package root folder, for example
    *     'BUCK'
    */
-  public static BuildTargetPatternToBuildPackagePathTransformer of(String buildFileName) {
-    return new BuildTargetPatternToBuildPackagePathTransformer(buildFileName);
+  public static BuildTargetPatternToBuildPackagePathComputation of(String buildFileName) {
+    return new BuildTargetPatternToBuildPackagePathComputation(buildFileName);
   }
 
   @Override
