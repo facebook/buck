@@ -25,7 +25,7 @@ import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionWrapperData;
 import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
-import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisComputation;
+import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
@@ -36,18 +36,18 @@ import com.google.common.collect.Iterables;
 import java.util.Objects;
 
 /**
- * A {@link TargetNodeToBuildRuleTransformer} that delegates to the {@link RuleAnalysisComputation}
- * when descriptions of the new type {@link RuleDescription} is encountered. A backwards compatible
+ * A {@link TargetNodeToBuildRuleTransformer} that delegates to the {@link RuleAnalysisGraph} when
+ * descriptions of the new type {@link RuleDescription} is encountered. A backwards compatible
  * {@link RuleAnalysisLegacyBuildRuleView} is returned for that target.
  */
 public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
     implements TargetNodeToBuildRuleTransformer {
 
-  private final RuleAnalysisComputation ruleAnalysisComputation;
+  private final RuleAnalysisGraph ruleAnalysisComputation;
   private final TargetNodeToBuildRuleTransformer delegate;
 
   public LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer(
-      RuleAnalysisComputation ruleAnalysisComputation, TargetNodeToBuildRuleTransformer delegate) {
+      RuleAnalysisGraph ruleAnalysisComputation, TargetNodeToBuildRuleTransformer delegate) {
     this.ruleAnalysisComputation = ruleAnalysisComputation;
     this.delegate = delegate;
   }
@@ -63,8 +63,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
     if (description instanceof RuleDescription) {
       RuleDescription<T> legacyRuleDescription = (RuleDescription<T>) description;
       RuleAnalysisResult result =
-          ruleAnalysisComputation.computeUnchecked(
-              ImmutableRuleAnalysisKey.of(targetNode.getBuildTarget()));
+          ruleAnalysisComputation.get(ImmutableRuleAnalysisKey.of(targetNode.getBuildTarget()));
 
       // TODO(bobyf): add support for multiple actions from a rule
       if (result.getRegisteredActions().isEmpty()) {

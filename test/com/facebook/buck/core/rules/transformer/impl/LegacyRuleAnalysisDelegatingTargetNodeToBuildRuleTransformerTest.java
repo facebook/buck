@@ -42,8 +42,8 @@ import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.rules.actions.FakeActionAnalysisRegistry;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
-import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisComputation;
-import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisComputation;
+import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
+import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisGraph;
 import com.facebook.buck.core.rules.analysis.impl.ImmutableFakeRuleAnalysisResultImpl;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
@@ -85,8 +85,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
 
     BuildRule rule = new FakeBuildRule(target);
 
-    RuleAnalysisComputation ruleAnalysisComputation =
-        new FakeRuleAnalysisComputation(
+    RuleAnalysisGraph ruleAnalysisComputation =
+        new FakeRuleAnalysisGraph(
             ignored -> {
               fail();
               return null;
@@ -172,8 +172,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
         (ins, outs, ctx) -> ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty()));
 
     AtomicBoolean ruleAnalysisCalled = new AtomicBoolean();
-    RuleAnalysisComputation ruleAnalysisComputation =
-        new FakeRuleAnalysisComputation(
+    RuleAnalysisGraph ruleAnalysisComputation =
+        new FakeRuleAnalysisGraph(
             ruleAnalysisKey -> {
               ruleAnalysisCalled.set(true);
               assertSame(target, ruleAnalysisKey.getBuildTarget());
@@ -260,8 +260,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
     TargetGraph targetGraph = TargetGraph.EMPTY;
 
     AtomicBoolean ruleAnalysisCalled = new AtomicBoolean();
-    RuleAnalysisComputation ruleAnalysisComputation =
-        new FakeRuleAnalysisComputation(
+    RuleAnalysisGraph ruleAnalysisComputation =
+        new FakeRuleAnalysisGraph(
             ruleAnalysisKey -> {
               ruleAnalysisCalled.set(true);
               assertSame(target, ruleAnalysisKey.getBuildTarget());

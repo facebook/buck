@@ -48,7 +48,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class RuleAnalysisComputationImplTest {
+public class RuleAnalysisGraphImplTest {
   private DepsAwareExecutor<? super ComputeResult, ?> depsAwareExecutor;
   private RuleAnalysisCache cache;
 
@@ -110,11 +110,11 @@ public class RuleAnalysisComputationImplTest {
         ImmutableMap.of(buildTarget, targetNode);
     TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
 
-    RuleAnalysisComputationImpl ruleAnalysisComputation =
-        RuleAnalysisComputationImpl.of(targetGraph, depsAwareExecutor, cache, eventBus);
+    RuleAnalysisGraphImpl ruleAnalysisComputation =
+        RuleAnalysisGraphImpl.of(targetGraph, depsAwareExecutor, cache, eventBus);
 
     RuleAnalysisResult ruleAnalysisResult =
-        ruleAnalysisComputation.computeUnchecked(ImmutableRuleAnalysisKey.of(buildTarget));
+        ruleAnalysisComputation.get(ImmutableRuleAnalysisKey.of(buildTarget));
 
     // We shouldn't be making copies of the providers or build target in our transformation. It
     // should be as given.
@@ -192,11 +192,11 @@ public class RuleAnalysisComputationImplTest {
         ImmutableMap.of(buildTarget, targetNode, buildTarget2, targetNode2);
     TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
 
-    RuleAnalysisComputationImpl ruleAnalysisComputation =
-        RuleAnalysisComputationImpl.of(targetGraph, depsAwareExecutor, cache, eventBus);
+    RuleAnalysisGraphImpl ruleAnalysisComputation =
+        RuleAnalysisGraphImpl.of(targetGraph, depsAwareExecutor, cache, eventBus);
 
     RuleAnalysisResult ruleAnalysisResult =
-        ruleAnalysisComputation.computeUnchecked(ImmutableRuleAnalysisKey.of(buildTarget));
+        ruleAnalysisComputation.get(ImmutableRuleAnalysisKey.of(buildTarget));
 
     // We shouldn't be making copies of the providers or build target in our transformation. It
     // should be as given.

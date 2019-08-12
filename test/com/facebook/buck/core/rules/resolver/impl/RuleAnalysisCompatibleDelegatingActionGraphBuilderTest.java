@@ -40,7 +40,7 @@ import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
-import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisComputation;
+import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisGraph;
 import com.facebook.buck.core.rules.analysis.impl.FakeRuleDescriptionArg;
 import com.facebook.buck.core.rules.analysis.impl.ImmutableFakeRuleAnalysisResultImpl;
 import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
@@ -89,7 +89,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
                     return expectedRule;
                   }
                 },
-            new FakeRuleAnalysisComputation(
+            new FakeRuleAnalysisGraph(
                 key -> {
                   fail("should not call RuleAnalysisComputation");
                   return ImmutableFakeRuleAnalysisResultImpl.of(
@@ -154,7 +154,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
                     return super.requireRule(buildTarget);
                   }
                 },
-            new FakeRuleAnalysisComputation(
+            new FakeRuleAnalysisGraph(
                 key -> {
                   delegateRuleAnalysisComputationCalled.set(true);
 
@@ -206,13 +206,13 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
                     return super.requireRule(buildTarget);
                   }
                 },
-            new FakeRuleAnalysisComputation(
+            new FakeRuleAnalysisGraph(
                 key -> {
                   delegateRuleAnalysisComputationCalled.set(true);
                   return ruleAnalysisResult;
                 }));
 
-    assertSame(ruleAnalysisResult, builder.computeUnchecked(ImmutableRuleAnalysisKey.of(target)));
+    assertSame(ruleAnalysisResult, builder.get(ImmutableRuleAnalysisKey.of(target)));
     assertTrue(delegateRuleAnalysisComputationCalled.get());
   }
 }

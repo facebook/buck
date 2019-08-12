@@ -17,30 +17,29 @@ package com.facebook.buck.core.rules.analysis.impl;
 
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
-import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisComputation;
+import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
 import com.facebook.buck.util.function.ThrowingFunction;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import java.util.Set;
 import java.util.function.Function;
 
-public class FakeRuleAnalysisComputation implements RuleAnalysisComputation {
+public class FakeRuleAnalysisGraph implements RuleAnalysisGraph {
 
   private final Function<RuleAnalysisKey, RuleAnalysisResult> mappingFunc;
 
-  public FakeRuleAnalysisComputation(
+  public FakeRuleAnalysisGraph(
       ThrowingFunction<RuleAnalysisKey, RuleAnalysisResult, Exception> mappingFunc) {
     this.mappingFunc = mappingFunc.asFunction();
   }
 
   @Override
-  public RuleAnalysisResult computeUnchecked(RuleAnalysisKey lookupKey) {
+  public RuleAnalysisResult get(RuleAnalysisKey lookupKey) {
     return mappingFunc.apply(lookupKey);
   }
 
   @Override
-  public ImmutableMap<RuleAnalysisKey, RuleAnalysisResult> computeAllUnchecked(
-      Set<RuleAnalysisKey> lookupKeys) {
+  public ImmutableMap<RuleAnalysisKey, RuleAnalysisResult> getAll(Set<RuleAnalysisKey> lookupKeys) {
     return Maps.toMap(lookupKeys, mappingFunc::apply);
   }
 }

@@ -20,7 +20,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
-import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisComputation;
+import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.rules.transformer.impl.LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.util.concurrent.Parallelizer;
@@ -34,22 +34,22 @@ import java.util.function.Function;
  * An {@link ActionGraphBuilder} that manages both rule analysis computation and the legacy action
  * graph construction.
  *
- * <p>This builder delegates to the new {@link RuleAnalysisComputation} and {@link
- * ActionGraphBuilder} as appropriate depending on the rule that is requested.
+ * <p>This builder delegates to the new {@link RuleAnalysisGraph} and {@link ActionGraphBuilder} as
+ * appropriate depending on the rule that is requested.
  *
  * <p>It satisfies the API of both computations to provide compatibility between them
  */
 public class RuleAnalysisCompatibleDelegatingActionGraphBuilder extends AbstractActionGraphBuilder
-    implements RuleAnalysisComputation {
+    implements RuleAnalysisGraph {
   // TODO(bobyf): allow rule analysis computation to access action graph rules
 
   private final ActionGraphBuilder delegateActionGraphBuilder;
-  private final RuleAnalysisComputation delegateRuleAnalysisComputation;
+  private final RuleAnalysisGraph delegateRuleAnalysisComputation;
 
   public RuleAnalysisCompatibleDelegatingActionGraphBuilder(
       TargetNodeToBuildRuleTransformer buildRuleGenerator,
       Function<TargetNodeToBuildRuleTransformer, ActionGraphBuilder> delegateBuilderConstructor,
-      RuleAnalysisComputation delegateRuleAnalysisComputation) {
+      RuleAnalysisGraph delegateRuleAnalysisComputation) {
     delegateActionGraphBuilder =
         delegateBuilderConstructor.apply(
             new LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer(
@@ -105,13 +105,12 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilder extends Abstract
   }
 
   @Override
-  public RuleAnalysisResult computeUnchecked(RuleAnalysisKey lookupKey) {
-    return delegateRuleAnalysisComputation.computeUnchecked(lookupKey);
+  public RuleAnalysisResult get(RuleAnalysisKey lookupKey) {
+    return delegateRuleAnalysisComputation.get(lookupKey);
   }
 
   @Override
-  public ImmutableMap<RuleAnalysisKey, RuleAnalysisResult> computeAllUnchecked(
-      Set<RuleAnalysisKey> lookupKeys) {
-    return delegateRuleAnalysisComputation.computeAllUnchecked(lookupKeys);
+  public ImmutableMap<RuleAnalysisKey, RuleAnalysisResult> getAll(Set<RuleAnalysisKey> lookupKeys) {
+    return delegateRuleAnalysisComputation.getAll(lookupKeys);
   }
 }

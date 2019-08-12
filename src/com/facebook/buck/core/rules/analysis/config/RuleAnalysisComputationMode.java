@@ -17,10 +17,10 @@ package com.facebook.buck.core.rules.analysis.config;
 
 /**
  * Indicates what mode of {@link
- * com.facebook.buck.core.rules.analysis.computation.RuleAnalysisComputation} should be ran.
+ * com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph} should be ran.
  */
 public enum RuleAnalysisComputationMode {
-  /** don't run {@link com.facebook.buck.core.rules.analysis.computation.RuleAnalysisComputation} */
+  /** don't run {@link com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph} */
   DISABLED,
 
   /**

@@ -25,25 +25,23 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.cache.RuleAnalysisCache;
+import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
 import com.facebook.buck.event.BuckEventBus;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Set;
 
 /**
- * Default implementation of {@link
- * com.facebook.buck.core.rules.analysis.computation.RuleAnalysisComputation} driven by a {@link
- * GraphTransformationEngine}
+ * Default implementation of {@link RuleAnalysisGraph} driven by a {@link GraphTransformationEngine}
  *
  * <p>TODO(bobyf): once we add stages to {@link GraphTransformationEngine} this implementation and
  * the interface will probably change/go away
  */
-public class RuleAnalysisComputationImpl
-    implements com.facebook.buck.core.rules.analysis.computation.RuleAnalysisComputation {
+public class RuleAnalysisGraphImpl implements RuleAnalysisGraph {
 
   private final GraphTransformationEngine computationEngine;
 
-  private RuleAnalysisComputationImpl(GraphTransformationEngine computationEngine) {
+  private RuleAnalysisGraphImpl(GraphTransformationEngine computationEngine) {
     this.computationEngine = computationEngine;
   }
 
@@ -52,7 +50,7 @@ public class RuleAnalysisComputationImpl
    * {@link GraphEngineCache}. All entries present in the cache will be reused, and newly computed
    * values will be offered to the cache.
    */
-  public static RuleAnalysisComputationImpl of(
+  public static RuleAnalysisGraphImpl of(
       TargetGraph targetGraph,
       DepsAwareExecutor<? super ComputeResult, ?> depsAwareExecutor,
       RuleAnalysisCache cache,
@@ -63,17 +61,16 @@ public class RuleAnalysisComputationImpl
             ImmutableList.of(new GraphComputationStage<>(transformer, cache)),
             targetGraph.getSize(),
             depsAwareExecutor);
-    return new RuleAnalysisComputationImpl(engine);
+    return new RuleAnalysisGraphImpl(engine);
   }
 
   @Override
-  public RuleAnalysisResult computeUnchecked(RuleAnalysisKey lookupKey) {
+  public RuleAnalysisResult get(RuleAnalysisKey lookupKey) {
     return computationEngine.computeUnchecked(lookupKey);
   }
 
   @Override
-  public ImmutableMap<RuleAnalysisKey, RuleAnalysisResult> computeAllUnchecked(
-      Set<RuleAnalysisKey> lookupKeys) {
+  public ImmutableMap<RuleAnalysisKey, RuleAnalysisResult> getAll(Set<RuleAnalysisKey> lookupKeys) {
     return computationEngine.computeAllUnchecked(lookupKeys);
   }
 }

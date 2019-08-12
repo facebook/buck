@@ -27,20 +27,17 @@ import java.util.Set;
  * corresponding {@link RuleAnalysisResult} graph, which consists of a {@link
  * com.google.devtools.build.lib.packages.Provider} graph and a {@link ActionAnalysisData} graph.
  */
-public interface RuleAnalysisComputation {
+public interface RuleAnalysisGraph {
 
   /**
-   * Starts to perform the transformation of the given {@link RuleAnalysisKey} to the corresponding
-   * {@link RuleAnalysisResult}. All dependencies required will also be transformed, and cached.
+   * Finds the {@link RuleAnalysisResult} of the given {@link RuleAnalysisKey}, starting computation
+   * as necessary. All dependencies required will also be transformed, and cached.
    *
-   * @param lookupKey the {@link RuleAnalysisKey} to transform
+   * @param lookupKey the {@link RuleAnalysisKey} to find the result for
    * @return the {@link RuleAnalysisResult} from analyzing the given {@link RuleAnalysisKey}
    */
-  RuleAnalysisResult computeUnchecked(RuleAnalysisKey lookupKey);
+  RuleAnalysisResult get(RuleAnalysisKey lookupKey);
 
-  /**
-   * same as {@link #computeUnchecked(RuleAnalysisKey)} but for multiple {@link RuleAnalysisKey}s
-   */
-  ImmutableMap<RuleAnalysisKey, RuleAnalysisResult> computeAllUnchecked(
-      Set<RuleAnalysisKey> lookupKeys);
+  /** same as {@link #get(RuleAnalysisKey)} but for multiple {@link RuleAnalysisKey}s */
+  ImmutableMap<RuleAnalysisKey, RuleAnalysisResult> getAll(Set<RuleAnalysisKey> lookupKeys);
 }

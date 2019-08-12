@@ -24,11 +24,11 @@ import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactoryDe
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.analysis.cache.RuleAnalysisCache;
-import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisComputation;
+import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
 import com.facebook.buck.core.rules.analysis.config.RuleAnalysisComputationMode;
 import com.facebook.buck.core.rules.analysis.config.RuleAnalysisConfig;
 import com.facebook.buck.core.rules.analysis.impl.RuleAnalysisCacheImpl;
-import com.facebook.buck.core.rules.analysis.impl.RuleAnalysisComputationImpl;
+import com.facebook.buck.core.rules.analysis.impl.RuleAnalysisGraphImpl;
 import com.facebook.buck.core.rules.resolver.impl.RuleAnalysisCompatibleDelegatingActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBus;
@@ -107,8 +107,8 @@ public class ActionGraphFactory {
       graphBuilderDecorator =
           builderConstructor -> {
             RuleAnalysisCache ruleAnalysisCache = new RuleAnalysisCacheImpl();
-            RuleAnalysisComputation ruleAnalysisComputation =
-                RuleAnalysisComputationImpl.of(
+            RuleAnalysisGraph ruleAnalysisComputation =
+                RuleAnalysisGraphImpl.of(
                     targetGraph, depsAwareExecutor.get(), ruleAnalysisCache, eventBus);
             return new RuleAnalysisCompatibleDelegatingActionGraphBuilder(
                 transformer, builderConstructor, ruleAnalysisComputation);
