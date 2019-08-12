@@ -29,7 +29,6 @@ import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.util.MoreMaps;
@@ -39,16 +38,13 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 
@@ -119,56 +115,6 @@ abstract class AbstractParser implements Parser {
   public ListenableFuture<TargetNode<?>> getTargetNodeJob(
       PerBuildState perBuildState, BuildTarget target) throws BuildTargetException {
     return perBuildState.getTargetNodeJob(target);
-  }
-
-  @Nullable
-  @Override
-  public SortedMap<String, Object> getTargetNodeRawAttributes(
-      PerBuildState state, Cell cell, TargetNode<?> targetNode) throws BuildFileParseException {
-    Cell owningCell = cell.getCell(targetNode.getBuildTarget());
-    BuildFileManifest buildFileManifest =
-        getTargetNodeRawAttributes(
-            state,
-            owningCell,
-            cell.getBuckConfigView(ParserConfig.class)
-                .getAbsolutePathToBuildFile(
-                    cell, targetNode.getBuildTarget().getUnconfiguredBuildTargetView()));
-    return getTargetFromManifest(targetNode, buildFileManifest);
-  }
-
-  @Override
-  public ListenableFuture<SortedMap<String, Object>> getTargetNodeRawAttributesJob(
-      PerBuildState state, Cell cell, TargetNode<?> targetNode) throws BuildFileParseException {
-    Cell owningCell = cell.getCell(targetNode.getBuildTarget());
-    ListenableFuture<BuildFileManifest> buildFileManifestFuture =
-        state.getBuildFileManifestJob(
-            owningCell,
-            cell.getBuckConfigView(ParserConfig.class)
-                .getAbsolutePathToBuildFile(
-                    cell, targetNode.getBuildTarget().getUnconfiguredBuildTargetView()));
-    return Futures.transform(
-        buildFileManifestFuture,
-        buildFileManifest -> getTargetFromManifest(targetNode, buildFileManifest),
-        MoreExecutors.directExecutor());
-  }
-
-  @Nullable
-  private static SortedMap<String, Object> getTargetFromManifest(
-      TargetNode<?> targetNode, BuildFileManifest buildFileManifest) {
-    String shortName = targetNode.getBuildTarget().getShortName();
-
-    if (!buildFileManifest.getTargets().containsKey(shortName)) {
-      return null;
-    }
-
-    SortedMap<String, Object> attributes =
-        new TreeMap<>(buildFileManifest.getTargets().get(shortName));
-    attributes.put(
-        InternalTargetAttributeNames.DIRECT_DEPENDENCIES,
-        targetNode.getParseDeps().stream()
-            .map(Object::toString)
-            .collect(ImmutableList.toImmutableList()));
-    return attributes;
   }
 
   /**
