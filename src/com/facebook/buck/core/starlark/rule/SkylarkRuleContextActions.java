@@ -56,7 +56,7 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
   @Override
   public Artifact declareFile(String path, Location location) throws EvalException {
     try {
-      return registry.declareArtifact(Paths.get(path));
+      return registry.declareArtifact(Paths.get(path), location);
     } catch (InvalidPathException e) {
       throw new EvalException(location, String.format("Invalid path '%s' provided", path));
     } catch (ArtifactDeclarationException e) {

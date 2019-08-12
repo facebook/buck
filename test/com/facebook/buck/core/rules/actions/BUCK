@@ -19,6 +19,9 @@ java_library(
     visibility = [
         "//test/...",
     ],
+    deps = [
+        "//third-party/java/jsr:jsr305",
+    ],
 )
 
 java_test(

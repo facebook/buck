@@ -27,6 +27,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.base.VerifyException;
+import com.google.devtools.build.lib.events.Location;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Rule;
@@ -46,7 +47,8 @@ public class BuildArtifactFactoryTest {
 
     ActionAnalysisDataKey key =
         ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
-    DeclaredArtifact declaredArtifact = factory.createDeclaredArtifact(Paths.get("bar"));
+    DeclaredArtifact declaredArtifact =
+        factory.createDeclaredArtifact(Paths.get("bar"), Location.BUILTIN);
     BuildArtifact buildArtifact = declaredArtifact.materialize(key);
 
     assertEquals(
@@ -64,10 +66,10 @@ public class BuildArtifactFactoryTest {
 
     BuildArtifactFactory factory = new BuildArtifactFactory(target, filesystem);
     Path path = Paths.get("some/output");
-    factory.createDeclaredArtifact(path);
+    factory.createDeclaredArtifact(path, Location.BUILTIN);
 
     expectedException.expect(IllegalStateException.class);
-    factory.createDeclaredArtifact(path);
+    factory.createDeclaredArtifact(path, Location.BUILTIN);
   }
 
   @Test
@@ -77,12 +79,12 @@ public class BuildArtifactFactoryTest {
 
     BuildArtifactFactory factory = new BuildArtifactFactory(target, filesystem);
     Path path = Paths.get("some/output");
-    DeclaredArtifact artifact = factory.createDeclaredArtifact(path);
+    DeclaredArtifact artifact = factory.createDeclaredArtifact(path, Location.BUILTIN);
     factory.bindtoBuildArtifact(
         ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {}), artifact);
 
     expectedException.expect(IllegalStateException.class);
-    factory.createDeclaredArtifact(path);
+    factory.createDeclaredArtifact(path, Location.BUILTIN);
   }
 
   @Test
@@ -91,9 +93,9 @@ public class BuildArtifactFactoryTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildArtifactFactory factory = new BuildArtifactFactory(target, filesystem);
-    factory.createDeclaredArtifact(Paths.get("path1"));
+    factory.createDeclaredArtifact(Paths.get("path1"), Location.BUILTIN);
 
-    factory.createDeclaredArtifact(Paths.get("path2"));
+    factory.createDeclaredArtifact(Paths.get("path2"), Location.BUILTIN);
   }
 
   @Test
@@ -102,7 +104,8 @@ public class BuildArtifactFactoryTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildArtifactFactory factory = new BuildArtifactFactory(target, filesystem);
-    DeclaredArtifact artifact = factory.createDeclaredArtifact(Paths.get("path1"));
+    DeclaredArtifact artifact =
+        factory.createDeclaredArtifact(Paths.get("path1"), Location.BUILTIN);
     factory.bindtoBuildArtifact(
         ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {}), artifact);
 
@@ -115,7 +118,7 @@ public class BuildArtifactFactoryTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildArtifactFactory factory = new BuildArtifactFactory(target, filesystem);
-    factory.createDeclaredArtifact(Paths.get("path1"));
+    factory.createDeclaredArtifact(Paths.get("path1"), Location.BUILTIN);
 
     expectedException.expect(VerifyException.class);
     factory.verifyAllArtifactsBound();

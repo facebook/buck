@@ -16,6 +16,7 @@
 package com.facebook.buck.core.starlark.rule;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.model.BuildId;
@@ -30,6 +31,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.vfs.PathFragment;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -53,11 +56,15 @@ public class SkylarkRuleContextActionsTest {
   @Test
   public void writingAFileAddsToListOfOutputs() throws EvalException {
 
+    Location testLocation = Location.fromPathFragment(PathFragment.create("sample_location.bzl"));
     CapturingActionRegistry registry = new CapturingActionRegistry(context.actionRegistry());
     SkylarkRuleContextActions actions = new SkylarkRuleContextActions(registry);
-    Artifact artifact = actions.declareFile("bar.sh", Location.BUILTIN);
+    Artifact artifact = actions.declareFile("bar.sh", testLocation);
     actions.write(artifact, "contents", false, Location.BUILTIN);
 
+    assertThat(
+        artifact.toString(),
+        Matchers.containsString(String.format("declared at %s", testLocation.print())));
     assertEquals(ImmutableSet.of(artifact), registry.getOutputs());
   }
 }

@@ -28,7 +28,9 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
+import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.Printer;
+import com.google.devtools.build.lib.vfs.PathFragment;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Rule;
@@ -46,7 +48,8 @@ public class ArtifactImplTest {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     Path packagePath = Paths.get("my/foo__");
     Path path = Paths.get("bar");
-    DeclaredArtifact artifact = ArtifactImpl.of(target, genDir, packagePath, path);
+    DeclaredArtifact artifact =
+        ArtifactImpl.of(target, genDir, packagePath, path, Location.BUILTIN);
     assertFalse(artifact.isBound());
 
     ImmutableActionAnalysisDataKey key =
@@ -66,7 +69,7 @@ public class ArtifactImplTest {
     Path packagePath = Paths.get("my/foo__");
 
     expectedException.expect(ArtifactDeclarationException.class);
-    ArtifactImpl.of(target, genDir, packagePath, Paths.get(""));
+    ArtifactImpl.of(target, genDir, packagePath, Paths.get(""), Location.BUILTIN);
   }
 
   @Test
@@ -75,7 +78,7 @@ public class ArtifactImplTest {
     Path packagePath = Paths.get("my/foo__");
 
     expectedException.expect(ArtifactDeclarationException.class);
-    ArtifactImpl.of(target, genDir, packagePath, Paths.get("foo/.."));
+    ArtifactImpl.of(target, genDir, packagePath, Paths.get("foo/.."), Location.BUILTIN);
   }
 
   @Test
@@ -85,7 +88,7 @@ public class ArtifactImplTest {
     Path packagePath = Paths.get("my/foo__");
 
     expectedException.expect(ArtifactDeclarationException.class);
-    ArtifactImpl.of(target, genDir, packagePath, Paths.get("../bar"));
+    ArtifactImpl.of(target, genDir, packagePath, Paths.get("../bar"), Location.BUILTIN);
   }
 
   @Test
@@ -95,7 +98,7 @@ public class ArtifactImplTest {
     Path packagePath = Paths.get("my/foo__");
 
     expectedException.expect(ArtifactDeclarationException.class);
-    ArtifactImpl.of(target, genDir, packagePath, Paths.get("foo/../.."));
+    ArtifactImpl.of(target, genDir, packagePath, Paths.get("foo/../.."), Location.BUILTIN);
   }
 
   @Test
@@ -104,7 +107,7 @@ public class ArtifactImplTest {
     Path packagePath = Paths.get("my/foo__");
 
     expectedException.expect(ArtifactDeclarationException.class);
-    ArtifactImpl.of(target, genDir, packagePath, Paths.get("foo/../../bar"));
+    ArtifactImpl.of(target, genDir, packagePath, Paths.get("foo/../../bar"), Location.BUILTIN);
   }
 
   @Test
@@ -113,7 +116,7 @@ public class ArtifactImplTest {
     Path packagePath = Paths.get("my/foo__");
 
     expectedException.expect(ArtifactDeclarationException.class);
-    ArtifactImpl.of(target, genDir, packagePath, Paths.get("").toAbsolutePath());
+    ArtifactImpl.of(target, genDir, packagePath, Paths.get("").toAbsolutePath(), Location.BUILTIN);
   }
 
   @Test
@@ -123,7 +126,8 @@ public class ArtifactImplTest {
     Path packagePath = Paths.get("my/foo__");
 
     DeclaredArtifact artifact =
-        ArtifactImpl.of(target, genDir, packagePath, Paths.get("bar/baz/.././blargl.sh"));
+        ArtifactImpl.of(
+            target, genDir, packagePath, Paths.get("bar/baz/.././blargl.sh"), Location.BUILTIN);
     assertEquals(Paths.get("my", "foo__", "bar", "blargl.sh").toString(), artifact.getShortPath());
   }
 
@@ -132,7 +136,8 @@ public class ArtifactImplTest {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     Path packagePath = Paths.get("my/foo__");
 
-    ArtifactImpl artifact = ArtifactImpl.of(target, genDir, packagePath, Paths.get("bar/baz.cpp"));
+    ArtifactImpl artifact =
+        ArtifactImpl.of(target, genDir, packagePath, Paths.get("bar/baz.cpp"), Location.BUILTIN);
 
     String expectedShortPath = Paths.get("my", "foo__", "bar", "baz.cpp").toString();
 
@@ -148,8 +153,10 @@ public class ArtifactImplTest {
   public void equalsArtifactHasEqualsTrueAndSameHashCode() {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     Path packagePath = Paths.get("my/foo__");
-    ArtifactImpl artifact1 = ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"));
-    ArtifactImpl artifact2 = ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"));
+    ArtifactImpl artifact1 =
+        ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"), Location.BUILTIN);
+    ArtifactImpl artifact2 =
+        ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"), Location.BUILTIN);
 
     assertEquals(artifact1, artifact2);
     assertEquals(artifact1.hashCode(), artifact2.hashCode());
@@ -168,8 +175,10 @@ public class ArtifactImplTest {
   public void differentPathsAreNotEqual() {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     Path packagePath = Paths.get("my/foo__");
-    ArtifactImpl artifact1 = ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path1"));
-    ArtifactImpl artifact2 = ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path2"));
+    ArtifactImpl artifact1 =
+        ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path1"), Location.BUILTIN);
+    ArtifactImpl artifact2 =
+        ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path2"), Location.BUILTIN);
 
     assertNotEquals(artifact1, artifact2);
   }
@@ -178,8 +187,10 @@ public class ArtifactImplTest {
   public void differentActionKeysAreNotEqual() {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     Path packagePath = Paths.get("my/foo__");
-    ArtifactImpl artifact1 = ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"));
-    ArtifactImpl artifact2 = ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"));
+    ArtifactImpl artifact1 =
+        ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"), Location.BUILTIN);
+    ArtifactImpl artifact2 =
+        ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"), Location.BUILTIN);
 
     ImmutableActionAnalysisDataKey key1 =
         ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
@@ -190,5 +201,51 @@ public class ArtifactImplTest {
     artifact2 = (ArtifactImpl) artifact2.materialize(key2);
 
     assertNotEquals(artifact1, artifact2);
+  }
+
+  @Test
+  public void toStringMakesSense() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path packagePath = Paths.get("my", "foo__");
+    Location location =
+        Location.fromPathAndStartColumn(
+            PathFragment.create("foo").getChild("bar.bzl"), 0, 5, new Location.LineAndColumn(3, 4));
+    ImmutableActionAnalysisDataKey key1 =
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
+    ImmutableActionAnalysisDataKey key2 =
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
+
+    ArtifactImpl declaredWithLocation =
+        ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"), location);
+    ArtifactImpl boundWithLocation =
+        ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"), location);
+    boundWithLocation.materialize(key1);
+    ArtifactImpl declaredWithoutLocation =
+        ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"), Location.BUILTIN);
+    ArtifactImpl boundWithoutLocation =
+        ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"), Location.BUILTIN);
+    boundWithoutLocation.materialize(key2);
+
+    String artifactPathString = Paths.get("my", "foo__", "some", "path").toString();
+    // Location always prints with forward slashes, Path uses platform native
+    String extensionPathString = "foo/bar.bzl";
+
+    String expectedWithLocation =
+        String.format("Artifact<%s, declared at %s:3:4>", artifactPathString, extensionPathString);
+
+    String expectedBoundWithLocation =
+        String.format(
+            "Artifact<%s, bound to %s, declared at %s:3:4>",
+            artifactPathString, key1, extensionPathString);
+
+    String expectedWithoutLocation = String.format("Artifact<%s, declared>", artifactPathString);
+
+    String expectedBoundWithoutLocation =
+        String.format("Artifact<%s, bound to %s>", artifactPathString, key2);
+
+    assertEquals(expectedWithLocation, declaredWithLocation.toString());
+    assertEquals(expectedBoundWithLocation, boundWithLocation.toString());
+    assertEquals(expectedWithoutLocation, declaredWithoutLocation.toString());
+    assertEquals(expectedBoundWithoutLocation, boundWithoutLocation.toString());
   }
 }

@@ -21,6 +21,7 @@ import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
+import com.google.devtools.build.lib.events.Location;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -48,12 +49,14 @@ public class BuildArtifactFactory {
   /**
    * @param output the output {@link Path} relative to the package path for the current rule that
    *     the {@link com.facebook.buck.core.rules.actions.Action}s are being created for
+   * @param location the location within the extension file where this artifact was declared. {@link
+   *     Location.BUILTIN} may be used if not applicable.
    * @return a {@link DeclaredArtifact} for the given path
    * @throws ArtifactDeclarationException if the provided output path is invalid in some way
    */
-  protected DeclaredArtifact createDeclaredArtifact(Path output)
+  protected DeclaredArtifact createDeclaredArtifact(Path output, Location location)
       throws ArtifactDeclarationException {
-    ArtifactImpl artifact = ArtifactImpl.of(target, genDir, basePath, output);
+    ArtifactImpl artifact = ArtifactImpl.of(target, genDir, basePath, output, location);
     Preconditions.checkState(
         declaredArtifacts.add(artifact), "Artifact at output %s is already declared.", output);
     return artifact;

@@ -22,6 +22,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
+import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,12 +48,14 @@ class ArtifactImpl extends AbstractArtifact
   private final Path genDir;
   private final Path basePath;
   private final Path outputPath;
+  private final Location location;
 
-  static ArtifactImpl of(BuildTarget target, Path genDir, Path packagePath, Path outputPath)
+  static ArtifactImpl of(
+      BuildTarget target, Path genDir, Path packagePath, Path outputPath, Location location)
       throws ArtifactDeclarationException {
     Path normalizedOutputPath = validateAndNormalizeOutputPath(target, outputPath);
 
-    return new ArtifactImpl(target, genDir, packagePath, normalizedOutputPath);
+    return new ArtifactImpl(target, genDir, packagePath, normalizedOutputPath, location);
   }
 
   private static Path validateAndNormalizeOutputPath(BuildTarget target, Path outputPath) {
@@ -135,11 +138,13 @@ class ArtifactImpl extends AbstractArtifact
     return Objects.requireNonNull(sourcePath);
   }
 
-  private ArtifactImpl(BuildTarget target, Path genDir, Path packagePath, Path outputPath) {
+  private ArtifactImpl(
+      BuildTarget target, Path genDir, Path packagePath, Path outputPath, Location location) {
     this.target = target;
     this.genDir = genDir;
     this.basePath = packagePath;
     this.outputPath = outputPath;
+    this.location = location;
   }
 
   private ArtifactImpl(
@@ -153,6 +158,7 @@ class ArtifactImpl extends AbstractArtifact
     this.basePath = packagePath;
     this.outputPath = outputPath;
     this.sourcePath = sourcePath;
+    this.location = Location.BUILTIN;
   }
 
   @Override
@@ -198,10 +204,20 @@ class ArtifactImpl extends AbstractArtifact
 
   @Override
   public String toString() {
-    return String.format(
-        "Artifact<%s, %s>",
-        getShortPath(),
-        isBound() ? String.format("bound to %s", actionAnalysisDataKey) : "declared");
+    StringBuilder builder = new StringBuilder("Artifact<");
+    builder.append(getShortPath()).append(", ");
+    if (isBound()) {
+      builder.append("bound to ").append(actionAnalysisDataKey);
+    } else {
+      builder.append("declared");
+    }
+    if (location != Location.BUILTIN) {
+      if (isBound()) {
+        builder.append(", declared");
+      }
+      builder.append(" at ").append(location.print());
+    }
+    return builder.append(">").toString();
   }
 
   @Override

@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataRegistry;
+import com.google.devtools.build.lib.events.Location;
 import java.nio.file.Path;
 
 /**
@@ -41,7 +42,19 @@ public interface ActionRegistry {
    * @return a {@link Artifact} for the given path
    * @throws ArtifactDeclarationException if the provided output path is invalid
    */
-  Artifact declareArtifact(Path output) throws ArtifactDeclarationException;
+  default Artifact declareArtifact(Path output) throws ArtifactDeclarationException {
+    return declareArtifact(output, Location.BUILTIN);
+  }
+
+  /**
+   * @param output the output {@link Path} relative to the package path for the current rule that
+   *     the {@link Action}s are being created for
+   * @param location if provided, the location within the extension file where this artifact was
+   *     declared
+   * @return a {@link Artifact} for the given path
+   * @throws ArtifactDeclarationException if the provided output path is invalid
+   */
+  Artifact declareArtifact(Path output, Location location) throws ArtifactDeclarationException;
 
   /**
    * Creates the {@link ActionWrapperData} from its {@link Action} and registers the {@link

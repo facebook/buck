@@ -19,6 +19,7 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.google.devtools.build.lib.events.Location;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -34,11 +35,11 @@ public class ActionRegistryForTests extends DefaultActionRegistry {
   }
 
   @Override
-  public Artifact declareArtifact(Path path) {
-    return super.declareArtifact(path);
+  public Artifact declareArtifact(Path path, Location location) {
+    return super.declareArtifact(path, location);
   }
 
   public Artifact declareArtifact(String path) {
-    return declareArtifact(Paths.get(path));
+    return declareArtifact(Paths.get(path), Location.BUILTIN);
   }
 }

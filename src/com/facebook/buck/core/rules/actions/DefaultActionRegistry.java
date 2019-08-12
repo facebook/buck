@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataRegistry;
 import com.facebook.buck.core.rules.analysis.action.ImmutableActionAnalysisDataKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.devtools.build.lib.events.Location;
 import java.nio.file.Path;
 
 /** The action registry that should be used throughout Buck to handle registering actions. */
@@ -46,8 +47,9 @@ public class DefaultActionRegistry extends BuildArtifactFactory implements Actio
   }
 
   @Override
-  public Artifact declareArtifact(Path output) throws ArtifactDeclarationException {
-    return createDeclaredArtifact(output);
+  public Artifact declareArtifact(Path output, Location location)
+      throws ArtifactDeclarationException {
+    return createDeclaredArtifact(output, location);
   }
 
   @Override

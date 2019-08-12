@@ -33,6 +33,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.devtools.build.lib.events.Location;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -119,7 +120,10 @@ public class ArtifactFilesystemTest {
         ImmutableActionAnalysisDataKey.of(buildTarget, new ActionAnalysisData.ID() {});
 
     ImmutableSet<Artifact> artifacts =
-        ImmutableSet.of(factory.createDeclaredArtifact(Paths.get("out.txt")).materialize(key));
+        ImmutableSet.of(
+            factory
+                .createDeclaredArtifact(Paths.get("out.txt"), Location.BUILTIN)
+                .materialize(key));
 
     Path expectedPath = BuildPaths.getGenDir(filesystem, buildTarget);
 
@@ -139,7 +143,8 @@ public class ArtifactFilesystemTest {
     ActionAnalysisDataKey key =
         ImmutableActionAnalysisDataKey.of(buildTarget, new ActionAnalysisData.ID() {});
 
-    BuildArtifact artifact = factory.createDeclaredArtifact(Paths.get("out.txt")).materialize(key);
+    BuildArtifact artifact =
+        factory.createDeclaredArtifact(Paths.get("out.txt"), Location.BUILTIN).materialize(key);
 
     artifactFilesystem.writeContentsToPath("contents", artifact);
 

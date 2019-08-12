@@ -34,6 +34,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
+import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,7 +50,8 @@ public class BasicRuleDescription implements RuleDescription<BasicRuleDescriptio
       RuleAnalysisContext context, BuildTarget target, BasicRuleDescriptionArg args)
       throws ActionCreationException {
 
-    Artifact artifact = context.actionRegistry().declareArtifact(Paths.get("output"));
+    Artifact artifact =
+        context.actionRegistry().declareArtifact(Paths.get("output"), Location.BUILTIN);
 
     FakeAction.FakeActionExecuteLambda actionExecution =
         (inputs, outputs, ctx) -> {
