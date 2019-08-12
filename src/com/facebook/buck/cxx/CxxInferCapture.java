@@ -185,6 +185,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
           Depfiles.parseAndVerifyDependencies(
               context.getEventBus(),
               getProjectFilesystem(),
+              context.getSourcePathResolver(),
               preprocessorDelegate.getHeaderPathNormalizer(context),
               preprocessorDelegate.getHeaderVerification(),
               getDepFilePath(),

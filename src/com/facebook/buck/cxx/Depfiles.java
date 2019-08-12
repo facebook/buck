@@ -20,6 +20,7 @@ import com.facebook.buck.core.exceptions.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
@@ -280,6 +281,7 @@ class Depfiles {
   public static ImmutableList<Path> parseAndVerifyDependencies(
       BuckEventBus eventBus,
       ProjectFilesystem filesystem,
+      SourcePathResolver pathResolver,
       HeaderPathNormalizer headerPathNormalizer,
       HeaderVerification headerVerification,
       Path sourceDepFile,
@@ -308,6 +310,7 @@ class Depfiles {
       return normalizeAndVerifyHeaders(
           eventBus,
           filesystem,
+          pathResolver,
           headerPathNormalizer,
           headerVerification,
           inputPath,
@@ -320,6 +323,7 @@ class Depfiles {
   private static ImmutableList<Path> normalizeAndVerifyHeaders(
       BuckEventBus eventBus,
       ProjectFilesystem filesystem,
+      SourcePathResolver pathResolver,
       HeaderPathNormalizer headerPathNormalizer,
       HeaderVerification headerVerification,
       Path inputPath,
@@ -334,7 +338,8 @@ class Depfiles {
     List<String> errors = new ArrayList<String>();
     for (String rawHeader : headers) {
       Path header = filesystem.resolve(rawHeader).normalize();
-      Optional<Path> absolutePath = headerPathNormalizer.getAbsolutePathForUnnormalizedPath(header);
+      Optional<Path> absolutePath =
+          headerPathNormalizer.getAbsolutePathForUnnormalizedPath(pathResolver, header);
       Optional<Path> repoRelativePath = filesystem.getPathRelativeToProjectRoot(header);
       if (absolutePath.isPresent()) {
         Preconditions.checkState(absolutePath.get().isAbsolute());
@@ -347,7 +352,7 @@ class Depfiles {
         // Check again with the real path with all symbolic links resolved.
         header = header.toRealPath();
         if (!(headerVerification.isWhitelisted(header.toString()))) {
-          String errorMessage = untrackedHeaderReporter.getErrorReport(header);
+          String errorMessage = untrackedHeaderReporter.getErrorReport(pathResolver, header);
           errors.add(errorMessage);
         }
       }

@@ -256,6 +256,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
               Depfiles.parseAndVerifyDependencies(
                   context.getEventBus(),
                   getProjectFilesystem(),
+                  context.getSourcePathResolver(),
                   preprocessorDelegate.getHeaderPathNormalizer(context),
                   preprocessorDelegate.getHeaderVerification(),
                   getDepFilePath(context.getSourcePathResolver()),
@@ -308,6 +309,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
                         .getAllFlags()),
                 resolver),
             preprocessorDelegate.getEnvironment(resolver)),
+        context.getSourcePathResolver(),
         preprocessorDelegate.getHeaderPathNormalizer(context),
         compilerSanitizer,
         scratchDir,

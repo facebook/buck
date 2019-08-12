@@ -235,6 +235,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
             Depfiles.parseAndVerifyDependencies(
                 context.getEventBus(),
                 getProjectFilesystem(),
+                context.getSourcePathResolver(),
                 preprocessorDelegate.getHeaderPathNormalizer(context),
                 preprocessorDelegate.getHeaderVerification(),
                 getDepFilePath(),
@@ -318,7 +319,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
       HeaderPathNormalizer headerPathNormalizer =
           preprocessDelegate
               .map(x -> x.getHeaderPathNormalizer(context))
-              .orElseGet(() -> HeaderPathNormalizer.empty(resolver));
+              .orElseGet(() -> HeaderPathNormalizer.empty());
 
       CxxToolFlags preprocessorDelegateFlags =
           preprocessDelegate
@@ -348,6 +349,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
               compilerDelegate.getCommandPrefix(resolver),
               Arg.stringify(arguments, resolver),
               compilerDelegate.getEnvironment(resolver)),
+          context.getSourcePathResolver(),
           headerPathNormalizer,
           sanitizer,
           outputPathResolver.getTempPath(),
