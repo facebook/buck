@@ -21,7 +21,6 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -50,9 +49,8 @@ class DirectHeaderMap extends HeaderSymlinkTree {
       BuildTarget target,
       ProjectFilesystem filesystem,
       Path root,
-      ImmutableMap<Path, SourcePath> links,
-      SourcePathRuleFinder ruleFinder) {
-    super(target, filesystem, root, links, ruleFinder);
+      ImmutableMap<Path, SourcePath> links) {
+    super(target, filesystem, root, links);
     this.headerMapPath = BuildTargetPaths.getGenPath(filesystem, target, "%s.hmap");
   }
 

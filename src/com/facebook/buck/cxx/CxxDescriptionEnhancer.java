@@ -161,7 +161,6 @@ public class CxxDescriptionEnhancer {
   public static HeaderSymlinkTree createHeaderSymlinkTree(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
       HeaderMode mode,
       ImmutableMap<Path, SourcePath> headers,
       HeaderVisibility headerVisibility,
@@ -173,12 +172,7 @@ public class CxxDescriptionEnhancer {
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
             projectFilesystem, buildTarget, headerVisibility, flavors);
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
-        headerSymlinkTreeTarget,
-        projectFilesystem,
-        ruleFinder,
-        headerSymlinkTreeRoot,
-        headers,
-        mode);
+        headerSymlinkTreeTarget, projectFilesystem, headerSymlinkTreeRoot, headers, mode);
   }
 
   public static HeaderSymlinkTree createHeaderSymlinkTree(
@@ -192,7 +186,6 @@ public class CxxDescriptionEnhancer {
     return createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
-        resolver,
         getHeaderModeForPlatform(
             resolver,
             buildTarget.getTargetConfiguration(),
@@ -1645,13 +1638,7 @@ public class CxxDescriptionEnhancer {
       links.put(Paths.get(ent.getKey()), ent.getValue());
     }
     return new SymlinkTree(
-        "cxx_binary",
-        symlinkTreeTarget,
-        filesystem,
-        symlinkTreeRoot,
-        links.build(),
-        ImmutableMultimap.of(),
-        graphBuilder);
+        "cxx_binary", symlinkTreeTarget, filesystem, symlinkTreeRoot, links.build());
   }
 
   public static SymlinkTree requireSharedLibrarySymlinkTree(
@@ -1714,13 +1701,7 @@ public class CxxDescriptionEnhancer {
     }
     links.put(binaryName, binarySource);
     return new SymlinkTree(
-        "cxx_binary",
-        symlinkTreeTarget,
-        filesystem,
-        symlinkTreeRoot,
-        links.build(),
-        ImmutableMultimap.of(),
-        graphBuilder);
+        "cxx_binary", symlinkTreeTarget, filesystem, symlinkTreeRoot, links.build());
   }
 
   private static SymlinkTree requireBinaryWithSharedLibrariesSymlinkTree(

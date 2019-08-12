@@ -107,8 +107,7 @@ public class DirectHeaderMapTest {
 
     pathResolver = graphBuilder.getSourcePathResolver();
 
-    buildRule =
-        new DirectHeaderMap(buildTarget, projectFilesystem, symlinkTreeRoot, links, graphBuilder);
+    buildRule = new DirectHeaderMap(buildTarget, projectFilesystem, symlinkTreeRoot, links);
     graphBuilder.addToIndex(buildRule);
 
     headerMapPath = pathResolver.getRelativePath(buildRule.getSourcePathToOutput());
@@ -159,11 +158,7 @@ public class DirectHeaderMapTest {
     }
     DirectHeaderMap modifiedBuildRule =
         new DirectHeaderMap(
-            buildTarget,
-            projectFilesystem,
-            symlinkTreeRoot,
-            modifiedLinksBuilder.build(),
-            graphBuilder);
+            buildTarget, projectFilesystem, symlinkTreeRoot, modifiedLinksBuilder.build());
 
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
 

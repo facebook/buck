@@ -75,7 +75,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -522,9 +521,7 @@ public class LuaBinaryDescription
             linkTreeTarget,
             filesystem,
             root,
-            MoreMaps.transformKeys(components, MorePaths.toPathFn(root.getFileSystem())),
-            ImmutableMultimap.of(),
-            graphBuilder));
+            MoreMaps.transformKeys(components, MorePaths.toPathFn(root.getFileSystem()))));
   }
 
   /**

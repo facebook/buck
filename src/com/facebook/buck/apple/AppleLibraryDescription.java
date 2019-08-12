@@ -708,7 +708,6 @@ public class AppleLibraryDescription
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
-        graphBuilder,
         HeaderMode.SYMLINK_TREE_WITH_MODULEMAP,
         headers.build(),
         HeaderVisibility.PUBLIC);
@@ -731,12 +730,7 @@ public class AppleLibraryDescription
 
     Path root = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s");
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
-        buildTarget,
-        projectFilesystem,
-        graphBuilder,
-        root,
-        headers,
-        HeaderMode.SYMLINK_TREE_WITH_MODULEMAP);
+        buildTarget, projectFilesystem, root, headers, HeaderMode.SYMLINK_TREE_WITH_MODULEMAP);
   }
 
   <U> Optional<U> createMetadataForLibrary(

@@ -681,7 +681,6 @@ public class CxxLibraryFactory {
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
-        graphBuilder,
         mode,
         CxxDescriptionEnhancer.parseExportedHeaders(
             buildTarget, graphBuilder, Optional.empty(), args),

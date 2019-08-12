@@ -161,7 +161,7 @@ public class PythonBinaryDescription
     Path linkTreeRoot = BuildTargetPaths.getGenPath(projectFilesystem, linkTreeTarget, "%s");
     SymlinkTree linkTree =
         graphBuilder.addToIndex(
-            new SymlinkTree(
+            new PythonSymlinkTree(
                 "python_in_place_binary",
                 linkTreeTarget,
                 projectFilesystem,

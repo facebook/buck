@@ -142,7 +142,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
     Path outputPath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s");
 
     return HeaderSymlinkTreeWithHeaderMap.create(
-        buildTarget, projectFilesystem, outputPath, headers, graphBuilder);
+        buildTarget, projectFilesystem, outputPath, headers);
   }
 
   public static ImmutableMap<Path, SourcePath> getObjCGeneratedHeader(

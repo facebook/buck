@@ -56,7 +56,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -591,14 +590,7 @@ abstract class GoDescriptors {
 
     Path root = BuildTargetPaths.getScratchPath(projectFilesystem, buildTarget, "__%s__tree");
 
-    return new SymlinkTree(
-        "go_linkable",
-        buildTarget,
-        projectFilesystem,
-        root,
-        treeMap,
-        ImmutableMultimap.of(),
-        ruleFinder);
+    return new SymlinkTree("go_linkable", buildTarget, projectFilesystem, root, treeMap);
   }
 
   /**

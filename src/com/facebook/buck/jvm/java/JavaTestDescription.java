@@ -52,7 +52,6 @@ import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
@@ -283,9 +282,7 @@ public class JavaTestDescription
                   nativeLibsSymlinkTree
                       .getProjectFilesystem()
                       .relativize(nativeLibsSymlinkTree.getRoot()),
-                  filteredLinks.build(),
-                  ImmutableMultimap.of(),
-                  graphBuilder);
+                  filteredLinks.build());
         }
 
         graphBuilder.addToIndex(nativeLibsSymlinkTree);

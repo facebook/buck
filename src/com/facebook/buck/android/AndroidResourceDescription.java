@@ -35,7 +35,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -51,7 +50,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -115,10 +113,9 @@ public class AndroidResourceDescription
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
     if (flavors.contains(RESOURCES_SYMLINK_TREE_FLAVOR)) {
-      return createSymlinkTree(buildTarget, projectFilesystem, graphBuilder, args.getRes(), "res");
+      return createSymlinkTree(buildTarget, projectFilesystem, args.getRes(), "res");
     } else if (flavors.contains(ASSETS_SYMLINK_TREE_FLAVOR)) {
-      return createSymlinkTree(
-          buildTarget, projectFilesystem, graphBuilder, args.getAssets(), "assets");
+      return createSymlinkTree(buildTarget, projectFilesystem, args.getAssets(), "assets");
     }
 
     // Only allow android resource and library rules as dependencies.
@@ -211,7 +208,6 @@ public class AndroidResourceDescription
   private SymlinkTree createSymlinkTree(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
       Optional<Either<SourcePath, ImmutableSortedMap<String, SourcePath>>> symlinkAttribute,
       String outputDirName) {
     ImmutableMap<Path, SourcePath> links = ImmutableMap.of();
@@ -240,14 +236,7 @@ public class AndroidResourceDescription
     }
     Path symlinkTreeRoot =
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").resolve(outputDirName);
-    return new SymlinkTree(
-        "android_res",
-        buildTarget,
-        projectFilesystem,
-        symlinkTreeRoot,
-        links,
-        ImmutableMultimap.of(),
-        ruleFinder);
+    return new SymlinkTree("android_res", buildTarget, projectFilesystem, symlinkTreeRoot, links);
   }
 
   public static Optional<SourcePath> getResDirectoryForProject(
