@@ -21,6 +21,9 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
@@ -71,14 +74,15 @@ abstract class AbstractAppleBundleResources implements AddsToRuleKey {
   }
 
   /** All kinds of destinations that are used by paths in this object. */
-  public Set<AppleBundleDestination> getAllDestinations() {
+  public SortedSet<AppleBundleDestination> getAllDestinations() {
     Stream<AppleBundleDestination> result =
         getResourcesWithDestinationStream()
             .map(SourcePathWithAppleBundleDestination::getDestination);
     if (!getResourceVariantFiles().isEmpty()) {
       result = Stream.concat(result, Stream.of(AppleBundleDestination.RESOURCES));
     }
-    return result.collect(Collectors.toSet());
+    Supplier<SortedSet<AppleBundleDestination>> supplier = TreeSet::new;
+    return result.collect(Collectors.toCollection(supplier));
   }
 
   /** Returns all the SourcePaths from the different types of resources. */

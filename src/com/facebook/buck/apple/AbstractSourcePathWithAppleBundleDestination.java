@@ -29,7 +29,9 @@ import org.immutables.value.Value;
  */
 @Value.Immutable()
 @BuckStyleImmutable
-public abstract class AbstractSourcePathWithAppleBundleDestination implements AddsToRuleKey {
+public abstract class AbstractSourcePathWithAppleBundleDestination
+    implements AddsToRuleKey, Comparable<AbstractSourcePathWithAppleBundleDestination> {
+
   @Value.Parameter
   @AddToRuleKey
   public abstract SourcePath getSourcePath();
@@ -50,5 +52,16 @@ public abstract class AbstractSourcePathWithAppleBundleDestination implements Ad
         .setSourcePath(sourcePath)
         .setDestination(AppleBundleDestination.defaultValue())
         .build();
+  }
+
+  @Override
+  public int compareTo(AbstractSourcePathWithAppleBundleDestination o) {
+    if (getSourcePath() != o.getSourcePath()) {
+      return getSourcePath().compareTo(o.getSourcePath());
+    }
+    if (getDestination() != o.getDestination()) {
+      return getDestination().compareTo(o.getDestination());
+    }
+    return 0;
   }
 }

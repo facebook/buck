@@ -33,6 +33,9 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
@@ -71,14 +74,15 @@ public class AppleResourceDescription
     AppleResourceDescriptionArg appleResource = targetNode.getConstructorArg();
     AppleBundleDestination destination =
         appleResource.getDestination().orElse(AppleBundleDestination.defaultValue());
+    Supplier<SortedSet<SourcePathWithAppleBundleDestination>> supplier = TreeSet::new;
     builder.addAllResourceDirs(
         appleResource.getDirs().stream()
             .map(sourcePath -> SourcePathWithAppleBundleDestination.of(sourcePath, destination))
-            .collect(Collectors.toSet()));
+            .collect(Collectors.toCollection(supplier)));
     builder.addAllResourceFiles(
         appleResource.getFiles().stream()
             .map(sourcePath -> SourcePathWithAppleBundleDestination.of(sourcePath, destination))
-            .collect(Collectors.toSet()));
+            .collect(Collectors.toCollection(supplier)));
     ImmutableSet<SourcePath> variants = appleResource.getVariants();
     if (!variants.isEmpty() && destination != AppleBundleDestination.RESOURCES) {
       throw new HumanReadableException(
