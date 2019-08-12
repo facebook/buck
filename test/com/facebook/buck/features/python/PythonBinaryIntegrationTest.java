@@ -66,6 +66,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
@@ -378,7 +379,8 @@ public class PythonBinaryIntegrationTest {
   public void inplacePackagePrebuiltLibrariesProperly() throws IOException {
     assumeThat(packageStyle, Matchers.is(PackageStyle.INPLACE));
 
-    workspace.runBuckCommand("run", "//:main_module_with_prebuilt_dep_bin").assertSuccess();
+    ProcessResult res = workspace.runBuckCommand("run", "//:main_module_with_prebuilt_dep_bin");
+    res.assertSuccess();
 
     Path linkTreeDir =
         workspace.resolve(
@@ -414,6 +416,40 @@ public class PythonBinaryIntegrationTest {
     ImmutableList<String> links =
         Files.walk(linkTreeDir).map(Path::toString).collect(ImmutableList.toImmutableList());
     assertThat(links, everyItem(not(endsWith(".whl"))));
+  }
+
+  @Test
+  public void inplaceFailsWhenPrebuiltLibraryConflictsWithOtherInitPy() throws IOException {
+    assumeThat(packageStyle, Matchers.is(PackageStyle.INPLACE));
+
+    assertThat(
+        workspace
+            .runBuckCommand("run", "//:main_module_with_prebuilt_dep_and_init_conflict_bin")
+            .assertFailure()
+            .getStderr(),
+        Matchers.matchesPattern(
+            Pattern.compile(
+                ".*Tried to link.*external_sources/__init__.py.*",
+                Pattern.MULTILINE | Pattern.DOTALL)));
+  }
+
+  @Test
+  public void inplaceFailsWhenTwoPrebuiltLibrariesConflictWithInitPy() throws IOException {
+    assumeThat(packageStyle, Matchers.is(PackageStyle.INPLACE));
+
+    // Iteration order on whls not guaranteed, but we want to make sure it's the whls conflicting
+    String expected =
+        ".*Tried to link .*__whl_dep__extracted\\S+__init__.py, but "
+            + ".*__whl_dep_copy__extracted\\S+__init__.py.*|"
+            + ".*Tried to link .*__whl_dep_copy__extracted\\S+__init__.py, but "
+            + ".*__whl_dep__extracted\\S+__init__.py.*";
+
+    assertThat(
+        workspace
+            .runBuckCommand("run", "//:main_module_with_prebuilt_dep_and_whl_init_conflict_bin")
+            .assertFailure()
+            .getStderr(),
+        Matchers.matchesPattern(Pattern.compile(expected, Pattern.MULTILINE | Pattern.DOTALL)));
   }
 
   /**

@@ -150,7 +150,11 @@ public class PythonSymlinkTreeTest {
                     "link_tree", projectFilesystem, outputPath, pathResolver.getMappedPaths(links)))
             .add(
                 new SymlinkTreeMergeStep(
-                    "link_tree", projectFilesystem, outputPath, ImmutableMultimap.of()))
+                    "link_tree",
+                    projectFilesystem,
+                    outputPath,
+                    ImmutableMultimap.of(),
+                    (fs, existingTarget) -> false))
             .build();
     ImmutableList<Step> actualBuildSteps =
         symlinkTreeBuildRule.getBuildSteps(buildContext, buildableContext);

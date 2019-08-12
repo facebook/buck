@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Map.Entry;
+import java.util.function.BiFunction;
 
 /** A step to merge the contents of provided directories into a symlink tree */
 public class SymlinkTreeMergeStep implements Step {
@@ -39,6 +40,7 @@ public class SymlinkTreeMergeStep implements Step {
   private final ProjectFilesystem filesystem;
   private final Path root;
   private final ImmutableMultimap<Path, Path> links;
+  private final BiFunction<ProjectFilesystem, Path, Boolean> deleteExistingLinkPredicate;
 
   /**
    * Creates an instance of {@link SymlinkTreeMergeStep}
@@ -49,16 +51,25 @@ public class SymlinkTreeMergeStep implements Step {
    * @param links A map of relative paths within the link tree into which files from the value will
    *     be recursively linked. e.g. if a file at /tmp/foo/bar should be linked as
    *     /tmp/symlink-root/subdir/bar, the map should contain {Paths.get("subdir"),
+   * @param deleteExistingLinkPredicate A predicate that, given an existing filesystem and target of
+   *     an existing symlink, can return 'true' if the original link should be deleted. This is used
+   *     in the case that there are conflicting files when merging {@code links} into {@code root}.
+   *     A common example is dummy __init__.py files placed by {@link
+   *     com.facebook.buck.features.python.PythonInPlaceBinary} which may be deleted safely in the
+   *     destination directory if one of the other directories being merged has a file with some
+   *     substance.
    */
   public SymlinkTreeMergeStep(
       String category,
       ProjectFilesystem filesystem,
       Path root,
-      ImmutableMultimap<Path, Path> links) {
+      ImmutableMultimap<Path, Path> links,
+      BiFunction<ProjectFilesystem, Path, Boolean> deleteExistingLinkPredicate) {
     this.name = category + "_link_merge_dir";
     this.filesystem = filesystem;
     this.root = root;
     this.links = links;
+    this.deleteExistingLinkPredicate = deleteExistingLinkPredicate;
   }
 
   @Override
@@ -100,15 +111,27 @@ public class SymlinkTreeMergeStep implements Step {
           @Override
           public FileVisitResult visitFile(Path childPath, BasicFileAttributes attrs)
               throws IOException {
+            return visitFile(childPath, attrs, true);
+          }
+
+          private FileVisitResult visitFile(
+              Path childPath, BasicFileAttributes attrs, boolean allowDeletingExistingSymlink)
+              throws IOException {
             Path relativePath = dirPath.relativize(childPath);
             Path destPath = destination.resolve(relativePath);
             try {
               filesystem.createSymLink(filesystem.resolve(destPath), childPath, false);
             } catch (FileAlreadyExistsException e) {
               if (filesystem.isSymLink(destPath)) {
-                throw new HumanReadableException(
-                    "Tried to link %s to %s, but %s already links to %s",
-                    destPath, childPath, destPath, filesystem.readSymLink(destPath));
+                if (allowDeletingExistingSymlink
+                    && deleteExistingLinkPredicate.apply(filesystem, destPath)) {
+                  filesystem.deleteFileAtPath(destPath);
+                  return visitFile(childPath, attrs, false);
+                } else {
+                  throw new HumanReadableException(
+                      "Tried to link %s to %s, but %s already links to %s",
+                      destPath, childPath, destPath, filesystem.readSymLink(destPath));
+                }
               } else {
                 throw new HumanReadableException(
                     "Tried to link %s to %s, but %s already exists", destPath, childPath, destPath);

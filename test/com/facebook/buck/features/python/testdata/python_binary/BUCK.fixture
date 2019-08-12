@@ -166,5 +166,25 @@ python_binary(
     main_module = "main_module_with_prebuilt_dep",
     deps = [
         ":main_module_with_prebuilt_dep",
+        "//external_sources:python_lib",
+    ],
+)
+
+python_binary(
+    name = "main_module_with_prebuilt_dep_and_init_conflict_bin",
+    main_module = "main_module_with_prebuilt_dep",
+    deps = [
+        ":main_module_with_prebuilt_dep",
+        "//external_sources:python_lib_with_init_py",
+    ],
+)
+
+python_binary(
+    name = "main_module_with_prebuilt_dep_and_whl_init_conflict_bin",
+    main_module = "main_module_with_prebuilt_dep",
+    deps = [
+        ":main_module_with_prebuilt_dep",
+        "//external_sources:python_lib",
+        "//external_sources:whl_dep_copy",
     ],
 )

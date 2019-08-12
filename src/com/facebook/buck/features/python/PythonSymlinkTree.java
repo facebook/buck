@@ -35,13 +35,16 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Supplier;
 
 /** Creates a tree of symlinks inside of a given directory */
 public class PythonSymlinkTree extends SymlinkTree {
+  private static final Path INIT_PY = Paths.get("__init__.py");
 
   @AddToRuleKey
   private final Supplier<ImmutableSortedMap<String, ImmutableList<SourcePath>>>
@@ -126,9 +129,20 @@ public class PythonSymlinkTree extends SymlinkTree {
                         ImmutableSetMultimap.toImmutableSetMultimap(
                             Entry::getKey,
                             entry ->
-                                context
-                                    .getSourcePathResolver()
-                                    .getAbsolutePath(entry.getValue())))))
+                                context.getSourcePathResolver().getAbsolutePath(entry.getValue()))),
+                PythonSymlinkTree::shouldDeleteExistingSymlink))
         .build();
+  }
+
+  private static boolean shouldDeleteExistingSymlink(
+      ProjectFilesystem projectFilesystem, Path existingTarget) {
+    // If the existing __init__.py already exists, and is 0 bytes, it should be safe to replace
+    // with a more substantial file that has real functionality
+    try {
+      return existingTarget.getFileName().equals(INIT_PY)
+          && projectFilesystem.getFileSize(existingTarget) == 0;
+    } catch (IOException e) {
+      return false;
+    }
   }
 }
