@@ -15,18 +15,24 @@
  */
 package com.facebook.buck.core.rules.analysis.impl;
 
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.JsonParser;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -77,28 +83,49 @@ public class RuleAnalysisRulesBuildIntegrationTest {
      * we should get something like
      *
      * <pre>
-     * bar1dep{
-     *    baz4dep{
-     *    }
-     *    foo2dep{
-     *      baz4dep{
+     * {
+     * target: bar
+     * val: 1
+     * dep: {
+     *    {
+     *      target: baz
+     *      val: 4
+     *      dep: {}
+     *    },
+     *    {
+     *      target: foo
+     *      val: 2
+     *      dep: {
+     *        {
+     *          target: baz
+     *          val: 4
+     *          dep: {}
+     *        }
      *      }
-     *    }
-     *    faz0dep{
-     *    }
+     *    },
+     *    {
+     *      target: faz
+     *      val: 0
+     *      dep: {}
+     *    },
+     *  }
      * }
      * </pre>
      */
-    List<String> lines = Files.readAllLines(resultPath);
+    RuleOutput output =
+        new RuleOutput(
+            "bar",
+            1,
+            ImmutableList.of(
+                new RuleOutput("baz", 4, ImmutableList.of()),
+                new RuleOutput(
+                    "foo", 2, ImmutableList.of(new RuleOutput("baz", 4, ImmutableList.of()))),
+                new RuleOutput("faz", 0, ImmutableList.of())));
 
-    assertEquals("bar1dep{", lines.get(0));
+    JsonParser parser = ObjectMappers.createParser(resultPath);
+    Map<String, Object> data = parser.readValueAs(Map.class);
 
-    assertNotEquals(-1, lines.indexOf("baz4dep{"));
-    assertNotEquals(-1, lines.indexOf("faz0dep{"));
-    int indexFoo = lines.indexOf("foo2dep{");
-    assertNotEquals(-1, indexFoo);
-
-    assertEquals("baz4dep{", lines.get(indexFoo + 1));
+    assertThat(data, ruleOutputToMatchers(output));
 
     workspace.writeContentsToPath(
         "basic_rule(\n"
@@ -114,27 +141,83 @@ public class RuleAnalysisRulesBuildIntegrationTest {
      * we should get something like
      *
      * <pre>
-     * bar1dep{
-     *    baz4dep{
-     *    }
-     *    foo2dep{
-     *      baz4dep{
+     * {
+     * target: bar
+     * val: 1
+     * dep: {
+     *    {
+     *      target: baz
+     *      val: 4
+     *      dep: {}
+     *    },
+     *    {
+     *      target: foo
+     *      val: 2
+     *      dep: {
+     *        {
+     *          target: baz
+     *          val: 4
+     *          dep: {}
+     *        }
      *      }
-     *    }
-     *    faz10dep{
-     *    }
+     *    },
+     *    {
+     *      target: faz
+     *      val: 10
+     *      dep: {}
+     *    },
+     *  }
      * }
      * </pre>
      */
-    lines = Files.readAllLines(resultPath);
+    output =
+        new RuleOutput(
+            "bar",
+            1,
+            ImmutableList.of(
+                new RuleOutput("baz", 4, ImmutableList.of()),
+                new RuleOutput(
+                    "foo", 2, ImmutableList.of(new RuleOutput("baz", 4, ImmutableList.of()))),
+                new RuleOutput("faz", 10, ImmutableList.of())));
 
-    assertEquals("bar1dep{", lines.get(0));
+    parser = ObjectMappers.createParser(resultPath);
+    data = parser.readValueAs(Map.class);
 
-    assertNotEquals(-1, lines.indexOf("baz4dep{"));
-    assertNotEquals(-1, lines.indexOf("faz10dep{"));
-    indexFoo = lines.indexOf("foo2dep{");
-    assertNotEquals(-1, indexFoo);
+    assertThat(data, ruleOutputToMatchers(output));
+  }
 
-    assertEquals("baz4dep{", lines.get(indexFoo + 1));
+  private static class RuleOutput {
+    final String target;
+    final int val;
+    final List<RuleOutput> deps;
+
+    private RuleOutput(String target, int val, List<RuleOutput> deps) {
+      this.target = target;
+      this.val = val;
+      this.deps = deps;
+    }
+  }
+
+  private Matcher<Map<String, Object>> ruleOutputToMatchers(RuleOutput ruleOutput) {
+
+    Matcher<Map<? extends String, ? extends Object>> targetMatcher =
+        Matchers.hasEntry("target", ruleOutput.target);
+    Matcher<Map<? extends String, ? extends Object>> valMatcher =
+        Matchers.hasEntry("val", ruleOutput.val);
+
+    Matcher<Object> deps =
+        (Matcher<Object>)
+            (Matcher<? extends Object>)
+                Matchers.containsInAnyOrder(
+                    Collections2.transform(
+                        ruleOutput.deps,
+                        d -> (Matcher<? super Object>) (Matcher<?>) ruleOutputToMatchers(d)));
+
+    Matcher<Map<? extends String, ? extends Object>> depMatcher =
+        Matchers.hasEntry(Matchers.is("dep"), deps);
+
+    Matcher<? extends Map<? extends String, ? extends Object>> matcher =
+        Matchers.allOf(targetMatcher, valMatcher, depMatcher);
+    return (Matcher<Map<String, Object>>) matcher;
   }
 }

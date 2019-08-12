@@ -21,6 +21,7 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/core/rules/providers/lib:lib",
+        "//src/com/facebook/buck/util/json:json",
         "//test/com/facebook/buck/core/rules/actions:testutil",
     ],
 )
@@ -37,6 +38,7 @@ java_test(
         "//src/com/facebook/buck/core/rules/analysis/impl:impl",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
         "//src/com/facebook/buck/rules/coercer:coercer",
+        "//src/com/facebook/buck/util/json:json",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/graph/transformation/impl:testutil",
         "//test/com/facebook/buck/core/model:testutil",

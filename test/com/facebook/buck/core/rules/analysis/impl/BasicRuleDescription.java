@@ -30,16 +30,22 @@ import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.io.ByteStreams;
+import com.google.common.io.CharStreams;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -58,19 +64,23 @@ public class BasicRuleDescription implements RuleDescription<BasicRuleDescriptio
           Artifact output = Iterables.getOnlyElement(outputs);
           try (OutputStream outputStream = ctx.getArtifactFilesystem().getOutputStream(output)) {
 
-            outputStream.write(
-                String.format("%s%ddep{", target.getShortName(), args.getVal())
-                    .getBytes(Charsets.UTF_8));
+            Map<String, Object> data = new HashMap<>();
+            data.put("target", target.getShortName());
+            data.put("val", args.getVal());
+
+            List<Object> deps = new ArrayList<>();
+            data.put("dep", deps);
 
             for (Artifact inArtifact : inputs) {
-              try (InputStream inputStream =
-                  ctx.getArtifactFilesystem().getInputStream(inArtifact)) {
-                outputStream.write(System.lineSeparator().getBytes(Charsets.UTF_8));
-
-                ByteStreams.copy(inputStream, outputStream);
+              try (Reader reader =
+                  new InputStreamReader(ctx.getArtifactFilesystem().getInputStream(inArtifact))) {
+                deps.add(
+                    ObjectMappers.createParser(CharStreams.toString(reader))
+                        .readValueAs(Map.class));
               }
             }
-            outputStream.write((System.lineSeparator() + "}").getBytes(Charsets.UTF_8));
+            outputStream.write(
+                ObjectMappers.WRITER.writeValueAsString(data).getBytes(Charsets.UTF_8));
 
           } catch (IOException e) {
             return ImmutableActionExecutionFailure.of(
