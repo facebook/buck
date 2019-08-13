@@ -303,6 +303,8 @@ public final class MainRunner {
   private static final int EVENT_BUS_TIMEOUT_SECONDS = 15;
   private static final int COUNTER_AGGREGATOR_SERVICE_TIMEOUT_SECONDS = 20;
 
+  private static final int COMMAND_PATH_MAX_LENGTH = 150;
+
   private static final String CRITICAL_PATH_FILE_NAME = "critical_path.log";
 
   private final InputStream stdIn;
@@ -644,8 +646,10 @@ public final class MainRunner {
         // buck_tool will set BUCK_BUSY_DISPLAYED if it already displayed the busy error
         if (!clientEnvironment.containsKey("BUCK_BUSY_DISPLAYED")) {
           String activeCommandLine = "buck " + String.join(" ", previousCommandArgsBuilder.build());
-          if (activeCommandLine.length() > 80) {
-            activeCommandLine = activeCommandLine.substring(0, 76) + "...";
+          if (activeCommandLine.length() > COMMAND_PATH_MAX_LENGTH) {
+            String ending = "...";
+            activeCommandLine =
+                activeCommandLine.substring(0, COMMAND_PATH_MAX_LENGTH - ending.length()) + ending;
           }
 
           System.err.println(
