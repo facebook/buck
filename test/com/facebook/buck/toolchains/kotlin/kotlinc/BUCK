@@ -1,0 +1,12 @@
+# Make these certs available for running tests elsewhere in repo
+filegroup(
+    name = "kotlinc",
+    srcs = [
+        "libexec/build.txt",
+        "libexec/lib/kotlin-annotation-processing-gradle.jar",
+        "libexec/lib/kotlin-compiler-embeddable.jar",
+        "libexec/lib/kotlin-reflect.jar",
+        "libexec/lib/kotlin-script-runtime.jar",
+        "libexec/lib/kotlin-stdlib.jar",
+    ],
+)
