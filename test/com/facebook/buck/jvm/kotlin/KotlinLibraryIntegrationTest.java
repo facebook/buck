@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -54,10 +53,7 @@ public class KotlinLibraryIntegrationTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "kotlin_library_description", tmp);
     workspace.setUp();
-
-    Path kotlincPath = TestDataHelper.getTestDataScenario(this, "kotlinc");
-    MostFiles.copyRecursively(kotlincPath, tmp.newFolder("kotlinc"));
-
+    workspace.addTemplateToWorkspace(Paths.get("test/com/facebook/buck/toolchains/kotlin"));
     KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
   }
 

@@ -16,12 +16,11 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,10 +38,7 @@ public class KotlinTestIntegrationTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "kotlin_test_description", tmp);
     workspace.setUp();
-
-    Path kotlincPath = TestDataHelper.getTestDataScenario(this, "kotlinc");
-    MostFiles.copyRecursively(kotlincPath, tmp.newFolder("kotlinc"));
-
+    workspace.addTemplateToWorkspace(Paths.get("test/com/facebook/buck/toolchains/kotlin"));
     KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
   }
 

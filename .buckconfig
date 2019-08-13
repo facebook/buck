@@ -21,7 +21,7 @@
   # TODO: Put this in a shared location so Kotlin code under src/
   # does not depend on files under test/. We should probably update the
   # version of the Kotlin toolchain we use, as well.
-  kotlin_home = test/com/facebook/buck/jvm/kotlin/testdata/kotlinc/
+  kotlin_home = test/com/facebook/buck/toolchains/kotlin/kotlinc/
 [alias]
     buck = //programs:buck
     buck-android-support = //android/com/facebook/buck/android/support:buck-android-support
