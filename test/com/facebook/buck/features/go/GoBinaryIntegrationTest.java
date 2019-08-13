@@ -138,6 +138,23 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
+  public void binaryWithExportedGoFunctionsToCxx() throws IOException {
+    GoAssumptions.assumeGoVersionAtLeast("1.10.0");
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
+    workspace.setUp();
+
+    // Test C++ version (C version with extern "C" compiled in CXX mode)
+    ProcessResult result = workspace.runBuckCommand("run", "//src/c_calls_go:bin_cpp");
+    result.assertSuccess();
+    assertThat(result.getStdout(), Matchers.containsString("From CPP: 3"));
+
+    // Test C version
+    result = workspace.runBuckCommand("run", "//src/c_calls_go:bin_c");
+    result.assertSuccess();
+    assertThat(result.getStdout(), Matchers.containsString("From C: 3"));
+  }
+
+  @Test
   public void buildAfterChangeWorks() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);

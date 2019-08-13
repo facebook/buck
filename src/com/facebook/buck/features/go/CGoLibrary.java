@@ -146,8 +146,10 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
     for (SourceWithFlags srcWithFlags : args.getSrcs()) {
       SourcePath pth = srcWithFlags.getSourcePath();
       String ext = Files.getFileExtension(pathResolver.getAbsolutePath(pth).toString());
+      Optional<CxxSource.Type> srcType = CxxSource.Type.fromExtension(ext);
 
-      if (CxxSource.Type.fromExtension(ext).equals(Optional.of(CxxSource.Type.C))) {
+      if (srcType.equals(Optional.of(CxxSource.Type.C))
+          || srcType.equals(Optional.of(CxxSource.Type.CXX))) {
         cxxSourcesFromArg.add(pth);
       } else if (ext.equals("go")) {
         goSourcesFromArg.add(pth);

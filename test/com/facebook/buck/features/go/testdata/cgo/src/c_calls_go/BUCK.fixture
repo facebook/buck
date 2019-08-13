@@ -1,0 +1,35 @@
+go_binary(
+    name = "bin_cpp",
+    srcs = ["main.go"],
+    deps = [":cgo_cpp"],
+)
+
+go_binary(
+    name = "bin_c",
+    srcs = ["main.go"],
+    deps = [":cgo_c"],
+)
+
+cgo_library(
+    name = "cgo_cpp",
+    package_name = "cgo",
+    srcs = [
+        "call_go.cpp",
+        "cgosrc.go",
+        "export-to-c.go",
+    ],
+    header_namespace = "",
+    headers = ["call_go.h"],
+)
+
+cgo_library(
+    name = "cgo_c",
+    package_name = "cgo",
+    srcs = [
+        "call_go.c",
+        "cgosrc.go",
+        "export-to-c.go",
+    ],
+    header_namespace = "",
+    headers = ["call_go.h"],
+)
