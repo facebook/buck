@@ -4,8 +4,8 @@
   ndk_version = 17
 
 [scala]
-  library = //scala:scala-library
-  compiler = //scala:scala-compiler
+  library = buck//third-party/scala:scala-library
+  compiler = buck//third-party/scala:scala-compiler
 
 [kotlin]
   kotlin_home = kotlinc
