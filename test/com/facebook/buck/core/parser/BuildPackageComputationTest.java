@@ -52,7 +52,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
-public class BuildTargetPatternToBuildPackagePathComputationTest {
+public class BuildPackageComputationTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
   @Rule public final TemporaryPaths tmp = new TemporaryPaths();
