@@ -20,11 +20,8 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.files.DirectoryListCache;
 import com.facebook.buck.core.files.DirectoryListComputation;
-import com.facebook.buck.core.files.FileTree;
 import com.facebook.buck.core.files.FileTreeCache;
 import com.facebook.buck.core.files.FileTreeComputation;
-import com.facebook.buck.core.files.FileTreeFileNameIterator;
-import com.facebook.buck.core.files.ImmutableFileTreeKey;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.impl.DefaultGraphTransformationEngine;
@@ -33,6 +30,10 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasBuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.parser.BuildPackagePaths;
+import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathComputation;
+import com.facebook.buck.core.parser.ImmutableBuildTargetPatternToBuildPackagePathKey;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -113,8 +114,10 @@ public class TargetSpecResolver implements AutoCloseable {
             .build(
                 CacheLoader.from(
                     path -> {
-                      ProjectFilesystemView fileSystemView =
-                          cellProvider.getCellByPath(path).getFilesystemViewForSourceFiles();
+                      Cell cell = cellProvider.getCellByPath(path);
+                      String buildFileName =
+                          cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
+                      ProjectFilesystemView fileSystemView = cell.getFilesystemViewForSourceFiles();
 
                       DirectoryListCache dirListCache = dirListCachePerRoot.getUnchecked(path);
                       Verify.verifyNotNull(
@@ -130,6 +133,9 @@ public class TargetSpecResolver implements AutoCloseable {
 
                       return new DefaultGraphTransformationEngine(
                           ImmutableList.of(
+                              new GraphComputationStage<>(
+                                  BuildTargetPatternToBuildPackagePathComputation.of(
+                                      buildFileName)),
                               new GraphComputationStage<>(
                                   DirectoryListComputation.of(fileSystemView), dirListCache),
                               new GraphComputationStage<>(FileTreeComputation.of(), fileTreeCache)),
@@ -216,23 +222,16 @@ public class TargetSpecResolver implements AutoCloseable {
           perBuildFileSpecs.put(buildFile, index);
         } else {
           // For recursive spec, i.e. //path/to/... we use cached file tree
-          Path basePath = spec.getBuildFileSpec().getBasePath();
-
-          // sometimes spec comes with absolute path as base path, sometimes it is relative to
-          // cell path
-          // TODO(sergeyb): find out why
-          if (basePath.isAbsolute()) {
-            basePath = cellPath.relativize(basePath);
-          }
-          FileTree fileTree =
+          BuildTargetPattern pattern = spec.getBuildTargetPattern(cell);
+          BuildPackagePaths paths =
               graphEngineForRecursiveSpecPerRoot
                   .getUnchecked(cellPath)
-                  .computeUnchecked(ImmutableFileTreeKey.of(basePath));
+                  .computeUnchecked(ImmutableBuildTargetPatternToBuildPackagePathKey.of(pattern));
 
-          for (Path path :
-              FileTreeFileNameIterator.ofIterable(
-                  fileTree, cell.getBuckConfigView(ParserConfig.class).getBuildFileName())) {
-            perBuildFileSpecs.put(projectFilesystemView.resolve(path), index);
+          String buildFileName = cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
+          for (Path path : paths.getPackageRoots()) {
+            perBuildFileSpecs.put(
+                projectFilesystemView.resolve(path).resolve(buildFileName), index);
           }
         }
       }

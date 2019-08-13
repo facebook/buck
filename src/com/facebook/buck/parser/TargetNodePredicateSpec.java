@@ -16,9 +16,13 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
+import com.facebook.buck.core.parser.buildtargetpattern.ImmutableBuildTargetPattern;
 import com.google.common.collect.ImmutableMap;
+import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /** Matches all {@link TargetNode} objects in a repository that match the specification. */
@@ -50,5 +54,33 @@ public abstract class TargetNodePredicateSpec implements TargetNodeSpec {
     }
 
     return resultBuilder.build();
+  }
+
+  @Override
+  public BuildTargetPattern getBuildTargetPattern(Cell cell) {
+    BuildFileSpec buildFileSpec = getBuildFileSpec();
+    if (!cell.getRoot().equals(buildFileSpec.getCellPath())) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Root of cell should agree with build file spec: %s vs %s",
+              toString(), cell.getRoot(), buildFileSpec.getCellPath()));
+    }
+
+    String cellName = cell.getCanonicalName().getName();
+
+    // sometimes spec comes with absolute path as base path, sometimes it is relative to
+    // cell path
+    // TODO(sergeyb): find out why
+    Path basePath = buildFileSpec.getBasePath();
+    if (basePath.isAbsolute()) {
+      basePath = buildFileSpec.getCellPath().relativize(basePath);
+    }
+    return ImmutableBuildTargetPattern.of(
+        cellName,
+        buildFileSpec.isRecursive()
+            ? BuildTargetPattern.Kind.RECURSIVE
+            : BuildTargetPattern.Kind.PACKAGE,
+        basePath,
+        "");
   }
 }
