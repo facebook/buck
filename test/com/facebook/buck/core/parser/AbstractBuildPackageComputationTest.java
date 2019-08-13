@@ -20,8 +20,6 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.core.files.DirectoryListComputation;
-import com.facebook.buck.core.files.FileTreeComputation;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.impl.DefaultGraphTransformationEngine;
@@ -42,22 +40,22 @@ import java.nio.file.NotDirectoryException;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nonnull;
-import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
 
-@RunWith(JUnitParamsRunner.class)
-public class BuildPackageComputationTest {
+public abstract class AbstractBuildPackageComputationTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
   @Rule public final TemporaryPaths tmp = new TemporaryPaths();
 
-  private ProjectFilesystem filesystem;
+  protected ProjectFilesystem filesystem;
+
+  protected abstract ImmutableList<GraphComputationStage<?, ?>> getComputationStages(
+      String buildFileName);
 
   @Before
   public void setUp() {
@@ -463,25 +461,26 @@ public class BuildPackageComputationTest {
   }
 
   @Nonnull
-  private static BuildTargetPatternToBuildPackagePathKey key(
+  public static BuildTargetPatternToBuildPackagePathKey key(
       String cell, Kind kind, String basePath, String targetName) {
     return ImmutableBuildTargetPatternToBuildPackagePathKey.of(
         ImmutableBuildTargetPattern.of(cell, kind, Paths.get(basePath), targetName));
   }
 
-  private BuildPackagePaths transform(
+  public BuildPackagePaths transform(
       String buildFileName, BuildTargetPatternToBuildPackagePathKey key)
+      throws ExecutionException, InterruptedException {
+    return transform(key, getComputationStages(buildFileName));
+  }
+
+  public BuildPackagePaths transform(
+      BuildTargetPatternToBuildPackagePathKey key,
+      ImmutableList<GraphComputationStage<?, ?>> stages)
       throws ExecutionException, InterruptedException {
     int estimatedNumOps = 0;
     GraphTransformationEngine engine =
         new DefaultGraphTransformationEngine(
-            ImmutableList.of(
-                new GraphComputationStage<>(
-                    BuildTargetPatternToBuildPackagePathComputation.of(buildFileName)),
-                new GraphComputationStage<>(DirectoryListComputation.of(filesystem.asView())),
-                new GraphComputationStage<>(FileTreeComputation.of())),
-            estimatedNumOps,
-            DefaultDepsAwareExecutor.of(1));
+            stages, estimatedNumOps, DefaultDepsAwareExecutor.of(1));
     return engine.compute(key).get();
   }
 
