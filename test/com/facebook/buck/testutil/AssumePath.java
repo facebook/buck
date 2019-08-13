@@ -68,4 +68,54 @@ public class AssumePath {
   private static boolean areNamesCaseInsensitive(Path pathInFileSystem) throws IOException {
     return !areNamesCaseSensitive(pathInFileSystem);
   }
+
+  public static void assumeStarIsAllowedInNames(Path pathInFileSystem) {
+    try {
+      Assume.assumeTrue(
+          "File system should allow '*' in names", isStarAllowedInNames(pathInFileSystem));
+    } catch (IOException e) {
+      Assume.assumeNoException(e);
+    }
+  }
+
+  public static boolean isStarAllowedInNames(Path pathInFileSystem) throws IOException {
+    // TODO: Properly detect valid characters based on pathInFileSystem.
+    Platform platform = Platform.detect();
+    switch (platform) {
+      case FREEBSD:
+      case LINUX:
+      case MACOS:
+        return true;
+      case WINDOWS:
+        return false;
+      case UNKNOWN:
+      default:
+        throw new UnknownPlatformException(platform);
+    }
+  }
+
+  public static void assumeQuestionIsAllowedInNames(Path pathInFileSystem) {
+    try {
+      Assume.assumeTrue(
+          "File system should allow '?' in names", isStarAllowedInNames(pathInFileSystem));
+    } catch (IOException e) {
+      Assume.assumeNoException(e);
+    }
+  }
+
+  public static boolean isQuestionAllowedInNames(Path pathInFileSystem) throws IOException {
+    // TODO: Properly detect valid characters based on pathInFileSystem.
+    Platform platform = Platform.detect();
+    switch (platform) {
+      case FREEBSD:
+      case LINUX:
+      case MACOS:
+        return true;
+      case WINDOWS:
+        return false;
+      case UNKNOWN:
+      default:
+        throw new UnknownPlatformException(platform);
+    }
+  }
 }

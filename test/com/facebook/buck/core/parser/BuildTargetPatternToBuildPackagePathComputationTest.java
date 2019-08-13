@@ -114,6 +114,31 @@ public class BuildTargetPatternToBuildPackagePathComputationTest {
 
   @Test
   @Parameters(method = "getAnyPathParams")
+  public void canDiscoverRootPath(Kind kind, String targetName)
+      throws ExecutionException, IOException, InterruptedException {
+    filesystem.createNewFile(Paths.get("BUCK"));
+
+    BuildPackagePaths paths = transform("BUCK", key("", kind, "", targetName));
+
+    assertEquals(ImmutableSortedSet.of(Paths.get("")), paths.getPackageRoots());
+  }
+
+  @Test
+  @Parameters(method = "getSinglePathParams")
+  public void singlePackageDoesNotMatchChildrenPackages(Kind kind, String targetName)
+      throws ExecutionException, IOException, InterruptedException {
+    filesystem.mkdirs(Paths.get("dir1"));
+    filesystem.createNewFile(Paths.get("dir1/BUCK"));
+    filesystem.mkdirs(Paths.get("dir1/dir2"));
+    filesystem.createNewFile(Paths.get("dir1/dir2/BUCK"));
+
+    BuildPackagePaths paths = transform("BUCK", key("", kind, "dir1", targetName));
+
+    assertEquals(ImmutableSortedSet.of(Paths.get("dir1")), paths.getPackageRoots());
+  }
+
+  @Test
+  @Parameters(method = "getAnyPathParams")
   public void returnsNothingIfBuildFileDoesNotExist(Kind kind, String targetName)
       throws ExecutionException, IOException, InterruptedException {
     filesystem.mkdirs(Paths.get("dir1/dir2"));
@@ -313,6 +338,128 @@ public class BuildTargetPatternToBuildPackagePathComputationTest {
     thrown.expect(ExecutionException.class);
     thrown.expectCause(IsInstanceOf.instanceOf(NoSuchFileException.class));
     transform("BUCK", key("", kind, "DIR", targetName));
+  }
+
+  @Test
+  public void findsBuildFilesWithSpecialStarGlobCharacter()
+      throws ExecutionException, IOException, InterruptedException {
+    AssumePath.assumeStarIsAllowedInNames(filesystem.getRootPath());
+
+    filesystem.mkdirs(Paths.get("dir-star"));
+    filesystem.createNewFile(Paths.get("dir-star/*UCK"));
+    filesystem.mkdirs(Paths.get("dir-luck"));
+    filesystem.createNewFile(Paths.get("dir-luck/LUCK"));
+
+    BuildPackagePaths paths;
+
+    // '*' is special in glob patterns.
+    paths = transform("*UCK", key("", Kind.RECURSIVE, "", ""));
+    assertEquals(
+        "dir-star/*UCK is the only *UCK build file",
+        ImmutableSortedSet.of(Paths.get("dir-star")),
+        paths.getPackageRoots());
+    paths = transform("*UCK", key("", Kind.PACKAGE, "dir-star", ""));
+    assertEquals(
+        "dir-star/*UCK is a *UCK build file",
+        ImmutableSortedSet.of(Paths.get("dir-star")),
+        paths.getPackageRoots());
+    paths = transform("*UCK", key("", Kind.PACKAGE, "dir-luck", ""));
+    assertEquals(
+        "dir-luck/LUCK is not a *UCK build file", ImmutableSortedSet.of(), paths.getPackageRoots());
+  }
+
+  @Test
+  public void findsBuildFilesWithSpecialQuestionGlobCharacter()
+      throws ExecutionException, IOException, InterruptedException {
+    AssumePath.assumeQuestionIsAllowedInNames(filesystem.getRootPath());
+
+    filesystem.mkdirs(Paths.get("dir-question"));
+    filesystem.createNewFile(Paths.get("dir-question/?UCK"));
+    filesystem.mkdirs(Paths.get("dir-luck"));
+    filesystem.createNewFile(Paths.get("dir-luck/LUCK"));
+
+    BuildPackagePaths paths;
+
+    // '?' is special in glob patterns.
+    paths = transform("?UCK", key("", Kind.RECURSIVE, "", ""));
+    assertEquals(
+        "dir-star/?UCK is the only ?UCK build file",
+        ImmutableSortedSet.of(Paths.get("dir-question")),
+        paths.getPackageRoots());
+    paths = transform("?UCK", key("", Kind.PACKAGE, "dir-question", ""));
+    assertEquals(
+        "dir-star/?UCK is a ?UCK build file",
+        ImmutableSortedSet.of(Paths.get("dir-question")),
+        paths.getPackageRoots());
+    paths = transform("?UCK", key("", Kind.PACKAGE, "dir-luck", ""));
+    assertEquals(
+        "dir-luck/LUCK is not a ?UCK build file", ImmutableSortedSet.of(), paths.getPackageRoots());
+  }
+
+  @Test
+  public void findsBuildFilesWithSpecialBracketGlobCharacters()
+      throws ExecutionException, IOException, InterruptedException {
+    filesystem.mkdirs(Paths.get("dir-bracket"));
+    filesystem.createNewFile(Paths.get("dir-bracket/[BUCK]"));
+    filesystem.mkdirs(Paths.get("dir-b"));
+    filesystem.createNewFile(Paths.get("dir-b/B"));
+
+    BuildPackagePaths paths;
+
+    // '[' and ']' are special in glob patterns.
+    paths = transform("[BUCK]", key("", Kind.RECURSIVE, "", ""));
+    assertEquals(
+        "dir-bracket/[BUCK] is the only [BUCK] build file",
+        ImmutableSortedSet.of(Paths.get("dir-bracket")),
+        paths.getPackageRoots());
+    paths = transform("[BUCK]", key("", Kind.PACKAGE, "dir-bracket", ""));
+    assertEquals(
+        "dir-bracket/[BUCK] is a [BUCK] build file",
+        ImmutableSortedSet.of(Paths.get("dir-bracket")),
+        paths.getPackageRoots());
+    paths = transform("[BUCK]", key("", Kind.PACKAGE, "dir-b", ""));
+    assertEquals(
+        "dir-b/B is not a [BUCK] build file", ImmutableSortedSet.of(), paths.getPackageRoots());
+  }
+
+  @Test
+  @Parameters(method = "getAnyPathParams")
+  public void findsInNamedDirectoryWithSpecialStarGlobCharacters(Kind kind, String targetName)
+      throws ExecutionException, IOException, InterruptedException {
+    AssumePath.assumeStarIsAllowedInNames(filesystem.getRootPath());
+
+    filesystem.mkdirs(Paths.get("star-d*r"));
+    filesystem.createNewFile(Paths.get("star-d*r/BUCK"));
+
+    // '*' is special in glob patterns.
+    BuildPackagePaths paths = transform("BUCK", key("", kind, "star-d*r", targetName));
+    assertEquals(ImmutableSortedSet.of(Paths.get("star-d*r")), paths.getPackageRoots());
+  }
+
+  @Test
+  @Parameters(method = "getAnyPathParams")
+  public void findsInNamedDirectoryWithSpecialQuestionGlobCharacters(Kind kind, String targetName)
+      throws ExecutionException, IOException, InterruptedException {
+    AssumePath.assumeQuestionIsAllowedInNames(filesystem.getRootPath());
+
+    filesystem.mkdirs(Paths.get("question-d?r"));
+    filesystem.createNewFile(Paths.get("question-d?r/BUCK"));
+
+    // '?' is special in glob patterns.
+    BuildPackagePaths paths = transform("BUCK", key("", kind, "question-d?r", targetName));
+    assertEquals(ImmutableSortedSet.of(Paths.get("question-d?r")), paths.getPackageRoots());
+  }
+
+  @Test
+  @Parameters(method = "getAnyPathParams")
+  public void findsInNamedDirectoryWithSpecialBracketGlobCharacters(Kind kind, String targetName)
+      throws ExecutionException, IOException, InterruptedException {
+    filesystem.mkdirs(Paths.get("bracket-[dir]"));
+    filesystem.createNewFile(Paths.get("bracket-[dir]/BUCK"));
+
+    // '[' and ']' are special in glob patterns.
+    BuildPackagePaths paths = transform("BUCK", key("", kind, "bracket-[dir]", targetName));
+    assertEquals(ImmutableSortedSet.of(Paths.get("bracket-[dir]")), paths.getPackageRoots());
   }
 
   @Nonnull
