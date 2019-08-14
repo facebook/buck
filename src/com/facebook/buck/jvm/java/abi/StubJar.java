@@ -110,6 +110,6 @@ public class StubJar {
   }
 
   private boolean isKotlinModule(List<Path> relativePaths) {
-    return relativePaths.stream().anyMatch(path -> path.endsWith("main.kotlin_module"));
+    return relativePaths.stream().anyMatch(path -> path.toString().endsWith(".kotlin_module"));
   }
 }
