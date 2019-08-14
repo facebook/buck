@@ -7,7 +7,7 @@ java_library(
         "//third-party/java/jdk:compiler-tree-api",
     ],
     visibility = [
-        "//test/com/facebook/buck/jvm/java/...",
+        "//test/com/facebook/buck/jvm/...",
     ],
     deps = [
         "//src/com/facebook/buck/io/file:file",

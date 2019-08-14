@@ -6,3 +6,20 @@ prebuilt_jar(
         "PUBLIC",
     ],
 )
+
+prebuilt_jar(
+    name = "kotlin-compiler",
+    binary_jar = "kotlin-compiler.jar",
+    source_jar = "kotlin-compiler-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+prebuilt_jar(
+    name = "trove",
+    binary_jar = "trove4j.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+)
