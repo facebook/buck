@@ -24,7 +24,6 @@ import com.facebook.buck.features.project.intellij.ModuleBuildContext;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationKeys;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
-import com.facebook.buck.jvm.java.AbstractJavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import java.util.Collection;
 import java.util.Optional;
@@ -52,27 +51,6 @@ public class JavaLibraryRuleHelper {
     }
   }
 
-  public static <T extends JavaLibraryDescription.CoreArg> Optional<String> getLanguageLevel(
-      IjProjectConfig projectConfig, TargetNode<T> targetNode) {
-
-    JavaLibraryDescription.CoreArg arg = targetNode.getConstructorArg();
-
-    if (arg.getSource().isPresent()) {
-      AbstractJavacLanguageLevelOptions languageLevelOptions =
-          projectConfig.getJavaBuckConfig().getJavacLanguageLevelOptions();
-      String defaultSourceLevel = languageLevelOptions.getSourceLevel();
-      String defaultTargetLevel = languageLevelOptions.getTargetLevel();
-      boolean languageLevelsAreDifferent =
-          !defaultSourceLevel.equals(arg.getSource().orElse(defaultSourceLevel))
-              || !defaultTargetLevel.equals(arg.getTarget().orElse(defaultTargetLevel));
-      if (languageLevelsAreDifferent) {
-        return Optional.of(JavaLanguageLevelHelper.normalizeSourceLevel(arg.getSource().get()));
-      }
-    }
-
-    return Optional.empty();
-  }
-
   public static <T extends JavaLibraryDescription.CoreArg> void addNonSourceBuildTargets(
       TargetNode<T> targetNode, ModuleBuildContext context) {
     T arg = targetNode.getConstructorArg();
@@ -87,7 +65,8 @@ public class JavaLibraryRuleHelper {
    */
   public static <T extends JavaLibraryDescription.CoreArg> void addLanguageAggregationKeyIfNeeded(
       IjProjectConfig projectConfig, TargetNode<T> target, AggregationContext context) {
-    Optional<String> languageLevel = getLanguageLevel(projectConfig, target);
+    Optional<String> languageLevel =
+        JavaLanguageLevelHelper.getLanguageLevel(projectConfig, target);
     if (languageLevel.isPresent()) {
       context.addAggregationKey(AggregationKeys.JAVA_LANGUAGE_LEVEL, languageLevel);
     }

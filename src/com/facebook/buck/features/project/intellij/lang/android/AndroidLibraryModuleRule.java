@@ -18,6 +18,7 @@ package com.facebook.buck.features.project.intellij.lang.android;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.features.project.intellij.JavaLanguageLevelHelper;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
 import com.facebook.buck.features.project.intellij.lang.java.JavaLibraryRuleHelper;
@@ -59,7 +60,7 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
       context.addExtraModuleDependency(dummyRDotJavaClassPath.get());
     }
 
-    context.setJavaLanguageLevel(JavaLibraryRuleHelper.getLanguageLevel(projectConfig, target));
+    context.setJavaLanguageLevel(JavaLanguageLevelHelper.getLanguageLevel(projectConfig, target));
 
     IjModuleAndroidFacet.Builder builder = context.getOrCreateAndroidFacetBuilder();
     Optional<Path> manifestPath = moduleFactoryResolver.getLibraryAndroidManifestPath(target);

@@ -19,6 +19,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.project.intellij.BaseIjModuleRule;
+import com.facebook.buck.features.project.intellij.JavaLanguageLevelHelper;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
@@ -80,7 +81,7 @@ public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.Cor
     }
     addDepsAndTestSources(target, true /* wantsPackagePrefix */, context, resourcePaths);
     JavaLibraryRuleHelper.addCompiledShadowIfNeeded(projectConfig, target, context);
-    context.setJavaLanguageLevel(JavaLibraryRuleHelper.getLanguageLevel(projectConfig, target));
+    context.setJavaLanguageLevel(JavaLanguageLevelHelper.getLanguageLevel(projectConfig, target));
   }
 
   @Override
