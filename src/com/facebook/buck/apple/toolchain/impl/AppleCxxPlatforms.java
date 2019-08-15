@@ -565,7 +565,7 @@ public class AppleCxxPlatforms {
           .add(foundSwiftRuntimePath.get().toString());
     } else {
       if (platformName != "driverkit") {
-        LOG.error("Swift stdlib missing from: %s for platform: %s", toolchainPath, platformName);
+        LOG.info("Swift stdlib missing from: %s for platform: %s", toolchainPath, platformName);
       }
     }
   }
