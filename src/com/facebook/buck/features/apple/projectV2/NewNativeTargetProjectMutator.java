@@ -60,6 +60,7 @@ import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.features.js.JsBundleOutputs;
 import com.facebook.buck.features.js.JsBundleOutputsDescription;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -290,11 +291,11 @@ class NewNativeTargetProjectMutator {
 
     Optional<PBXGroup> optTargetGroup;
     if (addBuildPhases) {
-      PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(targetName);
+      PBXGroup targetGroup = project.getMainGroup();
 
       // Phases
       addRunScriptBuildPhases(target, preBuildRunScriptPhases);
-      addPhasesAndGroupsForSources(target, targetGroup);
+      addPhasesAndGroupsForSources(project, target);
       addFrameworksBuildPhase(project, target);
       addResourcesFileReference(targetGroup);
       addCopyResourcesToNonStdDestinationPhases(target, targetGroup);
@@ -323,15 +324,68 @@ class NewNativeTargetProjectMutator {
     return new Result(target, optTargetGroup);
   }
 
-  private void addPhasesAndGroupsForSources(PBXNativeTarget target, PBXGroup targetGroup) {
-    PBXGroup sourcesGroup = targetGroup.getOrCreateChildGroupByName("Sources");
-    // Sources groups stay in the order in which they're declared in the BUCK file.
-    sourcesGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
+  /// Helper class for returning metadata about a created PBXFileReference
+  /// Includes a reference to the PBXFileReference and the Source Tree Path
+  /// We probably won't need this long term as we kill off Xcode build phases
+  /// but for now, let's just use this since it's named and structured
+  private static class SourcePathPBXFileReferenceDestination {
+    private final PBXFileReference fileReference;
+    private final SourceTreePath sourceTreePath;
+
+    public SourcePathPBXFileReferenceDestination(
+        PBXFileReference fileReference, SourceTreePath sourceTreePath) {
+      this.fileReference = fileReference;
+      this.sourceTreePath = sourceTreePath;
+    }
+
+    public PBXFileReference getFileReference() {
+      return fileReference;
+    }
+
+    public SourceTreePath getSourceTreePath() {
+      return sourceTreePath;
+    }
+  }
+
+  /// Writes a source path to a PBXFileReference in the input project. This will
+  /// create the relative directory structure based on the path relativizer (cell root).
+  ///
+  /// Thus, if a file is absolutely located at: /Users/me/dev/MyProject/Header.h
+  /// And the cell is: /Users/me/dev/
+  /// Then this will create a path in the PBXProject mainGroup as: /MyProject/Header.h
+  private SourcePathPBXFileReferenceDestination writeSourcePathToProject(
+      PBXProject project, SourcePath sourcePath) {
+    Path path = sourcePathResolver.apply(sourcePath);
+
+    PBXGroup filePathGroup;
+    // This check exists for files located in the root (e.g. ./foo.m instead of ./MyLibrary/foo.m)
+    if (path.getParent() != null) {
+      ImmutableList<String> filePathComponentList =
+          RichStream.from(path.getParent()).map(Object::toString).toImmutableList();
+      filePathGroup =
+          project.getMainGroup().getOrCreateDescendantGroupByPath(filePathComponentList);
+    } else {
+      filePathGroup = project.getMainGroup();
+    }
+
+    SourceTreePath sourceTreePath =
+        new SourceTreePath(
+            PBXReference.SourceTree.SOURCE_ROOT,
+            pathRelativizer.outputPathToSourcePath(sourcePath),
+            Optional.empty());
+
+    PBXFileReference fileReference =
+        filePathGroup.getOrCreateFileReferenceBySourceTreePath(sourceTreePath);
+
+    return new SourcePathPBXFileReferenceDestination(fileReference, sourceTreePath);
+  }
+
+  private void addPhasesAndGroupsForSources(PBXProject project, PBXNativeTarget target) {
     PBXSourcesBuildPhase sourcesBuildPhase = new PBXSourcesBuildPhase();
     PBXHeadersBuildPhase headersBuildPhase = new PBXHeadersBuildPhase();
 
     traverseGroupsTreeAndHandleSources(
-        sourcesGroup,
+        project,
         sourcesBuildPhase,
         headersBuildPhase,
         RuleUtils.createGroupsFromSourcePaths(
@@ -343,42 +397,28 @@ class NewNativeTargetProjectMutator {
             privateHeaders));
 
     if (prefixHeader.isPresent()) {
-      SourceTreePath prefixHeaderSourceTreePath =
-          new SourceTreePath(
-              PBXReference.SourceTree.GROUP,
-              pathRelativizer.outputPathToSourcePath(prefixHeader.get()),
-              Optional.empty());
-      sourcesGroup.getOrCreateFileReferenceBySourceTreePath(prefixHeaderSourceTreePath);
+      writeSourcePathToProject(project, prefixHeader.get());
     }
 
     if (infoPlist.isPresent()) {
-      SourceTreePath infoPlistSourceTreePath =
-          new SourceTreePath(
-              PBXReference.SourceTree.GROUP,
-              pathRelativizer.outputPathToSourcePath(infoPlist.get()),
-              Optional.empty());
-      sourcesGroup.getOrCreateFileReferenceBySourceTreePath(infoPlistSourceTreePath);
+      writeSourcePathToProject(project, infoPlist.get());
     }
 
     if (bridgingHeader.isPresent()) {
-      SourceTreePath bridgingHeaderSourceTreePath =
-          new SourceTreePath(
-              PBXReference.SourceTree.GROUP,
-              pathRelativizer.outputPathToSourcePath(bridgingHeader.get()),
-              Optional.empty());
-      sourcesGroup.getOrCreateFileReferenceBySourceTreePath(bridgingHeaderSourceTreePath);
+      writeSourcePathToProject(project, bridgingHeader.get());
     }
 
     if (!sourcesBuildPhase.getFiles().isEmpty()) {
       target.getBuildPhases().add(sourcesBuildPhase);
     }
+
     if (!headersBuildPhase.getFiles().isEmpty()) {
       target.getBuildPhases().add(headersBuildPhase);
     }
   }
 
   private void traverseGroupsTreeAndHandleSources(
-      PBXGroup sourcesGroup,
+      PBXProject project,
       PBXSourcesBuildPhase sourcesBuildPhase,
       PBXHeadersBuildPhase headersBuildPhase,
       Iterable<GroupedSource> groupedSources) {
@@ -386,24 +426,30 @@ class NewNativeTargetProjectMutator {
         new GroupedSource.Visitor() {
           @Override
           public void visitSourceWithFlags(SourceWithFlags sourceWithFlags) {
-            addSourcePathToSourcesBuildPhase(sourceWithFlags, sourcesGroup, sourcesBuildPhase);
+            SourcePathPBXFileReferenceDestination fileReference =
+                writeSourcePathToProject(project, sourceWithFlags.getSourcePath());
+            addFileReferenceToSourcesBuildPhase(fileReference, sourceWithFlags, sourcesBuildPhase);
           }
 
           @Override
           public void visitIgnoredSource(SourcePath source) {
-            addSourcePathToSourceTree(source, sourcesGroup);
+            writeSourcePathToProject(project, source);
           }
 
           @Override
           public void visitPublicHeader(SourcePath publicHeader) {
-            addSourcePathToHeadersBuildPhase(
-                publicHeader, sourcesGroup, headersBuildPhase, HeaderVisibility.PUBLIC);
+            PBXFileReference fileReference =
+                writeSourcePathToProject(project, publicHeader).getFileReference();
+            addFileReferenceToHeadersBuildPhase(
+                fileReference, headersBuildPhase, HeaderVisibility.PUBLIC);
           }
 
           @Override
           public void visitPrivateHeader(SourcePath privateHeader) {
-            addSourcePathToHeadersBuildPhase(
-                privateHeader, sourcesGroup, headersBuildPhase, HeaderVisibility.PRIVATE);
+            PBXFileReference fileReference =
+                writeSourcePathToProject(project, privateHeader).getFileReference();
+            addFileReferenceToHeadersBuildPhase(
+                fileReference, headersBuildPhase, HeaderVisibility.PRIVATE);
           }
 
           @Override
@@ -411,13 +457,8 @@ class NewNativeTargetProjectMutator {
               String sourceGroupName,
               Path sourceGroupPathRelativeToTarget,
               List<GroupedSource> sourceGroup) {
-            PBXGroup newSourceGroup = sourcesGroup.getOrCreateChildGroupByName(sourceGroupName);
-            newSourceGroup.setSourceTree(PBXReference.SourceTree.SOURCE_ROOT);
-            newSourceGroup.setPath(sourceGroupPathRelativeToTarget.toString());
-            // Sources groups stay in the order in which they're in the GroupedSource.
-            newSourceGroup.setSortPolicy(PBXGroup.SortPolicy.UNSORTED);
             traverseGroupsTreeAndHandleSources(
-                newSourceGroup, sourcesBuildPhase, headersBuildPhase, sourceGroup);
+                project, sourcesBuildPhase, headersBuildPhase, sourceGroup);
           }
         };
     for (GroupedSource groupedSource : groupedSources) {
@@ -425,18 +466,12 @@ class NewNativeTargetProjectMutator {
     }
   }
 
-  private void addSourcePathToSourcesBuildPhase(
+  private void addFileReferenceToSourcesBuildPhase(
+      SourcePathPBXFileReferenceDestination sourcePathPBXfileReferenceDestination,
       SourceWithFlags sourceWithFlags,
-      PBXGroup sourcesGroup,
       PBXSourcesBuildPhase sourcesBuildPhase) {
-    SourceTreePath sourceTreePath =
-        new SourceTreePath(
-            PBXReference.SourceTree.SOURCE_ROOT,
-            pathRelativizer.outputDirToRootRelative(
-                sourcePathResolver.apply(sourceWithFlags.getSourcePath())),
-            Optional.empty());
-    PBXFileReference fileReference =
-        sourcesGroup.getOrCreateFileReferenceBySourceTreePath(sourceTreePath);
+    PBXFileReference fileReference = sourcePathPBXfileReferenceDestination.getFileReference();
+    SourceTreePath sourceTreePath = sourcePathPBXfileReferenceDestination.getSourceTreePath();
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
     sourcesBuildPhase.getFiles().add(buildFile);
 
@@ -456,29 +491,14 @@ class NewNativeTargetProjectMutator {
       buildFile.setSettings(Optional.of(settings));
     }
     LOG.verbose(
-        "Added source path %s to group %s, flags %s, PBXFileReference %s",
-        sourceWithFlags, sourcesGroup.getName(), customFlags, fileReference);
+        "Added source path %s to sources build phase, flags %s, PBXFileReference %s",
+        sourceWithFlags, customFlags, fileReference);
   }
 
-  private void addSourcePathToSourceTree(SourcePath sourcePath, PBXGroup sourcesGroup) {
-    sourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-        new SourceTreePath(
-            PBXReference.SourceTree.SOURCE_ROOT,
-            pathRelativizer.outputPathToSourcePath(sourcePath),
-            Optional.empty()));
-  }
-
-  private void addSourcePathToHeadersBuildPhase(
-      SourcePath headerPath,
-      PBXGroup headersGroup,
+  private void addFileReferenceToHeadersBuildPhase(
+      PBXFileReference fileReference,
       PBXHeadersBuildPhase headersBuildPhase,
       HeaderVisibility visibility) {
-    PBXFileReference fileReference =
-        headersGroup.getOrCreateFileReferenceBySourceTreePath(
-            new SourceTreePath(
-                PBXReference.SourceTree.SOURCE_ROOT,
-                pathRelativizer.outputPathToSourcePath(headerPath),
-                Optional.empty()));
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
     if (visibility != HeaderVisibility.PRIVATE) {
 

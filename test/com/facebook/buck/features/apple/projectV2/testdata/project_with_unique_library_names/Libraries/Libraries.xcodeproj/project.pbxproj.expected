@@ -11,6 +11,19 @@
 	<string>46</string>
 	<key>objects</key>
 	<dict>
+		<key>1DD70E29001F47FB00000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>name</key>
+			<string>BUCK</string>
+			<key>path</key>
+			<string>BUCK</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+			<key>explicitFileType</key>
+			<string>text.script.python</string>
+		</dict>
 		<key>1DD70E294C6E7E5300000000</key>
 		<dict>
 			<key>isa</key>
@@ -120,19 +133,6 @@
 				<string>B401C9792F7F325000000000</string>
 			</array>
 		</dict>
-		<key>1DD70E29001F47FB00000000</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>name</key>
-			<string>BUCK</string>
-			<key>path</key>
-			<string>BUCK</string>
-			<key>sourceTree</key>
-			<string>SOURCE_ROOT</string>
-			<key>explicitFileType</key>
-			<string>text.script.python</string>
-		</dict>
 		<key>1DD70E29B0678B7700000000</key>
 		<dict>
 			<key>isa</key>
@@ -145,46 +145,6 @@
 			<string>SOURCE_ROOT</string>
 			<key>lastKnownFileType</key>
 			<string>sourcecode.c.c</string>
-		</dict>
-		<key>B401C979EAB5339800000000</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>name</key>
-			<string>Sources</string>
-			<key>sourceTree</key>
-			<string><![CDATA[<group>]]></string>
-			<key>children</key>
-			<array>
-				<string>1DD70E29B0678B7700000000</string>
-			</array>
-		</dict>
-		<key>B401C9790020722200000000</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>name</key>
-			<string>Dep1</string>
-			<key>sourceTree</key>
-			<string><![CDATA[<group>]]></string>
-			<key>children</key>
-			<array>
-				<string>1DD70E29001F47FB00000000</string>
-				<string>B401C979EAB5339800000000</string>
-			</array>
-		</dict>
-		<key>1DD70E29001F47FB00000001</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXFileReference</string>
-			<key>name</key>
-			<string>BUCK</string>
-			<key>path</key>
-			<string>BUCK</string>
-			<key>sourceTree</key>
-			<string>SOURCE_ROOT</string>
-			<key>explicitFileType</key>
-			<string>text.script.python</string>
 		</dict>
 		<key>1DD70E29B0678F3800000000</key>
 		<dict>
@@ -199,31 +159,18 @@
 			<key>lastKnownFileType</key>
 			<string>sourcecode.c.c</string>
 		</dict>
-		<key>B401C979EAB5339800000001</key>
+		<key>B401C979A7E3D27900000000</key>
 		<dict>
 			<key>isa</key>
 			<string>PBXGroup</string>
 			<key>name</key>
-			<string>Sources</string>
+			<string>Libraries</string>
 			<key>sourceTree</key>
 			<string><![CDATA[<group>]]></string>
 			<key>children</key>
 			<array>
+				<string>1DD70E29B0678B7700000000</string>
 				<string>1DD70E29B0678F3800000000</string>
-			</array>
-		</dict>
-		<key>B401C9790020722300000000</key>
-		<dict>
-			<key>isa</key>
-			<string>PBXGroup</string>
-			<key>name</key>
-			<string>Dep2</string>
-			<key>sourceTree</key>
-			<string><![CDATA[<group>]]></string>
-			<key>children</key>
-			<array>
-				<string>1DD70E29001F47FB00000001</string>
-				<string>B401C979EAB5339800000001</string>
 			</array>
 		</dict>
 		<key>1DD70E291405A14500000000</key>
@@ -276,9 +223,9 @@
 			<string><![CDATA[<group>]]></string>
 			<key>children</key>
 			<array>
+				<string>1DD70E29001F47FB00000000</string>
 				<string>B401C979B781F65D00000000</string>
-				<string>B401C9790020722200000000</string>
-				<string>B401C9790020722300000000</string>
+				<string>B401C979A7E3D27900000000</string>
 				<string>B401C979C806358400000000</string>
 			</array>
 		</dict>

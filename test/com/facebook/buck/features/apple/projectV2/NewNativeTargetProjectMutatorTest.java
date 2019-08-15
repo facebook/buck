@@ -92,7 +92,7 @@ public class NewNativeTargetProjectMutatorTest {
   }
 
   @Test
-  public void shouldCreateTargetAndTargetGroup() throws NoSuchBuildTargetException {
+  public void shouldCreateTarget() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator =
         new NewNativeTargetProjectMutator(pathRelativizer, sourcePathResolver::getRelativePath);
     mutator
@@ -101,7 +101,6 @@ public class NewNativeTargetProjectMutatorTest {
         .buildTargetAndAddToProject(generatedProject, true);
 
     assertTargetExistsAndReturnTarget(generatedProject, "TestTarget");
-    assertHasTargetGroupWithName(generatedProject, "TestTarget");
   }
 
   @Test
@@ -133,18 +132,16 @@ public class NewNativeTargetProjectMutatorTest {
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject, true);
 
-    PBXGroup sourcesGroup = result.targetGroup.get().getOrCreateChildGroupByName("Sources");
+    PBXGroup sourcesGroup = result.targetGroup.get();
 
-    PBXGroup group1 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 0);
-    assertEquals("Group1", group1.getName());
+    PBXGroup group1 = assertHasSubgroupAndReturnIt(sourcesGroup, "Group1");
     assertThat(group1.getChildren(), hasSize(2));
     PBXFileReference fileRefBar = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
     assertEquals("bar.m", fileRefBar.getName());
     PBXFileReference fileRefFoo = (PBXFileReference) Iterables.get(group1.getChildren(), 1);
     assertEquals("foo.m", fileRefFoo.getName());
 
-    PBXGroup group2 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 1);
-    assertEquals("Group2", group2.getName());
+    PBXGroup group2 = assertHasSubgroupAndReturnIt(sourcesGroup, "Group2");
     assertThat(group2.getChildren(), hasSize(1));
     PBXFileReference fileRefBaz = (PBXFileReference) Iterables.get(group2.getChildren(), 0);
     assertEquals("baz.m", fileRefBaz.getName());
@@ -162,19 +159,16 @@ public class NewNativeTargetProjectMutatorTest {
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject, true);
 
-    PBXGroup sourcesGroup = result.targetGroup.get().getOrCreateChildGroupByName("Sources");
+    PBXGroup sourcesGroup = result.targetGroup.get();
 
-    assertThat(sourcesGroup.getChildren(), hasSize(2));
-
-    PBXGroup group1 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 0);
-    assertEquals("HeaderGroup1", group1.getName());
+    PBXGroup group1 = assertHasSubgroupAndReturnIt(sourcesGroup, "HeaderGroup1");
     assertThat(group1.getChildren(), hasSize(2));
     PBXFileReference fileRefBar = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
     assertEquals("bar.h", fileRefBar.getName());
     PBXFileReference fileRefFoo = (PBXFileReference) Iterables.get(group1.getChildren(), 1);
     assertEquals("foo.h", fileRefFoo.getName());
 
-    PBXGroup group2 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 1);
+    PBXGroup group2 = assertHasSubgroupAndReturnIt(sourcesGroup, "HeaderGroup2");
     assertEquals("HeaderGroup2", group2.getName());
     assertThat(group2.getChildren(), hasSize(1));
     PBXFileReference fileRefBaz = (PBXFileReference) Iterables.get(group2.getChildren(), 0);
@@ -182,7 +176,7 @@ public class NewNativeTargetProjectMutatorTest {
   }
 
   @Test
-  public void testPrefixHeaderInSourceGroup() throws NoSuchBuildTargetException {
+  public void testPrefixHeaderInCorrectGroup() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
     SourcePath prefixHeader = FakeSourcePath.of("Group1/prefix.pch");
     mutator.setPrefixHeader(Optional.of(prefixHeader));
@@ -190,11 +184,8 @@ public class NewNativeTargetProjectMutatorTest {
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject, true);
 
-    // No matter where the prefixHeader file is it should always be directly inside Sources
-    PBXGroup sourcesGroup = result.targetGroup.get().getOrCreateChildGroupByName("Sources");
-
-    assertThat(sourcesGroup.getChildren(), hasSize(1));
-    PBXFileReference fileRef = (PBXFileReference) Iterables.get(sourcesGroup.getChildren(), 0);
+    PBXGroup group1 = assertHasSubgroupAndReturnIt(result.targetGroup.get(), "Group1");
+    PBXFileReference fileRef = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
     assertEquals("prefix.pch", fileRef.getName());
   }
 

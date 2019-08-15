@@ -260,14 +260,9 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    PBXGroup bundleGroup =
-        project.getMainGroup().getOrCreateChildGroupByName(bundleTarget.getFullyQualifiedName());
-    PBXGroup sourcesGroup = bundleGroup.getOrCreateChildGroupByName("Sources");
-
-    assertThat(bundleGroup.getChildren(), hasSize(2));
 
     Iterable<String> childNames =
-        Iterables.transform(sourcesGroup.getChildren(), PBXReference::getName);
+        Iterables.transform(project.getMainGroup().getChildren(), PBXReference::getName);
     assertThat(childNames, hasItem("Info.plist"));
   }
 
@@ -586,14 +581,9 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    PBXGroup bundleGroup =
-        project.getMainGroup().getOrCreateChildGroupByName(bundleTarget.getFullyQualifiedName());
-    PBXGroup sourcesGroup = bundleGroup.getOrCreateChildGroupByName("Sources");
-
-    assertThat(bundleGroup.getChildren(), hasSize(2));
 
     Iterable<String> childNames =
-        Iterables.transform(sourcesGroup.getChildren(), PBXReference::getName);
+        Iterables.transform(project.getMainGroup().getChildren(), PBXReference::getName);
     assertThat(childNames, hasItem("Info.plist"));
 
     PBXGroup otherGroup =
@@ -636,15 +626,12 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    PBXGroup bundleGroup =
-        project.getMainGroup().getOrCreateChildGroupByName(libraryTarget.getFullyQualifiedName());
-    PBXGroup sourcesGroup = bundleGroup.getOrCreateChildGroupByName("Sources");
 
     Iterable<String> childNames =
-        Iterables.transform(sourcesGroup.getChildren(), PBXReference::getName);
+        Iterables.transform(project.getMainGroup().getChildren(), PBXReference::getName);
     assertThat(childNames, hasItem("bar.json"));
 
-    PBXGroup fooGroup = sourcesGroup.getOrCreateChildGroupByName("foo");
+    PBXGroup fooGroup = project.getMainGroup().getOrCreateChildGroupByName("foo");
     childNames = Iterables.transform(fooGroup.getChildren(), PBXReference::getName);
     assertThat(childNames, hasItem("foo.json"));
 
@@ -678,15 +665,12 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    PBXGroup bundleGroup =
-        project.getMainGroup().getOrCreateChildGroupByName(libraryTarget.getFullyQualifiedName());
-    PBXGroup sourcesGroup = bundleGroup.getOrCreateChildGroupByName("Sources");
 
     Iterable<String> childNames =
-        Iterables.transform(sourcesGroup.getChildren(), PBXReference::getName);
+        Iterables.transform(project.getMainGroup().getChildren(), PBXReference::getName);
     assertThat(childNames, hasItem("bar.m"));
 
-    PBXGroup fooGroup = sourcesGroup.getOrCreateChildGroupByName("foo");
+    PBXGroup fooGroup = project.getMainGroup().getOrCreateChildGroupByName("foo");
     childNames = Iterables.transform(fooGroup.getChildren(), PBXReference::getName);
     assertThat(childNames, hasItem("foo.m"));
 
@@ -1088,14 +1072,8 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    PBXGroup targetGroup =
-        project.getMainGroup().getOrCreateChildGroupByName(buildTarget.getFullyQualifiedName());
-    PBXGroup sourcesGroup = targetGroup.getOrCreateChildGroupByName("Sources");
 
-    assertThat(sourcesGroup.getChildren(), hasSize(2));
-
-    PBXGroup group1 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 0);
-    assertEquals("HeaderGroup1", group1.getName());
+    PBXGroup group1 = project.getMainGroup().getOrCreateChildGroupByName("HeaderGroup1");
     assertThat(group1.getChildren(), hasSize(4));
     PBXFileReference fileRefFoo = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
     assertEquals("bar.h", fileRefFoo.getName());
@@ -1106,7 +1084,7 @@ public class ProjectGeneratorTest {
     PBXFileReference fileRefFoo2 = (PBXFileReference) Iterables.get(group1.getChildren(), 3);
     assertEquals("foo2.h", fileRefFoo2.getName());
 
-    PBXGroup group2 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 1);
+    PBXGroup group2 = project.getMainGroup().getOrCreateChildGroupByName("HeaderGroup2");
     assertEquals("HeaderGroup2", group2.getName());
     assertThat(group2.getChildren(), hasSize(2));
     PBXFileReference fileRefBaz = (PBXFileReference) Iterables.get(group2.getChildren(), 0);
@@ -1216,14 +1194,8 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    PBXGroup targetGroup =
-        project.getMainGroup().getOrCreateChildGroupByName(buildTarget.getFullyQualifiedName());
-    PBXGroup sourcesGroup = targetGroup.getOrCreateChildGroupByName("Sources");
 
-    assertThat(sourcesGroup.getChildren(), hasSize(3));
-
-    PBXGroup group1 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 0);
-    assertEquals("HeaderGroup1", group1.getName());
+    PBXGroup group1 = project.getMainGroup().getOrCreateChildGroupByName("HeaderGroup1");
     assertThat(group1.getChildren(), hasSize(3));
     PBXFileReference fileRefFoo = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
     assertEquals("bar.h", fileRefFoo.getName());
@@ -1232,16 +1204,14 @@ public class ProjectGeneratorTest {
     PBXFileReference fileRefBar = (PBXFileReference) Iterables.get(group1.getChildren(), 1);
     assertEquals("foo.h", fileRefBar.getName());
 
-    PBXGroup group2 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 1);
-    assertEquals("HeaderGroup2", group2.getName());
+    PBXGroup group2 = project.getMainGroup().getOrCreateChildGroupByName("HeaderGroup2");
     assertThat(group2.getChildren(), hasSize(2));
     PBXFileReference fileRefBaz = (PBXFileReference) Iterables.get(group2.getChildren(), 0);
     assertEquals("baz.h", fileRefBaz.getName());
     PBXFileReference fileRefFoo2 = (PBXFileReference) Iterables.get(group2.getChildren(), 1);
     assertEquals("foo2.h", fileRefFoo2.getName());
 
-    PBXGroup group3 = (PBXGroup) Iterables.get(sourcesGroup.getChildren(), 2);
-    assertEquals("foo", group3.getName());
+    PBXGroup group3 = project.getMainGroup().getOrCreateChildGroupByName("foo");
     assertThat(group3.getChildren(), hasSize(2));
     PBXFileReference fileRefGenerated1 = (PBXFileReference) Iterables.get(group3.getChildren(), 0);
     assertEquals("generated1.h", fileRefGenerated1.getName());
@@ -3958,9 +3928,7 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    PBXGroup targetGroup =
-        project.getMainGroup().getOrCreateChildGroupByName(bundleTarget.getFullyQualifiedName());
-    PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
+    PBXGroup resourcesGroup = project.getMainGroup().getOrCreateChildGroupByName("Resources");
     PBXVariantGroup storyboardGroup =
         (PBXVariantGroup) Iterables.get(resourcesGroup.getChildren(), 0);
     List<PBXReference> storyboardGroupChildren = storyboardGroup.getChildren();
@@ -4054,9 +4022,7 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    PBXGroup targetGroup =
-        project.getMainGroup().getOrCreateChildGroupByName(libraryTarget.getFullyQualifiedName());
-    PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
+    PBXGroup resourcesGroup = project.getMainGroup().getOrCreateChildGroupByName("Resources");
 
     assertThat(resourcesGroup.getChildren(), hasSize(1));
 
@@ -4109,13 +4075,10 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    PBXGroup targetGroup =
-        project.getMainGroup().getOrCreateChildGroupByName(bundleTarget.getFullyQualifiedName());
 
-    assertThat(targetGroup.getChildren(), hasSize(3));
-
-    PBXFileReference ruleReference = (PBXFileReference) Iterables.get(targetGroup.getChildren(), 2);
-    assertEquals("foo.plist", ruleReference.getName());
+    Iterable<String> childNames =
+        Iterables.transform(project.getMainGroup().getChildren(), PBXReference::getName);
+    assertThat(childNames, hasItem("foo.plist"));
   }
 
   @Test
@@ -5423,8 +5386,7 @@ public class ProjectGeneratorTest {
         FluentIterable.from(fooLibTarget.getBuildPhases())
             .filter(PBXResourcesBuildPhase.class)
             .isEmpty());
-    PBXGroup libResourcesGroup =
-        mainGroup.getOrCreateChildGroupByName("lib").getOrCreateChildGroupByName("Resources");
+    PBXGroup libResourcesGroup = mainGroup.getOrCreateChildGroupByName("Resources");
     PBXFileReference assetCatalogFile = (PBXFileReference) libResourcesGroup.getChildren().get(0);
     assertEquals("AssetCatalog.xcassets", assetCatalogFile.getName());
 
@@ -5436,8 +5398,7 @@ public class ProjectGeneratorTest {
     assertThat(
         assertFileRefIsRelativeAndResolvePath(resourcesBuildPhase.getFiles().get(0).getFileRef()),
         equalTo(projectFilesystem.resolve("AssetCatalog.xcassets").toString()));
-    PBXGroup testResourcesGroup =
-        mainGroup.getOrCreateChildGroupByName("test").getOrCreateChildGroupByName("Resources");
+    PBXGroup testResourcesGroup = mainGroup.getOrCreateChildGroupByName("Resources");
     assetCatalogFile = (PBXFileReference) testResourcesGroup.getChildren().get(0);
     assertEquals("AssetCatalog.xcassets", assetCatalogFile.getName());
   }
@@ -5468,7 +5429,7 @@ public class ProjectGeneratorTest {
     PBXGroup mainGroup = project.getMainGroup();
 
     PBXGroup resourcesGroup =
-        mainGroup.getOrCreateDescendantGroupByPath(ImmutableList.of("//foo:lib", "Resources"));
+        mainGroup.getOrCreateDescendantGroupByPath(ImmutableList.of("Resources"));
     PBXFileReference resource = (PBXFileReference) Iterables.get(resourcesGroup.getChildren(), 0);
     assertThat(resource.getName(), equalTo("file"));
   }
@@ -5499,7 +5460,7 @@ public class ProjectGeneratorTest {
     PBXGroup mainGroup = project.getMainGroup();
 
     PBXGroup resourcesGroup =
-        mainGroup.getOrCreateDescendantGroupByPath(ImmutableList.of("//foo:lib", "Resources"));
+        mainGroup.getOrCreateDescendantGroupByPath(ImmutableList.of("Resources"));
     PBXFileReference resource = (PBXFileReference) Iterables.get(resourcesGroup.getChildren(), 0);
     assertThat(resource.getName(), equalTo("dir"));
     assertThat(resource.getExplicitFileType(), equalTo(Optional.of("folder")));
@@ -5532,7 +5493,7 @@ public class ProjectGeneratorTest {
     PBXGroup mainGroup = project.getMainGroup();
 
     PBXGroup resourcesGroup =
-        mainGroup.getOrCreateDescendantGroupByPath(ImmutableList.of("//foo:lib", "Resources"));
+        mainGroup.getOrCreateDescendantGroupByPath(ImmutableList.of("Resources"));
     PBXFileReference resource = (PBXFileReference) Iterables.get(resourcesGroup.getChildren(), 0);
     assertThat(resource.getName(), equalTo("dir.iconset"));
     assertThat(resource.getExplicitFileType(), not(equalTo(Optional.of("folder"))));
@@ -5854,14 +5815,10 @@ public class ProjectGeneratorTest {
 
     // check if bridging header file existing in the project structure
     PBXProject project = projectGenerator.getGeneratedProject();
-    PBXGroup targetGroup =
-        project.getMainGroup().getOrCreateChildGroupByName(buildTarget.getFullyQualifiedName());
-    PBXGroup sourcesGroup = targetGroup.getOrCreateChildGroupByName("Sources");
-
-    assertThat(sourcesGroup.getChildren(), hasSize(1));
+    PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName("BridgingHeader");
 
     PBXFileReference fileRefBridgingHeader =
-        (PBXFileReference) Iterables.get(sourcesGroup.getChildren(), 0);
+        (PBXFileReference) Iterables.get(targetGroup.getChildren(), 0);
     assertEquals("header1.h", fileRefBridgingHeader.getName());
 
     // check for bridging header build setting
