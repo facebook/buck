@@ -266,6 +266,23 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testProjectStructureWithBuildFileName() throws IOException {
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo/myLib", "lib");
+    TargetNode<?> libraryNode =
+        AppleLibraryBuilder.createBuilder(libraryTarget)
+            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo.h")))
+            .build();
+
+    ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(libraryNode));
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup fooGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(project.getMainGroup(), "foo");
+    PBXGroup myLibGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(fooGroup, "myLib");
+    PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(myLibGroup, "BUCK");
+  }
+
+  @Test
   public void testProjectWithSharedBundleDep() throws IOException {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
     BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "sharedFramework");
@@ -1211,11 +1228,8 @@ public class ProjectGeneratorTest {
     assertEquals("foo2.h", fileRefFoo2.getName());
 
     PBXGroup group3 = project.getMainGroup().getOrCreateChildGroupByName("foo");
-    assertThat(group3.getChildren(), hasSize(2));
-    PBXFileReference fileRefGenerated1 = (PBXFileReference) Iterables.get(group3.getChildren(), 0);
-    assertEquals("generated1.h", fileRefGenerated1.getName());
-    PBXFileReference fileRefGenerated2 = (PBXFileReference) Iterables.get(group3.getChildren(), 1);
-    assertEquals("generated2.h", fileRefGenerated2.getName());
+    PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(group3, "generated1.h");
+    PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(group3, "generated2.h");
 
     // There should be no PBXHeadersBuildPhase in the 'Buck header map mode'.
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
@@ -5418,8 +5432,7 @@ public class ProjectGeneratorTest {
     PBXGroup mainGroup = project.getMainGroup();
 
     PBXGroup resourcesGroup = mainGroup.getOrCreateDescendantGroupByPath(ImmutableList.of("foo"));
-    PBXFileReference resource = (PBXFileReference) Iterables.get(resourcesGroup.getChildren(), 0);
-    assertThat(resource.getName(), equalTo("file"));
+    PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(resourcesGroup, "file");
   }
 
   @Test
@@ -5448,8 +5461,8 @@ public class ProjectGeneratorTest {
     PBXGroup mainGroup = project.getMainGroup();
 
     PBXGroup resourcesGroup = mainGroup.getOrCreateDescendantGroupByPath(ImmutableList.of("foo"));
-    PBXFileReference resource = (PBXFileReference) Iterables.get(resourcesGroup.getChildren(), 0);
-    assertThat(resource.getName(), equalTo("dir"));
+    PBXFileReference resource =
+        PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(resourcesGroup, "dir");
     assertThat(resource.getExplicitFileType(), equalTo(Optional.of("folder")));
   }
 
@@ -5480,8 +5493,8 @@ public class ProjectGeneratorTest {
     PBXGroup mainGroup = project.getMainGroup();
 
     PBXGroup resourcesGroup = mainGroup.getOrCreateDescendantGroupByPath(ImmutableList.of("foo"));
-    PBXFileReference resource = (PBXFileReference) Iterables.get(resourcesGroup.getChildren(), 0);
-    assertThat(resource.getName(), equalTo("dir.iconset"));
+    PBXFileReference resource =
+        PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(resourcesGroup, "dir.iconset");
     assertThat(resource.getExplicitFileType(), not(equalTo(Optional.of("folder"))));
   }
 

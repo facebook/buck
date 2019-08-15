@@ -119,6 +119,7 @@ class NewNativeTargetProjectMutator {
   private Optional<SourcePath> prefixHeader = Optional.empty();
   private Optional<SourcePath> infoPlist = Optional.empty();
   private Optional<SourcePath> bridgingHeader = Optional.empty();
+  private Optional<Path> buckFilePath = Optional.empty();
   private ImmutableSet<FrameworkPath> frameworks = ImmutableSet.of();
   private ImmutableSet<PBXFileReference> archives = ImmutableSet.of();
   private ImmutableSet<AppleResourceDescriptionArg> recursiveResources = ImmutableSet.of();
@@ -263,6 +264,11 @@ class NewNativeTargetProjectMutator {
       Iterable<TargetNode<?>> nodes,
       Function<? super TargetNode<?>, BuildRuleResolver> buildRuleResolverForNode) {
     postBuildRunScriptPhases = createScriptsForTargetNodes(nodes, buildRuleResolverForNode);
+    return this;
+  }
+
+  public NewNativeTargetProjectMutator setBuckFilePath(Optional<Path> buckFilePath) {
+    this.buckFilePath = buckFilePath;
     return this;
   }
 
@@ -416,6 +422,12 @@ class NewNativeTargetProjectMutator {
 
     if (bridgingHeader.isPresent()) {
       writeSourcePathToProject(project, bridgingHeader.get());
+    }
+
+    if (buckFilePath.isPresent()) {
+      PBXFileReference buckFileReference =
+          writeFilePathToProject(project, buckFilePath.get(), Optional.empty()).getFileReference();
+      buckFileReference.setExplicitFileType(Optional.of("text.script.python"));
     }
 
     if (!sourcesBuildPhase.getFiles().isEmpty()) {

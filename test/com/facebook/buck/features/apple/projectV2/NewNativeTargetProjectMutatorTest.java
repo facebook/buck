@@ -25,12 +25,9 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
-import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
@@ -63,7 +60,6 @@ import com.facebook.buck.features.js.JsTestScenario;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -134,14 +130,14 @@ public class NewNativeTargetProjectMutatorTest {
 
     PBXGroup sourcesGroup = result.targetGroup.get();
 
-    PBXGroup group1 = assertHasSubgroupAndReturnIt(sourcesGroup, "Group1");
+    PBXGroup group1 = PBXTestUtils.assertHasSubgroupAndReturnIt(sourcesGroup, "Group1");
     assertThat(group1.getChildren(), hasSize(2));
     PBXFileReference fileRefBar = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
     assertEquals("bar.m", fileRefBar.getName());
     PBXFileReference fileRefFoo = (PBXFileReference) Iterables.get(group1.getChildren(), 1);
     assertEquals("foo.m", fileRefFoo.getName());
 
-    PBXGroup group2 = assertHasSubgroupAndReturnIt(sourcesGroup, "Group2");
+    PBXGroup group2 = PBXTestUtils.assertHasSubgroupAndReturnIt(sourcesGroup, "Group2");
     assertThat(group2.getChildren(), hasSize(1));
     PBXFileReference fileRefBaz = (PBXFileReference) Iterables.get(group2.getChildren(), 0);
     assertEquals("baz.m", fileRefBaz.getName());
@@ -161,14 +157,14 @@ public class NewNativeTargetProjectMutatorTest {
 
     PBXGroup sourcesGroup = result.targetGroup.get();
 
-    PBXGroup group1 = assertHasSubgroupAndReturnIt(sourcesGroup, "HeaderGroup1");
+    PBXGroup group1 = PBXTestUtils.assertHasSubgroupAndReturnIt(sourcesGroup, "HeaderGroup1");
     assertThat(group1.getChildren(), hasSize(2));
     PBXFileReference fileRefBar = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
     assertEquals("bar.h", fileRefBar.getName());
     PBXFileReference fileRefFoo = (PBXFileReference) Iterables.get(group1.getChildren(), 1);
     assertEquals("foo.h", fileRefFoo.getName());
 
-    PBXGroup group2 = assertHasSubgroupAndReturnIt(sourcesGroup, "HeaderGroup2");
+    PBXGroup group2 = PBXTestUtils.assertHasSubgroupAndReturnIt(sourcesGroup, "HeaderGroup2");
     assertEquals("HeaderGroup2", group2.getName());
     assertThat(group2.getChildren(), hasSize(1));
     PBXFileReference fileRefBaz = (PBXFileReference) Iterables.get(group2.getChildren(), 0);
@@ -184,9 +180,23 @@ public class NewNativeTargetProjectMutatorTest {
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject, true);
 
-    PBXGroup group1 = assertHasSubgroupAndReturnIt(result.targetGroup.get(), "Group1");
+    PBXGroup group1 = PBXTestUtils.assertHasSubgroupAndReturnIt(result.targetGroup.get(), "Group1");
     PBXFileReference fileRef = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
     assertEquals("prefix.pch", fileRef.getName());
+  }
+
+  @Test
+  public void testBuckFileAddedInCorrectGroup() throws NoSuchBuildTargetException {
+    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
+    mutator.setBuckFilePath(Optional.of(Paths.get("MyApp/MyLib/BUCK")));
+
+    NewNativeTargetProjectMutator.Result result =
+        mutator.buildTargetAndAddToProject(generatedProject, true);
+    PBXGroup myAppGroup =
+        PBXTestUtils.assertHasSubgroupAndReturnIt(result.targetGroup.get(), "MyApp");
+    PBXGroup filesGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(myAppGroup, "MyLib");
+    PBXFileReference buckFileReference = PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(filesGroup, "BUCK");
+    assertEquals(buckFileReference.getExplicitFileType(), Optional.of("text.script.python"));
   }
 
   @Test
@@ -424,25 +434,5 @@ public class NewNativeTargetProjectMutatorTest {
         .setProduct(
             ProductTypes.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"));
     return mutator;
-  }
-
-  private static void assertHasTargetGroupWithName(PBXProject project, String name) {
-    assertThat(
-        "Should contain a target group named: " + name,
-        Iterables.filter(
-            project.getMainGroup().getChildren(), input -> input.getName().equals(name)),
-        not(emptyIterable()));
-  }
-
-  private static PBXGroup assertHasSubgroupAndReturnIt(PBXGroup group, String subgroupName) {
-    ImmutableList<PBXGroup> candidates =
-        FluentIterable.from(group.getChildren())
-            .filter(input -> input.getName().equals(subgroupName))
-            .filter(PBXGroup.class)
-            .toList();
-    if (candidates.size() != 1) {
-      fail("Could not find a unique subgroup by its name");
-    }
-    return candidates.get(0);
   }
 }

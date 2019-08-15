@@ -1534,6 +1534,11 @@ public class ProjectGenerator {
       }
     }
 
+    if (!options.shouldGenerateHeaderSymlinkTreesOnly() && isFocusedOnTarget) {
+      Path buckFilePath = buildTarget.getBasePath().resolve(buildFileName);
+      mutator.setBuckFilePath(Optional.of(buckFilePath));
+    }
+
     NewNativeTargetProjectMutator.Result targetBuilderResult =
         mutator.buildTargetAndAddToProject(project, isFocusedOnTarget);
     PBXNativeTarget target = targetBuilderResult.target;
@@ -1556,17 +1561,6 @@ public class ProjectGenerator {
     }
 
     if (!options.shouldGenerateHeaderSymlinkTreesOnly()) {
-      if (isFocusedOnTarget) {
-        SourceTreePath buckFilePath =
-            new SourceTreePath(
-                PBXReference.SourceTree.SOURCE_ROOT,
-                pathRelativizer.outputPathToBuildTargetPath(buildTarget).resolve(buildFileName),
-                Optional.empty());
-        PBXFileReference buckReference =
-            targetGroup.get().getOrCreateFileReferenceBySourceTreePath(buckFilePath);
-        buckReference.setExplicitFileType(Optional.of("text.script.python"));
-      }
-
       // Watch dependencies need to have explicit target dependencies setup in order for Xcode to
       // build them properly within the IDE.  It is unable to match the implicit dependency because
       // of the different in flavor between the targets (iphoneos vs watchos).
