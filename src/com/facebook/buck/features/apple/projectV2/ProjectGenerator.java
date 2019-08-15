@@ -242,16 +242,14 @@ public class ProjectGenerator {
               PosixFilePermission.GROUP_READ,
               PosixFilePermission.OTHERS_READ));
 
+  private final XcodeProjectWriteOptions xcodeProjectWriteOptions;
   private final XCodeDescriptions xcodeDescriptions;
   private final TargetGraph targetGraph;
   private final AppleDependenciesCache dependenciesCache;
   private final ProjectGenerationStateCache projGenerationStateCache;
   private final Cell projectCell;
   private final ProjectFilesystem projectFilesystem;
-  private final Path outputDirectory;
-  private final String projectName;
   private final ImmutableSet<BuildTarget> initialTargets;
-  private final Path projectPath;
   private final PathRelativizer pathRelativizer;
 
   private final String buildFileName;
@@ -259,7 +257,6 @@ public class ProjectGenerator {
   private final CxxPlatform defaultCxxPlatform;
 
   // These fields are created/filled when creating the projects.
-  private final PBXProject project;
   private final LoadingCache<TargetNode<?>, Optional<PBXTarget>> targetNodeToProjectTarget;
   private final ImmutableMultimap.Builder<TargetNode<?>, PBXTarget>
       targetNodeToGeneratedProjectTargetBuilder;
@@ -308,9 +305,8 @@ public class ProjectGenerator {
       ProjectGenerationStateCache projGenerationStateCache,
       Set<BuildTarget> initialTargets,
       Cell cell,
-      Path outputDirectory,
-      String projectName,
       String buildFileName,
+      XcodeProjectWriteOptions xcodeProjectWriteOptions,
       ProjectGeneratorOptions options,
       RuleKeyConfiguration ruleKeyConfiguration,
       boolean isMainProject,
@@ -326,6 +322,7 @@ public class ProjectGenerator {
       AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig,
       Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle) {
+    this.xcodeProjectWriteOptions = xcodeProjectWriteOptions;
     this.xcodeDescriptions = xcodeDescriptions;
     this.targetGraph = targetGraph;
     this.dependenciesCache = dependenciesCache;
@@ -333,8 +330,6 @@ public class ProjectGenerator {
     this.initialTargets = ImmutableSet.copyOf(initialTargets);
     this.projectCell = cell;
     this.projectFilesystem = cell.getFilesystem();
-    this.outputDirectory = outputDirectory;
-    this.projectName = projectName;
     this.buildFileName = buildFileName;
     this.options = options;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
@@ -365,17 +360,16 @@ public class ProjectGenerator {
         };
     this.buckEventBus = buckEventBus;
 
-    this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
-    this.pathRelativizer = new PathRelativizer(outputDirectory, this::resolveSourcePath);
+    this.pathRelativizer =
+        new PathRelativizer(xcodeProjectWriteOptions.sourceRoot(), this::resolveSourcePath);
     this.sharedLibraryToBundle = sharedLibraryToBundle;
 
     LOG.debug(
         "Output directory %s, profile fs root path %s, repo root relative to output dir %s",
-        this.outputDirectory,
+        xcodeProjectWriteOptions.sourceRoot(),
         projectFilesystem.getRootPath(),
         this.pathRelativizer.outputDirToRootRelative(Paths.get(".")));
 
-    this.project = new PBXProject(projectName);
     this.headerSymlinkTrees = new ArrayList<>();
 
     this.targetNodeToGeneratedProjectTargetBuilder = ImmutableMultimap.builder();
@@ -402,7 +396,7 @@ public class ProjectGenerator {
 
   @VisibleForTesting
   PBXProject getGeneratedProject() {
-    return project;
+    return xcodeProjectWriteOptions.project();
   }
 
   @VisibleForTesting
@@ -410,8 +404,8 @@ public class ProjectGenerator {
     return headerSymlinkTrees;
   }
 
-  public Path getProjectPath() {
-    return projectPath;
+  public Path getXcodeProjPath() {
+    return xcodeProjectWriteOptions.xcodeProjPath();
   }
 
   private boolean shouldMergeHeaderMaps() {
@@ -476,7 +470,7 @@ public class ProjectGenerator {
         SimplePerfEvent.scope(
             buckEventBus,
             PerfEventId.of("xcode_project_generation"),
-            ImmutableMap.of("Path", getProjectPath()))) {
+            ImmutableMap.of("Path", getXcodeProjPath()))) {
 
       // Filter out nodes that aren't included in project.
       ImmutableSet.Builder<TargetNode<?>> projectTargetsBuilder = ImmutableSet.builder();
@@ -521,6 +515,7 @@ public class ProjectGenerator {
         createMergedHeaderMap();
       }
 
+      PBXProject project = xcodeProjectWriteOptions.project();
       for (String configName : targetConfigNamesBuilder.build()) {
         XCBuildConfiguration outputConfig =
             project
@@ -553,7 +548,7 @@ public class ProjectGenerator {
   /** Add all source files of genrules in a group "Other". */
   private void addGenruleFiles() {
     ImmutableSet<SourcePath> filesAdded = filesAddedBuilder.build();
-    PBXGroup group = project.getMainGroup();
+    PBXGroup group = xcodeProjectWriteOptions.project().getMainGroup();
     ImmutableList<SourcePath> files = genruleFiles.build();
     if (files.size() > 0) {
       PBXGroup otherGroup = group.getOrCreateChildGroupByName("Other");
@@ -599,6 +594,7 @@ public class ProjectGenerator {
     }
     generatedTargets.add(targetWithoutSpecificFlavors);
 
+    PBXProject project = xcodeProjectWriteOptions.project();
     Optional<PBXTarget> result = Optional.empty();
     if (targetNode.getDescription() instanceof AppleLibraryDescription) {
       result =
@@ -764,7 +760,8 @@ public class ProjectGenerator {
                             testHostBundleTarget, testHostBundleNode.getDescription().getClass());
                       });
             });
-    return generateAppleBundleTarget(project, testTargetNode, testTargetNode, testHostBundle);
+    return generateAppleBundleTarget(
+        xcodeProjectWriteOptions.project(), testTargetNode, testTargetNode, testHostBundle);
   }
 
   private Optional<BuildTarget> extractTestTargetForTestDescriptionArg(
@@ -1358,7 +1355,7 @@ public class ProjectGenerator {
             appleCxxFlavors,
             platformSources,
             platformHeadersIterable,
-            outputDirectory,
+            xcodeProjectWriteOptions.sourceRoot(),
             defaultPathResolver);
     for (Map.Entry<String, ImmutableSortedSet<String>> platformExcludedSources :
         platformExcludedSourcesMapping.entrySet()) {
@@ -2352,6 +2349,7 @@ public class ProjectGenerator {
       return;
     }
 
+    PBXProject project = xcodeProjectWriteOptions.project();
     targetNodeToProjectTarget
         .getUnchecked(targetGraph.get(dependency))
         .ifPresent(
@@ -3423,9 +3421,8 @@ public class ProjectGenerator {
   private void writeProjectFile(PBXProject project) throws IOException {
     XcodeprojSerializer serializer = new XcodeprojSerializer(gidGenerator, project);
     NSDictionary rootObject = serializer.toPlist();
-    Path xcodeprojDir = outputDirectory.resolve(projectName + ".xcodeproj");
-    projectFilesystem.mkdirs(xcodeprojDir);
-    Path serializedProject = xcodeprojDir.resolve("project.pbxproj");
+    projectFilesystem.mkdirs(xcodeProjectWriteOptions.xcodeProjPath());
+    Path serializedProject = xcodeProjectWriteOptions.projectFilePath();
     String contentsToWrite = rootObject.toXMLPropertyList();
     // Before we write any files, check if the file contents have changed.
     if (MoreProjectFilesystems.fileContentsDiffer(
@@ -3544,7 +3541,7 @@ public class ProjectGenerator {
     if (options.shouldUseAbsoluteHeaderMapPaths()) {
       return treeRoot;
     } else {
-      return projectFilesystem.resolve(outputDirectory).relativize(treeRoot);
+      return projectFilesystem.resolve(xcodeProjectWriteOptions.sourceRoot()).relativize(treeRoot);
     }
   }
 
@@ -3696,7 +3693,7 @@ public class ProjectGenerator {
               builder.add(
                   targetNode
                       .getFilesystem()
-                      .resolve(outputDirectory)
+                      .resolve(xcodeProjectWriteOptions.sourceRoot())
                       .relativize(
                           nativeNode
                               .getFilesystem()
@@ -4522,6 +4519,7 @@ public class ProjectGenerator {
     // File references set as a productReference don't work with custom paths.
     SourceTreePath productsPath = getProductsSourceTreePath(targetNode);
 
+    PBXProject project = xcodeProjectWriteOptions.project();
     if (isWatchApplicationNode(targetNode)) {
       return project
           .getMainGroup()

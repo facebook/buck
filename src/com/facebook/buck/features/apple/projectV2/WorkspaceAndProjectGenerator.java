@@ -512,6 +512,9 @@ public class WorkspaceAndProjectGenerator {
           projectName = projectDirectoryName.toString();
         }
 
+        XcodeProjectWriteOptions xcodeProjectWriteOptions =
+            XcodeProjectWriteOptions.of(new PBXProject(projectName), projectDirectory);
+
         generator =
             new ProjectGenerator(
                 xcodeDescriptions,
@@ -520,9 +523,8 @@ public class WorkspaceAndProjectGenerator {
                 projGenerationStateCache,
                 rules,
                 projectCell,
-                projectDirectory,
-                projectName,
                 buildFileName,
+                xcodeProjectWriteOptions,
                 projectGeneratorOptions,
                 ruleKeyConfiguration,
                 isMainProject,
@@ -557,7 +559,7 @@ public class WorkspaceAndProjectGenerator {
     }
 
     return GenerationResult.of(
-        generator.getProjectPath(),
+        generator.getXcodeProjPath(),
         generator.isProjectGenerated(),
         requiredBuildTargets,
         generator.getXcconfigPaths(),

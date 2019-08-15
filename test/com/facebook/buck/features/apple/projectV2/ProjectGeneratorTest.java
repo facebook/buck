@@ -2074,8 +2074,8 @@ public class ProjectGeneratorTest {
 
     // The project should not generated since we're generating only header symlink trees.
     assertFalse(
-        projectGenerator.getProjectPath() + " should not be generated.",
-        projectFilesystem.isDirectory(projectGenerator.getProjectPath()));
+        projectGenerator.getXcodeProjPath() + " should not be generated.",
+        projectFilesystem.isDirectory(projectGenerator.getXcodeProjPath()));
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
     assertThat(headerSymlinkTrees, hasSize(2));
@@ -6328,9 +6328,8 @@ public class ProjectGeneratorTest {
             projStateCache,
             ImmutableSet.of(lib2Target),
             projectCell,
-            OUTPUT_DIRECTORY,
-            PROJECT_NAME,
             "BUCK",
+            XcodeProjectWriteOptions.of(new PBXProject(PROJECT_NAME), OUTPUT_DIRECTORY),
             ProjectGeneratorOptions.builder().setShouldMergeHeaderMaps(true).build(),
             TestRuleKeyConfigurationFactory.create(),
             false, /* isMainProject */
@@ -6375,9 +6374,8 @@ public class ProjectGeneratorTest {
             projStateCache,
             ImmutableSet.of(lib1Target, testTarget), /* lib3Target not included on purpose */
             projectCell,
-            OUTPUT_DIRECTORY,
-            PROJECT_NAME,
             "BUCK",
+            XcodeProjectWriteOptions.of(new PBXProject(PROJECT_NAME), OUTPUT_DIRECTORY),
             ProjectGeneratorOptions.builder().setShouldMergeHeaderMaps(true).build(),
             TestRuleKeyConfigurationFactory.create(),
             true, /* isMainProject */
@@ -6498,9 +6496,8 @@ public class ProjectGeneratorTest {
             projStateCache,
             ImmutableSet.of(lib2Target),
             projectCell,
-            OUTPUT_DIRECTORY,
-            PROJECT_NAME,
             "BUCK",
+            XcodeProjectWriteOptions.of(new PBXProject(PROJECT_NAME), OUTPUT_DIRECTORY),
             ProjectGeneratorOptions.builder()
                 .setShouldMergeHeaderMaps(true)
                 .setShouldUseAbsoluteHeaderMapPaths(true)
@@ -6553,9 +6550,8 @@ public class ProjectGeneratorTest {
             projStateCache,
             ImmutableSet.of(lib1Target, testTarget), /* lib3Target not included on purpose */
             projectCell,
-            OUTPUT_DIRECTORY,
-            PROJECT_NAME,
             "BUCK",
+            XcodeProjectWriteOptions.of(new PBXProject(PROJECT_NAME), OUTPUT_DIRECTORY),
             ProjectGeneratorOptions.builder()
                 .setShouldMergeHeaderMaps(true)
                 .setShouldUseAbsoluteHeaderMapPaths(true)
@@ -6766,9 +6762,8 @@ public class ProjectGeneratorTest {
         projStateCache,
         initialBuildTargets,
         projectCell,
-        OUTPUT_DIRECTORY,
-        PROJECT_NAME,
         "BUCK",
+        XcodeProjectWriteOptions.of(new PBXProject(PROJECT_NAME), OUTPUT_DIRECTORY),
         projectGeneratorOptions,
         TestRuleKeyConfigurationFactory.create(),
         false,
