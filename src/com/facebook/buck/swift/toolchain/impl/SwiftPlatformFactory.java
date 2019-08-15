@@ -26,6 +26,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
 
@@ -37,12 +38,17 @@ public class SwiftPlatformFactory {
   private SwiftPlatformFactory() {}
 
   public static SwiftPlatform build(
-      String platformName, Set<Path> toolchainPaths, Tool swiftc, Optional<Tool> swiftStdLibTool) {
+      String platformName,
+      Set<Path> toolchainPaths,
+      Tool swiftc,
+      Optional<Tool> swiftStdLibTool,
+      boolean shouldLinkSystemSwift) {
     SwiftPlatform.Builder builder =
         SwiftPlatform.builder()
             .setSwiftc(swiftc)
             .setSwiftStdlibTool(swiftStdLibTool)
-            .setSwiftSharedLibraryRunPaths(buildSharedRunPaths(platformName));
+            .setSwiftSharedLibraryRunPaths(
+                buildSharedRunPaths(platformName, shouldLinkSystemSwift));
 
     for (Path toolchainPath : toolchainPaths) {
       Optional<Path> foundSwiftRuntimePath = findSwiftRuntimePath(toolchainPath, platformName);
@@ -104,18 +110,22 @@ public class SwiftPlatformFactory {
     }
   }
 
-  private static ImmutableList<Path> buildSharedRunPaths(String platformName) {
+  private static ImmutableList<Path> buildSharedRunPaths(
+      String platformName, boolean shouldLinkSystemSwift) {
     ApplePlatformType platformType = ApplePlatformType.of(platformName);
+
+    ArrayList<Path> paths = new ArrayList<Path>();
+    if (shouldLinkSystemSwift) {
+      paths.add(Paths.get("/usr/lib/swift"));
+    }
     if (platformType == ApplePlatformType.MAC) {
-      return ImmutableList.of(
-          Paths.get("/usr/lib/swift"),
-          Paths.get("@executable_path", "..", "Frameworks"),
-          Paths.get("@loader_path", "..", "Frameworks"));
+      paths.add(Paths.get("@executable_path", "..", "Frameworks"));
+      paths.add(Paths.get("@loader_path", "..", "Frameworks"));
+    } else {
+      paths.add(Paths.get("@executable_path", "Frameworks"));
+      paths.add(Paths.get("@loader_path", "Frameworks"));
     }
 
-    return ImmutableList.of(
-        Paths.get("/usr/lib/swift"),
-        Paths.get("@executable_path", "Frameworks"),
-        Paths.get("@loader_path", "Frameworks"));
+    return ImmutableList.copyOf(paths);
   }
 }

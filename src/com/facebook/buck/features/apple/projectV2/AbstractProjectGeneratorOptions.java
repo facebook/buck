@@ -97,4 +97,10 @@ interface AbstractProjectGeneratorOptions {
   default boolean shouldAddLinkedLibrariesAsFlags() {
     return false;
   }
+
+  /** Add system swift library linker flags */
+  @Value.Default
+  default boolean shouldLinkSystemSwift() {
+    return true;
+  }
 }

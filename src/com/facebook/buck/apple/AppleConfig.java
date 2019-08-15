@@ -299,6 +299,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(APPLE_SECTION, "link_libraries_as_flags", false);
   }
 
+  public boolean shouldLinkSystemSwift() {
+    return delegate.getBooleanValue(APPLE_SECTION, "should_link_system_swift", true);
+  }
+
   public boolean shouldIncludeSharedLibraryResources() {
     return delegate.getBooleanValue(APPLE_SECTION, "include_shared_lib_resources", false);
   }

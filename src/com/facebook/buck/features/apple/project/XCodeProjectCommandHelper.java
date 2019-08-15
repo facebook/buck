@@ -369,6 +369,7 @@ public class XCodeProjectCommandHelper {
             .setShouldUseAbsoluteHeaderMapPaths(absoluteHeaderMapPaths)
             .setShouldMergeHeaderMaps(appleConfig.shouldMergeHeaderMapsInXcodeProject())
             .setShouldAddLinkedLibrariesAsFlags(appleConfig.shouldAddLinkedLibrariesAsFlags())
+            .setShouldLinkSystemSwift(appleConfig.shouldLinkSystemSwift())
             .setShouldForceLoadLinkWholeLibraries(
                 appleConfig.shouldAddLinkerFlagsForLinkWholeLibraries())
             .setShouldGenerateHeaderSymlinkTreesOnly(

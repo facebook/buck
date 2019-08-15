@@ -2465,10 +2465,14 @@ public class ProjectGenerator {
                                     .getParent());
                         if (prebuilt.getConstructorArg().getPreferredLinkage() != Linkage.STATIC) {
                           // Frameworks that are copied into the binary.
-                          iOSLdRunpathSearchPaths.add("/usr/lib/swift");
+                          if (options.shouldLinkSystemSwift()) {
+                            iOSLdRunpathSearchPaths.add("/usr/lib/swift");
+                            macOSLdRunpathSearchPaths.add("/usr/lib/swift");
+                          }
+
                           iOSLdRunpathSearchPaths.add("@loader_path/Frameworks");
                           iOSLdRunpathSearchPaths.add("@executable_path/Frameworks");
-                          macOSLdRunpathSearchPaths.add("/usr/lib/swift");
+
                           macOSLdRunpathSearchPaths.add("@loader_path/../Frameworks");
                           macOSLdRunpathSearchPaths.add("@executable_path/../Frameworks");
                         }
@@ -2488,14 +2492,20 @@ public class ProjectGenerator {
       // I'm not sure how to look for the correct folder here, so just adding both for now, if the
       // folder changes in a future release this can be revisited.
       librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift/$PLATFORM_NAME");
-      librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift-5.0/$PLATFORM_NAME");
+      if (options.shouldLinkSystemSwift()) {
+        librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift-5.0/$PLATFORM_NAME");
+      }
     }
 
     if (swiftDeps.size() > 0 || projGenerationStateCache.targetContainsSwiftSourceCode(node)) {
-      iOSLdRunpathSearchPaths.add("/usr/lib/swift");
+      if (options.shouldLinkSystemSwift()) {
+        iOSLdRunpathSearchPaths.add("/usr/lib/swift");
+        macOSLdRunpathSearchPaths.add("/usr/lib/swift");
+      }
+
       iOSLdRunpathSearchPaths.add("@executable_path/Frameworks");
       iOSLdRunpathSearchPaths.add("@loader_path/Frameworks");
-      macOSLdRunpathSearchPaths.add("/usr/lib/swift");
+
       macOSLdRunpathSearchPaths.add("@executable_path/../Frameworks");
       macOSLdRunpathSearchPaths.add("@loader_path/../Frameworks");
     }

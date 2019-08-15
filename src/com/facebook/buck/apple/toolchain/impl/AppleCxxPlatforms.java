@@ -471,6 +471,7 @@ public class AppleCxxPlatforms {
                 + minVersion,
             version,
             swiftSdkPathsBuilder.build(),
+            appleConfig.shouldLinkSystemSwift(),
             swiftOverrideSearchPathBuilder.addAll(toolSearchPaths).build(),
             xcodeToolFinder,
             filesystem);
@@ -506,6 +507,7 @@ public class AppleCxxPlatforms {
       String targetArchitectureName,
       String version,
       AppleSdkPaths sdkPaths,
+      boolean shouldLinkSystemSwift,
       ImmutableList<Path> toolSearchPaths,
       XcodeToolFinder xcodeToolFinder,
       ProjectFilesystem filesystem) {
@@ -544,7 +546,11 @@ public class AppleCxxPlatforms {
     return swiftc.map(
         tool ->
             SwiftPlatformFactory.build(
-                platformName, sdkPaths.getToolchainPaths(), tool, swiftStdLibTool));
+                platformName,
+                sdkPaths.getToolchainPaths(),
+                tool,
+                swiftStdLibTool,
+                shouldLinkSystemSwift));
   }
 
   private static void applySourceLibrariesParamIfNeeded(
