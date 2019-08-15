@@ -32,14 +32,31 @@ public abstract class BuildTargetPattern {
   /** Type of a pattern */
   public enum Kind {
     /** Pattern is a single build target, like cell//path/to/package:target */
-    SINGLE,
+    SINGLE {
+      @Override
+      public boolean isRecursive() {
+        return false;
+      }
+    },
     /** Pattern matches all targets in one specific package, like cell//path/to/package: */
-    PACKAGE,
+    PACKAGE {
+      @Override
+      public boolean isRecursive() {
+        return false;
+      }
+    },
     /**
      * Pattern matches all targets in a package, and all packages below that in a directory tree,
      * i.e cell//path/to/package/...
      */
-    RECURSIVE
+    RECURSIVE {
+      @Override
+      public boolean isRecursive() {
+        return true;
+      }
+    };
+
+    public abstract boolean isRecursive();
   }
 
   /** Name of the cell that current pattern specifies targets in */
@@ -59,6 +76,11 @@ public abstract class BuildTargetPattern {
   /** Target name in case pattern is single build target pattern; otherwise an empty string */
   @Value.Parameter
   public abstract String getTargetName();
+
+  /** Whether this is a '//package/...' pattern. */
+  public boolean isRecursive() {
+    return getKind().isRecursive();
+  }
 
   /**
    * Validate that target name is only present when necessary

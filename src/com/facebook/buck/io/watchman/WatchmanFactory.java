@@ -193,7 +193,9 @@ public class WatchmanFactory {
     return Optional.of(transportPath);
   }
 
-  private static Watchman getWatchman(
+  /** Query Watchman's capabilities and watch the given directories. */
+  @VisibleForTesting
+  public static Watchman getWatchman(
       WatchmanClient client,
       Path transportPath,
       ImmutableSet<Path> projectWatchList,
@@ -272,7 +274,8 @@ public class WatchmanFactory {
     }
   }
 
-  private static WatchmanClient createWatchmanClient(
+  @VisibleForTesting
+  public static WatchmanClient createWatchmanClient(
       Path transportPath, Console console, Clock clock) throws IOException {
     return new WatchmanTransportClient(console, clock, createLocalWatchmanTransport(transportPath));
   }

@@ -17,7 +17,9 @@
 package com.facebook.buck.core.parser;
 
 import com.facebook.buck.core.files.DirectoryList;
+import com.facebook.buck.core.files.DirectoryListComputation;
 import com.facebook.buck.core.files.FileTree;
+import com.facebook.buck.core.files.FileTreeComputation;
 import com.facebook.buck.core.files.FileTreeFileNameIterator;
 import com.facebook.buck.core.files.ImmutableDirectoryListKey;
 import com.facebook.buck.core.files.ImmutableFileTreeKey;
@@ -34,6 +36,11 @@ import java.nio.file.Path;
 
 /**
  * Discover paths for packages which contain targets that match specification (build target pattern)
+ *
+ * <p>This computation depends on {@link ImmutableFileTreeKey} ({@link FileTreeComputation}) and
+ * {@link ImmutableDirectoryListKey} ({@link DirectoryListComputation}).
+ *
+ * <p>See {@link WatchmanBuildPackageComputation} for an equivalent computation which uses Watchman.
  */
 public class BuildTargetPatternToBuildPackagePathComputation
     implements GraphComputation<BuildTargetPatternToBuildPackagePathKey, BuildPackagePaths> {

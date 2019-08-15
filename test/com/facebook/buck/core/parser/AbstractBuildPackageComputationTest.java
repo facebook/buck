@@ -15,10 +15,9 @@
  */
 package com.facebook.buck.core.parser;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeFalse;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
@@ -31,7 +30,6 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.AssumePath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.environment.PlatformType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -41,6 +39,7 @@ import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nonnull;
 import junitparams.Parameters;
+import org.hamcrest.Matchers;
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.Before;
 import org.junit.Rule;
@@ -56,6 +55,11 @@ public abstract class AbstractBuildPackageComputationTest {
 
   protected abstract ImmutableList<GraphComputationStage<?, ?>> getComputationStages(
       String buildFileName);
+
+  /** Should a file called "Buck" be treated as a BUCK build file? */
+  protected boolean isBuildFileCaseSensitive() {
+    return true;
+  }
 
   @Before
   public void setUp() {
@@ -179,11 +183,10 @@ public abstract class AbstractBuildPackageComputationTest {
     BuildTargetPatternToBuildPackagePathKey key = key("", kind, "symlink", targetName);
 
     thrown.expect(ExecutionException.class);
-    if (isWindows()) {
-      thrown.expectCause(IsInstanceOf.instanceOf(NotDirectoryException.class));
-    } else {
-      thrown.expectCause(IsInstanceOf.instanceOf(NoSuchFileException.class));
-    }
+    thrown.expectCause(
+        Matchers.anyOf(
+            IsInstanceOf.instanceOf(NotDirectoryException.class),
+            IsInstanceOf.instanceOf(NoSuchFileException.class)));
     transform("BUCK", key);
   }
 
@@ -222,11 +225,10 @@ public abstract class AbstractBuildPackageComputationTest {
     BuildTargetPatternToBuildPackagePathKey key = key("", kind, "file/dir", targetName);
 
     thrown.expect(ExecutionException.class);
-    if (isWindows()) {
-      thrown.expectCause(IsInstanceOf.instanceOf(NoSuchFileException.class));
-    } else {
-      thrown.expectCause(IsInstanceOf.instanceOf(NotDirectoryException.class));
-    }
+    thrown.expectCause(
+        Matchers.anyOf(
+            IsInstanceOf.instanceOf(NoSuchFileException.class),
+            IsInstanceOf.instanceOf(NotDirectoryException.class)));
     transform("BUCK", key);
   }
 
@@ -284,8 +286,7 @@ public abstract class AbstractBuildPackageComputationTest {
   @Parameters(method = "getAnyPathParams")
   public void requiresExactBuildFileCase(Kind kind, String targetName)
       throws ExecutionException, InterruptedException, IOException {
-    // TODO: Figure out why Windows behaves differently from Linux and macOS.
-    assumeThat(Platform.detect().getType(), not(equalTo(PlatformType.WINDOWS)));
+    assumeTrue(isBuildFileCaseSensitive());
 
     filesystem.mkdirs(Paths.get("dir"));
     filesystem.createNewFile(Paths.get("dir/BuCk"));
@@ -299,8 +300,7 @@ public abstract class AbstractBuildPackageComputationTest {
   @Parameters(method = "getAnyPathParams")
   public void allowsInexactBuildFileCase(Kind kind, String targetName)
       throws ExecutionException, InterruptedException, IOException {
-    // TODO: Figure out why Windows behaves differently from Linux and macOS.
-    assumeThat(Platform.detect().getType(), equalTo(PlatformType.WINDOWS));
+    assumeFalse(isBuildFileCaseSensitive());
 
     filesystem.mkdirs(Paths.get("dir"));
     filesystem.createNewFile(Paths.get("dir/BuCk"));

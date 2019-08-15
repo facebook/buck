@@ -18,6 +18,8 @@ package com.facebook.buck.core.parser;
 import com.facebook.buck.core.files.DirectoryListComputation;
 import com.facebook.buck.core.files.FileTreeComputation;
 import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
+import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.environment.PlatformType;
 import com.google.common.collect.ImmutableList;
 import junitparams.JUnitParamsRunner;
 import org.junit.runner.RunWith;
@@ -26,6 +28,12 @@ import org.junit.runner.RunWith;
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class BuildTargetPatternToBuildPackagePathTransformerTest
     extends AbstractBuildPackageComputationTest {
+  @Override
+  protected boolean isBuildFileCaseSensitive() {
+    // TODO: Figure out why Windows behaves differently from Linux and macOS.
+    return Platform.detect().getType() != PlatformType.WINDOWS;
+  }
+
   @Override
   protected ImmutableList<GraphComputationStage<?, ?>> getComputationStages(String buildFileName) {
     return ImmutableList.of(
