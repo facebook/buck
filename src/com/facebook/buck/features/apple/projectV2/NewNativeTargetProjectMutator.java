@@ -43,7 +43,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
@@ -75,10 +74,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -289,24 +286,22 @@ class NewNativeTargetProjectMutator {
   public Result buildTargetAndAddToProject(PBXProject project, boolean addBuildPhases) {
     PBXNativeTarget target = new PBXNativeTarget(targetName);
 
-    Optional<PBXGroup> optTargetGroup;
+    Optional<PBXGroup> targetGroup;
     if (addBuildPhases) {
-      PBXGroup targetGroup = project.getMainGroup();
-
       // Phases
       addRunScriptBuildPhases(target, preBuildRunScriptPhases);
       addPhasesAndGroupsForSources(project, target);
       addFrameworksBuildPhase(project, target);
-      addResourcesFileReference(targetGroup);
-      addCopyResourcesToNonStdDestinationPhases(target, targetGroup);
-      addResourcesBuildPhase(target, targetGroup);
+      addResourcesFileReference(project);
+      addCopyResourcesToNonStdDestinationPhases(target, project);
+      addResourcesBuildPhase(target, project);
       target.getBuildPhases().addAll((Collection<? extends PBXBuildPhase>) copyFilesPhases);
       addRunScriptBuildPhases(target, postBuildRunScriptPhases);
       addSwiftDependenciesBuildPhase(target);
 
-      optTargetGroup = Optional.of(targetGroup);
+      targetGroup = Optional.of(project.getMainGroup());
     } else {
-      optTargetGroup = Optional.empty();
+      targetGroup = Optional.empty();
     }
 
     // Product
@@ -321,7 +316,7 @@ class NewNativeTargetProjectMutator {
     target.setProductType(productType);
 
     project.getTargets().add(target);
-    return new Result(target, optTargetGroup);
+    return new Result(target, targetGroup);
   }
 
   /// Helper class for returning metadata about a created PBXFileReference
@@ -356,7 +351,28 @@ class NewNativeTargetProjectMutator {
   private SourcePathPBXFileReferenceDestination writeSourcePathToProject(
       PBXProject project, SourcePath sourcePath) {
     Path path = sourcePathResolver.apply(sourcePath);
+    SourceTreePath sourceTreePath =
+        new SourceTreePath(
+            PBXReference.SourceTree.SOURCE_ROOT,
+            pathRelativizer.outputPathToSourcePath(sourcePath),
+            Optional.empty());
+    return writeSourceTreePathAtFullPathToProject(project, path, sourceTreePath);
+  }
 
+  /// Writes a file at a path to a PBXFileReference in the input project.
+  private SourcePathPBXFileReferenceDestination writeFilePathToProject(
+      PBXProject project, Path path, Optional<String> type) {
+    SourceTreePath sourceTreePath =
+        new SourceTreePath(
+            PBXReference.SourceTree.SOURCE_ROOT,
+            pathRelativizer.outputDirToRootRelative(path),
+            type);
+
+    return writeSourceTreePathAtFullPathToProject(project, path, sourceTreePath);
+  }
+
+  private SourcePathPBXFileReferenceDestination writeSourceTreePathAtFullPathToProject(
+      PBXProject project, Path path, SourceTreePath sourceTreePath) {
     PBXGroup filePathGroup;
     // This check exists for files located in the root (e.g. ./foo.m instead of ./MyLibrary/foo.m)
     if (path.getParent() != null) {
@@ -367,12 +383,6 @@ class NewNativeTargetProjectMutator {
     } else {
       filePathGroup = project.getMainGroup();
     }
-
-    SourceTreePath sourceTreePath =
-        new SourceTreePath(
-            PBXReference.SourceTree.SOURCE_ROOT,
-            pathRelativizer.outputPathToSourcePath(sourcePath),
-            Optional.empty());
 
     PBXFileReference fileReference =
         filePathGroup.getOrCreateFileReferenceBySourceTreePath(sourceTreePath);
@@ -555,7 +565,7 @@ class NewNativeTargetProjectMutator {
     swiftDependenciesBuildPhase.ifPresent(buildPhase -> target.getBuildPhases().add(buildPhase));
   }
 
-  private void addResourcesFileReference(PBXGroup targetGroup) {
+  private void addResourcesFileReference(PBXProject project) {
     ImmutableSet.Builder<Path> resourceFiles = ImmutableSet.builder();
     ImmutableSet.Builder<Path> resourceDirs = ImmutableSet.builder();
     ImmutableSet.Builder<Path> variantResourceFiles = ImmutableSet.builder();
@@ -569,16 +579,15 @@ class NewNativeTargetProjectMutator {
         variantResourceFiles);
 
     addResourcesFileReference(
-        targetGroup,
+        project,
         resourceFiles.build(),
         resourceDirs.build(),
         variantResourceFiles.build(),
-        ignored -> {},
         ignored -> {});
   }
 
   private void addCopyResourcesToNonStdDestinationPhases(
-      PBXNativeTarget target, PBXGroup targetGroup) {
+      PBXNativeTarget target, PBXProject project) {
     List<AppleBundleDestination> allNonStandardDestinations =
         recursiveResources.stream()
             .map(AppleResourceDescriptionArg::getDestination)
@@ -589,12 +598,12 @@ class NewNativeTargetProjectMutator {
             .sorted(Comparator.naturalOrder())
             .collect(Collectors.toList());
     for (AppleBundleDestination destination : allNonStandardDestinations) {
-      addCopyResourcesToNonStdDestinationPhase(target, targetGroup, destination);
+      addCopyResourcesToNonStdDestinationPhase(target, project, destination);
     }
   }
 
   private void addCopyResourcesToNonStdDestinationPhase(
-      PBXNativeTarget target, PBXGroup targetGroup, AppleBundleDestination destination) {
+      PBXNativeTarget target, PBXProject project, AppleBundleDestination destination) {
     CopyFilePhaseDestinationSpec destinationSpec =
         CopyFilePhaseDestinationSpec.of(pbxCopyPhaseDestination(destination));
     PBXCopyFilesBuildPhase phase = new PBXCopyFilesBuildPhase(destinationSpec);
@@ -605,11 +614,7 @@ class NewNativeTargetProjectMutator {
                     e.getDestination().orElse(AppleBundleDestination.defaultValue()) == destination)
             .collect(Collectors.toSet());
     addResourcePathsToBuildPhase(
-        phase,
-        targetGroup,
-        resourceDescriptionArgsForDestination,
-        new HashSet<>(),
-        new HashSet<>());
+        phase, project, resourceDescriptionArgsForDestination, new HashSet<>(), new HashSet<>());
     if (!phase.getFiles().isEmpty()) {
       target.getBuildPhases().add(phase);
       LOG.debug(
@@ -636,7 +641,7 @@ class NewNativeTargetProjectMutator {
     }
   }
 
-  private void addResourcesBuildPhase(PBXNativeTarget target, PBXGroup targetGroup) {
+  private void addResourcesBuildPhase(PBXNativeTarget target, PBXProject project) {
     PBXBuildPhase phase = new PBXResourcesBuildPhase();
     Set<AppleResourceDescriptionArg> standardDestinationResources =
         recursiveResources.stream()
@@ -646,7 +651,7 @@ class NewNativeTargetProjectMutator {
                         == AppleBundleDestination.RESOURCES)
             .collect(Collectors.toSet());
     addResourcePathsToBuildPhase(
-        phase, targetGroup, standardDestinationResources, recursiveAssetCatalogs, wrapperResources);
+        phase, project, standardDestinationResources, recursiveAssetCatalogs, wrapperResources);
     if (!phase.getFiles().isEmpty()) {
       target.getBuildPhases().add(phase);
       LOG.debug("Added resources build phase %s", phase);
@@ -655,7 +660,7 @@ class NewNativeTargetProjectMutator {
 
   private void addResourcePathsToBuildPhase(
       PBXBuildPhase phase,
-      PBXGroup targetGroup,
+      PBXProject project,
       Set<AppleResourceDescriptionArg> resourceArgs,
       Set<AppleAssetCatalogDescriptionArg> assetCatalogArgs,
       Set<AppleWrapperResourceArg> resourcePathArgs) {
@@ -672,14 +677,10 @@ class NewNativeTargetProjectMutator {
         variantResourceFiles);
 
     addResourcesFileReference(
-        targetGroup,
+        project,
         resourceFiles.build(),
         resourceDirs.build(),
         variantResourceFiles.build(),
-        input -> {
-          PBXBuildFile buildFile = new PBXBuildFile(input);
-          phase.getFiles().add(buildFile);
-        },
         input -> {
           PBXBuildFile buildFile = new PBXBuildFile(input);
           phase.getFiles().add(buildFile);
@@ -709,37 +710,27 @@ class NewNativeTargetProjectMutator {
   }
 
   private void addResourcesFileReference(
-      PBXGroup targetGroup,
+      PBXProject project,
       ImmutableSet<Path> resourceFiles,
       ImmutableSet<Path> resourceDirs,
       ImmutableSet<Path> variantResourceFiles,
-      Consumer<? super PBXFileReference> resourceCallback,
-      Consumer<? super PBXVariantGroup> variantGroupCallback) {
+      Consumer<? super PBXFileReference> resourceCallback) {
     if (resourceFiles.isEmpty() && resourceDirs.isEmpty() && variantResourceFiles.isEmpty()) {
       return;
     }
 
-    PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
     for (Path path : resourceFiles) {
       PBXFileReference fileReference =
-          resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-              new SourceTreePath(
-                  PBXReference.SourceTree.SOURCE_ROOT,
-                  pathRelativizer.outputDirToRootRelative(path),
-                  Optional.empty()));
-      resourceCallback.accept(fileReference);
-    }
-    for (Path path : resourceDirs) {
-      PBXFileReference fileReference =
-          resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-              new SourceTreePath(
-                  PBXReference.SourceTree.SOURCE_ROOT,
-                  pathRelativizer.outputDirToRootRelative(path),
-                  Optional.of("folder")));
+          writeFilePathToProject(project, path, Optional.empty()).getFileReference();
       resourceCallback.accept(fileReference);
     }
 
-    Map<String, PBXVariantGroup> variantGroups = new HashMap<>();
+    for (Path path : resourceDirs) {
+      PBXFileReference fileReference =
+          writeFilePathToProject(project, path, Optional.of("folder")).getFileReference();
+      resourceCallback.accept(fileReference);
+    }
+
     for (Path variantFilePath : variantResourceFiles) {
       String lprojSuffix = ".lproj";
       Path variantDirectory = variantFilePath.getParent();
@@ -749,23 +740,7 @@ class NewNativeTargetProjectMutator {
                 + "but '%s' is not.",
             variantFilePath);
       }
-      String variantDirectoryName = variantDirectory.getFileName().toString();
-      String variantLocalization =
-          variantDirectoryName.substring(0, variantDirectoryName.length() - lprojSuffix.length());
-      String variantFileName = variantFilePath.getFileName().toString();
-      PBXVariantGroup variantGroup = variantGroups.get(variantFileName);
-      if (variantGroup == null) {
-        variantGroup = resourcesGroup.getOrCreateChildVariantGroupByName(variantFileName);
-        variantGroupCallback.accept(variantGroup);
-        variantGroups.put(variantFileName, variantGroup);
-      }
-      SourceTreePath sourceTreePath =
-          new SourceTreePath(
-              PBXReference.SourceTree.SOURCE_ROOT,
-              pathRelativizer.outputDirToRootRelative(variantFilePath),
-              Optional.empty());
-      variantGroup.getOrCreateVariantFileReferenceByNameAndSourceTreePath(
-          variantLocalization, sourceTreePath);
+      writeFilePathToProject(project, variantFilePath, Optional.empty());
     }
   }
 

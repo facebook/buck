@@ -70,7 +70,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXVariantGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
@@ -3928,19 +3927,13 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     PBXProject project = projectGenerator.getGeneratedProject();
-    PBXGroup resourcesGroup = project.getMainGroup().getOrCreateChildGroupByName("Resources");
-    PBXVariantGroup storyboardGroup =
-        (PBXVariantGroup) Iterables.get(resourcesGroup.getChildren(), 0);
+    PBXGroup storyboardGroup = project.getMainGroup().getOrCreateChildGroupByName("Base.lproj");
     List<PBXReference> storyboardGroupChildren = storyboardGroup.getChildren();
     assertEquals(1, storyboardGroupChildren.size());
     assertTrue(storyboardGroupChildren.get(0) instanceof PBXFileReference);
     PBXFileReference baseStoryboardReference = (PBXFileReference) storyboardGroupChildren.get(0);
 
-    assertEquals("Base", baseStoryboardReference.getName());
-
-    // Make sure the file type is set from the path.
-    assertEquals(Optional.of("file.storyboard"), baseStoryboardReference.getLastKnownFileType());
-    assertEquals(Optional.empty(), baseStoryboardReference.getExplicitFileType());
+    assertEquals("Bar.storyboard", baseStoryboardReference.getName());
   }
 
   @Test
@@ -5386,8 +5379,7 @@ public class ProjectGeneratorTest {
         FluentIterable.from(fooLibTarget.getBuildPhases())
             .filter(PBXResourcesBuildPhase.class)
             .isEmpty());
-    PBXGroup libResourcesGroup = mainGroup.getOrCreateChildGroupByName("Resources");
-    PBXFileReference assetCatalogFile = (PBXFileReference) libResourcesGroup.getChildren().get(0);
+    PBXFileReference assetCatalogFile = (PBXFileReference) mainGroup.getChildren().get(0);
     assertEquals("AssetCatalog.xcassets", assetCatalogFile.getName());
 
     PBXTarget fooTestTarget = assertTargetExistsAndReturnTarget(project, "test");
@@ -5398,9 +5390,6 @@ public class ProjectGeneratorTest {
     assertThat(
         assertFileRefIsRelativeAndResolvePath(resourcesBuildPhase.getFiles().get(0).getFileRef()),
         equalTo(projectFilesystem.resolve("AssetCatalog.xcassets").toString()));
-    PBXGroup testResourcesGroup = mainGroup.getOrCreateChildGroupByName("Resources");
-    assetCatalogFile = (PBXFileReference) testResourcesGroup.getChildren().get(0);
-    assertEquals("AssetCatalog.xcassets", assetCatalogFile.getName());
   }
 
   @Test
@@ -5428,8 +5417,7 @@ public class ProjectGeneratorTest {
     PBXProject project = projectGenerator.getGeneratedProject();
     PBXGroup mainGroup = project.getMainGroup();
 
-    PBXGroup resourcesGroup =
-        mainGroup.getOrCreateDescendantGroupByPath(ImmutableList.of("Resources"));
+    PBXGroup resourcesGroup = mainGroup.getOrCreateDescendantGroupByPath(ImmutableList.of("foo"));
     PBXFileReference resource = (PBXFileReference) Iterables.get(resourcesGroup.getChildren(), 0);
     assertThat(resource.getName(), equalTo("file"));
   }
@@ -5459,8 +5447,7 @@ public class ProjectGeneratorTest {
     PBXProject project = projectGenerator.getGeneratedProject();
     PBXGroup mainGroup = project.getMainGroup();
 
-    PBXGroup resourcesGroup =
-        mainGroup.getOrCreateDescendantGroupByPath(ImmutableList.of("Resources"));
+    PBXGroup resourcesGroup = mainGroup.getOrCreateDescendantGroupByPath(ImmutableList.of("foo"));
     PBXFileReference resource = (PBXFileReference) Iterables.get(resourcesGroup.getChildren(), 0);
     assertThat(resource.getName(), equalTo("dir"));
     assertThat(resource.getExplicitFileType(), equalTo(Optional.of("folder")));
@@ -5492,8 +5479,7 @@ public class ProjectGeneratorTest {
     PBXProject project = projectGenerator.getGeneratedProject();
     PBXGroup mainGroup = project.getMainGroup();
 
-    PBXGroup resourcesGroup =
-        mainGroup.getOrCreateDescendantGroupByPath(ImmutableList.of("Resources"));
+    PBXGroup resourcesGroup = mainGroup.getOrCreateDescendantGroupByPath(ImmutableList.of("foo"));
     PBXFileReference resource = (PBXFileReference) Iterables.get(resourcesGroup.getChildren(), 0);
     assertThat(resource.getName(), equalTo("dir.iconset"));
     assertThat(resource.getExplicitFileType(), not(equalTo(Optional.of("folder"))));
