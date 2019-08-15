@@ -32,6 +32,7 @@ import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
 import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.jvm.kotlin.testutil.compiler.KotlinTestCompiler;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.timing.FakeClock;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
@@ -101,7 +102,7 @@ public class StubJarTest {
 
   @Rule public TemporaryFolder temp = new TemporaryFolder();
 
-  private Tester tester = new Tester();
+  private Tester tester = new Tester(Language.JAVA);
 
   private ProjectFilesystem filesystem;
 
@@ -129,6 +130,34 @@ public class StubJarTest {
         .createAndCheckStubJar()
         .addStubJarToClasspath()
         .setSourceFile("B.java", "package com.example.buck; public class B extends A {}")
+        .testCanCompile();
+  }
+
+  @Test
+  public void emptyKotlinClass() throws IOException {
+    if (!isValidForKotlin()) {
+      return;
+    }
+
+    tester = new Tester(Language.KOTLIN);
+    tester
+        .setSourceFile("A.kt", "package com.example.buck open class A {}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\n\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0000\\u0008\\u0016\\u0018\\u00002\\u00020\\u0001B\\u0005\\u00a2\\u0006\\u0002\\u0010\\u0002\"}, d2={\"Lcom/example/buck/A;\", \"\", \"()V\"})",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .createAndCheckStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile("B.kt", "package com.example.buck class B: A() {}")
         .testCanCompile();
   }
 
@@ -5263,6 +5292,22 @@ public class StubJarTest {
     }
   }
 
+  private Path compileToKotlinJar(
+      SortedSet<Path> classpath, String fileName, String source, File outputDir)
+      throws IOException {
+    try (KotlinTestCompiler compiler = new KotlinTestCompiler()) {
+      compiler.init();
+      compiler.addSourceFileContents(fileName, source);
+      compiler.addClasspath(classpath);
+
+      compiler.compile();
+
+      Path jarPath = outputDir.toPath().resolve("output.jar");
+      compiler.getClasses().createJar(jarPath, false);
+      return jarPath;
+    }
+  }
+
   private Tester createAnnotationFullJar() throws IOException {
     return tester
         .setSourceFile(
@@ -5295,7 +5340,17 @@ public class StubJarTest {
     assumeThat(testingMode, Matchers.equalTo(MODE_JAR_BASED));
   }
 
+  private boolean isValidForKotlin() {
+    return testingMode.equals(MODE_JAR_BASED);
+  }
+
+  enum Language {
+    JAVA,
+    KOTLIN,
+  }
+
   private final class Tester {
+    private final Language language;
     private final List<String> expectedStubDirectory = new ArrayList<>();
     private final List<String> actualStubDirectory = new ArrayList<>();
     private final List<String> actualFullDirectory = new ArrayList<>();
@@ -5317,8 +5372,14 @@ public class StubJarTest {
     private boolean issueAPWarnings;
     private Pattern javaVersionSpecificPattern = Pattern.compile("^JDK(\\d+):.*");
 
-    public Tester() {
+    public Tester(Language language) {
+      this.language = language;
+
       expectedStubDirectory.add("META-INF/");
+
+      if (language.equals(Language.KOTLIN)) {
+        expectedStubDirectory.add("META-INF/main.kotlin_module");
+      }
     }
 
     private void resetActuals() {
@@ -5365,7 +5426,7 @@ public class StubJarTest {
 
     public Tester addExpectedStub(String classBinaryName, String... stubLines) {
       String filePath = classBinaryName + ".class";
-      if (expectedStubDirectory.size() == 1) {
+      if (!expectedStubDirectory.contains("com/")) {
         expectedStubDirectory.add("com/");
         expectedStubDirectory.add("com/example/");
         expectedStubDirectory.add("com/example/buck/");
@@ -5433,12 +5494,16 @@ public class StubJarTest {
     public Tester checkStubJar() throws IOException {
       dumpStubJar();
 
-      assertEquals("File list is not correct.", expectedStubDirectory, actualStubDirectory);
+      assertEquals(
+          "File list is not correct.",
+          expectedStubDirectory.stream().sorted().collect(Collectors.toList()),
+          actualStubDirectory.stream().sorted().collect(Collectors.toList()));
 
       for (String entryName : expectedStubDirectory) {
-        if (entryName.endsWith("/")) {
+        if (entryName.endsWith("/") || entryName.endsWith(".kotlin_module")) {
           continue;
         }
+
         assertEquals(
             "Stub for " + entryName + " is not correct",
             Joiner.on('\n').join(expectedStubs.get(entryName)),
@@ -5549,18 +5614,23 @@ public class StubJarTest {
 
     public Tester compileFullJar() throws IOException {
       File outputDir = temp.newFolder();
-      fullJarPath =
-          compileToJar(
-              ImmutableSortedSet.<Path>naturalOrder()
-                  .addAll(classpath)
-                  .addAll(universalClasspath)
-                  .build(),
-              Collections.emptyList(),
-              additionalOptions,
-              manifest,
-              sourceFileName,
-              sourceFileContents,
-              outputDir);
+      if (language.equals(Language.KOTLIN)) {
+        fullJarPath = compileToKotlinJar(classpath, sourceFileName, sourceFileContents, outputDir);
+      } else {
+        fullJarPath =
+            compileToJar(
+                ImmutableSortedSet.<Path>naturalOrder()
+                    .addAll(classpath)
+                    .addAll(universalClasspath)
+                    .build(),
+                Collections.emptyList(),
+                additionalOptions,
+                manifest,
+                sourceFileName,
+                sourceFileContents,
+                outputDir);
+      }
+
       return this;
     }
 
@@ -5590,29 +5660,41 @@ public class StubJarTest {
 
     public void testCanCompile() throws IOException {
       File outputDir = temp.newFolder();
-      try (TestCompiler compiler = new TestCompiler()) {
-        compiler.init();
-        compiler.addCompilerOptions(additionalOptions);
-        compiler.addSourceFileContents(sourceFileName, sourceFileContents);
-        compiler.addClasspath(universalClasspath);
-        compiler.addClasspath(classpath);
-        compiler.setProcessors(Collections.emptyList());
-        compiler.setAllowCompilationErrors(!expectedCompileErrors.isEmpty());
+      if (language.equals(Language.KOTLIN)) {
+        try (KotlinTestCompiler compiler = new KotlinTestCompiler()) {
+          compiler.init();
+          compiler.addSourceFileContents(sourceFileName, sourceFileContents);
+          compiler.addClasspath(classpath);
+          compiler.compile();
 
-        compiler.compile();
-        if (!expectedCompileErrors.isEmpty()) {
-          List<String> actualCompileErrors =
-              compiler.getErrorMessages().stream()
-                  .map(
-                      diagnostic ->
-                          diagnostic.substring(diagnostic.lastIndexOf(File.separatorChar) + 1))
-                  .collect(Collectors.toList());
-
-          assertEquals(expectedCompileErrors, actualCompileErrors);
+          fullJarPath = outputDir.toPath().resolve("output.jar");
+          compiler.getClasses().createJar(fullJarPath, false);
         }
+      } else {
+        try (TestCompiler compiler = new TestCompiler()) {
+          compiler.init();
+          compiler.addCompilerOptions(additionalOptions);
+          compiler.addSourceFileContents(sourceFileName, sourceFileContents);
+          compiler.addClasspath(universalClasspath);
+          compiler.addClasspath(classpath);
+          compiler.setProcessors(Collections.emptyList());
+          compiler.setAllowCompilationErrors(!expectedCompileErrors.isEmpty());
 
-        fullJarPath = outputDir.toPath().resolve("output.jar");
-        compiler.getClasses().createJar(fullJarPath, false);
+          compiler.compile();
+          if (!expectedCompileErrors.isEmpty()) {
+            List<String> actualCompileErrors =
+                compiler.getErrorMessages().stream()
+                    .map(
+                        diagnostic ->
+                            diagnostic.substring(diagnostic.lastIndexOf(File.separatorChar) + 1))
+                    .collect(Collectors.toList());
+
+            assertEquals(expectedCompileErrors, actualCompileErrors);
+          }
+
+          fullJarPath = outputDir.toPath().resolve("output.jar");
+          compiler.getClasses().createJar(fullJarPath, false);
+        }
       }
     }
 
