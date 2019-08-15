@@ -113,7 +113,6 @@ class NewNativeTargetProjectMutator {
   private boolean frameworkHeadersEnabled = false;
   private ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags =
       ImmutableMap.of();
-  private ImmutableList<String> targetGroupPath = ImmutableList.of();
   private ImmutableSet<SourceWithFlags> sourcesWithFlags = ImmutableSet.of();
   private ImmutableSet<SourcePath> extraXcodeSources = ImmutableSet.of();
   private ImmutableSet<SourcePath> extraXcodeFiles = ImmutableSet.of();
@@ -168,11 +167,6 @@ class NewNativeTargetProjectMutator {
   public NewNativeTargetProjectMutator setLangPreprocessorFlags(
       ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
     this.langPreprocessorFlags = langPreprocessorFlags;
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setTargetGroupPath(ImmutableList<String> targetGroupPath) {
-    this.targetGroupPath = targetGroupPath;
     return this;
   }
 
@@ -296,9 +290,7 @@ class NewNativeTargetProjectMutator {
 
     Optional<PBXGroup> optTargetGroup;
     if (addBuildPhases) {
-      PBXGroup targetGroup =
-          project.getMainGroup().getOrCreateDescendantGroupByPath(targetGroupPath);
-      targetGroup = targetGroup.getOrCreateChildGroupByName(targetName);
+      PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName(targetName);
 
       // Phases
       addRunScriptBuildPhases(target, preBuildRunScriptPhases);

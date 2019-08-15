@@ -105,29 +105,12 @@ public class NewNativeTargetProjectMutatorTest {
   }
 
   @Test
-  public void shouldCreateTargetAndCustomTargetGroup() throws NoSuchBuildTargetException {
-    NewNativeTargetProjectMutator mutator =
-        new NewNativeTargetProjectMutator(pathRelativizer, sourcePathResolver::getRelativePath);
-    mutator
-        .setTargetName("TestTarget")
-        .setTargetGroupPath(ImmutableList.of("Grandparent", "Parent"))
-        .setProduct(ProductTypes.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"))
-        .buildTargetAndAddToProject(generatedProject, true);
-
-    assertTargetExistsAndReturnTarget(generatedProject, "TestTarget");
-    PBXGroup grandparentGroup =
-        assertHasSubgroupAndReturnIt(generatedProject.getMainGroup(), "Grandparent");
-    assertHasSubgroupAndReturnIt(grandparentGroup, "Parent");
-  }
-
-  @Test
   public void shouldCreateTargetAndNoGroup() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator =
         new NewNativeTargetProjectMutator(pathRelativizer, sourcePathResolver::getRelativePath);
     NewNativeTargetProjectMutator.Result result =
         mutator
             .setTargetName("TestTarget")
-            .setTargetGroupPath(ImmutableList.of("Grandparent", "Parent"))
             .setProduct(
                 ProductTypes.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"))
             .buildTargetAndAddToProject(generatedProject, false);
