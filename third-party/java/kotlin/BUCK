@@ -1,4 +1,12 @@
 prebuilt_jar(
+    name = "annotations",
+    binary_jar = "annotations.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+prebuilt_jar(
     name = "kotlin-stdlib",
     binary_jar = "kotlin-stdlib.jar",
     source_jar = "kotlin-stdlib-sources.jar",
