@@ -67,7 +67,28 @@ class TestCommandLineArgs(unittest.TestCase):
         self.assertEqual(args.command, "clean")
         self.assertEqual(args.buck_options, ["--help"])
         self.assertEqual(args.command_options, [])
-        self.assertFalse(args.is_help(), "Global --help ignored with command")
+        self.assertTrue(args.is_help())
+
+    def test_short_help_before_command(self):
+        args = CommandLineArgs(["buck", "-h", "clean"])
+        self.assertEqual(args.command, "clean")
+        self.assertEqual(args.buck_options, ["-h"])
+        self.assertEqual(args.command_options, [])
+        self.assertTrue(args.is_help())
+
+    def test_short_help_after_command(self):
+        args = CommandLineArgs(["buck", "clean", "-h"])
+        self.assertEqual(args.command, "clean")
+        self.assertEqual(args.buck_options, [])
+        self.assertEqual(args.command_options, ["-h"])
+        self.assertTrue(args.is_help())
+
+    def test_short_help_after_external(self):
+        args = CommandLineArgs(["buck", "test", "--", "-h"])
+        self.assertEqual(args.command, "test")
+        self.assertEqual(args.buck_options, [])
+        self.assertEqual(args.command_options, [])
+        self.assertFalse(args.is_help())
 
     def test_command_all(self):
         args = CommandLineArgs(
@@ -97,7 +118,7 @@ class TestCommandLineArgs(unittest.TestCase):
         self.assertEqual(args.command, "run")
         self.assertEqual(args.buck_options, ["--help"])
         self.assertEqual(args.command_options, ["//some:cli"])
-        self.assertFalse(args.is_help(), "Global --help ignored with command")
+        self.assertTrue(args.is_help())
 
     def test_run_command_help_for_program_and_command(self):
         args = CommandLineArgs(["buck", "run", "--help", "//some:cli", "--", "--help"])

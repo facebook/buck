@@ -203,7 +203,7 @@ def main(argv, reporter):
 
     # Execute wrapper specific commands
     wrapper_specific_commands = [("kill", kill_buck), ("killall", killall_buck)]
-    if "--help" not in argv:
+    if "--help" not in argv and "-h" not in argv:
         for command_str, command_fcn in wrapper_specific_commands:
             if len(argv) > 1 and argv[1] == command_str:
                 return ExitCodeCallable(command_fcn(reporter))
