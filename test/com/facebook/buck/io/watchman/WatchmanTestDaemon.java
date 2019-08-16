@@ -132,8 +132,8 @@ public class WatchmanTestDaemon implements Closeable {
           }
         }
       } catch (IOException e) {
-        Thread.sleep(100L);
       }
+      Thread.sleep(100L);
     }
   }
 
