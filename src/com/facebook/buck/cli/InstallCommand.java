@@ -100,7 +100,7 @@ public class InstallCommand extends BuildCommand {
   private static final long APPLE_SIMULATOR_WAIT_MILLIS = 20000;
   private static final ImmutableList<String> APPLE_SIMULATOR_APPS =
       ImmutableList.of("Simulator.app", "iOS Simulator.app");
-  private static final String DEFAULT_APPLE_SIMULATOR_NAME = "iPhone 5s";
+  private static final String DEFAULT_APPLE_SIMULATOR_NAME = "iPhone 6s";
   private static final String DEFAULT_APPLE_TV_SIMULATOR_NAME = "Apple TV";
   private static final InstallResult FAILURE =
       InstallResult.builder().setExitCode(ExitCode.RUN_ERROR).build();
