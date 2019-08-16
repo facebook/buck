@@ -29,9 +29,11 @@ import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleInfoPlistParsing;
 import com.facebook.buck.apple.device.AppleDeviceHelper;
 import com.facebook.buck.apple.simulator.AppleCoreSimulatorServiceController;
+import com.facebook.buck.apple.simulator.AppleDeviceController;
 import com.facebook.buck.apple.simulator.AppleSimulator;
 import com.facebook.buck.apple.simulator.AppleSimulatorController;
 import com.facebook.buck.apple.simulator.AppleSimulatorDiscovery;
+import com.facebook.buck.apple.simulator.ImmutableAppleDevice;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.cli.UninstallCommand.UninstallOptions;
 import com.facebook.buck.command.Build;
@@ -467,9 +469,13 @@ public class InstallCommand extends BuildCommand {
       SourcePathResolver pathResolver)
       throws IOException, InterruptedException, NoSuchBuildTargetException {
     String platformName = appleBundle.getPlatformName();
+    AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
     if (isSimulator(platformName)) {
-      return installAppleBundleForSimulator(
-          params, appleBundle, pathResolver, projectFilesystem, processExecutor);
+      if (appleConfig.useIdb())
+        return installAppleBundleForSimulatorIdb(params, appleBundle, processExecutor);
+      else
+        return installAppleBundleForSimulator(
+            params, appleBundle, pathResolver, projectFilesystem, processExecutor);
     }
     if (isDevice(platformName)) {
       return installAppleBundleForDevice(
@@ -652,6 +658,28 @@ public class InstallCommand extends BuildCommand {
                   + ")");
       return FAILURE;
     }
+  }
+
+  /** Installs an Apple Bundle in an Apple simulator using idb */
+  private InstallResult installAppleBundleForSimulatorIdb(
+      CommandRunnerParams params, AppleBundle appleBundle, ProcessExecutor processExecutor)
+      throws IOException, InterruptedException {
+
+    AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
+
+    Optional<ImmutableAppleDevice> simulator =
+        getAppleSimulatorForBundleIdb(appleBundle, processExecutor, appleConfig.getIdbPath());
+    if (!simulator.isPresent()) {
+      params
+          .getConsole()
+          .printBuildFailure(
+              String.format(
+                  "Cannot install %s (no appropriate simulator found)",
+                  appleBundle.getFullyQualifiedName()));
+      return FAILURE;
+    }
+
+    return InstallResult.builder().setExitCode(ExitCode.SUCCESS).build();
   }
 
   private InstallResult installAppleBundleForSimulator(
@@ -896,6 +924,81 @@ public class InstallCommand extends BuildCommand {
         .setExitCode(ExitCode.SUCCESS)
         .setLaunchedPid(launchedPid.get())
         .build();
+  }
+
+  /**
+   * Given a bundle, determines the simulator for which this bundle will be installed in
+   *
+   * @return the chosen simulator
+   */
+  private Optional<ImmutableAppleDevice> getAppleSimulatorForBundleIdb(
+      AppleBundle appleBundle, ProcessExecutor processExecutor, Path idbPath)
+      throws IOException, InterruptedException {
+    LOG.debug("Choosing simulator for %s", appleBundle);
+
+    Optional<ImmutableAppleDevice> simulatorByUdid = Optional.empty();
+    Optional<ImmutableAppleDevice> simulatorByName = Optional.empty();
+    Optional<ImmutableAppleDevice> defaultSimulator = Optional.empty();
+
+    boolean wantUdid = deviceOptions.getSerialNumber().isPresent();
+    boolean wantName = deviceOptions.getSimulatorName().isPresent();
+
+    AppleDeviceController appleDeviceController =
+        new AppleDeviceController(processExecutor, idbPath);
+
+    for (ImmutableAppleDevice simulator : appleDeviceController.getSimulators()) {
+      if (wantUdid
+          && deviceOptions
+              .getSerialNumber()
+              .get()
+              .toLowerCase(Locale.US)
+              .equals(simulator.getUdid().toLowerCase(Locale.US))) {
+        LOG.debug("Got UDID match (%s): %s", deviceOptions.getSerialNumber().get(), simulator);
+        simulatorByUdid = Optional.of(simulator);
+        // We shouldn't need to keep looking.
+        break;
+      } else if (wantName
+          && deviceOptions
+              .getSimulatorName()
+              .get()
+              .toLowerCase(Locale.US)
+              .equals(simulator.getName().toLowerCase(Locale.US))) {
+        LOG.debug("Got name match (%s): %s", simulator.getName(), simulator);
+        simulatorByName = Optional.of(simulator);
+        // We assume the simulators are sorted by OS version, so we'll keep
+        // looking for a more recent simulator with this name.
+      } else if (isIPhoneSimulator(appleBundle.getPlatformName())
+          && simulator.getName().equals(DEFAULT_APPLE_SIMULATOR_NAME)) {
+        LOG.debug("Got default match (%s): %s", DEFAULT_APPLE_SIMULATOR_NAME, simulator);
+        defaultSimulator = Optional.of(simulator);
+      } else if (isAppleTVSimulator(appleBundle.getPlatformName())
+          && simulator.getName().equals(DEFAULT_APPLE_TV_SIMULATOR_NAME)) {
+        LOG.debug("Got default match (%s): %s", DEFAULT_APPLE_TV_SIMULATOR_NAME, simulator);
+        defaultSimulator = Optional.of(simulator);
+      }
+    }
+
+    if (wantUdid) {
+      if (simulatorByUdid.isPresent()) {
+        return simulatorByUdid;
+      } else {
+        LOG.warn(
+            "Asked to find simulator with UDID %s, but couldn't find one.",
+            deviceOptions.getSerialNumber().get());
+        return Optional.empty();
+      }
+    } else if (wantName) {
+      if (simulatorByName.isPresent()) {
+        return simulatorByName;
+      } else {
+        LOG.warn(
+            "Asked to find simulator with name %s, but couldn't find one.",
+            deviceOptions.getSimulatorName().get());
+        return Optional.empty();
+      }
+    } else {
+      return defaultSimulator;
+    }
   }
 
   private Optional<AppleSimulator> getAppleSimulatorForBundle(

@@ -103,6 +103,28 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     }
   }
 
+  /**
+   * Gets the path to the executable file of idb
+   *
+   * @return a custom path if it was passed in the config, the default path otherwise
+   */
+  public Path getIdbPath() {
+    Optional<String> idbPathString = delegate.getValue(APPLE_SECTION, "idb_path");
+    if (idbPathString.isPresent()) return Paths.get(idbPathString.get());
+    return Paths.get("/usr/local/bin/idb");
+  }
+
+  /**
+   * Determines whether to use idb install functions or simctl; current default is to not use idb
+   *
+   * @return true it is supposed to use idb, false otherwise
+   */
+  public boolean useIdb() {
+    Optional<String> idbPathString = delegate.getValue(APPLE_SECTION, "use_idb");
+    if (idbPathString.isPresent()) return idbPathString.get().equals("true");
+    return false;
+  }
+
   public Optional<String> getXcodeDeveloperDirectoryForTests() {
     return delegate.getValue(APPLE_SECTION, "xcode_developer_dir_for_tests");
   }
