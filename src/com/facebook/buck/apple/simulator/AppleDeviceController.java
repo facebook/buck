@@ -34,8 +34,16 @@ import java.util.Set;
 public class AppleDeviceController {
 
   private static final Logger LOG = Logger.get(AppleDeviceController.class);
+
   private final ProcessExecutor processExecutor;
   private final Path idbPath;
+
+  /** Enum indicating the different kinds of devices possible */
+  public enum AppleDeviceKindEnum {
+    MOBILE,
+    TV,
+    WATCH,
+  }
 
   public AppleDeviceController(ProcessExecutor processExecutor, Path idbPath) {
     this.processExecutor = processExecutor;
@@ -94,7 +102,7 @@ public class AppleDeviceController {
   }
 
   /** @return set of udids of the booted devices */
-  public ImmutableSet<String> getBootedSimulatorsUdids() throws IOException, InterruptedException {
+  public ImmutableSet<String> getBootedSimulatorsUdids() {
     ImmutableSet.Builder<String> bootedSimulatorUdids = ImmutableSet.builder();
     ImmutableSet<ImmutableAppleDevice> allTargets = getSimulators();
 
@@ -104,5 +112,68 @@ public class AppleDeviceController {
       }
     }
     return bootedSimulatorUdids.build();
+  }
+
+  /**
+   * Starts up the iOS simulator using idb, which waits until the simulator is completely booted.
+   *
+   * <p>Call {@link #isSimulatorAvailable(String)} before invoking this method to ensure the
+   * simulator is available.
+   *
+   * @return true if idb was able to boot the simulator, false otherwise
+   */
+  public boolean bootSimulator(String simulatorUdid) throws IOException, InterruptedException {
+    // Check if simulator is available
+    if (!isSimulatorAvailable(simulatorUdid)) {
+      LOG.warn("Did not find the simulator %s", simulatorUdid);
+      return false;
+    }
+
+    // Boots simulator
+    return bootSimulatorWithUdid(simulatorUdid);
+  }
+
+  /**
+   * @param simulatorUdid of the simulator is available
+   * @return true if the simulator is available, false otherwise
+   */
+  public boolean isSimulatorAvailable(String simulatorUdid) {
+    AppleDeviceController deviceController = new AppleDeviceController(processExecutor, idbPath);
+    ImmutableSet<ImmutableAppleDevice> simulators = deviceController.getSimulators();
+    for (ImmutableAppleDevice simulator : simulators) {
+      if (simulator.getUdid().equals(simulatorUdid)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * @param simulatorUdid, udid of the simulator to boot
+   * @return true if it was possible to boot the simulator, false otherwise
+   */
+  private boolean bootSimulatorWithUdid(String simulatorUdid)
+      throws IOException, InterruptedException {
+    ImmutableList<String> command =
+        ImmutableList.of(idbPath.toString(), "boot", "--udid", simulatorUdid);
+    LOG.debug("Booting iOS simulator %s: %s", simulatorUdid, command);
+    ProcessExecutorParams processExecutorParams =
+        ProcessExecutorParams.builder().setCommand(command).build();
+    ProcessExecutor.Result result = processExecutor.launchAndExecute(processExecutorParams);
+    if (result.getExitCode() != 0) {
+      LOG.error(result.getMessageForUnexpectedResult(command.toString()));
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * @param device to be analized
+   * @return the enum indicating the kind of device it is
+   */
+  public AppleDeviceKindEnum getDeviceKind(ImmutableAppleDevice device) {
+    if (device.getName().contains("TV")) return AppleDeviceKindEnum.TV;
+    if (device.getName().contains("Watch")) return AppleDeviceKindEnum.WATCH;
+    return AppleDeviceKindEnum.MOBILE;
   }
 }

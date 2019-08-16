@@ -666,7 +666,10 @@ public class InstallCommand extends BuildCommand {
       throws IOException, InterruptedException {
 
     AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
+    AppleDeviceController appleDeviceController =
+        new AppleDeviceController(processExecutor, appleConfig.getIdbPath());
 
+    // Choose the simulator
     Optional<ImmutableAppleDevice> simulator =
         getAppleSimulatorForBundleIdb(appleBundle, processExecutor, appleConfig.getIdbPath());
     if (!simulator.isPresent()) {
@@ -677,6 +680,27 @@ public class InstallCommand extends BuildCommand {
                   "Cannot install %s (no appropriate simulator found)",
                   appleBundle.getFullyQualifiedName()));
       return FAILURE;
+    }
+
+    // Boot the simulator
+    if (simulator.get().getState().equals("Shutdown")) {
+      LOG.debug("Starting up simulator %s", simulator.get());
+
+      if (!appleDeviceController.bootSimulator(simulator.get().getUdid())) {
+        params
+            .getConsole()
+            .printBuildFailure(
+                String.format(
+                    "Cannot install %s (could not start simulator %s)",
+                    appleBundle.getFullyQualifiedName(), simulator.get().getName()));
+        return FAILURE;
+      }
+
+      LOG.debug(
+          "Simulator started. Installing Apple bundle %s in simulator %s",
+          appleBundle, simulator.get());
+    } else {
+      LOG.debug("Simulator %s already running", simulator.get());
     }
 
     return InstallResult.builder().setExitCode(ExitCode.SUCCESS).build();
@@ -938,6 +962,7 @@ public class InstallCommand extends BuildCommand {
 
     Optional<ImmutableAppleDevice> simulatorByUdid = Optional.empty();
     Optional<ImmutableAppleDevice> simulatorByName = Optional.empty();
+    Optional<ImmutableAppleDevice> bootedSimulator = Optional.empty();
     Optional<ImmutableAppleDevice> defaultSimulator = Optional.empty();
 
     boolean wantUdid = deviceOptions.getSerialNumber().isPresent();
@@ -967,14 +992,35 @@ public class InstallCommand extends BuildCommand {
         simulatorByName = Optional.of(simulator);
         // We assume the simulators are sorted by OS version, so we'll keep
         // looking for a more recent simulator with this name.
-      } else if (isIPhoneSimulator(appleBundle.getPlatformName())
-          && simulator.getName().equals(DEFAULT_APPLE_SIMULATOR_NAME)) {
-        LOG.debug("Got default match (%s): %s", DEFAULT_APPLE_SIMULATOR_NAME, simulator);
-        defaultSimulator = Optional.of(simulator);
-      } else if (isAppleTVSimulator(appleBundle.getPlatformName())
-          && simulator.getName().equals(DEFAULT_APPLE_TV_SIMULATOR_NAME)) {
-        LOG.debug("Got default match (%s): %s", DEFAULT_APPLE_TV_SIMULATOR_NAME, simulator);
-        defaultSimulator = Optional.of(simulator);
+      } else {
+        switch (appleDeviceController.getDeviceKind(simulator)) {
+          case MOBILE:
+            if (isIPhoneSimulator(appleBundle.getPlatformName())) {
+              if (simulator.getName().equals(DEFAULT_APPLE_SIMULATOR_NAME)) {
+                LOG.debug("Got default match (%s): %s", DEFAULT_APPLE_SIMULATOR_NAME, simulator);
+                defaultSimulator = Optional.of(simulator);
+              }
+              if (simulator.getState().equals("Booted")) {
+                bootedSimulator = Optional.of(simulator);
+              }
+            }
+            break;
+
+          case TV:
+            if (isAppleTVSimulator(appleBundle.getPlatformName())) {
+              if (simulator.getName().equals(DEFAULT_APPLE_TV_SIMULATOR_NAME)) {
+                LOG.debug("Got default match (%s): %s", DEFAULT_APPLE_TV_SIMULATOR_NAME, simulator);
+                defaultSimulator = Optional.of(simulator);
+              }
+              if (simulator.getState().equals("Booted")) {
+                bootedSimulator = Optional.of(simulator);
+              }
+            }
+            break;
+
+          case WATCH:
+            break;
+        }
       }
     }
 
@@ -996,6 +1042,8 @@ public class InstallCommand extends BuildCommand {
             deviceOptions.getSimulatorName().get());
         return Optional.empty();
       }
+    } else if (bootedSimulator.isPresent()) {
+      return bootedSimulator;
     } else {
       return defaultSimulator;
     }
