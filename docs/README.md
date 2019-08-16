@@ -34,11 +34,35 @@ Therefore, to publish this documentation, you must commit it on the
     # Both build the docs with plovr in the background
     # (serving them on TCP port 9814) and push the
     # docs to GitHub Pages
-    ./docs/publish.sh --start-soyweb
+    cd docs
+    ./publish.sh --start-soyweb
 
 Because this script interacts with GitHub, you should have your
 GitHub credentials configured as described at
 [Generating a new SSH key and adding it to the ssh-agent](https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/).
+
+
+Javadoc
+=======
+
+The Javadoc on the Buck website is updated whenever the documentation is
+published. (See previous section.)
+
+To generate the Javadoc locally, from the root of the Buck tree, build
+the Javadoc with `ant`:
+
+    ant javadoc-with-android
+
+To view the generated Javadoc, either open 
+
+    ant-out/javadoc-with-android/index.html 
+
+in your browser, or to use the local web server on your computer, copy
+the Javadoc to the `docs` directory:
+
+    cp -r ant-out/javadoc-with-android/ docs/javadoc/
+
+and view the Javadoc at `http://localhost:9811/javadoc`.
 
 
 Creating a New Article
