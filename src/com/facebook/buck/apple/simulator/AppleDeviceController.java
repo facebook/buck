@@ -188,6 +188,26 @@ public class AppleDeviceController {
   }
 
   /**
+   * Brings the desired simulator to the front
+   *
+   * @return true if it managed to do so, false otherwise
+   */
+  public boolean bringSimulatorToFront(String simulatorUdid)
+      throws IOException, InterruptedException {
+    ImmutableList<String> command =
+        ImmutableList.of(idbPath.toString(), "focus", "--udid", simulatorUdid);
+    ProcessExecutorParams processExecutorParams =
+        ProcessExecutorParams.builder().setCommand(command).build();
+    ProcessExecutor.Result result = processExecutor.launchAndExecute(processExecutorParams);
+    if (result.getExitCode() != 0) {
+      LOG.warn("Could not bring simulators to front");
+      LOG.warn(result.getMessageForUnexpectedResult(command.toString()));
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * @param device to be analized
    * @return the enum indicating the kind of device it is
    */

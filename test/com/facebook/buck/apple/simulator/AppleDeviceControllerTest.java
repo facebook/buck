@@ -225,6 +225,25 @@ public class AppleDeviceControllerTest {
   }
 
   @Test
+  public void bringSimulatorToFrontTest() throws IOException, InterruptedException {
+    FakeProcess fakeProcess = new FakeProcess(0);
+    ProcessExecutorParams fakeProcessParams =
+        ProcessExecutorParams.builder()
+            .setCommand(
+                ImmutableList.of(
+                    IDB_PATH.toString(), "focus", "--udid", "70200ED8-EEF1-4BDB-BCCF-3595B137D67D"))
+            .build();
+    FakeProcessExecutor fakeProcessExecutor =
+        new FakeProcessExecutor(ImmutableMap.of(fakeProcessParams, fakeProcess));
+
+    AppleDeviceController deviceController =
+        new AppleDeviceController(fakeProcessExecutor, IDB_PATH);
+    boolean inFront =
+        deviceController.bringSimulatorToFront("70200ED8-EEF1-4BDB-BCCF-3595B137D67D");
+    assertThat(inFront, is(true));
+  }
+
+  @Test
   public void getSimulatorsTest() throws IOException {
     ImmutableSet<ImmutableAppleDevice> simulators;
     try (OutputStream stdin = new ByteArrayOutputStream();

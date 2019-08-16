@@ -723,6 +723,9 @@ public class InstallCommand extends BuildCommand {
       return FAILURE;
     }
 
+    // Brings the simulator to the front
+    appleDeviceController.bringSimulatorToFront(simulator.get().getUdid());
+
     return InstallResult.builder().setExitCode(ExitCode.SUCCESS).build();
   }
 
