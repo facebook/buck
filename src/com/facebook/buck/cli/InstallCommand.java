@@ -473,7 +473,7 @@ public class InstallCommand extends BuildCommand {
     if (isSimulator(platformName)) {
       if (appleConfig.useIdb())
         return installAppleBundleForSimulatorIdb(
-            params, appleBundle, pathResolver, processExecutor);
+            params, appleBundle, pathResolver, projectFilesystem, processExecutor);
       else
         return installAppleBundleForSimulator(
             params, appleBundle, pathResolver, projectFilesystem, processExecutor);
@@ -666,6 +666,7 @@ public class InstallCommand extends BuildCommand {
       CommandRunnerParams params,
       AppleBundle appleBundle,
       SourcePathResolver pathResolver,
+      ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor)
       throws IOException, InterruptedException {
 
@@ -726,6 +727,59 @@ public class InstallCommand extends BuildCommand {
     // Brings the simulator to the front
     appleDeviceController.bringSimulatorToFront(simulator.get().getUdid());
 
+    // Launching the bundle
+    if (run) {
+      // Get the bundleID
+      Optional<String> appleBundleId = getAppleBundleId(appleBundle, projectFilesystem);
+      if (!appleBundleId.isPresent()) {
+        params
+            .getConsole()
+            .printBuildFailure(
+                String.format(
+                    "Cannot install %s (could not get bundle ID from %s)",
+                    appleBundle.getFullyQualifiedName(), appleBundle.getInfoPlistPath()));
+        return FAILURE;
+      }
+
+      // Launching
+      if (!appleDeviceController.launchInstalledBundle(
+          simulator.get().getUdid(),
+          appleBundleId.get(),
+          waitForDebugger
+              ? AppleDeviceController.LaunchBehavior.WAIT_FOR_DEBUGGER
+              : AppleDeviceController.LaunchBehavior.DO_NOT_WAIT_FOR_DEBUGGER)) {
+        params
+            .getConsole()
+            .printBuildFailure(
+                String.format(
+                    "Cannot launch %s (failed to launch bundle ID %s)",
+                    appleBundle.getFullyQualifiedName(), appleBundleId.get()));
+        return FAILURE;
+      }
+      params
+          .getBuckEventBus()
+          .post(
+              ConsoleEvent.info(
+                  params
+                      .getConsole()
+                      .getAnsi()
+                      .asHighlightedSuccessText(
+                          "Successfully launched %s%s. To debug, run: lldb -p"),
+                  getArguments().get(0),
+                  waitForDebugger ? " (waiting for debugger)" : ""));
+    } else {
+      params
+          .getBuckEventBus()
+          .post(
+              ConsoleEvent.info(
+                  params
+                      .getConsole()
+                      .getAnsi()
+                      .asHighlightedSuccessText(
+                          "Successfully installed %s. (Use `buck install -r %s` to run.)"),
+                  getArguments().get(0),
+                  getArguments().get(0)));
+    }
     return InstallResult.builder().setExitCode(ExitCode.SUCCESS).build();
   }
 
@@ -919,13 +973,7 @@ public class InstallCommand extends BuildCommand {
 
     LOG.debug("Launching Apple bundle %s in simulator %s", appleBundle, appleSimulator);
 
-    Optional<String> appleBundleId;
-    try (InputStream bundlePlistStream =
-        projectFilesystem.getInputStreamForRelativePath(appleBundle.getInfoPlistPath())) {
-      appleBundleId =
-          AppleInfoPlistParsing.getBundleIdFromPlistStream(
-              appleBundle.getInfoPlistPath(), bundlePlistStream);
-    }
+    Optional<String> appleBundleId = getAppleBundleId(appleBundle, projectFilesystem);
     if (!appleBundleId.isPresent()) {
       params
           .getConsole()
@@ -1138,6 +1186,26 @@ public class InstallCommand extends BuildCommand {
     } else {
       return defaultSimulator;
     }
+  }
+
+  /**
+   * Gets the bundle ID of the installed bundle (the identifier of the bundle)
+   *
+   * @return the BundleId
+   */
+  private Optional<String> getAppleBundleId(
+      AppleBundle appleBundle, ProjectFilesystem projectFilesystem) {
+    Optional<String> appleBundleId = Optional.empty();
+    try (InputStream bundlePlistStream =
+        projectFilesystem.getInputStreamForRelativePath(appleBundle.getInfoPlistPath())) {
+      appleBundleId =
+          AppleInfoPlistParsing.getBundleIdFromPlistStream(
+              appleBundle.getInfoPlistPath(), bundlePlistStream);
+    } catch (IOException e) {
+      e.printStackTrace();
+      LOG.error("Could not get apple bundle ID");
+    }
+    return appleBundleId;
   }
 
   @Override

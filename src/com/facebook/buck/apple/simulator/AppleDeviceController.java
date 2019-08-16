@@ -45,6 +45,12 @@ public class AppleDeviceController {
     WATCH,
   }
 
+  /** Enum for the different ways to launch the simulator */
+  public enum LaunchBehavior {
+    DO_NOT_WAIT_FOR_DEBUGGER,
+    WAIT_FOR_DEBUGGER
+  }
+
   public AppleDeviceController(ProcessExecutor processExecutor, Path idbPath) {
     this.processExecutor = processExecutor;
     this.idbPath = idbPath;
@@ -202,6 +208,37 @@ public class AppleDeviceController {
     if (result.getExitCode() != 0) {
       LOG.warn("Could not bring simulators to front");
       LOG.warn(result.getMessageForUnexpectedResult(command.toString()));
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Launches an installed bundle in a device
+   *
+   * @return true if it was able to launch and false otherwise
+   */
+  public boolean launchInstalledBundle(
+      String deviceUdid, String bundleID, LaunchBehavior launchBehavior)
+      throws IOException, InterruptedException {
+    ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
+    commandBuilder.add(idbPath.toString(), "launch", bundleID);
+    if (launchBehavior == LaunchBehavior.WAIT_FOR_DEBUGGER) {
+      commandBuilder.add("-w");
+    }
+    commandBuilder.add("--udid", deviceUdid);
+    ImmutableList<String> command = commandBuilder.build();
+    ProcessExecutorParams processExecutorParams =
+        ProcessExecutorParams.builder().setCommand(command).build();
+
+    String message =
+        String.format(
+            "Launching bundle ID %s in simulator %s via command %s", bundleID, deviceUdid, command);
+    LOG.debug(message);
+
+    ProcessExecutor.Result result = processExecutor.launchAndExecute(processExecutorParams);
+    if (result.getExitCode() != 0) {
+      LOG.error(result.getMessageForResult(message));
       return false;
     }
     return true;

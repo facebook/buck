@@ -244,6 +244,59 @@ public class AppleDeviceControllerTest {
   }
 
   @Test
+  public void launchingInstalledBundleInSimulatorWorks() throws IOException, InterruptedException {
+    FakeProcess fakeLaunchProcess = new FakeProcess(0, "com.facebook.MyNeatApp: 42", "");
+    ProcessExecutorParams fakeLaunchParams =
+        ProcessExecutorParams.builder()
+            .setCommand(
+                ImmutableList.of(
+                    IDB_PATH.toString(),
+                    "launch",
+                    "com.facebook.MyNeatApp",
+                    "--udid",
+                    "70200ED8-EEF1-4BDB-BCCF-3595B137D67D"))
+            .build();
+    FakeProcessExecutor fakeProcessExecutor =
+        new FakeProcessExecutor(ImmutableMap.of(fakeLaunchParams, fakeLaunchProcess));
+    AppleDeviceController appleDeviceController =
+        new AppleDeviceController(fakeProcessExecutor, IDB_PATH);
+    boolean launchStatus =
+        appleDeviceController.launchInstalledBundle(
+            "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
+            "com.facebook.MyNeatApp",
+            AppleDeviceController.LaunchBehavior.DO_NOT_WAIT_FOR_DEBUGGER);
+    assertThat(launchStatus, is(true));
+  }
+
+  @Test
+  public void launchingInstalledBundleWaitingForDebuggerWorks()
+      throws IOException, InterruptedException {
+    FakeProcess fakeLaunchProcess = new FakeProcess(0, "com.facebook.MyNeatApp: 42", "");
+    ProcessExecutorParams fakeLaunchParams =
+        ProcessExecutorParams.builder()
+            .setCommand(
+                ImmutableList.of(
+                    IDB_PATH.toString(),
+                    "launch",
+                    "com.facebook.MyNeatApp",
+                    "-w",
+                    "--udid",
+                    "70200ED8-EEF1-4BDB-BCCF-3595B137D67D"))
+            .build();
+    FakeProcessExecutor fakeProcessExecutor =
+        new FakeProcessExecutor(ImmutableMap.of(fakeLaunchParams, fakeLaunchProcess));
+    AppleDeviceController appleDeviceController =
+        new AppleDeviceController(fakeProcessExecutor, IDB_PATH);
+    boolean launchStatus =
+        appleDeviceController.launchInstalledBundle(
+            "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
+            "com.facebook.MyNeatApp",
+            AppleDeviceController.LaunchBehavior.WAIT_FOR_DEBUGGER);
+
+    assertThat(launchStatus, is(true));
+  }
+
+  @Test
   public void getSimulatorsTest() throws IOException {
     ImmutableSet<ImmutableAppleDevice> simulators;
     try (OutputStream stdin = new ByteArrayOutputStream();
