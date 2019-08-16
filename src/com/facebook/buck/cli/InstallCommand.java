@@ -472,7 +472,8 @@ public class InstallCommand extends BuildCommand {
     AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
     if (isSimulator(platformName)) {
       if (appleConfig.useIdb())
-        return installAppleBundleForSimulatorIdb(params, appleBundle, processExecutor);
+        return installAppleBundleForSimulatorIdb(
+            params, appleBundle, pathResolver, processExecutor);
       else
         return installAppleBundleForSimulator(
             params, appleBundle, pathResolver, projectFilesystem, processExecutor);
@@ -662,7 +663,10 @@ public class InstallCommand extends BuildCommand {
 
   /** Installs an Apple Bundle in an Apple simulator using idb */
   private InstallResult installAppleBundleForSimulatorIdb(
-      CommandRunnerParams params, AppleBundle appleBundle, ProcessExecutor processExecutor)
+      CommandRunnerParams params,
+      AppleBundle appleBundle,
+      SourcePathResolver pathResolver,
+      ProcessExecutor processExecutor)
       throws IOException, InterruptedException {
 
     AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
@@ -701,6 +705,22 @@ public class InstallCommand extends BuildCommand {
           appleBundle, simulator.get());
     } else {
       LOG.debug("Simulator %s already running", simulator.get());
+    }
+
+    // Install the bundle
+    if (!appleDeviceController.installBundle(
+        simulator.get().getUdid(),
+        pathResolver.getAbsolutePath(
+            Objects.requireNonNull(appleBundle.getSourcePathToOutput())))) {
+      params
+          .getConsole()
+          .printBuildFailure(
+              String.format(
+                  "Cannot install %s (could not install bundle %s in simulator %s)",
+                  appleBundle.getFullyQualifiedName(),
+                  pathResolver.getAbsolutePath(appleBundle.getSourcePathToOutput()),
+                  simulator.get().getName()));
+      return FAILURE;
     }
 
     return InstallResult.builder().setExitCode(ExitCode.SUCCESS).build();

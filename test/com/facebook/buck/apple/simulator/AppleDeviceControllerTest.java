@@ -202,6 +202,29 @@ public class AppleDeviceControllerTest {
   }
 
   @Test
+  public void installingBundleInSimulatorWorks() throws IOException, InterruptedException {
+    FakeProcess fakeInstallProcess = new FakeProcess(0);
+    ProcessExecutorParams fakeInstallParams =
+        ProcessExecutorParams.builder()
+            .setCommand(
+                ImmutableList.of(
+                    IDB_PATH.toString(),
+                    "install",
+                    "--udid",
+                    "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
+                    "Path/To/MyNeatApp.app"))
+            .build();
+    FakeProcessExecutor fakeProcessExecutor =
+        new FakeProcessExecutor(ImmutableMap.of(fakeInstallParams, fakeInstallProcess));
+    AppleDeviceController deviceController =
+        new AppleDeviceController(fakeProcessExecutor, IDB_PATH);
+    boolean installed =
+        deviceController.installBundle(
+            "70200ED8-EEF1-4BDB-BCCF-3595B137D67D", Paths.get("Path/To/MyNeatApp.app"));
+    assertThat(installed, is(true));
+  }
+
+  @Test
   public void getSimulatorsTest() throws IOException {
     ImmutableSet<ImmutableAppleDevice> simulators;
     try (OutputStream stdin = new ByteArrayOutputStream();

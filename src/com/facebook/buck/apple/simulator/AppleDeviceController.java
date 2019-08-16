@@ -168,6 +168,26 @@ public class AppleDeviceController {
   }
 
   /**
+   * Installs a bundle in a previously-started simulator or physical device.
+   *
+   * @return true if the bundle was installed, false otherwise.
+   */
+  public boolean installBundle(String deviceUdid, Path bundlePath)
+      throws IOException, InterruptedException {
+    ImmutableList<String> command =
+        ImmutableList.of(
+            idbPath.toString(), "install", "--udid", deviceUdid, bundlePath.toString());
+    ProcessExecutorParams processExecutorParams =
+        ProcessExecutorParams.builder().setCommand(command).build();
+    ProcessExecutor.Result result = processExecutor.launchAndExecute(processExecutorParams);
+    if (result.getExitCode() != 0) {
+      LOG.error(result.getMessageForUnexpectedResult(command.toString()));
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * @param device to be analized
    * @return the enum indicating the kind of device it is
    */
