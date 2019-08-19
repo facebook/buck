@@ -23,6 +23,7 @@ java_library(
         "//src/com/facebook/buck/io/watchman:capability",
         "//src/com/facebook/buck/io/watchman:transport",
         "//src/com/facebook/buck/io/watchman:watchman",
+        "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util:process_executor",

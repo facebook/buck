@@ -17,6 +17,7 @@ package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.log.LogConfig;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -27,9 +28,11 @@ import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.ImmutableMap;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
@@ -43,14 +46,17 @@ public class WatchmanTestDaemon implements Closeable {
   private final ListeningProcessExecutor executor;
   @Nullable private ListeningProcessExecutor.LaunchedProcess watchmanProcess;
   private final Path watchmanSockFile;
+  private final Path watchmanLogFile;
 
   private WatchmanTestDaemon(
       ListeningProcessExecutor executor,
       @Nullable ListeningProcessExecutor.LaunchedProcess watchmanProcess,
-      Path watchmanSockFile) {
+      Path watchmanSockFile,
+      Path watchmanLogFile) {
     this.executor = executor;
     this.watchmanProcess = watchmanProcess;
     this.watchmanSockFile = watchmanSockFile;
+    this.watchmanLogFile = watchmanLogFile;
   }
 
   public static WatchmanTestDaemon start(Path watchmanBaseDir, ListeningProcessExecutor executor)
@@ -104,7 +110,8 @@ public class WatchmanTestDaemon implements Closeable {
         new WatchmanTestDaemon(
             executor,
             executor.launchProcess(params, new ProcessListeners.CapturingListener()),
-            watchmanSockFile);
+            watchmanSockFile,
+            watchmanLogFile);
     try {
       daemon.waitUntilReady();
       return daemon;
@@ -142,10 +149,38 @@ public class WatchmanTestDaemon implements Closeable {
   }
 
   @Override
-  public void close() {
-    if (watchmanProcess != null) {
-      executor.destroyProcess(watchmanProcess, true);
+  public void close() throws IOException {
+    if (watchmanProcess == null) {
+      return;
+    }
+    try {
+      stopWatchmanProcess();
       watchmanProcess = null;
+    } finally {
+      dumpWatchmanLogs();
+    }
+  }
+
+  private void stopWatchmanProcess() throws IOException {
+    try {
+      executor.destroyProcess(watchmanProcess, true);
+      executor.waitForProcess(watchmanProcess);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void dumpWatchmanLogs() throws IOException {
+    LogConfig.flushLogs();
+    PrintStream output = System.err;
+    output.printf("Watchman logs (%s):\n", watchmanLogFile);
+    printIndentedLines(output, Files.readAllLines(watchmanLogFile));
+  }
+
+  private static void printIndentedLines(PrintStream output, List<String> lines) {
+    for (String line : lines) {
+      output.print("    ");
+      output.println(line);
     }
   }
 }

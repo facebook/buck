@@ -71,7 +71,7 @@ public class WatchmanClientIntegrationTest {
   }
 
   @After
-  public void tearDown() {
+  public void tearDown() throws IOException {
     if (watchmanDaemon != null) {
       watchmanDaemon.close();
     }

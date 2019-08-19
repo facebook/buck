@@ -84,7 +84,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
   }
 
   @After
-  public void tearDownWatchman() {
+  public void tearDownWatchman() throws IOException {
     if (watchmanDaemon != null) {
       watchmanDaemon.close();
     }
