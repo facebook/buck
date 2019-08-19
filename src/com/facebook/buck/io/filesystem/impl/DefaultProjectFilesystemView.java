@@ -19,12 +19,13 @@ package com.facebook.buck.io.filesystem.impl;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
+import com.facebook.buck.util.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitOption;
@@ -191,13 +192,15 @@ public class DefaultProjectFilesystemView implements ProjectFilesystemView {
 
   @Override
   public ImmutableCollection<Path> getDirectoryContents(Path pathToUse) throws IOException {
+    Path relativeDirectoryPath =
+        MorePaths.relativize(resolvedProjectRoot, resolvedProjectRoot.resolve(pathToUse));
     try (DirectoryStream<Path> stream =
         filesystemParent.getDirectoryContentsStream(
             filesystemParent.getPathForRelativePath(projectRoot.resolve(pathToUse)))) {
-      return FluentIterable.from(stream)
+      return RichStream.from(stream)
           .filter(this::shouldExplorePaths)
-          .transform(absolutePath -> MorePaths.relativize(resolvedProjectRoot, absolutePath))
-          .toSortedList(Comparator.naturalOrder());
+          .map((Path absolutePath) -> relativeDirectoryPath.resolve(absolutePath.getFileName()))
+          .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
     }
   }
 
