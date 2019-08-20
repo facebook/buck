@@ -20,8 +20,6 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
-import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -30,11 +28,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
-import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
@@ -42,13 +36,8 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.step.Step;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.SortedSet;
-import javax.annotation.Nullable;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -149,38 +138,6 @@ public class LocationMacroExpanderTest {
             Paths.get(""),
             EmptyTargetConfiguration.INSTANCE,
             "$(location )");
-  }
-
-  private final class RuleWithSupplementaryOutput extends AbstractBuildRule
-      implements HasSupplementaryOutputs {
-
-    public RuleWithSupplementaryOutput(
-        BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
-      super(buildTarget, projectFilesystem);
-    }
-
-    @Override
-    public SourcePath getSourcePathToSupplementaryOutput(String name) {
-      return ExplicitBuildTargetSourcePath.of(
-          getBuildTarget(), getProjectFilesystem().getPath("supplementary-" + name));
-    }
-
-    @Override
-    public SortedSet<BuildRule> getBuildDeps() {
-      return ImmutableSortedSet.of();
-    }
-
-    @Override
-    public ImmutableList<? extends Step> getBuildSteps(
-        BuildContext context, BuildableContext buildableContext) {
-      return ImmutableList.of();
-    }
-
-    @Nullable
-    @Override
-    public SourcePath getSourcePathToOutput() {
-      return null;
-    }
   }
 
   private String coerceAndStringify(String input, BuildRule rule) throws CoerceFailedException {
