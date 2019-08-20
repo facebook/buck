@@ -20,8 +20,11 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.exceptions.UserVerify;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -30,6 +33,8 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.test.rule.HasTestRunnerLibrary;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -42,6 +47,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.rules.macros.AbsoluteOutputMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
@@ -53,7 +59,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.nio.file.Path;
@@ -69,7 +74,7 @@ public class JavaTestDescription
         VersionRoot<JavaTestDescriptionArg> {
 
   public static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
-      ImmutableList.of(new LocationMacroExpander());
+      ImmutableList.of(new LocationMacroExpander(), new AbsoluteOutputMacroExpander());
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
@@ -119,6 +124,29 @@ public class JavaTestDescription
             graphBuilder,
             args);
 
+    Optional<BuildTarget> runnerLibrary = args.getRunnerLibrary();
+    Optional<ImmutableMap<String, StringWithMacros>> runnerSpecs = args.getSpecs();
+
+    if (runnerSpecs.isPresent()) {
+      if (runnerLibrary.isPresent()) {
+        UserVerify.verify(
+            args.getRunnerMainClass().isPresent(),
+            "The main class of the runner should be specified via runner_main_class");
+        BuildRule library = graphBuilder.requireRule(runnerLibrary.get());
+        if (!(library instanceof JavaLibrary)) {
+          throw new HumanReadableException(
+              "Java tests should have a JavaLibrary as the runner library for test protocol");
+        }
+
+        params = params.copyAppendingExtraDeps(library);
+      } else {
+        throw new HumanReadableException(
+            "Java test should have a JavaLibrary as the runner library for test protocol");
+      }
+    } else if (runnerLibrary.isPresent()) {
+      throw new HumanReadableException("Should not have runner set when no specs are set");
+    }
+
     CxxLibraryEnhancement cxxLibraryEnhancement =
         new CxxLibraryEnhancement(
             buildTarget,
@@ -151,6 +179,7 @@ public class JavaTestDescription
     }
 
     JavaLibrary testsLibrary = graphBuilder.addToIndex(defaultJavaLibraryRules.buildLibrary());
+    params = params.copyAppendingExtraDeps(testsLibrary);
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.builder()
@@ -160,10 +189,51 @@ public class JavaTestDescription
             .setExpanders(MACRO_EXPANDERS)
             .build();
 
+    if (runnerSpecs.isPresent()) {
+
+      // Construct the build rule to build the binary JAR.
+      ImmutableSet<JavaLibrary> transitiveClasspathDeps =
+          JavaLibraryClasspathProvider.getClasspathDeps(params.getBuildDeps());
+      ImmutableSet<SourcePath> transitiveClasspaths =
+          JavaLibraryClasspathProvider.getClasspathsFromLibraries(transitiveClasspathDeps);
+      JavaBinary javaBinary =
+          new JavaBinary(
+              buildTarget.withFlavors(InternalFlavor.of("bin")),
+              projectFilesystem,
+              params.copyAppendingExtraDeps(transitiveClasspathDeps),
+              javaOptionsForTests
+                  .get()
+                  .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+              args.getRunnerMainClass().get(),
+              args.getManifestFile().orElse(null),
+              true,
+              false,
+              null,
+              ImmutableSet.of(),
+              transitiveClasspathDeps,
+              transitiveClasspaths,
+              javaBuckConfig.shouldCacheBinaries(),
+              javaBuckConfig.getDuplicatesLogLevel());
+
+      graphBuilder.addToIndex(javaBinary);
+
+      return new JavaTestX(
+          buildTarget,
+          projectFilesystem,
+          params.copyAppendingExtraDeps(javaBinary),
+          DefaultSourcePathResolver.from(graphBuilder),
+          javaBinary,
+          testsLibrary,
+          args.getLabels(),
+          args.getContacts(),
+          ImmutableMap.copyOf(
+              Maps.transformValues(args.getSpecs().get(), macrosConverter::convert)));
+    }
+
     return new JavaTest(
         buildTarget,
         projectFilesystem,
-        params.copyAppendingExtraDeps(ImmutableSortedSet.of(testsLibrary)),
+        params,
         testsLibrary,
         Optional.empty(),
         args.getLabels(),
@@ -241,7 +311,10 @@ public class JavaTestDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractJavaTestDescriptionArg extends CoreArg {}
+  interface AbstractJavaTestDescriptionArg extends CoreArg, HasTestRunnerLibrary {
+
+    Optional<String> getRunnerMainClass();
+  }
 
   public static class CxxLibraryEnhancement {
     public final BuildRuleParams updatedParams;

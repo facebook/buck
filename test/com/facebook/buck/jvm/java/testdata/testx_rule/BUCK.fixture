@@ -1,0 +1,20 @@
+java_library(
+    name = "runner",
+    srcs = ["SomeRunner.java"],
+    deps = [
+    ],
+)
+
+java_test(
+    name = "some_test",
+    srcs = ["SomeTest.java"],
+    runner_library = ":runner",
+    runner_main_class = "test.SomeRunner",
+    specs = {
+        "my": "spec",
+        "cmd": "java -jar $(abs_output testbin) $(abs_output classnames)",
+    },
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+)
