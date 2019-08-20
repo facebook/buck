@@ -34,6 +34,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.macros.AbsoluteOutputMacro;
 import com.facebook.buck.rules.macros.CcFlagsMacro;
 import com.facebook.buck.rules.macros.CcMacro;
 import com.facebook.buck.rules.macros.ClasspathAbiMacro;
@@ -192,6 +193,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                   .put("location", LocationMacro.class)
                   .put("maven_coords", MavenCoordinatesMacro.class)
                   .put("output", OutputMacro.class)
+                  .put("abs_output", AbsoluteOutputMacro.class)
                   .put("query_targets", QueryTargetsMacro.class)
                   .put("query_outputs", QueryOutputsMacro.class)
                   .put("query_paths", QueryPathsMacro.class)
@@ -226,6 +228,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                       MavenCoordinatesMacro.class,
                       MavenCoordinatesMacro::of),
                   new OutputMacroTypeCoercer(),
+                  new AbsoluteOutputMacroTypeCoercer(),
                   new QueryMacroTypeCoercer<>(
                       queryTypeCoercer, QueryTargetsMacro.class, QueryTargetsMacro::of),
                   new QueryMacroTypeCoercer<>(
