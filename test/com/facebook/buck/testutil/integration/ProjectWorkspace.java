@@ -703,6 +703,10 @@ public class ProjectWorkspace extends AbstractWorkspace {
         root, Files.readAllLines(root.resolve(PATH_TO_BUILD_LOG), UTF_8));
   }
 
+  public ProjectFilesystem getProjectFileSystem() throws IOException {
+    return getProjectFilesystemAndConfig().projectFilesystem;
+  }
+
   public Config getConfig() throws IOException {
     return getProjectFilesystemAndConfig().config;
   }

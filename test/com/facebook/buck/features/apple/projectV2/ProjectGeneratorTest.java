@@ -19,6 +19,7 @@ package com.facebook.buck.features.apple.projectV2;
 import static com.facebook.buck.apple.AppleBundleDescription.WATCH_OS_FLAVOR;
 import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR;
 import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
+import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUtils.getExpectedBuildPhasesByType;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -205,6 +206,8 @@ public class ProjectGeneratorTest {
     fakeProjectFilesystem.touch(Paths.get("Base.lproj", "Bar.storyboard"));
     halideBuckConfig = HalideLibraryBuilder.createDefaultHalideConfig(fakeProjectFilesystem);
 
+    Path buildSystemPath = AppleProjectHelper.getBuildScriptPath(fakeProjectFilesystem);
+
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of(
             "cxx",
@@ -217,10 +220,15 @@ public class ProjectGeneratorTest {
             "cxx#appletvos-armv7",
             ImmutableMap.of("cflags", "-Wno-nullability-completeness"),
             "apple",
-            ImmutableMap.of("force_dsym_mode_in_build_with_buck", "false"),
+            ImmutableMap.of(
+                "force_dsym_mode_in_build_with_buck",
+                "false",
+                AppleConfig.BUILD_SCRIPT,
+                buildSystemPath.toString()),
             "swift",
             ImmutableMap.of("version", "1.23"));
-    BuckConfig config = FakeBuckConfig.builder().setSections(sections).build();
+    BuckConfig config =
+        FakeBuckConfig.builder().setFilesystem(fakeProjectFilesystem).setSections(sections).build();
     cxxBuckConfig = new CxxBuckConfig(config);
     appleConfig = config.getView(AppleConfig.class);
     swiftBuckConfig = new SwiftBuckConfig(config);
@@ -692,7 +700,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
-    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+    assertHasSingleSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(
             "foo/foo.m", Optional.empty(),
@@ -2162,8 +2170,8 @@ public class ProjectGeneratorTest {
     assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
     assertHasConfigurations(target, "RandomConfig");
-    assertEquals("Should have exact number of build phases", 1, target.getBuildPhases().size());
-    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+    assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
+    assertHasSingleSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(
             "foo.m", Optional.of("-foo"),
@@ -2200,9 +2208,10 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     assertHasConfigurations(target, "Debug", "Release", "Profile");
-    assertEquals(1, target.getBuildPhases().size());
-    PBXShellScriptBuildPhase scriptPhase =
-        ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXShellScriptBuildPhase.class);
+
+    Iterable<PBXShellScriptBuildPhase> shellScriptBuildPhases =
+        getExpectedBuildPhasesByType(target, PBXShellScriptBuildPhase.class, 2);
+    PBXShellScriptBuildPhase scriptPhase = shellScriptBuildPhases.iterator().next();
     assertEquals(0, scriptPhase.getInputPaths().size());
     assertEquals(0, scriptPhase.getOutputPaths().size());
 
@@ -2242,8 +2251,8 @@ public class ProjectGeneratorTest {
     assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
     assertHasConfigurations(target, "Debug", "Release", "Profile");
-    assertEquals("Should have exact number of build phases", 1, target.getBuildPhases().size());
-    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+    assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
+    assertHasSingleSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(
             "foo.cpp", Optional.of("-foo"),
@@ -3627,12 +3636,12 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:xctest");
 
-    assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
+    assertEquals("Should have exact number of build phases", 3, target.getBuildPhases().size());
 
-    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+    assertHasSingleSourcesPhaseWithSourcesAndFlags(
         target, ImmutableMap.of("fooTest.m", Optional.empty()));
 
-    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+    ProjectGeneratorTestUtils.assertHasSingleFrameworksPhaseWithFrameworkEntries(
         target, ImmutableList.of("$SDKROOT/Library.framework"));
   }
 
@@ -3686,12 +3695,12 @@ public class ProjectGeneratorTest {
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals("libraries $BUILT_PRODUCTS_DIR", settings.get("LIBRARY_SEARCH_PATHS"));
 
-    assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
+    assertEquals("Should have exact number of build phases", 3, target.getBuildPhases().size());
 
-    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+    assertHasSingleSourcesPhaseWithSourcesAndFlags(
         target, ImmutableMap.of("fooTest.m", Optional.empty()));
 
-    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+    ProjectGeneratorTestUtils.assertHasSingleFrameworksPhaseWithFrameworkEntries(
         target, ImmutableList.of("$SDKROOT/Library.framework"));
   }
 
@@ -3751,13 +3760,13 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:binary");
     assertHasConfigurations(target, "Debug");
     assertEquals(target.getProductType(), ProductTypes.TOOL);
-    assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
-    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+    assertEquals("Should have exact number of build phases", 3, target.getBuildPhases().size());
+    assertHasSingleSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(
             "foo.m", Optional.of("-foo"),
             "libsomething.a", Optional.empty()));
-    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+    ProjectGeneratorTestUtils.assertHasSingleFrameworksPhaseWithFrameworkEntries(
         target,
         ImmutableList.of(
             "$SDKROOT/Foo.framework",
@@ -3814,8 +3823,10 @@ public class ProjectGeneratorTest {
     assertThat(target.getName(), equalTo("//foo:bundle"));
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
 
-    PBXShellScriptBuildPhase shellScriptBuildPhase =
-        ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXShellScriptBuildPhase.class);
+    Iterable<PBXShellScriptBuildPhase> shellScriptBuildPhases =
+        getExpectedBuildPhasesByType(target, PBXShellScriptBuildPhase.class, 2);
+
+    PBXShellScriptBuildPhase shellScriptBuildPhase = shellScriptBuildPhases.iterator().next();
 
     assertThat(shellScriptBuildPhase.getShellScript(), equalTo("script.sh"));
 
@@ -3867,8 +3878,10 @@ public class ProjectGeneratorTest {
     assertThat(target.getName(), equalTo("//foo:bundle"));
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
 
-    PBXShellScriptBuildPhase shellScriptBuildPhase =
-        ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXShellScriptBuildPhase.class);
+    Iterable<PBXShellScriptBuildPhase> shellScriptBuildPhases =
+        getExpectedBuildPhasesByType(target, PBXShellScriptBuildPhase.class, 2);
+
+    PBXShellScriptBuildPhase shellScriptBuildPhase = shellScriptBuildPhases.iterator().next();
 
     assertThat(shellScriptBuildPhase.getShellScript(), equalTo("script.sh"));
 
@@ -4160,7 +4173,7 @@ public class ProjectGeneratorTest {
         generatedWatchExtensionTarget.getProductType(),
         ProductType.of(WATCH_EXTENSION_PRODUCT_TYPE));
 
-    ProjectGeneratorTestUtils.assertHasSingletonCopyFilesPhaseWithFileEntries(
+    ProjectGeneratorTestUtils.assertHasSingleCopyFilesPhaseWithFileEntries(
         generatedHostAppTarget, ImmutableList.of("$BUILT_PRODUCTS_DIR/WatchApp.app"));
 
     ProjectGeneratorTestUtils.assertHasDependency(
@@ -4169,7 +4182,7 @@ public class ProjectGeneratorTest {
         generatedProject, generatedWatchAppTarget, watchExtensionTarget.getFullyQualifiedName());
 
     PBXCopyFilesBuildPhase copyBuildPhase =
-        ProjectGeneratorTestUtils.getSingletonPhaseByType(
+        ProjectGeneratorTestUtils.getSingleBuildPhaseOfType(
             generatedHostAppTarget, PBXCopyFilesBuildPhase.class);
     assertEquals(
         copyBuildPhase.getDstSubfolderSpec(),
@@ -4201,7 +4214,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget target =
         Iterables.getOnlyElement(projectGenerator.getBuildTargetToGeneratedTargetMap().values());
-    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+    assertHasSingleSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(
             "foo.m", Optional.of("-foo"),
@@ -4254,7 +4267,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget target =
         Iterables.getOnlyElement(projectGenerator.getBuildTargetToGeneratedTargetMap().values());
-    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+    assertHasSingleSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(
             "foo.m", Optional.of("-foo"),
@@ -4321,8 +4334,8 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:final");
     assertEquals(target.getProductType(), ProductTypes.BUNDLE);
-    assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
-    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+    assertEquals("Should have exact number of build phases ", 3, target.getBuildPhases().size());
+    ProjectGeneratorTestUtils.assertHasSingleFrameworksPhaseWithFrameworkEntries(
         target, ImmutableList.of("$BUILT_PRODUCTS_DIR/libshared.dylib"));
   }
 
@@ -4380,8 +4393,8 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:final");
     assertEquals(target.getProductType(), ProductTypes.BUNDLE);
-    assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
-    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+    assertEquals("Should have exact number of build phases ", 3, target.getBuildPhases().size());
+    ProjectGeneratorTestUtils.assertHasSingleFrameworksPhaseWithFrameworkEntries(
         target, ImmutableList.of("$BUILT_PRODUCTS_DIR/framework.framework"));
   }
 
@@ -4450,8 +4463,8 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:final");
     assertEquals(target.getProductType(), ProductTypes.BUNDLE);
-    assertEquals("Should have exact number of build phases ", 2, target.getBuildPhases().size());
-    ProjectGeneratorTestUtils.assertHasSingletonCopyFilesPhaseWithFileEntries(
+    assertEquals("Should have exact number of build phases ", 3, target.getBuildPhases().size());
+    ProjectGeneratorTestUtils.assertHasSingleCopyFilesPhaseWithFileEntries(
         target, ImmutableList.of("$BUILT_PRODUCTS_DIR/framework.framework"));
   }
 
@@ -4477,7 +4490,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:final");
     assertEquals(target.getProductType(), ProductTypes.BUNDLE);
-    assertEquals("Should have exact number of build phases ", 0, target.getBuildPhases().size());
+    assertEquals("Should have exact number of build phases ", 1, target.getBuildPhases().size());
   }
 
   @Test
@@ -4517,7 +4530,7 @@ public class ProjectGeneratorTest {
 
     PBXProject generatedProject = projectGenerator.getGeneratedProject();
     PBXTarget target = assertTargetExistsAndReturnTarget(generatedProject, "//foo:bundle");
-    assertHasSingletonResourcesPhaseWithEntries(target, "bar.png", "foodir");
+    assertHasSingleResourcesPhaseWithEntries(target, "bar.png", "foodir");
   }
 
   @Test
@@ -4557,7 +4570,7 @@ public class ProjectGeneratorTest {
 
     PBXProject generatedProject = projectGenerator.getGeneratedProject();
     PBXTarget target = assertTargetExistsAndReturnTarget(generatedProject, "//foo:bundle");
-    assertHasSingletonResourcesPhaseWithEntries(target, "AssetCatalog.xcassets");
+    assertHasSingleResourcesPhaseWithEntries(target, "AssetCatalog.xcassets");
   }
 
   @Test
@@ -4689,7 +4702,7 @@ public class ProjectGeneratorTest {
 
     PBXProject generatedProject = projectGenerator.getGeneratedProject();
     PBXTarget target = assertTargetExistsAndReturnTarget(generatedProject, "//foo:rule#shared");
-    ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+    ProjectGeneratorTestUtils.assertHasSingleFrameworksPhaseWithFrameworkEntries(
         target,
         ImmutableList.of(
             "$BUILT_PRODUCTS_DIR/libfoo.a", "$SDKROOT/libfoo.a", "$SOURCE_ROOT/libfoo.a"));
@@ -4896,7 +4909,7 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(
             projectGenerator.getGeneratedProject(), libTarget.toString());
 
-    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+    assertHasSingleSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(
             "Vendor/sources/source1", Optional.empty(),
@@ -5021,14 +5034,14 @@ public class ProjectGeneratorTest {
 
     PBXTarget hostPBXTarget =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:HostApp");
-    assertEquals(hostPBXTarget.getBuildPhases().size(), 1);
+    assertEquals(hostPBXTarget.getBuildPhases().size(), 2);
     assertEquals(
         getLinkedLibsForTarget.apply(hostPBXTarget),
         ImmutableSet.of("libHostOnly.a", "libShared.a"));
 
     PBXTarget testPBXTarget =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
-    assertEquals(testPBXTarget.getBuildPhases().size(), 1);
+    assertEquals(testPBXTarget.getBuildPhases().size(), 2);
     assertEquals(getLinkedLibsForTarget.apply(testPBXTarget), ImmutableSet.of("libTestOnly.a"));
   }
 
@@ -5101,14 +5114,14 @@ public class ProjectGeneratorTest {
 
     PBXTarget hostPBXTarget =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:HostApp");
-    assertEquals(hostPBXTarget.getBuildPhases().size(), 1);
+    assertEquals(hostPBXTarget.getBuildPhases().size(), 2);
     assertEquals(
         getLinkedLibsForTarget.apply(hostPBXTarget),
         ImmutableSet.of("libHostOnly.a", "libShared.a"));
 
     PBXTarget testPBXTarget =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
-    assertEquals(testPBXTarget.getBuildPhases().size(), 1);
+    assertEquals(testPBXTarget.getBuildPhases().size(), 2);
     assertEquals(
         getLinkedLibsForTarget.apply(testPBXTarget),
         ImmutableSet.of("libTestOnly.a", "libShared.a"));
@@ -5271,7 +5284,7 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
 
     // for this test phases should be empty - there should be no copy phases in particular
-    assertThat(testPBXTarget.getBuildPhases().size(), Matchers.equalTo(0));
+    assertThat(testPBXTarget.getBuildPhases().size(), Matchers.equalTo(1));
   }
 
   @Test
@@ -5306,7 +5319,7 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
 
     PBXSourcesBuildPhase sourcesBuildPhase =
-        ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXSourcesBuildPhase.class);
+        ProjectGeneratorTestUtils.getSingleBuildPhaseOfType(target, PBXSourcesBuildPhase.class);
 
     ImmutableMap<String, String> expected =
         ImmutableMap.of(
@@ -5398,7 +5411,7 @@ public class ProjectGeneratorTest {
 
     PBXTarget fooTestTarget = assertTargetExistsAndReturnTarget(project, "test");
     PBXResourcesBuildPhase resourcesBuildPhase =
-        ProjectGeneratorTestUtils.getSingletonPhaseByType(
+        ProjectGeneratorTestUtils.getSingleBuildPhaseOfType(
             fooTestTarget, PBXResourcesBuildPhase.class);
     assertThat(resourcesBuildPhase.getFiles(), hasSize(1));
     assertThat(
@@ -5709,7 +5722,7 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bundle");
     assertEquals(target.getProductType(), ProductTypes.APPLICATION);
-    assertThat(target.getBuildPhases().size(), Matchers.equalTo(1));
+    assertThat(target.getBuildPhases().size(), Matchers.equalTo(2));
 
     PBXBuildPhase buildPhase = target.getBuildPhases().get(0);
     assertThat(buildPhase instanceof PBXCopyFilesBuildPhase, Matchers.equalTo(true));
@@ -5795,7 +5808,7 @@ public class ProjectGeneratorTest {
     for (PBXBuildPhase buildPhase : target.getBuildPhases()) {
       assertFalse(buildPhase instanceof PBXCopyFilesBuildPhase);
     }
-    assertThat(target.getBuildPhases().size(), Matchers.equalTo(1));
+    assertThat(target.getBuildPhases().size(), Matchers.equalTo(2));
   }
 
   @Test
@@ -6851,11 +6864,11 @@ public class ProjectGeneratorTest {
     }
   }
 
-  private void assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+  private void assertHasSingleSourcesPhaseWithSourcesAndFlags(
       PBXTarget target, ImmutableMap<String, Optional<String>> sourcesAndFlags) {
 
     PBXSourcesBuildPhase sourcesBuildPhase =
-        ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXSourcesBuildPhase.class);
+        ProjectGeneratorTestUtils.getSingleBuildPhaseOfType(target, PBXSourcesBuildPhase.class);
 
     assertEquals(
         "Sources build phase should have correct number of sources",
@@ -6923,9 +6936,9 @@ public class ProjectGeneratorTest {
     }
   }
 
-  private void assertHasSingletonResourcesPhaseWithEntries(PBXTarget target, String... resources) {
+  private void assertHasSingleResourcesPhaseWithEntries(PBXTarget target, String... resources) {
     PBXResourcesBuildPhase buildPhase =
-        ProjectGeneratorTestUtils.getSingletonPhaseByType(target, PBXResourcesBuildPhase.class);
+        ProjectGeneratorTestUtils.getSingleBuildPhaseOfType(target, PBXResourcesBuildPhase.class);
     assertEquals(
         "Resources phase should have right number of elements",
         resources.length,

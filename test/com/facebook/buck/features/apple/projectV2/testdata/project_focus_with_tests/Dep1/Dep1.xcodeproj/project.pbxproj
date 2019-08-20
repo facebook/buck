@@ -150,9 +150,6 @@
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
 			<string>Debug</string>
-			<key>buildSettings</key>
-			<dict>
-			</dict>
 			<key>baseConfigurationReference</key>
 			<string>1DD70E294C6E7E5300000000</string>
 		</dict>
@@ -162,9 +159,6 @@
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
 			<string>Release</string>
-			<key>buildSettings</key>
-			<dict>
-			</dict>
 			<key>baseConfigurationReference</key>
 			<string>1DD70E294381785F00000000</string>
 		</dict>

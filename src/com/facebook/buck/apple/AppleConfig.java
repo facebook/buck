@@ -68,6 +68,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
       "force_load_link_whole_library";
   private static final String FORCE_LOAD_LIBRARY_PATH = "force_load_library_path";
 
+  public static final String BUILD_SCRIPT = "xcode_build_script";
+
   private final BuckConfig delegate;
 
   // Reflection-based factory for ConfigView
@@ -458,6 +460,14 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   public boolean shouldWorkAroundDsymutilLTOStackOverflowBug() {
     return delegate.getBooleanValue(
         APPLE_SECTION, "work_around_dsymutil_lto_stack_overflow_bug", false);
+  }
+
+  public Path shellPath() {
+    return delegate.getPath(APPLE_SECTION, "xcode_build_script_shell").orElse(Paths.get("/bin/sh"));
+  }
+
+  public Path buildScriptPath() {
+    return delegate.getRequiredPath(APPLE_SECTION, BUILD_SCRIPT);
   }
 
   @Value.Immutable

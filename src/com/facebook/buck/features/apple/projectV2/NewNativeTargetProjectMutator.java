@@ -21,6 +21,7 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
 import com.facebook.buck.apple.AppleBundleDestination;
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleHeaderVisibilities;
 import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.AppleWrapperResourceArg;
@@ -48,6 +49,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -101,6 +103,9 @@ class NewNativeTargetProjectMutator {
     }
   }
 
+  private final BuildTarget target;
+  private final Path shell;
+  private final Path buildScriptPath;
   private final PathRelativizer pathRelativizer;
   private final Function<SourcePath, Path> sourcePathResolver;
 
@@ -133,7 +138,14 @@ class NewNativeTargetProjectMutator {
   private Optional<PBXBuildPhase> swiftDependenciesBuildPhase = Optional.empty();
 
   public NewNativeTargetProjectMutator(
-      PathRelativizer pathRelativizer, Function<SourcePath, Path> sourcePathResolver) {
+      PathRelativizer pathRelativizer,
+      Function<SourcePath, Path> sourcePathResolver,
+      BuildTarget target,
+      AppleConfig appleConfig) {
+    this.target = target;
+    this.shell = appleConfig.shellPath();
+    this.buildScriptPath = appleConfig.buildScriptPath();
+
     this.pathRelativizer = pathRelativizer;
     this.sourcePathResolver = sourcePathResolver;
   }
@@ -290,20 +302,22 @@ class NewNativeTargetProjectMutator {
   }
 
   public Result buildTargetAndAddToProject(PBXProject project, boolean addBuildPhases) {
-    PBXNativeTarget target = new PBXNativeTarget(targetName);
+    PBXNativeTarget nativeTarget = new PBXNativeTarget(targetName);
 
     Optional<PBXGroup> targetGroup;
     if (addBuildPhases) {
       // Phases
-      addRunScriptBuildPhases(target, preBuildRunScriptPhases);
-      addPhasesAndGroupsForSources(project, target);
-      addFrameworksBuildPhase(project, target);
+      addRunScriptBuildPhases(nativeTarget, preBuildRunScriptPhases);
+      addPhasesAndGroupsForSources(project, nativeTarget);
+      addFrameworksBuildPhase(project, nativeTarget);
       addResourcesFileReference(project);
-      addCopyResourcesToNonStdDestinationPhases(target, project);
-      addResourcesBuildPhase(target, project);
-      target.getBuildPhases().addAll((Collection<? extends PBXBuildPhase>) copyFilesPhases);
-      addRunScriptBuildPhases(target, postBuildRunScriptPhases);
-      addSwiftDependenciesBuildPhase(target);
+      addCopyResourcesToNonStdDestinationPhases(nativeTarget, project);
+      addResourcesBuildPhase(nativeTarget, project);
+      nativeTarget.getBuildPhases().addAll((Collection<? extends PBXBuildPhase>) copyFilesPhases);
+      addRunScriptBuildPhases(nativeTarget, postBuildRunScriptPhases);
+      addSwiftDependenciesBuildPhase(nativeTarget);
+
+      addBuckBuildPhase(nativeTarget);
 
       targetGroup = Optional.of(project.getMainGroup());
     } else {
@@ -317,12 +331,12 @@ class NewNativeTargetProjectMutator {
         productsGroup.getOrCreateFileReferenceBySourceTreePath(
             new SourceTreePath(
                 PBXReference.SourceTree.BUILT_PRODUCTS_DIR, productOutputPath, Optional.empty()));
-    target.setProductName(productName);
-    target.setProductReference(productReference);
-    target.setProductType(productType);
+    nativeTarget.setProductName(productName);
+    nativeTarget.setProductReference(productReference);
+    nativeTarget.setProductType(productType);
 
-    project.getTargets().add(target);
-    return new Result(target, targetGroup);
+    project.getTargets().add(nativeTarget);
+    return new Result(nativeTarget, targetGroup);
   }
 
   /// Helper class for returning metadata about a created PBXFileReference
@@ -866,6 +880,29 @@ class NewNativeTargetProjectMutator {
                 Paths.get("")));
       }
     }
+  }
+
+  /**
+   * Add a `buck build TARGET` phase to the nativeTarget.
+   *
+   * @param nativeTarget PBXNativeTarget to which to add the buck build phase.
+   */
+  private void addBuckBuildPhase(PBXNativeTarget nativeTarget) {
+    PBXShellScriptBuildPhase buckBuildPhase = new PBXShellScriptBuildPhase();
+    buckBuildPhase.setName(Optional.of("Buck Build"));
+    buckBuildPhase.setShellPath(shell.toString());
+
+    // Form relative paths to the cell root and build script
+    Path targetPath = target.getCellPath().resolve(target.getBasePath());
+    Path targetRelativeCellRoot = targetPath.relativize(target.getCellPath());
+    Path cellRootRelativeBuildScript = target.getCellPath().relativize(buildScriptPath);
+
+    String shellCommand =
+        String.format(
+            "cd $SOURCE_ROOT/%s && ./%s", targetRelativeCellRoot, cellRootRelativeBuildScript);
+    buckBuildPhase.setShellScript(shellCommand);
+
+    nativeTarget.getBuildPhases().add(buckBuildPhase);
   }
 
   public void collectFilesToCopyInXcode(

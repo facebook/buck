@@ -16,10 +16,11 @@
 
 package com.facebook.buck.features.apple.projectV2;
 
-import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUtils.assertHasSingletonFrameworksPhaseWithFrameworkEntries;
-import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUtils.assertHasSingletonPhaseWithEntries;
+import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUtils.assertHasSingleFrameworksPhaseWithFrameworkEntries;
+import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUtils.assertHasSinglePhaseWithEntries;
 import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
-import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUtils.getSingletonPhaseByType;
+import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUtils.getExpectedBuildPhasesByType;
+import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUtils.getSingleBuildPhaseOfType;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
@@ -31,6 +32,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.XcodePostbuildScriptBuilder;
 import com.facebook.buck.apple.XcodePrebuildScriptBuilder;
@@ -57,6 +59,7 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.features.js.JsBundleGenruleBuilder;
 import com.facebook.buck.features.js.JsTestScenario;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.environment.Platform;
@@ -64,6 +67,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -72,15 +76,19 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class NewNativeTargetProjectMutatorTest {
+  private BuildTarget buildTarget;
+  private AppleConfig appleConfig;
   private PBXProject generatedProject;
   private PathRelativizer pathRelativizer;
   private SourcePathResolver sourcePathResolver;
   private BuildRuleResolver buildRuleResolver;
 
   @Before
-  public void setUp() {
+  public void setUp() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     generatedProject = new PBXProject("TestProject");
+    buildTarget = BuildTargetFactory.newInstance("//foo:bar");
+    appleConfig = AppleProjectHelper.createDefaultAppleConfig(new FakeProjectFilesystem());
     buildRuleResolver = new TestActionGraphBuilder();
     sourcePathResolver = buildRuleResolver.getSourcePathResolver();
     pathRelativizer =
@@ -90,7 +98,8 @@ public class NewNativeTargetProjectMutatorTest {
   @Test
   public void shouldCreateTarget() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator =
-        new NewNativeTargetProjectMutator(pathRelativizer, sourcePathResolver::getRelativePath);
+        new NewNativeTargetProjectMutator(
+            pathRelativizer, sourcePathResolver::getRelativePath, buildTarget, appleConfig);
     mutator
         .setTargetName("TestTarget")
         .setProduct(ProductTypes.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"))
@@ -102,7 +111,8 @@ public class NewNativeTargetProjectMutatorTest {
   @Test
   public void shouldCreateTargetAndNoGroup() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator =
-        new NewNativeTargetProjectMutator(pathRelativizer, sourcePathResolver::getRelativePath);
+        new NewNativeTargetProjectMutator(
+            pathRelativizer, sourcePathResolver::getRelativePath, buildTarget, appleConfig);
     NewNativeTargetProjectMutator.Result result =
         mutator
             .setTargetName("TestTarget")
@@ -195,7 +205,8 @@ public class NewNativeTargetProjectMutatorTest {
     PBXGroup myAppGroup =
         PBXTestUtils.assertHasSubgroupAndReturnIt(result.targetGroup.get(), "MyApp");
     PBXGroup filesGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(myAppGroup, "MyLib");
-    PBXFileReference buckFileReference = PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(filesGroup, "BUCK");
+    PBXFileReference buckFileReference =
+        PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(filesGroup, "BUCK");
     assertEquals(buckFileReference.getExplicitFileType(), Optional.of("text.script.python"));
   }
 
@@ -218,7 +229,7 @@ public class NewNativeTargetProjectMutatorTest {
                 Optional.empty())));
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject, true);
-    assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+    assertHasSingleFrameworksPhaseWithFrameworkEntries(
         result.target, ImmutableList.of("$SDKROOT/Foo.framework", "$BUILT_PRODUCTS_DIR/libdep.a"));
   }
 
@@ -236,7 +247,7 @@ public class NewNativeTargetProjectMutatorTest {
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject, true);
 
-    assertHasSingletonPhaseWithEntries(
+    assertHasSinglePhaseWithEntries(
         result.target, PBXResourcesBuildPhase.class, ImmutableList.of("$SOURCE_ROOT/../foo.png"));
   }
 
@@ -255,7 +266,7 @@ public class NewNativeTargetProjectMutatorTest {
         mutator.buildTargetAndAddToProject(generatedProject, true);
 
     PBXBuildPhase buildPhaseToTest =
-        getSingletonPhaseByType(result.target, PBXCopyFilesBuildPhase.class);
+        getSingleBuildPhaseOfType(result.target, PBXCopyFilesBuildPhase.class);
     assertThat(copyPhase, equalTo(buildPhaseToTest));
   }
 
@@ -286,9 +297,10 @@ public class NewNativeTargetProjectMutatorTest {
     List<PBXBuildPhase> buildPhases = target.getBuildPhases();
 
     PBXBuildPhase copyBuildPhaseToTest =
-        getSingletonPhaseByType(target, PBXCopyFilesBuildPhase.class);
-    PBXBuildPhase postBuildScriptPhase =
-        getSingletonPhaseByType(target, PBXShellScriptBuildPhase.class);
+        getSingleBuildPhaseOfType(target, PBXCopyFilesBuildPhase.class);
+    Iterable<PBXShellScriptBuildPhase> scriptBuildPhases =
+        getExpectedBuildPhasesByType(target, PBXShellScriptBuildPhase.class, 2);
+    PBXBuildPhase postBuildScriptPhase = scriptBuildPhases.iterator().next();
 
     assertThat(
         buildPhases.indexOf(copyBuildPhaseToTest),
@@ -307,7 +319,7 @@ public class NewNativeTargetProjectMutatorTest {
     mutator.setRecursiveAssetCatalogs(ImmutableSet.of(arg));
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject, true);
-    assertHasSingletonPhaseWithEntries(
+    assertHasSinglePhaseWithEntries(
         result.target,
         PBXResourcesBuildPhase.class,
         ImmutableList.of("$SOURCE_ROOT/../AssetCatalog1.xcassets"));
@@ -332,8 +344,10 @@ public class NewNativeTargetProjectMutatorTest {
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject, true);
 
-    PBXShellScriptBuildPhase phase =
-        getSingletonPhaseByType(result.target, PBXShellScriptBuildPhase.class);
+    Iterable<PBXShellScriptBuildPhase> scriptBuildPhases =
+        getExpectedBuildPhasesByType(result.target, PBXShellScriptBuildPhase.class, 2);
+
+    PBXShellScriptBuildPhase phase = scriptBuildPhases.iterator().next();
     assertThat("Should set input paths correctly", phase.getInputPaths().size(), is(equalTo(2)));
     assertThat(
         "Should set input paths correctly",
@@ -369,8 +383,10 @@ public class NewNativeTargetProjectMutatorTest {
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject, true);
 
-    PBXShellScriptBuildPhase phase =
-        getSingletonPhaseByType(result.target, PBXShellScriptBuildPhase.class);
+    Iterable<PBXShellScriptBuildPhase> scriptBuildPhases =
+        getExpectedBuildPhasesByType(result.target, PBXShellScriptBuildPhase.class, 2);
+
+    PBXShellScriptBuildPhase phase = scriptBuildPhases.iterator().next();
     String shellScript = phase.getShellScript();
     Path genDir = scenario.filesystem.getBuckPaths().getGenDir().toAbsolutePath();
     assertEquals(
@@ -402,8 +418,10 @@ public class NewNativeTargetProjectMutatorTest {
     NewNativeTargetProjectMutator.Result result =
         mutator.buildTargetAndAddToProject(generatedProject, true);
 
-    PBXShellScriptBuildPhase phase =
-        getSingletonPhaseByType(result.target, PBXShellScriptBuildPhase.class);
+    Iterable<PBXShellScriptBuildPhase> scriptBuildPhases =
+        getExpectedBuildPhasesByType(result.target, PBXShellScriptBuildPhase.class, 2);
+
+    PBXShellScriptBuildPhase phase = scriptBuildPhases.iterator().next();
     String shellScript = phase.getShellScript();
     Path genDir = scenario.filesystem.getBuckPaths().getGenDir().toAbsolutePath();
     assertEquals(
@@ -414,6 +432,26 @@ public class NewNativeTargetProjectMutatorTest {
                 + "cp -a \"%s/foo/bundle/res/\" \"${BASE_DIR}/\"\n",
             genDir, genDir),
         shellScript);
+  }
+
+  @Test
+  public void testApplicationTargetHasScriptPhase() {
+    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
+    mutator.setProduct(
+        ProductTypes.APPLICATION,
+        buildTarget.getShortName(),
+        Paths.get(buildTarget.getShortName()));
+
+    NewNativeTargetProjectMutator.Result result =
+        mutator.buildTargetAndAddToProject(generatedProject, true);
+
+    PBXShellScriptBuildPhase phase =
+        getSingleBuildPhaseOfType(result.target, PBXShellScriptBuildPhase.class);
+
+    assertThat(
+        "Buck build script command is as expected",
+        phase.getShellScript(),
+        is(equalTo("cd $SOURCE_ROOT/.. && ./build_script.sh")));
   }
 
   private NewNativeTargetProjectMutator mutatorWithCommonDefaults() {
@@ -428,7 +466,8 @@ public class NewNativeTargetProjectMutatorTest {
   private NewNativeTargetProjectMutator mutator(
       SourcePathResolver pathResolver, PathRelativizer relativizer) {
     NewNativeTargetProjectMutator mutator =
-        new NewNativeTargetProjectMutator(relativizer, pathResolver::getRelativePath);
+        new NewNativeTargetProjectMutator(
+            relativizer, pathResolver::getRelativePath, buildTarget, appleConfig);
     mutator
         .setTargetName("TestTarget")
         .setProduct(

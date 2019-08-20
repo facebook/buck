@@ -89,19 +89,19 @@ public final class ProjectGeneratorTestUtils {
     }
   }
 
-  public static void assertHasSingletonFrameworksPhaseWithFrameworkEntries(
+  public static void assertHasSingleFrameworksPhaseWithFrameworkEntries(
       PBXTarget target, ImmutableList<String> frameworks) {
-    assertHasSingletonPhaseWithEntries(target, PBXFrameworksBuildPhase.class, frameworks);
+    assertHasSinglePhaseWithEntries(target, PBXFrameworksBuildPhase.class, frameworks);
   }
 
-  public static void assertHasSingletonCopyFilesPhaseWithFileEntries(
+  public static void assertHasSingleCopyFilesPhaseWithFileEntries(
       PBXTarget target, ImmutableList<String> files) {
-    assertHasSingletonPhaseWithEntries(target, PBXCopyFilesBuildPhase.class, files);
+    assertHasSinglePhaseWithEntries(target, PBXCopyFilesBuildPhase.class, files);
   }
 
-  public static <T extends PBXBuildPhase> void assertHasSingletonPhaseWithEntries(
+  public static <T extends PBXBuildPhase> void assertHasSinglePhaseWithEntries(
       PBXTarget target, Class<T> cls, ImmutableList<String> entries) {
-    PBXBuildPhase buildPhase = getSingletonPhaseByType(target, cls);
+    PBXBuildPhase buildPhase = getSingleBuildPhaseOfType(target, cls);
     assertThat(
         "Phase should have right number of entries",
         buildPhase.getFiles(),
@@ -128,14 +128,26 @@ public final class ProjectGeneratorTestUtils {
     }
   }
 
-  public static <T extends PBXBuildPhase> T getSingletonPhaseByType(
+  public static <T extends PBXBuildPhase> T getSingleBuildPhaseOfType(
       PBXTarget target, Class<T> cls) {
-    Iterable<PBXBuildPhase> buildPhases =
-        Iterables.filter(target.getBuildPhases(), cls::isInstance);
-    assertEquals("Build phase should be singleton", 1, Iterables.size(buildPhases));
+    Iterable<T> buildPhases = getExpectedBuildPhasesByType(target, cls, 1);
     @SuppressWarnings("unchecked")
     T element = (T) Iterables.getOnlyElement(buildPhases);
     return element;
+  }
+
+  public static <T extends PBXBuildPhase> Iterable<T> getExpectedBuildPhasesByType(
+      PBXTarget target, Class<T> cls, int expectedCount) {
+    Iterable<PBXBuildPhase> buildPhases =
+        Iterables.filter(target.getBuildPhases(), cls::isInstance);
+    int actualCount = Iterables.size(buildPhases);
+    assertEquals(
+        String.format(
+            "Expected exactly %d build phases of type %s, found %d",
+            expectedCount, cls.getName(), actualCount),
+        expectedCount,
+        actualCount);
+    return (Iterable<T>) buildPhases;
   }
 
   public static ImmutableMap<String, String> getBuildSettings(

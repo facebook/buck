@@ -164,9 +164,6 @@
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
 			<string>Debug</string>
-			<key>buildSettings</key>
-			<dict>
-			</dict>
 			<key>baseConfigurationReference</key>
 			<string>1DD70E29FABC789400000000</string>
 		</dict>
@@ -176,9 +173,6 @@
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
 			<string>Release</string>
-			<key>buildSettings</key>
-			<dict>
-			</dict>
 			<key>baseConfigurationReference</key>
 			<string>1DD70E299639E66000000000</string>
 		</dict>
@@ -221,9 +215,6 @@
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
 			<string>Debug</string>
-			<key>buildSettings</key>
-			<dict>
-			</dict>
 		</dict>
 		<key>49524373A439BFE700000001</key>
 		<dict>
@@ -231,9 +222,6 @@
 			<string>XCBuildConfiguration</string>
 			<key>name</key>
 			<string>Release</string>
-			<key>buildSettings</key>
-			<dict>
-			</dict>
 		</dict>
 		<key>218C37090000000000000001</key>
 		<dict>

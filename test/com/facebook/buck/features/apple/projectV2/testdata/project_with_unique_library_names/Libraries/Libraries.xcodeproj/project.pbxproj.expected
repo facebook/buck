@@ -245,6 +245,26 @@
 				<string>E7A30F04B0678B7700000000</string>
 			</array>
 		</dict>
+		<key>E1F174220000000000000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXShellScriptBuildPhase</string>
+			<key>files</key>
+			<array>
+			</array>
+			<key>name</key>
+			<string>Buck Build</string>
+			<key>inputPaths</key>
+			<array>
+			</array>
+			<key>outputPaths</key>
+			<array>
+			</array>
+			<key>shellPath</key>
+			<string>/bin/sh</string>
+			<key>shellScript</key>
+			<string><![CDATA[cd $SOURCE_ROOT/.. && ./build_script.sh]]></string>
+		</dict>
 		<key>4952437303EDA63300000000</key>
 		<dict>
 			<key>isa</key>
@@ -312,6 +332,7 @@
 			<key>buildPhases</key>
 			<array>
 				<string>1870857F0000000000000000</string>
+				<string>E1F174220000000000000000</string>
 			</array>
 			<key>buildConfigurationList</key>
 			<string>218C37090000000000000000</string>
@@ -331,6 +352,26 @@
 			<array>
 				<string>E7A30F04B0678F3800000000</string>
 			</array>
+		</dict>
+		<key>E1F174220000000000000001</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXShellScriptBuildPhase</string>
+			<key>files</key>
+			<array>
+			</array>
+			<key>name</key>
+			<string>Buck Build</string>
+			<key>inputPaths</key>
+			<array>
+			</array>
+			<key>outputPaths</key>
+			<array>
+			</array>
+			<key>shellPath</key>
+			<string>/bin/sh</string>
+			<key>shellScript</key>
+			<string><![CDATA[cd $SOURCE_ROOT/.. && ./build_script.sh]]></string>
 		</dict>
 		<key>4952437303EDA63300000001</key>
 		<dict>
@@ -399,6 +440,7 @@
 			<key>buildPhases</key>
 			<array>
 				<string>1870857F0000000000000001</string>
+				<string>E1F174220000000000000001</string>
 			</array>
 			<key>buildConfigurationList</key>
 			<string>218C37090000000000000001</string>
@@ -411,6 +453,8 @@
 			<string>Debug</string>
 			<key>buildSettings</key>
 			<dict>
+				<key>BUCK_CELL_RELATIVE_PATH</key>
+				<string>..</string>
 			</dict>
 		</dict>
 		<key>4952437350C7218900000002</key>
@@ -421,6 +465,8 @@
 			<string>Profile</string>
 			<key>buildSettings</key>
 			<dict>
+				<key>BUCK_CELL_RELATIVE_PATH</key>
+				<string>..</string>
 			</dict>
 		</dict>
 		<key>49524373A439BFE700000002</key>
@@ -431,6 +477,8 @@
 			<string>Release</string>
 			<key>buildSettings</key>
 			<dict>
+				<key>BUCK_CELL_RELATIVE_PATH</key>
+				<string>..</string>
 			</dict>
 		</dict>
 		<key>218C37090000000000000002</key>

@@ -88,6 +88,7 @@ import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetLanguageConstants;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -224,6 +225,10 @@ public class ProjectGenerator {
   private static final ImmutableList<String> DEFAULT_LDFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_SWIFTFLAGS = ImmutableList.of();
   private static final String PRODUCT_NAME = "PRODUCT_NAME";
+
+  // TODO(chatatap): This is the same as REPO_ROOT, which can probably be dropped/consolidated.
+  private static final String BUCK_CELL_RELATIVE_PATH = "BUCK_CELL_RELATIVE_PATH";
+  private static final String BUILD_TARGET = "BUILD_TARGET";
 
   private static final ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>
       APPLE_NATIVE_DESCRIPTION_CLASSES =
@@ -522,7 +527,19 @@ public class ProjectGenerator {
                 .getBuildConfigurationList()
                 .getBuildConfigurationsByName()
                 .getUnchecked(configName);
-        outputConfig.setBuildSettings(new NSDictionary());
+
+        NSDictionary projectBuildSettings = new NSDictionary();
+
+        // Set the cell root relative to the source root for each configuration.
+        Path cellRootRelativeToSourceRoot =
+            projectCell
+                .getRoot()
+                .resolve(xcodeProjectWriteOptions.sourceRoot())
+                .relativize(projectCell.getRoot());
+        projectBuildSettings.put(
+            BUCK_CELL_RELATIVE_PATH, cellRootRelativeToSourceRoot.normalize().toString());
+
+        outputConfig.setBuildSettings(projectBuildSettings);
       }
 
       if (!options.shouldGenerateHeaderSymlinkTreesOnly()) {
@@ -694,7 +711,9 @@ public class ProjectGenerator {
     scriptPhase.setShellScript(script.orElse(""));
 
     NewNativeTargetProjectMutator mutator =
-        new NewNativeTargetProjectMutator(pathRelativizer, this::resolveSourcePath);
+        new NewNativeTargetProjectMutator(
+            pathRelativizer, this::resolveSourcePath, buildTarget, appleConfig);
+
     mutator
         .setTargetName(getXcodeTargetName(buildTarget))
         .setProduct(ProductTypes.STATIC_LIBRARY, productName, outputPath)
@@ -1281,7 +1300,8 @@ public class ProjectGenerator {
     String buildTargetName = getProductNameForBuildTargetNode(buildTargetNode);
     CommonArg arg = targetNode.getConstructorArg();
     NewNativeTargetProjectMutator mutator =
-        new NewNativeTargetProjectMutator(pathRelativizer, this::resolveSourcePath);
+        new NewNativeTargetProjectMutator(
+            pathRelativizer, this::resolveSourcePath, buildTarget, appleConfig);
 
     // Both exported headers and exported platform headers will be put into the symlink tree
     // exported platform headers will be excluded and then included by platform
@@ -1325,6 +1345,12 @@ public class ProjectGenerator {
 
     Builder<String, String> extraSettingsBuilder = ImmutableMap.builder();
     Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
+
+    // XCConfigs treat '//' as comments and must be escaped.
+    String cellRelativeBuildTarget = buildTarget.getCellRelativeName();
+    extraSettingsBuilder.put(
+        BUILD_TARGET,
+        cellRelativeBuildTarget.replaceAll(BuildTargetLanguageConstants.ROOT_SYMBOL, "\\\\/\\\\/"));
 
     ImmutableList<Pair<Pattern, SourceSortedSet>> platformHeaders =
         arg.getPlatformHeaders().getPatternsAndValues();

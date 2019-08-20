@@ -21,8 +21,10 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -30,8 +32,10 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Rule;
@@ -49,9 +53,7 @@ public class ProjectIntegrationTest {
   public void testBuckProjectGeneratedSchemeOnlyIncludesDependenciesWithoutTests()
       throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_generated_scheme_only_includes_dependencies", temporaryFolder);
-    workspace.setUp();
+        createWorkspace(this, "project_generated_scheme_only_includes_dependencies");
 
     ProcessResult result =
         workspace.runBuckCommand(
@@ -64,9 +66,7 @@ public class ProjectIntegrationTest {
   @Test
   public void testBuckProjectGeneratedSchemeIncludesTestsAndDependencies() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_generated_scheme_includes_tests_and_dependencies", temporaryFolder);
-    workspace.setUp();
+        createWorkspace(this, "project_generated_scheme_includes_tests_and_dependencies");
 
     ProcessResult result =
         workspace.runBuckCommand("project", "//Apps:workspace", "--experimental");
@@ -79,12 +79,9 @@ public class ProjectIntegrationTest {
   public void testBuckProjectGeneratedSchemeIncludesTestsAndDependenciesInADifferentBuckFile()
       throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
+        createWorkspace(
             this,
-            "project_generated_scheme_includes_tests_and_dependencies_in_a_different_buck_file",
-            temporaryFolder);
-    workspace.setUp();
-
+            "project_generated_scheme_includes_tests_and_dependencies_in_a_different_buck_file");
     ProcessResult result =
         workspace.runBuckCommand("project", "//Apps:workspace", "--experimental");
     result.assertSuccess();
@@ -95,9 +92,7 @@ public class ProjectIntegrationTest {
   @Test
   public void testBuckProjectGeneratedSchemesDoNotIncludeOtherTests() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_generated_schemes_do_not_include_other_tests", temporaryFolder);
-    workspace.setUp();
+        createWorkspace(this, "project_generated_schemes_do_not_include_other_tests");
 
     ProcessResult result = workspace.runBuckCommand("project");
     result.assertSuccess();
@@ -108,12 +103,8 @@ public class ProjectIntegrationTest {
   @Test
   public void generatingAllWorkspacesWillNotIncludeAllProjectsInEachOfThem() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this,
-            "generating_all_workspaces_will_not_include_all_projects_in_each_of_them",
-            temporaryFolder);
-    workspace.setUp();
-
+        createWorkspace(
+            this, "generating_all_workspaces_will_not_include_all_projects_in_each_of_them");
     ProcessResult result = workspace.runBuckCommand("project");
     result.assertSuccess();
 
@@ -122,10 +113,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void schemeWithActionConfigNames() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "scheme_with_action_config_names", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "scheme_with_action_config_names");
 
     ProcessResult result = workspace.runBuckCommand("project");
     result.assertSuccess();
@@ -135,10 +123,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void schemeWithExtraTests() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "scheme_with_extra_tests", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "scheme_with_extra_tests");
 
     ProcessResult result = workspace.runBuckCommand("project");
     result.assertSuccess();
@@ -149,9 +134,7 @@ public class ProjectIntegrationTest {
   @Test
   public void schemeWithExtraTestsWithoutSrcTarget() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "scheme_with_extra_tests_without_src_target", temporaryFolder);
-    workspace.setUp();
+        createWorkspace(this, "scheme_with_extra_tests_without_src_target");
 
     ProcessResult result = workspace.runBuckCommand("project");
     result.assertSuccess();
@@ -161,10 +144,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void generatingCombinedProject() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "generating_combined_project", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "generating_combined_project");
 
     ProcessResult result =
         workspace.runBuckCommand(
@@ -180,10 +160,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void generatingRootDirectoryProject() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "generating_root_directory_project", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "generating_root_directory_project");
 
     ProcessResult result = workspace.runBuckCommand("project", "//:bundle");
     result.assertSuccess();
@@ -193,10 +170,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void generatingCombinedProjectWithTests() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "generating_combined_project_with_tests", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "generating_combined_project_with_tests");
 
     ProcessResult result =
         workspace.runBuckCommand(
@@ -208,10 +182,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testGeneratesWorkspaceFromBundle() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_implicit_workspace_generation", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "project_implicit_workspace_generation");
 
     ProcessResult result = workspace.runBuckCommand("project", "//bin:app");
     result.assertSuccess();
@@ -221,10 +192,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testGeneratesWorkspaceFromLibrary() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_implicit_workspace_generation", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "project_implicit_workspace_generation");
 
     ProcessResult result = workspace.runBuckCommand("project", "//lib:lib");
     result.assertSuccess();
@@ -234,10 +202,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testGeneratesWorkspaceFromBinary() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_implicit_workspace_generation", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "project_implicit_workspace_generation");
 
     ProcessResult result = workspace.runBuckCommand("project", "//bin:bin");
     result.assertSuccess();
@@ -248,10 +213,7 @@ public class ProjectIntegrationTest {
   @Test
   public void testAttemptingToGenerateWorkspaceFromResourceTargetIsABuildError()
       throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_implicit_workspace_generation", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "project_implicit_workspace_generation");
 
     ProcessResult processResult = workspace.runBuckCommand("project", "//res:res");
     processResult.assertFailure();
@@ -263,10 +225,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testGeneratingProjectWithTargetUsingGenruleSourceBuildsGenrule() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "target_using_genrule_source", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "target_using_genrule_source");
 
     workspace.runBuckCommand("project", "//lib:lib");
 
@@ -277,10 +236,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testGeneratingProjectWithGenruleResourceBuildsGenrule() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "target_using_genrule_resource", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "target_using_genrule_resource");
 
     workspace.runBuckCommand("project", "//app:TestApp");
 
@@ -290,10 +246,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testBuckProjectBuckConfigWithoutTestsGenerate() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_buckconfig_without_tests_generate", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "project_buckconfig_without_tests_generate");
 
     ProcessResult result =
         workspace.runBuckCommand("project", "//Apps:workspace", "--experimental");
@@ -305,9 +258,7 @@ public class ProjectIntegrationTest {
   @Test
   public void testBuckProjectBuckConfigWithoutTestsGenerateWithTests() throws IOException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_buckconfig_without_tests_generate_with_tests", temporaryFolder);
-    workspace.setUp();
+        createWorkspace(this, "project_buckconfig_without_tests_generate_with_tests");
 
     ProcessResult result =
         workspace.runBuckCommand("project", "--with-tests", "//Apps:workspace", "--experimental");
@@ -321,9 +272,7 @@ public class ProjectIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(
         AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "project_focus", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "project_focus");
 
     ProcessResult result =
         workspace.runBuckCommand(
@@ -338,10 +287,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testBuckProjectFocusPattern() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_focus_pattern", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "project_focus_pattern");
 
     ProcessResult result =
         workspace.runBuckCommand(
@@ -353,10 +299,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testBuckProjectFocusPatternCell() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_focus_pattern_cell", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "project_focus_pattern_cell");
 
     ProcessResult result =
         workspace.runBuckCommand(
@@ -368,10 +311,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testBuckProjectFocusWithTests() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_focus_with_tests", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "project_focus_with_tests");
 
     ProcessResult result =
         workspace.runBuckCommand(
@@ -387,10 +327,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testGeneratingProjectMetadataWithGenrule() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "target_using_genrule_source", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "target_using_genrule_source");
 
     workspace.runBuckCommand("project", "//lib:lib");
     workspace.verify();
@@ -398,10 +335,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testBuckProjectWithUniqueLibraryNames() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_with_unique_library_names", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "project_with_unique_library_names");
 
     ProcessResult result =
         workspace.runBuckCommand(
@@ -417,10 +351,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testBuckProjectShowsFullOutput() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "target_using_genrule_source", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "target_using_genrule_source");
 
     ProcessResult result = workspace.runBuckCommand("project", "--show-full-output", "//lib:lib");
     workspace.verify();
@@ -434,10 +365,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testBuckProjectShowsOutput() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "target_using_genrule_source", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "target_using_genrule_source");
 
     ProcessResult result = workspace.runBuckCommand("project", "--show-output", "//lib:lib");
     workspace.verify();
@@ -451,10 +379,7 @@ public class ProjectIntegrationTest {
   public void testBuckProjectWithCell() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_with_cell", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "project_with_cell");
 
     ProcessResult result =
         workspace.runBuckCommand("project", "//Apps:workspace", "--experimental");
@@ -467,10 +392,7 @@ public class ProjectIntegrationTest {
   public void testBuckProjectWithEmbeddedCellBuckout() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_with_cell", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "project_with_cell");
 
     ProcessResult result =
         workspace.runBuckCommand(
@@ -488,10 +410,7 @@ public class ProjectIntegrationTest {
   public void testBuckProjectWithCellAndMergedHeaderMap() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_with_cell", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "project_with_cell");
 
     ProcessResult result =
         workspace.runBuckCommand(
@@ -509,10 +428,7 @@ public class ProjectIntegrationTest {
   public void testBuckProjectWithAppleBundleTests() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_with_apple_bundle_test", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "project_with_apple_bundle_test");
 
     ProcessResult result = workspace.runBuckCommand("project", "//app:bundle");
     result.assertSuccess();
@@ -536,10 +452,7 @@ public class ProjectIntegrationTest {
       throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_with_cell", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "project_with_cell");
 
     ProcessResult result =
         workspace.runBuckCommand(
@@ -559,10 +472,7 @@ public class ProjectIntegrationTest {
   public void testBuckProjectOtherCell() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_with_cell", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "project_with_cell");
 
     ProcessResult result =
         workspace.runBuckCommand(
@@ -589,9 +499,7 @@ public class ProjectIntegrationTest {
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "project_with_swift_dependency_on_modular_objective_c_library", temporaryFolder);
-    workspace.setUp();
+        createWorkspace(this, "project_with_swift_dependency_on_modular_objective_c_library");
 
     ProcessResult result = workspace.runBuckCommand("project", "//Apps:App");
     result.assertSuccess();
@@ -604,9 +512,7 @@ public class ProjectIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(
         AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "project_halide", temporaryFolder);
-    workspace.setUp();
+    ProjectWorkspace workspace = createWorkspace(this, "project_halide");
 
     ProcessResult result =
         workspace.runBuckCommand("project", "//Apps:workspace", "--experimental");
@@ -641,5 +547,22 @@ public class ProjectIntegrationTest {
             "iphonesimulator");
     processResult.getStderr().ifPresent(System.err::print);
     assertEquals("xcodebuild should succeed", 0, processResult.getExitCode());
+  }
+
+  private ProjectWorkspace createWorkspace(Object testCase, String scenario) throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(testCase, scenario, temporaryFolder);
+    workspace.setUp();
+
+    ProjectFilesystem projectFilesystem = workspace.getProjectFileSystem();
+    Path buildScriptPath = AppleProjectHelper.getBuildScriptPath(projectFilesystem);
+
+    TestDataHelper.overrideBuckconfig(
+        workspace,
+        ImmutableMap.of(
+            AppleConfig.APPLE_SECTION,
+            ImmutableMap.of(AppleConfig.BUILD_SCRIPT, buildScriptPath.toString())));
+
+    return workspace;
   }
 }
