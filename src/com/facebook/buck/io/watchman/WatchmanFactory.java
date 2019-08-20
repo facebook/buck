@@ -264,17 +264,6 @@ public class WatchmanFactory {
   }
 
   @VisibleForTesting
-  static Optional<WatchmanClient> tryCreateWatchmanClient(
-      Path transportPath, Console console, Clock clock) {
-    try {
-      return Optional.of(createWatchmanClient(transportPath, console, clock));
-    } catch (IOException e) {
-      LOG.warn(e, "Could not connect to Watchman at path %s", transportPath);
-      return Optional.empty();
-    }
-  }
-
-  @VisibleForTesting
   public static WatchmanClient createWatchmanClient(
       Path transportPath, Console console, Clock clock) throws IOException {
     return new WatchmanTransportClient(console, clock, createLocalWatchmanTransport(transportPath));

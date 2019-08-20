@@ -79,12 +79,10 @@ public class WatchmanClientIntegrationTest {
 
   @Test
   public void testWatchmanGlob() throws InterruptedException, IOException {
-    Optional<WatchmanClient> clientOpt =
-        WatchmanFactory.tryCreateWatchmanClient(
+    WatchmanClient client =
+        WatchmanFactory.createWatchmanClient(
             watchmanDaemon.getTransportPath(), new TestConsole(), new DefaultClock());
-    Assert.assertTrue(clientOpt.isPresent());
 
-    WatchmanClient client = clientOpt.get();
     Optional<? extends Map<String, ?>> versionResponse =
         client.queryWithTimeout(
             timeoutNanos,
