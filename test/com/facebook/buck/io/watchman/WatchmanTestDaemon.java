@@ -16,6 +16,7 @@
 package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.log.LogConfig;
 import com.facebook.buck.testutil.TestConsole;
@@ -40,6 +41,8 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
 public class WatchmanTestDaemon implements Closeable {
+  private static final Logger LOG = Logger.get(WatchmanTestDaemon.class);
+
   private static final long timeoutMillis = 5000L;
   private static final long timeoutNanos = TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
 
@@ -139,6 +142,7 @@ public class WatchmanTestDaemon implements Closeable {
           }
         }
       } catch (IOException e) {
+        LOG.warn(e, "Watchman is not ready");
       }
       Thread.sleep(100L);
     }
