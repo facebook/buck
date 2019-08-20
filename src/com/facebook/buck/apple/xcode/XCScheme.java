@@ -191,15 +191,18 @@ public class XCScheme {
 
   public static class BuildActionEntry {
     public enum BuildFor {
-      RUNNING,
+      ANALYZING,
       TESTING,
+      RUNNING,
       PROFILING,
-      ARCHIVING,
-      ANALYZING;
+      ARCHIVING;
 
       public static final EnumSet<BuildFor> DEFAULT = EnumSet.allOf(BuildFor.class);
-      public static final EnumSet<BuildFor> INDEXING = EnumSet.of(TESTING, ANALYZING, ARCHIVING);
-      public static final EnumSet<BuildFor> TEST_ONLY = EnumSet.of(TESTING, ANALYZING);
+      public static final EnumSet<BuildFor> INDEXING_ONLY = EnumSet.of(ANALYZING);
+      public static final EnumSet<BuildFor> SCHEME_LIBRARY = EnumSet.of(ANALYZING, RUNNING);
+      public static final EnumSet<BuildFor> MAIN_EXECUTABLE =
+          EnumSet.of(ANALYZING, RUNNING, PROFILING, ARCHIVING);
+      public static final EnumSet<BuildFor> TEST_ONLY = EnumSet.of(ANALYZING, TESTING);
     }
 
     private BuildableReference buildableReference;

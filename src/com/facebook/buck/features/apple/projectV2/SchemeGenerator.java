@@ -19,6 +19,7 @@ package com.facebook.buck.features.apple.projectV2;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.XCScheme.AdditionalActions;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.features.apple.common.SchemeActionType;
 import com.facebook.buck.io.MoreProjectFilesystems;
@@ -221,16 +222,12 @@ class SchemeGenerator {
     // For aesthetic reasons put all non-test build actions before all test build actions.
     for (PBXTarget target : orderedBuildTargets) {
       addBuildActionForBuildTarget(
-          buildTargetToBuildableReferenceMap.get(target),
-          XCScheme.BuildActionEntry.BuildFor.DEFAULT,
-          buildAction);
+          buildTargetToBuildableReferenceMap.get(target), buildForsForTarget(target), buildAction);
     }
 
     for (PBXTarget target : orderedBuildTestTargets) {
       addBuildActionForBuildTarget(
-          buildTargetToBuildableReferenceMap.get(target),
-          XCScheme.BuildActionEntry.BuildFor.TEST_ONLY,
-          buildAction);
+          buildTargetToBuildableReferenceMap.get(target), buildForsForTarget(target), buildAction);
     }
 
     ImmutableMap<SchemeActionType, ImmutableMap<String, String>> envVariables = ImmutableMap.of();
@@ -350,6 +347,48 @@ class SchemeGenerator {
       }
     }
     return schemePath;
+  }
+
+  /**
+   * Build action rules for each target in the scheme:
+   *
+   * <ol>
+   *   <li>Analyze all targets
+   *   <li>Test only for test targets
+   *   <li>If the primary target:
+   *       <ol>
+   *         <li>Run
+   *         <li>If an application, app-extension or watch extension, profile and archive.
+   *       </ol>
+   * </ol>
+   *
+   * @param target Target for which to generate buildFors
+   * @return Set of build fors for the target.
+   */
+  private EnumSet<XCScheme.BuildActionEntry.BuildFor> buildForsForTarget(PBXTarget target) {
+    EnumSet<XCScheme.BuildActionEntry.BuildFor> buildFors =
+        EnumSet.of(XCScheme.BuildActionEntry.BuildFor.ANALYZING);
+
+    if (ImmutableList.of(ProductTypes.UNIT_TEST, ProductTypes.UI_TEST)
+        .contains(target.getProductType())) {
+      buildFors.add(XCScheme.BuildActionEntry.BuildFor.TESTING);
+    }
+    primaryTarget.ifPresent(
+        pbxTarget -> {
+          if (pbxTarget.equals(target)) {
+            buildFors.add(XCScheme.BuildActionEntry.BuildFor.RUNNING);
+            if (ImmutableList.of(
+                    ProductTypes.APPLICATION,
+                    ProductTypes.APP_EXTENSION,
+                    ProductTypes.WATCH_APPLICATION)
+                .contains(target.getProductType())) {
+              buildFors.add(XCScheme.BuildActionEntry.BuildFor.PROFILING);
+              buildFors.add(XCScheme.BuildActionEntry.BuildFor.ARCHIVING);
+            }
+          }
+        });
+
+    return buildFors;
   }
 
   private static void addBuildActionForBuildTarget(

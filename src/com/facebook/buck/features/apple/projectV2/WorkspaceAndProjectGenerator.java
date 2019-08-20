@@ -711,7 +711,7 @@ public class WorkspaceAndProjectGenerator {
           TargetNode<?> targetNode = projectGraph.get(buildTarget);
 
           schemeConfigsBuilder.put(
-              extensionSchemeName, createImplicitExtensionWorkspaceArgs(sourceBuildTarget));
+              extensionSchemeName, createImplicitExtensionWorkspaceArgs(buildTarget));
 
           schemeNameToSrcTargetNodeBuilder.put(extensionSchemeName, Optional.of(sourceTargetNode));
           schemeNameToSrcTargetNodeBuilder.put(extensionSchemeName, Optional.of(targetNode));

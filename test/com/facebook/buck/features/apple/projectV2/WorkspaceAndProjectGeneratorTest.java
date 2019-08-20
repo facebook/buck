@@ -397,19 +397,20 @@ public class WorkspaceAndProjectGeneratorTest {
     assertThat(mainSchemeBuildActionEntries, hasSize(4));
     assertThat( // foo:bin
         mainSchemeBuildActionEntries,
-        hasItem(
-            withNameAndBuildingFor("bin", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT))));
+        hasItem(withNameAndBuildingFor("bin", equalTo(BuildFor.MAIN_EXECUTABLE))));
     assertThat( // foo:bin-xctest
         mainSchemeBuildActionEntries,
         hasItem(withNameAndBuildingFor("bin-xctest", equalTo(BuildFor.TEST_ONLY))));
     assertThat( // foo:lib
         mainSchemeBuildActionEntries,
         hasItem(
-            withNameAndBuildingFor("lib", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT))));
+            withNameAndBuildingFor(
+                "lib", equalTo(XCScheme.BuildActionEntry.BuildFor.INDEXING_ONLY))));
     assertThat( // bar:libbar
         mainSchemeBuildActionEntries,
         hasItem(
-            withNameAndBuildingFor("libbar", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT))));
+            withNameAndBuildingFor(
+                "libbar", equalTo(XCScheme.BuildActionEntry.BuildFor.INDEXING_ONLY))));
 
     XCScheme.TestAction mainSchemeTestAction = mainScheme.get().getTestAction().get();
     assertThat(mainSchemeTestAction.getTestables(), hasSize(1));
@@ -432,14 +433,16 @@ public class WorkspaceAndProjectGeneratorTest {
     assertThat( // foo:bin
         fooSchemeBuildActionEntries,
         hasItem(
-            withNameAndBuildingFor("bin", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT))));
+            withNameAndBuildingFor(
+                "bin", equalTo(XCScheme.BuildActionEntry.BuildFor.INDEXING_ONLY))));
     assertThat( // foo:bin-xctest
         fooSchemeBuildActionEntries,
         hasItem(withNameAndBuildingFor("bin-xctest", equalTo(BuildFor.TEST_ONLY))));
     assertThat( // foo:lib
         fooSchemeBuildActionEntries,
         hasItem(
-            withNameAndBuildingFor("lib", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT))));
+            withNameAndBuildingFor(
+                "lib", equalTo(XCScheme.BuildActionEntry.BuildFor.INDEXING_ONLY))));
 
     XCScheme.TestAction fooSchemeTestAction = fooScheme.get().getTestAction().get();
     assertThat(fooSchemeTestAction.getTestables(), hasSize(1));
@@ -462,7 +465,8 @@ public class WorkspaceAndProjectGeneratorTest {
     assertThat( // bar:libbar
         barSchemeBuildActionEntries,
         hasItem(
-            withNameAndBuildingFor("libbar", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT))));
+            withNameAndBuildingFor(
+                "libbar", equalTo(XCScheme.BuildActionEntry.BuildFor.INDEXING_ONLY))));
 
     XCScheme.TestAction barSchemeTestAction = barScheme.get().getTestAction().get();
     assertThat(barSchemeTestAction.getTestables(), hasSize(0));
@@ -704,30 +708,35 @@ public class WorkspaceAndProjectGeneratorTest {
     assertThat(mainSchemeBuildAction.getBuildActionEntries(), hasSize(2));
     assertThat(
         mainSchemeBuildAction.getBuildActionEntries().get(0),
-        withNameAndBuildingFor("BarLib", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+        withNameAndBuildingFor(
+            "BarLib", equalTo(XCScheme.BuildActionEntry.BuildFor.INDEXING_ONLY)));
     assertThat(
         mainSchemeBuildAction.getBuildActionEntries().get(1),
-        withNameAndBuildingFor("QuxBin", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+        withNameAndBuildingFor(
+            "QuxBin", equalTo(XCScheme.BuildActionEntry.BuildFor.SCHEME_LIBRARY)));
 
     XCScheme fooScheme = generator.getSchemeGenerators().get("FooScheme").getOutputScheme().get();
     XCScheme.BuildAction fooSchemeBuildAction = fooScheme.getBuildAction().get();
     assertThat(fooSchemeBuildAction.getBuildActionEntries(), hasSize(6));
     assertThat(
         fooSchemeBuildAction.getBuildActionEntries().get(0),
-        withNameAndBuildingFor("BarLib", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+        withNameAndBuildingFor(
+            "BarLib", equalTo(XCScheme.BuildActionEntry.BuildFor.INDEXING_ONLY)));
     assertThat(
         fooSchemeBuildAction.getBuildActionEntries().get(1),
-        withNameAndBuildingFor("FooLib", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+        withNameAndBuildingFor(
+            "FooLib", equalTo(XCScheme.BuildActionEntry.BuildFor.INDEXING_ONLY)));
     assertThat(
         fooSchemeBuildAction.getBuildActionEntries().get(2),
-        withNameAndBuildingFor("FooBin", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+        withNameAndBuildingFor("FooBin", equalTo(BuildFor.MAIN_EXECUTABLE)));
     assertThat(
         fooSchemeBuildAction.getBuildActionEntries().get(3),
         withNameAndBuildingFor(
             "FooBinTest", equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY)));
     assertThat(
         fooSchemeBuildAction.getBuildActionEntries().get(4),
-        withNameAndBuildingFor("BazLib", equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY)));
+        withNameAndBuildingFor(
+            "BazLib", equalTo(XCScheme.BuildActionEntry.BuildFor.INDEXING_ONLY)));
 
     assertThat(
         fooSchemeBuildAction.getBuildActionEntries().get(5),
@@ -816,13 +825,16 @@ public class WorkspaceAndProjectGeneratorTest {
     assertThat(mainSchemeBuildAction.getBuildActionEntries(), hasSize(3));
     assertThat(
         mainSchemeBuildAction.getBuildActionEntries().get(0),
-        withNameAndBuildingFor("FooLib", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+        withNameAndBuildingFor(
+            "FooLib", equalTo(XCScheme.BuildActionEntry.BuildFor.SCHEME_LIBRARY)));
     assertThat(
         mainSchemeBuildAction.getBuildActionEntries().get(1),
-        withNameAndBuildingFor("BarLib", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+        withNameAndBuildingFor(
+            "BarLib", equalTo(XCScheme.BuildActionEntry.BuildFor.INDEXING_ONLY)));
     assertThat(
         mainSchemeBuildAction.getBuildActionEntries().get(2),
-        withNameAndBuildingFor("BazLib", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+        withNameAndBuildingFor(
+            "BazLib", equalTo(XCScheme.BuildActionEntry.BuildFor.INDEXING_ONLY)));
   }
 
   @Test
@@ -914,10 +926,10 @@ public class WorkspaceAndProjectGeneratorTest {
     assertThat(
         appSchemeBuildAction.getBuildActionEntries().get(0),
         withNameAndBuildingFor(
-            "BarShareExtension", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+            "BarShareExtension", equalTo(XCScheme.BuildActionEntry.BuildFor.INDEXING_ONLY)));
     assertThat(
         appSchemeBuildAction.getBuildActionEntries().get(1),
-        withNameAndBuildingFor("BarApp", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+        withNameAndBuildingFor("BarApp", equalTo(BuildFor.MAIN_EXECUTABLE)));
 
     // Validate extension scheme
     XCScheme extensionScheme =
@@ -927,11 +939,11 @@ public class WorkspaceAndProjectGeneratorTest {
     assertThat(extensionSchemeBuildAction.getBuildActionEntries(), hasSize(2));
     assertThat(
         extensionSchemeBuildAction.getBuildActionEntries().get(0),
-        withNameAndBuildingFor("BarApp", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+        withNameAndBuildingFor(
+            "BarApp", equalTo(XCScheme.BuildActionEntry.BuildFor.INDEXING_ONLY)));
     assertThat(
         extensionSchemeBuildAction.getBuildActionEntries().get(1),
-        withNameAndBuildingFor(
-            "BarShareExtension", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+        withNameAndBuildingFor("BarShareExtension", equalTo(BuildFor.MAIN_EXECUTABLE)));
   }
 
   @Test
@@ -985,7 +997,8 @@ public class WorkspaceAndProjectGeneratorTest {
     assertThat(mainSchemeBuildAction.getBuildActionEntries(), hasSize(1));
     assertThat(
         mainSchemeBuildAction.getBuildActionEntries().get(0),
-        withNameAndBuildingFor("FooLib", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+        withNameAndBuildingFor(
+            "FooLib", equalTo(XCScheme.BuildActionEntry.BuildFor.SCHEME_LIBRARY)));
     assertThat(mainSchemeBuildAction.getParallelizeBuild(), is(true));
   }
 
