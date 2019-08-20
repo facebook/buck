@@ -166,11 +166,18 @@ public class WatchmanTestDaemon implements Closeable {
     }
   }
 
-  private void dumpWatchmanLogs() throws IOException {
+  private void dumpWatchmanLogs() {
     LogConfig.flushLogs();
     PrintStream output = System.err;
+    List<String> lines;
+    try {
+      lines = Files.readAllLines(watchmanLogFile);
+    } catch (IOException e) {
+      LOG.warn(e, "Could not read Watchman's log file");
+      return;
+    }
     output.printf("Watchman logs (%s):\n", watchmanLogFile);
-    printIndentedLines(output, Files.readAllLines(watchmanLogFile));
+    printIndentedLines(output, lines);
   }
 
   private static void printIndentedLines(PrintStream output, List<String> lines) {
