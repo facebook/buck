@@ -127,19 +127,24 @@ public class WatchmanTestDaemon implements Closeable {
   private void waitUntilReady() throws InterruptedException {
     long deadline = System.currentTimeMillis() + timeoutMillis;
     while (System.currentTimeMillis() < deadline) {
-      try {
-        try (WatchmanClient client =
-            WatchmanFactory.createWatchmanClient(
-                watchmanSockFile, new TestConsole(), new DefaultClock())) {
-          Optional<?> response = client.queryWithTimeout(timeoutNanos, "get-pid");
-          if (response.isPresent()) {
-            break;
-          }
-        }
-      } catch (IOException e) {
-        LOG.warn(e, "Watchman is not ready");
+      if (isWatchmanReady()) {
+        break;
       }
       Thread.sleep(100L);
+    }
+  }
+
+  private boolean isWatchmanReady() throws InterruptedException {
+    try {
+      try (WatchmanClient client =
+          WatchmanFactory.createWatchmanClient(
+              watchmanSockFile, new TestConsole(), new DefaultClock())) {
+        Optional<?> response = client.queryWithTimeout(timeoutNanos, "get-pid");
+        return response.isPresent();
+      }
+    } catch (IOException e) {
+      LOG.warn(e, "Watchman is not ready");
+      return false;
     }
   }
 
