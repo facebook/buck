@@ -41,6 +41,8 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
 public class WatchmanTestDaemon implements Closeable {
+  public class StartingWatchmanTimedOutException extends IOException {}
+
   private static final Logger LOG = Logger.get(WatchmanTestDaemon.class);
 
   private static final long timeoutMillis = 5000L;
@@ -124,14 +126,15 @@ public class WatchmanTestDaemon implements Closeable {
     }
   }
 
-  private void waitUntilReady() throws InterruptedException {
+  private void waitUntilReady() throws InterruptedException, StartingWatchmanTimedOutException {
     long deadline = System.currentTimeMillis() + timeoutMillis;
     while (System.currentTimeMillis() < deadline) {
       if (isWatchmanReady()) {
-        break;
+        return;
       }
       Thread.sleep(100L);
     }
+    throw new StartingWatchmanTimedOutException();
   }
 
   private boolean isWatchmanReady() throws InterruptedException {
