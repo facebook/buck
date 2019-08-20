@@ -461,7 +461,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private Set<String> getClassNamesForSources(SourcePathResolver pathResolver) {
     if (compiledClassFileFinder == null) {
-      compiledClassFileFinder = new CompiledClassFileFinder(this, pathResolver);
+      compiledClassFileFinder = new CompiledClassFileFinder(compiledTestsLibrary, pathResolver);
     }
     return compiledClassFileFinder.getClassNamesForSources();
   }
@@ -518,7 +518,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     private final Set<String> classNamesForSources;
 
-    CompiledClassFileFinder(JavaTest rule, SourcePathResolver pathResolver) {
+    CompiledClassFileFinder(JavaLibrary rule, SourcePathResolver pathResolver) {
       Path outputPath;
       SourcePath outputSourcePath = rule.getSourcePathToOutput();
       if (outputSourcePath != null) {
@@ -528,10 +528,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       }
       classNamesForSources =
           getClassNamesForSources(
-              rule.compiledTestsLibrary.getJavaSrcs(),
-              outputPath,
-              rule.getProjectFilesystem(),
-              pathResolver);
+              rule.getJavaSrcs(), outputPath, rule.getProjectFilesystem(), pathResolver);
     }
 
     public Set<String> getClassNamesForSources() {
