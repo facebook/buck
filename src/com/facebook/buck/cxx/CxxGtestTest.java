@@ -30,6 +30,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
+import com.facebook.buck.core.test.rule.ExternalTestSpec;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -226,7 +227,7 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
   }
 
   @Override
-  public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
+  public ExternalTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {

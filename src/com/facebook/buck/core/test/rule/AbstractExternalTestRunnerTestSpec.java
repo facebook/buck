@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.types.Pair;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializable;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.google.common.collect.ImmutableList;
@@ -39,7 +38,7 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractExternalTestRunnerTestSpec implements JsonSerializable {
+abstract class AbstractExternalTestRunnerTestSpec implements ExternalTestSpec {
 
   /** @return the build target of this rule. */
   protected abstract BuildTarget getTarget();

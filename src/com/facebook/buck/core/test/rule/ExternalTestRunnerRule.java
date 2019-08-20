@@ -23,7 +23,7 @@ import java.io.IOException;
 
 /** A interface describing {@link TestRule}s which support being run by an external test runner. */
 public interface ExternalTestRunnerRule extends TestRule {
-  ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
+  ExternalTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
       BuildContext buildContext);

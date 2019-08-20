@@ -41,7 +41,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
-import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
+import com.facebook.buck.core.test.rule.ExternalTestSpec;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
@@ -356,7 +356,7 @@ public class TestCommand extends BuildCommand {
             .getView(TestBuckConfig.class)
             .isParallelExternalTestSpecComputationEnabled();
     // Walk the test rules, collecting all the specs.
-    ImmutableList<ExternalTestRunnerTestSpec> specs =
+    ImmutableList<ExternalTestSpec> specs =
         StreamSupport.stream(testRules.spliterator(), parallelExternalTestSpecComputationEnabled)
             .map(ExternalTestRunnerRule.class::cast)
             .map(
