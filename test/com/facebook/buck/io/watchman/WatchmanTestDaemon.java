@@ -34,7 +34,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -128,18 +127,11 @@ public class WatchmanTestDaemon implements Closeable {
     long deadline = System.currentTimeMillis() + timeoutMillis;
     while (System.currentTimeMillis() < deadline) {
       try {
-        Optional<WatchmanClient> optClient =
-            WatchmanFactory.tryCreateWatchmanClient(
-                watchmanSockFile, new TestConsole(), new DefaultClock());
-        try {
-          if (optClient.isPresent()) {
-            optClient.get().queryWithTimeout(timeoutNanos, "get-pid");
-            break;
-          }
-        } finally {
-          if (optClient.isPresent()) {
-            optClient.get().close();
-          }
+        try (WatchmanClient client =
+            WatchmanFactory.createWatchmanClient(
+                watchmanSockFile, new TestConsole(), new DefaultClock())) {
+          client.queryWithTimeout(timeoutNanos, "get-pid");
+          break;
         }
       } catch (IOException e) {
         LOG.warn(e, "Watchman is not ready");
