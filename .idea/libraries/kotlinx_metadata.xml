@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="kotlinx-metadata">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/kotlinx-metadata-jvm/kotlinx-metadata-jvm-0.1.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/kotlinx-metadata-jvm/kotlinx-metadata-jvm-0.1.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

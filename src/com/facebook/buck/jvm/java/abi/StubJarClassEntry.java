@@ -16,22 +16,26 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.jvm.java.abi.kotlin.KotlinMetadataReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InnerClassNode;
 
 class StubJarClassEntry extends StubJarEntry {
   @Nullable private final Set<String> referencedClassNames;
+  private final List<String> inlineMethods;
   private final Path path;
   private final ClassNode stub;
 
@@ -44,11 +48,19 @@ class StubJarClassEntry extends StubJarEntry {
       throws IOException {
     ClassNode stub = new ClassNode(Opcodes.ASM7);
 
+    // Kotlin has the concept of "inline functions", which means that we need to retain the body
+    // of these functions so that the compiler is able to inline them.
+    List<String> inlineFunctions = Collections.emptyList();
+    if (isKotlinModule) {
+      inlineFunctions = KotlinMetadataReader.getInlineFunctions(getVisibleAnnotations(input, path));
+    }
+
     // As we read the class in, we create a partial stub that removes non-ABI methods and fields
     // but leaves the entire InnerClasses table. We record all classes that are referenced from
     // ABI methods and fields, and will use that information later to filter the InnerClasses table.
     ClassReferenceTracker referenceTracker = new ClassReferenceTracker(stub);
-    ClassVisitor firstLevelFiltering = new AbiFilteringClassVisitor(referenceTracker);
+    ClassVisitor firstLevelFiltering =
+        new AbiFilteringClassVisitor(referenceTracker, inlineFunctions);
 
     // If we want ABIs that are compatible with those generated from source, we add a visitor
     // at the very start of the chain which transforms the event stream coming out of `ClassNode`
@@ -56,21 +68,24 @@ class StubJarClassEntry extends StubJarEntry {
     if (compatibilityMode != null && compatibilityMode != AbiGenerationMode.CLASS) {
       firstLevelFiltering = new SourceAbiCompatibleVisitor(firstLevelFiltering, compatibilityMode);
     }
-    input.visitClass(path, firstLevelFiltering, /* skipCode */ true);
+    input.visitClass(path, firstLevelFiltering, /* skipCode */ inlineFunctions.isEmpty());
 
     // The synthetic package-info class is how package annotations are recorded; that one is
     // actually used by the compiler
     if (!isAnonymousOrLocalOrSyntheticClass(stub) || stub.name.endsWith("/package-info")) {
-      return new StubJarClassEntry(path, stub, referenceTracker.getReferencedClassNames());
+      return new StubJarClassEntry(
+          path, stub, referenceTracker.getReferencedClassNames(), inlineFunctions);
     }
 
     return null;
   }
 
-  private StubJarClassEntry(Path path, ClassNode stub, Set<String> referencedClassNames) {
+  private StubJarClassEntry(
+      Path path, ClassNode stub, Set<String> referencedClassNames, List<String> inlineMethods) {
     this.path = path;
     this.stub = stub;
     this.referencedClassNames = referencedClassNames;
+    this.inlineMethods = inlineMethods;
   }
 
   @Override
@@ -82,7 +97,7 @@ class StubJarClassEntry extends StubJarEntry {
     ClassWriter writer = new ClassWriter(0);
     ClassVisitor visitor = writer;
     visitor = new InnerClassSortingClassVisitor(stub.name, visitor);
-    visitor = new AbiFilteringClassVisitor(visitor, referencedClassNames);
+    visitor = new AbiFilteringClassVisitor(visitor, inlineMethods, referencedClassNames);
     stub.accept(visitor);
 
     return new ByteArrayInputStream(writer.toByteArray());
@@ -108,6 +123,14 @@ class StubJarClassEntry extends StubJarEntry {
   private static InnerClassNode getInnerClassMetadata(ClassNode node) {
     String name = node.name;
     return getInnerClassMetadata(node, name);
+  }
+
+  private static List<AnnotationNode> getVisibleAnnotations(LibraryReader input, Path relativePath)
+      throws IOException {
+    ClassNode node = new ClassNode();
+    input.visitClass(relativePath, node, /* skipCode */ true);
+
+    return node.visibleAnnotations;
   }
 
   @Nullable

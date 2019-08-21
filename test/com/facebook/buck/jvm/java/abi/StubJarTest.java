@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.DefaultBuckEventBus;
@@ -33,6 +34,7 @@ import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized
 import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.jvm.kotlin.testutil.compiler.KotlinTestCompiler;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.timing.FakeClock;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
@@ -228,6 +230,96 @@ public class StubJarTest {
             "",
             "  // access flags 0x1",
             "  public eatCake()V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
+  public void kotlinClassWithInlineMethod() throws IOException {
+    if (!isValidForKotlin()) {
+      return;
+    }
+
+    tester = new Tester(Language.KOTLIN);
+    tester
+        .setSourceFile(
+            "A.kt",
+            "package com.example.buck",
+            "open class A {",
+            "  inline fun getString(): String { return \"test\" }",
+            "  fun someOtherMethod() {}",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u0016\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\u0008\\u0002\\n\\u0002\\u0010\\u000e\\n\\u0000\\n\\u0002\\u0010\\u0002\\u0008\\u0016\\u0018\\u00002\\u00020\\u0001B\\u0005\\u00a2\\u0006\\u0002\\u0010\\u0002J\\u0009\\u0010\\u0003\\u001a\\u00020\\u0004H\\u0086\\u0008J\\u0006\\u0010\\u0005\\u001a\\u00020\\u0006\"}, d2={\"Lcom/example/buck/A;\", \"\", \"()V\", \"getString\", \"\", \"someOtherMethod\", \"\"})",
+            "",
+            "  // access flags 0x11",
+            "  public final getString()Ljava/lang/String;",
+            "  @Lorg/jetbrains/annotations/NotNull;() // invisible",
+            "    LDC 0",
+            "    ISTORE 1",
+            "    LDC \"test\"",
+            "    ARETURN",
+            "    MAXSTACK = 1",
+            "    MAXLOCALS = 2",
+            "",
+            "  // access flags 0x11",
+            "  public final someOtherMethod()V",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .createAndCheckStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "B.kt",
+            "package com.example.buck",
+            "class B {",
+            "fun useInline(): String { return A().getString() }",
+            "}")
+        .testCanCompile();
+  }
+
+  @Test
+  public void kotlinClassNoInlineMethod() throws IOException {
+    if (!isValidForKotlin()) {
+      return;
+    }
+
+    tester = new Tester(Language.KOTLIN);
+    tester
+        .setSourceFile(
+            "A.kt",
+            "package com.example.buck",
+            "open class A {",
+            "  fun getString(): String { return \"test\" }",
+            "  fun someOtherMethod() {}",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u0016\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\u0008\\u0002\\n\\u0002\\u0010\\u000e\\n\\u0000\\n\\u0002\\u0010\\u0002\\u0008\\u0016\\u0018\\u00002\\u00020\\u0001B\\u0005\\u00a2\\u0006\\u0002\\u0010\\u0002J\\u0006\\u0010\\u0003\\u001a\\u00020\\u0004J\\u0006\\u0010\\u0005\\u001a\\u00020\\u0006\"}, d2={\"Lcom/example/buck/A;\", \"\", \"()V\", \"getString\", \"\", \"someOtherMethod\", \"\"})",
+            "",
+            "  // access flags 0x11",
+            "  public final getString()Ljava/lang/String;",
+            "  @Lorg/jetbrains/annotations/NotNull;() // invisible",
+            "",
+            "  // access flags 0x11",
+            "  public final someOtherMethod()V",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
             "}")
         .createAndCheckStubJar();
   }
@@ -5341,6 +5433,9 @@ public class StubJarTest {
   }
 
   private boolean isValidForKotlin() {
+    // System.getProperty("java.class.path") returning classpath with ":" as separator which means
+    // that KotlinTestCompiler crashes (separator should be ";" on Windows)
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
     return testingMode.equals(MODE_JAR_BASED);
   }
 

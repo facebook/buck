@@ -10,3 +10,43 @@ filegroup(
         "libexec/lib/kotlin-stdlib.jar",
     ],
 )
+
+prebuilt_jar(
+    name = "annotation-processing-gradle",
+    binary_jar = "libexec/lib/kotlin-annotation-processing-gradle.jar",
+    visibility = [
+        "//test/com/facebook/buck/...",
+    ],
+)
+
+prebuilt_jar(
+    name = "compiler-embeddable",
+    binary_jar = "libexec/lib/kotlin-compiler-embeddable.jar",
+    visibility = [
+        "//test/com/facebook/buck/...",
+    ],
+)
+
+prebuilt_jar(
+    name = "reflect",
+    binary_jar = "libexec/lib/kotlin-reflect.jar",
+    visibility = [
+        "//test/com/facebook/buck/...",
+    ],
+)
+
+prebuilt_jar(
+    name = "script-runtime",
+    binary_jar = "libexec/lib/kotlin-script-runtime.jar",
+    visibility = [
+        "//test/com/facebook/buck/...",
+    ],
+)
+
+prebuilt_jar(
+    name = "stdlib",
+    binary_jar = "libexec/lib/kotlin-stdlib.jar",
+    visibility = [
+        "//test/com/facebook/buck/...",
+    ],
+)

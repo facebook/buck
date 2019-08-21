@@ -73,7 +73,9 @@ class KotlinTestCompiler : ExternalResource(), AutoCloseable {
             it.noReflect = true
             it.freeArgs = sourceFiles.map(File::getAbsolutePath).distinct()
             it.destination = outputFolder.root.toString()
-            it.classpath = classpath.joinToString(File.pathSeparatorChar.toString())
+
+            it.classpath = classpath.joinToString(File.pathSeparator)
+            it.classpath += File.pathSeparator + System.getProperty("java.class.path")
         }
 
         kotlinCompiler.exec(collector, Services.EMPTY, k2JVMCompilerArguments)

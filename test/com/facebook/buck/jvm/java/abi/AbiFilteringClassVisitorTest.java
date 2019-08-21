@@ -21,6 +21,7 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +35,8 @@ public class AbiFilteringClassVisitorTest {
   @Before
   public void setUp() {
     mockVisitor = createMock(ClassVisitor.class);
-    filteringVisitor = new AbiFilteringClassVisitor(mockVisitor, ImmutableSet.of());
+    filteringVisitor =
+        new AbiFilteringClassVisitor(mockVisitor, ImmutableList.of(), ImmutableSet.of());
   }
 
   @Test
@@ -85,6 +87,13 @@ public class AbiFilteringClassVisitorTest {
   @Test
   public void testExcludesPrivateMethods() {
     testExcludesMethodWithAccess(Opcodes.ACC_PRIVATE);
+  }
+
+  @Test
+  public void testIncludesPrivateMethodsWhenRetained() {
+    filteringVisitor =
+        new AbiFilteringClassVisitor(mockVisitor, ImmutableList.of("foo"), ImmutableSet.of());
+    testIncludesMethodWithAccess(Opcodes.ACC_PRIVATE);
   }
 
   @Test
@@ -156,7 +165,8 @@ public class AbiFilteringClassVisitorTest {
 
   @Test
   public void testIncludesInnerClassEntryForReferencedOtherClassInnerClass() {
-    filteringVisitor = new AbiFilteringClassVisitor(mockVisitor, ImmutableSet.of("Bar$Inner"));
+    filteringVisitor =
+        new AbiFilteringClassVisitor(mockVisitor, ImmutableList.of(), ImmutableSet.of("Bar$Inner"));
 
     visitClass(mockVisitor, "Foo");
     mockVisitor.visitInnerClass("Bar$Inner", "Bar", "Inner", Opcodes.ACC_PUBLIC);

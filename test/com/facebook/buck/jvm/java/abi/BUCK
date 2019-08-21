@@ -242,6 +242,8 @@ standard_java_test(
         "//third-party/java/jna:jna",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",
+        "//third-party/java/kotlin:annotations",
+        "//third-party/java/kotlin:kotlin-stdlib",
         "//third-party/java/maven:maven-model",
         "//third-party/java/nailgun:nailgun",
         "//third-party/java/okhttp:okhttp",
