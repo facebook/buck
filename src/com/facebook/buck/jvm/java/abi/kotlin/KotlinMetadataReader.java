@@ -20,9 +20,11 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import kotlinx.metadata.Flag;
 import kotlinx.metadata.KmDeclarationContainer;
+import kotlinx.metadata.KmFunction;
 import kotlinx.metadata.jvm.KotlinClassHeader;
 import kotlinx.metadata.jvm.KotlinClassMetadata;
 import org.objectweb.asm.tree.AnnotationNode;
@@ -53,10 +55,43 @@ public class KotlinMetadataReader {
       return Collections.emptyList();
     }
 
-    return container.getFunctions().stream()
-        .filter(function -> Flag.Function.IS_INLINE.invoke(function.getFlags()))
-        .map(function -> function.getName())
+    Stream<String> inlineFunctions =
+        container.getFunctions().stream()
+            .filter(function -> Flag.Function.IS_INLINE.invoke(function.getFlags()))
+            .map(KmFunction::getName);
+
+    Stream<String> inlineGetters =
+        container.getProperties().stream()
+            .filter(property -> Flag.PropertyAccessor.IS_INLINE.invoke(property.getGetterFlags()))
+            .map(property -> getPropertyGetterName(property.getName()));
+
+    Stream<String> inlineSetters =
+        container.getProperties().stream()
+            .filter(function -> Flag.PropertyAccessor.IS_INLINE.invoke(function.getSetterFlags()))
+            .map(property -> getPropertySetterName(property.getName()));
+
+    return Stream.concat(Stream.concat(inlineFunctions, inlineGetters), inlineSetters)
         .collect(Collectors.toList());
+  }
+
+  private static String getPropertyGetterName(String propertyName) {
+    if (propertyName.startsWith("is")) {
+      return propertyName;
+    } else {
+      return "get".concat(capitalize(propertyName));
+    }
+  }
+
+  private static String getPropertySetterName(String propertyName) {
+    if (propertyName.startsWith("is")) {
+      return "set".concat(propertyName.substring(2));
+    } else {
+      return "set".concat(capitalize(propertyName));
+    }
+  }
+
+  private static String capitalize(String name) {
+    return name.substring(0, 1).toUpperCase().concat(name.substring(1));
   }
 
   @Nullable

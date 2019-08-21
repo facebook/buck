@@ -9,4 +9,7 @@ prebuilt_jar(
         "//src/com/facebook/buck/jvm/java/abi/kotlin:kotlin",
         "//third-party/java/d8/...",
     ],
+    deps = [
+        "//third-party/java/kotlin:kotlin-stdlib",
+    ],
 )

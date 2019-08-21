@@ -325,6 +325,88 @@ public class StubJarTest {
   }
 
   @Test
+  public void kotlinClassWithInlineProperty() throws IOException {
+    if (!isValidForKotlin()) {
+      return;
+    }
+
+    tester = new Tester(Language.KOTLIN);
+    tester
+        .setSourceFile(
+            "A.kt",
+            "package com.example.buck",
+            "open class A {",
+            "  inline var someProperty: Boolean",
+            "    get() = true",
+            "    set(value) {}",
+            "  inline var isAProperty: Boolean",
+            "    get() = true",
+            "    set(value) {}",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u0014\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\u0008\\u0002\\n\\u0002\\u0010\\u000b\\n\\u0002\\u0008\\u0007\\u0008\\u0016\\u0018\\u00002\\u00020\\u0001B\\u0005\\u00a2\\u0006\\u0002\\u0010\\u0002R&\\u0010\\u0005\\u001a\\u00020\\u00042\\u0006\\u0010\\u0003\\u001a\\u00020\\u00048\\u00c6\\u0002@\\u00c6\\u0002X\\u0086\\u000e\\u00a2\\u0006\\u000c\\u001a\\u0004\\u0008\\u0005\\u0010\\u0006\\\"\\u0004\\u0008\\u0007\\u0010\\u0008R&\\u0010\\u0009\\u001a\\u00020\\u00042\\u0006\\u0010\\u0003\\u001a\\u00020\\u00048\\u00c6\\u0002@\\u00c6\\u0002X\\u0086\\u000e\\u00a2\\u0006\\u000c\\u001a\\u0004\\u0008\\n\\u0010\\u0006\\\"\\u0004\\u0008\\u000b\\u0010\\u0008\"}, d2={\"Lcom/example/buck/A;\", \"\", \"()V\", \"value\", \"\", \"isAProperty\", \"()Z\", \"setAProperty\", \"(Z)V\", \"someProperty\", \"getSomeProperty\", \"setSomeProperty\"})",
+            "",
+            "  // access flags 0x11",
+            "  public final getSomeProperty()Z",
+            "    LDC 0",
+            "    ISTORE 1",
+            "    ICONST_1",
+            "    IRETURN",
+            "    MAXSTACK = 1",
+            "    MAXLOCALS = 2",
+            "",
+            "  // access flags 0x11",
+            "  public final setSomeProperty(Z)V",
+            "    LDC 0",
+            "    ISTORE 2",
+            "    RETURN",
+            "    MAXSTACK = 1",
+            "    MAXLOCALS = 3",
+            "",
+            "  // access flags 0x11",
+            "  public final isAProperty()Z",
+            "    LDC 0",
+            "    ISTORE 1",
+            "    ICONST_1",
+            "    IRETURN",
+            "    MAXSTACK = 1",
+            "    MAXLOCALS = 2",
+            "",
+            "  // access flags 0x11",
+            "  public final setAProperty(Z)V",
+            "    LDC 0",
+            "    ISTORE 2",
+            "    RETURN",
+            "    MAXSTACK = 1",
+            "    MAXLOCALS = 3",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .createAndCheckStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "B.kt",
+            "package com.example.buck",
+            "class B {",
+            "  fun useInlineProperties() {",
+            "    A().someProperty",
+            "    A().someProperty = true",
+            "    A().isAProperty",
+            "    A().isAProperty = true",
+            "  }",
+            "}")
+        .testCanCompile();
+  }
+
+  @Test
   public void stubsOverloadedMethods() throws IOException {
     tester
         .setSourceFile(
