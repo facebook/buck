@@ -168,6 +168,7 @@ public class AppleTestDescription
       BuildRuleParams params,
       AppleTestDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    args.checkDuplicateSources(graphBuilder.getSourcePathResolver());
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     if (!appleConfig.shouldUseSwiftDelegate()) {
       Optional<BuildRule> buildRule =

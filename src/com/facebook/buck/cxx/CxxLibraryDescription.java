@@ -212,12 +212,14 @@ public class CxxLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       CxxLibraryDescriptionArg args) {
+    ActionGraphBuilder actionGraphBuilder = context.getActionGraphBuilder();
+    args.checkDuplicateSources(actionGraphBuilder.getSourcePathResolver());
     return cxxLibraryFactory.createBuildRule(
         context.getTargetGraph(),
         buildTarget,
         context.getProjectFilesystem(),
         params,
-        context.getActionGraphBuilder(),
+        actionGraphBuilder,
         context.getCellPathResolver(),
         args,
         args.getLinkStyle(),

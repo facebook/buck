@@ -84,11 +84,13 @@ public class CxxBinaryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       CxxBinaryDescriptionArg args) {
+    ActionGraphBuilder actionGraphBuilder = context.getActionGraphBuilder();
+    args.checkDuplicateSources(actionGraphBuilder.getSourcePathResolver());
     return cxxBinaryFactory.createBuildRule(
         context.getTargetGraph(),
         buildTarget,
         context.getProjectFilesystem(),
-        context.getActionGraphBuilder(),
+        actionGraphBuilder,
         context.getCellPathResolver(),
         args,
         ImmutableSortedSet.of());

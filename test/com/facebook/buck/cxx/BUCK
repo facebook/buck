@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_test", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_test")
 
 BINARY_INTEGRATION_SRCS = [
     "CxxBinaryIntegrationTest.java",
@@ -312,7 +312,7 @@ java_test(
     ],
 )
 
-java_immutables_library(
+java_library(
     name = "testutil",
     srcs = UTIL_SRCS,
     visibility = ["PUBLIC"],

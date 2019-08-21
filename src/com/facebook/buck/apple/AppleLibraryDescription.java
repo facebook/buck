@@ -352,6 +352,7 @@ public class AppleLibraryDescription
       AppleLibraryDescriptionArg args) {
     TargetGraph targetGraph = context.getTargetGraph();
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    args.checkDuplicateSources(graphBuilder.getSourcePathResolver());
     Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
     if (type.isPresent() && type.get().getValue().equals(Type.FRAMEWORK)) {
       return createFrameworkBundleBuildRule(
@@ -397,6 +398,7 @@ public class AppleLibraryDescription
               + "No value specified for 'info_plist' attribute.",
           buildTarget.getUnflavoredBuildTarget());
     }
+    args.checkDuplicateSources(graphBuilder.getSourcePathResolver());
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(buildTarget).isPresent()) {
       return graphBuilder.requireRule(
           buildTarget.withAppendedFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR));

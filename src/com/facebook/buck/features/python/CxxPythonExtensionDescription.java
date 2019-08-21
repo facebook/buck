@@ -380,6 +380,7 @@ public class CxxPythonExtensionDescription
     ActionGraphBuilder graphBuilderLocal = context.getActionGraphBuilder();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
+    args.checkDuplicateSources(graphBuilderLocal.getSourcePathResolver());
 
     // See if we're building a particular "type" of this library, and if so, extract it as an enum.
     Optional<Type> type = LIBRARY_TYPE.getValue(buildTarget);
