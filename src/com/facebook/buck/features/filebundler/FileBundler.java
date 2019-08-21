@@ -51,10 +51,7 @@ public abstract class FileBundler {
   }
 
   static ImmutableMap<Path, Path> createRelativeMap(
-      Path basePath,
-      ProjectFilesystem filesystem,
-      SourcePathResolver resolver,
-      Iterable<SourcePath> toCopy) {
+      Path basePath, SourcePathResolver resolver, Iterable<SourcePath> toCopy) {
     // The goal here is pretty simple.
     // 1. For a PathSourcePath (an explicit file reference in a BUCK file) that is a
     //   a. file, add it as a single entry at a path relative to this target's base path
@@ -73,6 +70,7 @@ public abstract class FileBundler {
     Map<Path, Path> relativePathMap = new LinkedHashMap<>();
 
     for (SourcePath sourcePath : toCopy) {
+      ProjectFilesystem filesystem = resolver.getFilesystem(sourcePath);
       Path absolutePath = resolver.getAbsolutePath(sourcePath).normalize();
       try {
         if (sourcePath instanceof PathSourcePath) {
@@ -166,7 +164,7 @@ public abstract class FileBundler {
       SourcePathResolver pathResolver,
       PatternsMatcher entriesToExclude) {
 
-    Map<Path, Path> relativeMap = createRelativeMap(basePath, filesystem, pathResolver, toCopy);
+    Map<Path, Path> relativeMap = createRelativeMap(basePath, pathResolver, toCopy);
 
     for (Map.Entry<Path, Path> pathEntry : relativeMap.entrySet()) {
       Path relativePath = pathEntry.getKey();
