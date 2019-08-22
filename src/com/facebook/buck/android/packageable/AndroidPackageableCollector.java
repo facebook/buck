@@ -207,6 +207,27 @@ public class AndroidPackageableCollector {
     return this;
   }
 
+  /**
+   * Add a directory containing native libraries that must be packaged in a standard location so
+   * that they are accessible via the system library loader.
+   */
+  public AndroidPackageableCollector addNativeLibsDirectoryForSystemLoader(
+      BuildTarget owner, SourcePath nativeLibDir) {
+    if (nativeLibsToExclude.contains(nativeLibDir)
+        || androidPackageableFilter.shouldExcludeNativeTarget(owner)) {
+      return this;
+    }
+    APKModule module = apkModuleGraph.findModuleForTarget(owner);
+    if (module.isRootModule()) {
+      collectionBuilder.addNativeLibsDirectoriesForSystemLoader(nativeLibDir);
+    } else {
+      throw new HumanReadableException(
+          "%s which is marked as use_system_library_loader cannot be included in non-root-module %s",
+          owner, module.getName());
+    }
+    return this;
+  }
+
   public AndroidPackageableCollector addNativeLinkable(NativeLinkableGroup nativeLinkableGroup) {
     if (nativeLinkablesToExcludeGroup.contains(nativeLinkableGroup)
         || androidPackageableFilter.shouldExcludeNativeTarget(

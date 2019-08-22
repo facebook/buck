@@ -44,6 +44,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
 
   private final UnzipAar unzipAar;
   private final SourcePath nativeLibsDirectory;
+  private final boolean useSystemLibraryLoader;
   private final PrebuiltJar prebuiltJar;
 
   // TODO(cjhopman): It's silly that this is pretending to be a java library.
@@ -59,7 +60,8 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       CompileToJarStepFactory configuredCompiler,
       Iterable<PrebuiltJar> exportedDeps,
       boolean requiredForSourceAbi,
-      Optional<String> mavenCoords) {
+      Optional<String> mavenCoords,
+      boolean useSystemLibraryLoader) {
     super(
         androidLibraryBuildTarget,
         projectFilesystem,
@@ -104,6 +106,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;
+    this.useSystemLibraryLoader = useSystemLibraryLoader;
   }
 
   @Override
@@ -141,7 +144,11 @@ public class AndroidPrebuiltAar extends AndroidLibrary
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
     super.addToCollector(collector);
-    collector.addNativeLibsDirectory(getBuildTarget(), nativeLibsDirectory);
+    if (useSystemLibraryLoader) {
+      collector.addNativeLibsDirectoryForSystemLoader(getBuildTarget(), nativeLibsDirectory);
+    } else {
+      collector.addNativeLibsDirectory(getBuildTarget(), nativeLibsDirectory);
+    }
 
     collector.addResourceDirectory(getBuildTarget(), getRes());
     collector.addAssetsDirectory(getBuildTarget(), getAssets());

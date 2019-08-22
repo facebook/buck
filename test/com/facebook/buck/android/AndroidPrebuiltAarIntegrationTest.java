@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
@@ -31,7 +32,11 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -127,5 +132,44 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
   @Test
   public void testAarWithoutResBuildsFine() {
     workspace.runBuckBuild("//:app-dep-on-aar-without-res").assertSuccess();
+  }
+
+  @Test
+  public void testAarWhichNeedsToSupportNativeLoaderIsPackagedInLibsDir() throws Exception {
+    // Check that a vanilla APK will package the libs in the "standard" place
+    Path outputApk = workspace.buildAndReturnOutput("//:app-dep-on-aar-with-native-loaded-so");
+    ZipInspector zipInspector = new ZipInspector(outputApk);
+    zipInspector.assertFileExists("lib/armeabi-v7a/libdep.so");
+    zipInspector.assertFileExists("lib/x86/libdep.so");
+    // We also have another lib: liba from a different dep, make sure it gets packaged properly
+    zipInspector.assertFileExists("lib/x86/liba.so");
+  }
+
+  @Test
+  public void testAarWhichNeedsToSupportNativeLoaderDoesNotGetExopackage() throws IOException {
+    // In an exopackage build, the native lib needs to go into the APK even when the other native
+    // libs are exo-loaded
+    Path outputApk =
+        workspace.buildAndReturnOutput("//:app-dep-on-aar-with-native-loaded-so_exo-native");
+    ZipInspector zipInspector = new ZipInspector(outputApk);
+    zipInspector.assertFileExists("lib/armeabi-v7a/libdep.so");
+    zipInspector.assertFileExists("lib/x86/libdep.so");
+
+    Path exoSymlinkTree =
+        workspace.buildAndReturnOutput(
+            "//:app-dep-on-aar-with-native-loaded-so_exo-native#exo_symlink_tree");
+
+    List<String> metadataContents =
+        Files.readAllLines(
+                exoSymlinkTree.resolve("native-libs").resolve("x86").resolve("metadata.txt"))
+            .stream()
+            .map(line -> line.split("\\s+")[0])
+            .sorted()
+            .collect(Collectors.toList());
+
+    // The exo-dir should contain the other libs
+    assertThat(metadataContents, contains("liba"));
+    // but not the one that was excluded via the native_loader flag
+    assertThat(metadataContents, not(contains("libdep")));
   }
 }

@@ -218,7 +218,8 @@ public class AndroidPrebuiltAarDescription
             ExtraClasspathProvider.EMPTY),
         /* exportedDeps */ javaDeps,
         args.getRequiredForSourceOnlyAbi(),
-        args.getMavenCoords());
+        args.getMavenCoords(),
+        args.isUseSystemLibraryLoader());
   }
 
   @Override
@@ -252,6 +253,16 @@ public class AndroidPrebuiltAarDescription
       // often a source of annotations and constants. To ease migration to ABI generation from
       // source without deps, we have them present during ABI gen by default.
       return true;
+    }
+
+    /**
+     * If an AAR bundles a native .so as well as java code that uses System.loadLibrary() to
+     * dynamically link this so, then we need to disable some optimizations for these libraries,
+     * namely native exopackage code, SoMerge, and ReLinker
+     */
+    @Value.Default
+    default boolean isUseSystemLibraryLoader() {
+      return false;
     }
   }
 }

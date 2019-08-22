@@ -183,7 +183,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         !(nativeLinkableGroups.isEmpty() && nativeLinkableGroupsAssets.isEmpty());
     boolean hasNativeLibDirs =
         !(packageableCollection.getNativeLibsDirectories().isEmpty()
-            && packageableCollection.getNativeLibAssetsDirectories().isEmpty());
+            && packageableCollection.getNativeLibAssetsDirectories().isEmpty()
+            && packageableCollection.getNativeLibsDirectoriesForSystemLoader().isEmpty());
     boolean hasNativeCode = hasLinkables || hasNativeLibDirs;
 
     if (!hasNativeCode) {
@@ -357,10 +358,16 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       ImmutableCollection<SourcePath> nativeLibsAssetsDirectories =
           packageableCollection.getNativeLibAssetsDirectories().get(module);
 
+      ImmutableCollection<SourcePath> nativeLibsDirectoriesForPrimaryDexModule =
+          module.isRootModule()
+              ? packageableCollection.getNativeLibsDirectoriesForSystemLoader()
+              : ImmutableList.of();
+
       if (filteredStrippedLibsMap.isEmpty()
           && filteredStrippedLibsAssetsMap.isEmpty()
           && nativeLibsDirectories.isEmpty()
-          && nativeLibsAssetsDirectories.isEmpty()) {
+          && nativeLibsAssetsDirectories.isEmpty()
+          && nativeLibsDirectoriesForPrimaryDexModule.isEmpty()) {
         continue;
       }
 

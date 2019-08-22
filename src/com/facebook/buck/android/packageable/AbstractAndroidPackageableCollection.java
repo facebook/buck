@@ -84,6 +84,12 @@ interface AbstractAndroidPackageableCollection {
   ImmutableMultimap<APKModule, SourcePath> getNativeLibAssetsDirectories();
 
   /**
+   * Directories containing native libraries which must be loadable by the system loader. Since
+   * these cannot be in a separate module, we use a list instead of a map
+   */
+  ImmutableList<SourcePath> getNativeLibsDirectoriesForSystemLoader();
+
+  /**
    * Directories containing assets to be included directly in the apk, under the "assets" directory.
    */
   ImmutableMultimap<APKModule, SourcePath> getAssetsDirectories();
