@@ -151,6 +151,7 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
+            "  // compiled from: A.kt",
             "",
             "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\n\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0000\\u0008\\u0016\\u0018\\u00002\\u00020\\u0001B\\u0005\\u00a2\\u0006\\u0002\\u0010\\u0002\"}, d2={\"Lcom/example/buck/A;\", \"\", \"()V\"})",
             "",
@@ -256,16 +257,23 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
+            "  // compiled from: A.kt",
             "",
             "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u0016\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\u0008\\u0002\\n\\u0002\\u0010\\u000e\\n\\u0000\\n\\u0002\\u0010\\u0002\\u0008\\u0016\\u0018\\u00002\\u00020\\u0001B\\u0005\\u00a2\\u0006\\u0002\\u0010\\u0002J\\u0009\\u0010\\u0003\\u001a\\u00020\\u0004H\\u0086\\u0008J\\u0006\\u0010\\u0005\\u001a\\u00020\\u0006\"}, d2={\"Lcom/example/buck/A;\", \"\", \"()V\", \"getString\", \"\", \"someOtherMethod\", \"\"})",
             "",
             "  // access flags 0x11",
             "  public final getString()Ljava/lang/String;",
             "  @Lorg/jetbrains/annotations/NotNull;() // invisible",
+            "   L0",
             "    LDC 0",
             "    ISTORE 1",
+            "   L1",
+            "    LINENUMBER 3 L1",
             "    LDC \"test\"",
             "    ARETURN",
+            "   L2",
+            "    LOCALVARIABLE this Lcom/example/buck/A; L0 L2 0",
+            "    LOCALVARIABLE $i$f$getString I L1 L2 1",
             "    MAXSTACK = 1",
             "    MAXLOCALS = 2",
             "",
@@ -308,6 +316,7 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
+            "  // compiled from: A.kt",
             "",
             "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u0016\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\u0008\\u0002\\n\\u0002\\u0010\\u000e\\n\\u0000\\n\\u0002\\u0010\\u0002\\u0008\\u0016\\u0018\\u00002\\u00020\\u0001B\\u0005\\u00a2\\u0006\\u0002\\u0010\\u0002J\\u0006\\u0010\\u0003\\u001a\\u00020\\u0004J\\u0006\\u0010\\u0005\\u001a\\u00020\\u0006\"}, d2={\"Lcom/example/buck/A;\", \"\", \"()V\", \"getString\", \"\", \"someOtherMethod\", \"\"})",
             "",
@@ -350,40 +359,67 @@ public class StubJarTest {
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
+            "  // compiled from: A.kt",
             "",
             "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u0014\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\u0008\\u0002\\n\\u0002\\u0010\\u000b\\n\\u0002\\u0008\\u0007\\u0008\\u0016\\u0018\\u00002\\u00020\\u0001B\\u0005\\u00a2\\u0006\\u0002\\u0010\\u0002R&\\u0010\\u0005\\u001a\\u00020\\u00042\\u0006\\u0010\\u0003\\u001a\\u00020\\u00048\\u00c6\\u0002@\\u00c6\\u0002X\\u0086\\u000e\\u00a2\\u0006\\u000c\\u001a\\u0004\\u0008\\u0005\\u0010\\u0006\\\"\\u0004\\u0008\\u0007\\u0010\\u0008R&\\u0010\\u0009\\u001a\\u00020\\u00042\\u0006\\u0010\\u0003\\u001a\\u00020\\u00048\\u00c6\\u0002@\\u00c6\\u0002X\\u0086\\u000e\\u00a2\\u0006\\u000c\\u001a\\u0004\\u0008\\n\\u0010\\u0006\\\"\\u0004\\u0008\\u000b\\u0010\\u0008\"}, d2={\"Lcom/example/buck/A;\", \"\", \"()V\", \"value\", \"\", \"isAProperty\", \"()Z\", \"setAProperty\", \"(Z)V\", \"someProperty\", \"getSomeProperty\", \"setSomeProperty\"})",
             "",
             "  // access flags 0x11",
             "  public final getSomeProperty()Z",
+            "   L0",
             "    LDC 0",
             "    ISTORE 1",
+            "   L1",
+            "    LINENUMBER 4 L1",
             "    ICONST_1",
             "    IRETURN",
+            "   L2",
+            "    LOCALVARIABLE this Lcom/example/buck/A; L0 L2 0",
+            "    LOCALVARIABLE $i$f$getSomeProperty I L1 L2 1",
             "    MAXSTACK = 1",
             "    MAXLOCALS = 2",
             "",
             "  // access flags 0x11",
             "  public final setSomeProperty(Z)V",
+            "   L0",
             "    LDC 0",
             "    ISTORE 2",
+            "   L1",
+            "    LINENUMBER 5 L1",
             "    RETURN",
+            "   L2",
+            "    LOCALVARIABLE this Lcom/example/buck/A; L0 L2 0",
+            "    LOCALVARIABLE value Z L0 L2 1",
+            "    LOCALVARIABLE $i$f$setSomeProperty I L1 L2 2",
             "    MAXSTACK = 1",
             "    MAXLOCALS = 3",
             "",
             "  // access flags 0x11",
             "  public final isAProperty()Z",
+            "   L0",
             "    LDC 0",
             "    ISTORE 1",
+            "   L1",
+            "    LINENUMBER 7 L1",
             "    ICONST_1",
             "    IRETURN",
+            "   L2",
+            "    LOCALVARIABLE this Lcom/example/buck/A; L0 L2 0",
+            "    LOCALVARIABLE $i$f$isAProperty I L1 L2 1",
             "    MAXSTACK = 1",
             "    MAXLOCALS = 2",
             "",
             "  // access flags 0x11",
             "  public final setAProperty(Z)V",
+            "   L0",
             "    LDC 0",
             "    ISTORE 2",
+            "   L1",
+            "    LINENUMBER 8 L1",
             "    RETURN",
+            "   L2",
+            "    LOCALVARIABLE this Lcom/example/buck/A; L0 L2 0",
+            "    LOCALVARIABLE value Z L0 L2 1",
+            "    LOCALVARIABLE $i$f$setAProperty I L1 L2 2",
             "    MAXSTACK = 1",
             "    MAXLOCALS = 3",
             "",
@@ -5482,6 +5518,22 @@ public class StubJarTest {
     }
   }
 
+  private Path compileToKotlinAbiJar(
+      SortedSet<Path> classpath, String fileName, String source, File outputDir)
+      throws IOException {
+    try (KotlinTestCompiler compiler = new KotlinTestCompiler()) {
+      compiler.init();
+      compiler.addSourceFileContents(fileName, source);
+      compiler.addClasspath(classpath);
+
+      compiler.compile();
+
+      Path jarPath = outputDir.toPath().resolve("output.jar");
+      compiler.getAbiClasses().createJar(jarPath, false);
+      return jarPath;
+    }
+  }
+
   private Tester createAnnotationFullJar() throws IOException {
     return tester
         .setSourceFile(
@@ -5518,7 +5570,7 @@ public class StubJarTest {
     // System.getProperty("java.class.path") returning classpath with ":" as separator which means
     // that KotlinTestCompiler crashes (separator should be ";" on Windows)
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    return testingMode.equals(MODE_JAR_BASED);
+    return !testingMode.equals(MODE_SOURCE_BASED_MISSING_DEPS);
   }
 
   enum Language {
@@ -5697,7 +5749,10 @@ public class StubJarTest {
 
     public Tester createStubJar() throws IOException {
       File outputDir = temp.newFolder();
-      if (testingMode != MODE_JAR_BASED) {
+      if (language.equals(Language.KOTLIN) && testingMode.equals(MODE_SOURCE_BASED)) {
+        stubJarPath =
+            compileToKotlinAbiJar(classpath, sourceFileName, sourceFileContents, temp.newFolder());
+      } else if (testingMode != MODE_JAR_BASED) {
         SortedSet<Path> classpath1 =
             testingMode == MODE_SOURCE_BASED
                 ? ImmutableSortedSet.<Path>naturalOrder()

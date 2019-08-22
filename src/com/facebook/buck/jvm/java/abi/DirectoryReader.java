@@ -56,9 +56,9 @@ class DirectoryReader implements LibraryReader {
       throw new IllegalArgumentException();
     }
 
-    int parsingOptions = ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES;
+    int parsingOptions = 0;
     if (skipCode) {
-      parsingOptions |= ClassReader.SKIP_CODE;
+      parsingOptions |= ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES | ClassReader.SKIP_CODE;
     }
 
     try (InputStream inputStream = openInputStream(relativePath)) {

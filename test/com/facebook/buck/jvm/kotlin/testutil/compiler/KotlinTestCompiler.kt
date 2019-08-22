@@ -47,10 +47,12 @@ class KotlinTestCompiler : ExternalResource(), AutoCloseable {
     private val kotlinCompiler = K2JVMCompiler()
     private val inputFolder = TemporaryFolder()
     private val outputFolder = TemporaryFolder()
+    private val abiOutputFolder = TemporaryFolder()
 
     private val sourceFiles: MutableList<File> = mutableListOf()
     private val classpath: MutableSet<String> = mutableSetOf()
     val classes: Classes = ClassesImpl(outputFolder)
+    val abiClasses: Classes = ClassesImpl(abiOutputFolder)
 
     @Throws(IOException::class) fun addSourceFileContents(fileName: String, vararg lines: String) {
         val sourceFilePath = inputFolder.root.toPath().resolve(fileName)
@@ -76,6 +78,10 @@ class KotlinTestCompiler : ExternalResource(), AutoCloseable {
 
             it.classpath = classpath.joinToString(File.pathSeparator)
             it.classpath += File.pathSeparator + System.getProperty("java.class.path")
+
+            it.pluginClasspaths = arrayOf("third-party/java/kotlin/jvm-abi-gen.jar")
+            it.pluginOptions =
+                arrayOf("plugin:org.jetbrains.kotlin.jvm.abi:outputDir=${abiOutputFolder.root}")
         }
 
         kotlinCompiler.exec(collector, Services.EMPTY, k2JVMCompilerArguments)
@@ -96,9 +102,11 @@ class KotlinTestCompiler : ExternalResource(), AutoCloseable {
     @Throws(IOException::class) override fun before() {
         inputFolder.create()
         outputFolder.create()
+        abiOutputFolder.create()
     }
 
     override fun after() {
+        abiOutputFolder.delete()
         outputFolder.delete()
         inputFolder.delete()
     }

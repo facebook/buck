@@ -51,8 +51,13 @@ class StubJarClassEntry extends StubJarEntry {
     // Kotlin has the concept of "inline functions", which means that we need to retain the body
     // of these functions so that the compiler is able to inline them.
     List<String> inlineFunctions = Collections.emptyList();
+    boolean isKotlinClass = false;
     if (isKotlinModule) {
-      inlineFunctions = KotlinMetadataReader.getInlineFunctions(getVisibleAnnotations(input, path));
+      AnnotationNode kotlinMetadataAnnotation = findKotlinMetadataAnnotation(input, path);
+      if (kotlinMetadataAnnotation != null) {
+        isKotlinClass = true;
+        inlineFunctions = KotlinMetadataReader.getInlineFunctions(kotlinMetadataAnnotation);
+      }
     }
 
     // As we read the class in, we create a partial stub that removes non-ABI methods and fields
@@ -68,7 +73,7 @@ class StubJarClassEntry extends StubJarEntry {
     if (compatibilityMode != null && compatibilityMode != AbiGenerationMode.CLASS) {
       firstLevelFiltering = new SourceAbiCompatibleVisitor(firstLevelFiltering, compatibilityMode);
     }
-    input.visitClass(path, firstLevelFiltering, /* skipCode */ inlineFunctions.isEmpty());
+    input.visitClass(path, firstLevelFiltering, /* skipCode */ !isKotlinClass);
 
     // The synthetic package-info class is how package annotations are recorded; that one is
     // actually used by the compiler
@@ -123,6 +128,19 @@ class StubJarClassEntry extends StubJarEntry {
   private static InnerClassNode getInnerClassMetadata(ClassNode node) {
     String name = node.name;
     return getInnerClassMetadata(node, name);
+  }
+
+  @Nullable
+  private static AnnotationNode findKotlinMetadataAnnotation(LibraryReader input, Path relativePath)
+      throws IOException {
+    final List<AnnotationNode> annotations = getVisibleAnnotations(input, relativePath);
+    if (annotations == null) {
+      return null;
+    }
+    return annotations.stream()
+        .filter(annotation -> "Lkotlin/Metadata;".equals(annotation.desc))
+        .findFirst()
+        .orElse(null);
   }
 
   private static List<AnnotationNode> getVisibleAnnotations(LibraryReader input, Path relativePath)

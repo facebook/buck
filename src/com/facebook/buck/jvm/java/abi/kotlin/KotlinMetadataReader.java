@@ -21,7 +21,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 import kotlinx.metadata.Flag;
 import kotlinx.metadata.KmDeclarationContainer;
 import kotlinx.metadata.KmFunction;
@@ -36,12 +35,7 @@ public class KotlinMetadataReader {
    * Method to find the inline functions of a Kotlin class by finding the Kotlin metadata annotation
    * and reading it.
    */
-  public static List<String> getInlineFunctions(List<AnnotationNode> annotations) {
-    AnnotationNode annotationNode = findMetadataAnnotation(annotations);
-    if (annotationNode == null) {
-      return Collections.emptyList();
-    }
-
+  public static List<String> getInlineFunctions(AnnotationNode annotationNode) {
     KotlinClassMetadata metadata = KotlinClassMetadata.read(createHeader(annotationNode));
 
     KmDeclarationContainer container;
@@ -92,17 +86,6 @@ public class KotlinMetadataReader {
 
   private static String capitalize(String name) {
     return name.substring(0, 1).toUpperCase().concat(name.substring(1));
-  }
-
-  @Nullable
-  private static AnnotationNode findMetadataAnnotation(List<AnnotationNode> annotations) {
-    if (annotations == null) {
-      return null;
-    }
-    return annotations.stream()
-        .filter(annotation -> "Lkotlin/Metadata;".equals(annotation.desc))
-        .findFirst()
-        .orElse(null);
   }
 
   /**
