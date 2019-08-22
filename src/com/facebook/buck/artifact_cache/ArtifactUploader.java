@@ -165,11 +165,14 @@ public class ArtifactUploader {
     ArtifactCompressionEvent.Started started =
         ArtifactCompressionEvent.started(ArtifactCompressionEvent.Operation.COMPRESS, ruleKeys);
     eventBus.post(started);
+    long compressedSize = 0L;
+    long fullSize = 0L;
     try (CloseableHolder<NamedTemporaryFile> archive =
         new CloseableHolder<>(
             new NamedTemporaryFile(
                 "buck_artifact_" + MostFiles.sanitize(buildTarget.getShortName()), ".tar.zst"))) {
-      compress(projectFilesystem, pathsToIncludeInArchive, archive.get().get());
+      fullSize = compress(projectFilesystem, pathsToIncludeInArchive, archive.get().get());
+      compressedSize = Files.size(archive.get().get());
       return archive.release();
     } catch (IOException e) {
       throw new BuckUncheckedExecutionException(
@@ -178,15 +181,16 @@ public class ArtifactUploader {
           buildTarget,
           Joiner.on('\n').join(ImmutableSortedSet.copyOf(pathsToIncludeInArchive)));
     } finally {
-      eventBus.post(ArtifactCompressionEvent.finished(started));
+      eventBus.post(ArtifactCompressionEvent.finished(started, fullSize, compressedSize));
     }
   }
 
   /** Archive and compress 'pathsToIncludeInArchive' into 'out', using tar+zstandard. */
   @VisibleForTesting
-  static void compress(
+  static long compress(
       ProjectFilesystem projectFilesystem, Collection<Path> pathsToIncludeInArchive, Path out)
       throws IOException {
+    long fullSize = 0L;
     try (OutputStream o = new BufferedOutputStream(Files.newOutputStream(out));
         OutputStream z = new ZstdCompressorOutputStream(o);
         TarArchiveOutputStream archive = new TarArchiveOutputStream(z)) {
@@ -202,7 +206,9 @@ public class ArtifactUploader {
         e.setModTime(ZipConstants.getFakeTime());
 
         if (isRegularFile) {
-          e.setSize(projectFilesystem.getFileSize(path));
+          long pathSize = projectFilesystem.getFileSize(path);
+          e.setSize(pathSize);
+          fullSize += pathSize;
           archive.putArchiveEntry(e);
           try (InputStream input = projectFilesystem.newFileInputStream(path)) {
             ByteStreams.copy(input, archive);
@@ -214,5 +220,7 @@ public class ArtifactUploader {
       }
       archive.finish();
     }
+
+    return fullSize;
   }
 }

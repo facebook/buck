@@ -238,6 +238,8 @@ public class BuildCacheArtifactFetcher {
         ArtifactCompressionEvent.started(
             ArtifactCompressionEvent.Operation.DECOMPRESS, ImmutableSet.of(ruleKey));
     eventBus.post(started);
+    long compressedSize = filesystem.getFileSize(zipPath);
+    long fullSize = 0L;
     try {
       // First, clear out the pre-existing metadata directory.  We have to do this *before*
       // unpacking the zipped artifact, as it includes files that will be stored in the metadata
@@ -259,6 +261,7 @@ public class BuildCacheArtifactFetcher {
                   ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
       onDiskBuildInfo.validateArtifact(extractedFiles);
+      fullSize = Long.parseLong(onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE).get());
 
       // We only delete the ZIP file when it has been unzipped successfully. Otherwise, we leave it
       // around for debugging purposes.
@@ -275,7 +278,7 @@ public class BuildCacheArtifactFetcher {
               e.getMessage(), ruleKey),
           e.getCause());
     } finally {
-      eventBus.post(ArtifactCompressionEvent.finished(started));
+      eventBus.post(ArtifactCompressionEvent.finished(started, fullSize, compressedSize));
     }
 
     return cacheResult;

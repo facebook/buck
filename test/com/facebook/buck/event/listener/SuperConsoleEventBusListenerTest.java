@@ -363,7 +363,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ArtifactCompressionEvent.finished(compressStarted),
+            ArtifactCompressionEvent.finished(compressStarted, 0, 0),
             704L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));

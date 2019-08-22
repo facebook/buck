@@ -476,7 +476,7 @@ public class ChromeTraceBuildListenerTest {
         ArtifactCompressionEvent.started(
             ArtifactCompressionEvent.Operation.COMPRESS, ImmutableSet.of(ruleKey));
     eventBus.post(artifactCompressionStartedEvent);
-    eventBus.post(ArtifactCompressionEvent.finished(artifactCompressionStartedEvent));
+    eventBus.post(ArtifactCompressionEvent.finished(artifactCompressionStartedEvent, 0, 0));
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(rule, durationTracker);
     eventBus.post(started);
@@ -643,7 +643,7 @@ public class ChromeTraceBuildListenerTest {
         resultListCopy,
         "artifact_compress",
         ChromeTraceEvent.Phase.END,
-        ImmutableMap.of("rule_key", "abc123"));
+        ImmutableMap.of("rule_key", "abc123", "full_size", "0", "compressed_size", "0"));
 
     // BuildRuleEvent.Started
     assertNextResult(

@@ -620,21 +620,28 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void artifactCompressionStarted(ArtifactCompressionEvent.Started started) {
-    writeArtifactCompressionEvent(started, ChromeTraceEvent.Phase.BEGIN);
+    writeArtifactCompressionEvent(started, ChromeTraceEvent.Phase.BEGIN, ImmutableMap.builder());
   }
 
   @Subscribe
   public void artifactCompressionFinished(ArtifactCompressionEvent.Finished finished) {
-    writeArtifactCompressionEvent(finished, ChromeTraceEvent.Phase.END);
+    writeArtifactCompressionEvent(
+        finished,
+        ChromeTraceEvent.Phase.END,
+        ImmutableMap.<String, String>builder()
+            .put("full_size", Long.toString(finished.fullSize))
+            .put("compressed_size", Long.toString(finished.compressedSize)));
   }
 
   public void writeArtifactCompressionEvent(
-      ArtifactCompressionEvent event, ChromeTraceEvent.Phase phase) {
+      ArtifactCompressionEvent event,
+      ChromeTraceEvent.Phase phase,
+      ImmutableMap.Builder<String, String> builder) {
     writeChromeTraceEvent(
         "buck",
         event.getCategory(),
         phase,
-        ImmutableMap.of("rule_key", Joiner.on(", ").join(event.getRuleKeys())),
+        builder.put("rule_key", Joiner.on(", ").join(event.getRuleKeys())).build(),
         event);
   }
 
