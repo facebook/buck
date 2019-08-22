@@ -25,6 +25,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.collect.ImmutableMap;
@@ -340,5 +341,24 @@ public class KotlinBuckConfigTest {
             .getView(KotlinBuckConfig.class);
 
     assertTrue(config.shouldCompileAgainstAbis());
+  }
+
+  @Test
+  public void generateClassAbisByDefault() {
+    KotlinBuckConfig config = FakeBuckConfig.builder().build().getView(KotlinBuckConfig.class);
+
+    assertEquals(AbiGenerationMode.CLASS, config.getAbiGenerationMode());
+  }
+
+  @Test
+  public void generateSourceAbis() {
+    KotlinBuckConfig config =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of("kotlin", ImmutableMap.of("abi_generation_mode", "source")))
+            .build()
+            .getView(KotlinBuckConfig.class);
+
+    assertEquals(AbiGenerationMode.SOURCE, config.getAbiGenerationMode());
   }
 }

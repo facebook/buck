@@ -88,4 +88,9 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   public boolean shouldCompileAgainstAbis() {
     return kotlinBuckConfig.shouldCompileAgainstAbis();
   }
+
+  @Override
+  public boolean shouldGenerateSourceAbi() {
+    return kotlinBuckConfig.getAbiGenerationMode().isSourceAbi();
+  }
 }

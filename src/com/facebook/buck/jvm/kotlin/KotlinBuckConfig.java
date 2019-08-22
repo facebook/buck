@@ -22,6 +22,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -38,6 +39,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
 
   private static final String SECTION = "kotlin";
   public static final String PROPERTY_COMPILE_AGAINST_ABIS = "compile_against_abis";
+  public static final String PROPERTY_ABI_GENERATION_MODE = "abi_generation_mode";
 
   private static final Path DEFAULT_KOTLIN_COMPILER = Paths.get("kotlinc");
 
@@ -75,6 +77,12 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
 
   public boolean shouldCompileAgainstAbis() {
     return delegate.getBooleanValue(SECTION, PROPERTY_COMPILE_AGAINST_ABIS, false);
+  }
+
+  public AbiGenerationMode getAbiGenerationMode() {
+    return delegate
+        .getEnum(SECTION, PROPERTY_ABI_GENERATION_MODE, AbiGenerationMode.class)
+        .orElse(AbiGenerationMode.CLASS);
   }
 
   Path getPathToCompilerBinary() {
