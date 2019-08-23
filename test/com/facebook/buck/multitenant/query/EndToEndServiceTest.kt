@@ -169,6 +169,7 @@ private class FakeFsToBuildPackageChangeTranslator : FsToBuildPackageChangeTrans
 
 private fun createService(resource: String, changeTranslator: FsToBuildPackageChangeTranslator): FakeMultitenantService {
     val (index, indexAppender) = IndexFactory.createIndex()
-    populateIndexFromStream(indexAppender, EndToEndServiceTest::class.java.getResourceAsStream(resource))
+    populateIndexFromStream(indexAppender,
+        EndToEndServiceTest::class.java.getResourceAsStream("data/$resource"))
     return FakeMultitenantService(index, indexAppender, changeTranslator)
 }

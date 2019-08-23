@@ -342,7 +342,8 @@ private fun asFileTargets(vararg path: String): Set<QueryFileTarget> {
 
 private fun loadIndex(resource: String, commitIndex: Int): MultitenantQueryEnvironment {
     val (index, indexAppender) = IndexFactory.createIndex()
-    val commits = populateIndexFromStream(indexAppender, MultitenantQueryTest::class.java.getResourceAsStream(resource))
+    val commits = populateIndexFromStream(indexAppender,
+        MultitenantQueryTest::class.java.getResourceAsStream("data/$resource"))
     val generation = indexAppender.getGeneration(commits[commitIndex])
     requireNotNull(generation)
     val cellToBuildFileName = mapOf("" to "BUCK")

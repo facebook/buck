@@ -4,7 +4,7 @@ kotlin_test(
     friend_paths = [
         "//src/com/facebook/buck/multitenant/service:service",
     ],
-    resources = glob(["*.json"]),
+    resources = glob(["data/**"]),
     deps = [
         "//src/com/facebook/buck/core/cell/impl:impl",
         "//src/com/facebook/buck/core/model:model",
@@ -17,6 +17,8 @@ kotlin_test(
         "//src/com/facebook/buck/multitenant/service:service",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
+        "//third-party/java/mockk:mockk",
+        "//third-party/java/mockk:mockk-dsl-jvm",
         "//third-party/java/vavr:vavr",
     ],
 )

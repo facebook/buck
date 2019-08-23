@@ -88,6 +88,22 @@ fun populateIndexFromStream(
     return result
 }
 
+/**
+ * Read packages from JSON
+ */
+fun parsePackagesFromStream(stream: InputStream): MutableList<BuildPackage> {
+    val parser = createParser(stream)
+    val packages = mutableListOf<BuildPackage>()
+    parsePackages(parser, packages)
+    return packages
+}
+
+private fun createParser(stream: InputStream): JsonParser {
+    return ObjectMappers.createParser(stream)
+        .enable(JsonParser.Feature.ALLOW_COMMENTS)
+        .enable(JsonParser.Feature.ALLOW_TRAILING_COMMA)
+}
+
 private fun parsePaths(parser: JsonParser, list: MutableList<FsAgnosticPath>) {
     check(parser.nextToken() == JsonToken.START_ARRAY)
     val removeNode = parser.readValueAsTree<JsonNode>()

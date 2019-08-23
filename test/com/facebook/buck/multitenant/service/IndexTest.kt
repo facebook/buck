@@ -425,7 +425,8 @@ class IndexTest {
 
 private fun loadIndex(resource: String): Pair<Index, List<Int>> {
     val (index, indexAppender) = IndexFactory.createIndex()
-    val commits = populateIndexFromStream(indexAppender, IndexTest::class.java.getResourceAsStream(resource))
+    val commits = populateIndexFromStream(indexAppender,
+        IndexTest::class.java.getResourceAsStream("data/$resource"))
     val generations = commits.map { requireNotNull(indexAppender.getGeneration(it)) }
     return Pair(index, generations)
 }

@@ -15,7 +15,7 @@ kotlin_test(
     friend_paths = [
         "//src/com/facebook/buck/multitenant/query:query",
     ],
-    resources = glob(["*.json"]),
+    resources = glob(["data/**"]),
     deps = [
         ":testutil",
         "//src/com/facebook/buck/core/model:model",
