@@ -23,7 +23,6 @@ import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUti
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.startsWith;
@@ -50,18 +49,13 @@ import com.facebook.buck.apple.AppleLibraryDescriptionArg;
 import com.facebook.buck.apple.AppleResourceBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.apple.CoreDataModelBuilder;
-import com.facebook.buck.apple.FakeAppleRuleDescriptions;
 import com.facebook.buck.apple.SceneKitAssetsBuilder;
 import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.XCodeDescriptionsFactory;
-import com.facebook.buck.apple.XcodePostbuildScriptBuilder;
-import com.facebook.buck.apple.XcodePrebuildScriptBuilder;
 import com.facebook.buck.apple.clang.HeaderMap;
-import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXContainerItemProxy;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXHeadersBuildPhase;
@@ -136,7 +130,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
@@ -151,11 +144,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -2210,7 +2201,7 @@ public class ProjectGeneratorTest {
     assertHasConfigurations(target, "Debug", "Release", "Profile");
 
     Iterable<PBXShellScriptBuildPhase> shellScriptBuildPhases =
-        getExpectedBuildPhasesByType(target, PBXShellScriptBuildPhase.class, 2);
+        getExpectedBuildPhasesByType(target, PBXShellScriptBuildPhase.class, 1);
     PBXShellScriptBuildPhase scriptPhase = shellScriptBuildPhases.iterator().next();
     assertEquals(0, scriptPhase.getInputPaths().size());
     assertEquals(0, scriptPhase.getOutputPaths().size());
@@ -3636,13 +3627,10 @@ public class ProjectGeneratorTest {
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:xctest");
 
-    assertEquals("Should have exact number of build phases", 3, target.getBuildPhases().size());
+    PBXShellScriptBuildPhase shellScriptBuildPhase =
+        ProjectGeneratorTestUtils.getSingleBuildPhaseOfType(target, PBXShellScriptBuildPhase.class);
 
-    assertHasSingleSourcesPhaseWithSourcesAndFlags(
-        target, ImmutableMap.of("fooTest.m", Optional.empty()));
-
-    ProjectGeneratorTestUtils.assertHasSingleFrameworksPhaseWithFrameworkEntries(
-        target, ImmutableList.of("$SDKROOT/Library.framework"));
+    assertEquals("Buck Build", shellScriptBuildPhase.getName().get());
   }
 
   @Test
@@ -3695,13 +3683,7 @@ public class ProjectGeneratorTest {
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals("libraries $BUILT_PRODUCTS_DIR", settings.get("LIBRARY_SEARCH_PATHS"));
 
-    assertEquals("Should have exact number of build phases", 3, target.getBuildPhases().size());
-
-    assertHasSingleSourcesPhaseWithSourcesAndFlags(
-        target, ImmutableMap.of("fooTest.m", Optional.empty()));
-
-    ProjectGeneratorTestUtils.assertHasSingleFrameworksPhaseWithFrameworkEntries(
-        target, ImmutableList.of("$SDKROOT/Library.framework"));
+    assertEquals("Should have exact number of build phases", 1, target.getBuildPhases().size());
   }
 
   @Test
@@ -3760,18 +3742,12 @@ public class ProjectGeneratorTest {
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:binary");
     assertHasConfigurations(target, "Debug");
     assertEquals(target.getProductType(), ProductTypes.TOOL);
-    assertEquals("Should have exact number of build phases", 3, target.getBuildPhases().size());
+    assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
     assertHasSingleSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(
             "foo.m", Optional.of("-foo"),
             "libsomething.a", Optional.empty()));
-    ProjectGeneratorTestUtils.assertHasSingleFrameworksPhaseWithFrameworkEntries(
-        target,
-        ImmutableList.of(
-            "$SDKROOT/Foo.framework",
-            // Propagated library from deps.
-            "$BUILT_PRODUCTS_DIR/libdep.a"));
 
     // this test does not have a dependency on any asset catalogs, so verify no build phase for them
     // exists.
@@ -3779,116 +3755,6 @@ public class ProjectGeneratorTest {
         FluentIterable.from(target.getBuildPhases())
             .filter(PBXResourcesBuildPhase.class)
             .isEmpty());
-  }
-
-  @Test
-  public void testAppleBundleRuleWithPreBuildScriptDependency() throws IOException {
-    BuildTarget scriptTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "pre_build_script", DEFAULT_FLAVOR);
-    TargetNode<?> scriptNode =
-        XcodePrebuildScriptBuilder.createBuilder(scriptTarget).setCmd("script.sh").build();
-
-    BuildTarget resourceTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "resource");
-    TargetNode<?> resourceNode =
-        AppleResourceBuilder.createBuilder(resourceTarget)
-            .setFiles(ImmutableSet.of(FakeSourcePath.of("bar.png")))
-            .setDirs(ImmutableSet.of())
-            .build();
-
-    BuildTarget sharedLibraryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath, "//dep", "shared", CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?> sharedLibraryNode =
-        AppleLibraryBuilder.createBuilder(sharedLibraryTarget)
-            .setDeps(ImmutableSortedSet.of(resourceTarget))
-            .build();
-
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
-    TargetNode<?> bundleNode =
-        AppleBundleBuilder.createBuilder(bundleTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(sharedLibraryTarget)
-            .setDeps(ImmutableSortedSet.of(scriptTarget))
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(scriptNode, resourceNode, sharedLibraryNode, bundleNode));
-
-    projectGenerator.createXcodeProjects();
-
-    PBXProject project = projectGenerator.getGeneratedProject();
-    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bundle");
-    assertThat(target.getName(), equalTo("//foo:bundle"));
-    assertThat(target.isa(), equalTo("PBXNativeTarget"));
-
-    Iterable<PBXShellScriptBuildPhase> shellScriptBuildPhases =
-        getExpectedBuildPhasesByType(target, PBXShellScriptBuildPhase.class, 2);
-
-    PBXShellScriptBuildPhase shellScriptBuildPhase = shellScriptBuildPhases.iterator().next();
-
-    assertThat(shellScriptBuildPhase.getShellScript(), equalTo("script.sh"));
-
-    // Assert that the pre-build script phase comes before resources are copied.
-    assertThat(target.getBuildPhases().get(0), instanceOf(PBXShellScriptBuildPhase.class));
-
-    assertThat(target.getBuildPhases().get(1), instanceOf(PBXResourcesBuildPhase.class));
-  }
-
-  @Test
-  public void testAppleBundleRuleWithPostBuildScriptDependency() throws IOException {
-    BuildTarget scriptTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "post_build_script", DEFAULT_FLAVOR);
-    TargetNode<?> scriptNode =
-        XcodePostbuildScriptBuilder.createBuilder(scriptTarget).setCmd("script.sh").build();
-
-    BuildTarget resourceTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "resource");
-    TargetNode<?> resourceNode =
-        AppleResourceBuilder.createBuilder(resourceTarget)
-            .setFiles(ImmutableSet.of(FakeSourcePath.of("bar.png")))
-            .setDirs(ImmutableSet.of())
-            .build();
-
-    BuildTarget sharedLibraryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath, "//dep", "shared", CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?> sharedLibraryNode =
-        AppleLibraryBuilder.createBuilder(sharedLibraryTarget)
-            .setDeps(ImmutableSortedSet.of(resourceTarget))
-            .build();
-
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
-    TargetNode<?> bundleNode =
-        AppleBundleBuilder.createBuilder(bundleTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(sharedLibraryTarget)
-            .setDeps(ImmutableSortedSet.of(scriptTarget))
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(scriptNode, resourceNode, sharedLibraryNode, bundleNode));
-
-    projectGenerator.createXcodeProjects();
-
-    PBXProject project = projectGenerator.getGeneratedProject();
-    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bundle");
-    assertThat(target.getName(), equalTo("//foo:bundle"));
-    assertThat(target.isa(), equalTo("PBXNativeTarget"));
-
-    Iterable<PBXShellScriptBuildPhase> shellScriptBuildPhases =
-        getExpectedBuildPhasesByType(target, PBXShellScriptBuildPhase.class, 2);
-
-    PBXShellScriptBuildPhase shellScriptBuildPhase = shellScriptBuildPhases.iterator().next();
-
-    assertThat(shellScriptBuildPhase.getShellScript(), equalTo("script.sh"));
-
-    // Assert that the post-build script phase comes after resources are copied.
-    assertThat(target.getBuildPhases().get(0), instanceOf(PBXResourcesBuildPhase.class));
-
-    assertThat(target.getBuildPhases().get(1), instanceOf(PBXShellScriptBuildPhase.class));
   }
 
   @Test
@@ -4173,23 +4039,10 @@ public class ProjectGeneratorTest {
         generatedWatchExtensionTarget.getProductType(),
         ProductType.of(WATCH_EXTENSION_PRODUCT_TYPE));
 
-    ProjectGeneratorTestUtils.assertHasSingleCopyFilesPhaseWithFileEntries(
-        generatedHostAppTarget, ImmutableList.of("$BUILT_PRODUCTS_DIR/WatchApp.app"));
-
     ProjectGeneratorTestUtils.assertHasDependency(
         generatedProject, generatedHostAppTarget, watchAppTarget.getFullyQualifiedName());
     ProjectGeneratorTestUtils.assertHasDependency(
         generatedProject, generatedWatchAppTarget, watchExtensionTarget.getFullyQualifiedName());
-
-    PBXCopyFilesBuildPhase copyBuildPhase =
-        ProjectGeneratorTestUtils.getSingleBuildPhaseOfType(
-            generatedHostAppTarget, PBXCopyFilesBuildPhase.class);
-    assertEquals(
-        copyBuildPhase.getDstSubfolderSpec(),
-        CopyFilePhaseDestinationSpec.builder()
-            .setDestination(PBXCopyFilesBuildPhase.Destination.PRODUCTS)
-            .setPath("$(CONTENTS_FOLDER_PATH)/Watch")
-            .build());
   }
 
   @Test
@@ -4294,286 +4147,6 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void stopsLinkingRecursiveDependenciesAtSharedLibraries() throws IOException {
-    BuildTarget dependentStaticLibraryTarget =
-        BuildTargetFactory.newInstance(rootPath, "//dep", "static");
-    TargetNode<?> dependentStaticLibraryNode =
-        AppleLibraryBuilder.createBuilder(dependentStaticLibraryTarget).build();
-
-    BuildTarget dependentSharedLibraryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath, "//dep", "shared", CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?> dependentSharedLibraryNode =
-        AppleLibraryBuilder.createBuilder(dependentSharedLibraryTarget)
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("empty.m"))))
-            .setDeps(ImmutableSortedSet.of(dependentStaticLibraryTarget))
-            .build();
-
-    BuildTarget libraryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath, "//foo", "library", CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?> libraryNode =
-        AppleLibraryBuilder.createBuilder(libraryTarget)
-            .setDeps(ImmutableSortedSet.of(dependentSharedLibraryTarget))
-            .build();
-
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "final");
-    TargetNode<?> bundleNode =
-        AppleBundleBuilder.createBuilder(bundleTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(libraryTarget)
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(
-                dependentStaticLibraryNode, dependentSharedLibraryNode, libraryNode, bundleNode));
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:final");
-    assertEquals(target.getProductType(), ProductTypes.BUNDLE);
-    assertEquals("Should have exact number of build phases ", 3, target.getBuildPhases().size());
-    ProjectGeneratorTestUtils.assertHasSingleFrameworksPhaseWithFrameworkEntries(
-        target, ImmutableList.of("$BUILT_PRODUCTS_DIR/libshared.dylib"));
-  }
-
-  @Test
-  public void stopsLinkingRecursiveDependenciesAtBundles() throws IOException {
-    BuildTarget dependentStaticLibraryTarget =
-        BuildTargetFactory.newInstance(rootPath, "//dep", "static");
-    TargetNode<?> dependentStaticLibraryNode =
-        AppleLibraryBuilder.createBuilder(dependentStaticLibraryTarget).build();
-
-    BuildTarget dependentSharedLibraryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath, "//dep", "shared", CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?> dependentSharedLibraryNode =
-        AppleLibraryBuilder.createBuilder(dependentSharedLibraryTarget)
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("e.m"))))
-            .setDeps(ImmutableSortedSet.of(dependentStaticLibraryTarget))
-            .build();
-
-    BuildTarget dependentFrameworkTarget =
-        BuildTargetFactory.newInstance(rootPath, "//dep", "framework");
-    TargetNode<?> dependentFrameworkNode =
-        AppleBundleBuilder.createBuilder(dependentFrameworkTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(dependentSharedLibraryTarget)
-            .build();
-
-    BuildTarget libraryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath, "//foo", "library", CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?> libraryNode =
-        AppleLibraryBuilder.createBuilder(libraryTarget)
-            .setDeps(ImmutableSortedSet.of(dependentFrameworkTarget))
-            .build();
-
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "final");
-    TargetNode<?> bundleNode =
-        AppleBundleBuilder.createBuilder(bundleTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(libraryTarget)
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(
-                dependentStaticLibraryNode,
-                dependentSharedLibraryNode,
-                dependentFrameworkNode,
-                libraryNode,
-                bundleNode));
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:final");
-    assertEquals(target.getProductType(), ProductTypes.BUNDLE);
-    assertEquals("Should have exact number of build phases ", 3, target.getBuildPhases().size());
-    ProjectGeneratorTestUtils.assertHasSingleFrameworksPhaseWithFrameworkEntries(
-        target, ImmutableList.of("$BUILT_PRODUCTS_DIR/framework.framework"));
-  }
-
-  @Test
-  public void stopsCopyingRecursiveDependenciesAtBundles() throws IOException {
-    BuildTarget dependentStaticLibraryTarget =
-        BuildTargetFactory.newInstance(rootPath, "//dep", "static");
-    TargetNode<?> dependentStaticLibraryNode =
-        AppleLibraryBuilder.createBuilder(dependentStaticLibraryTarget).build();
-
-    BuildTarget dependentStaticFrameworkTarget =
-        BuildTargetFactory.newInstance(rootPath, "//dep", "static-framework");
-    TargetNode<?> dependentStaticFrameworkNode =
-        AppleBundleBuilder.createBuilder(dependentStaticFrameworkTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(dependentStaticLibraryTarget)
-            .build();
-
-    BuildTarget dependentSharedLibraryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath, "//dep", "shared", CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?> dependentSharedLibraryNode =
-        AppleLibraryBuilder.createBuilder(dependentSharedLibraryTarget)
-            .setDeps(ImmutableSortedSet.of(dependentStaticFrameworkTarget))
-            .build();
-
-    BuildTarget dependentFrameworkTarget =
-        BuildTargetFactory.newInstance(rootPath, "//dep", "framework");
-    TargetNode<?> dependentFrameworkNode =
-        AppleBundleBuilder.createBuilder(dependentFrameworkTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(dependentSharedLibraryTarget)
-            .build();
-
-    BuildTarget libraryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath, "//foo", "library", CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?> libraryNode =
-        AppleLibraryBuilder.createBuilder(libraryTarget)
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("e.m"))))
-            .setDeps(ImmutableSortedSet.of(dependentFrameworkTarget))
-            .build();
-
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "final");
-    TargetNode<?> bundleNode =
-        AppleBundleBuilder.createBuilder(bundleTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(libraryTarget)
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            // ant needs this to be explicit
-            ImmutableSet.of(
-                dependentStaticLibraryNode,
-                dependentStaticFrameworkNode,
-                dependentSharedLibraryNode,
-                dependentFrameworkNode,
-                libraryNode,
-                bundleNode));
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:final");
-    assertEquals(target.getProductType(), ProductTypes.BUNDLE);
-    assertEquals("Should have exact number of build phases ", 3, target.getBuildPhases().size());
-    ProjectGeneratorTestUtils.assertHasSingleCopyFilesPhaseWithFileEntries(
-        target, ImmutableList.of("$BUILT_PRODUCTS_DIR/framework.framework"));
-  }
-
-  @Test
-  public void bundlesDontLinkTheirOwnBinary() throws IOException {
-    BuildTarget libraryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath, "//foo", "library", CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?> libraryNode = AppleLibraryBuilder.createBuilder(libraryTarget).build();
-
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "final");
-    TargetNode<?> bundleNode =
-        AppleBundleBuilder.createBuilder(bundleTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(libraryTarget)
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(ImmutableSet.of(libraryNode, bundleNode));
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:final");
-    assertEquals(target.getProductType(), ProductTypes.BUNDLE);
-    assertEquals("Should have exact number of build phases ", 1, target.getBuildPhases().size());
-  }
-
-  @Test
-  public void resourcesInDependenciesPropagatesToBundles() throws IOException {
-    BuildTarget resourceTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "res");
-    TargetNode<?> resourceNode =
-        AppleResourceBuilder.createBuilder(resourceTarget)
-            .setFiles(ImmutableSet.of(FakeSourcePath.of("bar.png")))
-            .setDirs(ImmutableSet.of(FakeSourcePath.of("foodir")))
-            .build();
-
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
-    TargetNode<?> libraryNode =
-        AppleLibraryBuilder.createBuilder(libraryTarget)
-            .setDeps(ImmutableSortedSet.of(resourceTarget))
-            .build();
-
-    BuildTarget bundleLibraryTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "bundlelib");
-    TargetNode<?> bundleLibraryNode =
-        AppleLibraryBuilder.createBuilder(bundleLibraryTarget)
-            .setDeps(ImmutableSortedSet.of(libraryTarget))
-            .build();
-
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
-    TargetNode<?> bundleNode =
-        AppleBundleBuilder.createBuilder(bundleTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(bundleLibraryTarget)
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(resourceNode, libraryNode, bundleLibraryNode, bundleNode));
-    projectGenerator.createXcodeProjects();
-
-    PBXProject generatedProject = projectGenerator.getGeneratedProject();
-    PBXTarget target = assertTargetExistsAndReturnTarget(generatedProject, "//foo:bundle");
-    assertHasSingleResourcesPhaseWithEntries(target, "bar.png", "foodir");
-  }
-
-  @Test
-  public void assetCatalogsInDependenciesPropogatesToBundles() throws IOException {
-    BuildTarget assetCatalogTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "asset_catalog");
-    TargetNode<?> assetCatalogNode =
-        AppleAssetCatalogBuilder.createBuilder(assetCatalogTarget)
-            .setDirs(ImmutableSortedSet.of(FakeSourcePath.of("AssetCatalog.xcassets")))
-            .build();
-
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
-    TargetNode<?> libraryNode =
-        AppleLibraryBuilder.createBuilder(libraryTarget)
-            .setDeps(ImmutableSortedSet.of(assetCatalogTarget))
-            .build();
-
-    BuildTarget bundleLibraryTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "bundlelib");
-    TargetNode<?> bundleLibraryNode =
-        AppleLibraryBuilder.createBuilder(bundleLibraryTarget)
-            .setDeps(ImmutableSortedSet.of(libraryTarget))
-            .build();
-
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
-    TargetNode<?> bundleNode =
-        AppleBundleBuilder.createBuilder(bundleTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(bundleLibraryTarget)
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(assetCatalogNode, libraryNode, bundleLibraryNode, bundleNode));
-    projectGenerator.createXcodeProjects();
-
-    PBXProject generatedProject = projectGenerator.getGeneratedProject();
-    PBXTarget target = assertTargetExistsAndReturnTarget(generatedProject, "//foo:bundle");
-    assertHasSingleResourcesPhaseWithEntries(target, "AssetCatalog.xcassets");
-  }
-
-  @Test
   public void assetCatalogsSetBuildSettings() throws IOException {
     BuildTarget assetCatalogTarget =
         BuildTargetFactory.newInstance(rootPath, "//foo", "asset_catalog");
@@ -4668,44 +4241,6 @@ public class ProjectGeneratorTest {
     assertThat(configurations, hasKey("Conf1"));
     assertThat(configurations, hasKey("Conf2"));
     assertThat(configurations, hasKey("Conf3"));
-  }
-
-  @Test
-  public void shouldEmitFilesForBuildSettingPrefixedFrameworks() throws IOException {
-    BuildTarget buildTarget =
-        BuildTargetFactory.newInstance(
-            rootPath, "//foo", "rule", CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?> node =
-        AppleLibraryBuilder.createBuilder(buildTarget)
-            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
-            .setLibraries(
-                ImmutableSortedSet.of(
-                    FrameworkPath.ofSourceTreePath(
-                        new SourceTreePath(
-                            PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-                            Paths.get("libfoo.a"),
-                            Optional.empty())),
-                    FrameworkPath.ofSourceTreePath(
-                        new SourceTreePath(
-                            PBXReference.SourceTree.SDKROOT,
-                            Paths.get("libfoo.a"),
-                            Optional.empty())),
-                    FrameworkPath.ofSourceTreePath(
-                        new SourceTreePath(
-                            PBXReference.SourceTree.SOURCE_ROOT,
-                            Paths.get("libfoo.a"),
-                            Optional.empty()))))
-            .build();
-
-    ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node));
-    projectGenerator.createXcodeProjects();
-
-    PBXProject generatedProject = projectGenerator.getGeneratedProject();
-    PBXTarget target = assertTargetExistsAndReturnTarget(generatedProject, "//foo:rule#shared");
-    ProjectGeneratorTestUtils.assertHasSingleFrameworksPhaseWithFrameworkEntries(
-        target,
-        ImmutableList.of(
-            "$BUILT_PRODUCTS_DIR/libfoo.a", "$SDKROOT/libfoo.a", "$SOURCE_ROOT/libfoo.a"));
   }
 
   @Test
@@ -4967,167 +4502,6 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void applicationTestOnlyLinksLibrariesNotLinkedByTheHostApp() throws IOException {
-    // libs
-    BuildTarget hostOnlyLibTarget = BuildTargetFactory.newInstance(rootPath, "//libs", "HostOnly");
-    TargetNode<?> hostOnlyLibNode =
-        AppleLibraryBuilder.createBuilder(hostOnlyLibTarget)
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("HostOnly.m"))))
-            .build();
-
-    BuildTarget sharedLibTarget = BuildTargetFactory.newInstance(rootPath, "//libs", "Shared");
-    TargetNode<?> sharedLibNode =
-        AppleLibraryBuilder.createBuilder(sharedLibTarget)
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Shared.m"))))
-            .build();
-
-    BuildTarget testOnlyLibTarget = BuildTargetFactory.newInstance(rootPath, "//libs", "TestOnly");
-    TargetNode<?> testOnlyLibNode =
-        AppleLibraryBuilder.createBuilder(testOnlyLibTarget)
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("TestOnly.m"))))
-            .build();
-
-    // host app
-    BuildTarget hostAppBinaryTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "HostAppBinary");
-    TargetNode<?> hostAppBinaryNode =
-        AppleBinaryBuilder.createBuilder(hostAppBinaryTarget)
-            .setDeps(ImmutableSortedSet.of(hostOnlyLibTarget, sharedLibTarget))
-            .build();
-
-    BuildTarget hostAppTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "HostApp");
-    TargetNode<?> hostAppNode =
-        AppleBundleBuilder.createBuilder(hostAppTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(hostAppBinaryTarget)
-            .build();
-
-    // app test
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "AppTest");
-    TargetNode<?> testNode =
-        AppleTestBuilder.createBuilder(testTarget)
-            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setTestHostApp(Optional.of(hostAppTarget))
-            .setDeps(ImmutableSortedSet.of(sharedLibTarget, testOnlyLibTarget))
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(
-                hostOnlyLibNode,
-                sharedLibNode,
-                testOnlyLibNode,
-                hostAppBinaryNode,
-                hostAppNode,
-                testNode));
-
-    projectGenerator.createXcodeProjects();
-
-    Function<PBXTarget, Set<String>> getLinkedLibsForTarget =
-        pbxTarget ->
-            pbxTarget.getBuildPhases().get(0).getFiles().stream()
-                .map(PBXBuildFile::getFileRef)
-                .map(PBXReference::getName)
-                .collect(Collectors.toSet());
-
-    PBXTarget hostPBXTarget =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:HostApp");
-    assertEquals(hostPBXTarget.getBuildPhases().size(), 2);
-    assertEquals(
-        getLinkedLibsForTarget.apply(hostPBXTarget),
-        ImmutableSet.of("libHostOnly.a", "libShared.a"));
-
-    PBXTarget testPBXTarget =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
-    assertEquals(testPBXTarget.getBuildPhases().size(), 2);
-    assertEquals(getLinkedLibsForTarget.apply(testPBXTarget), ImmutableSet.of("libTestOnly.a"));
-  }
-
-  @Test
-  public void uiTestLinksAllLibrariesItDependsOn() throws IOException {
-    // libs
-    BuildTarget hostOnlyLibTarget = BuildTargetFactory.newInstance(rootPath, "//libs", "HostOnly");
-    TargetNode<?> hostOnlyLibNode =
-        AppleLibraryBuilder.createBuilder(hostOnlyLibTarget)
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("HostOnly.m"))))
-            .build();
-
-    BuildTarget sharedLibTarget = BuildTargetFactory.newInstance(rootPath, "//libs", "Shared");
-    TargetNode<?> sharedLibNode =
-        AppleLibraryBuilder.createBuilder(sharedLibTarget)
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Shared.m"))))
-            .build();
-
-    BuildTarget testOnlyLibTarget = BuildTargetFactory.newInstance(rootPath, "//libs", "TestOnly");
-    TargetNode<?> testOnlyLibNode =
-        AppleLibraryBuilder.createBuilder(testOnlyLibTarget)
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("TestOnly.m"))))
-            .build();
-
-    // host app
-    BuildTarget hostAppBinaryTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "HostAppBinary");
-    TargetNode<?> hostAppBinaryNode =
-        AppleBinaryBuilder.createBuilder(hostAppBinaryTarget)
-            .setDeps(ImmutableSortedSet.of(hostOnlyLibTarget, sharedLibTarget))
-            .build();
-
-    BuildTarget hostAppTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "HostApp");
-    TargetNode<?> hostAppNode =
-        AppleBundleBuilder.createBuilder(hostAppTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(hostAppBinaryTarget)
-            .build();
-
-    // app test
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "AppTest");
-    TargetNode<?> testNode =
-        AppleTestBuilder.createBuilder(testTarget)
-            .isUiTest(true)
-            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setTestHostApp(Optional.of(hostAppTarget))
-            .setDeps(ImmutableSortedSet.of(sharedLibTarget, testOnlyLibTarget))
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(
-                hostOnlyLibNode,
-                sharedLibNode,
-                testOnlyLibNode,
-                hostAppBinaryNode,
-                hostAppNode,
-                testNode));
-
-    projectGenerator.createXcodeProjects();
-
-    Function<PBXTarget, Set<String>> getLinkedLibsForTarget =
-        pbxTarget ->
-            pbxTarget.getBuildPhases().get(0).getFiles().stream()
-                .map(PBXBuildFile::getFileRef)
-                .map(PBXReference::getName)
-                .collect(Collectors.toSet());
-
-    PBXTarget hostPBXTarget =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:HostApp");
-    assertEquals(hostPBXTarget.getBuildPhases().size(), 2);
-    assertEquals(
-        getLinkedLibsForTarget.apply(hostPBXTarget),
-        ImmutableSet.of("libHostOnly.a", "libShared.a"));
-
-    PBXTarget testPBXTarget =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
-    assertEquals(testPBXTarget.getBuildPhases().size(), 2);
-    assertEquals(
-        getLinkedLibsForTarget.apply(testPBXTarget),
-        ImmutableSet.of("libTestOnly.a", "libShared.a"));
-  }
-
-  @Test
   public void uiTestUsesHostAppAsTarget() throws IOException {
     BuildTarget hostAppBinaryTarget =
         BuildTargetFactory.newInstance(rootPath, "//foo", "HostAppBinary");
@@ -5254,40 +4628,6 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void applicationTestDoesNotCopyHostAppBundleIntoTestBundle() throws IOException {
-    BuildTarget hostAppBinaryTarget =
-        BuildTargetFactory.newInstance(rootPath, "//foo", "HostAppBinary");
-    TargetNode<?> hostAppBinaryNode = AppleBinaryBuilder.createBuilder(hostAppBinaryTarget).build();
-
-    BuildTarget hostAppTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "HostApp");
-    TargetNode<?> hostAppNode =
-        AppleBundleBuilder.createBuilder(hostAppTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(hostAppBinaryTarget)
-            .build();
-
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "AppTest");
-    TargetNode<?> testNode =
-        AppleTestBuilder.createBuilder(testTarget)
-            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setTestHostApp(Optional.of(hostAppTarget))
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(ImmutableSet.of(hostAppBinaryNode, hostAppNode, testNode));
-
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget testPBXTarget =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
-
-    // for this test phases should be empty - there should be no copy phases in particular
-    assertThat(testPBXTarget.getBuildPhases().size(), Matchers.equalTo(1));
-  }
-
-  @Test
   public void cxxFlagsPropagatedToConfig() throws IOException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
     TargetNode<?> node =
@@ -5369,7 +4709,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAssetCatalogsUnderLibraryNotTest() throws IOException {
+  public void testAssetCatalogsUnderLibrary() throws IOException {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
     BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "test");
     BuildTarget assetCatalogTarget =
@@ -5401,22 +4741,8 @@ public class ProjectGeneratorTest {
     PBXProject project = projectGenerator.getGeneratedProject();
     PBXGroup mainGroup = project.getMainGroup();
 
-    PBXTarget fooLibTarget = assertTargetExistsAndReturnTarget(project, "lib");
-    assertTrue(
-        FluentIterable.from(fooLibTarget.getBuildPhases())
-            .filter(PBXResourcesBuildPhase.class)
-            .isEmpty());
     PBXFileReference assetCatalogFile = (PBXFileReference) mainGroup.getChildren().get(0);
     assertEquals("AssetCatalog.xcassets", assetCatalogFile.getName());
-
-    PBXTarget fooTestTarget = assertTargetExistsAndReturnTarget(project, "test");
-    PBXResourcesBuildPhase resourcesBuildPhase =
-        ProjectGeneratorTestUtils.getSingleBuildPhaseOfType(
-            fooTestTarget, PBXResourcesBuildPhase.class);
-    assertThat(resourcesBuildPhase.getFiles(), hasSize(1));
-    assertThat(
-        assertFileRefIsRelativeAndResolvePath(resourcesBuildPhase.getFiles().get(0).getFileRef()),
-        equalTo(projectFilesystem.resolve("AssetCatalog.xcassets").toString()));
   }
 
   @Test
@@ -5550,265 +4876,6 @@ public class ProjectGeneratorTest {
             + "../buck-out/gen/_p/CwkbTNOBmb-pub "
             + "../buck-out",
         settings.get("HEADER_SEARCH_PATHS"));
-  }
-
-  @Test
-  public void testFrameworkBundleDepIsNotCopiedToFrameworkBundle() throws IOException {
-    BuildTarget framework2Target =
-        BuildTargetFactory.newInstance(
-            rootPath, "//foo", "framework_2", DEFAULT_FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR);
-    BuildTarget framework2BinaryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath,
-            "//foo",
-            "framework_2_bin",
-            DEFAULT_FLAVOR,
-            CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?> framework2BinaryNode =
-        AppleLibraryBuilder.createBuilder(framework2BinaryTarget).build();
-    TargetNode<?> framework2Node =
-        AppleBundleBuilder.createBuilder(framework2Target)
-            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(framework2BinaryTarget)
-            .build();
-
-    BuildTarget framework1Target =
-        BuildTargetFactory.newInstance(
-            rootPath, "//foo", "framework_1", DEFAULT_FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR);
-    BuildTarget framework1BinaryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath,
-            "//foo",
-            "framework_1_bin",
-            DEFAULT_FLAVOR,
-            CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?> framework1BinaryNode =
-        AppleLibraryBuilder.createBuilder(framework1BinaryTarget).build();
-    TargetNode<?> framework1Node =
-        AppleBundleBuilder.createBuilder(framework1Target)
-            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(framework1BinaryTarget)
-            .setDeps(ImmutableSortedSet.of(framework2Target))
-            .build();
-
-    BuildTarget sharedLibraryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath, "//dep", "shared", CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?> sharedLibraryNode =
-        AppleLibraryBuilder.createBuilder(sharedLibraryTarget).build();
-
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
-    TargetNode<?> bundleNode =
-        AppleBundleBuilder.createBuilder(bundleTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(sharedLibraryTarget)
-            .setDeps(ImmutableSortedSet.of(framework1Target))
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(
-                framework1Node,
-                framework2Node,
-                framework1BinaryNode,
-                framework2BinaryNode,
-                sharedLibraryNode,
-                bundleNode));
-
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(
-            projectGenerator.getGeneratedProject(), "//foo:framework_1#default,shared");
-    assertEquals(target.getProductType(), ProductTypes.FRAMEWORK);
-    for (PBXBuildPhase buildPhase : target.getBuildPhases()) {
-      if (buildPhase instanceof PBXCopyFilesBuildPhase) {
-        PBXCopyFilesBuildPhase copyFilesBuildPhase = (PBXCopyFilesBuildPhase) buildPhase;
-        assertThat(
-            copyFilesBuildPhase.getDstSubfolderSpec().getDestination(),
-            Matchers.not(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS));
-      }
-    }
-  }
-
-  @Test
-  public void testAppBundleContainsAllTransitiveFrameworkDeps() throws IOException {
-    BuildTarget framework2Target =
-        BuildTargetFactory.newInstance(
-            rootPath, "//foo", "framework_2", DEFAULT_FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR);
-    BuildTarget framework2BinaryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath,
-            "//foo",
-            "framework_2_bin",
-            DEFAULT_FLAVOR,
-            CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?> framework2BinaryNode =
-        AppleLibraryBuilder.createBuilder(framework2BinaryTarget).build();
-    TargetNode<?> framework2Node =
-        AppleBundleBuilder.createBuilder(framework2Target)
-            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(framework2BinaryTarget)
-            .setProductName(Optional.of("framework_2_override"))
-            .build();
-
-    BuildTarget framework1Target =
-        BuildTargetFactory.newInstance(
-            rootPath, "//foo", "framework_1", DEFAULT_FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR);
-    BuildTarget framework1BinaryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath,
-            "//foo",
-            "framework_1_bin",
-            DEFAULT_FLAVOR,
-            CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?> framework1BinaryNode =
-        AppleLibraryBuilder.createBuilder(framework1BinaryTarget).build();
-    TargetNode<?> framework1Node =
-        AppleBundleBuilder.createBuilder(framework1Target)
-            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(framework1BinaryTarget)
-            .setDeps(ImmutableSortedSet.of(framework2Target))
-            .build();
-
-    BuildTarget framework1FlavoredTarget =
-        BuildTargetFactory.newInstance(
-            rootPath,
-            "//foo",
-            "framework_1",
-            DEFAULT_FLAVOR,
-            CxxDescriptionEnhancer.SHARED_FLAVOR,
-            InternalFlavor.of("iphoneos-arm64"));
-    TargetNode<?> framework1FlavoredNode =
-        AppleBundleBuilder.createBuilder(framework1FlavoredTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(framework1BinaryTarget)
-            .setDeps(ImmutableSortedSet.of(framework2Target))
-            .build();
-
-    BuildTarget sharedLibraryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath, "//dep", "shared", CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?> binaryNode = AppleBinaryBuilder.createBuilder(sharedLibraryTarget).build();
-
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
-    TargetNode<?> bundleNode =
-        AppleBundleBuilder.createBuilder(bundleTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(sharedLibraryTarget)
-            .setDeps(ImmutableSortedSet.of(framework1Target, framework1FlavoredTarget))
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(
-                framework1Node,
-                framework1FlavoredNode,
-                framework2Node,
-                framework1BinaryNode,
-                framework2BinaryNode,
-                binaryNode,
-                bundleNode));
-
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bundle");
-    assertEquals(target.getProductType(), ProductTypes.APPLICATION);
-    assertThat(target.getBuildPhases().size(), Matchers.equalTo(2));
-
-    PBXBuildPhase buildPhase = target.getBuildPhases().get(0);
-    assertThat(buildPhase instanceof PBXCopyFilesBuildPhase, Matchers.equalTo(true));
-
-    PBXCopyFilesBuildPhase copyFilesBuildPhase = (PBXCopyFilesBuildPhase) buildPhase;
-    assertThat(copyFilesBuildPhase.getFiles().size(), Matchers.equalTo(2));
-
-    ImmutableSet<String> frameworkNames =
-        FluentIterable.from(copyFilesBuildPhase.getFiles())
-            .transform(input -> input.getFileRef().getName())
-            .toSortedSet(Ordering.natural());
-    assertThat(
-        frameworkNames,
-        Matchers.equalToObject(
-            ImmutableSortedSet.of("framework_1.framework", "framework_2_override.framework")));
-  }
-
-  @Test
-  public void testAppBundleDoesntLinkFrameworkWrappedWithResource() throws Exception {
-    BuildTarget frameworkTarget =
-        BuildTargetFactory.newInstance(
-            rootPath,
-            "//foo",
-            "framework",
-            FakeAppleRuleDescriptions.DEFAULT_MACOSX_X86_64_PLATFORM.getFlavor(),
-            CxxDescriptionEnhancer.SHARED_FLAVOR);
-    BuildTarget frameworkBinaryTarget =
-        BuildTargetFactory.newInstance(
-            rootPath,
-            "//foo",
-            "framework_bin",
-            FakeAppleRuleDescriptions.DEFAULT_MACOSX_X86_64_PLATFORM.getFlavor(),
-            CxxDescriptionEnhancer.SHARED_FLAVOR);
-    TargetNode<?> frameworkBinaryNode =
-        AppleLibraryBuilder.createBuilder(frameworkBinaryTarget).build();
-    TargetNode<?> frameworkNode =
-        AppleBundleBuilder.createBuilder(frameworkTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(frameworkBinaryTarget)
-            .build();
-    BuildTarget resourceTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "res");
-    SourcePath sourcePath = DefaultBuildTargetSourcePath.of(frameworkTarget);
-    TargetNode<?> resourceNode =
-        AppleResourceBuilder.createBuilder(resourceTarget)
-            .setFiles(ImmutableSet.of())
-            .setDirs(ImmutableSet.of(sourcePath))
-            .build();
-    BuildTarget binaryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
-    TargetNode<?> binaryNode =
-        AppleBinaryBuilder.createBuilder(binaryTarget)
-            .setDeps(ImmutableSortedSet.of(resourceTarget))
-            .build();
-    BuildTarget bundleTarget =
-        BuildTargetFactory.newInstance(
-            rootPath,
-            "//foo",
-            "bundle",
-            FakeAppleRuleDescriptions.DEFAULT_MACOSX_X86_64_PLATFORM.getFlavor());
-    TargetNode<?> bundleNode =
-        AppleBundleBuilder.createBuilder(bundleTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(binaryTarget)
-            .build();
-    ImmutableSet<TargetNode<?>> nodes =
-        ImmutableSet.of(frameworkBinaryNode, frameworkNode, resourceNode, binaryNode, bundleNode);
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(nodes));
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            nodes,
-            ProjectGeneratorOptions.builder().build(),
-            input -> {
-              graphBuilder.requireRule(input.getBuildTarget());
-              return graphBuilder;
-            });
-    projectGenerator.createXcodeProjects();
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(
-            projectGenerator.getGeneratedProject(), bundleTarget.getFullyQualifiedName());
-    assertEquals(target.getProductType(), ProductTypes.APPLICATION);
-    for (PBXBuildPhase buildPhase : target.getBuildPhases()) {
-      assertFalse(buildPhase instanceof PBXCopyFilesBuildPhase);
-    }
-    assertThat(target.getBuildPhases().size(), Matchers.equalTo(2));
   }
 
   @Test
@@ -6065,54 +5132,6 @@ public class ProjectGeneratorTest {
     assertTrue(buildSettings.get("DERIVED_FILE_DIR").endsWith(derivedSourcesUserDir));
     assertThat(
         buildSettings.get("SWIFT_OBJC_INTERFACE_HEADER_NAME"), equalTo(objCGeneratedHeaderName));
-  }
-
-  @Test
-  public void testSwiftDependencyBuildPhase() throws IOException {
-    BuildTarget fooBuildTarget = BuildTargetFactory.newInstance(rootPath, "//baz", "foo");
-    BuildTarget barBuildTarget = BuildTargetFactory.newInstance(rootPath, "//baz", "bar");
-
-    TargetNode<?> fooNode =
-        AppleLibraryBuilder.createBuilder(fooBuildTarget)
-            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
-            .setSwiftVersion(Optional.of("3.0"))
-            .setXcodePublicHeadersSymlinks(false)
-            .setXcodePrivateHeadersSymlinks(false)
-            .build();
-    TargetNode<?> barNode =
-        AppleLibraryBuilder.createBuilder(barBuildTarget)
-            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Bar.swift"))))
-            .setDeps(ImmutableSortedSet.of(fooBuildTarget))
-            .setSwiftVersion(Optional.of("3.0"))
-            .setXcodePublicHeadersSymlinks(false)
-            .setXcodePrivateHeadersSymlinks(false)
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(fooNode, barNode), ProjectGeneratorOptions.builder().build());
-
-    projectGenerator.createXcodeProjects();
-
-    PBXProject pbxProject = projectGenerator.getGeneratedProject();
-    PBXTarget pbxTarget = assertTargetExistsAndReturnTarget(pbxProject, "//baz:bar");
-
-    ImmutableSet<PBXBuildPhase> fakeDepPhases =
-        FluentIterable.from(pbxTarget.getBuildPhases())
-            .filter(
-                phase -> {
-                  return phase
-                      .getName()
-                      .equals(Optional.of("Fake Swift Dependencies (Copy Files Phase)"));
-                })
-            .toSet();
-    assertThat(fakeDepPhases.size(), equalTo(1));
-
-    ImmutableMap<String, String> buildSettings =
-        getBuildSettings(barBuildTarget, pbxTarget, "Debug");
-    assertThat(buildSettings.get("DEPLOYMENT_POSTPROCESSING"), equalTo("NO"));
   }
 
   @Test

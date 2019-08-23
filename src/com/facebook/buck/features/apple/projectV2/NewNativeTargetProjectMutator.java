@@ -27,63 +27,41 @@ import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.AppleWrapperResourceArg;
 import com.facebook.buck.apple.GroupedSource;
 import com.facebook.buck.apple.RuleUtils;
-import com.facebook.buck.apple.XcodePostbuildScriptDescription;
-import com.facebook.buck.apple.XcodePrebuildScriptDescription;
-import com.facebook.buck.apple.XcodeScriptDescriptionArg;
-import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXFrameworksBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXHeadersBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
-import com.facebook.buck.features.js.JsBundleOutputs;
-import com.facebook.buck.features.js.JsBundleOutputsDescription;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.RichStream;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-import com.google.common.io.Resources;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.stringtemplate.v4.ST;
 
 /**
  * Configures a PBXProject by adding a PBXNativeTarget and its associated dependencies into a
@@ -91,7 +69,6 @@ import org.stringtemplate.v4.ST;
  */
 class NewNativeTargetProjectMutator {
   private static final Logger LOG = Logger.get(NewNativeTargetProjectMutator.class);
-  private static final String JS_BUNDLE_TEMPLATE = "js-bundle.st";
 
   public static class Result {
     public final PBXNativeTarget target;
@@ -125,17 +102,11 @@ class NewNativeTargetProjectMutator {
   private Optional<SourcePath> infoPlist = Optional.empty();
   private Optional<SourcePath> bridgingHeader = Optional.empty();
   private Optional<Path> buckFilePath = Optional.empty();
-  private ImmutableSet<FrameworkPath> frameworks = ImmutableSet.of();
-  private ImmutableSet<PBXFileReference> archives = ImmutableSet.of();
   private ImmutableSet<AppleResourceDescriptionArg> recursiveResources = ImmutableSet.of();
   private ImmutableSet<AppleResourceDescriptionArg> directResources = ImmutableSet.of();
   private ImmutableSet<AppleAssetCatalogDescriptionArg> recursiveAssetCatalogs = ImmutableSet.of();
   private ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs = ImmutableSet.of();
   private ImmutableSet<AppleWrapperResourceArg> wrapperResources = ImmutableSet.of();
-  private Iterable<PBXShellScriptBuildPhase> preBuildRunScriptPhases = ImmutableList.of();
-  private Iterable<PBXBuildPhase> copyFilesPhases = ImmutableList.of();
-  private Iterable<PBXShellScriptBuildPhase> postBuildRunScriptPhases = ImmutableList.of();
-  private Optional<PBXBuildPhase> swiftDependenciesBuildPhase = Optional.empty();
 
   public NewNativeTargetProjectMutator(
       PathRelativizer pathRelativizer,
@@ -221,21 +192,6 @@ class NewNativeTargetProjectMutator {
     return this;
   }
 
-  public NewNativeTargetProjectMutator setFrameworks(Set<FrameworkPath> frameworks) {
-    this.frameworks = ImmutableSet.copyOf(frameworks);
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setArchives(Set<PBXFileReference> archives) {
-    this.archives = ImmutableSet.copyOf(archives);
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setSwiftDependenciesBuildPhase(PBXBuildPhase buildPhase) {
-    this.swiftDependenciesBuildPhase = Optional.of(buildPhase);
-    return this;
-  }
-
   public NewNativeTargetProjectMutator setRecursiveResources(
       Set<AppleResourceDescriptionArg> recursiveResources) {
     this.recursiveResources = ImmutableSet.copyOf(recursiveResources);
@@ -251,31 +207,6 @@ class NewNativeTargetProjectMutator {
   public NewNativeTargetProjectMutator setWrapperResources(
       ImmutableSet<AppleWrapperResourceArg> wrapperResources) {
     this.wrapperResources = wrapperResources;
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setPreBuildRunScriptPhasesFromTargetNodes(
-      Iterable<TargetNode<?>> nodes,
-      Function<? super TargetNode<?>, BuildRuleResolver> buildRuleResolverForNode) {
-    preBuildRunScriptPhases = createScriptsForTargetNodes(nodes, buildRuleResolverForNode);
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setPreBuildRunScriptPhases(
-      Iterable<PBXShellScriptBuildPhase> phases) {
-    preBuildRunScriptPhases = phases;
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setCopyFilesPhases(Iterable<PBXBuildPhase> phases) {
-    copyFilesPhases = phases;
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setPostBuildRunScriptPhasesFromTargetNodes(
-      Iterable<TargetNode<?>> nodes,
-      Function<? super TargetNode<?>, BuildRuleResolver> buildRuleResolverForNode) {
-    postBuildRunScriptPhases = createScriptsForTargetNodes(nodes, buildRuleResolverForNode);
     return this;
   }
 
@@ -307,16 +238,22 @@ class NewNativeTargetProjectMutator {
     Optional<PBXGroup> targetGroup;
     if (addBuildPhases) {
       // Phases
-      addRunScriptBuildPhases(nativeTarget, preBuildRunScriptPhases);
       addPhasesAndGroupsForSources(project, nativeTarget);
-      addFrameworksBuildPhase(project, nativeTarget);
       addResourcesFileReference(project);
-      addCopyResourcesToNonStdDestinationPhases(nativeTarget, project);
-      addResourcesBuildPhase(nativeTarget, project);
-      nativeTarget.getBuildPhases().addAll((Collection<? extends PBXBuildPhase>) copyFilesPhases);
-      addRunScriptBuildPhases(nativeTarget, postBuildRunScriptPhases);
-      addSwiftDependenciesBuildPhase(nativeTarget);
+      addCopyResourcesToNonStdDestinations(project);
+      addResourcesBuildPhase(project);
 
+      // Using a buck build phase doesnt support having other build phases.
+      // TODO(chatatap): Find solutions around this, as this will likely break indexing.
+      if (ImmutableList.of(
+              ProductTypes.APPLICATION,
+              ProductTypes.UNIT_TEST,
+              ProductTypes.UI_TEST,
+              ProductTypes.APP_EXTENSION,
+              ProductTypes.WATCH_APPLICATION)
+          .contains(productType)) {
+        nativeTarget.getBuildPhases().clear();
+      }
       addBuckBuildPhase(nativeTarget);
 
       targetGroup = Optional.of(project.getMainGroup());
@@ -444,10 +381,12 @@ class NewNativeTargetProjectMutator {
       buckFileReference.setExplicitFileType(Optional.of("text.script.python"));
     }
 
+    // Source files must be compiled in order to be indexed.
     if (!sourcesBuildPhase.getFiles().isEmpty()) {
       target.getBuildPhases().add(sourcesBuildPhase);
     }
 
+    // TODO(chatatap): Verify if we still need header build phases (specifically for swift).
     if (!headersBuildPhase.getFiles().isEmpty()) {
       target.getBuildPhases().add(headersBuildPhase);
     }
@@ -554,43 +493,6 @@ class NewNativeTargetProjectMutator {
     }
   }
 
-  private void addFrameworksBuildPhase(PBXProject project, PBXNativeTarget target) {
-    if (frameworks.isEmpty() && archives.isEmpty()) {
-      return;
-    }
-
-    PBXGroup sharedFrameworksGroup =
-        project.getMainGroup().getOrCreateChildGroupByName("Frameworks");
-    PBXFrameworksBuildPhase frameworksBuildPhase = new PBXFrameworksBuildPhase();
-    target.getBuildPhases().add(frameworksBuildPhase);
-
-    for (FrameworkPath framework : frameworks) {
-      SourceTreePath sourceTreePath;
-      if (framework.getSourceTreePath().isPresent()) {
-        sourceTreePath = framework.getSourceTreePath().get();
-      } else if (framework.getSourcePath().isPresent()) {
-        sourceTreePath =
-            new SourceTreePath(
-                PBXReference.SourceTree.SOURCE_ROOT,
-                pathRelativizer.outputPathToSourcePath(framework.getSourcePath().get()),
-                Optional.empty());
-      } else {
-        throw new RuntimeException();
-      }
-      PBXFileReference fileReference =
-          sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(sourceTreePath);
-      frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
-    }
-
-    for (PBXFileReference archive : archives) {
-      frameworksBuildPhase.getFiles().add(new PBXBuildFile(archive));
-    }
-  }
-
-  private void addSwiftDependenciesBuildPhase(PBXNativeTarget target) {
-    swiftDependenciesBuildPhase.ifPresent(buildPhase -> target.getBuildPhases().add(buildPhase));
-  }
-
   private void addResourcesFileReference(PBXProject project) {
     ImmutableSet.Builder<Path> resourceFiles = ImmutableSet.builder();
     ImmutableSet.Builder<Path> resourceDirs = ImmutableSet.builder();
@@ -605,15 +507,10 @@ class NewNativeTargetProjectMutator {
         variantResourceFiles);
 
     addResourcesFileReference(
-        project,
-        resourceFiles.build(),
-        resourceDirs.build(),
-        variantResourceFiles.build(),
-        ignored -> {});
+        project, resourceFiles.build(), resourceDirs.build(), variantResourceFiles.build());
   }
 
-  private void addCopyResourcesToNonStdDestinationPhases(
-      PBXNativeTarget target, PBXProject project) {
+  private void addCopyResourcesToNonStdDestinations(PBXProject project) {
     List<AppleBundleDestination> allNonStandardDestinations =
         recursiveResources.stream()
             .map(AppleResourceDescriptionArg::getDestination)
@@ -624,15 +521,12 @@ class NewNativeTargetProjectMutator {
             .sorted(Comparator.naturalOrder())
             .collect(Collectors.toList());
     for (AppleBundleDestination destination : allNonStandardDestinations) {
-      addCopyResourcesToNonStdDestinationPhase(target, project, destination);
+      addCopyResourcesToNonStdDestination(project, destination);
     }
   }
 
-  private void addCopyResourcesToNonStdDestinationPhase(
-      PBXNativeTarget target, PBXProject project, AppleBundleDestination destination) {
-    CopyFilePhaseDestinationSpec destinationSpec =
-        CopyFilePhaseDestinationSpec.of(pbxCopyPhaseDestination(destination));
-    PBXCopyFilesBuildPhase phase = new PBXCopyFilesBuildPhase(destinationSpec);
+  private void addCopyResourcesToNonStdDestination(
+      PBXProject project, AppleBundleDestination destination) {
     Set<AppleResourceDescriptionArg> resourceDescriptionArgsForDestination =
         recursiveResources.stream()
             .filter(
@@ -640,35 +534,10 @@ class NewNativeTargetProjectMutator {
                     e.getDestination().orElse(AppleBundleDestination.defaultValue()) == destination)
             .collect(Collectors.toSet());
     addResourcePathsToBuildPhase(
-        phase, project, resourceDescriptionArgsForDestination, new HashSet<>(), new HashSet<>());
-    if (!phase.getFiles().isEmpty()) {
-      target.getBuildPhases().add(phase);
-      LOG.debug(
-          "Added copy resources to non standard destination %s as build phase %s",
-          destination, phase);
-    }
+        project, resourceDescriptionArgsForDestination, new HashSet<>(), new HashSet<>());
   }
 
-  private PBXCopyFilesBuildPhase.Destination pbxCopyPhaseDestination(
-      AppleBundleDestination destination) {
-    switch (destination) {
-      case FRAMEWORKS:
-        return PBXCopyFilesBuildPhase.Destination.FRAMEWORKS;
-      case EXECUTABLES:
-        return PBXCopyFilesBuildPhase.Destination.EXECUTABLES;
-      case RESOURCES:
-        return PBXCopyFilesBuildPhase.Destination.RESOURCES;
-      case PLUGINS:
-        return PBXCopyFilesBuildPhase.Destination.PLUGINS;
-      case XPCSERVICES:
-        return PBXCopyFilesBuildPhase.Destination.XPC;
-      default:
-        throw new IllegalStateException("Unhandled AppleBundleDestination " + destination);
-    }
-  }
-
-  private void addResourcesBuildPhase(PBXNativeTarget target, PBXProject project) {
-    PBXBuildPhase phase = new PBXResourcesBuildPhase();
+  private void addResourcesBuildPhase(PBXProject project) {
     Set<AppleResourceDescriptionArg> standardDestinationResources =
         recursiveResources.stream()
             .filter(
@@ -677,15 +546,10 @@ class NewNativeTargetProjectMutator {
                         == AppleBundleDestination.RESOURCES)
             .collect(Collectors.toSet());
     addResourcePathsToBuildPhase(
-        phase, project, standardDestinationResources, recursiveAssetCatalogs, wrapperResources);
-    if (!phase.getFiles().isEmpty()) {
-      target.getBuildPhases().add(phase);
-      LOG.debug("Added resources build phase %s", phase);
-    }
+        project, standardDestinationResources, recursiveAssetCatalogs, wrapperResources);
   }
 
   private void addResourcePathsToBuildPhase(
-      PBXBuildPhase phase,
       PBXProject project,
       Set<AppleResourceDescriptionArg> resourceArgs,
       Set<AppleAssetCatalogDescriptionArg> assetCatalogArgs,
@@ -703,14 +567,7 @@ class NewNativeTargetProjectMutator {
         variantResourceFiles);
 
     addResourcesFileReference(
-        project,
-        resourceFiles.build(),
-        resourceDirs.build(),
-        variantResourceFiles.build(),
-        input -> {
-          PBXBuildFile buildFile = new PBXBuildFile(input);
-          phase.getFiles().add(buildFile);
-        });
+        project, resourceFiles.build(), resourceDirs.build(), variantResourceFiles.build());
   }
 
   private void collectResourcePathsFromConstructorArgs(
@@ -739,22 +596,17 @@ class NewNativeTargetProjectMutator {
       PBXProject project,
       ImmutableSet<Path> resourceFiles,
       ImmutableSet<Path> resourceDirs,
-      ImmutableSet<Path> variantResourceFiles,
-      Consumer<? super PBXFileReference> resourceCallback) {
+      ImmutableSet<Path> variantResourceFiles) {
     if (resourceFiles.isEmpty() && resourceDirs.isEmpty() && variantResourceFiles.isEmpty()) {
       return;
     }
 
     for (Path path : resourceFiles) {
-      PBXFileReference fileReference =
-          writeFilePathToProject(project, path, Optional.empty()).getFileReference();
-      resourceCallback.accept(fileReference);
+      writeFilePathToProject(project, path, Optional.empty()).getFileReference();
     }
 
     for (Path path : resourceDirs) {
-      PBXFileReference fileReference =
-          writeFilePathToProject(project, path, Optional.of("folder")).getFileReference();
-      resourceCallback.accept(fileReference);
+      writeFilePathToProject(project, path, Optional.of("folder")).getFileReference();
     }
 
     for (Path variantFilePath : variantResourceFiles) {
@@ -767,118 +619,6 @@ class NewNativeTargetProjectMutator {
             variantFilePath);
       }
       writeFilePathToProject(project, variantFilePath, Optional.empty());
-    }
-  }
-
-  private ImmutableList<PBXShellScriptBuildPhase> createScriptsForTargetNodes(
-      Iterable<TargetNode<?>> nodes,
-      Function<? super TargetNode<?>, BuildRuleResolver> buildRuleResolverForNode)
-      throws IllegalStateException {
-    ImmutableList.Builder<PBXShellScriptBuildPhase> builder = ImmutableList.builder();
-    for (TargetNode<?> node : nodes) {
-      PBXShellScriptBuildPhase shellScriptBuildPhase = new PBXShellScriptBuildPhase();
-      boolean nodeIsPrebuildScript =
-          node.getDescription() instanceof XcodePrebuildScriptDescription;
-      boolean nodeIsPostbuildScript =
-          node.getDescription() instanceof XcodePostbuildScriptDescription;
-      if (nodeIsPrebuildScript || nodeIsPostbuildScript) {
-        XcodeScriptDescriptionArg arg = (XcodeScriptDescriptionArg) node.getConstructorArg();
-        shellScriptBuildPhase
-            .getInputPaths()
-            .addAll(
-                arg.getSrcs().stream()
-                    .map(sourcePathResolver)
-                    .map(pathRelativizer::outputDirToRootRelative)
-                    .map(Object::toString)
-                    .collect(Collectors.toSet()));
-        shellScriptBuildPhase.getInputPaths().addAll(arg.getInputs());
-        shellScriptBuildPhase.getInputFileListPaths().addAll(arg.getInputFileLists());
-        shellScriptBuildPhase.getOutputPaths().addAll(arg.getOutputs());
-        shellScriptBuildPhase.getOutputFileListPaths().addAll(arg.getOutputFileLists());
-        shellScriptBuildPhase.setShellScript(arg.getCmd());
-      } else if (node.getDescription() instanceof JsBundleOutputsDescription) {
-        shellScriptBuildPhase.setShellScript(
-            generateXcodeShellScriptForJsBundle(node, buildRuleResolverForNode));
-      } else {
-        // unreachable
-        throw new IllegalStateException("Invalid rule type for shell script build phase");
-      }
-      builder.add(shellScriptBuildPhase);
-    }
-    return builder.build();
-  }
-
-  private void addRunScriptBuildPhases(
-      PBXNativeTarget target, Iterable<PBXShellScriptBuildPhase> phases) {
-    for (PBXShellScriptBuildPhase phase : phases) {
-      target.getBuildPhases().add(phase);
-    }
-  }
-
-  private String generateXcodeShellScriptForJsBundle(
-      TargetNode<?> targetNode,
-      Function<? super TargetNode<?>, BuildRuleResolver> buildRuleResolverForNode) {
-    Preconditions.checkArgument(targetNode.getDescription() instanceof JsBundleOutputsDescription);
-
-    ST template;
-    try {
-      template =
-          new ST(
-              Resources.toString(
-                  Resources.getResource(NewNativeTargetProjectMutator.class, JS_BUNDLE_TEMPLATE),
-                  Charsets.UTF_8));
-    } catch (IOException e) {
-      throw new RuntimeException(
-          String.format("There was an error loading '%s' template", JS_BUNDLE_TEMPLATE), e);
-    }
-
-    BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
-    BuildRule rule = resolver.getRule(targetNode.getBuildTarget());
-
-    Preconditions.checkState(rule instanceof JsBundleOutputs);
-    JsBundleOutputs bundle = (JsBundleOutputs) rule;
-
-    SourcePath jsOutput = bundle.getSourcePathToOutput();
-    SourcePath resOutput = bundle.getSourcePathToResources();
-
-    template.add("built_bundle_path", resolver.getSourcePathResolver().getAbsolutePath(jsOutput));
-    template.add(
-        "built_resources_path", resolver.getSourcePathResolver().getAbsolutePath(resOutput));
-
-    return template.render();
-  }
-
-  private void collectJsBundleFiles(
-      ImmutableList.Builder<CopyInXcode> builder,
-      ImmutableList<TargetNode<?>> scriptPhases,
-      Cell cell,
-      Function<? super TargetNode<?>, BuildRuleResolver> buildRuleResolverForNode) {
-    for (TargetNode<?> targetNode : scriptPhases) {
-      if (targetNode.getDescription() instanceof JsBundleOutputsDescription) {
-        BuildRuleResolver resolver = buildRuleResolverForNode.apply(targetNode);
-        BuildRule rule = resolver.getRule(targetNode.getBuildTarget());
-
-        Preconditions.checkState(rule instanceof JsBundleOutputs);
-        JsBundleOutputs bundle = (JsBundleOutputs) rule;
-
-        SourcePath jsOutput = bundle.getSourcePathToOutput();
-        SourcePath resOutput = bundle.getSourcePathToResources();
-
-        Path jsOutputPath = resolver.getSourcePathResolver().getAbsolutePath(jsOutput);
-        builder.add(
-            CopyInXcode.of(
-                CopyInXcode.SourceType.FOLDER_CONTENTS,
-                cell.getFilesystem().relativize(jsOutputPath),
-                CopyInXcode.DestinationBase.UNLOCALIZED_RESOURCES,
-                Paths.get("")));
-        Path resOutputPath = resolver.getSourcePathResolver().getAbsolutePath(resOutput);
-        builder.add(
-            CopyInXcode.of(
-                CopyInXcode.SourceType.FOLDER_CONTENTS,
-                cell.getFilesystem().relativize(resOutputPath),
-                CopyInXcode.DestinationBase.UNLOCALIZED_RESOURCES,
-                Paths.get("")));
-      }
     }
   }
 
@@ -903,13 +643,5 @@ class NewNativeTargetProjectMutator {
     buckBuildPhase.setShellScript(shellCommand);
 
     nativeTarget.getBuildPhases().add(buckBuildPhase);
-  }
-
-  public void collectFilesToCopyInXcode(
-      ImmutableList.Builder<CopyInXcode> builder,
-      ImmutableList<TargetNode<?>> scriptPhases,
-      Cell cell,
-      Function<? super TargetNode<?>, BuildRuleResolver> buildRuleResolverForNode) {
-    collectJsBundleFiles(builder, scriptPhases, cell, buildRuleResolverForNode);
   }
 }

@@ -16,61 +16,38 @@
 
 package com.facebook.buck.features.apple.projectV2;
 
-import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUtils.assertHasSingleFrameworksPhaseWithFrameworkEntries;
-import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUtils.assertHasSinglePhaseWithEntries;
 import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
-import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUtils.getExpectedBuildPhasesByType;
 import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUtils.getSingleBuildPhaseOfType;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
 import com.facebook.buck.apple.AppleConfig;
-import com.facebook.buck.apple.AppleResourceDescriptionArg;
-import com.facebook.buck.apple.XcodePostbuildScriptBuilder;
-import com.facebook.buck.apple.XcodePrebuildScriptBuilder;
-import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
-import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.features.js.JsBundleGenruleBuilder;
-import com.facebook.buck.features.js.JsTestScenario;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
-import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -211,231 +188,7 @@ public class NewNativeTargetProjectMutatorTest {
   }
 
   @Test
-  public void testFrameworkBuildPhase() throws NoSuchBuildTargetException {
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
-    mutator.setFrameworks(
-        ImmutableSet.of(
-            FrameworkPath.ofSourceTreePath(
-                new SourceTreePath(
-                    PBXReference.SourceTree.SDKROOT,
-                    Paths.get("Foo.framework"),
-                    Optional.empty()))));
-    mutator.setArchives(
-        ImmutableSet.of(
-            new PBXFileReference(
-                "libdep.a",
-                "libdep.a",
-                PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-                Optional.empty())));
-    NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject, true);
-    assertHasSingleFrameworksPhaseWithFrameworkEntries(
-        result.target, ImmutableList.of("$SDKROOT/Foo.framework", "$BUILT_PRODUCTS_DIR/libdep.a"));
-  }
-
-  @Test
-  public void testResourcesBuildPhase() throws NoSuchBuildTargetException {
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
-
-    AppleResourceDescriptionArg arg =
-        AppleResourceDescriptionArg.builder()
-            .setName("resources")
-            .setFiles(ImmutableSet.of(FakeSourcePath.of("foo.png")))
-            .build();
-
-    mutator.setRecursiveResources(ImmutableSet.of(arg));
-    NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject, true);
-
-    assertHasSinglePhaseWithEntries(
-        result.target, PBXResourcesBuildPhase.class, ImmutableList.of("$SOURCE_ROOT/../foo.png"));
-  }
-
-  @Test
-  public void testCopyFilesBuildPhase() throws NoSuchBuildTargetException {
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
-
-    CopyFilePhaseDestinationSpec.Builder specBuilder = CopyFilePhaseDestinationSpec.builder();
-    specBuilder.setDestination(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS);
-    specBuilder.setPath("foo.png");
-
-    PBXBuildPhase copyPhase = new PBXCopyFilesBuildPhase(specBuilder.build());
-    mutator.setCopyFilesPhases(ImmutableList.of(copyPhase));
-
-    NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject, true);
-
-    PBXBuildPhase buildPhaseToTest =
-        getSingleBuildPhaseOfType(result.target, PBXCopyFilesBuildPhase.class);
-    assertThat(copyPhase, equalTo(buildPhaseToTest));
-  }
-
-  @Test
-  public void testCopyFilesBuildPhaseIsBeforePostBuildScriptBuildPhase()
-      throws NoSuchBuildTargetException {
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
-
-    CopyFilePhaseDestinationSpec.Builder specBuilder = CopyFilePhaseDestinationSpec.builder();
-    specBuilder.setDestination(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS);
-    specBuilder.setPath("script/input.png");
-
-    PBXBuildPhase copyFilesPhase = new PBXCopyFilesBuildPhase(specBuilder.build());
-    mutator.setCopyFilesPhases(ImmutableList.of(copyFilesPhase));
-
-    TargetNode<?> postbuildNode =
-        XcodePostbuildScriptBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:script"))
-            .setCmd("echo \"hello world!\"")
-            .build();
-    mutator.setPostBuildRunScriptPhasesFromTargetNodes(
-        ImmutableList.of(postbuildNode), x -> buildRuleResolver);
-
-    NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject, true);
-
-    PBXNativeTarget target = result.target;
-
-    List<PBXBuildPhase> buildPhases = target.getBuildPhases();
-
-    PBXBuildPhase copyBuildPhaseToTest =
-        getSingleBuildPhaseOfType(target, PBXCopyFilesBuildPhase.class);
-    Iterable<PBXShellScriptBuildPhase> scriptBuildPhases =
-        getExpectedBuildPhasesByType(target, PBXShellScriptBuildPhase.class, 2);
-    PBXBuildPhase postBuildScriptPhase = scriptBuildPhases.iterator().next();
-
-    assertThat(
-        buildPhases.indexOf(copyBuildPhaseToTest),
-        lessThan(buildPhases.indexOf(postBuildScriptPhase)));
-  }
-
-  @Test
-  public void assetCatalogsBuildPhaseBuildsAssetCatalogs() throws NoSuchBuildTargetException {
-    AppleAssetCatalogDescriptionArg arg =
-        AppleAssetCatalogDescriptionArg.builder()
-            .setName("some_rule")
-            .setDirs(ImmutableSortedSet.of(FakeSourcePath.of("AssetCatalog1.xcassets")))
-            .build();
-
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
-    mutator.setRecursiveAssetCatalogs(ImmutableSet.of(arg));
-    NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject, true);
-    assertHasSinglePhaseWithEntries(
-        result.target,
-        PBXResourcesBuildPhase.class,
-        ImmutableList.of("$SOURCE_ROOT/../AssetCatalog1.xcassets"));
-  }
-
-  @Test
-  public void testScriptBuildPhase() throws NoSuchBuildTargetException {
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
-
-    TargetNode<?> prebuildNode =
-        XcodePrebuildScriptBuilder.createBuilder(BuildTargetFactory.newInstance("//foo:script"))
-            .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("script/input.png")))
-            .setInputs(ImmutableSortedSet.of("$(SRCROOT)/helloworld.md"))
-            .setInputFileLists(ImmutableSortedSet.of("$(SRCROOT)/foo-inputs.xcfilelist"))
-            .setOutputs(ImmutableSortedSet.of("helloworld.txt"))
-            .setOutputFileLists(ImmutableSortedSet.of("$(SRCROOT)/foo-outputs.xcfilelist"))
-            .setCmd("echo \"hello world!\"")
-            .build();
-
-    mutator.setPostBuildRunScriptPhasesFromTargetNodes(
-        ImmutableList.of(prebuildNode), x -> buildRuleResolver);
-    NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject, true);
-
-    Iterable<PBXShellScriptBuildPhase> scriptBuildPhases =
-        getExpectedBuildPhasesByType(result.target, PBXShellScriptBuildPhase.class, 2);
-
-    PBXShellScriptBuildPhase phase = scriptBuildPhases.iterator().next();
-    assertThat("Should set input paths correctly", phase.getInputPaths().size(), is(equalTo(2)));
-    assertThat(
-        "Should set input paths correctly",
-        phase.getInputPaths(),
-        is(hasItems("../script/input.png", "$(SRCROOT)/helloworld.md")));
-    assertThat(
-        "Should set input file list paths correctly",
-        Iterables.getOnlyElement(phase.getInputFileListPaths()),
-        is(equalTo("$(SRCROOT)/foo-inputs.xcfilelist")));
-    assertThat(
-        "Should set output paths correctly",
-        "helloworld.txt",
-        is(equalTo(Iterables.getOnlyElement(phase.getOutputPaths()))));
-    assertThat(
-        "Should set output file list paths correctly",
-        Iterables.getOnlyElement(phase.getOutputFileListPaths()),
-        is(equalTo("$(SRCROOT)/foo-outputs.xcfilelist")));
-    assertEquals("should set script correctly", "echo \"hello world!\"", phase.getShellScript());
-  }
-
-  @Test
-  public void testScriptBuildPhaseWithJsBundle() throws NoSuchBuildTargetException {
-    BuildTarget depBuildTarget = BuildTargetFactory.newInstance("//foo:dep");
-    JsTestScenario scenario =
-        JsTestScenario.builder().bundle(depBuildTarget, ImmutableSortedSet.of()).build();
-
-    NewNativeTargetProjectMutator mutator = mutator(scenario.graphBuilder.getSourcePathResolver());
-
-    TargetNode<?> jsBundleNode = scenario.targetGraph.get(depBuildTarget);
-
-    mutator.setPostBuildRunScriptPhasesFromTargetNodes(
-        ImmutableList.of(jsBundleNode), x -> scenario.graphBuilder);
-    NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject, true);
-
-    Iterable<PBXShellScriptBuildPhase> scriptBuildPhases =
-        getExpectedBuildPhasesByType(result.target, PBXShellScriptBuildPhase.class, 2);
-
-    PBXShellScriptBuildPhase phase = scriptBuildPhases.iterator().next();
-    String shellScript = phase.getShellScript();
-    Path genDir = scenario.filesystem.getBuckPaths().getGenDir().toAbsolutePath();
-    assertEquals(
-        String.format(
-            "BASE_DIR=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\n"
-                + "mkdir -p \"${BASE_DIR}\"\n\n"
-                + "cp -a \"%s/foo/dep/js/\" \"${BASE_DIR}/\"\n"
-                + "cp -a \"%s/foo/dep/res/\" \"${BASE_DIR}/\"\n",
-            genDir, genDir),
-        shellScript);
-  }
-
-  @Test
-  public void testScriptBuildPhaseWithJsBundleGenrule() throws NoSuchBuildTargetException {
-    BuildTarget bundleBuildTarget = BuildTargetFactory.newInstance("//foo:bundle");
-    BuildTarget depBuildTarget = BuildTargetFactory.newInstance("//foo:dep");
-    JsTestScenario scenario =
-        JsTestScenario.builder()
-            .bundle(bundleBuildTarget, ImmutableSortedSet.of())
-            .bundleGenrule(JsBundleGenruleBuilder.Options.of(depBuildTarget, bundleBuildTarget))
-            .build();
-
-    NewNativeTargetProjectMutator mutator = mutator(scenario.graphBuilder.getSourcePathResolver());
-
-    TargetNode<?> jsBundleGenruleNode = scenario.targetGraph.get(depBuildTarget);
-
-    mutator.setPostBuildRunScriptPhasesFromTargetNodes(
-        ImmutableList.of(jsBundleGenruleNode), x -> scenario.graphBuilder);
-    NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject, true);
-
-    Iterable<PBXShellScriptBuildPhase> scriptBuildPhases =
-        getExpectedBuildPhasesByType(result.target, PBXShellScriptBuildPhase.class, 2);
-
-    PBXShellScriptBuildPhase phase = scriptBuildPhases.iterator().next();
-    String shellScript = phase.getShellScript();
-    Path genDir = scenario.filesystem.getBuckPaths().getGenDir().toAbsolutePath();
-    assertEquals(
-        String.format(
-            "BASE_DIR=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\n"
-                + "mkdir -p \"${BASE_DIR}\"\n\n"
-                + "cp -a \"%s/foo/dep/js/\" \"${BASE_DIR}/\"\n"
-                + "cp -a \"%s/foo/bundle/res/\" \"${BASE_DIR}/\"\n",
-            genDir, genDir),
-        shellScript);
-  }
-
-  @Test
-  public void testApplicationTargetHasScriptPhase() {
+  public void testTargetHasBuildScriptPhase() {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
     mutator.setProduct(
         ProductTypes.APPLICATION,
