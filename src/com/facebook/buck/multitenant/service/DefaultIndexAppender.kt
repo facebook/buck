@@ -31,7 +31,6 @@ class DefaultIndexAppender internal constructor(
     private val indexGenerationData: MutableIndexGenerationData,
     private val buildTargetCache: AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>
 ) : IndexAppender {
-
     /**
      * id of the current generation. should only be read and set by [addCommitData] as clients
      * should get generation ids via [commitToGeneration]/[getGeneration].
@@ -55,6 +54,8 @@ class DefaultIndexAppender internal constructor(
      *     with [getGeneration].
      */
     override fun getLatestCommit(): Commit? = latestCommit.get()
+
+    override fun commitExists(commit: Commit): Boolean = commitToGeneration.containsKey(commit)
 
     /**
      * Currently, the caller is responsible for ensuring that addCommitData() is invoked
@@ -127,8 +128,8 @@ class DefaultIndexAppender internal constructor(
     }
 
     private fun addMapping(commit: Commit, nextGeneration: Generation, updateGeneration: Boolean) {
-        val oldValue = commitToGeneration.putIfAbsent(commit, nextGeneration)
-        require(oldValue == null) { "Should not have existing value for $commit" }
+        require(!commitExists(commit)) { "Should not have existing value for $commit" }
+        commitToGeneration[commit] = nextGeneration
         latestCommit.set(commit)
         if (updateGeneration) {
             generation.set(nextGeneration)

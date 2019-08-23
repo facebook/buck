@@ -34,6 +34,11 @@ interface IndexAppender {
     fun getLatestCommit(): Commit?
 
     /**
+    * Tests whether a commit exists.
+     */
+    fun commitExists(commit: Commit): Boolean
+
+    /**
      * Currently, the caller is responsible for ensuring that addCommitData() is invoked
      * serially (never concurrently) for each commit in a chain of version control history.
      *
