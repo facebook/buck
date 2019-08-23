@@ -124,6 +124,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.SimplePerfEvent;
+import com.facebook.buck.features.apple.common.Utils;
 import com.facebook.buck.features.halide.HalideBuckConfig;
 import com.facebook.buck.features.halide.HalideCompile;
 import com.facebook.buck.features.halide.HalideLibraryDescription;
@@ -1825,44 +1826,47 @@ public class ProjectGenerator {
 
         ImmutableList<String> testingOverlay = getFlagsForExcludesForModulesUnderTests(targetNode);
         Iterable<String> otherSwiftFlags =
-            Iterables.concat(
-                swiftBuckConfig.getCompilerFlags().orElse(DEFAULT_SWIFTFLAGS),
-                targetSpecificSwiftFlags.build());
+            Utils.distinctUntilChanged(
+                Iterables.concat(
+                    swiftBuckConfig.getCompilerFlags().orElse(DEFAULT_SWIFTFLAGS),
+                    targetSpecificSwiftFlags.build()));
 
         Iterable<String> targetCFlags =
-            ImmutableList.<String>builder()
-                .addAll(
-                    convertStringWithMacros(
-                        targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
-                .addAll(
-                    convertStringWithMacros(
-                        targetNode, targetNode.getConstructorArg().getCompilerFlags()))
-                .addAll(
-                    convertStringWithMacros(
-                        targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
-                .addAll(
-                    convertStringWithMacros(
-                        targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
-                .addAll(systemIncludeDirectoryFlags)
-                .addAll(testingOverlay)
-                .build();
+            Utils.distinctUntilChanged(
+                ImmutableList.<String>builder()
+                    .addAll(
+                        convertStringWithMacros(
+                            targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
+                    .addAll(
+                        convertStringWithMacros(
+                            targetNode, targetNode.getConstructorArg().getCompilerFlags()))
+                    .addAll(
+                        convertStringWithMacros(
+                            targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
+                    .addAll(
+                        convertStringWithMacros(
+                            targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
+                    .addAll(systemIncludeDirectoryFlags)
+                    .addAll(testingOverlay)
+                    .build());
         Iterable<String> targetCxxFlags =
-            ImmutableList.<String>builder()
-                .addAll(
-                    convertStringWithMacros(
-                        targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
-                .addAll(
-                    convertStringWithMacros(
-                        targetNode, targetNode.getConstructorArg().getCompilerFlags()))
-                .addAll(
-                    convertStringWithMacros(
-                        targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
-                .addAll(
-                    convertStringWithMacros(
-                        targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
-                .addAll(systemIncludeDirectoryFlags)
-                .addAll(testingOverlay)
-                .build();
+            Utils.distinctUntilChanged(
+                ImmutableList.<String>builder()
+                    .addAll(
+                        convertStringWithMacros(
+                            targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
+                    .addAll(
+                        convertStringWithMacros(
+                            targetNode, targetNode.getConstructorArg().getCompilerFlags()))
+                    .addAll(
+                        convertStringWithMacros(
+                            targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
+                    .addAll(
+                        convertStringWithMacros(
+                            targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
+                    .addAll(systemIncludeDirectoryFlags)
+                    .addAll(testingOverlay)
+                    .build());
 
         appendConfigsBuilder
             .put(
@@ -1923,36 +1927,38 @@ public class ProjectGenerator {
               .put(
                   generateConfigKey("OTHER_CFLAGS", platform),
                   Streams.stream(
-                          Iterables.transform(
-                              Iterables.concat(
-                                  cxxBuckConfig.getCflags().orElse(DEFAULT_CFLAGS),
-                                  platformConfig
-                                      .flatMap(CxxBuckConfig::getCflags)
-                                      .orElse(DEFAULT_CFLAGS),
-                                  cxxBuckConfig.getCppflags().orElse(DEFAULT_CPPFLAGS),
-                                  platformConfig
-                                      .flatMap(CxxBuckConfig::getCppflags)
-                                      .orElse(DEFAULT_CPPFLAGS),
-                                  targetCFlags,
-                                  Iterables.concat(platformFlags.get(platform))),
-                              Escaper.BASH_ESCAPER::apply))
+                          Utils.distinctUntilChanged(
+                              Iterables.transform(
+                                  Iterables.concat(
+                                      cxxBuckConfig.getCflags().orElse(DEFAULT_CFLAGS),
+                                      platformConfig
+                                          .flatMap(CxxBuckConfig::getCflags)
+                                          .orElse(DEFAULT_CFLAGS),
+                                      cxxBuckConfig.getCppflags().orElse(DEFAULT_CPPFLAGS),
+                                      platformConfig
+                                          .flatMap(CxxBuckConfig::getCppflags)
+                                          .orElse(DEFAULT_CPPFLAGS),
+                                      targetCFlags,
+                                      Iterables.concat(platformFlags.get(platform))),
+                                  Escaper.BASH_ESCAPER::apply)))
                       .collect(Collectors.joining(" ")))
               .put(
                   generateConfigKey("OTHER_CPLUSPLUSFLAGS", platform),
                   Streams.stream(
-                          Iterables.transform(
-                              Iterables.concat(
-                                  cxxBuckConfig.getCxxflags().orElse(DEFAULT_CPPFLAGS),
-                                  platformConfig
-                                      .flatMap(CxxBuckConfig::getCxxflags)
-                                      .orElse(DEFAULT_CXXFLAGS),
-                                  cxxBuckConfig.getCxxppflags().orElse(DEFAULT_CXXPPFLAGS),
-                                  platformConfig
-                                      .flatMap(CxxBuckConfig::getCxxppflags)
-                                      .orElse(DEFAULT_CXXPPFLAGS),
-                                  targetCxxFlags,
-                                  Iterables.concat(platformFlags.get(platform))),
-                              Escaper.BASH_ESCAPER::apply))
+                          Utils.distinctUntilChanged(
+                              Iterables.transform(
+                                  Iterables.concat(
+                                      cxxBuckConfig.getCxxflags().orElse(DEFAULT_CPPFLAGS),
+                                      platformConfig
+                                          .flatMap(CxxBuckConfig::getCxxflags)
+                                          .orElse(DEFAULT_CXXFLAGS),
+                                      cxxBuckConfig.getCxxppflags().orElse(DEFAULT_CXXPPFLAGS),
+                                      platformConfig
+                                          .flatMap(CxxBuckConfig::getCxxppflags)
+                                          .orElse(DEFAULT_CXXPPFLAGS),
+                                      targetCxxFlags,
+                                      Iterables.concat(platformFlags.get(platform))),
+                                  Escaper.BASH_ESCAPER::apply)))
                       .collect(Collectors.joining(" ")));
         }
 
