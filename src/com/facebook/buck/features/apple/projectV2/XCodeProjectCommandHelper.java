@@ -363,9 +363,9 @@ public class XCodeProjectCommandHelper {
             .setShouldGenerateReadOnlyFiles(readOnly)
             .setShouldIncludeTests(isWithTests(buckConfig))
             .setShouldIncludeDependenciesTests(isWithDependenciesTests(buckConfig))
-            .setShouldUseHeaderMaps(appleConfig.shouldUseHeaderMapsInXcodeProject())
+            .setShouldUseHeaderMaps(true)
             .setShouldUseAbsoluteHeaderMapPaths(absoluteHeaderMapPaths)
-            .setShouldMergeHeaderMaps(appleConfig.shouldMergeHeaderMapsInXcodeProject())
+            .setShouldMergeHeaderMaps(true)
             .setShouldAddLinkedLibrariesAsFlags(appleConfig.shouldAddLinkedLibrariesAsFlags())
             .setShouldForceLoadLinkWholeLibraries(
                 appleConfig.shouldAddLinkerFlagsForLinkWholeLibraries())

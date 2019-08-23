@@ -1675,11 +1675,11 @@ public class ProjectGenerator {
       }
 
       if (isFocusedOnTarget) {
-        Iterable<Path> recursivePublicSystemIncludeDirectories =
+        Set<Path> recursivePublicSystemIncludeDirectories =
             collectRecursivePublicSystemIncludeDirectories(targetNode);
-        Iterable<Path> recursivePublicIncludeDirectories =
+        Set<Path> recursivePublicIncludeDirectories =
             collectRecursivePublicIncludeDirectories(targetNode);
-        Iterable<Path> includeDirectories = extractIncludeDirectories(targetNode);
+        Set<Path> includeDirectories = extractIncludeDirectories(targetNode);
 
         // Explicitly add system include directories to compile flags to mute warnings,
         // XCode seems to not support system include directories directly.
@@ -3743,7 +3743,7 @@ public class ProjectGenerator {
             });
   }
 
-  private Iterable<Path> collectRecursivePublicIncludeDirectories(TargetNode<?> targetNode) {
+  private Set<Path> collectRecursivePublicIncludeDirectories(TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 xcodeDescriptions,
@@ -3753,10 +3753,11 @@ public class ProjectGenerator {
                 targetNode,
                 ImmutableSet.of(CxxLibraryDescription.class, AppleLibraryDescription.class)))
         .append(targetNode)
-        .transformAndConcat(this::extractPublicIncludeDirectories);
+        .transformAndConcat(this::extractPublicIncludeDirectories)
+        .toSet();
   }
 
-  private Iterable<Path> collectRecursivePublicSystemIncludeDirectories(TargetNode<?> targetNode) {
+  private Set<Path> collectRecursivePublicSystemIncludeDirectories(TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 xcodeDescriptions,
@@ -3766,10 +3767,11 @@ public class ProjectGenerator {
                 targetNode,
                 ImmutableSet.of(CxxLibraryDescription.class, AppleLibraryDescription.class)))
         .append(targetNode)
-        .transformAndConcat(this::extractPublicSystemIncludeDirectories);
+        .transformAndConcat(this::extractPublicSystemIncludeDirectories)
+        .toSet();
   }
 
-  private Iterable<Path> extractIncludeDirectories(TargetNode<?> targetNode) {
+  private Set<Path> extractIncludeDirectories(TargetNode<?> targetNode) {
     Path basePath =
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
             .resolve(targetNode.getBuildTarget().getBasePath());
@@ -3778,10 +3780,11 @@ public class ProjectGenerator {
             .map(input -> input.getConstructorArg().getIncludeDirectories())
             .orElse(ImmutableSortedSet.of());
     return FluentIterable.from(includeDirectories)
-        .transform(includeDirectory -> basePath.resolve(includeDirectory).normalize());
+        .transform(includeDirectory -> basePath.resolve(includeDirectory).normalize())
+        .toSet();
   }
 
-  private Iterable<Path> extractPublicIncludeDirectories(TargetNode<?> targetNode) {
+  private Set<Path> extractPublicIncludeDirectories(TargetNode<?> targetNode) {
     Path basePath =
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
             .resolve(targetNode.getBuildTarget().getBasePath());
@@ -3790,10 +3793,11 @@ public class ProjectGenerator {
             .map(input -> input.getConstructorArg().getPublicIncludeDirectories())
             .orElse(ImmutableSortedSet.of());
     return FluentIterable.from(includeDirectories)
-        .transform(includeDirectory -> basePath.resolve(includeDirectory).normalize());
+        .transform(includeDirectory -> basePath.resolve(includeDirectory).normalize())
+        .toSet();
   }
 
-  private Iterable<Path> extractPublicSystemIncludeDirectories(TargetNode<?> targetNode) {
+  private Set<Path> extractPublicSystemIncludeDirectories(TargetNode<?> targetNode) {
     Path basePath =
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
             .resolve(targetNode.getBuildTarget().getBasePath());
@@ -3802,7 +3806,8 @@ public class ProjectGenerator {
             .map(input -> input.getConstructorArg().getPublicSystemIncludeDirectories())
             .orElse(ImmutableSortedSet.of());
     return FluentIterable.from(includeDirectories)
-        .transform(includeDirectory -> basePath.resolve(includeDirectory).normalize());
+        .transform(includeDirectory -> basePath.resolve(includeDirectory).normalize())
+        .toSet();
   }
 
   private ImmutableList<StringWithMacros> collectRecursiveExportedLinkerFlags(
