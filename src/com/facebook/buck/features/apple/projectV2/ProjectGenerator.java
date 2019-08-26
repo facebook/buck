@@ -735,7 +735,6 @@ public class ProjectGenerator {
     setTargetBuildConfigurations(
         buildTarget,
         target,
-        project.getMainGroup(),
         configs.get(),
         getTargetCxxBuildConfigurationForTargetNode(targetNode, appendedConfig),
         extraSettings,
@@ -1889,7 +1888,6 @@ public class ProjectGenerator {
         setTargetBuildConfigurations(
             buildTarget,
             target,
-            project.getMainGroup(),
             configs.get(),
             getTargetCxxBuildConfigurationForTargetNode(targetNode, appendedConfig),
             extraSettingsBuilder.build(),
@@ -2715,7 +2713,6 @@ public class ProjectGenerator {
    * Create target level configuration entries.
    *
    * @param target Xcode target for which the configurations will be set.
-   * @param targetGroup Xcode group in which the configuration file references will be placed.
    * @param configurations Configurations as extracted from the BUCK file.
    * @param overrideBuildSettings Build settings that will override ones defined elsewhere.
    * @param defaultBuildSettings Target-inline level build settings that will be set if not already
@@ -2726,7 +2723,6 @@ public class ProjectGenerator {
   private void setTargetBuildConfigurations(
       BuildTarget buildTarget,
       PBXTarget target,
-      PBXGroup targetGroup,
       ImmutableMap<String, ImmutableMap<String, String>> configurations,
       ImmutableMap<String, String> cxxPlatformXcodeBuildSettings,
       ImmutableMap<String, String> overrideBuildSettings,
@@ -2796,7 +2792,7 @@ public class ProjectGenerator {
         }
       }
 
-      PBXFileReference fileReference = getConfigurationFileReference(targetGroup, xcconfigPath);
+      PBXFileReference fileReference = getConfigurationFileReference(xcconfigPath);
       outputConfiguration.setBaseConfigurationReference(fileReference);
 
       xcconfigPathsBuilder.add(
@@ -2804,15 +2800,11 @@ public class ProjectGenerator {
     }
   }
 
-  private PBXFileReference getConfigurationFileReference(PBXGroup targetGroup, Path xcconfigPath) {
-    return targetGroup
-        .getOrCreateChildGroupByName("Configurations")
-        .getOrCreateChildGroupByName("Buck (Do Not Modify)")
-        .getOrCreateFileReferenceBySourceTreePath(
-            new SourceTreePath(
-                PBXReference.SourceTree.SOURCE_ROOT,
-                pathRelativizer.outputDirToRootRelative(xcconfigPath),
-                Optional.empty()));
+  private PBXFileReference getConfigurationFileReference(Path xcconfigPath) {
+    ProjectFileWriter projectFileWriter =
+        new ProjectFileWriter(
+            xcodeProjectWriteOptions.project(), this.pathRelativizer, this::resolveSourcePath);
+    return projectFileWriter.writeFilePath(xcconfigPath, Optional.empty()).getFileReference();
   }
 
   private void collectProjectTargetWatchDependencies(

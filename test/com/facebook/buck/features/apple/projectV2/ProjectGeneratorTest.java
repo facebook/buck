@@ -82,6 +82,8 @@ import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -3385,7 +3387,7 @@ public class ProjectGeneratorTest {
     assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
     assertHasConfigurations(target, "Debug");
-    assertKeepsConfigurationsInMainGroup(projectGenerator.getGeneratedProject(), target);
+    assertKeepsConfigurationsInGenGroup(projectGenerator.getGeneratedProject(), target);
     XCBuildConfiguration configuration =
         target.getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
     assertEquals(configuration.getBuildSettings().count(), 0);
@@ -5841,17 +5843,22 @@ public class ProjectGeneratorTest {
     }
   }
 
-  private void assertKeepsConfigurationsInMainGroup(PBXProject project, PBXTarget target) {
+  private void assertKeepsConfigurationsInGenGroup(PBXProject project, PBXTarget target) {
     Map<String, XCBuildConfiguration> buildConfigurationMap =
         target.getBuildConfigurationList().getBuildConfigurationsByName().asMap();
 
-    PBXGroup configsGroup =
-        project
-            .getMainGroup()
-            .getOrCreateChildGroupByName("Configurations")
-            .getOrCreateChildGroupByName("Buck (Do Not Modify)");
+    PBXGroup buckOutGroup =
+        PBXTestUtils.assertHasSubgroupAndReturnIt(project.getMainGroup(), "buck-out");
+    PBXGroup genGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(buckOutGroup, "gen");
 
-    assertNotNull("Configuration group exists", configsGroup);
+    BuildTargetPattern buildTargetPattern = BuildTargetPatternParser.parse(target.getName());
+    PBXGroup configsGroup = genGroup;
+    // File should be located in the buck-out/gen/{target-path}, so iterate through the path
+    // components
+    // to find the configs directory.
+    for (Path component : buildTargetPattern.getBasePath()) {
+      configsGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(configsGroup, component.toString());
+    }
 
     List<PBXReference> configReferences = configsGroup.getChildren();
     assertFalse("Configuration file references exist", configReferences.isEmpty());
