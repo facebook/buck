@@ -388,12 +388,16 @@ public class WorkspaceAndProjectGenerator {
       ImmutableMap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder,
       ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder)
       throws IOException, InterruptedException {
+
     ImmutableMultimap.Builder<Cell, BuildTarget> projectCellToBuildTargetsBuilder =
         ImmutableMultimap.builder();
     for (TargetNode<?> targetNode : projectGraph.getNodes()) {
       BuildTarget buildTarget = targetNode.getBuildTarget();
-      projectCellToBuildTargetsBuilder.put(rootCell.getCell(buildTarget), buildTarget);
+      if (focusedTargetMatcher.matches(targetNode.getBuildTarget())) {
+        projectCellToBuildTargetsBuilder.put(rootCell.getCell(buildTarget), buildTarget);
+      }
     }
+
     ImmutableMultimap<Cell, BuildTarget> projectCellToBuildTargets =
         projectCellToBuildTargetsBuilder.build();
     List<ListenableFuture<GenerationResult>> projectGeneratorFutures = new ArrayList<>();
@@ -517,7 +521,6 @@ public class WorkspaceAndProjectGenerator {
                 isMainProject,
                 workspaceArguments.getSrcTarget(),
                 targetsInRequiredProjects,
-                focusedTargetMatcher,
                 defaultCxxPlatform,
                 appleCxxFlavors,
                 graphBuilderForNode,

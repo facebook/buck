@@ -5422,7 +5422,6 @@ public class ProjectGeneratorTest {
             false, /* isMainProject */
             Optional.of(lib1Target),
             ImmutableSet.of(lib1Target, lib4Target),
-            FocusedTargetMatcher.noFocus(),
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
             getActionGraphBuilderNodeFunction(targetGraph),
@@ -5468,7 +5467,6 @@ public class ProjectGeneratorTest {
             true, /* isMainProject */
             Optional.of(lib1Target),
             ImmutableSet.of(lib1Target, lib4Target),
-            FocusedTargetMatcher.noFocus(),
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
             getActionGraphBuilderNodeFunction(targetGraph),
@@ -5593,7 +5591,6 @@ public class ProjectGeneratorTest {
             false, /* isMainProject */
             Optional.of(lib1Target),
             ImmutableSet.of(lib1Target, lib4Target),
-            FocusedTargetMatcher.noFocus(),
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
             getActionGraphBuilderNodeFunction(targetGraph),
@@ -5647,7 +5644,6 @@ public class ProjectGeneratorTest {
             true, /* isMainProject */
             Optional.of(lib1Target),
             ImmutableSet.of(lib1Target, lib4Target),
-            FocusedTargetMatcher.noFocus(),
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
             getActionGraphBuilderNodeFunction(targetGraph),
@@ -5885,7 +5881,6 @@ public class ProjectGeneratorTest {
         false,
         workspaceTarget,
         ImmutableSet.of(),
-        FocusedTargetMatcher.noFocus(),
         DEFAULT_PLATFORM,
         appleCxxFlavors,
         actionGraphBuilderForNode,

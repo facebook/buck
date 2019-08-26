@@ -22,7 +22,6 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -80,24 +79,9 @@ public class NewNativeTargetProjectMutatorTest {
     mutator
         .setTargetName("TestTarget")
         .setProduct(ProductTypes.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"))
-        .buildTargetAndAddToProject(generatedProject, true);
+        .buildTargetAndAddToProject(generatedProject);
 
     assertTargetExistsAndReturnTarget(generatedProject, "TestTarget");
-  }
-
-  @Test
-  public void shouldCreateTargetAndNoGroup() throws NoSuchBuildTargetException {
-    NewNativeTargetProjectMutator mutator =
-        new NewNativeTargetProjectMutator(
-            pathRelativizer, sourcePathResolver::getRelativePath, buildTarget, appleConfig);
-    NewNativeTargetProjectMutator.Result result =
-        mutator
-            .setTargetName("TestTarget")
-            .setProduct(
-                ProductTypes.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"))
-            .buildTargetAndAddToProject(generatedProject, false);
-
-    assertFalse(result.targetGroup.isPresent());
   }
 
   @Test
@@ -113,9 +97,9 @@ public class NewNativeTargetProjectMutatorTest {
             SourceWithFlags.of(bar, ImmutableList.of("-Wall")),
             SourceWithFlags.of(baz)));
     NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject, true);
+        mutator.buildTargetAndAddToProject(generatedProject);
 
-    PBXGroup sourcesGroup = result.targetGroup.get();
+    PBXGroup sourcesGroup = result.targetGroup;
 
     PBXGroup group1 = PBXTestUtils.assertHasSubgroupAndReturnIt(sourcesGroup, "Group1");
     assertThat(group1.getChildren(), hasSize(2));
@@ -140,9 +124,9 @@ public class NewNativeTargetProjectMutatorTest {
     mutator.setPublicHeaders(ImmutableSet.of(bar, baz));
     mutator.setPrivateHeaders(ImmutableSet.of(foo));
     NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject, true);
+        mutator.buildTargetAndAddToProject(generatedProject);
 
-    PBXGroup sourcesGroup = result.targetGroup.get();
+    PBXGroup sourcesGroup = result.targetGroup;
 
     PBXGroup group1 = PBXTestUtils.assertHasSubgroupAndReturnIt(sourcesGroup, "HeaderGroup1");
     assertThat(group1.getChildren(), hasSize(2));
@@ -165,9 +149,9 @@ public class NewNativeTargetProjectMutatorTest {
     mutator.setPrefixHeader(Optional.of(prefixHeader));
 
     NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject, true);
+        mutator.buildTargetAndAddToProject(generatedProject);
 
-    PBXGroup group1 = PBXTestUtils.assertHasSubgroupAndReturnIt(result.targetGroup.get(), "Group1");
+    PBXGroup group1 = PBXTestUtils.assertHasSubgroupAndReturnIt(result.targetGroup, "Group1");
     PBXFileReference fileRef = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
     assertEquals("prefix.pch", fileRef.getName());
   }
@@ -178,9 +162,8 @@ public class NewNativeTargetProjectMutatorTest {
     mutator.setBuckFilePath(Optional.of(Paths.get("MyApp/MyLib/BUCK")));
 
     NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject, true);
-    PBXGroup myAppGroup =
-        PBXTestUtils.assertHasSubgroupAndReturnIt(result.targetGroup.get(), "MyApp");
+        mutator.buildTargetAndAddToProject(generatedProject);
+    PBXGroup myAppGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(result.targetGroup, "MyApp");
     PBXGroup filesGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(myAppGroup, "MyLib");
     PBXFileReference buckFileReference =
         PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(filesGroup, "BUCK");
@@ -196,7 +179,7 @@ public class NewNativeTargetProjectMutatorTest {
         Paths.get(buildTarget.getShortName()));
 
     NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject, true);
+        mutator.buildTargetAndAddToProject(generatedProject);
 
     PBXShellScriptBuildPhase phase =
         getSingleBuildPhaseOfType(result.target, PBXShellScriptBuildPhase.class);

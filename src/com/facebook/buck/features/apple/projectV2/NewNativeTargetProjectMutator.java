@@ -73,9 +73,9 @@ class NewNativeTargetProjectMutator {
 
   public static class Result {
     public final PBXNativeTarget target;
-    public final Optional<PBXGroup> targetGroup;
+    public final PBXGroup targetGroup;
 
-    private Result(PBXNativeTarget target, Optional<PBXGroup> targetGroup) {
+    private Result(PBXNativeTarget target, PBXGroup targetGroup) {
       this.target = target;
       this.targetGroup = targetGroup;
     }
@@ -240,50 +240,45 @@ class NewNativeTargetProjectMutator {
     return this;
   }
 
-  public Result buildTargetAndAddToProject(PBXProject project, boolean addBuildPhases) {
+  public Result buildTargetAndAddToProject(PBXProject project) {
     PBXNativeTarget nativeTarget = new PBXNativeTarget(targetName);
     ProjectFileWriter projectFileWriter =
         new ProjectFileWriter(project, pathRelativizer, sourcePathResolver);
 
-    Optional<PBXGroup> targetGroup;
-    if (addBuildPhases) {
-      PBXSourcesBuildPhase sourcesBuildPhase = new PBXSourcesBuildPhase();
-      PBXHeadersBuildPhase headersBuildPhase = new PBXHeadersBuildPhase();
+    PBXSourcesBuildPhase sourcesBuildPhase = new PBXSourcesBuildPhase();
+    PBXHeadersBuildPhase headersBuildPhase = new PBXHeadersBuildPhase();
 
-      // Phases
-      addPhasesAndGroupsForSources(projectFileWriter, sourcesBuildPhase, headersBuildPhase);
-      addResourcesFileReference(projectFileWriter);
-      addCopyResourcesToNonStdDestinations(projectFileWriter);
-      addResourcesBuildPhase(projectFileWriter);
-      addCoreDataModelBuildPhaseToProject(project, sourcesBuildPhase);
+    // Phases
+    addPhasesAndGroupsForSources(projectFileWriter, sourcesBuildPhase, headersBuildPhase);
+    addResourcesFileReference(projectFileWriter);
+    addCopyResourcesToNonStdDestinations(projectFileWriter);
+    addResourcesBuildPhase(projectFileWriter);
+    addCoreDataModelBuildPhaseToProject(project, sourcesBuildPhase);
 
-      // Source files must be compiled in order to be indexed.
-      if (!sourcesBuildPhase.getFiles().isEmpty()) {
-        nativeTarget.getBuildPhases().add(sourcesBuildPhase);
-      }
-
-      // TODO(chatatap): Verify if we still need header build phases (specifically for swift).
-      if (!headersBuildPhase.getFiles().isEmpty()) {
-        nativeTarget.getBuildPhases().add(headersBuildPhase);
-      }
-
-      // Using a buck build phase doesnt support having other build phases.
-      // TODO(chatatap): Find solutions around this, as this will likely break indexing.
-      if (ImmutableList.of(
-              ProductTypes.APPLICATION,
-              ProductTypes.UNIT_TEST,
-              ProductTypes.UI_TEST,
-              ProductTypes.APP_EXTENSION,
-              ProductTypes.WATCH_APPLICATION)
-          .contains(productType)) {
-        nativeTarget.getBuildPhases().clear();
-      }
-      addBuckBuildPhase(nativeTarget);
-
-      targetGroup = Optional.of(project.getMainGroup());
-    } else {
-      targetGroup = Optional.empty();
+    // Source files must be compiled in order to be indexed.
+    if (!sourcesBuildPhase.getFiles().isEmpty()) {
+      nativeTarget.getBuildPhases().add(sourcesBuildPhase);
     }
+
+    // TODO(chatatap): Verify if we still need header build phases (specifically for swift).
+    if (!headersBuildPhase.getFiles().isEmpty()) {
+      nativeTarget.getBuildPhases().add(headersBuildPhase);
+    }
+
+    // Using a buck build phase doesnt support having other build phases.
+    // TODO(chatatap): Find solutions around this, as this will likely break indexing.
+    if (ImmutableList.of(
+            ProductTypes.APPLICATION,
+            ProductTypes.UNIT_TEST,
+            ProductTypes.UI_TEST,
+            ProductTypes.APP_EXTENSION,
+            ProductTypes.WATCH_APPLICATION)
+        .contains(productType)) {
+      nativeTarget.getBuildPhases().clear();
+    }
+    addBuckBuildPhase(nativeTarget);
+
+    PBXGroup targetGroup = project.getMainGroup();
 
     // Product
 

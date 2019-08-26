@@ -268,7 +268,6 @@ public class ProjectGenerator {
   private final ImmutableMap<Flavor, CxxBuckConfig> platformCxxBuckConfigs;
   private final SwiftBuckConfig swiftBuckConfig;
   private final AppleConfig appleConfig;
-  private final FocusedTargetMatcher focusedTargetMatcher;
   private final boolean isMainProject;
   private final Optional<BuildTarget> workspaceTarget;
   private final ImmutableSet<BuildTarget> targetsInRequiredProjects;
@@ -298,7 +297,6 @@ public class ProjectGenerator {
       boolean isMainProject,
       Optional<BuildTarget> workspaceTarget,
       ImmutableSet<BuildTarget> targetsInRequiredProjects,
-      FocusedTargetMatcher focusedTargetMatcher,
       CxxPlatform defaultCxxPlatform,
       ImmutableSet<Flavor> appleCxxFlavors,
       Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode,
@@ -375,7 +373,6 @@ public class ProjectGenerator {
     this.platformCxxBuckConfigs = cxxBuckConfig.getFlavoredConfigs();
     this.appleConfig = appleConfig;
     this.swiftBuckConfig = swiftBuckConfig;
-    this.focusedTargetMatcher = focusedTargetMatcher;
 
     gidGenerator = new GidGenerator();
   }
@@ -451,7 +448,6 @@ public class ProjectGenerator {
   public void createXcodeProjects() throws IOException {
     LOG.debug("Creating projects for targets %s", initialTargets);
 
-    boolean hasAtLeastOneTarget = false;
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(
             buckEventBus,
@@ -464,12 +460,6 @@ public class ProjectGenerator {
         if (isBuiltByCurrentProject(targetNode.getBuildTarget())) {
           LOG.debug("Including rule %s in project", targetNode);
           projectTargetsBuilder.add(targetNode);
-
-          if (focusedTargetMatcher.matches(targetNode.getBuildTarget())) {
-            // If the target is not included, we still need to do other operations to generate
-            // the required header maps.
-            hasAtLeastOneTarget = true;
-          }
         } else {
           LOG.verbose("Excluding rule %s (not built by current project)", targetNode);
         }
@@ -492,10 +482,6 @@ public class ProjectGenerator {
           .forEach(input -> triggerLoadingCache(input));
 
       addGenruleFiles();
-
-      if (!hasAtLeastOneTarget && focusedTargetMatcher.hasEntries) {
-        return;
-      }
 
       if (shouldMergeHeaderMaps() && isMainProject) {
         createMergedHeaderMap();
@@ -672,7 +658,6 @@ public class ProjectGenerator {
   private Optional<PBXTarget> generateHalideLibraryTarget(
       PBXProject project, TargetNode<HalideLibraryDescriptionArg> targetNode) throws IOException {
     BuildTarget buildTarget = targetNode.getBuildTarget();
-    boolean isFocusedOnTarget = focusedTargetMatcher.matches(buildTarget);
     String productName = getProductNameForBuildTargetNode(targetNode);
     Path outputPath = getHalideOutputPath(targetNode.getFilesystem(), buildTarget);
 
@@ -690,7 +675,7 @@ public class ProjectGenerator {
         .setProduct(ProductTypes.STATIC_LIBRARY, productName, outputPath);
 
     NewNativeTargetProjectMutator.Result targetBuilderResult;
-    targetBuilderResult = mutator.buildTargetAndAddToProject(project, isFocusedOnTarget);
+    targetBuilderResult = mutator.buildTargetAndAddToProject(project);
 
     BuildTarget compilerTarget =
         HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget);
@@ -1312,7 +1297,6 @@ public class ProjectGenerator {
     ImmutableSet<SourcePath> headers = headersBuilder.build();
     ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> langPreprocessorFlags =
         targetNode.getConstructorArg().getLangPreprocessorFlags();
-    boolean isFocusedOnTarget = focusedTargetMatcher.matches(buildTarget);
 
     Optional<String> swiftVersion = getSwiftVersionForTargetNode(targetNode);
     boolean hasSwiftVersionArg = swiftVersion.isPresent();
@@ -1327,7 +1311,7 @@ public class ProjectGenerator {
             buildTargetName,
             Paths.get(String.format(productOutputFormat, buildTargetName)));
 
-    boolean isModularAppleLibrary = isModularAppleLibrary(targetNode) && isFocusedOnTarget;
+    boolean isModularAppleLibrary = isModularAppleLibrary(targetNode);
     mutator.setFrameworkHeadersEnabled(isModularAppleLibrary);
 
     Builder<String, String> swiftDepsSettingsBuilder = ImmutableMap.builder();
@@ -1391,43 +1375,41 @@ public class ProjectGenerator {
     ImmutableSortedSet<SourceWithFlags> allSrcs = allSrcsBuilder.build();
 
     if (!options.shouldGenerateHeaderSymlinkTreesOnly()) {
-      if (isFocusedOnTarget) {
-        filesAddedBuilder.addAll(
-            allSrcs.stream().map(s -> s.getSourcePath()).collect(ImmutableList.toImmutableList()));
-        mutator
-            .setLangPreprocessorFlags(
-                ImmutableMap.copyOf(
-                    Maps.transformValues(
-                        langPreprocessorFlags, f -> convertStringWithMacros(targetNode, f))))
-            .setPublicHeaders(exportedHeaders)
-            .setPrefixHeader(getPrefixHeaderSourcePath(arg))
-            .setSourcesWithFlags(ImmutableSet.copyOf(allSrcs))
-            .setPrivateHeaders(headers)
-            .setRecursiveResources(recursiveResources)
-            .setDirectResources(directResources)
-            .setWrapperResources(wrapperResources)
-            .setExtraXcodeSources(ImmutableSet.copyOf(arg.getExtraXcodeSources()))
-            .setExtraXcodeFiles(ImmutableSet.copyOf(arg.getExtraXcodeFiles()));
-      }
+      filesAddedBuilder.addAll(
+          allSrcs.stream().map(s -> s.getSourcePath()).collect(ImmutableList.toImmutableList()));
+      mutator
+          .setLangPreprocessorFlags(
+              ImmutableMap.copyOf(
+                  Maps.transformValues(
+                      langPreprocessorFlags, f -> convertStringWithMacros(targetNode, f))))
+          .setPublicHeaders(exportedHeaders)
+          .setPrefixHeader(getPrefixHeaderSourcePath(arg))
+          .setSourcesWithFlags(ImmutableSet.copyOf(allSrcs))
+          .setPrivateHeaders(headers)
+          .setRecursiveResources(recursiveResources)
+          .setDirectResources(directResources)
+          .setWrapperResources(wrapperResources)
+          .setExtraXcodeSources(ImmutableSet.copyOf(arg.getExtraXcodeSources()))
+          .setExtraXcodeFiles(ImmutableSet.copyOf(arg.getExtraXcodeFiles()));
 
-      if (bundle.isPresent() && isFocusedOnTarget) {
+      if (bundle.isPresent()) {
         HasAppleBundleFields bundleArg = bundle.get().getConstructorArg();
         mutator.setInfoPlist(Optional.of(bundleArg.getInfoPlist()));
       }
 
       mutator.setBridgingHeader(arg.getBridgingHeader());
 
-      if (!recursiveAssetCatalogs.isEmpty() && isFocusedOnTarget) {
+      if (!recursiveAssetCatalogs.isEmpty()) {
         mutator.setRecursiveAssetCatalogs(recursiveAssetCatalogs);
       }
 
-      if (!directAssetCatalogs.isEmpty() && isFocusedOnTarget) {
+      if (!directAssetCatalogs.isEmpty()) {
         mutator.setDirectAssetCatalogs(directAssetCatalogs);
       }
 
       FluentIterable<TargetNode<?>> depTargetNodes = collectRecursiveLibraryDepTargets(targetNode);
 
-      if (includeFrameworks && isFocusedOnTarget) {
+      if (includeFrameworks) {
         if (sharedLibraryToBundle.isPresent()) {
           // Replace target nodes of libraries which are actually constituents of embedded
           // frameworks to the bundle representing the embedded framework.
@@ -1438,37 +1420,35 @@ public class ProjectGenerator {
         }
       }
 
-      if (isFocusedOnTarget) {
-        ImmutableSet<TargetNode<?>> swiftDepTargets =
-            filterRecursiveLibraryDepTargetsWithSwiftSources(depTargetNodes);
+      ImmutableSet<TargetNode<?>> swiftDepTargets =
+          filterRecursiveLibraryDepTargetsWithSwiftSources(depTargetNodes);
 
-        if (includeFrameworks
-            && !swiftDepTargets.isEmpty()
-            && shouldEmbedSwiftRuntimeInBundleTarget(bundle)
-            && swiftBuckConfig.getProjectEmbedRuntime()) {
-          // This is a binary that transitively depends on a library that uses Swift. We must ensure
-          // that the Swift runtime is bundled.
-          swiftDepsSettingsBuilder.put("ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", "YES");
-        }
+      if (includeFrameworks
+          && !swiftDepTargets.isEmpty()
+          && shouldEmbedSwiftRuntimeInBundleTarget(bundle)
+          && swiftBuckConfig.getProjectEmbedRuntime()) {
+        // This is a binary that transitively depends on a library that uses Swift. We must ensure
+        // that the Swift runtime is bundled.
+        swiftDepsSettingsBuilder.put("ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", "YES");
+      }
 
-        if (includeFrameworks
-            && !swiftDepTargets.isEmpty()
-            && swiftBuckConfig.getProjectAddASTPaths()) {
-          for (TargetNode<?> swiftNode : swiftDepTargets) {
-            String swiftModulePath =
-                String.format(
-                    "${BUILT_PRODUCTS_DIR}/%s.swiftmodule/${CURRENT_ARCH}.swiftmodule",
-                    getModuleName(swiftNode));
-            swiftDebugLinkerFlagsBuilder.add("-Xlinker");
-            swiftDebugLinkerFlagsBuilder.add("-add_ast_path");
-            swiftDebugLinkerFlagsBuilder.add("-Xlinker");
-            swiftDebugLinkerFlagsBuilder.add(swiftModulePath);
-          }
+      if (includeFrameworks
+          && !swiftDepTargets.isEmpty()
+          && swiftBuckConfig.getProjectAddASTPaths()) {
+        for (TargetNode<?> swiftNode : swiftDepTargets) {
+          String swiftModulePath =
+              String.format(
+                  "${BUILT_PRODUCTS_DIR}/%s.swiftmodule/${CURRENT_ARCH}.swiftmodule",
+                  getModuleName(swiftNode));
+          swiftDebugLinkerFlagsBuilder.add("-Xlinker");
+          swiftDebugLinkerFlagsBuilder.add("-add_ast_path");
+          swiftDebugLinkerFlagsBuilder.add("-Xlinker");
+          swiftDebugLinkerFlagsBuilder.add(swiftModulePath);
         }
       }
     }
 
-    if (!options.shouldGenerateHeaderSymlinkTreesOnly() && isFocusedOnTarget) {
+    if (!options.shouldGenerateHeaderSymlinkTreesOnly()) {
       // Assume the BUCK file path is at the the base path of this target
       Path buckFilePath = buildTarget.getBasePath().resolve(buildFileName);
       mutator.setBuckFilePath(Optional.of(buckFilePath));
@@ -1476,9 +1456,7 @@ public class ProjectGenerator {
 
     Optional<TargetNode<AppleNativeTargetDescriptionArg>> appleTargetNode =
         TargetNodes.castArg(targetNode, AppleNativeTargetDescriptionArg.class);
-    if (appleTargetNode.isPresent()
-        && isFocusedOnTarget
-        && !options.shouldGenerateHeaderSymlinkTreesOnly()) {
+    if (appleTargetNode.isPresent() && !options.shouldGenerateHeaderSymlinkTreesOnly()) {
       // Use Core Data models from immediate dependencies only.
 
       ImmutableList.Builder<CoreDataResource> coreDataFileBuilder = ImmutableList.builder();
@@ -1490,7 +1468,7 @@ public class ProjectGenerator {
     }
 
     NewNativeTargetProjectMutator.Result targetBuilderResult =
-        mutator.buildTargetAndAddToProject(project, isFocusedOnTarget);
+        mutator.buildTargetAndAddToProject(project);
     PBXNativeTarget target = targetBuilderResult.target;
 
     extraSettingsBuilder.putAll(swiftDepsSettingsBuilder.build());
@@ -1513,7 +1491,7 @@ public class ProjectGenerator {
       // Watch dependencies need to have explicit target dependencies setup in order for Xcode to
       // build them properly within the IDE.  It is unable to match the implicit dependency because
       // of the different in flavor between the targets (iphoneos vs watchos).
-      if (bundle.isPresent() && isFocusedOnTarget) {
+      if (bundle.isPresent()) {
         collectProjectTargetWatchDependencies(
             targetNode.getBuildTarget().getFlavorPostfix(),
             target,
@@ -1524,7 +1502,7 @@ public class ProjectGenerator {
       extraSettingsBuilder
           .put("TARGET_NAME", buildTargetName)
           .put("SRCROOT", pathRelativizer.outputPathToBuildTargetPath(buildTarget).toString());
-      if (productType == ProductTypes.UI_TEST && isFocusedOnTarget) {
+      if (productType == ProductTypes.UI_TEST) {
         if (bundleLoaderNode.isPresent()) {
           BuildTarget testTarget = bundleLoaderNode.get().getBuildTarget();
           extraSettingsBuilder.put("TEST_TARGET_NAME", getXcodeTargetName(testTarget));
@@ -1534,7 +1512,7 @@ public class ProjectGenerator {
               "The test rule '%s' is configured with 'is_ui_test' but has no test_host_app",
               buildTargetName);
         }
-      } else if (bundleLoaderNode.isPresent() && isFocusedOnTarget) {
+      } else if (bundleLoaderNode.isPresent()) {
         TargetNode<AppleBundleDescriptionArg> bundleLoader = bundleLoaderNode.get();
         String bundleLoaderProductName = getProductName(bundleLoader);
         String bundleLoaderBundleName =
@@ -1618,7 +1596,7 @@ public class ProjectGenerator {
       swiftVersion.ifPresent(
           s -> extraSettingsBuilder.put("PRODUCT_MODULE_NAME", getModuleName(targetNode)));
 
-      if (hasSwiftVersionArg && containsSwiftCode && isFocusedOnTarget) {
+      if (hasSwiftVersionArg && containsSwiftCode) {
         extraSettingsBuilder.put(
             "SWIFT_OBJC_INTERFACE_HEADER_NAME", getSwiftObjCGeneratedHeaderName(buildTargetNode));
 
@@ -1662,7 +1640,7 @@ public class ProjectGenerator {
 
       Path repoRoot = projectFilesystem.getRootPath().toAbsolutePath().normalize();
       defaultSettingsBuilder.put("REPO_ROOT", repoRoot.toString());
-      if (hasSwiftVersionArg && containsSwiftCode && isFocusedOnTarget) {
+      if (hasSwiftVersionArg && containsSwiftCode) {
         // We need to be able to control the directory where Xcode places the derived sources, so
         // that the Obj-C Generated Header can be included in the header map and imported through
         // a framework-style import like <Module/Module-Swift.h>
@@ -1695,235 +1673,231 @@ public class ProjectGenerator {
         defaultSettingsBuilder.put("EXECUTABLE_PREFIX", "lib");
       }
 
-      if (isFocusedOnTarget) {
-        Set<Path> recursivePublicSystemIncludeDirectories =
-            collectRecursivePublicSystemIncludeDirectories(targetNode);
-        Set<Path> recursivePublicIncludeDirectories =
-            collectRecursivePublicIncludeDirectories(targetNode);
-        Set<Path> includeDirectories = extractIncludeDirectories(targetNode);
+      Set<Path> recursivePublicSystemIncludeDirectories =
+          collectRecursivePublicSystemIncludeDirectories(targetNode);
+      Set<Path> recursivePublicIncludeDirectories =
+          collectRecursivePublicIncludeDirectories(targetNode);
+      Set<Path> includeDirectories = extractIncludeDirectories(targetNode);
 
-        // Explicitly add system include directories to compile flags to mute warnings,
-        // XCode seems to not support system include directories directly.
-        // But even if headers dirs are passed as flags, we still need to add
-        // them to `HEADER_SEARCH_PATH` otherwise header generation for Swift interop
-        // won't work (it doesn't use `OTHER_XXX_FLAGS`).
-        Iterable<String> systemIncludeDirectoryFlags =
-            StreamSupport.stream(recursivePublicSystemIncludeDirectories.spliterator(), false)
-                .map(path -> "-isystem" + path)
-                .collect(Collectors.toList());
+      // Explicitly add system include directories to compile flags to mute warnings,
+      // XCode seems to not support system include directories directly.
+      // But even if headers dirs are passed as flags, we still need to add
+      // them to `HEADER_SEARCH_PATH` otherwise header generation for Swift interop
+      // won't work (it doesn't use `OTHER_XXX_FLAGS`).
+      Iterable<String> systemIncludeDirectoryFlags =
+          StreamSupport.stream(recursivePublicSystemIncludeDirectories.spliterator(), false)
+              .map(path -> "-isystem" + path)
+              .collect(Collectors.toList());
 
-        ImmutableSet<Path> recursiveHeaderSearchPaths =
-            collectRecursiveHeaderSearchPaths(targetNode);
-        ImmutableSet<Path> headerMapBases = collectRecursiveHeaderMapBases(targetNode);
+      ImmutableSet<Path> recursiveHeaderSearchPaths = collectRecursiveHeaderSearchPaths(targetNode);
+      ImmutableSet<Path> headerMapBases = collectRecursiveHeaderMapBases(targetNode);
 
-        Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
-        appendConfigsBuilder.putAll(
-            getFrameworkAndLibrarySearchPathConfigs(targetNode, includeFrameworks));
-        appendConfigsBuilder.put(
-            "HEADER_SEARCH_PATHS",
-            Joiner.on(' ')
-                .join(
-                    Iterables.concat(
-                        recursiveHeaderSearchPaths,
-                        headerMapBases,
-                        recursivePublicSystemIncludeDirectories,
-                        recursivePublicIncludeDirectories,
-                        includeDirectories)));
-        if (hasSwiftVersionArg && isFocusedOnTarget) {
-          ImmutableSet<Path> swiftIncludePaths = collectRecursiveSwiftIncludePaths(targetNode);
-          Stream<String> allValues =
-              Streams.concat(
-                  Stream.of("$BUILT_PRODUCTS_DIR"),
-                  Streams.stream(swiftIncludePaths)
-                      .map((path) -> path.toString())
-                      .map(Escaper.BASH_ESCAPER));
-          appendConfigsBuilder.put(
-              "SWIFT_INCLUDE_PATHS", allValues.collect(Collectors.joining(" ")));
-        }
+      Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
+      appendConfigsBuilder.putAll(
+          getFrameworkAndLibrarySearchPathConfigs(targetNode, includeFrameworks));
+      appendConfigsBuilder.put(
+          "HEADER_SEARCH_PATHS",
+          Joiner.on(' ')
+              .join(
+                  Iterables.concat(
+                      recursiveHeaderSearchPaths,
+                      headerMapBases,
+                      recursivePublicSystemIncludeDirectories,
+                      recursivePublicIncludeDirectories,
+                      includeDirectories)));
+      if (hasSwiftVersionArg) {
+        ImmutableSet<Path> swiftIncludePaths = collectRecursiveSwiftIncludePaths(targetNode);
+        Stream<String> allValues =
+            Streams.concat(
+                Stream.of("$BUILT_PRODUCTS_DIR"),
+                Streams.stream(swiftIncludePaths)
+                    .map((path) -> path.toString())
+                    .map(Escaper.BASH_ESCAPER));
+        appendConfigsBuilder.put("SWIFT_INCLUDE_PATHS", allValues.collect(Collectors.joining(" ")));
+      }
 
-        ImmutableList.Builder<String> targetSpecificSwiftFlags = ImmutableList.builder();
-        Optional<TargetNode<SwiftCommonArg>> swiftTargetNode =
-            TargetNodes.castArg(targetNode, SwiftCommonArg.class);
-        targetSpecificSwiftFlags.addAll(
-            swiftTargetNode
-                .map(
-                    x ->
-                        convertStringWithMacros(
-                            targetNode, x.getConstructorArg().getSwiftCompilerFlags()))
-                .orElse(ImmutableList.of()));
+      ImmutableList.Builder<String> targetSpecificSwiftFlags = ImmutableList.builder();
+      Optional<TargetNode<SwiftCommonArg>> swiftTargetNode =
+          TargetNodes.castArg(targetNode, SwiftCommonArg.class);
+      targetSpecificSwiftFlags.addAll(
+          swiftTargetNode
+              .map(
+                  x ->
+                      convertStringWithMacros(
+                          targetNode, x.getConstructorArg().getSwiftCompilerFlags()))
+              .orElse(ImmutableList.of()));
 
-        if (containsSwiftCode && isModularAppleLibrary && publicCxxHeaders.size() > 0) {
-          targetSpecificSwiftFlags.addAll(collectModularTargetSpecificSwiftFlags(targetNode));
-        }
+      if (containsSwiftCode && isModularAppleLibrary && publicCxxHeaders.size() > 0) {
+        targetSpecificSwiftFlags.addAll(collectModularTargetSpecificSwiftFlags(targetNode));
+      }
 
-        ImmutableList<String> testingOverlay = getFlagsForExcludesForModulesUnderTests(targetNode);
-        Iterable<String> otherSwiftFlags =
-            Utils.distinctUntilChanged(
-                Iterables.concat(
-                    swiftBuckConfig.getCompilerFlags().orElse(DEFAULT_SWIFTFLAGS),
-                    targetSpecificSwiftFlags.build()));
+      ImmutableList<String> testingOverlay = getFlagsForExcludesForModulesUnderTests(targetNode);
+      Iterable<String> otherSwiftFlags =
+          Utils.distinctUntilChanged(
+              Iterables.concat(
+                  swiftBuckConfig.getCompilerFlags().orElse(DEFAULT_SWIFTFLAGS),
+                  targetSpecificSwiftFlags.build()));
 
-        Iterable<String> targetCFlags =
-            Utils.distinctUntilChanged(
-                ImmutableList.<String>builder()
-                    .addAll(
-                        convertStringWithMacros(
-                            targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
-                    .addAll(
-                        convertStringWithMacros(
-                            targetNode, targetNode.getConstructorArg().getCompilerFlags()))
-                    .addAll(
-                        convertStringWithMacros(
-                            targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
-                    .addAll(
-                        convertStringWithMacros(
-                            targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
-                    .addAll(systemIncludeDirectoryFlags)
-                    .addAll(testingOverlay)
-                    .build());
-        Iterable<String> targetCxxFlags =
-            Utils.distinctUntilChanged(
-                ImmutableList.<String>builder()
-                    .addAll(
-                        convertStringWithMacros(
-                            targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
-                    .addAll(
-                        convertStringWithMacros(
-                            targetNode, targetNode.getConstructorArg().getCompilerFlags()))
-                    .addAll(
-                        convertStringWithMacros(
-                            targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
-                    .addAll(
-                        convertStringWithMacros(
-                            targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
-                    .addAll(systemIncludeDirectoryFlags)
-                    .addAll(testingOverlay)
-                    .build());
+      Iterable<String> targetCFlags =
+          Utils.distinctUntilChanged(
+              ImmutableList.<String>builder()
+                  .addAll(
+                      convertStringWithMacros(
+                          targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
+                  .addAll(
+                      convertStringWithMacros(
+                          targetNode, targetNode.getConstructorArg().getCompilerFlags()))
+                  .addAll(
+                      convertStringWithMacros(
+                          targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
+                  .addAll(
+                      convertStringWithMacros(
+                          targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
+                  .addAll(systemIncludeDirectoryFlags)
+                  .addAll(testingOverlay)
+                  .build());
+      Iterable<String> targetCxxFlags =
+          Utils.distinctUntilChanged(
+              ImmutableList.<String>builder()
+                  .addAll(
+                      convertStringWithMacros(
+                          targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
+                  .addAll(
+                      convertStringWithMacros(
+                          targetNode, targetNode.getConstructorArg().getCompilerFlags()))
+                  .addAll(
+                      convertStringWithMacros(
+                          targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
+                  .addAll(
+                      convertStringWithMacros(
+                          targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
+                  .addAll(systemIncludeDirectoryFlags)
+                  .addAll(testingOverlay)
+                  .build());
 
+      appendConfigsBuilder
+          .put(
+              "OTHER_SWIFT_FLAGS",
+              Streams.stream(otherSwiftFlags)
+                  .map(Escaper.BASH_ESCAPER)
+                  .collect(Collectors.joining(" ")))
+          .put(
+              "OTHER_CFLAGS",
+              Streams.stream(
+                      Iterables.concat(
+                          cxxBuckConfig.getCflags().orElse(DEFAULT_CFLAGS),
+                          cxxBuckConfig.getCppflags().orElse(DEFAULT_CPPFLAGS),
+                          targetCFlags))
+                  .map(Escaper.BASH_ESCAPER)
+                  .collect(Collectors.joining(" ")))
+          .put(
+              "OTHER_CPLUSPLUSFLAGS",
+              Streams.stream(
+                      Iterables.concat(
+                          cxxBuckConfig.getCxxflags().orElse(DEFAULT_CXXFLAGS),
+                          cxxBuckConfig.getCxxppflags().orElse(DEFAULT_CXXPPFLAGS),
+                          targetCxxFlags))
+                  .map(Escaper.BASH_ESCAPER)
+                  .collect(Collectors.joining(" ")));
+
+      Iterable<String> otherLdFlags =
+          ImmutableList.<String>builder()
+              .addAll(cxxBuckConfig.getLdflags().orElse(DEFAULT_LDFLAGS))
+              .addAll(appleConfig.linkAllObjC() ? ImmutableList.of("-ObjC") : ImmutableList.of())
+              .addAll(
+                  convertStringWithMacros(
+                      targetNode,
+                      Iterables.concat(
+                          targetNode.getConstructorArg().getLinkerFlags(),
+                          collectRecursiveExportedLinkerFlags(targetNode))))
+              .addAll(swiftDebugLinkerFlagsBuilder.build())
+              .build();
+
+      updateOtherLinkerFlagsForOptions(
+          targetNode, bundleLoaderNode, appendConfigsBuilder, otherLdFlags);
+
+      ImmutableMultimap<String, ImmutableList<String>> platformFlags =
+          convertPlatformFlags(
+              targetNode,
+              Iterables.concat(
+                  ImmutableList.of(targetNode.getConstructorArg().getPlatformCompilerFlags()),
+                  ImmutableList.of(targetNode.getConstructorArg().getPlatformPreprocessorFlags()),
+                  collectRecursiveExportedPlatformPreprocessorFlags(targetNode)));
+      for (Flavor platformFlavor : appleCxxFlavors) {
+        Optional<CxxBuckConfig> platformConfig =
+            Optional.ofNullable(platformCxxBuckConfigs.get(platformFlavor));
+        String platform = platformFlavor.getName();
+
+        // The behavior below matches the CxxPlatform behavior where it adds the cxx flags,
+        // then the cxx#platform flags, then the flags for the target
         appendConfigsBuilder
             .put(
-                "OTHER_SWIFT_FLAGS",
-                Streams.stream(otherSwiftFlags)
-                    .map(Escaper.BASH_ESCAPER)
+                generateConfigKey("OTHER_CFLAGS", platform),
+                Streams.stream(
+                        Utils.distinctUntilChanged(
+                            Iterables.transform(
+                                Iterables.concat(
+                                    cxxBuckConfig.getCflags().orElse(DEFAULT_CFLAGS),
+                                    platformConfig
+                                        .flatMap(CxxBuckConfig::getCflags)
+                                        .orElse(DEFAULT_CFLAGS),
+                                    cxxBuckConfig.getCppflags().orElse(DEFAULT_CPPFLAGS),
+                                    platformConfig
+                                        .flatMap(CxxBuckConfig::getCppflags)
+                                        .orElse(DEFAULT_CPPFLAGS),
+                                    targetCFlags,
+                                    Iterables.concat(platformFlags.get(platform))),
+                                Escaper.BASH_ESCAPER::apply)))
                     .collect(Collectors.joining(" ")))
             .put(
-                "OTHER_CFLAGS",
+                generateConfigKey("OTHER_CPLUSPLUSFLAGS", platform),
                 Streams.stream(
-                        Iterables.concat(
-                            cxxBuckConfig.getCflags().orElse(DEFAULT_CFLAGS),
-                            cxxBuckConfig.getCppflags().orElse(DEFAULT_CPPFLAGS),
-                            targetCFlags))
-                    .map(Escaper.BASH_ESCAPER)
-                    .collect(Collectors.joining(" ")))
-            .put(
-                "OTHER_CPLUSPLUSFLAGS",
-                Streams.stream(
-                        Iterables.concat(
-                            cxxBuckConfig.getCxxflags().orElse(DEFAULT_CXXFLAGS),
-                            cxxBuckConfig.getCxxppflags().orElse(DEFAULT_CXXPPFLAGS),
-                            targetCxxFlags))
-                    .map(Escaper.BASH_ESCAPER)
+                        Utils.distinctUntilChanged(
+                            Iterables.transform(
+                                Iterables.concat(
+                                    cxxBuckConfig.getCxxflags().orElse(DEFAULT_CPPFLAGS),
+                                    platformConfig
+                                        .flatMap(CxxBuckConfig::getCxxflags)
+                                        .orElse(DEFAULT_CXXFLAGS),
+                                    cxxBuckConfig.getCxxppflags().orElse(DEFAULT_CXXPPFLAGS),
+                                    platformConfig
+                                        .flatMap(CxxBuckConfig::getCxxppflags)
+                                        .orElse(DEFAULT_CXXPPFLAGS),
+                                    targetCxxFlags,
+                                    Iterables.concat(platformFlags.get(platform))),
+                                Escaper.BASH_ESCAPER::apply)))
                     .collect(Collectors.joining(" ")));
-
-        Iterable<String> otherLdFlags =
-            ImmutableList.<String>builder()
-                .addAll(cxxBuckConfig.getLdflags().orElse(DEFAULT_LDFLAGS))
-                .addAll(appleConfig.linkAllObjC() ? ImmutableList.of("-ObjC") : ImmutableList.of())
-                .addAll(
-                    convertStringWithMacros(
-                        targetNode,
-                        Iterables.concat(
-                            targetNode.getConstructorArg().getLinkerFlags(),
-                            collectRecursiveExportedLinkerFlags(targetNode))))
-                .addAll(swiftDebugLinkerFlagsBuilder.build())
-                .build();
-
-        updateOtherLinkerFlagsForOptions(
-            targetNode, bundleLoaderNode, appendConfigsBuilder, otherLdFlags);
-
-        ImmutableMultimap<String, ImmutableList<String>> platformFlags =
-            convertPlatformFlags(
-                targetNode,
-                Iterables.concat(
-                    ImmutableList.of(targetNode.getConstructorArg().getPlatformCompilerFlags()),
-                    ImmutableList.of(targetNode.getConstructorArg().getPlatformPreprocessorFlags()),
-                    collectRecursiveExportedPlatformPreprocessorFlags(targetNode)));
-        for (Flavor platformFlavor : appleCxxFlavors) {
-          Optional<CxxBuckConfig> platformConfig =
-              Optional.ofNullable(platformCxxBuckConfigs.get(platformFlavor));
-          String platform = platformFlavor.getName();
-
-          // The behavior below matches the CxxPlatform behavior where it adds the cxx flags,
-          // then the cxx#platform flags, then the flags for the target
-          appendConfigsBuilder
-              .put(
-                  generateConfigKey("OTHER_CFLAGS", platform),
-                  Streams.stream(
-                          Utils.distinctUntilChanged(
-                              Iterables.transform(
-                                  Iterables.concat(
-                                      cxxBuckConfig.getCflags().orElse(DEFAULT_CFLAGS),
-                                      platformConfig
-                                          .flatMap(CxxBuckConfig::getCflags)
-                                          .orElse(DEFAULT_CFLAGS),
-                                      cxxBuckConfig.getCppflags().orElse(DEFAULT_CPPFLAGS),
-                                      platformConfig
-                                          .flatMap(CxxBuckConfig::getCppflags)
-                                          .orElse(DEFAULT_CPPFLAGS),
-                                      targetCFlags,
-                                      Iterables.concat(platformFlags.get(platform))),
-                                  Escaper.BASH_ESCAPER::apply)))
-                      .collect(Collectors.joining(" ")))
-              .put(
-                  generateConfigKey("OTHER_CPLUSPLUSFLAGS", platform),
-                  Streams.stream(
-                          Utils.distinctUntilChanged(
-                              Iterables.transform(
-                                  Iterables.concat(
-                                      cxxBuckConfig.getCxxflags().orElse(DEFAULT_CPPFLAGS),
-                                      platformConfig
-                                          .flatMap(CxxBuckConfig::getCxxflags)
-                                          .orElse(DEFAULT_CXXFLAGS),
-                                      cxxBuckConfig.getCxxppflags().orElse(DEFAULT_CXXPPFLAGS),
-                                      platformConfig
-                                          .flatMap(CxxBuckConfig::getCxxppflags)
-                                          .orElse(DEFAULT_CXXPPFLAGS),
-                                      targetCxxFlags,
-                                      Iterables.concat(platformFlags.get(platform))),
-                                  Escaper.BASH_ESCAPER::apply)))
-                      .collect(Collectors.joining(" ")));
-        }
-
-        ImmutableMultimap<String, ImmutableList<String>> platformLinkerFlags =
-            convertPlatformFlags(
-                targetNode,
-                Iterables.concat(
-                    ImmutableList.of(targetNode.getConstructorArg().getPlatformLinkerFlags()),
-                    collectRecursiveExportedPlatformLinkerFlags(targetNode)));
-        for (String platform : platformLinkerFlags.keySet()) {
-          appendConfigsBuilder.put(
-              generateConfigKey("OTHER_LDFLAGS", platform),
-              Streams.stream(
-                      Iterables.transform(
-                          Iterables.concat(
-                              otherLdFlags, Iterables.concat(platformLinkerFlags.get(platform))),
-                          Escaper.BASH_ESCAPER::apply))
-                  .collect(Collectors.joining(" ")));
-        }
-
-        ImmutableMap<String, String> appendedConfig = appendConfigsBuilder.build();
-
-        Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs =
-            getXcodeBuildConfigurationsForTargetNode(targetNode);
-        setTargetBuildConfigurations(
-            buildTarget,
-            target,
-            configs.get(),
-            getTargetCxxBuildConfigurationForTargetNode(targetNode, appendedConfig),
-            extraSettingsBuilder.build(),
-            defaultSettingsBuilder.build(),
-            appendedConfig);
       }
+
+      ImmutableMultimap<String, ImmutableList<String>> platformLinkerFlags =
+          convertPlatformFlags(
+              targetNode,
+              Iterables.concat(
+                  ImmutableList.of(targetNode.getConstructorArg().getPlatformLinkerFlags()),
+                  collectRecursiveExportedPlatformLinkerFlags(targetNode)));
+      for (String platform : platformLinkerFlags.keySet()) {
+        appendConfigsBuilder.put(
+            generateConfigKey("OTHER_LDFLAGS", platform),
+            Streams.stream(
+                    Iterables.transform(
+                        Iterables.concat(
+                            otherLdFlags, Iterables.concat(platformLinkerFlags.get(platform))),
+                        Escaper.BASH_ESCAPER::apply))
+                .collect(Collectors.joining(" ")));
+      }
+
+      ImmutableMap<String, String> appendedConfig = appendConfigsBuilder.build();
+
+      Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs =
+          getXcodeBuildConfigurationsForTargetNode(targetNode);
+      setTargetBuildConfigurations(
+          buildTarget,
+          target,
+          configs.get(),
+          getTargetCxxBuildConfigurationForTargetNode(targetNode, appendedConfig),
+          extraSettingsBuilder.build(),
+          defaultSettingsBuilder.build(),
+          appendedConfig);
     }
 
     Optional<String> moduleName =
@@ -1939,22 +1913,18 @@ public class ProjectGenerator {
             || isModularAppleLibrary,
         !shouldMergeHeaderMaps(),
         options.shouldGenerateMissingUmbrellaHeader());
-    if (isFocusedOnTarget) {
-      createHeaderSymlinkTree(
-          getPrivateCxxHeaders(targetNode),
-          ImmutableMap.of(), // private interfaces never have a modulemap
-          Optional.empty(),
-          getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE),
-          arg.getXcodePrivateHeadersSymlinks()
-                  .orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled())
-              || !options.shouldUseHeaderMaps(),
-          options.shouldUseHeaderMaps(),
-          options.shouldGenerateMissingUmbrellaHeader());
-    }
+    createHeaderSymlinkTree(
+        getPrivateCxxHeaders(targetNode),
+        ImmutableMap.of(), // private interfaces never have a modulemap
+        Optional.empty(),
+        getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE),
+        arg.getXcodePrivateHeadersSymlinks()
+                .orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled())
+            || !options.shouldUseHeaderMaps(),
+        options.shouldUseHeaderMaps(),
+        options.shouldGenerateMissingUmbrellaHeader());
 
-    if (bundle.isPresent()
-        && isFocusedOnTarget
-        && !options.shouldGenerateHeaderSymlinkTreesOnly()) {
+    if (bundle.isPresent() && !options.shouldGenerateHeaderSymlinkTreesOnly()) {
       addEntitlementsPlistIntoTarget(bundle.get());
     }
 
@@ -3848,11 +3818,6 @@ public class ProjectGenerator {
         filterRecursiveLibraryDepTargetsWithSwiftSources(targetNodes));
   }
 
-  private boolean isLibraryFocused(TargetNode<?> targetNode) {
-    BuildTarget buildTarget = targetNode.getBuildTarget();
-    return focusedTargetMatcher.matches(buildTarget);
-  }
-
   boolean isFrameworkTarget(TargetNode<?> targetNode) {
     if (targetNode.getDescription() instanceof AppleBundleDescription
         || targetNode.getDescription() instanceof AppleTestDescription) {
@@ -3918,15 +3883,9 @@ public class ProjectGenerator {
     if (filters.contains(FilterFlags.CURRENT_PROJECT)) {
       filtered = filtered.filter(dep -> isLibraryBuiltByCurrentProject(dep));
     } else if (filters.contains(FilterFlags.OTHER_FOCUSED)) {
-      filtered =
-          filtered
-              .filter(dep -> !isLibraryBuiltByCurrentProject(dep))
-              .filter(dep -> isLibraryFocused(dep));
+      filtered = filtered.filter(dep -> !isLibraryBuiltByCurrentProject(dep));
     } else if (filters.contains(FilterFlags.OTHER_NON_FOCUSED)) {
-      filtered =
-          filtered
-              .filter(dep -> !isLibraryBuiltByCurrentProject(dep))
-              .filter(dep -> !isLibraryFocused(dep));
+      filtered = FluentIterable.of();
     }
 
     // If neither is specified then do not limit by force_load at all.
@@ -4046,13 +4005,11 @@ public class ProjectGenerator {
   }
 
   private Optional<String> getForceLoadLinkerFlag(TargetNode<? extends CommonArg> targetNode) {
-    BuildTarget buildTarget = targetNode.getBuildTarget();
-    boolean isFocusedOnTarget = focusedTargetMatcher.matches(buildTarget);
     CommonArg arg = targetNode.getConstructorArg();
     if (arg.getLinkWhole().orElse(false)) {
       String flag =
           "-Wl,-force_load,"
-              + appleConfig.getForceLoadLibraryPath(isFocusedOnTarget)
+              + appleConfig.getForceLoadLibraryPath(true)
               + "/"
               + getProductOutputNameWithExtension(targetNode);
       return Optional.of(flag);
