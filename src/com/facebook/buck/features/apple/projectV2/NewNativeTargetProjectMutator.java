@@ -46,7 +46,6 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
-import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -234,14 +233,16 @@ class NewNativeTargetProjectMutator {
 
   public Result buildTargetAndAddToProject(PBXProject project, boolean addBuildPhases) {
     PBXNativeTarget nativeTarget = new PBXNativeTarget(targetName);
+    ProjectFileWriter projectFileWriter =
+        new ProjectFileWriter(project, pathRelativizer, sourcePathResolver);
 
     Optional<PBXGroup> targetGroup;
     if (addBuildPhases) {
       // Phases
-      addPhasesAndGroupsForSources(project, nativeTarget);
-      addResourcesFileReference(project);
-      addCopyResourcesToNonStdDestinations(project);
-      addResourcesBuildPhase(project);
+      addPhasesAndGroupsForSources(projectFileWriter, nativeTarget);
+      addResourcesFileReference(projectFileWriter);
+      addCopyResourcesToNonStdDestinations(projectFileWriter);
+      addResourcesBuildPhase(projectFileWriter);
 
       // Using a buck build phase doesnt support having other build phases.
       // TODO(chatatap): Find solutions around this, as this will likely break indexing.
@@ -276,83 +277,13 @@ class NewNativeTargetProjectMutator {
     return new Result(nativeTarget, targetGroup);
   }
 
-  /// Helper class for returning metadata about a created PBXFileReference
-  /// Includes a reference to the PBXFileReference and the Source Tree Path
-  /// We probably won't need this long term as we kill off Xcode build phases
-  /// but for now, let's just use this since it's named and structured
-  private static class SourcePathPBXFileReferenceDestination {
-    private final PBXFileReference fileReference;
-    private final SourceTreePath sourceTreePath;
-
-    public SourcePathPBXFileReferenceDestination(
-        PBXFileReference fileReference, SourceTreePath sourceTreePath) {
-      this.fileReference = fileReference;
-      this.sourceTreePath = sourceTreePath;
-    }
-
-    public PBXFileReference getFileReference() {
-      return fileReference;
-    }
-
-    public SourceTreePath getSourceTreePath() {
-      return sourceTreePath;
-    }
-  }
-
-  /// Writes a source path to a PBXFileReference in the input project. This will
-  /// create the relative directory structure based on the path relativizer (cell root).
-  ///
-  /// Thus, if a file is absolutely located at: /Users/me/dev/MyProject/Header.h
-  /// And the cell is: /Users/me/dev/
-  /// Then this will create a path in the PBXProject mainGroup as: /MyProject/Header.h
-  private SourcePathPBXFileReferenceDestination writeSourcePathToProject(
-      PBXProject project, SourcePath sourcePath) {
-    Path path = sourcePathResolver.apply(sourcePath);
-    SourceTreePath sourceTreePath =
-        new SourceTreePath(
-            PBXReference.SourceTree.SOURCE_ROOT,
-            pathRelativizer.outputPathToSourcePath(sourcePath),
-            Optional.empty());
-    return writeSourceTreePathAtFullPathToProject(project, path, sourceTreePath);
-  }
-
-  /// Writes a file at a path to a PBXFileReference in the input project.
-  private SourcePathPBXFileReferenceDestination writeFilePathToProject(
-      PBXProject project, Path path, Optional<String> type) {
-    SourceTreePath sourceTreePath =
-        new SourceTreePath(
-            PBXReference.SourceTree.SOURCE_ROOT,
-            pathRelativizer.outputDirToRootRelative(path),
-            type);
-
-    return writeSourceTreePathAtFullPathToProject(project, path, sourceTreePath);
-  }
-
-  private SourcePathPBXFileReferenceDestination writeSourceTreePathAtFullPathToProject(
-      PBXProject project, Path path, SourceTreePath sourceTreePath) {
-    PBXGroup filePathGroup;
-    // This check exists for files located in the root (e.g. ./foo.m instead of ./MyLibrary/foo.m)
-    if (path.getParent() != null) {
-      ImmutableList<String> filePathComponentList =
-          RichStream.from(path.getParent()).map(Object::toString).toImmutableList();
-      filePathGroup =
-          project.getMainGroup().getOrCreateDescendantGroupByPath(filePathComponentList);
-    } else {
-      filePathGroup = project.getMainGroup();
-    }
-
-    PBXFileReference fileReference =
-        filePathGroup.getOrCreateFileReferenceBySourceTreePath(sourceTreePath);
-
-    return new SourcePathPBXFileReferenceDestination(fileReference, sourceTreePath);
-  }
-
-  private void addPhasesAndGroupsForSources(PBXProject project, PBXNativeTarget target) {
+  private void addPhasesAndGroupsForSources(
+      ProjectFileWriter projectFileWriter, PBXNativeTarget target) {
     PBXSourcesBuildPhase sourcesBuildPhase = new PBXSourcesBuildPhase();
     PBXHeadersBuildPhase headersBuildPhase = new PBXHeadersBuildPhase();
 
     traverseGroupsTreeAndHandleSources(
-        project,
+        projectFileWriter,
         sourcesBuildPhase,
         headersBuildPhase,
         RuleUtils.createGroupsFromSourcePaths(
@@ -364,20 +295,20 @@ class NewNativeTargetProjectMutator {
             privateHeaders));
 
     if (prefixHeader.isPresent()) {
-      writeSourcePathToProject(project, prefixHeader.get());
+      projectFileWriter.writeSourcePath(prefixHeader.get());
     }
 
     if (infoPlist.isPresent()) {
-      writeSourcePathToProject(project, infoPlist.get());
+      projectFileWriter.writeSourcePath(infoPlist.get());
     }
 
     if (bridgingHeader.isPresent()) {
-      writeSourcePathToProject(project, bridgingHeader.get());
+      projectFileWriter.writeSourcePath(bridgingHeader.get());
     }
 
     if (buckFilePath.isPresent()) {
       PBXFileReference buckFileReference =
-          writeFilePathToProject(project, buckFilePath.get(), Optional.empty()).getFileReference();
+          projectFileWriter.writeFilePath(buckFilePath.get(), Optional.empty()).getFileReference();
       buckFileReference.setExplicitFileType(Optional.of("text.script.python"));
     }
 
@@ -393,7 +324,7 @@ class NewNativeTargetProjectMutator {
   }
 
   private void traverseGroupsTreeAndHandleSources(
-      PBXProject project,
+      ProjectFileWriter projectFileWriter,
       PBXSourcesBuildPhase sourcesBuildPhase,
       PBXHeadersBuildPhase headersBuildPhase,
       Iterable<GroupedSource> groupedSources) {
@@ -401,20 +332,20 @@ class NewNativeTargetProjectMutator {
         new GroupedSource.Visitor() {
           @Override
           public void visitSourceWithFlags(SourceWithFlags sourceWithFlags) {
-            SourcePathPBXFileReferenceDestination fileReference =
-                writeSourcePathToProject(project, sourceWithFlags.getSourcePath());
-            addFileReferenceToSourcesBuildPhase(fileReference, sourceWithFlags, sourcesBuildPhase);
+            ProjectFileWriter.Result result =
+                projectFileWriter.writeSourcePath(sourceWithFlags.getSourcePath());
+            addFileReferenceToSourcesBuildPhase(result, sourceWithFlags, sourcesBuildPhase);
           }
 
           @Override
           public void visitIgnoredSource(SourcePath source) {
-            writeSourcePathToProject(project, source);
+            projectFileWriter.writeSourcePath(source);
           }
 
           @Override
           public void visitPublicHeader(SourcePath publicHeader) {
             PBXFileReference fileReference =
-                writeSourcePathToProject(project, publicHeader).getFileReference();
+                projectFileWriter.writeSourcePath(publicHeader).getFileReference();
             addFileReferenceToHeadersBuildPhase(
                 fileReference, headersBuildPhase, HeaderVisibility.PUBLIC);
           }
@@ -422,7 +353,7 @@ class NewNativeTargetProjectMutator {
           @Override
           public void visitPrivateHeader(SourcePath privateHeader) {
             PBXFileReference fileReference =
-                writeSourcePathToProject(project, privateHeader).getFileReference();
+                projectFileWriter.writeSourcePath(privateHeader).getFileReference();
             addFileReferenceToHeadersBuildPhase(
                 fileReference, headersBuildPhase, HeaderVisibility.PRIVATE);
           }
@@ -433,7 +364,7 @@ class NewNativeTargetProjectMutator {
               Path sourceGroupPathRelativeToTarget,
               List<GroupedSource> sourceGroup) {
             traverseGroupsTreeAndHandleSources(
-                project, sourcesBuildPhase, headersBuildPhase, sourceGroup);
+                projectFileWriter, sourcesBuildPhase, headersBuildPhase, sourceGroup);
           }
         };
     for (GroupedSource groupedSource : groupedSources) {
@@ -442,11 +373,11 @@ class NewNativeTargetProjectMutator {
   }
 
   private void addFileReferenceToSourcesBuildPhase(
-      SourcePathPBXFileReferenceDestination sourcePathPBXfileReferenceDestination,
+      ProjectFileWriter.Result result,
       SourceWithFlags sourceWithFlags,
       PBXSourcesBuildPhase sourcesBuildPhase) {
-    PBXFileReference fileReference = sourcePathPBXfileReferenceDestination.getFileReference();
-    SourceTreePath sourceTreePath = sourcePathPBXfileReferenceDestination.getSourceTreePath();
+    PBXFileReference fileReference = result.getFileReference();
+    SourceTreePath sourceTreePath = result.getSourceTreePath();
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
     sourcesBuildPhase.getFiles().add(buildFile);
 
@@ -493,7 +424,7 @@ class NewNativeTargetProjectMutator {
     }
   }
 
-  private void addResourcesFileReference(PBXProject project) {
+  private void addResourcesFileReference(ProjectFileWriter projectFileWriter) {
     ImmutableSet.Builder<Path> resourceFiles = ImmutableSet.builder();
     ImmutableSet.Builder<Path> resourceDirs = ImmutableSet.builder();
     ImmutableSet.Builder<Path> variantResourceFiles = ImmutableSet.builder();
@@ -507,10 +438,10 @@ class NewNativeTargetProjectMutator {
         variantResourceFiles);
 
     addResourcesFileReference(
-        project, resourceFiles.build(), resourceDirs.build(), variantResourceFiles.build());
+        projectFileWriter, resourceFiles.build(), resourceDirs.build(), variantResourceFiles.build());
   }
 
-  private void addCopyResourcesToNonStdDestinations(PBXProject project) {
+  private void addCopyResourcesToNonStdDestinations(ProjectFileWriter projectFileWriter) {
     List<AppleBundleDestination> allNonStandardDestinations =
         recursiveResources.stream()
             .map(AppleResourceDescriptionArg::getDestination)
@@ -521,12 +452,12 @@ class NewNativeTargetProjectMutator {
             .sorted(Comparator.naturalOrder())
             .collect(Collectors.toList());
     for (AppleBundleDestination destination : allNonStandardDestinations) {
-      addCopyResourcesToNonStdDestination(project, destination);
+      addCopyResourcesToNonStdDestination(projectFileWriter, destination);
     }
   }
 
   private void addCopyResourcesToNonStdDestination(
-      PBXProject project, AppleBundleDestination destination) {
+      ProjectFileWriter projectFileWriter, AppleBundleDestination destination) {
     Set<AppleResourceDescriptionArg> resourceDescriptionArgsForDestination =
         recursiveResources.stream()
             .filter(
@@ -534,10 +465,10 @@ class NewNativeTargetProjectMutator {
                     e.getDestination().orElse(AppleBundleDestination.defaultValue()) == destination)
             .collect(Collectors.toSet());
     addResourcePathsToBuildPhase(
-        project, resourceDescriptionArgsForDestination, new HashSet<>(), new HashSet<>());
+        projectFileWriter, resourceDescriptionArgsForDestination, new HashSet<>(), new HashSet<>());
   }
 
-  private void addResourcesBuildPhase(PBXProject project) {
+  private void addResourcesBuildPhase(ProjectFileWriter projectFileWriter) {
     Set<AppleResourceDescriptionArg> standardDestinationResources =
         recursiveResources.stream()
             .filter(
@@ -546,11 +477,11 @@ class NewNativeTargetProjectMutator {
                         == AppleBundleDestination.RESOURCES)
             .collect(Collectors.toSet());
     addResourcePathsToBuildPhase(
-        project, standardDestinationResources, recursiveAssetCatalogs, wrapperResources);
+        projectFileWriter, standardDestinationResources, recursiveAssetCatalogs, wrapperResources);
   }
 
   private void addResourcePathsToBuildPhase(
-      PBXProject project,
+      ProjectFileWriter projectFileWriter,
       Set<AppleResourceDescriptionArg> resourceArgs,
       Set<AppleAssetCatalogDescriptionArg> assetCatalogArgs,
       Set<AppleWrapperResourceArg> resourcePathArgs) {
@@ -567,7 +498,7 @@ class NewNativeTargetProjectMutator {
         variantResourceFiles);
 
     addResourcesFileReference(
-        project, resourceFiles.build(), resourceDirs.build(), variantResourceFiles.build());
+        projectFileWriter, resourceFiles.build(), resourceDirs.build(), variantResourceFiles.build());
   }
 
   private void collectResourcePathsFromConstructorArgs(
@@ -593,7 +524,7 @@ class NewNativeTargetProjectMutator {
   }
 
   private void addResourcesFileReference(
-      PBXProject project,
+      ProjectFileWriter projectFileWriter,
       ImmutableSet<Path> resourceFiles,
       ImmutableSet<Path> resourceDirs,
       ImmutableSet<Path> variantResourceFiles) {
@@ -602,11 +533,11 @@ class NewNativeTargetProjectMutator {
     }
 
     for (Path path : resourceFiles) {
-      writeFilePathToProject(project, path, Optional.empty()).getFileReference();
+      projectFileWriter.writeFilePath(path, Optional.empty()).getFileReference();
     }
 
     for (Path path : resourceDirs) {
-      writeFilePathToProject(project, path, Optional.of("folder")).getFileReference();
+      projectFileWriter.writeFilePath(path, Optional.of("folder")).getFileReference();
     }
 
     for (Path variantFilePath : variantResourceFiles) {
@@ -618,7 +549,7 @@ class NewNativeTargetProjectMutator {
                 + "but '%s' is not.",
             variantFilePath);
       }
-      writeFilePathToProject(project, variantFilePath, Optional.empty());
+      projectFileWriter.writeFilePath(variantFilePath, Optional.empty());
     }
   }
 
