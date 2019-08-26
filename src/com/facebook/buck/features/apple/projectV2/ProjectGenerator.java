@@ -1935,7 +1935,7 @@ public class ProjectGenerator {
     if (bundle.isPresent()
         && isFocusedOnTarget
         && !options.shouldGenerateHeaderSymlinkTreesOnly()) {
-      addEntitlementsPlistIntoTarget(bundle.get(), targetGroup.get());
+      addEntitlementsPlistIntoTarget(bundle.get());
     }
 
     return target;
@@ -2639,25 +2639,27 @@ public class ProjectGenerator {
   }
 
   private void addEntitlementsPlistIntoTarget(
-      TargetNode<? extends HasAppleBundleFields> targetNode, PBXGroup targetGroup) {
+      TargetNode<? extends HasAppleBundleFields> targetNode) {
     ImmutableMap<String, String> infoPlistSubstitutions =
         targetNode.getConstructorArg().getInfoPlistSubstitutions();
 
     if (infoPlistSubstitutions.containsKey(AppleBundle.CODE_SIGN_ENTITLEMENTS)) {
+      // Expand SOURCE_ROOT to the target base path so we can get the full proper path to the
+      // entitlements file instead of a path relative to the project.
+      String targetPath = targetNode.getBuildTarget().getBasePath().toString();
       String entitlementsPlistPath =
           InfoPlistSubstitution.replaceVariablesInString(
               "$(" + AppleBundle.CODE_SIGN_ENTITLEMENTS + ")",
               AppleBundle.withDefaults(
                   infoPlistSubstitutions,
                   ImmutableMap.of(
-                      "SOURCE_ROOT", ".",
-                      "SRCROOT", ".")));
+                      "SOURCE_ROOT", targetPath,
+                      "SRCROOT", targetPath)));
 
-      targetGroup.getOrCreateFileReferenceBySourceTreePath(
-          new SourceTreePath(
-              PBXReference.SourceTree.SOURCE_ROOT,
-              Paths.get(entitlementsPlistPath),
-              Optional.empty()));
+      ProjectFileWriter projectFileWriter =
+          new ProjectFileWriter(
+              xcodeProjectWriteOptions.project(), this.pathRelativizer, this::resolveSourcePath);
+      projectFileWriter.writeFilePath(Paths.get(entitlementsPlistPath), Optional.empty());
     }
   }
 

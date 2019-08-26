@@ -47,4 +47,13 @@ public class PBXTestUtils {
     }
     return candidates.get(0);
   }
+
+  public static PBXGroup assertHasSubgroupPathAndReturnLast(
+      PBXGroup root, ImmutableList<String> components) {
+    PBXGroup group = root;
+    for (String component : components) {
+      group = assertHasSubgroupAndReturnIt(group, component);
+    }
+    return group;
+  }
 }

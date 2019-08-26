@@ -40,6 +40,7 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleAssetCatalogBuilder;
 import com.facebook.buck.apple.AppleBinaryBuilder;
+import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleConfig;
@@ -5610,6 +5611,35 @@ public class ProjectGeneratorTest {
                 .normalize()
                 .toString(),
         buildSettingsTest.get("HEADER_SEARCH_PATHS"));
+  }
+
+  @Test
+  public void testEntitlementsPlistAddedToPath() throws IOException {
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bin");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
+
+    TargetNode<?> binaryNode = AppleBinaryBuilder.createBuilder(binaryTarget).build();
+    TargetNode<?> bundleNode =
+        AppleBundleBuilder.createBuilder(bundleTarget)
+            .setBinary(binaryTarget)
+            .setInfoPlist(FakeSourcePath.of(("Info.plist")))
+            .setInfoPlistSubstitutions(
+                ImmutableMap.of(
+                    AppleBundle.CODE_SIGN_ENTITLEMENTS,
+                    "$(SOURCE_ROOT)/Support/Entitlements/My-Entitlements.plist"))
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGenerator(ImmutableSet.of(binaryNode, bundleNode));
+    projectGenerator.createXcodeProjects();
+
+    PBXProject generatedProject = projectGenerator.getGeneratedProject();
+    PBXGroup entitlementsGroup =
+        PBXTestUtils.assertHasSubgroupPathAndReturnLast(
+            generatedProject.getMainGroup(), ImmutableList.of("foo", "Support", "Entitlements"));
+    PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(
+        entitlementsGroup, "My-Entitlements.plist");
   }
 
   private ProjectGenerator createProjectGenerator(

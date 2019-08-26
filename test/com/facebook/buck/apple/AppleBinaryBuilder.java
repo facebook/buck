@@ -151,4 +151,9 @@ public class AppleBinaryBuilder
     getArgForPopulating().setLinkWhole(Optional.of(linkWhole));
     return this;
   }
+
+  public AppleBinaryBuilder setEntitlementsFilePath(SourcePath entitlementsFilePath) {
+    getArgForPopulating().setEntitlementsFile(entitlementsFilePath);
+    return this;
+  }
 }
