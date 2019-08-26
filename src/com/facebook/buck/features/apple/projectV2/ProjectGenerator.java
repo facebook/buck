@@ -52,7 +52,6 @@ import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXContainerItemProxy;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
@@ -1493,7 +1492,6 @@ public class ProjectGenerator {
     NewNativeTargetProjectMutator.Result targetBuilderResult =
         mutator.buildTargetAndAddToProject(project, isFocusedOnTarget);
     PBXNativeTarget target = targetBuilderResult.target;
-    Optional<PBXGroup> targetGroup = targetBuilderResult.targetGroup;
 
     extraSettingsBuilder.putAll(swiftDepsSettingsBuilder.build());
 
@@ -1952,12 +1950,6 @@ public class ProjectGenerator {
               || !options.shouldUseHeaderMaps(),
           options.shouldUseHeaderMaps(),
           options.shouldGenerateMissingUmbrellaHeader());
-    }
-
-    if (appleTargetNode.isPresent()
-        && isFocusedOnTarget
-        && !options.shouldGenerateHeaderSymlinkTreesOnly()) {
-      addSceneKitAssetsIntoTarget(appleTargetNode.get(), targetGroup.get());
     }
 
     if (bundle.isPresent()
@@ -2688,28 +2680,6 @@ public class ProjectGenerator {
           new ProjectFileWriter(
               xcodeProjectWriteOptions.project(), this.pathRelativizer, this::resolveSourcePath);
       projectFileWriter.writeFilePath(Paths.get(entitlementsPlistPath), Optional.empty());
-    }
-  }
-
-  private void addSceneKitAssetsIntoTarget(
-      TargetNode<? extends CommonArg> targetNode, PBXGroup targetGroup) {
-    ImmutableSet<AppleWrapperResourceArg> allSceneKitAssets =
-        AppleBuildRules.collectTransitiveBuildRules(
-            xcodeDescriptions,
-            targetGraph,
-            Optional.of(dependenciesCache),
-            AppleBuildRules.SCENEKIT_ASSETS_DESCRIPTION_CLASSES,
-            ImmutableList.of(targetNode),
-            RecursiveDependenciesMode.COPYING);
-
-    for (AppleWrapperResourceArg sceneKitAssets : allSceneKitAssets) {
-      PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
-
-      resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-          new SourceTreePath(
-              PBXReference.SourceTree.SOURCE_ROOT,
-              pathRelativizer.outputDirToRootRelative(sceneKitAssets.getPath()),
-              Optional.empty()));
     }
   }
 

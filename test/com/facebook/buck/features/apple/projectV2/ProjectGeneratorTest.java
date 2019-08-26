@@ -4010,12 +4010,30 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testSceneKitAssetsRuleAddsReference() throws IOException {
-    BuildTarget target = BuildTargetFactory.newInstance(rootPath, "//foo", "scenekitasset");
-    TargetNode<?> node =
-        SceneKitAssetsBuilder.createBuilder(target)
+    BuildTarget sceneKitTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "scenekitasset");
+    TargetNode<?> sceneKitNode =
+        SceneKitAssetsBuilder.createBuilder(sceneKitTarget)
             .setPath(FakeSourcePath.of("foo.scnassets").getRelativePath())
             .build();
-    testRuleAddsReference(target, node, "foo.scnassets");
+    BuildTarget fooLibraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    TargetNode<?> fooLibraryNode =
+        AppleLibraryBuilder.createBuilder(fooLibraryTarget)
+            .setDeps(ImmutableSortedSet.of(sceneKitTarget))
+            .build();
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
+    TargetNode<?> bundleNode =
+        AppleBundleBuilder.createBuilder(bundleTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(fooLibraryTarget)
+            .build();
+
+    ProjectGenerator generator =
+        createProjectGenerator(ImmutableList.of(bundleNode, fooLibraryNode, sceneKitNode));
+    generator.createXcodeProjects();
+
+    PBXProject project = generator.getGeneratedProject();
+    PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(project.getMainGroup(), "foo.scnassets");
   }
 
   @Test
