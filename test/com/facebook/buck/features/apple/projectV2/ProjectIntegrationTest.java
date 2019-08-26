@@ -298,18 +298,6 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void testBuckProjectFocusPatternCell() throws IOException {
-    ProjectWorkspace workspace = createWorkspace(this, "project_focus_pattern_cell");
-
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "project", "--focus", "bar//Dep2:", "//Apps:workspace", "--experimental");
-    result.assertSuccess();
-
-    workspace.verify();
-  }
-
-  @Test
   public void testBuckProjectFocusWithTests() throws IOException {
     ProjectWorkspace workspace = createWorkspace(this, "project_focus_with_tests");
 
