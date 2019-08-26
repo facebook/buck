@@ -286,7 +286,7 @@ public class ProjectGenerator {
   private final ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
   private final ImmutableList.Builder<CopyInXcode> filesToCopyInXcodeBuilder =
       ImmutableList.builder();
-  private final ImmutableList.Builder<SourcePath> genruleFiles = ImmutableList.builder();
+  private final ImmutableSet.Builder<SourcePath> genruleFiles = ImmutableSet.builder();
   private final ImmutableSet.Builder<SourcePath> filesAddedBuilder = ImmutableSet.builder();
   private final Set<BuildTarget> generatedTargets = new HashSet<>();
   /**
@@ -557,26 +557,16 @@ public class ProjectGenerator {
   /** Add all source files of genrules in a group "Other". */
   private void addGenruleFiles() {
     ImmutableSet<SourcePath> filesAdded = filesAddedBuilder.build();
-    PBXGroup group = xcodeProjectWriteOptions.project().getMainGroup();
-    ImmutableList<SourcePath> files = genruleFiles.build();
-    if (files.size() > 0) {
-      PBXGroup otherGroup = group.getOrCreateChildGroupByName("Other");
-      for (SourcePath sourcePath : files) {
-        // Make sure we don't add duplicates of existing files in this section.
-        if (filesAdded.contains(sourcePath)) {
-          continue;
-        }
-        Path path = pathRelativizer.outputPathToSourcePath(sourcePath);
-        ImmutableList<String> targetGroupPath = null;
-        PBXGroup sourceGroup = otherGroup;
-        if (path.getParent() != null) {
-          targetGroupPath =
-              RichStream.from(path.getParent()).map(Object::toString).toImmutableList();
-          sourceGroup = otherGroup.getOrCreateDescendantGroupByPath(targetGroupPath);
-        }
-        sourceGroup.getOrCreateFileReferenceBySourceTreePath(
-            new SourceTreePath(PBXReference.SourceTree.SOURCE_ROOT, path, Optional.empty()));
+    ImmutableSet<SourcePath> files = genruleFiles.build();
+    ProjectFileWriter projectFileWriter =
+        new ProjectFileWriter(
+            xcodeProjectWriteOptions.project(), pathRelativizer, this::resolveSourcePath);
+    for (SourcePath sourcePath : files) {
+      // Make sure we don't add duplicates of existing files in this section.
+      if (filesAdded.contains(sourcePath)) {
+        continue;
       }
+      projectFileWriter.writeSourcePath(sourcePath);
     }
   }
 
@@ -1464,6 +1454,7 @@ public class ProjectGenerator {
     }
 
     if (!options.shouldGenerateHeaderSymlinkTreesOnly() && isFocusedOnTarget) {
+      // Assume the BUCK file path is at the the base path of this target
       Path buckFilePath = buildTarget.getBasePath().resolve(buildFileName);
       mutator.setBuckFilePath(Optional.of(buckFilePath));
     }

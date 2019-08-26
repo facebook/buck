@@ -601,17 +601,10 @@ public class ProjectGeneratorTest {
         Iterables.transform(project.getMainGroup().getChildren(), PBXReference::getName);
     assertThat(childNames, hasItem("Info.plist"));
 
-    PBXGroup otherGroup =
-        project
-            .getMainGroup()
-            .getOrCreateChildGroupByName("Other")
-            .getOrCreateChildGroupByName("..");
-    assertThat(otherGroup.getChildren(), hasSize(2));
-    childNames = Iterables.transform(otherGroup.getChildren(), PBXReference::getName);
+    childNames = Iterables.transform(project.getMainGroup().getChildren(), PBXReference::getName);
     assertThat(childNames, hasItem("bar.json"));
 
-    PBXGroup otherFooGroup = otherGroup.getOrCreateChildGroupByName("foo");
-    assertThat(otherFooGroup.getChildren(), hasSize(1));
+    PBXGroup otherFooGroup = project.getMainGroup().getOrCreateChildGroupByName("foo");
     childNames = Iterables.transform(otherFooGroup.getChildren(), PBXReference::getName);
     assertThat(childNames, hasItem("foo.json"));
   }
