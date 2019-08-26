@@ -656,6 +656,21 @@ public class NdkCxxPlatforms {
           cxxPlatformBuilder.putRuntimeLdflags(Linker.LinkableDepType.STATIC, "-landroid_support");
         }
         cxxPlatformBuilder.putRuntimeLdflags(Linker.LinkableDepType.STATIC, "-lc++abi");
+
+        if (targetConfiguration.getTargetArchAbi() == NdkTargetArchAbi.ARMEABI_V7A) {
+          // libc++abi on 32-bit ARM depends on the LLVM unwinder; if not explicitly
+          // included here, clang++ would resolve references to _Unwind_RaiseException
+          // and related symbols with implementations provided by libgcc.a, which is
+          // not ABI-compatible with libc++ (and would most likely result in crashes
+          // when throwing exceptions).
+          cxxPlatformBuilder.putRuntimeLdflags(Linker.LinkableDepType.STATIC, "-lunwind");
+          // Don't export symbols from libunwind and libgcc in the linked binary.
+          cxxPlatformBuilder.putRuntimeLdflags(
+              Linker.LinkableDepType.STATIC, "-Wl,--exclude-libs,libunwind.a");
+          cxxPlatformBuilder.putRuntimeLdflags(
+              Linker.LinkableDepType.STATIC, "-Wl,--exclude-libs,libgcc.a");
+        }
+
         if (targetConfiguration.getTargetArchAbi() == NdkTargetArchAbi.ARMEABI) {
           cxxPlatformBuilder.putRuntimeLdflags(Linker.LinkableDepType.STATIC, "-latomic");
         }
