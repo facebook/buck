@@ -39,6 +39,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
+import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -46,6 +47,7 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -97,6 +99,7 @@ class NewNativeTargetProjectMutator {
   private ImmutableSet<SourcePath> extraXcodeFiles = ImmutableSet.of();
   private ImmutableSet<SourcePath> publicHeaders = ImmutableSet.of();
   private ImmutableSet<SourcePath> privateHeaders = ImmutableSet.of();
+  private ImmutableList<CoreDataResource> coreDataResources = ImmutableList.of();
   private Optional<SourcePath> prefixHeader = Optional.empty();
   private Optional<SourcePath> infoPlist = Optional.empty();
   private Optional<SourcePath> bridgingHeader = Optional.empty();
@@ -214,6 +217,12 @@ class NewNativeTargetProjectMutator {
     return this;
   }
 
+  public NewNativeTargetProjectMutator setCoreDataResources(
+      ImmutableList<CoreDataResource> coreDataResources) {
+    this.coreDataResources = coreDataResources;
+    return this;
+  }
+
   /**
    * @param recursiveAssetCatalogs List of asset catalog targets of targetNode and dependencies of
    *     targetNode.
@@ -238,11 +247,25 @@ class NewNativeTargetProjectMutator {
 
     Optional<PBXGroup> targetGroup;
     if (addBuildPhases) {
+      PBXSourcesBuildPhase sourcesBuildPhase = new PBXSourcesBuildPhase();
+      PBXHeadersBuildPhase headersBuildPhase = new PBXHeadersBuildPhase();
+
       // Phases
-      addPhasesAndGroupsForSources(projectFileWriter, nativeTarget);
+      addPhasesAndGroupsForSources(projectFileWriter, sourcesBuildPhase, headersBuildPhase);
       addResourcesFileReference(projectFileWriter);
       addCopyResourcesToNonStdDestinations(projectFileWriter);
       addResourcesBuildPhase(projectFileWriter);
+      addCoreDataModelBuildPhaseToProject(project, sourcesBuildPhase);
+
+      // Source files must be compiled in order to be indexed.
+      if (!sourcesBuildPhase.getFiles().isEmpty()) {
+        nativeTarget.getBuildPhases().add(sourcesBuildPhase);
+      }
+
+      // TODO(chatatap): Verify if we still need header build phases (specifically for swift).
+      if (!headersBuildPhase.getFiles().isEmpty()) {
+        nativeTarget.getBuildPhases().add(headersBuildPhase);
+      }
 
       // Using a buck build phase doesnt support having other build phases.
       // TODO(chatatap): Find solutions around this, as this will likely break indexing.
@@ -278,10 +301,9 @@ class NewNativeTargetProjectMutator {
   }
 
   private void addPhasesAndGroupsForSources(
-      ProjectFileWriter projectFileWriter, PBXNativeTarget target) {
-    PBXSourcesBuildPhase sourcesBuildPhase = new PBXSourcesBuildPhase();
-    PBXHeadersBuildPhase headersBuildPhase = new PBXHeadersBuildPhase();
-
+      ProjectFileWriter projectFileWriter,
+      PBXSourcesBuildPhase sourcesBuildPhase,
+      PBXHeadersBuildPhase headersBuildPhase) {
     traverseGroupsTreeAndHandleSources(
         projectFileWriter,
         sourcesBuildPhase,
@@ -310,16 +332,6 @@ class NewNativeTargetProjectMutator {
       PBXFileReference buckFileReference =
           projectFileWriter.writeFilePath(buckFilePath.get(), Optional.empty()).getFileReference();
       buckFileReference.setExplicitFileType(Optional.of("text.script.python"));
-    }
-
-    // Source files must be compiled in order to be indexed.
-    if (!sourcesBuildPhase.getFiles().isEmpty()) {
-      target.getBuildPhases().add(sourcesBuildPhase);
-    }
-
-    // TODO(chatatap): Verify if we still need header build phases (specifically for swift).
-    if (!headersBuildPhase.getFiles().isEmpty()) {
-      target.getBuildPhases().add(headersBuildPhase);
     }
   }
 
@@ -438,7 +450,10 @@ class NewNativeTargetProjectMutator {
         variantResourceFiles);
 
     addResourcesFileReference(
-        projectFileWriter, resourceFiles.build(), resourceDirs.build(), variantResourceFiles.build());
+        projectFileWriter,
+        resourceFiles.build(),
+        resourceDirs.build(),
+        variantResourceFiles.build());
   }
 
   private void addCopyResourcesToNonStdDestinations(ProjectFileWriter projectFileWriter) {
@@ -498,7 +513,10 @@ class NewNativeTargetProjectMutator {
         variantResourceFiles);
 
     addResourcesFileReference(
-        projectFileWriter, resourceFiles.build(), resourceDirs.build(), variantResourceFiles.build());
+        projectFileWriter,
+        resourceFiles.build(),
+        resourceDirs.build(),
+        variantResourceFiles.build());
   }
 
   private void collectResourcePathsFromConstructorArgs(
@@ -574,5 +592,65 @@ class NewNativeTargetProjectMutator {
     buckBuildPhase.setShellScript(shellCommand);
 
     nativeTarget.getBuildPhases().add(buckBuildPhase);
+  }
+
+  private void addCoreDataModelBuildPhaseToProject(
+      PBXProject project, PBXSourcesBuildPhase sourcesBuildPhase) {
+    for (CoreDataResource dataFile : coreDataResources) {
+      // Core data models go in the resources group also.
+      PBXGroup coreDataModelGroup;
+      Path coreDataModelPath = dataFile.getPath();
+      if (coreDataModelPath.getParent() != null) {
+        coreDataModelGroup =
+            project
+                .getMainGroup()
+                .getOrCreateDescendantGroupByPath(
+                    RichStream.from(coreDataModelPath.getParent())
+                        .map(Object::toString)
+                        .toImmutableList());
+      } else {
+        coreDataModelGroup = project.getMainGroup();
+      }
+
+      if (dataFile.versionInfo().isPresent()) {
+        CoreDataResource.VersionInformation versionInformation = dataFile.versionInfo().get();
+
+        XCVersionGroup versionGroup =
+            coreDataModelGroup.getOrCreateChildVersionGroupsBySourceTreePath(
+                new SourceTreePath(
+                    PBXReference.SourceTree.SOURCE_ROOT,
+                    pathRelativizer.outputDirToRootRelative(coreDataModelPath),
+                    Optional.empty()));
+
+        PBXBuildFile buildFile = new PBXBuildFile(versionGroup);
+        sourcesBuildPhase.getFiles().add(buildFile);
+
+        for (Path versionPath : versionInformation.getAllVersionPaths()) {
+          versionGroup.getOrCreateFileReferenceBySourceTreePath(
+              new SourceTreePath(
+                  PBXReference.SourceTree.SOURCE_ROOT,
+                  pathRelativizer.outputDirToRootRelative(versionPath),
+                  Optional.empty()));
+        }
+
+        PBXFileReference ref =
+            versionGroup.getOrCreateFileReferenceBySourceTreePath(
+                new SourceTreePath(
+                    PBXReference.SourceTree.SOURCE_ROOT,
+                    pathRelativizer.outputDirToRootRelative(
+                        versionInformation.getCurrentVersionPath()),
+                    Optional.empty()));
+        versionGroup.setCurrentVersion(ref);
+      } else {
+        PBXFileReference fileRef =
+            coreDataModelGroup.getOrCreateFileReferenceBySourceTreePath(
+                new SourceTreePath(
+                    PBXReference.SourceTree.SOURCE_ROOT,
+                    pathRelativizer.outputDirToRootRelative(dataFile.getPath()),
+                    Optional.empty()));
+        PBXBuildFile buildFile = new PBXBuildFile(fileRef);
+        sourcesBuildPhase.getFiles().add(buildFile);
+      }
+    }
   }
 }

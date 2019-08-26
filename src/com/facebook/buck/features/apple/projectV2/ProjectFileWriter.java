@@ -89,7 +89,6 @@ public class ProjectFileWriter {
             PBXReference.SourceTree.SOURCE_ROOT,
             pathRelativizer.outputDirToRootRelative(path),
             type);
-
     return writeSourceTreePathAtFullPathToProject(path, sourceTreePath);
   }
 

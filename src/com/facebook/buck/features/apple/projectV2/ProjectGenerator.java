@@ -17,9 +17,6 @@
 package com.facebook.buck.features.apple.projectV2;
 
 import com.dd.plist.NSDictionary;
-import com.dd.plist.NSObject;
-import com.dd.plist.NSString;
-import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBinaryDescriptionArg;
@@ -42,7 +39,6 @@ import com.facebook.buck.apple.AppleResources;
 import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.AppleTestDescriptionArg;
 import com.facebook.buck.apple.AppleWrapperResourceArg;
-import com.facebook.buck.apple.CoreDataModelDescription;
 import com.facebook.buck.apple.HasAppleBundleFields;
 import com.facebook.buck.apple.InfoPlistSubstitution;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
@@ -67,7 +63,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
-import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.HasTests;
@@ -174,14 +169,9 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.nio.file.FileVisitResult;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -832,6 +822,34 @@ public class ProjectGenerator {
         appleConfig.shouldIncludeSharedLibraryResources()
             ? RecursiveDependenciesMode.COPYING_INCLUDE_SHARED_RESOURCES
             : RecursiveDependenciesMode.COPYING;
+
+    ImmutableSet<AppleWrapperResourceArg> allWrapperResources =
+        AppleBuildRules.collectRecursiveWrapperResources(
+            xcodeDescriptions,
+            targetGraph,
+            Optional.of(dependenciesCache),
+            ImmutableList.of(targetNode),
+            mode);
+    ImmutableSet<AppleWrapperResourceArg> coreDataResources =
+        AppleBuildRules.collectTransitiveBuildRules(
+            xcodeDescriptions,
+            targetGraph,
+            Optional.of(dependenciesCache),
+            AppleBuildRules.CORE_DATA_MODEL_DESCRIPTION_CLASSES,
+            ImmutableList.of(targetNode),
+            RecursiveDependenciesMode.COPYING);
+
+    // As of now, CoreDataResources are AppleWrapperResourceArgs so they will both be returned when
+    // querying for recursive wrapper resources above. We want to separate these out and handle
+    // them properly -- core data resources need to be part of the build phase, and we want to
+    // render them differently since they are "versioned" and should use PBXVersionGroup.
+    //
+    // Ideally, we would separate these out so that way the CoreData objects are not recursive
+    // wrapper resources, but since that would change things for regular buck project given that
+    // this code is shared, we can just diff the sets here.
+    ImmutableSet<AppleWrapperResourceArg> filteredWrapperResources =
+        Sets.difference(allWrapperResources, coreDataResources).immutableCopy();
+
     PBXNativeTarget target =
         generateBinaryTarget(
             project,
@@ -851,12 +869,8 @@ public class ProjectGenerator {
                 ImmutableList.of(targetNode),
                 mode),
             AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
-            AppleBuildRules.collectRecursiveWrapperResources(
-                xcodeDescriptions,
-                targetGraph,
-                Optional.of(dependenciesCache),
-                ImmutableList.of(targetNode),
-                mode),
+            filteredWrapperResources,
+            coreDataResources,
             bundleLoaderNode);
 
     if (bundleLoaderNode.isPresent()) {
@@ -964,6 +978,7 @@ public class ProjectGenerator {
             ImmutableSet.of(),
             AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
             ImmutableSet.of(),
+            ImmutableSet.of(),
             Optional.empty());
     LOG.debug(
         "Generated Apple binary target %s", targetNode.getBuildTarget().getFullyQualifiedName());
@@ -1011,6 +1026,7 @@ public class ProjectGenerator {
             directResources,
             ImmutableSet.of(),
             directAssetCatalogs,
+            ImmutableSet.of(),
             ImmutableSet.of(),
             bundleLoaderNode);
     LOG.debug(
@@ -1262,6 +1278,7 @@ public class ProjectGenerator {
       ImmutableSet<AppleAssetCatalogDescriptionArg> recursiveAssetCatalogs,
       ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs,
       ImmutableSet<AppleWrapperResourceArg> wrapperResources,
+      ImmutableSet<AppleWrapperResourceArg> coreDataResources,
       Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode)
       throws IOException {
 
@@ -1456,6 +1473,21 @@ public class ProjectGenerator {
       // Assume the BUCK file path is at the the base path of this target
       Path buckFilePath = buildTarget.getBasePath().resolve(buildFileName);
       mutator.setBuckFilePath(Optional.of(buckFilePath));
+    }
+
+    Optional<TargetNode<AppleNativeTargetDescriptionArg>> appleTargetNode =
+        TargetNodes.castArg(targetNode, AppleNativeTargetDescriptionArg.class);
+    if (appleTargetNode.isPresent()
+        && isFocusedOnTarget
+        && !options.shouldGenerateHeaderSymlinkTreesOnly()) {
+      // Use Core Data models from immediate dependencies only.
+
+      ImmutableList.Builder<CoreDataResource> coreDataFileBuilder = ImmutableList.builder();
+      for (AppleWrapperResourceArg appleWrapperResourceArg : coreDataResources) {
+        coreDataFileBuilder.add(
+            CoreDataResource.fromResourceArgs(appleWrapperResourceArg, projectFilesystem));
+      }
+      mutator.setCoreDataResources(coreDataFileBuilder.build());
     }
 
     NewNativeTargetProjectMutator.Result targetBuilderResult =
@@ -1922,13 +1954,9 @@ public class ProjectGenerator {
           options.shouldGenerateMissingUmbrellaHeader());
     }
 
-    Optional<TargetNode<AppleNativeTargetDescriptionArg>> appleTargetNode =
-        TargetNodes.castArg(targetNode, AppleNativeTargetDescriptionArg.class);
     if (appleTargetNode.isPresent()
         && isFocusedOnTarget
         && !options.shouldGenerateHeaderSymlinkTreesOnly()) {
-      // Use Core Data models from immediate dependencies only.
-      addCoreDataModelsIntoTarget(appleTargetNode.get(), targetGroup.get());
       addSceneKitAssetsIntoTarget(appleTargetNode.get(), targetGroup.get());
     }
 
@@ -2663,19 +2691,6 @@ public class ProjectGenerator {
     }
   }
 
-  private void addCoreDataModelsIntoTarget(
-      TargetNode<? extends CommonArg> targetNode, PBXGroup targetGroup) throws IOException {
-    addCoreDataModelBuildPhase(
-        targetGroup,
-        AppleBuildRules.collectTransitiveBuildRules(
-            xcodeDescriptions,
-            targetGraph,
-            Optional.of(dependenciesCache),
-            AppleBuildRules.CORE_DATA_MODEL_DESCRIPTION_CLASSES,
-            ImmutableList.of(targetNode),
-            RecursiveDependenciesMode.COPYING));
-  }
-
   private void addSceneKitAssetsIntoTarget(
       TargetNode<? extends CommonArg> targetNode, PBXGroup targetGroup) {
     ImmutableSet<AppleWrapperResourceArg> allSceneKitAssets =
@@ -3084,87 +3099,6 @@ public class ProjectGenerator {
       hasher.putBytes(value);
     }
     return hasher.hash();
-  }
-
-  private void addCoreDataModelBuildPhase(
-      PBXGroup targetGroup, Iterable<AppleWrapperResourceArg> dataModels) throws IOException {
-    // TODO(coneko): actually add a build phase
-
-    for (AppleWrapperResourceArg dataModel : dataModels) {
-      // Core data models go in the resources group also.
-      PBXGroup resourcesGroup = targetGroup.getOrCreateChildGroupByName("Resources");
-
-      if (CoreDataModelDescription.isVersionedDataModel(dataModel)) {
-        // It's safe to do I/O here to figure out the current version because we're returning all
-        // the versions and the file pointing to the current version from
-        // getInputsToCompareToOutput(), so the rule will be correctly detected as stale if any of
-        // them change.
-        String currentVersionFileName = ".xccurrentversion";
-        String currentVersionKey = "_XCCurrentVersionName";
-
-        XCVersionGroup versionGroup =
-            resourcesGroup.getOrCreateChildVersionGroupsBySourceTreePath(
-                new SourceTreePath(
-                    PBXReference.SourceTree.SOURCE_ROOT,
-                    pathRelativizer.outputDirToRootRelative(dataModel.getPath()),
-                    Optional.empty()));
-
-        projectFilesystem.walkRelativeFileTree(
-            dataModel.getPath(),
-            new SimpleFileVisitor<Path>() {
-              @Override
-              public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-                if (dir.equals(dataModel.getPath())) {
-                  return FileVisitResult.CONTINUE;
-                }
-                versionGroup.getOrCreateFileReferenceBySourceTreePath(
-                    new SourceTreePath(
-                        PBXReference.SourceTree.SOURCE_ROOT,
-                        pathRelativizer.outputDirToRootRelative(dir),
-                        Optional.empty()));
-                return FileVisitResult.SKIP_SUBTREE;
-              }
-            });
-
-        Path currentVersionPath = dataModel.getPath().resolve(currentVersionFileName);
-        try (InputStream in = projectFilesystem.newFileInputStream(currentVersionPath)) {
-          NSObject rootObject;
-          try {
-            rootObject = PropertyListParser.parse(in);
-          } catch (IOException e) {
-            throw e;
-          } catch (Exception e) {
-            rootObject = null;
-          }
-          if (!(rootObject instanceof NSDictionary)) {
-            throw new HumanReadableException("Malformed %s file.", currentVersionFileName);
-          }
-          NSDictionary rootDictionary = (NSDictionary) rootObject;
-          NSObject currentVersionName = rootDictionary.objectForKey(currentVersionKey);
-          if (!(currentVersionName instanceof NSString)) {
-            throw new HumanReadableException("Malformed %s file.", currentVersionFileName);
-          }
-          PBXFileReference ref =
-              versionGroup.getOrCreateFileReferenceBySourceTreePath(
-                  new SourceTreePath(
-                      PBXReference.SourceTree.SOURCE_ROOT,
-                      pathRelativizer.outputDirToRootRelative(
-                          dataModel.getPath().resolve(currentVersionName.toString())),
-                      Optional.empty()));
-          versionGroup.setCurrentVersion(ref);
-        } catch (NoSuchFileException e) {
-          if (versionGroup.getChildren().size() == 1) {
-            versionGroup.setCurrentVersion(Iterables.get(versionGroup.getChildren(), 0));
-          }
-        }
-      } else {
-        resourcesGroup.getOrCreateFileReferenceBySourceTreePath(
-            new SourceTreePath(
-                PBXReference.SourceTree.SOURCE_ROOT,
-                pathRelativizer.outputDirToRootRelative(dataModel.getPath()),
-                Optional.empty()));
-      }
-    }
   }
 
   /** Create the project bundle structure and write {@code project.pbxproj}. */

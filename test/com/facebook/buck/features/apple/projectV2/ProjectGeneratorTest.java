@@ -70,6 +70,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
+import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
@@ -3914,13 +3915,97 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testCoreDataModelRuleAddsReference() throws IOException {
+  public void testUnversionedCoreDataModelCreatesFileReference() throws IOException {
     BuildTarget modelTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "model");
     TargetNode<?> modelNode =
         CoreDataModelBuilder.createBuilder(modelTarget)
-            .setPath(FakeSourcePath.of("foo.xcdatamodel").getRelativePath())
+            .setPath(FakeSourcePath.of("foo/models/foo.xcdatamodel").getRelativePath())
             .build();
-    testRuleAddsReference(modelTarget, modelNode, "foo.xcdatamodel");
+    BuildTarget fooLibraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    TargetNode<?> fooLibraryNode =
+        AppleLibraryBuilder.createBuilder(fooLibraryTarget)
+            .setDeps(ImmutableSortedSet.of(modelTarget))
+            .build();
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
+    TargetNode<?> bundleNode =
+        AppleBundleBuilder.createBuilder(bundleTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(fooLibraryTarget)
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGenerator(ImmutableSet.of(fooLibraryNode, bundleNode, modelNode));
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup modelGroup =
+        PBXTestUtils.assertHasSubgroupPathAndReturnLast(
+            project.getMainGroup(), ImmutableList.of("foo", "models"));
+    PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(modelGroup, "foo.xcdatamodel");
+  }
+
+  @Test
+  public void testVersionedCoreDataModelCreatesGroupWithCurrentVersionSpecified()
+      throws IOException {
+    BuildTarget modelTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "model");
+    Path dataModelRootPath = Paths.get("foo/models/foo.xcdatamodeld");
+    TargetNode<?> modelNode =
+        CoreDataModelBuilder.createBuilder(modelTarget)
+            .setPath(FakeSourcePath.of(dataModelRootPath).getRelativePath())
+            .build();
+    BuildTarget fooLibraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    TargetNode<?> fooLibraryNode =
+        AppleLibraryBuilder.createBuilder(fooLibraryTarget)
+            .setDeps(ImmutableSortedSet.of(modelTarget))
+            .build();
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "bundle");
+    TargetNode<?> bundleNode =
+        AppleBundleBuilder.createBuilder(bundleTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.BUNDLE))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(fooLibraryTarget)
+            .build();
+
+    Path currentVersionPath = dataModelRootPath.resolve(".xccurrentversion");
+    fakeProjectFilesystem.writeContentsToPath(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            + "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
+            + "<plist version=\"1.0\">\n"
+            + "<dict>\n"
+            + "\t<key>_XCCurrentVersionName</key>\n"
+            + "\t<string>foov1.1.0.xcdatamodel</string>\n"
+            + "</dict>\n"
+            + "</plist>",
+        currentVersionPath);
+
+    String currentVersionFileName = "foov1.1.0.xcdatamodel";
+    Path versionFilePath = dataModelRootPath.resolve(currentVersionFileName);
+    fakeProjectFilesystem.mkdirs(versionFilePath);
+    fakeProjectFilesystem.writeContentsToPath("", versionFilePath.resolve("contents"));
+
+    ProjectGenerator projectGenerator =
+        createProjectGenerator(ImmutableSet.of(fooLibraryNode, bundleNode, modelNode));
+    projectGenerator.createXcodeProjects();
+
+    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXGroup modelGroup =
+        PBXTestUtils.assertHasSubgroupPathAndReturnLast(
+            project.getMainGroup(), ImmutableList.of("foo", "models"));
+    Optional<XCVersionGroup> versionGroup =
+        modelGroup.getChildren().stream()
+            .filter(input -> input.getName().equals("foo.xcdatamodeld"))
+            .filter(input -> input.getClass() == XCVersionGroup.class)
+            .map(input -> (XCVersionGroup) input)
+            .findFirst();
+    assert (versionGroup.isPresent());
+
+    assertEquals(versionGroup.get().getCurrentVersion().getName(), currentVersionFileName);
+    Optional<PBXFileReference> currentCoreDataFileReference =
+        versionGroup.get().getChildren().stream()
+            .filter(input -> input.getName().equals(currentVersionFileName))
+            .findFirst();
+    assertTrue(currentCoreDataFileReference.isPresent());
   }
 
   @Test
