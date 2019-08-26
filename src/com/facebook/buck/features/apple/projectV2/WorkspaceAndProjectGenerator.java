@@ -407,7 +407,6 @@ public class WorkspaceAndProjectGenerator {
       }
       ImmutableMultimap<Path, BuildTarget> projectDirectoryToBuildTargets =
           projectDirectoryToBuildTargetsBuilder.build();
-      Path relativeTargetCell = rootCell.getRoot().relativize(projectCell.getRoot());
       for (Path projectDirectory : projectDirectoryToBuildTargets.keySet()) {
         ImmutableSet<BuildTarget> rules =
             filterRulesForProjectDirectory(
@@ -423,25 +422,13 @@ public class WorkspaceAndProjectGenerator {
         projectGeneratorFutures.add(
             listeningExecutorService.submit(
                 () -> {
-                  GenerationResult result =
-                      generateProjectForDirectory(
-                          projectGenerators,
-                          projectCell,
-                          projectDirectory,
-                          rules,
-                          isMainProject,
-                          targetsInRequiredProjects);
-                  // convert the projectPath to relative to the target cell here
-                  result =
-                      GenerationResult.of(
-                          relativeTargetCell.resolve(result.getProjectPath()),
-                          result.isProjectGenerated(),
-                          result.getRequiredBuildTargets(),
-                          result.getXcconfigPaths(),
-                          result.getFilesToCopyInXcode(),
-                          result.getBuildTargetToGeneratedTargetMap(),
-                          result.getGeneratedProjectToPbxTargets());
-                  return result;
+                  return generateProjectForDirectory(
+                      projectGenerators,
+                      projectCell,
+                      projectDirectory,
+                      rules,
+                      isMainProject,
+                      targetsInRequiredProjects);
                 }));
       }
     }
@@ -458,7 +445,7 @@ public class WorkspaceAndProjectGenerator {
       if (!result.isProjectGenerated()) {
         continue;
       }
-      workspaceGenerator.addFilePath(result.getProjectPath());
+      workspaceGenerator.addFilePath(result.getProjectPath(), Optional.empty());
       processGenerationResult(
           generatedProjectToPbxTargetsBuilder,
           buildTargetToPbxTargetMapBuilder,
