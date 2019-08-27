@@ -117,6 +117,18 @@
 {/template}
 
 /***/
+{template .exported_header_style_arg}
+{call buck.arg}
+  {param name : 'exported_header_style' /}
+  {param default : 'local' /}
+  {param desc}
+  How dependents should include exported headers from this rule.  Can be either <code>local</code>
+  (e.g. <code>-I</code>) or <code>system</code> (e.g. <code>-isystem</code>).
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .exported_platform_headers_arg}
 {call buck.arg}
   {param name : 'exported_platform_headers' /}

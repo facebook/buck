@@ -526,6 +526,12 @@ public class CxxLibraryDescription
       return CxxDeps.concat(getPrivateCxxDeps(), getExportedCxxDeps());
     }
 
+    /** @return how exported headers from this rule should be included by dependents. */
+    @Value.Default
+    default CxxPreprocessables.IncludeType getExportedHeaderStyle() {
+      return CxxPreprocessables.IncludeType.LOCAL;
+    }
+
     Optional<Boolean> getSupportsMergedLinking();
   }
 
