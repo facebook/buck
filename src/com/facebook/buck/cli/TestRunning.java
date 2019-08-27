@@ -47,6 +47,7 @@ import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.GenerateCodeCoverageReportStep;
 import com.facebook.buck.jvm.java.JacocoConstants;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.JavaLibraryWithTests;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
@@ -567,7 +568,8 @@ public class TestRunning {
         JavaTest javaTest = (JavaTest) test;
 
         ImmutableSet<JavaLibrary> transitiveDeps =
-            javaTest.getCompiledTestsLibrary().getTransitiveClasspathDeps();
+            JavaLibraryClasspathProvider.getAllReachableJavaLibraries(
+                ImmutableSet.of(javaTest.getCompiledTestsLibrary()));
         for (JavaLibrary dep : transitiveDeps) {
           if (dep instanceof JavaLibraryWithTests) {
             ImmutableSortedSet<BuildTarget> depTests = ((JavaLibraryWithTests) dep).getTests();

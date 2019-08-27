@@ -27,7 +27,9 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -75,8 +77,11 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
 
     bNode =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//foo:b"))
-            .setSrcs(ImmutableList.of(FakeSourcePath.of(filesystem, "foo/b.java")))
-            .setCmd("echo $(classpath //foo:d")
+            .setSrcs(
+                ImmutableList.of(
+                    FakeSourcePath.of(filesystem, "foo/b.java"),
+                    DefaultBuildTargetSourcePath.of(dNode.getBuildTarget())))
+            .setCmd("echo $(location //foo:d)")
             .setOut("b.out")
             .build();
 
@@ -89,6 +94,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
             ImmutableSet.of("foo", "c.java"),
             ImmutableSet.of(eNode),
             ImmutableSet.of(eNode), // exported
+            null, // resources
             filesystem);
 
     aNode =
@@ -97,6 +103,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
             ImmutableSet.of("foo", "a.java"),
             ImmutableSet.of(bNode, cNode),
             ImmutableSet.of(cNode),
+            ImmutableSet.of(DefaultBuildTargetSourcePath.of(bNode.getBuildTarget())),
             filesystem);
 
     zNode =
@@ -221,6 +228,13 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
         Matchers.containsInAnyOrder(a, c, d, e));
   }
 
+  @Test
+  public void getAllReachableJavaLibrariesFindsDepsOfGenrule() {
+    assertThat(
+        JavaLibraryClasspathProvider.getAllReachableJavaLibraries(ImmutableList.of(a)),
+        Matchers.containsInAnyOrder(a, d, c, e));
+  }
+
   private Path getFullOutput(BuildRule lib) {
     return resolver.getAbsolutePath(lib.getSourcePathToOutput());
   }
@@ -230,7 +244,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
       Iterable<String> srcs,
       Iterable<TargetNode<?>> deps,
       ProjectFilesystem filesystem) {
-    return makeRule(target, srcs, deps, null, filesystem);
+    return makeRule(target, srcs, deps, null, null, filesystem);
   }
 
   private TargetNode<?> makeRule(
@@ -238,6 +252,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
       Iterable<String> srcs,
       Iterable<TargetNode<?>> deps,
       @Nullable Iterable<TargetNode<?>> exportedDeps,
+      @Nullable Iterable<SourcePath> resources,
       ProjectFilesystem filesystem) {
     JavaLibraryBuilder builder;
     BuildTarget parsedTarget = BuildTargetFactory.newInstance(target);
@@ -254,6 +269,11 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
     if (exportedDeps != null) {
       for (TargetNode<?> dep : exportedDeps) {
         builder.addExportedDep(dep.getBuildTarget());
+      }
+    }
+    if (resources != null) {
+      for (SourcePath res : resources) {
+        builder.addResource(res);
       }
     }
     return builder.build();

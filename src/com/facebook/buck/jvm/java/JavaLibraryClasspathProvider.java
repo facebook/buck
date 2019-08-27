@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.google.common.collect.FluentIterable;
@@ -119,5 +120,20 @@ public class JavaLibraryClasspathProvider {
       classpathEntries.addAll(library.getImmediateClasspaths());
     }
     return classpathEntries.build();
+  }
+
+  /** Return the classpath, including traversing any provided_deps edges and non-java edges */
+  public static ImmutableSet<JavaLibrary> getAllReachableJavaLibraries(
+      Iterable<? extends BuildRule> rules) {
+    ImmutableSet.Builder<JavaLibrary> builder = ImmutableSet.builder();
+    AbstractBreadthFirstTraversal.traverse(
+        rules,
+        (BuildRule rule) -> {
+          if (rule instanceof JavaLibrary) {
+            builder.add((JavaLibrary) rule);
+          }
+          return rule.getBuildDeps();
+        });
+    return builder.build();
   }
 }

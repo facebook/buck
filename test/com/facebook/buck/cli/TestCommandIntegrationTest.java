@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -41,6 +42,7 @@ public class TestCommandIntegrationTest {
 
   private static final Path CODE_COVERAGE_SUBPATH =
       Paths.get("buck-out", "gen", "jacoco", "code-coverage");
+  private ProjectWorkspace workspace;
 
   private static Map<String, String> getCodeCoverageProperties() {
     Path genDir = Paths.get("buck-out", "gen").toAbsolutePath();
@@ -65,6 +67,12 @@ public class TestCommandIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
+  @Before
+  public void setUp() throws Exception {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "test_coverage", tmp);
+    workspace.setUp();
+  }
+
   /*
    * We spoof system properties in the --code-coverage integration tests so that buck will look for
    * jacoco and the report generator in the correct locations in the buck repo rather than in the
@@ -73,10 +81,6 @@ public class TestCommandIntegrationTest {
 
   @Test
   public void testCsvCodeCoverage() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "test_coverage", tmp);
-    workspace.setUp();
-
     try (PropertySaver saver = new PropertySaver(getCodeCoverageProperties())) {
       ProcessResult result =
           workspace.runBuckCommand(
@@ -89,10 +93,6 @@ public class TestCommandIntegrationTest {
 
   @Test
   public void testHtmlCodeCoverage() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "test_coverage", tmp);
-    workspace.setUp();
-
     try (PropertySaver saver = new PropertySaver(getCodeCoverageProperties())) {
       ProcessResult result =
           workspace.runBuckCommand(
@@ -108,10 +108,6 @@ public class TestCommandIntegrationTest {
 
   @Test
   public void testXmlCodeCoverage() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "test_coverage", tmp);
-    workspace.setUp();
-
     try (PropertySaver saver = new PropertySaver(getCodeCoverageProperties())) {
       ProcessResult result =
           workspace.runBuckCommand(
@@ -124,11 +120,25 @@ public class TestCommandIntegrationTest {
   }
 
   @Test
-  public void testFailsIfNoTestsProvided() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "test_coverage", tmp);
-    workspace.setUp();
+  public void testCodeCoverageFindsNonClasspathSources() throws Exception {
+    try (PropertySaver saver = new PropertySaver(getCodeCoverageProperties())) {
+      ProcessResult result =
+          workspace.runBuckCommand(
+              "test",
+              "--code-coverage",
+              "--code-coverage-format",
+              "CSV",
+              "//test:wider_classpath_coverage_test");
+      result.assertSuccess();
+    }
 
+    Path coverageOutput = workspace.getPath(CODE_COVERAGE_SUBPATH).resolve("coverage.csv");
+    // This file would not exist if no srcs were found
+    assertTrue(Files.exists(coverageOutput));
+  }
+
+  @Test
+  public void testFailsIfNoTestsProvided() throws IOException {
     ProcessResult result = workspace.runBuckCommand("test");
     result.assertExitCode(null, ExitCode.COMMANDLINE_ERROR);
     assertThat(

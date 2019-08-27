@@ -9,3 +9,15 @@ java_test(
         "//:foo",
     ],
 )
+
+java_test(
+    name = "wider_classpath_coverage_test",
+    srcs = [
+        "MockTest.java",
+        "MockTest2.java",
+    ],
+    deps = [
+        "buck//third-party/java/junit:junit",
+        "//:top",
+    ],
+)
