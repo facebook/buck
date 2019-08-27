@@ -25,6 +25,7 @@ import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.exceptions.UserVerify;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
@@ -37,6 +38,8 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.test.rule.HasTestRunnerLibrary;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -44,6 +47,7 @@ import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.macros.AbsoluteOutputMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
@@ -74,7 +78,7 @@ public class GoTestDescription
 
   private static final Flavor TEST_LIBRARY_FLAVOR = InternalFlavor.of("test-library");
   public static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
-      ImmutableList.of(new LocationMacroExpander());
+      ImmutableList.of(new LocationMacroExpander(), new AbsoluteOutputMacroExpander());
 
   private final GoBuckConfig goBuckConfig;
   private final ToolchainProvider toolchainProvider;
@@ -253,17 +257,58 @@ public class GoTestDescription
           platform);
     }
 
-    GoBinary testMain =
-        createTestMainRule(
-            buildTarget,
-            projectFilesystem,
-            params.copyAppendingExtraDeps(extraDeps.build()),
-            graphBuilder,
-            srcs.build(),
-            coverVariables,
-            coverageMode,
-            args,
-            platform);
+    GoBinary testMain;
+    if (args.getSpecs().isPresent()) {
+      UserVerify.checkArgument(
+          args.getRunnerLibrary().isPresent(),
+          "runner_library should be specified for rules implementing test protocol");
+
+      BuildRule library = graphBuilder.requireRule(args.getRunnerLibrary().get());
+      UserVerify.verify(
+          library instanceof GoLibrary, "runner_library should be a go_library for go_test");
+      GoLibrary runnerLibrary = (GoLibrary) library;
+
+      BuildRule testLibrary =
+          new GoLibrary(
+              buildTarget.withAppendedFlavors(TEST_LIBRARY_FLAVOR),
+              projectFilesystem,
+              params,
+              srcs.build());
+      graphBuilder.addToIndex(testLibrary);
+
+      // TODO(bobyf): this doesn't quite work the way we want since the runner code has hard coded
+      // imports based on the test itself. We need some code gen/template like the existing gotest
+      testMain =
+          GoDescriptors.createGoBinaryRule(
+              buildTarget.withAppendedFlavors(InternalFlavor.of("test-main")),
+              projectFilesystem,
+              params
+                  .copyAppendingExtraDeps(extraDeps.add(runnerLibrary).build())
+                  .withDeclaredDeps(ImmutableSortedSet.of(testLibrary)),
+              graphBuilder,
+              goBuckConfig,
+              args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC_PIC),
+              args.getLinkMode(),
+              runnerLibrary.getSrcs(),
+              args.getResources(),
+              args.getCompilerFlags(),
+              args.getAssemblerFlags(),
+              args.getLinkerFlags(),
+              args.getExternalLinkerFlags(),
+              platform);
+    } else {
+      testMain =
+          createTestMainRule(
+              buildTarget,
+              projectFilesystem,
+              params.copyAppendingExtraDeps(extraDeps.build()),
+              graphBuilder,
+              srcs.build(),
+              coverVariables,
+              coverageMode,
+              args,
+              platform);
+    }
     graphBuilder.addToIndex(testMain);
 
     StringWithMacrosConverter macrosConverter =
@@ -274,6 +319,19 @@ public class GoTestDescription
             .setExpanders(MACRO_EXPANDERS)
             .build();
 
+    if (args.getSpecs().isPresent()) {
+      return new GoTestX(
+          buildTarget,
+          projectFilesystem,
+          DefaultSourcePathResolver.from(graphBuilder),
+          params.withDeclaredDeps(ImmutableSortedSet.of(testMain)).withoutExtraDeps(),
+          testMain,
+          args.getLabels(),
+          args.getContacts(),
+          ImmutableMap.copyOf(
+              Maps.transformValues(args.getSpecs().get(), macrosConverter::convert)),
+          args.getResources());
+    }
     return new GoTest(
         buildTarget,
         projectFilesystem,
@@ -494,6 +552,7 @@ public class GoTestDescription
           HasContacts,
           HasDeclaredDeps,
           HasSrcs,
+          HasTestRunnerLibrary,
           HasTestTimeout,
           HasGoLinkable {
     Optional<BuildTarget> getLibrary();

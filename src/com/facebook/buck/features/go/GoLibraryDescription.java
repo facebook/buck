@@ -150,7 +150,7 @@ public class GoLibraryDescription
           Collections.singletonList(ListType.GoFiles));
     }
 
-    return new GoLibrary(buildTarget, projectFilesystem, params);
+    return new GoLibrary(buildTarget, projectFilesystem, params, args.getSrcs());
   }
 
   @Override

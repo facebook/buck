@@ -18,13 +18,26 @@ package com.facebook.buck.features.go;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.collect.ImmutableSet;
 
 /** Provides information about a Go Library rule */
 public class GoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
 
+  private final ImmutableSet<SourcePath> srcs;
+
   public GoLibrary(
-      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      ImmutableSet<SourcePath> srcs) {
     super(buildTarget, projectFilesystem, params);
+    this.srcs = srcs;
+  }
+
+  /** @return the sources of the go library */
+  public ImmutableSet<SourcePath> getSrcs() {
+    return srcs;
   }
 }
