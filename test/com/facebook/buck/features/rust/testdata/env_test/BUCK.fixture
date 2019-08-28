@@ -1,0 +1,39 @@
+rust_library(
+    name = "env-library",
+    srcs = ["lib.rs"],
+    environment = {
+        "FOO": "a simple thing",
+    },
+)
+
+rust_binary(
+    name = "env-binary",
+    srcs = ["main.rs"],
+    environment = {
+        "FOO": "something else",
+        "HELLO": "$(location :gen)",
+    },
+    deps = [":env-library"],
+)
+
+rust_test(
+    name = "env-test",
+    srcs = ["main.rs"],
+    environment = {
+        "HELLO": "$(location :gen-test)",
+        "TEST_FOO": "some test",
+    },
+    deps = [":env-library"],
+)
+
+genrule(
+    name = "gen",
+    out = "foo.txt",
+    cmd = "echo Hello, world > $OUT",
+)
+
+genrule(
+    name = "gen-test",
+    out = "foo.txt",
+    cmd = "echo Hello test world > $OUT",
+)

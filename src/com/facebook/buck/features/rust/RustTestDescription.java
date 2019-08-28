@@ -50,7 +50,9 @@ import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -117,6 +119,8 @@ public class RustTestDescription
                         args.getCrate(),
                         args.getEdition(),
                         args.getFeatures(),
+                        ImmutableSortedMap.copyOf(
+                            Maps.transformValues(args.getEnvironment(), converter::convert)),
                         Stream.of(
                                 testarg,
                                 rustPlatform.getRustTestFlags().stream(),
@@ -173,6 +177,9 @@ public class RustTestDescription
   interface AbstractRustTestDescriptionArg
       extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasDefaultPlatform {
     ImmutableSet<String> getContacts();
+
+    @Value.NaturalOrder
+    ImmutableSortedMap<String, StringWithMacros> getEnvironment();
 
     Optional<String> getEdition();
 

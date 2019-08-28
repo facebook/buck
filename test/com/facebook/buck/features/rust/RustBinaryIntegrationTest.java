@@ -901,4 +901,20 @@ public class RustBinaryIntegrationTest {
     assertThat(result.getStdout().get(), Matchers.blankString());
     assertThat(result.getStderr().get(), Matchers.blankString());
   }
+
+  @Test
+  public void rustBinaryEnv() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "env_test", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:env-binary").assertSuccess();
+
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            workspace.resolve("buck-out/gen/env-binary#binary,default/env_binary").toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("My FOO something else"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
 }

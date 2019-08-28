@@ -41,6 +41,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -239,6 +240,7 @@ public class RustCompileTest {
           /* depArgs */ ImmutableList.of(),
           /* linkerFlags */
           ImmutableList.of(),
+          ImmutableSortedMap.of(),
           srcs,
           rootModule,
           RustBuckConfig.RemapSrcPaths.NO,

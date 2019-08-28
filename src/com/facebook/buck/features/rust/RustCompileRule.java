@@ -47,7 +47,9 @@ import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -62,6 +64,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final ImmutableList<Arg> args;
   @AddToRuleKey private final ImmutableList<Arg> depArgs;
   @AddToRuleKey private final ImmutableList<Arg> linkerArgs;
+  @AddToRuleKey private final ImmutableSortedMap<String, Arg> environment;
 
   @AddToRuleKey private final SourcePath rootModule;
 
@@ -100,6 +103,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<Arg> args,
       ImmutableList<Arg> depArgs,
       ImmutableList<Arg> linkerArgs,
+      ImmutableSortedMap<String, Arg> environment,
       ImmutableSortedSet<SourcePath> srcs,
       SourcePath rootModule,
       RemapSrcPaths remapSrcPaths,
@@ -112,6 +116,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.args = args;
     this.depArgs = depArgs;
     this.linkerArgs = linkerArgs;
+    this.environment = environment;
     this.rootModule = rootModule;
     this.srcs = srcs;
     this.scratchDir =
@@ -131,6 +136,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<Arg> args,
       ImmutableList<Arg> depArgs,
       ImmutableList<Arg> linkerArgs,
+      ImmutableSortedMap<String, Arg> environment,
       ImmutableSortedSet<SourcePath> sources,
       SourcePath rootModule,
       RemapSrcPaths remapSrcPaths,
@@ -145,7 +151,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                         .addAll(BuildableSupport.getDepsCollection(compiler, ruleFinder))
                         .addAll(BuildableSupport.getDepsCollection(linker, ruleFinder))
                         .addAll(
-                            Stream.of(args, depArgs, linkerArgs)
+                            Stream.of(args, depArgs, linkerArgs, environment.values())
                                 .flatMap(
                                     a ->
                                         a.stream()
@@ -161,6 +167,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         args,
         depArgs,
         linkerArgs,
+        environment,
         sources,
         rootModule,
         remapSrcPaths,
@@ -288,6 +295,9 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   ExecutionContext context) {
                 ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
                 env.putAll(compiler.getEnvironment(buildContext.getSourcePathResolver()));
+                env.putAll(
+                    Maps.transformValues(
+                        environment, v -> Arg.stringify(v, buildContext.getSourcePathResolver())));
 
                 Path root = getProjectFilesystem().getRootPath();
                 Path basePath = getBuildTarget().getBasePath();

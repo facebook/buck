@@ -46,7 +46,9 @@ import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -106,6 +108,7 @@ public class RustBinaryDescription
         args.getCrate(),
         args.getEdition(),
         args.getFeatures(),
+        ImmutableSortedMap.copyOf(Maps.transformValues(args.getEnvironment(), converter::convert)),
         Stream.of(
                 rustPlatform.getRustBinaryFlags().stream(),
                 args.getRustcFlags().stream().map(converter::convert))
@@ -191,6 +194,9 @@ public class RustBinaryDescription
   interface AbstractRustBinaryDescriptionArg
       extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests, HasDefaultPlatform {
     Optional<String> getEdition();
+
+    @Value.NaturalOrder
+    ImmutableSortedMap<String, StringWithMacros> getEnvironment();
 
     @Value.NaturalOrder
     ImmutableSortedSet<String> getFeatures();

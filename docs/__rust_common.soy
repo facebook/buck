@@ -142,6 +142,20 @@ to allow for extra warnings, etc.
 {/template}
 
 /***/
+{template .environment}
+{call buck.arg}
+  {param name : 'environment' /}
+  {{param default : '{}' /}}
+  {param desc}
+  <p>
+    Set environment variables for this rule's invocations of rustc. The environment variable
+    values may include macros which are expanded.
+  </p>
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .more_examples}
 <p>
   For more examples, check out our <a

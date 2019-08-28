@@ -61,7 +61,9 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Maps;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -98,6 +100,7 @@ public class RustLibraryDescription
       ActionGraphBuilder graphBuilder,
       RustPlatform rustPlatform,
       RustBuckConfig rustBuckConfig,
+      ImmutableSortedMap<String, Arg> environment,
       ImmutableList<Arg> extraFlags,
       ImmutableList<Arg> extraLinkerFlags,
       Iterable<Arg> linkerInputs,
@@ -123,6 +126,7 @@ public class RustLibraryDescription
         graphBuilder,
         rustPlatform,
         rustBuckConfig,
+        environment,
         extraFlags,
         extraLinkerFlags,
         linkerInputs,
@@ -149,19 +153,25 @@ public class RustLibraryDescription
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
 
-    Function<RustPlatform, ImmutableList<Arg>> getRustcArgs =
-        rustPlatform -> {
-          StringWithMacrosConverter converter =
-              RustCompileUtils.getMacroExpander(
-                  context, buildTarget, rustPlatform.getCxxPlatform());
+    Function<RustPlatform, Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>>>
+        getRustcArgsEnv =
+            rustPlatform -> {
+              StringWithMacrosConverter converter =
+                  RustCompileUtils.getMacroExpander(
+                      context, buildTarget, rustPlatform.getCxxPlatform());
 
-          ImmutableList.Builder<Arg> rustcArgs = ImmutableList.builder();
-          RustCompileUtils.addFeatures(buildTarget, args.getFeatures(), rustcArgs);
-          RustCompileUtils.addTargetTripleForFlavor(rustPlatform.getFlavor(), rustcArgs);
-          rustcArgs.addAll(rustPlatform.getRustLibraryFlags());
-          rustcArgs.addAll(args.getRustcFlags().stream().map(converter::convert).iterator());
-          return rustcArgs.build();
-        };
+              ImmutableList.Builder<Arg> rustcArgs = ImmutableList.builder();
+              RustCompileUtils.addFeatures(buildTarget, args.getFeatures(), rustcArgs);
+              RustCompileUtils.addTargetTripleForFlavor(rustPlatform.getFlavor(), rustcArgs);
+              rustcArgs.addAll(rustPlatform.getRustLibraryFlags());
+              rustcArgs.addAll(args.getRustcFlags().stream().map(converter::convert).iterator());
+
+              ImmutableSortedMap<String, Arg> env =
+                  ImmutableSortedMap.copyOf(
+                      Maps.transformValues(args.getEnvironment(), converter::convert));
+
+              return new Pair<>(rustcArgs.build(), env);
+            };
 
     String crate = args.getCrate().orElse(ruleToCrateName(buildTarget.getShortName()));
 
@@ -198,6 +208,10 @@ public class RustLibraryDescription
       RustPlatform platform =
           RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args)
               .resolve(graphBuilder, buildTarget.getTargetConfiguration());
+
+      Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> argenv =
+          getRustcArgsEnv.apply(platform);
+
       return requireBuild(
           buildTarget,
           projectFilesystem,
@@ -205,7 +219,8 @@ public class RustLibraryDescription
           graphBuilder,
           platform,
           rustBuckConfig,
-          getRustcArgs.apply(platform),
+          argenv.getSecond(),
+          argenv.getFirst(),
           /* linkerArgs */ ImmutableList.of(),
           /* linkerInputs */ ImmutableList.of(),
           crate,
@@ -270,6 +285,9 @@ public class RustLibraryDescription
           }
         }
 
+        Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> argenv =
+            getRustcArgsEnv.apply(rustPlatform);
+
         rule =
             requireBuild(
                 buildTarget,
@@ -278,7 +296,8 @@ public class RustLibraryDescription
                 graphBuilder,
                 rustPlatform,
                 rustBuckConfig,
-                getRustcArgs.apply(rustPlatform),
+                argenv.getSecond(),
+                argenv.getFirst(),
                 /* linkerArgs */ ImmutableList.of(),
                 /* linkerInputs */ ImmutableList.of(),
                 crate,
@@ -308,6 +327,10 @@ public class RustLibraryDescription
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
             CrateType.DYLIB.filenameFor(target, crate, rustPlatform.getCxxPlatform()).get();
+
+        Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> argenv =
+            getRustcArgsEnv.apply(rustPlatform);
+
         BuildRule sharedLibraryBuildRule =
             requireBuild(
                 buildTarget,
@@ -316,7 +339,8 @@ public class RustLibraryDescription
                 graphBuilder,
                 rustPlatform,
                 rustBuckConfig,
-                getRustcArgs.apply(rustPlatform),
+                argenv.getSecond(),
+                argenv.getFirst(),
                 /* linkerArgs */ ImmutableList.of(),
                 /* linkerInputs */ ImmutableList.of(),
                 crate,
@@ -412,6 +436,9 @@ public class RustLibraryDescription
                 .getRustPlatforms()
                 .getValue(cxxPlatform.getFlavor())
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration());
+        Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> argenv =
+            getRustcArgsEnv.apply(rustPlatform);
+
         BuildRule rule =
             requireBuild(
                 buildTarget,
@@ -420,7 +447,8 @@ public class RustLibraryDescription
                 graphBuilder,
                 rustPlatform,
                 rustBuckConfig,
-                getRustcArgs.apply(rustPlatform),
+                argenv.getSecond(),
+                argenv.getFirst(),
                 /* linkerArgs */ ImmutableList.of(),
                 /* linkerInputs */ ImmutableList.of(),
                 crate,
@@ -452,6 +480,10 @@ public class RustLibraryDescription
                 .getRustPlatforms()
                 .getValue(cxxPlatform.getFlavor())
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration());
+
+        Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> argenv =
+            getRustcArgsEnv.apply(rustPlatform);
+
         BuildRule sharedLibraryBuildRule =
             requireBuild(
                 buildTarget,
@@ -460,7 +492,8 @@ public class RustLibraryDescription
                 graphBuilder,
                 rustPlatform,
                 rustBuckConfig,
-                getRustcArgs.apply(rustPlatform),
+                argenv.getSecond(),
+                argenv.getFirst(),
                 /* linkerArgs */ ImmutableList.of(),
                 /* linkerInputs */ ImmutableList.of(),
                 crate,
@@ -509,6 +542,9 @@ public class RustLibraryDescription
       extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests, HasDefaultPlatform {
     @Value.NaturalOrder
     ImmutableSortedSet<String> getFeatures();
+
+    @Value.NaturalOrder
+    ImmutableSortedMap<String, StringWithMacros> getEnvironment();
 
     Optional<String> getEdition();
 
