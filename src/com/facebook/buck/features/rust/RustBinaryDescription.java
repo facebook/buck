@@ -105,7 +105,7 @@ public class RustBinaryDescription
         args.getCrate(),
         args.getEdition(),
         args.getFeatures(),
-        ImmutableSortedMap.copyOf(Maps.transformValues(args.getEnvironment(), converter::convert)),
+        ImmutableSortedMap.copyOf(Maps.transformValues(args.getEnv(), converter::convert)),
         Stream.of(
                 rustPlatform.getRustBinaryFlags().stream(),
                 args.getRustcFlags().stream().map(converter::convert))

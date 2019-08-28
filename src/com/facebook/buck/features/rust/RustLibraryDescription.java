@@ -167,7 +167,7 @@ public class RustLibraryDescription
 
               ImmutableSortedMap<String, Arg> env =
                   ImmutableSortedMap.copyOf(
-                      Maps.transformValues(args.getEnvironment(), converter::convert));
+                      Maps.transformValues(args.getEnv(), converter::convert));
 
               return new Pair<>(rustcArgs.build(), env);
             };

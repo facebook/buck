@@ -117,7 +117,7 @@ public class RustTestDescription
                         args.getEdition(),
                         args.getFeatures(),
                         ImmutableSortedMap.copyOf(
-                            Maps.transformValues(args.getEnvironment(), converter::convert)),
+                            Maps.transformValues(args.getEnv(), converter::convert)),
                         Stream.of(
                                 testarg,
                                 rustPlatform.getRustTestFlags().stream().map(x -> (Arg) x),

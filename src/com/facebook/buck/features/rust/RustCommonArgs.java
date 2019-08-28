@@ -34,7 +34,7 @@ public interface RustCommonArgs
   ImmutableSortedMap<SourcePath, String> getMappedSrcs();
 
   @Value.NaturalOrder
-  ImmutableSortedMap<String, StringWithMacros> getEnvironment();
+  ImmutableSortedMap<String, StringWithMacros> getEnv();
 
   Optional<String> getEdition();
 
