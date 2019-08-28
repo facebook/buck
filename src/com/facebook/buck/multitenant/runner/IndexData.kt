@@ -28,5 +28,5 @@ fun createIndex(stream: InputStream): IndexComponents {
     val (index, appender) = IndexFactory.createIndex()
     populateIndexFromStream(appender, stream)
 
-    return IndexComponents(index, appender)
+    return IndexComponents(index, appender, mapOf("" to "BUCK"))
 }
