@@ -26,10 +26,9 @@ import java.nio.file.Path
 interface FsToBuildPackageChangeTranslator {
     /**
      * Parse packages which changed because of changes in filesystem
-     * @param generation Base generation upon which filesystem changes are based
      * @param fsChanges Changes in filesystem, like modification of a file
      */
-    fun translateChanges(generation: Generation, fsChanges: FsChanges): BuildPackageChanges
+    fun translateChanges(fsChanges: FsChanges): BuildPackageChanges
 }
 
 /**
@@ -41,14 +40,14 @@ interface FsToBuildPackageChangeTranslator {
  * speaking, this is the folder should contain .buckconfig. This Path does not necessarily need to
  * be physical and can potentially point to virtual filesystem.
  */
-internal class DefaultFsToBuildPackageChangeTranslator(
+class DefaultFsToBuildPackageChangeTranslator(
     private val index: Index,
+    private val generation: Generation,
     private val buildFileName: FsAgnosticPath,
     private val projectRoot: Path
 
 ) : FsToBuildPackageChangeTranslator {
     override fun translateChanges(
-        generation: Generation,
         fsChanges: FsChanges
     ): BuildPackageChanges {
 

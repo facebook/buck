@@ -14,34 +14,26 @@
  * under the License.
  */
 
-package com.facebook.buck.multitenant.runner
+package com.facebook.buck.multitenant.query
 
-import com.facebook.buck.multitenant.fs.FsAgnosticPath
-import com.facebook.buck.multitenant.query.MultitenantQueryEnvironment
-import com.facebook.buck.multitenant.service.DefaultFsToBuildPackageChangeTranslator
 import com.facebook.buck.multitenant.service.FsChanges
+import com.facebook.buck.multitenant.service.FsToBuildPackageChangeTranslator
 import com.facebook.buck.multitenant.service.Index
 import com.facebook.buck.multitenant.service.IndexAppender
-import java.nio.file.Path
 
 /**
- * Note that a real implementation of the service would subscribe to new commits to the repo and use
- * the changeTranslator to take the commit data and turn it into a [BuildPackageChanges] that it can
- * record via [IndexAppender.addCommitData].
+ * Fake implementation of a service for tests
  */
-class FakeMultitenantService(
+class MultitenantServiceStub(
     private val index: Index,
     private val indexAppender: IndexAppender,
-    private val buildFileName: FsAgnosticPath,
-    private val projectRoot: Path
+    private val fsToBuildPackageChangeTranslator: FsToBuildPackageChangeTranslator
 ) {
     fun handleBuckQueryRequest(query: String, changes: FsChanges): List<String> {
-        val generation = requireNotNull(indexAppender.getGeneration(changes.commit)) {
-            "commit '${changes.commit}' not indexed by service"
-        }
-        val changeTranslator =
-            DefaultFsToBuildPackageChangeTranslator(index, generation, buildFileName, projectRoot)
-        val buildPackageChanges = changeTranslator.translateChanges(changes)
+        val generation =
+            indexAppender.getGeneration(changes.commit) ?: throw IllegalArgumentException(
+                "commit '${changes.commit}' not indexed by service")
+        val buildPackageChanges = fsToBuildPackageChangeTranslator.translateChanges(changes)
         val localizedIndex =
             index.createIndexForGenerationWithLocalChanges(generation, buildPackageChanges)
         val cellToBuildFileName = mapOf("" to "BUCK")

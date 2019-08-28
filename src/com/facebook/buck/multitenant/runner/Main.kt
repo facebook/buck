@@ -16,13 +16,16 @@
 
 package com.facebook.buck.multitenant.runner
 
-import com.facebook.buck.multitenant.service.InputSource
+import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.FsChanges
 import com.facebook.buck.multitenant.service.IndexComponents
+import com.facebook.buck.multitenant.service.InputSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import java.net.URI
+import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.system.measureTimeMillis
 
 /**
@@ -33,45 +36,45 @@ fun main(args: Array<String>) {
     // TODO: proper command line options
 
     if (args.isEmpty()) {
-        msg("Missing parameters, example index1@/tmp/index.json index2@http://www.some.site/index2.json")
+        msg("Missing parameters, example index1@/tmp/index.json@/path/to/checkout1 index2@http://www.some.site/index2.json@/path/to/checkout2")
         return
     }
 
     msg("Loading ${args.size} index(es) asynchronously")
     val start = System.nanoTime()
     val corpusToIndex = runBlocking {
-            args.asList().map { arg ->
-                // Have to explicitly call [Dispatchers.Default] to execute on shared pool because
-                // [runBlocking] executes on main thread
-                async(Dispatchers.Default) {
-                    val (corpus, source) = arg.split('@', limit = 2)
-                    val sourceUri = URI.create(source)
+        args.asList().map { arg ->
+            // Have to explicitly call [Dispatchers.Default] to execute on shared pool because
+            // [runBlocking] executes on main thread
+            async(Dispatchers.Default) {
+                val (corpus, source, checkout) = arg.split('@', limit = 3)
+                val sourceUri = URI.create(source)
 
-                    val start = System.nanoTime()
-                    val indexComponents = InputSource.from(sourceUri).use { inputSource ->
-                        msg("Loading index '$corpus' from $source (${inputSource.getSize()} bytes)")
-                        createIndex(inputSource.getInputStream())
-                    }
-
-                    msg("Index '$corpus' loaded in ${nanosToNowInSec(start)} sec.")
-
-                    Pair(corpus, indexComponents)
+                val start = System.nanoTime()
+                val indexComponents = InputSource.from(sourceUri).use { inputSource ->
+                    msg("Loading index '$corpus' from $source (${inputSource.getSize()} bytes)")
+                    createIndex(inputSource.getInputStream())
                 }
-                // Explicitly call toList() to avoid potential lazy evaluation of a map for
-                // coroutine creation
-            }.toList().map { loader -> loader.await() }.toMap()
+
+                msg("Index '$corpus' loaded in ${nanosToNowInSec(start)} sec.")
+
+                Pair(corpus, Pair(indexComponents, Paths.get(checkout)))
+            }
+            // Explicitly call toList() to avoid potential lazy evaluation of a map for
+            // coroutine creation
+        }.toList().map { loader -> loader.await() }.toMap()
     }
 
     msg("Loading all indexes completed in ${nanosToNowInSec(start)} sec.")
 
     msg("Collecting garbage...")
 
-    @Suppress("ExplicitGarbageCollectionCall")
-    System.gc()
+    @Suppress("ExplicitGarbageCollectionCall") System.gc()
 
     msg("Service started. Available commands are: basecommit, corpus, query, out, quit.")
 
     var indexComponents: IndexComponents? = null
+    var projectPath: Path? = null
     var basecommit = ""
     var out = "stdout"
 
@@ -90,18 +93,24 @@ fun main(args: Array<String>) {
             val data = parts.getOrElse(1) { "" }.trim()
             when (cmd) {
                 "basecommit" -> basecommit = data
-                "corpus" -> indexComponents = corpusToIndex.getOrElse(data) {
-                    throw IllegalArgumentException(
-                            "corpus '$data' is not found, available corpuses are '${corpusToIndex.keys.joinToString(
-                                    ", ")}'")
+                "corpus" -> {
+                    val index = requireNotNull(corpusToIndex.get(data)) {
+                        "corpus '$data' is not found, available corpuses are '${corpusToIndex.keys.joinToString(
+                            ", ")}'"
+                    }
+
+                    indexComponents = index.first
+                    projectPath = index.second
                 }
                 "query" -> {
                     val changes = FsChanges(basecommit)
                     var result = listOf<String>()
                     val timeToQueryMs = measureTimeMillis {
-                        result = execute(data, changes,
-                                indexComponents ?: throw IllegalArgumentException(
-                                        "corpus is not specified - use 'corpus' command"))
+                        result = execute(data, changes, requireNotNull(indexComponents) {
+                            "corpus is not specified - use 'corpus' command"
+                        }, requireNotNull(projectPath) {
+                            "path to checkout is not specified"
+                        })
                     }
                     msg("query returned ${result.size} results in $timeToQueryMs ms")
                     output(result, out)
@@ -124,13 +133,14 @@ fun main(args: Array<String>) {
 private fun execute(
     query: String,
     changes: FsChanges,
-    indexComponents: IndexComponents
+    indexComponents: IndexComponents,
+    projectPath: Path
 ): List<String> {
     require(changes.commit.isNotEmpty()) { "should specify basecommit" }
     require(query.isNotEmpty()) { "should specify query" }
 
     val service = FakeMultitenantService(indexComponents.index, indexComponents.appender,
-            indexComponents.changeTranslator)
+        FsAgnosticPath.of("BUCK"), projectPath)
     return service.handleBuckQueryRequest(query, changes)
 }
 

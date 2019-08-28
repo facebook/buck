@@ -17,19 +17,17 @@
 package com.facebook.buck.multitenant.query
 
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
-import com.facebook.buck.multitenant.service.RuleTypeFactory
-import com.facebook.buck.multitenant.service.ServiceRawTargetNode
-import com.facebook.buck.multitenant.service.populateIndexFromStream
-import com.facebook.buck.multitenant.runner.FakeMultitenantService
 import com.facebook.buck.multitenant.service.BuildPackage
 import com.facebook.buck.multitenant.service.BuildPackageChanges
 import com.facebook.buck.multitenant.service.BuildTargets
 import com.facebook.buck.multitenant.service.FsChange
 import com.facebook.buck.multitenant.service.FsChanges
 import com.facebook.buck.multitenant.service.FsToBuildPackageChangeTranslator
-import com.facebook.buck.multitenant.service.Generation
 import com.facebook.buck.multitenant.service.IndexFactory
 import com.facebook.buck.multitenant.service.RawBuildRule
+import com.facebook.buck.multitenant.service.RuleTypeFactory
+import com.facebook.buck.multitenant.service.ServiceRawTargetNode
+import com.facebook.buck.multitenant.service.populateIndexFromStream
 import com.google.common.collect.ImmutableMap
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -49,65 +47,45 @@ java_binary(
  * mechanism, such as Thrift or gRPC.
  */
 class EndToEndServiceTest {
-    @Test
-    fun doQueryWithNoLocalChanges() {
+    @Test fun doQueryWithNoLocalChanges() {
         val translator = FakeFsToBuildPackageChangeTranslator()
         val service = createService("diamond_dependency_graph.json", translator)
 
         val fsChanges = FsChanges("608fd7bdf9")
-        val depsWithNoFileChanges = service.handleBuckQueryRequest(
-                "deps(//java/com/facebook/buck:buck)",
-                fsChanges)
-        assertEquals(setOf(
-                "//java/com/facebook/buck:buck"
-        ), depsWithNoFileChanges.toSet())
+        val depsWithNoFileChanges =
+            service.handleBuckQueryRequest("deps(//java/com/facebook/buck:buck)", fsChanges)
+        assertEquals(setOf("//java/com/facebook/buck:buck"), depsWithNoFileChanges.toSet())
     }
 
-    @Test
-    fun doQueryWithLocallyAddedBuildFile() {
+    @Test fun doQueryWithLocallyAddedBuildFile() {
         val translator = FakeFsToBuildPackageChangeTranslator()
         val service = createService("diamond_dependency_graph.json", translator)
 
         val fsChangesWithAddedBuildFile = FsChanges("608fd7bdf9", added = listOf(
-                FsChange.Added(
-                        FsAgnosticPath.of("java/com/newpkg/BUCK"), BUCK_RULE_WITH_DEPS.toByteArray())
-        ))
-        val universeWithBuildFileAddition = service.handleBuckQueryRequest(
-                "//...",
-                fsChangesWithAddedBuildFile)
-        assertEquals(
-                "Universe should now include //java/com/newpkg:buck",
-                setOf(
-                        "//java/com/example:A",
-                        "//java/com/example:B",
-                        "//java/com/example:C",
-                        "//java/com/example:D",
-                        "//java/com/facebook/buck:buck",
-                        "//java/com/newpkg:buck",
-                        "//test/com/example:script",
-                        "//test/com/example:test"
-                ), universeWithBuildFileAddition.toSet())
+            FsChange.Added(FsAgnosticPath.of("java/com/newpkg/BUCK"),
+                BUCK_RULE_WITH_DEPS.toByteArray())))
+        val universeWithBuildFileAddition =
+            service.handleBuckQueryRequest("//...", fsChangesWithAddedBuildFile)
+        assertEquals("Universe should now include //java/com/newpkg:buck",
+            setOf("//java/com/example:A", "//java/com/example:B", "//java/com/example:C",
+                "//java/com/example:D", "//java/com/facebook/buck:buck", "//java/com/newpkg:buck",
+                "//test/com/example:script", "//test/com/example:test"),
+            universeWithBuildFileAddition.toSet())
     }
 
-    @Test
-    fun doQueryWithLocallyModifiedBuildFile() {
+    @Test fun doQueryWithLocallyModifiedBuildFile() {
         val translator = FakeFsToBuildPackageChangeTranslator()
         val service = createService("diamond_dependency_graph.json", translator)
 
         val fsChangesWithModifiedBuildFile = FsChanges("608fd7bdf9", modified = listOf(
-                FsChange.Modified(
-                        FsAgnosticPath.of("java/com/facebook/buck/BUCK"), BUCK_RULE_WITH_DEPS.toByteArray())
-        ))
-        val depsWithBuildFileChange = service.handleBuckQueryRequest(
-                "deps(//java/com/facebook/buck:buck)",
+            FsChange.Modified(FsAgnosticPath.of("java/com/facebook/buck/BUCK"),
+                BUCK_RULE_WITH_DEPS.toByteArray())))
+        val depsWithBuildFileChange =
+            service.handleBuckQueryRequest("deps(//java/com/facebook/buck:buck)",
                 fsChangesWithModifiedBuildFile)
-        assertEquals(
-                "Local change that adds dep for :B also adds transitive dep to :A.",
-                setOf(
-                        "//java/com/example:A",
-                        "//java/com/example:B",
-                        "//java/com/facebook/buck:buck"
-                ), depsWithBuildFileChange.toSet())
+        assertEquals("Local change that adds dep for :B also adds transitive dep to :A.",
+            setOf("//java/com/example:A", "//java/com/example:B", "//java/com/facebook/buck:buck"),
+            depsWithBuildFileChange.toSet())
     }
 }
 
@@ -119,56 +97,48 @@ class EndToEndServiceTest {
  * have been affected.
  */
 private class FakeFsToBuildPackageChangeTranslator : FsToBuildPackageChangeTranslator {
-    override fun translateChanges(generation: Generation, fsChanges: FsChanges): BuildPackageChanges {
+    override fun translateChanges(fsChanges: FsChanges): BuildPackageChanges {
         val addedBuildPackageChanges: MutableList<BuildPackage> = mutableListOf()
         val modifiedBuildPackageChanges: MutableList<BuildPackage> = mutableListOf()
         val removedBuildPackages: MutableList<FsAgnosticPath> = mutableListOf()
 
         fsChanges.added.forEach { added ->
             val contents = added.contents ?: return@forEach
-            if (added.path == FsAgnosticPath.of("java/com/newpkg/BUCK") &&
-                    contents.contentEquals(BUCK_RULE_WITH_DEPS.toByteArray())) {
-                addedBuildPackageChanges.add(
-                        BuildPackage(
-                                FsAgnosticPath.of("java/com/newpkg"),
-                                setOf(RawBuildRule(
-                                    ServiceRawTargetNode(
-                                        BuildTargets.parseOrThrow("//java/com/newpkg:buck"),
-                                        RuleTypeFactory.createBuildRule("java_binary"),
-                                        ImmutableMap.of()),
-                                        setOf(BuildTargets.parseOrThrow("//java/com/example:B"))
-                                ))
-                        )
-                )
+            if (added.path == FsAgnosticPath.of("java/com/newpkg/BUCK") && contents.contentEquals(
+                    BUCK_RULE_WITH_DEPS.toByteArray())) {
+                addedBuildPackageChanges.add(BuildPackage(FsAgnosticPath.of("java/com/newpkg"),
+                    setOf(RawBuildRule(
+                        ServiceRawTargetNode(BuildTargets.parseOrThrow("//java/com/newpkg:buck"),
+                            RuleTypeFactory.createBuildRule("java_binary"), ImmutableMap.of()),
+                        setOf(BuildTargets.parseOrThrow("//java/com/example:B"))))))
             }
         }
 
         fsChanges.modified.forEach { modified ->
             val contents = modified.contents ?: return@forEach
-            if (modified.path == FsAgnosticPath.of("java/com/facebook/buck/BUCK") &&
-                    contents.contentEquals(BUCK_RULE_WITH_DEPS.toByteArray())) {
+            if (modified.path == FsAgnosticPath.of(
+                    "java/com/facebook/buck/BUCK") && contents.contentEquals(
+                    BUCK_RULE_WITH_DEPS.toByteArray())) {
                 modifiedBuildPackageChanges.add(
-                        BuildPackage(
-                                FsAgnosticPath.of("java/com/facebook/buck"),
-                                setOf(RawBuildRule(
-                                    ServiceRawTargetNode(
-                                        BuildTargets.parseOrThrow("//java/com/facebook/buck:buck"),
-                                        RuleTypeFactory.createBuildRule("java_binary"),
-                                        ImmutableMap.of()),
-                                        setOf(BuildTargets.parseOrThrow("//java/com/example:B"))
-                                ))
-                        )
-                )
+                    BuildPackage(FsAgnosticPath.of("java/com/facebook/buck"), setOf(RawBuildRule(
+                        ServiceRawTargetNode(
+                            BuildTargets.parseOrThrow("//java/com/facebook/buck:buck"),
+                            RuleTypeFactory.createBuildRule("java_binary"), ImmutableMap.of()),
+                        setOf(BuildTargets.parseOrThrow("//java/com/example:B"))))))
             }
         }
 
-        return BuildPackageChanges(addedBuildPackageChanges, modifiedBuildPackageChanges, removedBuildPackages)
+        return BuildPackageChanges(addedBuildPackageChanges, modifiedBuildPackageChanges,
+            removedBuildPackages)
     }
 }
 
-private fun createService(resource: String, changeTranslator: FsToBuildPackageChangeTranslator): FakeMultitenantService {
+private fun createService(
+    resource: String,
+    changeTranslator: FsToBuildPackageChangeTranslator
+): MultitenantServiceStub {
     val (index, indexAppender) = IndexFactory.createIndex()
     populateIndexFromStream(indexAppender,
         EndToEndServiceTest::class.java.getResourceAsStream("data/$resource"))
-    return FakeMultitenantService(index, indexAppender, changeTranslator)
+    return MultitenantServiceStub(index, indexAppender, changeTranslator)
 }

@@ -21,6 +21,5 @@ package com.facebook.buck.multitenant.service
  */
 data class IndexComponents(
     val index: Index,
-    val appender: IndexAppender,
-    val changeTranslator: FsToBuildPackageChangeTranslator
+    val appender: IndexAppender
 )
