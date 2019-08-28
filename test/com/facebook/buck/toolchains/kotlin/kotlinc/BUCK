@@ -3,8 +3,8 @@ filegroup(
     name = "kotlinc",
     srcs = [
         "libexec/build.txt",
-        "libexec/lib/kotlin-annotation-processing-gradle.jar",
-        "libexec/lib/kotlin-compiler-embeddable.jar",
+        "libexec/lib/kotlin-annotation-processing.jar",
+        "libexec/lib/kotlin-compiler.jar",
         "libexec/lib/kotlin-reflect.jar",
         "libexec/lib/kotlin-script-runtime.jar",
         "libexec/lib/kotlin-stdlib.jar",
@@ -12,16 +12,16 @@ filegroup(
 )
 
 prebuilt_jar(
-    name = "annotation-processing-gradle",
-    binary_jar = "libexec/lib/kotlin-annotation-processing-gradle.jar",
+    name = "annotation-processing",
+    binary_jar = "libexec/lib/kotlin-annotation-processing.jar",
     visibility = [
         "//test/com/facebook/buck/...",
     ],
 )
 
 prebuilt_jar(
-    name = "compiler-embeddable",
-    binary_jar = "libexec/lib/kotlin-compiler-embeddable.jar",
+    name = "compiler",
+    binary_jar = "libexec/lib/kotlin-compiler.jar",
     visibility = [
         "//test/com/facebook/buck/...",
     ],
