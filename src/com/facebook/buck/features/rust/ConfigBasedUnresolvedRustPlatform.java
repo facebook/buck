@@ -29,6 +29,7 @@ import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Option;
 import com.facebook.buck.util.ProcessExecutor.Result;
@@ -99,20 +100,42 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
                             tp,
                             true))
             .orElseGet(cxxPlatform::getLd);
-    return RustPlatform.builder()
-        .setRustCompiler(rustCompiler)
-        .addAllRustLibraryFlags(rustBuckConfig.getRustcLibraryFlags(name))
-        .addAllRustBinaryFlags(rustBuckConfig.getRustcBinaryFlags(name))
-        .addAllRustTestFlags(rustBuckConfig.getRustcTestFlags(name))
-        .addAllRustCheckFlags(rustBuckConfig.getRustcCheckFlags(name))
-        .setLinker(linkerOverride)
-        .setLinkerProvider(linkerProvider)
-        .addAllLinkerArgs(rustBuckConfig.getLinkerFlags(name))
-        .addAllLinkerArgs(
-            !linkerOverride.isPresent() ? cxxPlatform.getLdflags() : ImmutableList.of())
-        .setCxxPlatform(cxxPlatform)
-        .setXcrunSdkPath(computeXcrunSdkPath(cxxPlatform.getFlavor()))
-        .build();
+    RustPlatform.Builder builder =
+        RustPlatform.builder()
+            .setRustCompiler(rustCompiler)
+            .addAllRustLibraryFlags(
+                rustBuckConfig.getRustcLibraryFlags(name).stream()
+                    .map(StringArg::of)
+                    .collect(ImmutableList.toImmutableList()))
+            .addAllRustBinaryFlags(
+                rustBuckConfig.getRustcBinaryFlags(name).stream()
+                    .map(StringArg::of)
+                    .collect(ImmutableList.toImmutableList()))
+            .addAllRustTestFlags(
+                rustBuckConfig.getRustcTestFlags(name).stream()
+                    .map(StringArg::of)
+                    .collect(ImmutableList.toImmutableList()))
+            .addAllRustCheckFlags(
+                rustBuckConfig.getRustcCheckFlags(name).stream()
+                    .map(StringArg::of)
+                    .collect(ImmutableList.toImmutableList()))
+            .setLinker(linkerOverride)
+            .setLinkerProvider(linkerProvider)
+            .addAllLinkerArgs(
+                rustBuckConfig.getLinkerFlags(name).stream()
+                    .map(StringArg::of)
+                    .collect(ImmutableList.toImmutableList()))
+            .setCxxPlatform(cxxPlatform)
+            .setXcrunSdkPath(computeXcrunSdkPath(cxxPlatform.getFlavor()));
+
+    if (!linkerOverride.isPresent()) {
+      builder.addAllLinkerArgs(
+          cxxPlatform.getLdflags().stream()
+              .map(StringArg::of)
+              .collect(ImmutableList.toImmutableList()));
+    }
+
+    return builder.build();
   }
 
   @Override

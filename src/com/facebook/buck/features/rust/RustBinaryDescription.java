@@ -38,7 +38,10 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -90,6 +93,9 @@ public class RustBinaryDescription
         RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args)
             .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration());
 
+    StringWithMacrosConverter converter =
+        RustCompileUtils.getMacroExpander(context, buildTarget, rustPlatform.getCxxPlatform());
+
     return RustCompileUtils.createBinaryBuildRule(
         buildTarget,
         context.getProjectFilesystem(),
@@ -100,10 +106,13 @@ public class RustBinaryDescription
         args.getCrate(),
         args.getEdition(),
         args.getFeatures(),
-        Stream.of(rustPlatform.getRustBinaryFlags().stream(), args.getRustcFlags().stream())
+        Stream.of(
+                rustPlatform.getRustBinaryFlags().stream(),
+                args.getRustcFlags().stream().map(converter::convert))
             .flatMap(x -> x)
+            .map(x -> (Arg) x)
             .iterator(),
-        args.getLinkerFlags().iterator(),
+        args.getLinkerFlags().stream().map(converter::convert).iterator(),
         linkStyle,
         args.isRpath(),
         args.getSrcs(),
@@ -186,9 +195,9 @@ public class RustBinaryDescription
     @Value.NaturalOrder
     ImmutableSortedSet<String> getFeatures();
 
-    ImmutableList<String> getRustcFlags();
+    ImmutableList<StringWithMacros> getRustcFlags();
 
-    ImmutableList<String> getLinkerFlags();
+    ImmutableList<StringWithMacros> getLinkerFlags();
 
     Optional<Linker.LinkableDepType> getLinkStyle();
 

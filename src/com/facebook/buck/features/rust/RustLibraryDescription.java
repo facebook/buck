@@ -52,6 +52,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionPropagator;
@@ -96,8 +98,8 @@ public class RustLibraryDescription
       ActionGraphBuilder graphBuilder,
       RustPlatform rustPlatform,
       RustBuckConfig rustBuckConfig,
-      ImmutableList<String> extraFlags,
-      ImmutableList<String> extraLinkerFlags,
+      ImmutableList<Arg> extraFlags,
+      ImmutableList<Arg> extraLinkerFlags,
       Iterable<Arg> linkerInputs,
       String crate,
       CrateType crateType,
@@ -147,13 +149,17 @@ public class RustLibraryDescription
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
 
-    Function<RustPlatform, ImmutableList<String>> getRustcArgs =
+    Function<RustPlatform, ImmutableList<Arg>> getRustcArgs =
         rustPlatform -> {
-          ImmutableList.Builder<String> rustcArgs = ImmutableList.builder();
+          StringWithMacrosConverter converter =
+              RustCompileUtils.getMacroExpander(
+                  context, buildTarget, rustPlatform.getCxxPlatform());
+
+          ImmutableList.Builder<Arg> rustcArgs = ImmutableList.builder();
           RustCompileUtils.addFeatures(buildTarget, args.getFeatures(), rustcArgs);
           RustCompileUtils.addTargetTripleForFlavor(rustPlatform.getFlavor(), rustcArgs);
           rustcArgs.addAll(rustPlatform.getRustLibraryFlags());
-          rustcArgs.addAll(args.getRustcFlags());
+          rustcArgs.addAll(args.getRustcFlags().stream().map(converter::convert).iterator());
           return rustcArgs.build();
         };
 
@@ -506,7 +512,7 @@ public class RustLibraryDescription
 
     Optional<String> getEdition();
 
-    List<String> getRustcFlags();
+    List<StringWithMacros> getRustcFlags();
 
     @Value.Default
     default NativeLinkableGroup.Linkage getPreferredLinkage() {

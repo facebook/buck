@@ -22,6 +22,7 @@ import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
+import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -47,21 +48,21 @@ interface AbstractRustPlatform extends FlavorConvertible {
    *
    * @return List of rustc_library_flags, as well as common rustc_flags.
    */
-  ImmutableList<String> getRustLibraryFlags();
+  ImmutableList<StringArg> getRustLibraryFlags();
 
   /**
    * Get rustc flags for rust_binary() rules.
    *
    * @return List of rustc_binary_flags, as well as common rustc_flags.
    */
-  ImmutableList<String> getRustBinaryFlags();
+  ImmutableList<StringArg> getRustBinaryFlags();
 
   /**
    * Get rustc flags for rust_test() rules.
    *
    * @return List of rustc_test_flags, as well as common rustc_flags.
    */
-  ImmutableList<String> getRustTestFlags();
+  ImmutableList<StringArg> getRustTestFlags();
 
   /**
    * Get rustc flags for #check flavored builds. Caller must also include rule-dependent flags and
@@ -69,7 +70,7 @@ interface AbstractRustPlatform extends FlavorConvertible {
    *
    * @return List of rustc_check_flags.
    */
-  ImmutableList<String> getRustCheckFlags();
+  ImmutableList<StringArg> getRustCheckFlags();
 
   Optional<ToolProvider> getLinker();
 
@@ -77,7 +78,7 @@ interface AbstractRustPlatform extends FlavorConvertible {
 
   // Get args for linker. Always return rust.linker_args if provided, and also include cxx.ldflags
   // if we're using the Cxx platform linker.
-  ImmutableList<String> getLinkerArgs();
+  ImmutableList<StringArg> getLinkerArgs();
 
   /** @return the {@link CxxPlatform} to use for C/C++ dependencies. */
   CxxPlatform getCxxPlatform();

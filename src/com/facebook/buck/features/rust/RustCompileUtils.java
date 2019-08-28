@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.rules.tool.BinaryWrapperRule;
@@ -37,6 +38,7 @@ import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxGenruleDescription;
+import com.facebook.buck.cxx.CxxLocationMacroExpander;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
@@ -48,6 +50,10 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
+import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.OutputMacroExpander;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.types.Pair;
@@ -70,6 +76,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
 /** Utilities to generate various kinds of Rust compilation. */
@@ -101,8 +108,8 @@ public class RustCompileUtils {
       ActionGraphBuilder graphBuilder,
       RustPlatform rustPlatform,
       RustBuckConfig rustConfig,
-      ImmutableList<String> extraFlags,
-      ImmutableList<String> extraLinkerFlags,
+      ImmutableList<Arg> extraFlags,
+      ImmutableList<Arg> extraLinkerFlags,
       Iterable<Arg> linkerInputs,
       CrateType crateType,
       Optional<String> edition,
@@ -126,8 +133,6 @@ public class RustCompileUtils {
     }
 
     Stream.concat(rustPlatform.getLinkerArgs().stream(), extraLinkerFlags.stream())
-        .filter(x -> !x.isEmpty())
-        .map(StringArg::of)
         .forEach(linkerArgs::add);
 
     linkerArgs.addAll(linkerInputs);
@@ -142,7 +147,7 @@ public class RustCompileUtils {
       relocModel = "static";
     }
 
-    Stream<String> checkArgs;
+    Stream<StringArg> checkArgs;
     if (crateType.isCheck()) {
       args.add(StringArg.of("--emit=metadata"));
       checkArgs = rustPlatform.getRustCheckFlags().stream();
@@ -157,13 +162,13 @@ public class RustCompileUtils {
 
     Stream.of(
             Stream.of(
-                String.format("--crate-name=%s", crateName),
-                String.format("--crate-type=%s", crateType),
-                String.format("-Crelocation-model=%s", relocModel)),
+                    String.format("--crate-name=%s", crateName),
+                    String.format("--crate-type=%s", crateType),
+                    String.format("-Crelocation-model=%s", relocModel))
+                .map(StringArg::of),
             extraFlags.stream(),
             checkArgs)
         .flatMap(x -> x)
-        .map(StringArg::of)
         .forEach(args::add);
 
     args.add(StringArg.of(String.format("--edition=%s", edition.orElse(rustConfig.getEdition()))));
@@ -290,8 +295,8 @@ public class RustCompileUtils {
       ActionGraphBuilder graphBuilder,
       RustPlatform rustPlatform,
       RustBuckConfig rustConfig,
-      ImmutableList<String> extraFlags,
-      ImmutableList<String> extraLinkerFlags,
+      ImmutableList<Arg> extraFlags,
+      ImmutableList<Arg> extraLinkerFlags,
       Iterable<Arg> linkerInputs,
       String crateName,
       CrateType crateType,
@@ -388,8 +393,8 @@ public class RustCompileUtils {
       Optional<String> crateName,
       Optional<String> edition,
       ImmutableSortedSet<String> features,
-      Iterator<String> rustcFlags,
-      Iterator<String> linkerFlags,
+      Iterator<Arg> rustcFlags,
+      Iterator<Arg> linkerFlags,
       LinkableDepType linkStyle,
       boolean rpath,
       ImmutableSortedSet<SourcePath> srcs,
@@ -397,14 +402,14 @@ public class RustCompileUtils {
       ImmutableSet<String> defaultRoots,
       CrateType crateType,
       Iterable<BuildRule> deps) {
-    ImmutableList.Builder<String> rustcArgs = ImmutableList.builder();
+    ImmutableList.Builder<Arg> rustcArgs = ImmutableList.builder();
 
     RustCompileUtils.addFeatures(buildTarget, features, rustcArgs);
 
     RustCompileUtils.addTargetTripleForFlavor(rustPlatform.getFlavor(), rustcArgs);
     rustcArgs.addAll(rustcFlags);
 
-    ImmutableList.Builder<String> linkerArgs = ImmutableList.builder();
+    ImmutableList.Builder<Arg> linkerArgs = ImmutableList.builder();
     linkerArgs.addAll(linkerFlags);
 
     String crate = crateName.orElse(ruleToCrateName(buildTarget.getShortName()));
@@ -454,16 +459,20 @@ public class RustCompileUtils {
       Path absBinaryDir =
           projectFilesystem.resolve(RustCompileRule.getOutputDir(binaryTarget, projectFilesystem));
 
-      linkerArgs.addAll(
-          Linkers.iXlinker(
-              "-rpath",
-              String.format(
-                  "%s/%s",
-                  cxxPlatform
-                      .getLd()
-                      .resolve(graphBuilder, buildTarget.getTargetConfiguration())
-                      .origin(),
-                  absBinaryDir.relativize(sharedLibraries.getRoot()).toString())));
+      StreamSupport.stream(
+              Linkers.iXlinker(
+                      "-rpath",
+                      String.format(
+                          "%s/%s",
+                          cxxPlatform
+                              .getLd()
+                              .resolve(graphBuilder, buildTarget.getTargetConfiguration())
+                              .origin(),
+                          absBinaryDir.relativize(sharedLibraries.getRoot()).toString()))
+                  .spliterator(),
+              false)
+          .map(StringArg::of)
+          .forEach(linkerArgs::add);
 
       // Add all the shared libraries and the symlink tree as inputs to the tool that represents
       // this binary, so that users can attach the proper deps.
@@ -559,14 +568,14 @@ public class RustCompileUtils {
   }
 
   public static void addFeatures(
-      BuildTarget buildTarget, Iterable<String> features, ImmutableList.Builder<String> args) {
+      BuildTarget buildTarget, Iterable<String> features, ImmutableList.Builder<Arg> args) {
     for (String feature : features) {
       if (feature.contains("\"")) {
         throw new HumanReadableException(
             "%s contains an invalid feature name %s", buildTarget.getFullyQualifiedName(), feature);
       }
 
-      args.add("--cfg", String.format("feature=\"%s\"", feature));
+      args.add(StringArg.of("--cfg"), StringArg.of(String.format("feature=\"%s\"", feature)));
     }
   }
 
@@ -705,10 +714,29 @@ public class RustCompileUtils {
   }
 
   /** Add the appropriate --target option to the given rustc args if the given flavor is known. */
-  public static void addTargetTripleForFlavor(Flavor flavor, ImmutableList.Builder<String> args) {
+  public static void addTargetTripleForFlavor(Flavor flavor, ImmutableList.Builder<Arg> args) {
     String triple = targetTripleForFlavor(flavor);
     if (triple != null) {
-      args.add("--target", triple);
+      args.add(StringArg.of("--target"), StringArg.of(triple));
     }
+  }
+
+  /** Return a macro expander for a string with macros */
+  public static StringWithMacrosConverter getMacroExpander(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
+      CxxPlatform cxxPlatform) {
+    ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>> expanders =
+        ImmutableList.of(new CxxLocationMacroExpander(cxxPlatform), new OutputMacroExpander());
+
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(buildTarget)
+            .setCellPathResolver(context.getCellPathResolver())
+            .setActionGraphBuilder(context.getActionGraphBuilder())
+            .setExpanders(expanders)
+            .build();
+
+    return macrosConverter;
   }
 }

@@ -41,7 +41,11 @@ import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.features.rust.RustBinaryDescription.Type;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -93,6 +97,11 @@ public class RustTestDescription
         RustCompileUtils.getRustPlatform(getRustToolchain(), buildTarget, args)
             .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration());
 
+    StringWithMacrosConverter converter =
+        RustCompileUtils.getMacroExpander(context, buildTarget, rustPlatform.getCxxPlatform());
+
+    Stream<Arg> testarg = args.isFramework() ? Stream.of(StringArg.of("--test")) : Stream.empty();
+
     BinaryWrapperRule testExeBuild =
         (BinaryWrapperRule)
             graphBuilder.computeIfAbsent(
@@ -109,12 +118,13 @@ public class RustTestDescription
                         args.getEdition(),
                         args.getFeatures(),
                         Stream.of(
-                                args.isFramework() ? Stream.of("--test") : Stream.<String>empty(),
+                                testarg,
                                 rustPlatform.getRustTestFlags().stream(),
-                                args.getRustcFlags().stream())
+                                args.getRustcFlags().stream().map(converter::convert))
                             .flatMap(x -> x)
+                            .map(x -> (Arg) x)
                             .iterator(),
-                        args.getLinkerFlags().iterator(),
+                        args.getLinkerFlags().stream().map(converter::convert).iterator(),
                         RustCompileUtils.getLinkStyle(buildTarget, args.getLinkStyle()),
                         args.isRpath(),
                         args.getSrcs(),
@@ -169,9 +179,9 @@ public class RustTestDescription
     @Value.NaturalOrder
     ImmutableSortedSet<String> getFeatures();
 
-    ImmutableList<String> getRustcFlags();
+    ImmutableList<StringWithMacros> getRustcFlags();
 
-    ImmutableList<String> getLinkerFlags();
+    ImmutableList<StringWithMacros> getLinkerFlags();
 
     Optional<Linker.LinkableDepType> getLinkStyle();
 

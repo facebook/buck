@@ -882,4 +882,23 @@ public class RustBinaryIntegrationTest {
     workspace.runCommand(
         workspace.resolve("cell/buck-out/gen/thinguser#binary/thinguser").toString());
   }
+
+  @Test
+  public void simpleBinaryWithMacroExpansion() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "macro_args", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:binary-args").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:binary-args");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            workspace.resolve("buck-out/gen/binary-args#binary,default/binary_args").toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), Matchers.blankString());
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
 }

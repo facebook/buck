@@ -23,11 +23,11 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 
-class CxxLocationMacroExpander extends LocationMacroExpander {
+public class CxxLocationMacroExpander extends LocationMacroExpander {
 
   private final CxxPlatform platform;
 
-  CxxLocationMacroExpander(CxxPlatform platform) {
+  public CxxLocationMacroExpander(CxxPlatform platform) {
     this.platform = platform;
   }
 
