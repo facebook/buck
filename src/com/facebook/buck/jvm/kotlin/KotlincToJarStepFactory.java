@@ -208,10 +208,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
         ImmutableList<String> annotationProcessors =
             ImmutableList.copyOf(
-                javacOptions
-                    .getJavaAnnotationProcessorParams()
-                    .getPluginProperties()
-                    .stream()
+                javacOptions.getJavaAnnotationProcessorParams().getPluginProperties().stream()
                     .map(
                         resolvedJavacPluginProperties ->
                             resolvedJavacPluginProperties.getJavacPluginJsr199Fields(
@@ -223,7 +220,9 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
         ImmutableList<String> kaptPluginOptions =
             ImmutableList.<String>builder()
-                .add(AP_CLASSPATH_ARG + kotlinc.getAnnotationProcessorPath(buildContext.getSourcePathResolver()))
+                .add(
+                    AP_CLASSPATH_ARG
+                        + kotlinc.getAnnotationProcessorPath(buildContext.getSourcePathResolver()))
                 .add(AP_CLASSPATH_ARG + kotlinc.getStdlibPath(buildContext.getSourcePathResolver()))
                 .addAll(annotationProcessors)
                 .add(SOURCES_ARG + projectFilesystem.resolve(sourcesOutput))
@@ -233,7 +232,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 .add(
                     AP_OPTIONS
                         + encodeKaptApOptions(
-                        kaptApOptions, projectFilesystem.resolve(kaptGeneratedOutput).toString()))
+                            kaptApOptions,
+                            projectFilesystem.resolve(kaptGeneratedOutput).toString()))
                 .add(JAVAC_ARG + encodeOptions(Collections.emptyMap()))
                 .add(LIGHT_ANALYSIS + "true") // TODO: Provide value as argument
                 .add(CORRECT_ERROR_TYPES + "false") // TODO: Provide value as argument
@@ -242,7 +242,9 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
         String join = Joiner.on(",").join(kaptPluginOptions);
 
         annotationProcessingOptionsBuilder
-            .add(X_PLUGIN_ARG + kotlinc.getAnnotationProcessorPath(buildContext.getSourcePathResolver()))
+            .add(
+                X_PLUGIN_ARG
+                    + kotlinc.getAnnotationProcessorPath(buildContext.getSourcePathResolver()))
             .add(PLUGIN)
             // kapt option that allows one single call of kapt to run all kapt phases + compilation
             .add(KAPT3_PLUGIN + APT_MODE + "compile," + join);
@@ -274,7 +276,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
         sourceBuilder.add(genOutput);
       }
-
 
       steps.add(
           new KotlincStep(
@@ -367,7 +368,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     }
   }
 
- @Override
+  @Override
   protected Optional<String> getBootClasspath(BuildContext context) {
     return javacOptions.withBootclasspathFromContext(extraClassPath).getBootclasspath();
   }

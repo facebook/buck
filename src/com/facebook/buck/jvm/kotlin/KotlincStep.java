@@ -153,7 +153,6 @@ public class KotlincStep implements Step {
                       path -> filesystem.resolve(path).toAbsolutePath().toString())));
     }
 
-
     if (!extraArguments.isEmpty()) {
       for (String extraArgument : extraArguments) {
         if (!extraArgument.isEmpty()) {
