@@ -123,6 +123,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     Optional<ImmutableSortedMap<String, String>> getSonameMergeMap();
 
     Optional<ImmutableSortedMap<String, ImmutableSortedSet<String>>> getSharedObjectTargets();
+
+    Optional<CopyNativeLibraries> getCopyNativeLibrariesForSystemLibraryLoader();
   }
 
   // Populates an immutable map builder with all given linkables set to the given cpu type.
@@ -191,6 +193,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       return new ImmutableAndroidNativeLibsGraphEnhancementResult(
           Optional.empty(),
           Optional.of(ImmutableSortedSet.of()),
+          Optional.empty(),
           Optional.empty(),
           Optional.empty());
     }
@@ -341,6 +344,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
             .concat(nativeLinkableLibsAssets.values().stream())
             .toImmutableSortedSet(Ordering.natural());
 
+    Optional<CopyNativeLibraries> nativeLibrariesForPrimaryApk = Optional.empty();
+
     for (APKModule module : apkModules) {
       ImmutableMap<StripLinkable, StrippedObjectDescription> filteredStrippedLibsMap =
           ImmutableMap.copyOf(
@@ -358,10 +363,22 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       ImmutableCollection<SourcePath> nativeLibsAssetsDirectories =
           packageableCollection.getNativeLibAssetsDirectories().get(module);
 
+      // Handle native libs which need to go into the primary APK and skip exopackage/optimization
       ImmutableCollection<SourcePath> nativeLibsDirectoriesForPrimaryDexModule =
           module.isRootModule()
               ? packageableCollection.getNativeLibsDirectoriesForSystemLoader()
               : ImmutableList.of();
+      if (module.isRootModule() && !nativeLibsDirectoriesForPrimaryDexModule.isEmpty()) {
+        nativeLibrariesForPrimaryApk =
+            Optional.of(
+                createCopyNativeLibraries(
+                    module,
+                    ImmutableMap.of(),
+                    ImmutableMap.of(),
+                    nativeLibsDirectoriesForPrimaryDexModule,
+                    ImmutableList.of(),
+                    "_for_primary_apk"));
+      }
 
       if (filteredStrippedLibsMap.isEmpty()
           && filteredStrippedLibsAssetsMap.isEmpty()
@@ -378,7 +395,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               filteredStrippedLibsMap,
               filteredStrippedLibsAssetsMap,
               nativeLibsDirectories,
-              nativeLibsAssetsDirectories));
+              nativeLibsAssetsDirectories,
+              ""));
       hasCopyNativeLibraries = true;
     }
 
@@ -386,11 +404,13 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         hasCopyNativeLibraries
             ? Optional.of(moduleMappedCopyNativeLibriesBuilder.build())
             : Optional.empty();
+
     return new ImmutableAndroidNativeLibsGraphEnhancementResult(
         copyNativeLibraries,
         Optional.of(unstrippedLibraries),
         Optional.ofNullable(sonameMapping),
-        Optional.ofNullable(sharedObjectTargets));
+        Optional.ofNullable(sharedObjectTargets),
+        nativeLibrariesForPrimaryApk);
   }
 
   private NativeLinkableEnhancementResult expandLinkableGroups(
@@ -447,10 +467,11 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       ImmutableMap<StripLinkable, StrippedObjectDescription> filteredStrippedLibsMap,
       ImmutableMap<StripLinkable, StrippedObjectDescription> filteredStrippedLibsAssetsMap,
       ImmutableCollection<SourcePath> nativeLibsDirectories,
-      ImmutableCollection<SourcePath> nativeLibAssetsDirectories) {
+      ImmutableCollection<SourcePath> nativeLibAssetsDirectories,
+      String suffix) {
     return new CopyNativeLibraries(
         originalBuildTarget.withAppendedFlavors(
-            InternalFlavor.of(COPY_NATIVE_LIBS + "_" + module.getName())),
+            InternalFlavor.of(COPY_NATIVE_LIBS + "_" + module.getName() + suffix)),
         projectFilesystem,
         graphBuilder,
         ImmutableSet.copyOf(filteredStrippedLibsMap.values()),

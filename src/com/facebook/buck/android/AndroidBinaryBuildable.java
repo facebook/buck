@@ -424,13 +424,12 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
     // Package prebuilt libs which need to be loaded by `System.loadLibrary` in the standard dir,
     // even in exopackage builds.
-    if (nativeFilesInfo.nativeLibsDirsForSystemLoader.isPresent() && module.isRootModule()) {
+    if (nativeFilesInfo.nativeLibsDirForSystemLoader.isPresent() && module.isRootModule()) {
       addThisModule = true;
-      for (SourcePath sourcePath : nativeFilesInfo.nativeLibsDirsForSystemLoader.get()) {
-        Path relativePath = pathResolver.getRelativePath(sourcePath);
-        nativeLibraryDirectoriesBuilder.add(relativePath);
-        nativeLibraryDirectoriesBuilderForThisModule.add(relativePath);
-      }
+      Path relativePath =
+          pathResolver.getRelativePath(nativeFilesInfo.nativeLibsDirForSystemLoader.get());
+      nativeLibraryDirectoriesBuilder.add(relativePath);
+      nativeLibraryDirectoriesBuilderForThisModule.add(relativePath);
     }
 
     if (shouldPackageAssetLibraries) {

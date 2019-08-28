@@ -16,10 +16,11 @@
 
 package com.facebook.buck.android;
 
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -168,8 +169,18 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
             .collect(Collectors.toList());
 
     // The exo-dir should contain the other libs
-    assertThat(metadataContents, contains("liba"));
+    assertTrue(metadataContents.contains("liba"));
     // but not the one that was excluded via the native_loader flag
-    assertThat(metadataContents, not(contains("libdep")));
+    assertFalse(metadataContents.contains("libdep"));
+  }
+
+  @Test
+  public void testSystemLoadedLibsRespectCpuFilter() throws IOException {
+    Path outputApk =
+        workspace.buildAndReturnOutput("//:app-dep-on-aar-with-native-loaded-so_exo-native_armv7");
+    ZipInspector zipInspector = new ZipInspector(outputApk);
+    zipInspector.assertFileExists("lib/armeabi-v7a/libdep.so");
+    // Since we have a cpu filter for armv7 we should _not_ see x86 deps
+    zipInspector.assertFileDoesNotExist("lib/x86/libdep.so");
   }
 }

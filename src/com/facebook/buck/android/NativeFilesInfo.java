@@ -21,20 +21,19 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public class NativeFilesInfo implements AddsToRuleKey {
   @AddToRuleKey Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsDirs;
   @AddToRuleKey Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsAssetsDirs;
-  @AddToRuleKey Optional<ImmutableSortedSet<SourcePath>> nativeLibsDirsForSystemLoader;
+  @AddToRuleKey Optional<SourcePath> nativeLibsDirForSystemLoader;
 
   public NativeFilesInfo(
       Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsDirs,
       Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsAssetsDirs,
-      Optional<ImmutableSortedSet<SourcePath>> nativeLibsDirsForSystemLoader) {
+      Optional<SourcePath> nativeLibsDirForSystemLoader) {
     this.nativeLibsDirs = nativeLibsDirs;
     this.nativeLibsAssetsDirs = nativeLibsAssetsDirs;
-    this.nativeLibsDirsForSystemLoader = nativeLibsDirsForSystemLoader;
+    this.nativeLibsDirForSystemLoader = nativeLibsDirForSystemLoader;
   }
 }

@@ -325,6 +325,10 @@ public class AndroidBinaryGraphEnhancer {
         apkModuleCopyNativeLibrariesImmutableMap ->
             apkModuleCopyNativeLibrariesImmutableMap.values().forEach(graphBuilder::addToIndex));
 
+    nativeLibsEnhancementResult
+        .getCopyNativeLibrariesForSystemLibraryLoader()
+        .ifPresent(graphBuilder::addToIndex);
+
     if (nativeLibraryProguardConfigGenerator.isPresent()) {
       NativeLibraryProguardGenerator nativeLibraryProguardGenerator =
           createNativeLibraryProguardGenerator(
@@ -485,6 +489,8 @@ public class AndroidBinaryGraphEnhancer {
         .setClasspathEntriesToDex(classpathEntriesToDex)
         .setAPKModuleGraph(apkModuleGraph)
         .setModuleResourceApkPaths(resourcesEnhancementResult.getModuleResourceApkPaths())
+        .setCopyNativeLibrariesForSystemLibraryLoader(
+            nativeLibsEnhancementResult.getCopyNativeLibrariesForSystemLibraryLoader())
         .build();
   }
 

@@ -93,13 +93,12 @@ public class AndroidBinaryFilesInfo {
                             e -> e.getKey(),
                             e -> e.getValue().getSourcePathToNativeLibsAssetsDir())));
 
-    ImmutableList<SourcePath> nativeLibsDirectoriesForSystemLoader =
-        enhancementResult.getPackageableCollection().getNativeLibsDirectoriesForSystemLoader();
-    Optional<ImmutableSortedSet<SourcePath>> nativeLibsDirsForSystemLoader =
-        nativeLibsDirectoriesForSystemLoader.isEmpty()
-            ? Optional.empty()
-            : Optional.of(ImmutableSortedSet.copyOf(nativeLibsDirectoriesForSystemLoader));
-    return new NativeFilesInfo(nativeLibsDirs, nativeLibsAssetsDirs, nativeLibsDirsForSystemLoader);
+    Optional<SourcePath> nativeLibsDirectoriesForSystemLoader =
+        enhancementResult
+            .getCopyNativeLibrariesForSystemLibraryLoader()
+            .map(CopyNativeLibraries::getSourcePathToNativeLibsDir);
+    return new NativeFilesInfo(
+        nativeLibsDirs, nativeLibsAssetsDirs, nativeLibsDirectoriesForSystemLoader);
   }
 
   ResourceFilesInfo getResourceFilesInfo() {
