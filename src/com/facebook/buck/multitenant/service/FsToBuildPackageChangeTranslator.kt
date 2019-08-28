@@ -21,5 +21,10 @@ package com.facebook.buck.multitenant.service
  * to operate on changes to the build graph, so we must create a mapping between the two.
  */
 interface FsToBuildPackageChangeTranslator {
-    fun translateChanges(fsChanges: FsChanges): BuildPackageChanges
+    /**
+     * Parse packages which changed because of changes in filesystem
+     * @param generation Base generation upon which filesystem changes are based
+     * @param fsChanges Changes in filesystem, like modification of a file
+     */
+    fun translateChanges(generation: Generation, fsChanges: FsChanges): BuildPackageChanges
 }

@@ -27,6 +27,7 @@ import com.facebook.buck.multitenant.service.BuildTargets
 import com.facebook.buck.multitenant.service.FsChange
 import com.facebook.buck.multitenant.service.FsChanges
 import com.facebook.buck.multitenant.service.FsToBuildPackageChangeTranslator
+import com.facebook.buck.multitenant.service.Generation
 import com.facebook.buck.multitenant.service.IndexFactory
 import com.facebook.buck.multitenant.service.RawBuildRule
 import com.google.common.collect.ImmutableMap
@@ -118,7 +119,7 @@ class EndToEndServiceTest {
  * have been affected.
  */
 private class FakeFsToBuildPackageChangeTranslator : FsToBuildPackageChangeTranslator {
-    override fun translateChanges(fsChanges: FsChanges): BuildPackageChanges {
+    override fun translateChanges(generation: Generation, fsChanges: FsChanges): BuildPackageChanges {
         val addedBuildPackageChanges: MutableList<BuildPackage> = mutableListOf()
         val modifiedBuildPackageChanges: MutableList<BuildPackage> = mutableListOf()
         val removedBuildPackages: MutableList<FsAgnosticPath> = mutableListOf()

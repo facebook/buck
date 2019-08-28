@@ -35,7 +35,7 @@ class FakeMultitenantService(
     fun handleBuckQueryRequest(query: String, changes: FsChanges): List<String> {
         val generation = indexAppender.getGeneration(changes.commit)
                 ?: throw IllegalArgumentException("commit '${changes.commit}' not indexed by service")
-        val buildPackageChanges = changeTranslator.translateChanges(changes)
+        val buildPackageChanges = changeTranslator.translateChanges(generation, changes)
         val localizedIndex = index.createIndexForGenerationWithLocalChanges(generation, buildPackageChanges)
         val cellToBuildFileName = mapOf("" to "BUCK")
         val env = MultitenantQueryEnvironment(localizedIndex, generation, cellToBuildFileName)
