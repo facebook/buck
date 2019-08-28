@@ -329,6 +329,7 @@ java_binary(
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol_config",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol_generator",
+        "//src/com/facebook/buck/util/zip/collect:collect",
         "//src/com/facebook/buck/versions:translator",
         "//src/com/facebook/buck/versions:types",
         "//src/com/facebook/buck/versions:versions",

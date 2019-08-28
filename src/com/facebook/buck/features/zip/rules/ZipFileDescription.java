@@ -23,6 +23,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.zip.collect.OnDuplicateEntry;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -61,7 +62,8 @@ public class ZipFileDescription
         zipSources,
         args.getFlatten(),
         mergeSourceZips,
-        args.getEntriesToExclude());
+        args.getEntriesToExclude(),
+        args.getOnDuplicateEntry());
   }
 
   @Override
@@ -92,5 +94,10 @@ public class ZipFileDescription
     ImmutableSet<Pattern> getEntriesToExclude();
 
     ImmutableList<SourcePath> getZipSrcs();
+
+    @Value.Default
+    default OnDuplicateEntry getOnDuplicateEntry() {
+      return OnDuplicateEntry.OVERWRITE;
+    }
   }
 }

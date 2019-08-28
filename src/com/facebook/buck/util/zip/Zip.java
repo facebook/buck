@@ -20,6 +20,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
@@ -32,6 +33,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
@@ -162,6 +164,16 @@ public class Zip {
         }
       }
       zipOut.closeEntry();
+    }
+  }
+
+  /** @return a list of all entry names in a zip archive. */
+  public static ImmutableList<String> getAllZipEntries(Path archiveAbsolutePath)
+      throws IOException {
+    try (java.util.zip.ZipFile zip = new java.util.zip.ZipFile(archiveAbsolutePath.toFile())) {
+      return Collections.list(zip.entries()).stream()
+          .map(ZipEntry::getName)
+          .collect(ImmutableList.toImmutableList());
     }
   }
 }

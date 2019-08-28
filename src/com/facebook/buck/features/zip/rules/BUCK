@@ -20,6 +20,7 @@ buck_module(
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/zip:zip",
+        "//src/com/facebook/buck/util/zip/collect:collect",
         "//src/com/facebook/buck/versions:versions",
         "//src/com/facebook/buck/zip:zip",
         "//third-party/java/guava:guava",

@@ -96,6 +96,10 @@ public class ZipOutputStreams {
     return new CustomZipOutputStream(newImpl(out, mode, clock));
   }
 
+  public static CustomZipOutputStream newSimpleOutputStream(OutputStream out) {
+    return new CustomZipOutputStream(new SimpleZipOutputStreamImpl(new DefaultClock(), out));
+  }
+
   public static CustomJarOutputStream newJarOutputStream(
       OutputStream out, HandleDuplicates mode, Clock clock) {
     return new CustomJarOutputStream(newImpl(out, mode, clock));

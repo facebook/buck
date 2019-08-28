@@ -141,6 +141,13 @@ zip_file(
 )
 
 zip_file(
+    name = "zip3",
+    srcs = [
+        "cake.txt",
+    ],
+)
+
+zip_file(
     name = "overwrite_duplicates",
     zip_srcs = [
         ":zip1",
@@ -160,5 +167,36 @@ zip_file(
     name = "copy-zip-with-empty-dir",
     zip_srcs = [
         "zip-with-empty-dir.zip",
+    ],
+)
+
+zip_file(
+    name = "fail_on_duplicates",
+    on_duplicate_entry = "fail",
+    zip_srcs = [
+        ":zip1",
+        ":zip2",
+    ],
+)
+
+zip_file(
+    name = "append_duplicates",
+    srcs = [
+        "cake.txt",
+    ],
+    on_duplicate_entry = "append",
+    zip_srcs = [
+        ":zip1",
+        ":zip3",
+    ],
+)
+
+zip_file(
+    name = "overwrite_mixed_duplicates",
+    srcs = [
+        "cake.txt",
+    ],
+    zip_srcs = [
+        ":zip2",
     ],
 )
