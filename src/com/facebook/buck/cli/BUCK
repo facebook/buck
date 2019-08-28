@@ -357,25 +357,24 @@ java_binary(
     ],
 )
 
-genrule(
+zip_file(
     name = "main-fixed",
     out = "main-fixed.jar",
-    cmd = " ".join([
-        "$(exe //py/buck/zip:munger)",
-        "--input=$(location :main)",
-        "--output=$OUT",
-        "--exclude=.api_description",
-        "--exclude=.options",
-        "--exclude=NOTICE",
-        "--exclude=about.html",
-        "--exclude=about_files",
-        "--exclude=plugin.properties",
-        "--exclude=plugin.xml",
-        "--exclude=META-INF",
-        "--include=META-INF/services",
-        "--include=META-INF/native",
-    ]),
+    entries_to_exclude = [
+        "META-INF/MANIFEST.MF",
+        "META-INF/(?!services|native).*",
+        "^.api_description",
+        "^.options",
+        "^NOTICE",
+        "^about.html",
+        "^about_files.*",
+        "^plugin.properties",
+        "^plugin.xml",
+    ],
     visibility = [
         "PUBLIC",
+    ],
+    zip_srcs = [
+        ":main",
     ],
 )
