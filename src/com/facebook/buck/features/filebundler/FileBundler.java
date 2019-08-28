@@ -16,9 +16,7 @@
 
 package com.facebook.buck.features.filebundler;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -26,15 +24,9 @@ import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.PatternsMatcher;
-import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -48,94 +40,6 @@ public abstract class FileBundler {
 
   public FileBundler(Path basePath) {
     this.basePath = Objects.requireNonNull(basePath);
-  }
-
-  static ImmutableMap<Path, Path> createRelativeMap(
-      Path basePath, SourcePathResolver resolver, Iterable<SourcePath> toCopy) {
-    // The goal here is pretty simple.
-    // 1. For a PathSourcePath (an explicit file reference in a BUCK file) that is a
-    //   a. file, add it as a single entry at a path relative to this target's base path
-    //   b. directory, add all its contents as paths relative to this target's base path
-    // 2. For a BuildTargetSourcePath (an output of another rule) that is a
-    //   a. file, add it as a single entry with just the filename
-    //   b. directory, add all its as paths relative to that directory preceded by the directory
-    // name
-    //
-    // Simplified: 1a and 1b add the item relative to the target's directory, 2a and 2b add the item
-    // relative to its own parent.
-
-    // TODO(cjhopman): We should remove 1a because we shouldn't allow specifying directories in
-    // srcs.
-
-    Map<Path, Path> relativePathMap = new LinkedHashMap<>();
-
-    for (SourcePath sourcePath : toCopy) {
-      ProjectFilesystem filesystem = resolver.getFilesystem(sourcePath);
-      Path absolutePath = resolver.getAbsolutePath(sourcePath).normalize();
-      try {
-        if (sourcePath instanceof PathSourcePath) {
-          // If the path doesn't start with the base path, then it's a reference to a file in a
-          // different package and violates package boundaries. We could just add it by the
-          // filename, but better to discourage violating package boundaries.
-          Verify.verify(
-              absolutePath.startsWith(basePath),
-              "Expected %s to start with %s.",
-              absolutePath,
-              basePath);
-          addPathToRelativePathMap(
-              filesystem,
-              relativePathMap,
-              basePath,
-              absolutePath,
-              basePath.relativize(absolutePath));
-        } else {
-          addPathToRelativePathMap(
-              filesystem,
-              relativePathMap,
-              absolutePath.getParent(),
-              absolutePath,
-              absolutePath.getFileName());
-        }
-      } catch (IOException e) {
-        throw new RuntimeException(
-            String.format("Couldn't read directory [%s].", absolutePath.toString()), e);
-      }
-    }
-
-    return ImmutableMap.copyOf(relativePathMap);
-  }
-
-  private static void addPathToRelativePathMap(
-      ProjectFilesystem filesystem,
-      Map<Path, Path> relativePathMap,
-      Path basePath,
-      Path absolutePath,
-      Path relativePath)
-      throws IOException {
-    if (Files.isDirectory(absolutePath)) {
-      ImmutableSet<Path> files = filesystem.getFilesUnderPath(absolutePath);
-      for (Path file : files) {
-        Path absoluteFilePath = filesystem.resolve(file).normalize();
-        addToRelativePathMap(
-            relativePathMap, basePath.relativize(absoluteFilePath), absoluteFilePath);
-      }
-    } else {
-      addToRelativePathMap(relativePathMap, relativePath, absolutePath);
-    }
-  }
-
-  private static void addToRelativePathMap(
-      Map<Path, Path> relativePathMap, Path pathRelativeToBaseDir, Path absoluteFilePath) {
-    relativePathMap.compute(
-        pathRelativeToBaseDir,
-        (ignored, current) -> {
-          if (current != null) {
-            throw new HumanReadableException(
-                "The file '%s' appears twice in the hierarchy",
-                pathRelativeToBaseDir.getFileName());
-          }
-          return absoluteFilePath;
-        });
   }
 
   public void copy(
@@ -164,7 +68,7 @@ public abstract class FileBundler {
       SourcePathResolver pathResolver,
       PatternsMatcher entriesToExclude) {
 
-    Map<Path, Path> relativeMap = createRelativeMap(basePath, pathResolver, toCopy);
+    Map<Path, Path> relativeMap = pathResolver.createRelativeMap(basePath, toCopy);
 
     for (Map.Entry<Path, Path> pathEntry : relativeMap.entrySet()) {
       Path relativePath = pathEntry.getKey();
