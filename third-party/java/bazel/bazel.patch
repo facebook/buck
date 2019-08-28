@@ -2656,16 +2656,3 @@ index 87dd882d59..321c106326 100644
 -    return cloneBuilder(this.type);
 -  }
  }
-diff --git a/src/main/java/com/google/devtools/build/lib/packages/NativeInfo.java b/src/main/java/com/google/devtools/build/lib/packages/NativeInfo.java
-index 8e05e0e91f..69e73439f8 100644
---- a/src/main/java/com/google/devtools/build/lib/packages/NativeInfo.java
-+++ b/src/main/java/com/google/devtools/build/lib/packages/NativeInfo.java
-@@ -25,7 +25,7 @@ import java.util.Map;
-
- /** Base class for native implementations of {@link StructImpl}. */
- // todo(vladmos,dslomov): make abstract once DefaultInfo stops instantiating it.
--public class NativeInfo extends StructImpl {
-+public abstract class NativeInfo extends StructImpl {
-   protected final ImmutableSortedMap<String, Object> values;
-
-   // Initialized lazily.
