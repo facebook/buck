@@ -27,7 +27,7 @@ class PotentiallyAffectedBuildPackagesTest {
         val changes = getPotentiallyAffectedBuildPackages(
             fsChanges = FsChanges(commit = commit, added = listOf(), modified = listOf(),
                 removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
-            allKnownPackages = setOf(), depToPackageIndex = mapOf())
+            depToPackageIndex = mapOf()) { false }
         assertEquals(commit, changes.commit)
         assertEquals(0, changes.added.size)
         assertEquals(0, changes.modified.size)
@@ -38,7 +38,7 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(fsChanges = FsChanges(commit = "123",
             added = listOf(FsChange.Added(FsAgnosticPath.of("BUCK"), null)), modified = listOf(),
             removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
-            allKnownPackages = setOf(), depToPackageIndex = mapOf()).let { changes ->
+            depToPackageIndex = mapOf()) { false }.let { changes ->
             assertEquals(1, changes.added.size)
             assertEquals(FsAgnosticPath.of(""), changes.added[0])
             assertEquals(0, changes.modified.size)
@@ -48,7 +48,7 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(fsChanges = FsChanges(commit = "123",
             added = listOf(FsChange.Added(FsAgnosticPath.of("a/b/BUCK"), null)),
             modified = listOf(), removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
-            allKnownPackages = setOf(), depToPackageIndex = mapOf()).let { changes ->
+            depToPackageIndex = mapOf()) { false }.let { changes ->
             assertEquals(1, changes.added.size)
             assertEquals(FsAgnosticPath.of("a/b"), changes.added[0])
             assertEquals(0, changes.modified.size)
@@ -60,8 +60,7 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(fsChanges = FsChanges(commit = "123",
             added = listOf(FsChange.Added(FsAgnosticPath.of("a/b/BUCK"), null)),
             modified = listOf(), removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
-            allKnownPackages = setOf(FsAgnosticPath.of("a")),
-            depToPackageIndex = mapOf()).let { changes ->
+            depToPackageIndex = mapOf()) { it == FsAgnosticPath.of("a") }.let { changes ->
             assertEquals(1, changes.added.size)
             assertEquals(FsAgnosticPath.of("a/b"), changes.added[0])
             assertEquals(1, changes.modified.size)
@@ -72,8 +71,7 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(fsChanges = FsChanges(commit = "123",
             added = listOf(FsChange.Added(FsAgnosticPath.of("a/BUCK"), null)), modified = listOf(),
             removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
-            allKnownPackages = setOf(FsAgnosticPath.of("")),
-            depToPackageIndex = mapOf()).let { changes ->
+            depToPackageIndex = mapOf()) { it == FsAgnosticPath.of("") }.let { changes ->
             assertEquals(1, changes.added.size)
             assertEquals(FsAgnosticPath.of("a"), changes.added[0])
             assertEquals(1, changes.modified.size)
@@ -87,8 +85,7 @@ class PotentiallyAffectedBuildPackagesTest {
             fsChanges = FsChanges(commit = "123", added = listOf(), modified = listOf(),
                 removed = listOf(FsChange.Removed(FsAgnosticPath.of("BUCK")))),
             buildFileName = FsAgnosticPath.of("BUCK"),
-            allKnownPackages = setOf(FsAgnosticPath.of("")),
-            depToPackageIndex = mapOf()).let { changes ->
+            depToPackageIndex = mapOf()) { it == FsAgnosticPath.of("") }.let { changes ->
             assertEquals(0, changes.added.size)
             assertEquals(0, changes.modified.size)
             assertEquals(1, changes.removed.size)
@@ -98,9 +95,9 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(
             fsChanges = FsChanges(commit = "123", added = listOf(), modified = listOf(),
                 removed = listOf(FsChange.Removed(FsAgnosticPath.of("a/b/c/d/BUCK")))),
-            buildFileName = FsAgnosticPath.of("BUCK"),
-            allKnownPackages = setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a/b/c/d")),
-            depToPackageIndex = mapOf()).let { changes ->
+            buildFileName = FsAgnosticPath.of("BUCK"), depToPackageIndex = mapOf()) {
+            setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a/b/c/d")).contains(it)
+        }.let { changes ->
             assertEquals(0, changes.added.size)
             assertEquals(1, changes.modified.size)
             assertEquals(FsAgnosticPath.of(""), changes.modified[0])
@@ -113,8 +110,10 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(fsChanges = FsChanges(commit = "123",
             added = listOf(FsChange.Added(FsAgnosticPath.of("a/file.cpp"), null)),
             modified = listOf(), removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
-            allKnownPackages = setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"),
-                FsAgnosticPath.of("b")), depToPackageIndex = mapOf()).let { changes ->
+            depToPackageIndex = mapOf()) {
+            setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"), FsAgnosticPath.of("b")).contains(
+                it)
+        }.let { changes ->
             assertEquals(0, changes.added.size)
             assertEquals(1, changes.modified.size)
             assertEquals(FsAgnosticPath.of("a"), changes.modified[0])
@@ -124,8 +123,10 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(fsChanges = FsChanges(commit = "123",
             added = listOf(FsChange.Added(FsAgnosticPath.of("d/c/b/a/file.cpp"), null)),
             modified = listOf(), removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
-            allKnownPackages = setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"),
-                FsAgnosticPath.of("b")), depToPackageIndex = mapOf()).let { changes ->
+            depToPackageIndex = mapOf()) {
+            setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"), FsAgnosticPath.of("b")).contains(
+                it)
+        }.let { changes ->
             assertEquals(0, changes.added.size)
             assertEquals(1, changes.modified.size)
             assertEquals(FsAgnosticPath.of(""), changes.modified[0])
@@ -137,9 +138,10 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(
             fsChanges = FsChanges(commit = "123", added = listOf(), modified = listOf(),
                 removed = listOf(FsChange.Removed(FsAgnosticPath.of("a/file.cpp")))),
-            buildFileName = FsAgnosticPath.of("BUCK"),
-            allKnownPackages = setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"),
-                FsAgnosticPath.of("b")), depToPackageIndex = mapOf()).let { changes ->
+            buildFileName = FsAgnosticPath.of("BUCK"), depToPackageIndex = mapOf()) {
+            setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"), FsAgnosticPath.of("b")).contains(
+                it)
+        }.let { changes ->
             assertEquals(0, changes.added.size)
             assertEquals(1, changes.modified.size)
             assertEquals(FsAgnosticPath.of("a"), changes.modified[0])
@@ -149,9 +151,10 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(
             fsChanges = FsChanges(commit = "123", added = listOf(), modified = listOf(),
                 removed = listOf(FsChange.Removed(FsAgnosticPath.of("d/c/b/a/file.cpp")))),
-            buildFileName = FsAgnosticPath.of("BUCK"),
-            allKnownPackages = setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"),
-                FsAgnosticPath.of("b")), depToPackageIndex = mapOf()).let { changes ->
+            buildFileName = FsAgnosticPath.of("BUCK"), depToPackageIndex = mapOf()) {
+            setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"), FsAgnosticPath.of("b")).contains(
+                it)
+        }.let { changes ->
             assertEquals(0, changes.added.size)
             assertEquals(1, changes.modified.size)
             assertEquals(FsAgnosticPath.of(""), changes.modified[0])
@@ -163,8 +166,10 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(fsChanges = FsChanges(commit = "123", added = listOf(),
             modified = listOf(FsChange.Modified(FsAgnosticPath.of("a/file.cpp"), null)),
             removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
-            allKnownPackages = setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"),
-                FsAgnosticPath.of("b")), depToPackageIndex = mapOf()).let { changes ->
+            depToPackageIndex = mapOf()) {
+            setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"), FsAgnosticPath.of("b")).contains(
+                it)
+        }.let { changes ->
             assertEquals(0, changes.added.size)
             assertEquals(0, changes.modified.size)
             assertEquals(0, changes.removed.size)
@@ -175,10 +180,11 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(fsChanges = FsChanges(commit = "123", added = listOf(),
             modified = listOf(FsChange.Modified(FsAgnosticPath.of("defs.bzl"), null)),
             removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
-            allKnownPackages = setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"),
-                FsAgnosticPath.of("b")), depToPackageIndex = mapOf(
-                FsAgnosticPath.of("defs.bzl") to setOf(FsAgnosticPath.of(""),
-                    FsAgnosticPath.of("a")))).let { changes ->
+            depToPackageIndex = mapOf(FsAgnosticPath.of("defs.bzl") to setOf(FsAgnosticPath.of(""),
+                FsAgnosticPath.of("a")))) {
+            setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"), FsAgnosticPath.of("b")).contains(
+                it)
+        }.let { changes ->
             assertEquals(0, changes.added.size)
             assertEquals(2, changes.modified.size)
             assertTrue(changes.modified.contains(FsAgnosticPath.of("")))
@@ -191,11 +197,12 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(
             fsChanges = FsChanges(commit = "123", added = listOf(), modified = listOf(),
                 removed = listOf(FsChange.Removed(FsAgnosticPath.of("defs.bzl")))),
-            buildFileName = FsAgnosticPath.of("BUCK"),
-            allKnownPackages = setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"),
-                FsAgnosticPath.of("b")), depToPackageIndex = mapOf(
+            buildFileName = FsAgnosticPath.of("BUCK"), depToPackageIndex = mapOf(
                 FsAgnosticPath.of("defs.bzl") to setOf(FsAgnosticPath.of(""),
-                    FsAgnosticPath.of("a")))).let { changes ->
+                    FsAgnosticPath.of("a")))) {
+            setOf(FsAgnosticPath.of(""), FsAgnosticPath.of("a"), FsAgnosticPath.of("b")).contains(
+                it)
+        }.let { changes ->
             assertEquals(0, changes.added.size)
             assertEquals(2, changes.modified.size)
             assertTrue(changes.modified.contains(FsAgnosticPath.of("")))
@@ -208,10 +215,11 @@ class PotentiallyAffectedBuildPackagesTest {
         getPotentiallyAffectedBuildPackages(fsChanges = FsChanges(commit = "123",
             added = listOf(FsChange.Added(FsAgnosticPath.of("d/defs.bzl"), null)),
             modified = listOf(), removed = listOf()), buildFileName = FsAgnosticPath.of("BUCK"),
-            allKnownPackages = setOf(FsAgnosticPath.of("a"), FsAgnosticPath.of("b"),
-                FsAgnosticPath.of("c")), depToPackageIndex = mapOf(
-                FsAgnosticPath.of("defs.bzl") to setOf(FsAgnosticPath.of("a"),
-                    FsAgnosticPath.of("b")))).let { changes ->
+            depToPackageIndex = mapOf(FsAgnosticPath.of("defs.bzl") to setOf(FsAgnosticPath.of("a"),
+                FsAgnosticPath.of("b")))) {
+            setOf(FsAgnosticPath.of("a"), FsAgnosticPath.of("b"), FsAgnosticPath.of("c")).contains(
+                it)
+        }.let { changes ->
             assertEquals(0, changes.added.size)
             assertEquals(0, changes.modified.size)
             assertEquals(0, changes.removed.size)

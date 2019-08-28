@@ -22,8 +22,10 @@ import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.google.common.collect.ImmutableMap
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 private val JAVA_LIBRARY: RuleType = RuleTypeFactory.createBuildRule("java_library")
@@ -417,6 +419,16 @@ class IndexTest {
             listOf<UnconfiguredBuildTarget>(),
             index.getRefs(generation0, targetOf("//:i_do_not_exist"))
         )
+    }
+
+    @Test fun packageExists() {
+        val (index, generations) = loadIndex("index_test_targets_and_deps.json")
+        val generation5 = generations[4]
+
+        assertTrue(
+            index.packageExists(generation5, FsAgnosticPath.of("java/com/facebook/buck/base")))
+        assertFalse(
+            index.packageExists(generation5, FsAgnosticPath.of("java/com/facebook/buck/model")))
     }
 }
 

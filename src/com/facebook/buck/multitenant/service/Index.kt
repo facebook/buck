@@ -283,6 +283,15 @@ class Index internal constructor(
     }
 
     /**
+     * Return true if package exists in [basePath] for the specified [generation]
+     */
+    fun packageExists(generation: Generation, basePath: FsAgnosticPath): Boolean {
+        return indexGenerationData.withBuildPackageMap { buildPackageMap ->
+            buildPackageMap.getVersion(basePath, generation) != null
+        }
+    }
+
+    /**
      * This is similar to [getTargetsInBasePath], except when there is no build file under
      * `basePath`, it will recursively check the parent directory until it finds a build file and
      * returns  all of the build targets defined in that build package. In the unlikely event

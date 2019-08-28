@@ -37,7 +37,7 @@ object IndexFactory {
         val indexGenerationData = DefaultMutableIndexGenerationData()
         val (index, indexAppender) = createIndex(indexGenerationData)
         val fsToBuildPackageChangeTranslator =
-            DefaultFsToBuildPackageChangeTranslator(indexGenerationData, buildFileName, projectRoot)
+            DefaultFsToBuildPackageChangeTranslator(index, buildFileName, projectRoot)
         return IndexComponents(index, indexAppender,
             fsToBuildPackageChangeTranslator)
     }

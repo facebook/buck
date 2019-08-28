@@ -42,7 +42,7 @@ interface FsToBuildPackageChangeTranslator {
  * be physical and can potentially point to virtual filesystem.
  */
 internal class DefaultFsToBuildPackageChangeTranslator(
-    private val indexGenerationData: IndexGenerationData,
+    private val index: Index,
     private val buildFileName: FsAgnosticPath,
     private val projectRoot: Path
 
@@ -52,14 +52,13 @@ internal class DefaultFsToBuildPackageChangeTranslator(
         fsChanges: FsChanges
     ): BuildPackageChanges {
 
-        // TODO: refactor getPotentiallyAffectedBuildPackages to read from [IndexGenerationData] instead
-        val allKnownPackages: Set<FsAgnosticPath> = setOf()
-
         // TODO: implement parse dependency index
         val depToPackageIndex: Map<FsAgnosticPath, Set<FsAgnosticPath>> = mapOf()
-        val affectedPackagePaths =
-            getPotentiallyAffectedBuildPackages(fsChanges, buildFileName, allKnownPackages,
-                depToPackageIndex)
+
+        val affectedPackagePaths = getPotentiallyAffectedBuildPackages(fsChanges, buildFileName,
+            depToPackageIndex) { packagePath ->
+            index.packageExists(generation, packagePath)
+        }
 
         val parser = BuckShellBuildPackageParser(projectRoot)
         val addedPackages = parser.parsePackages(affectedPackagePaths.added)

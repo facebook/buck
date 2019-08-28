@@ -35,18 +35,17 @@ data class PotentiallyAffectedBuildPackages(
  *
  * @param fsChanges Changes in files to some known commit base
  * @param buildFileName Name of the build file (like 'BUCK'), expressed as [FsAgnosticPath]
- * @param allKnownPackages All packages known to current universe (usually, all packages in
- * a corpus), expressed by [FsAgnosticPath] to package root, relative to universe root
  * @param depToPackageIndex An index from all files which are parse-time dependencies, including
  * transitive ones, to packages (expressed as [FsAgnosticPath]s) which load or otherwise use
  * those dependencies during parsing for that specific universe. Parse-time dependencies are usually
  * extension (.bzl) files. This should not include configuration files.
+ * @param packageExists Predicate used to check if some package exists in the universe
  */
 fun getPotentiallyAffectedBuildPackages(
     fsChanges: FsChanges,
     buildFileName: FsAgnosticPath,
-    allKnownPackages: Set<FsAgnosticPath>,
-    depToPackageIndex: Map<FsAgnosticPath, Set<FsAgnosticPath>>
+    depToPackageIndex: Map<FsAgnosticPath, Set<FsAgnosticPath>>,
+    packageExists: (path: FsAgnosticPath) -> Boolean
 ): PotentiallyAffectedBuildPackages {
     val newPackages = mutableSetOf<FsAgnosticPath>()
     val changedPackages = mutableSetOf<FsAgnosticPath>()
@@ -62,7 +61,7 @@ fun getPotentiallyAffectedBuildPackages(
             val newPackagePath = path.dirname()
             newPackages.add(newPackagePath)
             getContainingPackage(newPackagePath.dirname(),
-                allKnownPackages)?.let { changedPackages.add(it) }
+                packageExists)?.let { changedPackages.add(it) }
             return@forEach
         }
 
@@ -71,7 +70,7 @@ fun getPotentiallyAffectedBuildPackages(
 
         // Adding a new source file: reparse package that potentially owns the file because
         // some target contents may change
-        getContainingPackage(path.dirname(), allKnownPackages)?.let { changedPackages.add(it) }
+        getContainingPackage(path.dirname(), packageExists)?.let { changedPackages.add(it) }
     }
 
     fsChanges.modified.forEach { modified ->
@@ -103,7 +102,7 @@ fun getPotentiallyAffectedBuildPackages(
             val packagePath = path.dirname()
             removedPackages.add(packagePath)
             getContainingPackage(packagePath.dirname(),
-                allKnownPackages)?.let { changedPackages.add(it) }
+                packageExists)?.let { changedPackages.add(it) }
             return@forEach
         }
 
@@ -114,7 +113,7 @@ fun getPotentiallyAffectedBuildPackages(
 
         // Removing a source file: reparse package that potentially owns the file because
         // some target contents may change
-        getContainingPackage(path.dirname(), allKnownPackages)?.let { changedPackages.add(it) }
+        getContainingPackage(path.dirname(), packageExists)?.let { changedPackages.add(it) }
     }
 
     return PotentiallyAffectedBuildPackages(commit = fsChanges.commit, added = newPackages.toList(),
@@ -133,11 +132,11 @@ fun getPotentiallyAffectedBuildPackages(
  */
 private fun getContainingPackage(
     dir: FsAgnosticPath,
-    allKnownPackages: Set<FsAgnosticPath>
+    packageExists: (path: FsAgnosticPath) -> Boolean
 ): FsAgnosticPath? {
     var current = dir
     while (true) {
-        if (allKnownPackages.contains(current)) {
+        if (packageExists(current)) {
             return current
         }
 
