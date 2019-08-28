@@ -14,15 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.multitenant.runner
+package com.facebook.buck.multitenant.service
 
-import com.facebook.buck.multitenant.service.FsToBuildPackageChangeTranslator
-import com.facebook.buck.multitenant.service.Index
-import com.facebook.buck.multitenant.service.IndexAppender
-
+/**
+ * Data object to hold various components of the index
+ */
 data class IndexComponents(
     val index: Index,
     val appender: IndexAppender,
-    val changeTranslator: FsToBuildPackageChangeTranslator,
-    val cellToBuildFileName: Map<String, String>
+    val changeTranslator: FsToBuildPackageChangeTranslator
 )

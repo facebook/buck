@@ -19,8 +19,6 @@ package com.facebook.buck.multitenant.service
 import com.facebook.buck.core.model.RuleType
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
-import com.facebook.buck.multitenant.importer.RuleTypeFactory
-import com.facebook.buck.multitenant.importer.ServiceRawTargetNode
 import com.google.common.collect.ImmutableMap
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -137,6 +135,8 @@ private fun createBuildTarget(shortName: String): UnconfiguredBuildTarget {
 
 private fun createRule(shortName: String, deps: BuildTargetSet): InternalRawBuildRule {
     val buildTarget = createBuildTarget(shortName)
-    val node = ServiceRawTargetNode(buildTarget, FAKE_RULE_TYPE, ImmutableMap.of())
+    val node =
+        ServiceRawTargetNode(buildTarget, FAKE_RULE_TYPE,
+            ImmutableMap.of())
     return InternalRawBuildRule(node, deps)
 }

@@ -16,8 +16,9 @@
 
 package com.facebook.buck.multitenant.runner
 
-import com.facebook.buck.multitenant.importer.InputSource
+import com.facebook.buck.multitenant.service.InputSource
 import com.facebook.buck.multitenant.service.FsChanges
+import com.facebook.buck.multitenant.service.IndexComponents
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking

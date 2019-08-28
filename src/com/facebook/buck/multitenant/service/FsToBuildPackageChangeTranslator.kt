@@ -16,6 +16,9 @@
 
 package com.facebook.buck.multitenant.service
 
+import com.facebook.buck.multitenant.fs.FsAgnosticPath
+import java.nio.file.Path
+
 /**
  * The client reports changes in terms of modified files ([FsChanges]), but the service needs
  * to operate on changes to the build graph, so we must create a mapping between the two.
@@ -27,4 +30,45 @@ interface FsToBuildPackageChangeTranslator {
      * @param fsChanges Changes in filesystem, like modification of a file
      */
     fun translateChanges(generation: Generation, fsChanges: FsChanges): BuildPackageChanges
+}
+
+/**
+ * Simple implementation of [FsToBuildPackageChangeTranslator] that subshells to Buck to parse
+ * packages
+ * @param indexGenerationData Read-only index data to read build graph at current generation.
+ * @param buildFileName Name of a build file (for example, `BUCK`) that defines targets
+ * @param projectRoot Absolute path to a directory that is a project root for BUCK. Generally
+ * speaking, this is the folder should contain .buckconfig. This Path does not necessarily need to
+ * be physical and can potentially point to virtual filesystem.
+ */
+internal class DefaultFsToBuildPackageChangeTranslator(
+    private val indexGenerationData: IndexGenerationData,
+    private val buildFileName: FsAgnosticPath,
+    private val projectRoot: Path
+
+) : FsToBuildPackageChangeTranslator {
+    override fun translateChanges(
+        generation: Generation,
+        fsChanges: FsChanges
+    ): BuildPackageChanges {
+
+        // TODO: refactor getPotentiallyAffectedBuildPackages to read from [IndexGenerationData] instead
+        val allKnownPackages: Set<FsAgnosticPath> = setOf()
+
+        // TODO: implement parse dependency index
+        val depToPackageIndex: Map<FsAgnosticPath, Set<FsAgnosticPath>> = mapOf()
+        val affectedPackagePaths =
+            getPotentiallyAffectedBuildPackages(fsChanges, buildFileName, allKnownPackages,
+                depToPackageIndex)
+
+        val parser = BuckShellBuildPackageParser(projectRoot)
+        val addedPackages = parser.parsePackages(affectedPackagePaths.added)
+        val modifiedPackages = parser.parsePackages(affectedPackagePaths.modified)
+
+        // TODO: implement reducer to kill packages that haven't really changed
+
+        return BuildPackageChanges(addedBuildPackages = addedPackages,
+            modifiedBuildPackages = modifiedPackages,
+            removedBuildPackages = affectedPackagePaths.removed)
+    }
 }

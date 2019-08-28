@@ -16,11 +16,12 @@
 @file:Suppress("MatchingDeclarationName")
 package com.facebook.buck.multitenant.runner
 
-import com.facebook.buck.multitenant.importer.populateIndexFromStream
+import com.facebook.buck.multitenant.service.populateIndexFromStream
 import com.facebook.buck.multitenant.service.BuildPackageChanges
 import com.facebook.buck.multitenant.service.FsChanges
 import com.facebook.buck.multitenant.service.FsToBuildPackageChangeTranslator
 import com.facebook.buck.multitenant.service.Generation
+import com.facebook.buck.multitenant.service.IndexComponents
 import com.facebook.buck.multitenant.service.IndexFactory
 import java.io.InputStream
 
@@ -31,9 +32,8 @@ fun createIndex(stream: InputStream): IndexComponents {
     val (index, appender) = IndexFactory.createIndex()
     populateIndexFromStream(appender, stream)
 
-    val cellToBuildFileName = mapOf("" to "BUCK")
     val changeTranslator = FakeFsToBuildPackageChangeTranslator()
-    return IndexComponents(index, appender, changeTranslator, cellToBuildFileName)
+    return IndexComponents(index, appender, changeTranslator)
 }
 
 class FakeFsToBuildPackageChangeTranslator : FsToBuildPackageChangeTranslator {

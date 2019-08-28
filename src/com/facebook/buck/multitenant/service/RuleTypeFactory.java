@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.multitenant.importer;
+package com.facebook.buck.multitenant.service;
 
 import com.facebook.buck.core.model.RuleType;
 

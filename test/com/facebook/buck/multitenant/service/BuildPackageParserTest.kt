@@ -14,17 +14,17 @@
  * under the License.
  */
 
-package com.facebook.buck.multitenant.importer
+package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import io.mockk.every
 import io.mockk.slot
 import io.mockk.spyk
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
 import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
-import org.junit.Test
 
 class BuildPackageParserTest {
     @Test fun canParseOutputOfBuck() {
@@ -89,11 +89,7 @@ class BuildPackageParserTest {
             parser.parsePackages(listOf(FsAgnosticPath.of("foo"), FsAgnosticPath.of("foo/bar")))
 
         assertEquals(2, packages.size)
-        assertTrue {
-            packages.any { p -> p.buildFileDirectory == FsAgnosticPath.of("foo") }
-        }
-        assertTrue {
-            packages.any { p -> p.buildFileDirectory == FsAgnosticPath.of("foo/bar") }
-        }
+        assertTrue(packages.any { p -> p.buildFileDirectory == FsAgnosticPath.of("foo") })
+        assertTrue(packages.any { p -> p.buildFileDirectory == FsAgnosticPath.of("foo/bar") })
     }
 }

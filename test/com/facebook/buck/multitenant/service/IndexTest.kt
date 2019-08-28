@@ -20,9 +20,6 @@ import com.facebook.buck.core.model.RuleType
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
-import com.facebook.buck.multitenant.importer.RuleTypeFactory
-import com.facebook.buck.multitenant.importer.ServiceRawTargetNode
-import com.facebook.buck.multitenant.importer.populateIndexFromStream
 import com.google.common.collect.ImmutableMap
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -446,6 +443,8 @@ private fun String.buildTarget(): UnconfiguredBuildTarget {
     return BuildTargets.parseOrThrow(this)
 }
 
-private fun createTargetNode(target: String, attributes: Map<String, Any> = mapOf()): RawTargetNode = ServiceRawTargetNode(target.buildTarget(), JAVA_LIBRARY, ImmutableMap.copyOf(attributes))
+private fun createTargetNode(target: String, attributes: Map<String, Any> = mapOf()): RawTargetNode =
+    ServiceRawTargetNode(target.buildTarget(), JAVA_LIBRARY,
+        ImmutableMap.copyOf(attributes))
 
 private fun createRawRule(target: String, deps: List<String>, attributes: Map<String, Any> = mapOf()) = RawBuildRule(createTargetNode(target, attributes), targetSet(*deps.toTypedArray()))

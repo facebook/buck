@@ -1,5 +1,23 @@
-prebuilt_jar(
+java_library(
     name = "mockk",
+    exported_deps = [
+        ":byte-buddy",
+        ":byte-buddy-agent",
+        ":mockk-agent-api",
+        ":mockk-agent-common",
+        ":mockk-agent-jvm",
+        ":mockk-dsl-jvm",
+        ":mockk-jar",
+        "//third-party/java/kotlin:kotlin-reflect",
+    ],
+    visibility = [
+        "//test/...",
+        "//tools/ideabuck/tests/...",
+    ],
+)
+
+prebuilt_jar(
+    name = "mockk-jar",
     binary_jar = "mockk-1.9.3.kotlin12.jar",
     licenses = [
         "LICENSE",
@@ -18,6 +36,71 @@ prebuilt_jar(
         "LICENSE",
     ],
     source_jar = "mockk-dsl-jvm-1.9.3.kotlin12-sources.jar",
+    visibility = [
+        "//test/...",
+        "//tools/ideabuck/tests/...",
+    ],
+)
+
+prebuilt_jar(
+    name = "mockk-agent-api",
+    binary_jar = "mockk-agent-api-1.9.3.kotlin12.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "mockk-agent-api-1.9.3.kotlin12-sources.jar",
+    visibility = [
+        "//test/...",
+        "//tools/ideabuck/tests/...",
+    ],
+)
+
+prebuilt_jar(
+    name = "mockk-agent-common",
+    binary_jar = "mockk-agent-common-1.9.3.kotlin12.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "mockk-agent-common-1.9.3.kotlin12-sources.jar",
+    visibility = [
+        "//test/...",
+        "//tools/ideabuck/tests/...",
+    ],
+)
+
+prebuilt_jar(
+    name = "mockk-agent-jvm",
+    binary_jar = "mockk-agent-jvm-1.9.3.kotlin12.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "mockk-agent-jvm-1.9.3.kotlin12-sources.jar",
+    visibility = [
+        "//test/...",
+        "//tools/ideabuck/tests/...",
+    ],
+)
+
+prebuilt_jar(
+    name = "byte-buddy-agent",
+    binary_jar = "byte-buddy-agent-1.10.1.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "byte-buddy-agent-1.10.1-sources.jar",
+    visibility = [
+        "//test/...",
+        "//tools/ideabuck/tests/...",
+    ],
+)
+
+prebuilt_jar(
+    name = "byte-buddy",
+    binary_jar = "byte-buddy-1.10.1.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "byte-buddy-1.10.1-sources.jar",
     visibility = [
         "//test/...",
         "//tools/ideabuck/tests/...",

@@ -17,10 +17,34 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.multitenant.fs.FsAgnosticPath
+import java.nio.file.Path
 
 object IndexFactory {
+
     fun createIndex(): Pair<Index, IndexAppender> {
         val indexGenerationData = DefaultMutableIndexGenerationData()
+        return createIndex(indexGenerationData)
+    }
+
+    /**
+     * Create index, appender and translator
+     * @param projectRoot Absolute path to a folder containing Buck project, used to reparse
+     * packages. Can point to virtual filesystem.
+     * @param buildFileName Name of a build file (for example, BUCK) which defines targets
+     */
+    fun createIndexComponents(projectRoot: Path, buildFileName: FsAgnosticPath): IndexComponents {
+        val indexGenerationData = DefaultMutableIndexGenerationData()
+        val (index, indexAppender) = createIndex(indexGenerationData)
+        val fsToBuildPackageChangeTranslator =
+            DefaultFsToBuildPackageChangeTranslator(indexGenerationData, buildFileName, projectRoot)
+        return IndexComponents(index, indexAppender,
+            fsToBuildPackageChangeTranslator)
+    }
+
+    private fun createIndex(
+        indexGenerationData: MutableIndexGenerationData
+    ): Pair<Index, IndexAppender> {
         val buildTargetCache = AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>()
         val index = Index(indexGenerationData, buildTargetCache)
         val indexAppender = DefaultIndexAppender(indexGenerationData, buildTargetCache)

@@ -14,16 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.multitenant.importer
+package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
-import com.facebook.buck.multitenant.service.BuildPackage
-import com.facebook.buck.multitenant.service.BuildPackageChanges
-import com.facebook.buck.multitenant.service.BuildPackageParsingError
-import com.facebook.buck.multitenant.service.BuildTargets
-import com.facebook.buck.multitenant.service.IndexAppender
-import com.facebook.buck.multitenant.service.RawBuildRule
 import com.facebook.buck.util.json.ObjectMappers
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonToken
@@ -135,7 +129,8 @@ private fun toBuildPackage(nodes: JsonNode): BuildPackage {
             when (field.key) {
                 "attributes" -> {
                     for (attr in field.value.fields()) {
-                        attrs.put(attr.key.intern(), normalizeJsonValue(attr.value))
+                        attrs.put(attr.key.intern(),
+                            normalizeJsonValue(attr.value))
                         if (attr.key == "buck.type") {
                             ruleType = attr.value.asText()
                         }
@@ -147,7 +142,8 @@ private fun toBuildPackage(nodes: JsonNode): BuildPackage {
         requireNotNull(ruleType)
         val buildTarget = BuildTargets.createBuildTargetFromParts(path, name)
         val depsAsTargets = deps.map { BuildTargets.parseOrThrow(it) }.toSet()
-        createRawRule(buildTarget, ruleType, depsAsTargets, attrs.build())
+        createRawRule(buildTarget, ruleType, depsAsTargets,
+            attrs.build())
     }.toSet()
     val nodesErrors = nodes.get("errors")
     val errors = if (nodesErrors == null) {
@@ -175,7 +171,9 @@ private fun normalizeJsonValue(value: JsonNode): Any {
         value.isInt -> value.asInt()
         value.isLong -> value.asLong()
         value.isDouble -> value.asDouble()
-        value.isArray -> (value as ArrayNode).map { normalizeJsonValue(it) }
+        value.isArray -> (value as ArrayNode).map {
+            normalizeJsonValue(it)
+        }
         value.isObject -> (value as ObjectNode).fields().asSequence().map {
             it.key to normalizeJsonValue(it.value)
         }.toMap()
@@ -189,6 +187,7 @@ private fun createRawRule(
     deps: Set<UnconfiguredBuildTarget>,
     attrs: ImmutableMap<String, Any>
 ): RawBuildRule {
-    val node = ServiceRawTargetNode(target, RuleTypeFactory.createBuildRule(ruleType), attrs)
+    val node = ServiceRawTargetNode(target,
+        RuleTypeFactory.createBuildRule(ruleType), attrs)
     return RawBuildRule(node, deps)
 }

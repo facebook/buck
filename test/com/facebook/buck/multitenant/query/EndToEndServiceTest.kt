@@ -17,9 +17,9 @@
 package com.facebook.buck.multitenant.query
 
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
-import com.facebook.buck.multitenant.importer.RuleTypeFactory
-import com.facebook.buck.multitenant.importer.ServiceRawTargetNode
-import com.facebook.buck.multitenant.importer.populateIndexFromStream
+import com.facebook.buck.multitenant.service.RuleTypeFactory
+import com.facebook.buck.multitenant.service.ServiceRawTargetNode
+import com.facebook.buck.multitenant.service.populateIndexFromStream
 import com.facebook.buck.multitenant.runner.FakeMultitenantService
 import com.facebook.buck.multitenant.service.BuildPackage
 import com.facebook.buck.multitenant.service.BuildPackageChanges
@@ -132,11 +132,10 @@ private class FakeFsToBuildPackageChangeTranslator : FsToBuildPackageChangeTrans
                         BuildPackage(
                                 FsAgnosticPath.of("java/com/newpkg"),
                                 setOf(RawBuildRule(
-                                        ServiceRawTargetNode(
-                                                BuildTargets.parseOrThrow("//java/com/newpkg:buck"),
-                                                RuleTypeFactory.createBuildRule("java_binary"),
-                                                ImmutableMap.of()
-                                        ),
+                                    ServiceRawTargetNode(
+                                        BuildTargets.parseOrThrow("//java/com/newpkg:buck"),
+                                        RuleTypeFactory.createBuildRule("java_binary"),
+                                        ImmutableMap.of()),
                                         setOf(BuildTargets.parseOrThrow("//java/com/example:B"))
                                 ))
                         )
@@ -152,11 +151,10 @@ private class FakeFsToBuildPackageChangeTranslator : FsToBuildPackageChangeTrans
                         BuildPackage(
                                 FsAgnosticPath.of("java/com/facebook/buck"),
                                 setOf(RawBuildRule(
-                                        ServiceRawTargetNode(
-                                                BuildTargets.parseOrThrow("//java/com/facebook/buck:buck"),
-                                                RuleTypeFactory.createBuildRule("java_binary"),
-                                                ImmutableMap.of()
-                                        ),
+                                    ServiceRawTargetNode(
+                                        BuildTargets.parseOrThrow("//java/com/facebook/buck:buck"),
+                                        RuleTypeFactory.createBuildRule("java_binary"),
+                                        ImmutableMap.of()),
                                         setOf(BuildTargets.parseOrThrow("//java/com/example:B"))
                                 ))
                         )

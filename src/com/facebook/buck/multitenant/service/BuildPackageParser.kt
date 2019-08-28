@@ -14,10 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.multitenant.importer
+package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
-import com.facebook.buck.multitenant.service.BuildPackage
 import java.io.BufferedInputStream
 import java.io.FileWriter
 import java.io.PrintWriter

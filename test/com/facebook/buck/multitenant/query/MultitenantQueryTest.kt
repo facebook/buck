@@ -18,7 +18,7 @@ package com.facebook.buck.multitenant.query
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
-import com.facebook.buck.multitenant.importer.populateIndexFromStream
+import com.facebook.buck.multitenant.service.populateIndexFromStream
 import com.facebook.buck.multitenant.service.BuildTargets
 import com.facebook.buck.multitenant.service.IndexFactory
 import com.facebook.buck.query.QueryFileTarget

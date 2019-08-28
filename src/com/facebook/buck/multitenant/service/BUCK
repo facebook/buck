@@ -9,15 +9,32 @@ kotlin_library(
         "//test/com/facebook/buck/multitenant/...",
     ],
     deps = [
+        ":RuleTypeFactory",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
         "//src/com/facebook/buck/core/parser/buildtargetpattern:buildtargetpattern",
         "//src/com/facebook/buck/io/pathformat:pathformat",
         "//src/com/facebook/buck/multitenant/collect:collect",
         "//src/com/facebook/buck/multitenant/fs:fs",
+        "//src/com/facebook/buck/rules/visibility:visibility",
+        "//src/com/facebook/buck/util/json:json",
         "//third-party/java/fastutil:fastutil",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/vavr:vavr",
+    ],
+)
+
+# This rule is only visible within this package by design. See Javadoc.
+java_library(
+    name = "RuleTypeFactory",
+    srcs = [
+        "RuleTypeFactory.java",
+    ],
+    visibility = [
+        "//test/com/facebook/buck/multitenant/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/model:model",
     ],
 )

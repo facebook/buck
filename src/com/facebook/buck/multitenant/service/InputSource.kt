@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.multitenant.importer
+package com.facebook.buck.multitenant.service
 
 import java.io.Closeable
 import java.io.InputStream
@@ -41,8 +41,10 @@ sealed class InputSource : Closeable {
     companion object {
         fun from(uri: URI): InputSource {
             return when {
-                uri.scheme == "http" || uri.scheme == "https" -> Http(uri.toURL())
-                uri.scheme == "file" || uri.scheme.isNullOrEmpty() -> File(uri.path)
+                uri.scheme == "http" || uri.scheme == "https" -> Http(
+                    uri.toURL())
+                uri.scheme == "file" || uri.scheme.isNullOrEmpty() -> File(
+                    uri.path)
                 else -> throw IllegalArgumentException(
                     "schema ${uri.scheme} is not supported")
             }
