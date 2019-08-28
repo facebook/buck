@@ -24,9 +24,11 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.timing.FakeClock;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Optional;
 import org.junit.rules.ExternalResource;
 
@@ -46,7 +48,7 @@ public class TestWithBuckd extends ExternalResource {
     temporaryPaths.newFolder(".git");
     temporaryPaths.newFile(".arcconfig");
     // Create an empty watchman config file.
-    temporaryPaths.newFile(".watchmanconfig");
+    Files.write(temporaryPaths.newFile(".watchmanconfig"), "{}\n".getBytes(Charsets.UTF_8));
     WatchmanFactory watchmanFactory = new WatchmanFactory();
     Watchman watchman =
         watchmanFactory.build(
