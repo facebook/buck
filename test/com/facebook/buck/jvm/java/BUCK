@@ -540,6 +540,7 @@ java_test(
         "//third-party/java/jna:jna",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",
+        "//third-party/java/junitparams:junitparams",
         "//third-party/java/maven:maven-model",
         "//third-party/java/nailgun:nailgun",
         "//third-party/java/nuprocess:nuprocess",
