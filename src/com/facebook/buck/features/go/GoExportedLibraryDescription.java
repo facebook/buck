@@ -37,23 +37,25 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;
 
-public class GoBinaryDescription
-    implements DescriptionWithTargetGraph<GoBinaryDescriptionArg>,
-        ImplicitDepsInferringDescription<GoBinaryDescription.AbstractGoBinaryDescriptionArg>,
-        VersionRoot<GoBinaryDescriptionArg>,
+public class GoExportedLibraryDescription
+    implements DescriptionWithTargetGraph<GoExportedLibraryDescriptionArg>,
+        ImplicitDepsInferringDescription<
+            GoExportedLibraryDescription.AbstractGoExportedLibraryDescriptionArg>,
+        VersionRoot<GoExportedLibraryDescriptionArg>,
         Flavored {
 
   private final GoBuckConfig goBuckConfig;
   private final ToolchainProvider toolchainProvider;
 
-  public GoBinaryDescription(GoBuckConfig goBuckConfig, ToolchainProvider toolchainProvider) {
+  public GoExportedLibraryDescription(
+      GoBuckConfig goBuckConfig, ToolchainProvider toolchainProvider) {
     this.goBuckConfig = goBuckConfig;
     this.toolchainProvider = toolchainProvider;
   }
 
   @Override
-  public Class<GoBinaryDescriptionArg> getConstructorArgType() {
-    return GoBinaryDescriptionArg.class;
+  public Class<GoExportedLibraryDescriptionArg> getConstructorArgType() {
+    return GoExportedLibraryDescriptionArg.class;
   }
 
   @Override
@@ -66,7 +68,7 @@ public class GoBinaryDescription
       BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
-      GoBinaryDescriptionArg args) {
+      GoExportedLibraryDescriptionArg args) {
     GoPlatform platform =
         GoDescriptors.getPlatformForRule(getGoToolchain(), this.goBuckConfig, buildTarget, args);
     return GoDescriptors.createGoBinaryRule(
@@ -76,7 +78,7 @@ public class GoBinaryDescription
         context.getActionGraphBuilder(),
         goBuckConfig,
         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC_PIC),
-        GoLinkStep.BuildMode.EXECUTABLE,
+        args.getBuildMode(),
         args.getLinkMode(),
         args.getSrcs(),
         args.getResources(),
@@ -91,7 +93,7 @@ public class GoBinaryDescription
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      AbstractGoBinaryDescriptionArg constructorArg,
+      AbstractGoExportedLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ linker parse time deps.
@@ -109,6 +111,8 @@ public class GoBinaryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractGoBinaryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasGoLinkable {}
+  interface AbstractGoExportedLibraryDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasGoLinkable {
+    GoLinkStep.BuildMode getBuildMode();
+  }
 }

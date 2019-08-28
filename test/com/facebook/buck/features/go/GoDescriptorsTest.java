@@ -208,6 +208,7 @@ public class GoDescriptorsTest {
             graphBuilder,
             goBuckConfig,
             Linker.LinkableDepType.STATIC_PIC,
+            GoLinkStep.BuildMode.EXECUTABLE,
             Optional.empty(),
             ImmutableSet.of(
                 PathSourcePath.of(filesystem, Paths.get("not_build_target.go")),
@@ -272,6 +273,7 @@ public class GoDescriptorsTest {
               graphBuilder,
               goBuckConfig,
               Linker.LinkableDepType.STATIC_PIC,
+              GoLinkStep.BuildMode.EXECUTABLE,
               entry.getKey(),
               ImmutableSet.of(),
               ImmutableSortedSet.of(),
