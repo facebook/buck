@@ -123,15 +123,15 @@ public class RustTestDescription
                             Maps.transformValues(args.getEnvironment(), converter::convert)),
                         Stream.of(
                                 testarg,
-                                rustPlatform.getRustTestFlags().stream(),
+                                rustPlatform.getRustTestFlags().stream().map(x -> (Arg) x),
                                 args.getRustcFlags().stream().map(converter::convert))
                             .flatMap(x -> x)
-                            .map(x -> (Arg) x)
                             .iterator(),
                         args.getLinkerFlags().stream().map(converter::convert).iterator(),
                         RustCompileUtils.getLinkStyle(buildTarget, args.getLinkStyle()),
                         args.isRpath(),
                         args.getSrcs(),
+                        args.getMappedSrcs(),
                         args.getCrateRoot(),
                         ImmutableSet.of("lib.rs", "main.rs"),
                         type.getCrateType(),
@@ -176,6 +176,9 @@ public class RustTestDescription
   @Value.Immutable
   interface AbstractRustTestDescriptionArg
       extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasDefaultPlatform {
+    @Value.NaturalOrder
+    ImmutableSortedMap<SourcePath, String> getMappedSrcs();
+
     ImmutableSet<String> getContacts();
 
     @Value.NaturalOrder

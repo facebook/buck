@@ -20,4 +20,26 @@ genrule(
   sleep 2
   echo "pub const INFO: &'static str = \\"this is generated info\\";" > $OUT
   """,
+    visibility = ["PUBLIC"],
+)
+
+rust_binary(
+    name = "gen_submod",
+    srcs = [
+        "gen_submod.rs",
+    ],
+    mapped_srcs = {
+        ":generated": "generated.rs",
+    },
+)
+
+rust_test(
+    name = "gen_submod-test",
+    srcs = [
+        "gen_submod.rs",
+    ],
+    crate_root = "gen_submod.rs",
+    mapped_srcs = {
+        ":generated": "generated.rs",
+    },
 )

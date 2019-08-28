@@ -189,4 +189,44 @@ public class RustTestIntegrationTest {
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStderr().get(), Matchers.blankString());
   }
+
+  @Test
+  public void testWithGeneratedModule() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_generated", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:gen_submod-test").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:gen_submod-test");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            workspace
+                .resolve("buck-out/gen/gen_submod-test#binary,default,unittest/gen_submod_test")
+                .toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void testWithSubdirGeneratedModule() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_generated", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//subdir:subbin-test").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//subdir:subbin-test");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            workspace
+                .resolve("buck-out/gen/subdir/subbin-test#binary,default,unittest/subbin_test")
+                .toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
 }

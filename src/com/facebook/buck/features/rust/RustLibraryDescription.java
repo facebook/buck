@@ -110,7 +110,7 @@ public class RustLibraryDescription
       LinkableDepType depType,
       RustLibraryDescriptionArg args,
       Iterable<BuildRule> deps) {
-    Pair<SourcePath, ImmutableSortedSet<SourcePath>> rootModuleAndSources =
+    Pair<SourcePath, ImmutableSortedMap<SourcePath, Optional<String>>> rootModuleAndSources =
         RustCompileUtils.getRootModuleAndSources(
             buildTarget,
             graphBuilder,
@@ -118,7 +118,8 @@ public class RustLibraryDescription
             crate,
             args.getCrateRoot(),
             ImmutableSet.of("lib.rs"),
-            args.getSrcs());
+            args.getSrcs(),
+            args.getMappedSrcs());
     return RustCompileUtils.requireBuild(
         buildTarget,
         projectFilesystem,
@@ -540,6 +541,9 @@ public class RustLibraryDescription
   @Value.Immutable
   interface AbstractRustLibraryDescriptionArg
       extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests, HasDefaultPlatform {
+    @Value.NaturalOrder
+    ImmutableSortedMap<SourcePath, String> getMappedSrcs();
+
     @Value.NaturalOrder
     ImmutableSortedSet<String> getFeatures();
 

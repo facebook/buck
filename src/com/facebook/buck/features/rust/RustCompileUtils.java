@@ -116,7 +116,7 @@ public class RustCompileUtils {
       Optional<String> edition,
       LinkableDepType depType,
       boolean rpath,
-      ImmutableSortedSet<SourcePath> sources,
+      ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
       SourcePath rootModule,
       boolean forceRlib,
       boolean preferStatic,
@@ -284,7 +284,7 @@ public class RustCompileUtils {
         depArgs.build(),
         linkerArgs.build(),
         environment,
-        CxxGenruleDescription.fixupSourcePaths(graphBuilder, cxxPlatform, sources),
+        mappedSources,
         CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform, rootModule),
         rustConfig.getRemapSrcPaths(),
         rustPlatform.getXcrunSdkPath());
@@ -305,7 +305,7 @@ public class RustCompileUtils {
       CrateType crateType,
       Optional<String> edition,
       LinkableDepType depType,
-      ImmutableSortedSet<SourcePath> sources,
+      ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
       SourcePath rootModule,
       boolean forceRlib,
       boolean preferStatic,
@@ -332,7 +332,7 @@ public class RustCompileUtils {
                     edition,
                     depType,
                     true,
-                    sources,
+                    mappedSources,
                     rootModule,
                     forceRlib,
                     preferStatic,
@@ -402,7 +402,8 @@ public class RustCompileUtils {
       Iterator<Arg> linkerFlags,
       LinkableDepType linkStyle,
       boolean rpath,
-      ImmutableSortedSet<SourcePath> srcs,
+      ImmutableSortedSet<SourcePath> sources,
+      ImmutableSortedMap<SourcePath, String> mappedSources,
       Optional<SourcePath> crateRoot,
       ImmutableSet<String> defaultRoots,
       CrateType crateType,
@@ -421,9 +422,16 @@ public class RustCompileUtils {
 
     CxxPlatform cxxPlatform = rustPlatform.getCxxPlatform();
 
-    Pair<SourcePath, ImmutableSortedSet<SourcePath>> rootModuleAndSources =
+    Pair<SourcePath, ImmutableSortedMap<SourcePath, Optional<String>>> rootModuleAndSources =
         getRootModuleAndSources(
-            buildTarget, graphBuilder, cxxPlatform, crate, crateRoot, defaultRoots, srcs);
+            buildTarget,
+            graphBuilder,
+            cxxPlatform,
+            crate,
+            crateRoot,
+            defaultRoots,
+            sources,
+            mappedSources);
 
     // The target to use for the link rule.
     BuildTarget binaryTarget = buildTarget.withAppendedFlavors(crateType.getFlavor());
@@ -624,32 +632,49 @@ public class RustCompileUtils {
     return libs.build();
   }
 
-  static Pair<SourcePath, ImmutableSortedSet<SourcePath>> getRootModuleAndSources(
+  static Pair<SourcePath, ImmutableSortedMap<SourcePath, Optional<String>>> getRootModuleAndSources(
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       String crate,
       Optional<SourcePath> crateRoot,
       ImmutableSet<String> defaultRoots,
-      ImmutableSortedSet<SourcePath> srcs) {
+      ImmutableSortedSet<SourcePath> srcs,
+      ImmutableSortedMap<SourcePath, String> mappedSrcs) {
 
-    ImmutableSortedSet<SourcePath> fixedSrcs =
-        CxxGenruleDescription.fixupSourcePaths(graphBuilder, cxxPlatform, srcs);
+    ImmutableSortedMap.Builder<SourcePath, Optional<String>> fixedBuilder =
+        ImmutableSortedMap.naturalOrder();
+
+    srcs.stream()
+        .map(src -> CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform, src))
+        .forEach(src -> fixedBuilder.put(src, Optional.empty()));
+    mappedSrcs
+        .entrySet()
+        .forEach(
+            ent ->
+                fixedBuilder.put(
+                    CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform, ent.getKey()),
+                    Optional.of(ent.getValue())));
+
+    ImmutableSortedMap<SourcePath, Optional<String>> fixed = fixedBuilder.build();
 
     Optional<SourcePath> rootModule =
         crateRoot
             .map(Optional::of)
             .orElse(
                 getCrateRoot(
-                    graphBuilder.getSourcePathResolver(), crate, defaultRoots, fixedSrcs.stream()));
+                    graphBuilder.getSourcePathResolver(),
+                    crate,
+                    defaultRoots,
+                    fixed.keySet().stream()));
 
     return new Pair<>(
         rootModule.orElseThrow(
             () ->
                 new HumanReadableException(
                     "Can't find suitable top-level source file for %s: %s",
-                    target.getFullyQualifiedName(), fixedSrcs)),
-        fixedSrcs);
+                    target.getFullyQualifiedName(), fixed)),
+        fixed);
   }
 
   /**

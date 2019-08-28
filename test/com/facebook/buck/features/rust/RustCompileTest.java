@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.hamcrest.Matchers;
@@ -241,7 +242,10 @@ public class RustCompileTest {
           /* linkerFlags */
           ImmutableList.of(),
           ImmutableSortedMap.of(),
-          srcs,
+          srcs.stream()
+              .collect(
+                  ImmutableSortedMap.toImmutableSortedMap(
+                      Comparator.naturalOrder(), src -> src, src -> Optional.empty())),
           rootModule,
           RustBuckConfig.RemapSrcPaths.NO,
           Optional.empty());

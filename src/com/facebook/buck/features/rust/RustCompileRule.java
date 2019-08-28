@@ -39,9 +39,9 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.shell.SymlinkFilesIntoDirectoryStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.collect.ImmutableList;
@@ -68,7 +68,8 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final SourcePath rootModule;
 
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
+  @AddToRuleKey private final ImmutableSortedMap<SourcePath, Optional<String>> mappedSources;
+
   @AddToRuleKey private final RustBuckConfig.RemapSrcPaths remapSrcPaths;
 
   private final Path scratchDir;
@@ -104,7 +105,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<Arg> depArgs,
       ImmutableList<Arg> linkerArgs,
       ImmutableSortedMap<String, Arg> environment,
-      ImmutableSortedSet<SourcePath> srcs,
+      ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
       SourcePath rootModule,
       RemapSrcPaths remapSrcPaths,
       Optional<Path> xcrunSdkPath) {
@@ -118,7 +119,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.linkerArgs = linkerArgs;
     this.environment = environment;
     this.rootModule = rootModule;
-    this.srcs = srcs;
+    this.mappedSources = mappedSources;
     this.scratchDir =
         BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s-container");
     this.remapSrcPaths = remapSrcPaths;
@@ -137,7 +138,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<Arg> depArgs,
       ImmutableList<Arg> linkerArgs,
       ImmutableSortedMap<String, Arg> environment,
-      ImmutableSortedSet<SourcePath> sources,
+      ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
       SourcePath rootModule,
       RemapSrcPaths remapSrcPaths,
       Optional<Path> xcrunSdkPath) {
@@ -159,7 +160,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                                                 arg -> BuildableSupport.getDeps(arg, ruleFinder)))
                                 .iterator())
                         .addAll(ruleFinder.filterBuildRuleInputs(ImmutableList.of(rootModule)))
-                        .addAll(ruleFinder.filterBuildRuleInputs(sources))
+                        .addAll(ruleFinder.filterBuildRuleInputs(mappedSources.keySet()))
                         .build())),
         filename,
         compiler,
@@ -168,7 +169,7 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         depArgs,
         linkerArgs,
         environment,
-        sources,
+        mappedSources,
         rootModule,
         remapSrcPaths,
         xcrunSdkPath);
@@ -186,7 +187,8 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public ImmutableList<Step> getBuildSteps(
       BuildContext buildContext, BuildableContext buildableContext) {
 
-    Path outputdir = getOutputDir(getBuildTarget(), getProjectFilesystem());
+    BuildTarget buildTarget = getBuildTarget();
+    Path outputdir = getOutputDir(buildTarget, getProjectFilesystem());
     Path output = getOutput();
 
     if (filename.isPresent()) {
@@ -208,121 +210,132 @@ public class RustCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 BuildTargetPaths.getScratchPath(
                     getProjectFilesystem(), getBuildTarget(), "%s__filelist.txt"));
 
-    return new ImmutableList.Builder<Step>()
-        .addAll(
-            MakeCleanDirectoryStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(), getProjectFilesystem(), scratchDir)))
-        .add(
-            new SymlinkFilesIntoDirectoryStep(
+    ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), getProjectFilesystem(), scratchDir)));
+    steps.add(
+        new SymlinkTreeStep(
+            "rust_sources",
+            getProjectFilesystem(),
+            scratchDir,
+            mappedSources.entrySet().stream()
+                .collect(
+                    ImmutableMap.toImmutableMap(
+                        ent -> {
+                          Path path;
+                          if (ent.getValue().isPresent()) {
+                            path = buildTarget.getBasePath().resolve(ent.getValue().get());
+                          } else {
+                            path = resolver.getRelativePath(ent.getKey());
+                          }
+                          return path;
+                        },
+                        ent -> resolver.getAbsolutePath(ent.getKey())))));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(),
                 getProjectFilesystem(),
-                getProjectFilesystem().getRootPath(),
-                srcs.stream()
-                    .map(resolver::getRelativePath)
-                    .collect(ImmutableList.toImmutableList()),
-                scratchDir))
-        .addAll(
-            MakeCleanDirectoryStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(),
-                    getProjectFilesystem(),
-                    getOutputDir(getBuildTarget(), getProjectFilesystem()))))
-        .addAll(
-            CxxPrepareForLinkStep.create(
-                argFilePath,
-                fileListPath,
-                linker.fileList(fileListPath),
-                output,
-                linkerArgs,
-                linker,
-                getProjectFilesystem().getRootPath(),
-                resolver))
-        .add(
-            new ShellStep(getProjectFilesystem().getRootPath()) {
+                getOutputDir(getBuildTarget(), getProjectFilesystem()))));
 
-              @Override
-              protected ImmutableList<String> getShellCommandInternal(
-                  ExecutionContext executionContext) {
-                ImmutableList<String> linkerCmd = linker.getCommandPrefix(resolver);
-                ImmutableList.Builder<String> cmd = ImmutableList.builder();
+    steps.addAll(
+        CxxPrepareForLinkStep.create(
+            argFilePath,
+            fileListPath,
+            linker.fileList(fileListPath),
+            output,
+            linkerArgs,
+            linker,
+            getProjectFilesystem().getRootPath(),
+            resolver));
 
-                // Accumulate Args into set to dedup them while retaining their order,
-                // since there are often many duplicates for things like library paths.
-                //
-                // NOTE: this means that all logical args should be a single string on the command
-                // line (ie "-Lfoo", not ["-L", "foo"])
-                ImmutableSet.Builder<String> dedupArgs = ImmutableSet.builder();
+    steps.add(
+        new ShellStep(getProjectFilesystem().getRootPath()) {
 
-                dedupArgs.addAll(Arg.stringify(depArgs, buildContext.getSourcePathResolver()));
+          @Override
+          protected ImmutableList<String> getShellCommandInternal(
+              ExecutionContext executionContext) {
+            ImmutableList<String> linkerCmd = linker.getCommandPrefix(resolver);
+            ImmutableList.Builder<String> cmd = ImmutableList.builder();
 
-                Path src = scratchDir.resolve(resolver.getRelativePath(rootModule));
-                cmd.addAll(compiler.getCommandPrefix(resolver));
-                if (executionContext.getAnsi().isAnsiTerminal()) {
-                  cmd.add("--color=always");
-                }
+            // Accumulate Args into set to dedup them while retaining their order,
+            // since there are often many duplicates for things like library paths.
+            //
+            // NOTE: this means that all logical args should be a single string on the command
+            // line (ie "-Lfoo", not ["-L", "foo"])
+            ImmutableSet.Builder<String> dedupArgs = ImmutableSet.builder();
 
-                remapSrcPaths.addRemapOption(cmd, workingDirectory.toString(), scratchDir + "/");
+            dedupArgs.addAll(Arg.stringify(depArgs, buildContext.getSourcePathResolver()));
 
-                // Generate a target-unique string to distinguish distinct crates with the same
-                // name.
-                String metadata =
-                    RustCompileUtils.hashForTarget(RustCompileRule.this.getBuildTarget());
+            Path src = scratchDir.resolve(resolver.getRelativePath(rootModule));
+            cmd.addAll(compiler.getCommandPrefix(resolver));
+            if (executionContext.getAnsi().isAnsiTerminal()) {
+              cmd.add("--color=always");
+            }
 
-                cmd.add(String.format("-Clinker=%s", linkerCmd.get(0)))
-                    .add(String.format("-Clink-arg=@%s", argFilePath))
-                    .add(String.format("-Cmetadata=%s", metadata))
-                    .add(String.format("-Cextra-filename=-%s", metadata))
-                    .addAll(Arg.stringify(args, buildContext.getSourcePathResolver()))
-                    .addAll(dedupArgs.build())
-                    .add("--out-dir", outputdir.toString())
-                    .add(src.toString());
+            remapSrcPaths.addRemapOption(cmd, workingDirectory.toString(), scratchDir + "/");
 
-                return cmd.build();
-              }
+            // Generate a target-unique string to distinguish distinct crates with the same
+            // name.
+            String metadata = RustCompileUtils.hashForTarget(RustCompileRule.this.getBuildTarget());
 
-              /*
-               * Make sure all stderr output from rustc is emitted, since its either a warning or an
-               * error. In general Rust code should have zero warnings, or all warnings as errors.
-               * Regardless, respect requests for silence.
-               */
-              @Override
-              protected boolean shouldPrintStderr(Verbosity verbosity) {
-                return !verbosity.isSilent();
-              }
+            cmd.add(String.format("-Clinker=%s", linkerCmd.get(0)))
+                .add(String.format("-Clink-arg=@%s", argFilePath))
+                .add(String.format("-Cmetadata=%s", metadata))
+                .add(String.format("-Cextra-filename=-%s", metadata))
+                .addAll(Arg.stringify(args, buildContext.getSourcePathResolver()))
+                .addAll(dedupArgs.build())
+                .add("--out-dir", outputdir.toString())
+                .add(src.toString());
 
-              @Override
-              public ImmutableMap<String, String> getEnvironmentVariables(
-                  ExecutionContext context) {
-                ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
-                env.putAll(compiler.getEnvironment(buildContext.getSourcePathResolver()));
-                env.putAll(
-                    Maps.transformValues(
-                        environment, v -> Arg.stringify(v, buildContext.getSourcePathResolver())));
+            return cmd.build();
+          }
 
-                Path root = getProjectFilesystem().getRootPath();
-                Path basePath = getBuildTarget().getBasePath();
+          /*
+           * Make sure all stderr output from rustc is emitted, since its either a warning or an
+           * error. In general Rust code should have zero warnings, or all warnings as errors.
+           * Regardless, respect requests for silence.
+           */
+          @Override
+          protected boolean shouldPrintStderr(Verbosity verbosity) {
+            return !verbosity.isSilent();
+          }
 
-                // These need to be set as absolute paths - the intended use
-                // is within an `include!(concat!(env!("..."), "...")`
-                // invocation in Rust source, and if the path isn't absolute
-                // it will be treated as relative to the current file including
-                // it. The trailing '/' is also to assist this use-case.
-                env.put("RUSTC_BUILD_CONTAINER", root.resolve(scratchDir) + "/");
-                env.put(
-                    "RUSTC_BUILD_CONTAINER_BASE_PATH",
-                    root.resolve(scratchDir.resolve(basePath)) + "/");
-                if (xcrunSdkPath.isPresent()) {
-                  env.put("SDKROOT", xcrunSdkPath.get().toString());
-                }
-                return env.build();
-              }
+          @Override
+          public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+            ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
+            env.putAll(compiler.getEnvironment(buildContext.getSourcePathResolver()));
+            env.putAll(
+                Maps.transformValues(
+                    environment, v -> Arg.stringify(v, buildContext.getSourcePathResolver())));
 
-              @Override
-              public String getShortName() {
-                return "rust-build";
-              }
-            })
-        .build();
+            Path root = getProjectFilesystem().getRootPath();
+            Path basePath = getBuildTarget().getBasePath();
+
+            // These need to be set as absolute paths - the intended use
+            // is within an `include!(concat!(env!("..."), "...")`
+            // invocation in Rust source, and if the path isn't absolute
+            // it will be treated as relative to the current file including
+            // it. The trailing '/' is also to assist this use-case.
+            env.put("RUSTC_BUILD_CONTAINER", root.resolve(scratchDir) + "/");
+            env.put(
+                "RUSTC_BUILD_CONTAINER_BASE_PATH",
+                root.resolve(scratchDir.resolve(basePath)) + "/");
+            if (xcrunSdkPath.isPresent()) {
+              env.put("SDKROOT", xcrunSdkPath.get().toString());
+            }
+            return env.build();
+          }
+
+          @Override
+          public String getShortName() {
+            return "rust-build";
+          }
+        });
+
+    return steps.build();
   }
 
   @Override

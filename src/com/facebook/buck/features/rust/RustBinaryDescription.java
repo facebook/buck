@@ -119,6 +119,7 @@ public class RustBinaryDescription
         linkStyle,
         args.isRpath(),
         args.getSrcs(),
+        args.getMappedSrcs(),
         args.getCrateRoot(),
         ImmutableSet.of("main.rs"),
         type.getCrateType(),
@@ -193,6 +194,9 @@ public class RustBinaryDescription
   @Value.Immutable
   interface AbstractRustBinaryDescriptionArg
       extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests, HasDefaultPlatform {
+    @Value.NaturalOrder
+    ImmutableSortedMap<SourcePath, String> getMappedSrcs();
+
     Optional<String> getEdition();
 
     @Value.NaturalOrder
