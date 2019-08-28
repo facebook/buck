@@ -45,10 +45,8 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.stream.Stream;
 
 public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
@@ -58,7 +56,6 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final Linker cxxLinker;
   @AddToRuleKey private final ImmutableList<String> linkerFlags;
   @AddToRuleKey private final ImmutableList<Arg> cxxLinkerArgs;
-  @AddToRuleKey private final GoLinkStep.BuildMode buildMode;
   @AddToRuleKey private final GoLinkStep.LinkMode linkMode;
   @AddToRuleKey private final GoPlatform platform;
 
@@ -66,19 +63,16 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final GoCompile mainObject;
   private final SymlinkTree linkTree;
   private final ImmutableSortedSet<SourcePath> resources;
-  private final ImmutableMap<Path, SourcePath> cgoExportedHeaders;
 
   public GoBinary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ImmutableSortedSet<SourcePath> resources,
-      ImmutableMap<Path, SourcePath> cgoExportedHeaders,
       SymlinkTree linkTree,
       GoCompile mainObject,
       Tool linker,
       Linker cxxLinker,
-      GoLinkStep.BuildMode buildMode,
       GoLinkStep.LinkMode linkMode,
       ImmutableList<String> linkerFlags,
       ImmutableList<Arg> cxxLinkerArgs,
@@ -87,19 +81,24 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.cxxLinker = cxxLinker;
     this.cxxLinkerArgs = cxxLinkerArgs;
     this.resources = resources;
-    this.cgoExportedHeaders = cgoExportedHeaders;
     this.linker = linker;
     this.linkTree = linkTree;
     this.mainObject = mainObject;
     this.platform = platform;
 
-    String outputFormat = getOutputFormat(buildTarget, platform, buildMode);
-
+    String outputFormat = "%s/" + buildTarget.getShortName();
+    if (platform.getGoOs() == GoOs.WINDOWS) {
+      outputFormat = outputFormat + ".exe";
+    }
     this.output = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, outputFormat);
 
     this.linkerFlags = linkerFlags;
     this.linkMode = linkMode;
-    this.buildMode = buildMode;
+  }
+
+  @Override
+  public Tool getExecutableCommand() {
+    return new CommandTool.Builder().addArg(SourcePathArg.of(getSourcePathToOutput())).build();
   }
 
   private ImmutableMap<String, String> getEnvironment(BuildContext context) {
@@ -111,35 +110,6 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     environment.putAll(linker.getEnvironment(context.getSourcePathResolver()));
 
     return environment.build();
-  }
-
-  private String getOutputFormat(
-      BuildTarget buildTarget, GoPlatform platform, GoLinkStep.BuildMode buildMode) {
-    String outputFormat = "%s/" + buildTarget.getShortName();
-
-    switch (buildMode) {
-      case C_SHARED:
-        if (buildMode == GoLinkStep.BuildMode.C_SHARED) {
-          return outputFormat + ".so";
-        }
-        break;
-      case C_ARCHIVE:
-        if (buildMode == GoLinkStep.BuildMode.C_ARCHIVE) {
-          return outputFormat + ".a";
-        }
-        break;
-      case EXECUTABLE:
-        if (platform.getGoOs() == GoOs.WINDOWS) {
-          return outputFormat + ".exe";
-        }
-    }
-
-    return outputFormat;
-  }
-
-  @Override
-  public Tool getExecutableCommand() {
-    return new CommandTool.Builder().addArg(SourcePathArg.of(getSourcePathToOutput())).build();
   }
 
   @Override
@@ -191,29 +161,6 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       }
     }
 
-    if (buildMode == GoLinkStep.BuildMode.C_SHARED || buildMode == GoLinkStep.BuildMode.C_ARCHIVE) {
-      Path includesDir = output.getParent().resolve("includes");
-
-      steps.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(), getProjectFilesystem(), includesDir)));
-
-      // copy cgo exported headers to <output_dir>/includes
-      for (Map.Entry<Path, SourcePath> entry : cgoExportedHeaders.entrySet()) {
-        String dstName =
-            entry.getKey().toString().replaceAll(File.separator, "_") + "_cgo_export.h";
-        Path outputResourcePath = includesDir.resolve(dstName);
-
-        buildableContext.recordArtifact(outputResourcePath);
-        steps.add(
-            CopyStep.forFile(
-                getProjectFilesystem(),
-                resolver.getRelativePath(entry.getValue()),
-                outputResourcePath));
-      }
-    }
-
     // cxxLinkerArgs comes from cgo rules and are reuqired for cxx deps linking
     ImmutableList.Builder<String> externalLinkerFlags = ImmutableList.builder();
     if (linkMode == GoLinkStep.LinkMode.EXTERNAL) {
@@ -253,7 +200,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             ImmutableList.of(linkTree.getRoot()),
             platform,
             resolver.getRelativePath(mainObject.getSourcePathToOutput()),
-            buildMode,
+            GoLinkStep.BuildMode.EXECUTABLE,
             linkMode,
             output));
     return steps.build();

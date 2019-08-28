@@ -76,7 +76,6 @@ public class GoBinaryDescription
         context.getActionGraphBuilder(),
         goBuckConfig,
         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC_PIC),
-        GoLinkStep.BuildMode.EXECUTABLE,
         args.getLinkMode(),
         args.getSrcs(),
         args.getResources(),
