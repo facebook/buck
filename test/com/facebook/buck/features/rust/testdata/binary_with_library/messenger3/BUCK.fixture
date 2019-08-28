@@ -1,0 +1,10 @@
+rust_library(
+    name = "messenger3",
+    srcs = [
+        "messenger-top.rs",
+    ],
+    crate_root = "messenger-top.rs",
+    visibility = [
+        "PUBLIC",
+    ],
+)

@@ -17,10 +17,6 @@
 package com.facebook.buck.features.rust;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
-import com.facebook.buck.core.description.arg.HasDeclaredDeps;
-import com.facebook.buck.core.description.arg.HasDefaultPlatform;
-import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
@@ -32,14 +28,12 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.versions.VersionRoot;
@@ -47,7 +41,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -83,7 +76,11 @@ public class RustBinaryDescription
       BuildRuleParams params,
       RustBinaryDescriptionArg args) {
     CxxDeps allDeps =
-        CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
+        CxxDeps.builder()
+            .addDeps(args.getDeps())
+            .addDeps(args.getNamedDeps().values())
+            .addPlatformDeps(args.getPlatformDeps())
+            .build();
     Linker.LinkableDepType linkStyle =
         RustCompileUtils.getLinkStyle(buildTarget, args.getLinkStyle());
 
@@ -123,7 +120,8 @@ public class RustBinaryDescription
         args.getCrateRoot(),
         ImmutableSet.of("main.rs"),
         type.getCrateType(),
-        allDeps.get(context.getActionGraphBuilder(), rustPlatform.getCxxPlatform()));
+        allDeps.get(context.getActionGraphBuilder(), rustPlatform.getCxxPlatform()),
+        args.getNamedDeps());
   }
 
   @Override
@@ -192,37 +190,15 @@ public class RustBinaryDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractRustBinaryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests, HasDefaultPlatform {
-    @Value.NaturalOrder
-    ImmutableSortedMap<SourcePath, String> getMappedSrcs();
-
-    Optional<String> getEdition();
-
-    @Value.NaturalOrder
-    ImmutableSortedMap<String, StringWithMacros> getEnvironment();
-
-    @Value.NaturalOrder
-    ImmutableSortedSet<String> getFeatures();
-
-    ImmutableList<StringWithMacros> getRustcFlags();
+  interface AbstractRustBinaryDescriptionArg extends RustCommonArgs, HasTests {
 
     ImmutableList<StringWithMacros> getLinkerFlags();
 
     Optional<Linker.LinkableDepType> getLinkStyle();
 
-    Optional<String> getCrate();
-
-    Optional<SourcePath> getCrateRoot();
-
     @Value.Default
     default boolean isRpath() {
       return true;
-    }
-
-    @Value.Default
-    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
-      return PatternMatchedCollection.of();
     }
   }
 }

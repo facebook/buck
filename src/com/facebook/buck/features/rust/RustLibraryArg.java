@@ -22,6 +22,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.HasSourcePath;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /** Generate linker command line for Rust library when used as a dependency. */
@@ -29,11 +30,13 @@ public class RustLibraryArg implements Arg, HasSourcePath {
   @AddToRuleKey private final String crate;
   @AddToRuleKey private final SourcePath rlib;
   @AddToRuleKey private final boolean direct;
+  @AddToRuleKey private final Optional<String> alias;
 
-  RustLibraryArg(String crate, SourcePath rlib, boolean direct) {
+  RustLibraryArg(String crate, SourcePath rlib, boolean direct, Optional<String> alias) {
     this.crate = crate;
     this.rlib = rlib;
     this.direct = direct;
+    this.alias = alias;
   }
 
   @Override
@@ -43,7 +46,7 @@ public class RustLibraryArg implements Arg, HasSourcePath {
     // NOTE: each of these logical args must be put on the command line as a single parameter
     // (otherwise dedup might just remove one piece of it)
     if (direct) {
-      consumer.accept(String.format("--extern=%s=%s", crate, path));
+      consumer.accept(String.format("--extern=%s=%s", alias.orElse(crate), path));
     } else {
       consumer.accept(String.format("-Ldependency=%s", path.getParent()));
     }

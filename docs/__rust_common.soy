@@ -175,6 +175,23 @@ to allow for extra warnings, etc.
 {/template}
 
 /***/
+{template .named_deps}
+{call buck.arg}
+  {param name : 'named_deps' /}
+  {{param default : '{}' /}}
+  {param desc}
+  <p>
+    Add crate dependencies and define a local name by which to use that dependency by. This
+    allows a crate to have multiple dependencies with the same crate name. For example:
+    <code>named_deps = {lb} "local_name", ":some_rust_crate" {rb}</code>.
+    The dependencies may also be non-Rust, but the alias is ignored. It has no effect on the
+    symbols provided by a C/C++ library.
+  </p>
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .more_examples}
 <p>
   For more examples, check out our <a

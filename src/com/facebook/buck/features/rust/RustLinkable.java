@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
 
 /**
  * Slightly misnamed. Really just a non-source input to the compiler (ie, an already-compiled Rust
@@ -36,10 +37,15 @@ interface RustLinkable {
    * @param isCheck true if we're generated check builds
    * @param rustPlatform Current platform we're building for.
    * @param depType What kind of linkage we want with the dependency.
+   * @param alias
    * @return Arg for linking dependency.
    */
   Arg getLinkerArg(
-      boolean direct, boolean isCheck, RustPlatform rustPlatform, Linker.LinkableDepType depType);
+      boolean direct,
+      boolean isCheck,
+      RustPlatform rustPlatform,
+      Linker.LinkableDepType depType,
+      Optional<String> alias);
 
   /**
    * Return {@link BuildTarget} for linkable

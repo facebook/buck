@@ -572,6 +572,32 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void binaryWithNamedLibrary() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:hello-renamed").assertSuccess().getStdout(),
+        Matchers.allOf(
+            containsString("Hello, world!"), containsString("I have a message to deliver to you")));
+  }
+
+  @Test
+  public void binaryWithMultiNamedLibrary() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:hello-multi-renamed").assertSuccess().getStdout(),
+        Matchers.allOf(
+            containsString("Hello, world!"),
+            containsString("I have a message to deliver to you"),
+            containsString("New thing")));
+  }
+
+  @Test
   public void binaryWithStaticCxxDep() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_cxx_dep", tmp);

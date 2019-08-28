@@ -61,8 +61,9 @@ public class PrebuiltRustLibraryDescription
           boolean direct,
           boolean isCheck,
           RustPlatform rustPlatform,
-          Linker.LinkableDepType depType) {
-        return new RustLibraryArg(args.getCrate(), args.getRlib(), direct);
+          Linker.LinkableDepType depType,
+          Optional<String> alias) {
+        return new RustLibraryArg(args.getCrate(), args.getRlib(), direct, alias);
       }
 
       @Override

@@ -17,10 +17,6 @@
 package com.facebook.buck.features.rust;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
-import com.facebook.buck.core.description.arg.HasDeclaredDeps;
-import com.facebook.buck.core.description.arg.HasDefaultPlatform;
-import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -33,7 +29,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.tool.BinaryWrapperRule;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -43,7 +38,6 @@ import com.facebook.buck.features.rust.RustBinaryDescription.Type;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.versions.VersionRoot;
@@ -51,7 +45,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -86,7 +79,11 @@ public class RustTestDescription
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     BuildTarget exeTarget = buildTarget.withAppendedFlavors(InternalFlavor.of("unittest"));
     CxxDeps allDeps =
-        CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
+        CxxDeps.builder()
+            .addDeps(args.getDeps())
+            .addDeps(args.getNamedDeps().values())
+            .addPlatformDeps(args.getPlatformDeps())
+            .build();
 
     RustBinaryDescription.Type type =
         RustBinaryDescription.BINARY_TYPE
@@ -135,7 +132,8 @@ public class RustTestDescription
                         args.getCrateRoot(),
                         ImmutableSet.of("lib.rs", "main.rs"),
                         type.getCrateType(),
-                        allDeps.get(graphBuilder, rustPlatform.getCxxPlatform())));
+                        allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
+                        args.getNamedDeps()));
 
     Tool testExe = testExeBuild.getExecutableCommand();
 
@@ -174,22 +172,8 @@ public class RustTestDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractRustTestDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasDefaultPlatform {
-    @Value.NaturalOrder
-    ImmutableSortedMap<SourcePath, String> getMappedSrcs();
-
+  interface AbstractRustTestDescriptionArg extends RustCommonArgs {
     ImmutableSet<String> getContacts();
-
-    @Value.NaturalOrder
-    ImmutableSortedMap<String, StringWithMacros> getEnvironment();
-
-    Optional<String> getEdition();
-
-    @Value.NaturalOrder
-    ImmutableSortedSet<String> getFeatures();
-
-    ImmutableList<StringWithMacros> getRustcFlags();
 
     ImmutableList<StringWithMacros> getLinkerFlags();
 
@@ -203,15 +187,6 @@ public class RustTestDescription
     @Value.Default
     default boolean isFramework() {
       return true;
-    }
-
-    Optional<String> getCrate();
-
-    Optional<SourcePath> getCrateRoot();
-
-    @Value.Default
-    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
-      return PatternMatchedCollection.of();
     }
   }
 }

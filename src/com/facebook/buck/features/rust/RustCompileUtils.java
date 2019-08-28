@@ -65,11 +65,15 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.Multimaps;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -121,6 +125,7 @@ public class RustCompileUtils {
       boolean forceRlib,
       boolean preferStatic,
       Iterable<BuildRule> ruledeps,
+      ImmutableMap<String, BuildTarget> depsAliases,
       Optional<String> incremental) {
     CxxPlatform cxxPlatform = rustPlatform.getCxxPlatform();
     ImmutableList.Builder<Arg> linkerArgs = ImmutableList.builder();
@@ -197,6 +202,13 @@ public class RustCompileUtils {
       rustDepType = depType;
     }
 
+    // Build reverse mapping from build targets to aliases. This might be a 1:many relationship
+    // (ie, the crate may import another crate multiple times under multiple names). If there's
+    // nothing here then the default name is used.
+    Multimap<BuildTarget, String> revAliasMap =
+        Multimaps.invertFrom(
+            Multimaps.forMap(depsAliases), MultimapBuilder.hashKeys().arrayListValues().build());
+
     // Find direct and transitive Rust deps. We do this in two passes, since a dependency that's
     // both direct and transitive needs to be listed on the command line in each form.
     //
@@ -206,11 +218,11 @@ public class RustCompileUtils {
     // First pass - direct deps
     RichStream.from(ruledeps)
         .filter(RustLinkable.class::isInstance)
-        .map(
-            rule ->
-                ((RustLinkable) rule)
-                    .getLinkerArg(true, crateType.isCheck(), rustPlatform, rustDepType))
-        .forEach(depArgs::add);
+        .forEach(
+            rule -> {
+              addDependencyArgs(
+                  rule, rustPlatform, crateType, depArgs, revAliasMap, rustDepType, true);
+            });
 
     // Second pass - indirect deps
     new AbstractBreadthFirstTraversal<BuildRule>(
@@ -224,11 +236,8 @@ public class RustCompileUtils {
         if (rule instanceof RustLinkable) {
           deps = ((RustLinkable) rule).getRustLinakbleDeps(rustPlatform);
 
-          Arg arg =
-              ((RustLinkable) rule)
-                  .getLinkerArg(false, crateType.isCheck(), rustPlatform, rustDepType);
-
-          depArgs.add(arg);
+          addDependencyArgs(
+              rule, rustPlatform, crateType, depArgs, revAliasMap, rustDepType, false);
         }
         return deps;
       }
@@ -290,6 +299,29 @@ public class RustCompileUtils {
         rustPlatform.getXcrunSdkPath());
   }
 
+  private static void addDependencyArgs(
+      BuildRule rule,
+      RustPlatform rustPlatform,
+      CrateType crateType,
+      ImmutableList.Builder<Arg> depArgs,
+      Multimap<BuildTarget, String> revAliasMap,
+      LinkableDepType rustDepType,
+      boolean direct) {
+    Collection<String> coll = revAliasMap.get(rule.getBuildTarget());
+    Stream<Optional<String>> aliases;
+    if (coll.isEmpty()) {
+      aliases = Stream.of(Optional.empty());
+    } else {
+      aliases = coll.stream().map(Optional::of);
+    }
+    aliases // now stream of Optional<alias>
+        .map(
+            alias ->
+                ((RustLinkable) rule)
+                    .getLinkerArg(direct, crateType.isCheck(), rustPlatform, rustDepType, alias))
+        .forEach(depArgs::add);
+  }
+
   public static RustCompileRule requireBuild(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -310,6 +342,7 @@ public class RustCompileUtils {
       boolean forceRlib,
       boolean preferStatic,
       Iterable<BuildRule> deps,
+      ImmutableMap<String, BuildTarget> depsAliases,
       Optional<String> incremental) {
 
     return (RustCompileRule)
@@ -337,6 +370,7 @@ public class RustCompileUtils {
                     forceRlib,
                     preferStatic,
                     deps,
+                    depsAliases,
                     incremental));
   }
 
@@ -407,7 +441,8 @@ public class RustCompileUtils {
       Optional<SourcePath> crateRoot,
       ImmutableSet<String> defaultRoots,
       CrateType crateType,
-      Iterable<BuildRule> deps) {
+      Iterable<BuildRule> deps,
+      ImmutableMap<String, BuildTarget> depsAliases) {
     ImmutableList.Builder<Arg> rustcArgs = ImmutableList.builder();
 
     RustCompileUtils.addFeatures(buildTarget, features, rustcArgs);
@@ -526,6 +561,7 @@ public class RustCompileUtils {
                         forceRlib,
                         preferStatic,
                         deps,
+                        depsAliases,
                         rustBuckConfig.getIncremental(rustPlatform.getFlavor().getName())));
 
     // Add the binary as the first argument.
