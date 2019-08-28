@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.google.common.collect.ImmutableMap
 import java.io.InputStream
+import java.io.OutputStream
 
 /**
  * Read commit state from JSON and populate index with data
@@ -90,6 +91,13 @@ fun parsePackagesFromStream(stream: InputStream): MutableList<BuildPackage> {
     val packages = mutableListOf<BuildPackage>()
     parsePackages(parser, packages)
     return packages
+}
+
+/**
+ * Write packages to JSON
+ */
+fun serializePackagesToStream(packages: List<BuildPackage>, stream: OutputStream) {
+    ObjectMappers.WRITER.writeValue(stream, packages)
 }
 
 private fun createParser(stream: InputStream): JsonParser {
