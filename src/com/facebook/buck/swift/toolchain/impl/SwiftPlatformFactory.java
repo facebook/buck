@@ -56,6 +56,12 @@ public class SwiftPlatformFactory {
         builder.addSwiftRuntimePaths(foundSwiftRuntimePath.get());
       }
 
+      Optional<Path> foundSwiftCompatibilityRuntimePath =
+          findSwiftCompatibilityRuntimePath(toolchainPath, platformName);
+      if (foundSwiftCompatibilityRuntimePath.isPresent()) {
+        builder.addSwiftRuntimePaths(foundSwiftCompatibilityRuntimePath.get());
+      }
+
       Path swiftStaticRuntimePath =
           toolchainPath.resolve("usr/lib/swift_static").resolve(platformName);
       if (Files.isDirectory(swiftStaticRuntimePath)) {
@@ -108,6 +114,26 @@ public class SwiftPlatformFactory {
           toolchainPath, platformName);
       return Optional.empty();
     }
+  }
+
+  public static Optional<Path> findSwiftCompatibilityRuntimePath(
+      Path toolchainPath, String platformName) {
+    if (platformName == "driverkit") {
+      return Optional.empty();
+    }
+
+    // Currently Xcode includes swift and swift-5.0 directories, and each contains different
+    // contents. Specifically, swift/platform contains the libswiftCompatibility50 and
+    // libswiftCompatibilityDynamicReplacements libraries which are *also* necessary.
+    Path swiftRuntimePath = toolchainPath.resolve("usr/lib/swift").resolve(platformName);
+    String libSwiftCompatibilityLibraryName = "libswiftCompatibility50.a";
+    LOG.debug("Searching for swift compatibility toolchain in %s", toolchainPath.toString());
+    if (Files.exists(swiftRuntimePath.resolve(libSwiftCompatibilityLibraryName))) {
+      LOG.debug("Found swift compatibility toolchain at %s", toolchainPath.toString());
+      return Optional.of(swiftRuntimePath);
+    }
+
+    return Optional.empty();
   }
 
   private static ImmutableList<Path> buildSharedRunPaths(
