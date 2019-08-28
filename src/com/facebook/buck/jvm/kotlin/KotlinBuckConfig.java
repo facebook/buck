@@ -56,6 +56,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
               delegate.getPathSourcePath(getPathToStdlibJar()),
               delegate.getPathSourcePath(getPathToReflectJar()),
               delegate.getPathSourcePath(getPathToScriptRuntimeJar()),
+              delegate.getPathSourcePath(getPathToAnnotationsJar()),
               delegate.getPathSourcePath(getPathToCompilerJar()));
 
       return new JarBackedReflectedKotlinc(
@@ -70,7 +71,8 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
             getPathToReflectJar(),
             getPathToScriptRuntimeJar(),
             getPathToCompilerJar(),
-            getPathToTrove4jJar()));
+            getPathToTrove4jJar(),
+            getPathToAnnotationsJar()));
   }
 
   public boolean shouldCompileAgainstAbis() {
@@ -158,6 +160,15 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    */
   Path getPathToTrove4jJar() {
     return getPathToJar("trove4j");
+  }
+
+  /**
+   * Get the path to the annotations jar, which is required by the compiler jar.
+   *
+   * @return the annotations jar path
+   */
+  Path getPathToAnnotationsJar() {
+    return getPathToJar("annotations");
   }
 
   /**
