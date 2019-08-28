@@ -20,6 +20,7 @@ kotlin_library(
     ],
     deps = [
         ":runner_lib",
+        "//src/com/facebook/buck/multitenant/fs:fs",
         "//src/com/facebook/buck/multitenant/service:service",
         "//third-party/java/kotlinx-coroutines:kotlinx-coroutines",
     ],

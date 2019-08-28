@@ -63,10 +63,11 @@ class DefaultFsToBuildPackageChangeTranslator(
         val addedPackages = parser.parsePackages(affectedPackagePaths.added)
         val modifiedPackages = parser.parsePackages(affectedPackagePaths.modified)
 
-        // TODO: implement reducer to kill packages that haven't really changed
-
         return BuildPackageChanges(addedBuildPackages = addedPackages,
-            modifiedBuildPackages = modifiedPackages,
+            // Sometimes reparsing of a package does not really yield to a change in a package
+            // contents. Compare parsed packages to the ones existing at base revision and only
+            // take those that really changed.
+            modifiedBuildPackages = modifiedPackages.filter { !index.containsBuildPackage(generation, it) },
             removedBuildPackages = affectedPackagePaths.removed)
     }
 }
