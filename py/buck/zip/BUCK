@@ -1,12 +1,4 @@
 python_binary(
-    name = "munger",
-    main = "munger.py",
-    visibility = [
-        "PUBLIC",
-    ],
-)
-
-python_binary(
     name = "append_with_copy",
     main = "append_with_copy.py",
     visibility = [
@@ -26,6 +18,5 @@ python_library(
     name = "lib",
     srcs = [
         "append_with_copy.py",
-        "munger.py",
     ],
 )
