@@ -1,8 +1,8 @@
 diff --git a/src/main/java/com/google/devtools/build/lib/BUILD b/src/main/java/com/google/devtools/build/lib/BUILD
-index 4666aa4dae..53f8829b52 100644
+index 3c2b25a2d4..34b86b7bfc 100644
 --- a/src/main/java/com/google/devtools/build/lib/BUILD
 +++ b/src/main/java/com/google/devtools/build/lib/BUILD
-@@ -359,16 +359,58 @@ java_library(
+@@ -360,16 +360,58 @@ java_library(
  #
  # IMPORTANT:  NOT A PUBLIC INTERFACE. TARGETS SHOULDN'T DEPEND ON THIS.
  #
@@ -65,20 +65,9 @@ index 4666aa4dae..53f8829b52 100644
 +        "//third_party/protobuf:protobuf_java",
      ],
  )
-
-@@ -1390,6 +1432,10 @@ java_library(
-         ":runtime/commands/LICENSE",
-     ],
-     exports = [":runtime"],
-+    deps = [
-+        ":out-err",
-+        "//src/main/java/com/google/devtools/build/lib/skyframe/serialization",
-+    ],
- )
-
- java_library(
+ 
 diff --git a/src/main/java/com/google/devtools/build/lib/cmdline/Label.java b/src/main/java/com/google/devtools/build/lib/cmdline/Label.java
-index 0cd3dc94df..6f3d5f0fbc 100644
+index 0cd3dc94df..be68970072 100644
 --- a/src/main/java/com/google/devtools/build/lib/cmdline/Label.java
 +++ b/src/main/java/com/google/devtools/build/lib/cmdline/Label.java
 @@ -19,7 +19,6 @@ import com.google.common.collect.ImmutableMap;
@@ -116,7 +105,7 @@ index 0cd3dc94df..6f3d5f0fbc 100644
 +    // invocation. Also, this is the only usage of BazelStarlarkContext, so we remove that dep.
 +    return getRelativeWithRemapping(relName, ImmutableMap.of());
    }
-
+ 
    /**
 diff --git a/src/main/java/com/google/devtools/build/lib/collect/nestedset/BUILD b/src/main/java/com/google/devtools/build/lib/collect/nestedset/BUILD
 index d15b0bd817..7b0f971036 100644
@@ -131,7 +120,7 @@ index d15b0bd817..7b0f971036 100644
          "//third_party:jsr305",
          "//third_party/protobuf:protobuf_java",
 diff --git a/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java b/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java
-index b2a64b8021..50d79522bc 100644
+index 11d3fafb92..e3f01dbbaa 100644
 --- a/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java
 +++ b/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java
 @@ -19,7 +19,6 @@ import com.google.common.base.Function;
@@ -151,7 +140,7 @@ index b2a64b8021..50d79522bc 100644
    /**
     * Order and size of set packed into one int.
     *
-@@ -338,7 +335,6 @@ public final class NestedSet<E> implements Iterable<E> {
+@@ -382,7 +379,6 @@ public final class NestedSet<E> implements Iterable<E> {
          try {
            return Arrays.toString(Futures.getDone(future));
          } catch (ExecutionException e) {
@@ -164,9 +153,9 @@ index 87dd882d59..321c106326 100644
 --- a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
 +++ b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
 @@ -14,2391 +14,13 @@
-
+ 
  package com.google.devtools.build.lib.packages;
-
+ 
 -import static com.google.common.collect.Sets.newEnumSet;
 -
 -import com.google.common.annotations.VisibleForTesting;
@@ -2559,13 +2548,14 @@ index 87dd882d59..321c106326 100644
 + * </code> may share many attributes in common).
 + */
 +public final class Attribute {
-
+ 
    /**
     * Returns if an attribute with the given name is an implicit dependency according to the
-@@ -2409,14 +31,6 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2408,14 +30,6 @@ public final class Attribute implements Comparable<Attribute> {
+     return name.startsWith("$");
    }
-
-   /**
+ 
+-  /**
 -   * Returns if this attribute is late-bound according to the naming policy that designates
 -   * late-bound attributes.
 -   */
@@ -2573,10 +2563,9 @@ index 87dd882d59..321c106326 100644
 -    return isLateBound(getName());
 -  }
 -
--  /**
+   /**
     * Returns if an attribute with the given name is late-bound according to the naming policy
     * that designates late-bound attributes.
-    */
 @@ -2440,78 +54,4 @@ public final class Attribute implements Comparable<Attribute> {
      }
      return nativeAttrName;
