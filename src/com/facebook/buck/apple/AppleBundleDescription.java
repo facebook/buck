@@ -195,7 +195,8 @@ public class AppleBundleDescription
         args.getIbtoolFlags(),
         appleConfig.getCodesignTimeout(),
         swiftBuckConfig.getCopyStdlibToFrameworks(),
-        cxxBuckConfig.shouldCacheStrip());
+        cxxBuckConfig.shouldCacheStrip(),
+        appleConfig.useEntitlementsWhenAdhocCodeSigning());
   }
 
   /**

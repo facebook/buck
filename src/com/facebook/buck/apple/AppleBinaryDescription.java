@@ -406,7 +406,8 @@ public class AppleBinaryDescription
         Optional.empty(),
         appleConfig.getCodesignTimeout(),
         swiftBuckConfig.getCopyStdlibToFrameworks(),
-        cxxBuckConfig.shouldCacheStrip());
+        cxxBuckConfig.shouldCacheStrip(),
+        appleConfig.useEntitlementsWhenAdhocCodeSigning());
   }
 
   private BuildRule createBinary(

@@ -161,6 +161,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final boolean copySwiftStdlibToFrameworks;
 
+  @AddToRuleKey private final boolean useEntitlementsWhenAdhocCodeSigning;
+
   private final Optional<AppleAssetCatalog> assetCatalog;
   private final Optional<CoreDataModel> coreDataModel;
   private final Optional<SceneKitAssets> sceneKitAssets;
@@ -218,7 +220,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Boolean> ibtoolModuleFlag,
       ImmutableList<String> ibtoolFlags,
       Duration codesignTimeout,
-      boolean copySwiftStdlibToFrameworks) {
+      boolean copySwiftStdlibToFrameworks,
+      boolean useEntitlementsWhenAdhocCodeSigning) {
     super(buildTarget, projectFilesystem, params);
     this.extension =
         extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
@@ -291,6 +294,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     this.codesignTimeout = codesignTimeout;
     this.copySwiftStdlibToFrameworks = copySwiftStdlibToFrameworks;
+    this.useEntitlementsWhenAdhocCodeSigning = useEntitlementsWhenAdhocCodeSigning;
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -512,11 +516,13 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
 
     if (needCodeSign()) {
-      Optional<Path> signingEntitlementsTempPath;
+      Optional<Path> signingEntitlementsTempPath = Optional.empty();
       Supplier<CodeSignIdentity> codeSignIdentitySupplier;
 
       if (adHocCodeSignIsSufficient()) {
-        signingEntitlementsTempPath = Optional.empty();
+        if (useEntitlementsWhenAdhocCodeSigning) {
+          signingEntitlementsTempPath = prepareEntitlementsPlistFile(context, stepsBuilder);
+        }
         CodeSignIdentity identity =
             codesignIdentitySubjectName
                 .map(id -> CodeSignIdentity.ofAdhocSignedWithSubjectCommonName(id))
@@ -524,47 +530,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
         codeSignIdentitySupplier = () -> identity;
       } else {
         // Copy the .mobileprovision file if the platform requires it, and sign the executable.
-        Optional<Path> entitlementsPlist = Optional.empty();
-
-        // Try to use the entitlements file specified in the bundle's binary first.
-        entitlementsPlist =
-            entitlementsFile.map(p -> context.getSourcePathResolver().getAbsolutePath(p));
-
-        // Fall back to getting CODE_SIGN_ENTITLEMENTS from info_plist_substitutions.
-        if (!entitlementsPlist.isPresent()) {
-          Path srcRoot =
-              getProjectFilesystem().getRootPath().resolve(getBuildTarget().getBasePath());
-          Optional<String> entitlementsPlistString =
-              InfoPlistSubstitution.getVariableExpansionForPlatform(
-                  CODE_SIGN_ENTITLEMENTS,
-                  platform.getName(),
-                  withDefaults(
-                      infoPlistSubstitutions,
-                      ImmutableMap.of(
-                          "SOURCE_ROOT", srcRoot.toString(),
-                          "SRCROOT", srcRoot.toString())));
-          entitlementsPlist =
-              entitlementsPlistString.map(
-                  entitlementsPlistName -> {
-                    ProjectFilesystem filesystem = getProjectFilesystem();
-                    Path originalEntitlementsPlist =
-                        srcRoot.resolve(Paths.get(entitlementsPlistName));
-                    Path entitlementsPlistWithSubstitutions =
-                        BuildTargetPaths.getScratchPath(
-                            filesystem, getBuildTarget(), "%s-Entitlements.plist");
-
-                    stepsBuilder.add(
-                        new FindAndReplaceStep(
-                            filesystem,
-                            originalEntitlementsPlist,
-                            entitlementsPlistWithSubstitutions,
-                            InfoPlistSubstitution.createVariableExpansionFunction(
-                                infoPlistSubstitutions)));
-
-                    return filesystem.resolve(entitlementsPlistWithSubstitutions);
-                  });
-        }
-
+        Optional<Path> entitlementsPlist = prepareEntitlementsPlistFile(context, stepsBuilder);
         signingEntitlementsTempPath =
             Optional.of(
                 BuildTargetPaths.getScratchPath(
@@ -683,6 +649,50 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
         context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
 
     return stepsBuilder.build();
+  }
+
+  private Optional<Path> prepareEntitlementsPlistFile(
+      BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
+
+    Optional<Path> entitlementsPlist;
+
+    // Try to use the entitlements file specified in the bundle's binary first.
+    entitlementsPlist =
+        entitlementsFile.map(p -> context.getSourcePathResolver().getAbsolutePath(p));
+
+    // Fall back to getting CODE_SIGN_ENTITLEMENTS from info_plist_substitutions.
+    if (!entitlementsPlist.isPresent()) {
+      Path srcRoot = getProjectFilesystem().getRootPath().resolve(getBuildTarget().getBasePath());
+      Optional<String> entitlementsPlistString =
+          InfoPlistSubstitution.getVariableExpansionForPlatform(
+              CODE_SIGN_ENTITLEMENTS,
+              platform.getName(),
+              withDefaults(
+                  infoPlistSubstitutions,
+                  ImmutableMap.of(
+                      "SOURCE_ROOT", srcRoot.toString(),
+                      "SRCROOT", srcRoot.toString())));
+      entitlementsPlist =
+          entitlementsPlistString.map(
+              entitlementsPlistName -> {
+                ProjectFilesystem filesystem = getProjectFilesystem();
+                Path originalEntitlementsPlist = srcRoot.resolve(Paths.get(entitlementsPlistName));
+                Path entitlementsPlistWithSubstitutions =
+                    BuildTargetPaths.getScratchPath(
+                        filesystem, getBuildTarget(), "%s-Entitlements.plist");
+
+                stepsBuilder.add(
+                    new FindAndReplaceStep(
+                        filesystem,
+                        originalEntitlementsPlist,
+                        entitlementsPlistWithSubstitutions,
+                        InfoPlistSubstitution.createVariableExpansionFunction(
+                            infoPlistSubstitutions)));
+
+                return filesystem.resolve(entitlementsPlistWithSubstitutions);
+              });
+    }
+    return entitlementsPlist;
   }
 
   private void verifyResourceConflicts(

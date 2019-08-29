@@ -343,7 +343,8 @@ public class AppleTestDescription
                         Optional.empty(),
                         appleConfig.getCodesignTimeout(),
                         swiftBuckConfig.getCopyStdlibToFrameworks(),
-                        cxxBuckConfig.shouldCacheStrip())));
+                        cxxBuckConfig.shouldCacheStrip(),
+                        appleConfig.useEntitlementsWhenAdhocCodeSigning())));
 
     Optional<SourcePath> xctool =
         getXctool(projectFilesystem, params, buildTarget.getTargetConfiguration(), graphBuilder);
