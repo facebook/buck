@@ -170,7 +170,9 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   public BuildFileManifest getBuildFileManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     LOG.verbose("Started parsing build file %s", buildFile);
-    ParseBuckFileEvent.Started startEvent = ParseBuckFileEvent.started(buildFile, this.getClass());
+    ParseBuckFileEvent.Started startEvent =
+        ParseBuckFileEvent.started(
+            buildFile, ParseBuckFileEvent.ParserKind.SKYLARK, this.getClass());
     buckEventBus.post(startEvent);
     int rulesParsed = 0;
     try {

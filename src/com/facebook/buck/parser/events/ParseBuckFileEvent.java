@@ -55,11 +55,12 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements Wo
    * Create an event when parsing of build file starts
    *
    * @param buckFilePath Path to a build file that is about to start parsing
+   * @param parser Parser being used to parse this file
    * @param parserClass Java class of a parser implementation
    */
   public static Started started(
-      Path buckFilePath, Class<? extends ProjectBuildFileParser> parserClass) {
-    return new Started(buckFilePath, parserClass);
+      Path buckFilePath, ParserKind parser, Class<? extends ProjectBuildFileParser> parserClass) {
+    return new Started(buckFilePath, parser, parserClass);
   }
 
   /**
@@ -78,13 +79,22 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements Wo
 
   /** The event raised when build file parsing is started */
   public static class Started extends ParseBuckFileEvent {
-    protected Started(Path buckFilePath, Class<? extends ProjectBuildFileParser> parserClass) {
+    private final ParserKind parser;
+
+    protected Started(
+        Path buckFilePath, ParserKind parser, Class<? extends ProjectBuildFileParser> parserClass) {
       super(EventKey.unique(), buckFilePath, parserClass);
+      this.parser = parser;
     }
 
     @Override
     public String getEventName() {
       return "ParseBuckFileStarted";
+    }
+
+    /** @return The {@link ParserKind} that was used to parse this file. */
+    public ParserKind getParserKind() {
+      return parser;
     }
   }
 
@@ -93,6 +103,7 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements Wo
     private final int rulesCount;
     private final long processedBytes;
     private final Optional<String> profile;
+    private final ParserKind parserKind;
 
     protected Finished(
         Started started, int rulesCount, long processedBytes, Optional<String> profile) {
@@ -100,6 +111,7 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements Wo
       this.rulesCount = rulesCount;
       this.processedBytes = processedBytes;
       this.profile = profile;
+      this.parserKind = started.getParserKind();
     }
 
     @Override
@@ -121,6 +133,11 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements Wo
       return profile;
     }
 
+    /** @return The {@link ParserKind} that was used to parse this file. */
+    public ParserKind getParserKind() {
+      return parserKind;
+    }
+
     @Override
     public boolean equals(Object o) {
       if (!super.equals(o)) {
@@ -135,5 +152,11 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements Wo
     public int hashCode() {
       return Objects.hashCode(super.hashCode(), getNumRules());
     }
+  }
+
+  /** The kind of parser used to parse a particular build file. */
+  public enum ParserKind {
+    PYTHON_DSL,
+    SKYLARK,
   }
 }
