@@ -875,7 +875,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
             Optional.of(
                 additionalJarsForProguardAndDesugar.stream()
                     .map(input -> buildContext.getSourcePathResolver().getAbsolutePath(input))
-                    .collect(ImmutableSet.toImmutableSet())));
+                    .collect(ImmutableSet.toImmutableSet())),
+            getBuildTarget());
     steps.add(smartDexingCommand);
 
     if (reorderClassesIntraDex) {

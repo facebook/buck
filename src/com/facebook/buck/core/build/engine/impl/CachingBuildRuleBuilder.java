@@ -1277,7 +1277,8 @@ class CachingBuildRuleBuilder {
                       rule.getType(),
                       CachingBuildEngine.STEP_TYPE_CONTEXT_KEY,
                       CachingBuildEngine.StepType.POST_BUILD_STEP.toString()))),
-          step);
+          step,
+          Optional.of(rule.getBuildTarget()));
 
       // Check for interruptions that may have been ignored by step.
       if (Thread.interrupted()) {
@@ -1444,7 +1445,7 @@ class CachingBuildRuleBuilder {
       try (Scope ignored = BuildRuleExecutionEvent.scope(eventBus, rule)) {
         // Get and run all of the commands.
         for (Step step : getSteps(buildRuleBuildContext, buildableContext)) {
-          StepRunner.runStep(executionContext, step);
+          StepRunner.runStep(executionContext, step, Optional.of(rule.getBuildTarget()));
           rethrowIgnoredInterruptedException(step);
         }
       }

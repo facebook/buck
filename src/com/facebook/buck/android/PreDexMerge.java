@@ -371,7 +371,8 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             dexTool,
             false,
             false,
-            Optional.empty()));
+            Optional.empty(),
+            getBuildTarget()));
 
     for (PreDexedFilesSorter.Result result : sortResults.values()) {
       if (!result.apkModule.equals(apkModuleGraph.getRootAPKModule())) {

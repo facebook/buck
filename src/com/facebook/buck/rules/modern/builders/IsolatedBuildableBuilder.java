@@ -339,7 +339,7 @@ public abstract class IsolatedBuildableBuilder {
       for (Step step :
           ModernBuildRule.stepsForBuildable(
               buildContext, reconstructed.buildable, filesystem, reconstructed.target)) {
-        StepRunner.runStep(executionContext, step);
+        StepRunner.runStep(executionContext, step, Optional.of(reconstructed.target));
       }
 
       long duration =

@@ -19,6 +19,7 @@ import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -99,6 +100,7 @@ public class SmartDexingStep implements Step {
   private final String dexTool;
   private final boolean useDexBuckedId;
   private final Optional<Set<Path>> additonalDesugarDeps;
+  private final BuildTarget buildTarget;
 
   /**
    * @param primaryOutputPath Path for the primary dex artifact.
@@ -129,7 +131,8 @@ public class SmartDexingStep implements Step {
       String dexTool,
       boolean desugarInterfaceMethods,
       boolean useDexBuckedId,
-      Optional<Set<Path>> additonalDesugarDeps) {
+      Optional<Set<Path>> additonalDesugarDeps,
+      BuildTarget buildTarget) {
     this.androidPlatformTarget = androidPlatformTarget;
     this.buildContext = buildContext;
     this.filesystem = filesystem;
@@ -154,6 +157,7 @@ public class SmartDexingStep implements Step {
     this.dexTool = dexTool;
     this.useDexBuckedId = useDexBuckedId;
     this.additonalDesugarDeps = additonalDesugarDeps;
+    this.buildTarget = buildTarget;
   }
 
   /**
@@ -215,8 +219,8 @@ public class SmartDexingStep implements Step {
                     secondaryBlobOutput,
                     secondaryCompressedBlobOutput,
                     xzCompressionLevel);
-            StepRunner.runStep(context, concatStep);
-            StepRunner.runStep(context, xzStep);
+            StepRunner.runStep(context, concatStep, Optional.of(buildTarget));
+            StepRunner.runStep(context, xzStep, Optional.of(buildTarget));
           }
         }
       }
@@ -241,7 +245,7 @@ public class SmartDexingStep implements Step {
                     (Callable<Void>)
                         () -> {
                           for (Step step : steps) {
-                            StepRunner.runStep(context, step);
+                            StepRunner.runStep(context, step, Optional.of(buildTarget));
                           }
                           return null;
                         })
