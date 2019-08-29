@@ -368,6 +368,7 @@ zip_file(
         "^NOTICE",
         "^about.html",
         "^about_files.*",
+        "^javax/annotation/.*\.java",
         "^plugin.properties",
         "^plugin.xml",
     ],
