@@ -332,7 +332,7 @@ public class HaskellDescriptionUtils {
                 Optional.empty(),
                 ImmutableList.of(),
                 HaskellSources.builder()
-                    .putModuleMap("Unused", emptyModule.getSourcePathToOutput())
+                    .putModuleMap(HaskellSourceModule.UNUSED, emptyModule.getSourcePathToOutput())
                     .build()));
     BuildTarget emptyArchiveTarget = target.withAppendedFlavors(InternalFlavor.of("empty-archive"));
     Archive emptyArchive =
