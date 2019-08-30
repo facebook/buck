@@ -25,3 +25,29 @@
  {/param}
 {/call}
 {/template}
+
+
+/***/
+{template .contacts_arg}
+{call buck.arg}
+  {param name: 'contacts' /}
+  {{param default : '[]' /}}
+  {param desc}
+  <p>
+  A list of organizational contacts for this test. These could be
+  individuals who you would contact in the event of a test failure
+  or other issue with the test.
+  </p>
+
+<p>
+<pre>
+{literal}
+contacts = [ 'Joe Sixpack', 'Erika Mustermann' ]
+{/literal}
+</pre>
+</p>
+
+  {/param}
+{/call}
+{/template}
+
