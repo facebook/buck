@@ -37,12 +37,7 @@ with Robolectric test runner. It extends from <code>java_test()</code> rule.
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call buck.arg}
   {param name: 'robolectric_runtime_dependency' /}

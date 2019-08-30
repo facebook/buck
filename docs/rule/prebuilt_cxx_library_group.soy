@@ -36,12 +36,7 @@ be handled together in a single rule, perhaps using special link-line constructi
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call cxx_common.exported_preprocessor_flags_arg /}
 

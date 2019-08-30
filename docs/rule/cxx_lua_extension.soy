@@ -36,12 +36,7 @@ depends on Lua C library (configured via the {call buckconfig.lua_cxx_library /}
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call lua_common.base_module_arg /}
 

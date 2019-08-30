@@ -38,12 +38,7 @@ This rule can be customized using the config options {call buckconfig.apple_pack
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call buck.arg}
   {param name: 'bundle' /}

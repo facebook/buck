@@ -89,12 +89,7 @@ buck build :cxx_gr_name#default
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call genrule_common.srcs_arg /}
 

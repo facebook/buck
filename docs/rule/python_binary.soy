@@ -41,7 +41,8 @@ all transitive {call buck.python_library /} dependencies.
 {call buck.arg}
   {param name: 'name' /}
   {param desc}
-  The name of the rule.  The output PEX file will have this name as its
+  The <em>short name</em> for this {call buck.build_target /}.
+  Also, the output PEX file will have this name as its
   base filename with an additional <code>.pex</code> extension.
   {/param}
 {/call}

@@ -893,6 +893,18 @@ docsearch({
 <a href="{ROOT}files-and-dirs/buck-out.html"><code>buck-out</code></a>
 {/template}
 
+
+/***/
+{template .name_arg}
+{call buck.arg}
+  {param name: 'name' /}
+  {param desc}
+  The <em>short name</em> for this {call buck.build_target /}.
+  {/param}
+{/call}
+{/template}
+
+
 /***/
 {template .deps_query_arg}
 {call buck.arg}

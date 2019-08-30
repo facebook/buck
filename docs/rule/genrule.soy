@@ -36,12 +36,7 @@
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the genrule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call genrule_common.srcs_arg /}
 

@@ -74,12 +74,7 @@ that the <code>cxx_library</code> depends on <em>might not be built</em>.
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call cxx_common.srcs_arg /}
 
