@@ -17,40 +17,44 @@ package com.facebook.buck.core.rules.transformer.impl;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.RuleDescription;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.actions.Action;
-import com.facebook.buck.core.rules.actions.ActionWrapperData;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ProviderCreationContext;
 import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
+import com.facebook.buck.core.rules.analysis.impl.LegacyProviderRuleAnalysisResult;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
-import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.util.RichStream;
-import com.google.common.collect.Iterables;
-import java.util.Objects;
+import com.google.common.base.Verify;
 
 /**
  * A {@link TargetNodeToBuildRuleTransformer} that delegates to the {@link RuleAnalysisGraph} when
  * descriptions of the new type {@link RuleDescription} is encountered. A backwards compatible
  * {@link RuleAnalysisLegacyBuildRuleView} is returned for that target.
+ *
+ * <p>For any legacy rules, the {@link com.facebook.buck.core.rules.providers.Provider}s from {@link
+ * com.facebook.buck.core.rules.DescriptionWithTargetGraph#createProviders(ProviderCreationContext,
+ * BuildTarget, Object)} will be supplied to the {@link
+ * com.facebook.buck.core.rules.DescriptionWithTargetGraph#createBuildRule(BuildRuleCreationContextWithTargetGraph,
+ * BuildTarget, BuildRuleParams, Object)}
  */
-public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
-    implements TargetNodeToBuildRuleTransformer {
+public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransformer
+    extends LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer {
 
-  protected final RuleAnalysisGraph ruleAnalysisComputation;
-  protected final TargetNodeToBuildRuleTransformer delegate;
-
-  public LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer(
+  public LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransformer(
       RuleAnalysisGraph ruleAnalysisComputation, TargetNodeToBuildRuleTransformer delegate) {
-    this.ruleAnalysisComputation = ruleAnalysisComputation;
-    this.delegate = delegate;
+    super(ruleAnalysisComputation, delegate);
   }
 
   @Override
@@ -59,45 +63,27 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
       TargetGraph targetGraph,
       ConfigurationRuleRegistry configurationRuleRegistry,
       ActionGraphBuilder graphBuilder,
-      TargetNode<T> targetNode,
-      ProviderInfoCollection providerInfoCollection) {
+      TargetNode<T> targetNode) {
     BaseDescription<T> description = targetNode.getDescription();
-    if (description instanceof RuleDescription) {
-      RuleDescription<T> legacyRuleDescription = (RuleDescription<T>) description;
+
+    ProviderInfoCollection providerInfos;
+
+    if (description instanceof DescriptionWithTargetGraph) {
       RuleAnalysisResult result =
           ruleAnalysisComputation.get(ImmutableRuleAnalysisKey.of(targetNode.getBuildTarget()));
-
-      // TODO(bobyf): add support for multiple actions from a rule
-      if (result.getRegisteredActions().isEmpty()) {
-        return new NoopBuildRule(result.getBuildTarget(), targetNode.getFilesystem());
-      }
-
-      Action correspondingAction =
-          ((ActionWrapperData)
-                  Iterables.getOnlyElement(result.getRegisteredActions().entrySet()).getValue())
-              .getAction();
-
-      graphBuilder.requireAllRules(
-          RichStream.from(correspondingAction.getInputs())
-              .map(artifact -> artifact.asBound().asBuildArtifact())
-              .filter(Objects::nonNull)
-              .map(buildArtifact -> buildArtifact.getSourcePath().getTarget())
-              .toImmutableList());
-
-      return new RuleAnalysisLegacyBuildRuleView(
-          legacyRuleDescription.getConstructorArgType().getTypeName(),
-          result.getBuildTarget(),
-          correspondingAction,
-          graphBuilder,
-          targetNode.getFilesystem());
+      // check that we are getting legacy providers. More or a sanity check than a necessary check
+      Verify.verify(result instanceof LegacyProviderRuleAnalysisResult);
+      providerInfos = result.getProviderInfos();
+    } else {
+      providerInfos = ProviderInfoCollectionImpl.builder().build();
     }
 
-    return delegate.transform(
+    return transform(
         toolchainProvider,
         targetGraph,
         configurationRuleRegistry,
         graphBuilder,
         targetNode,
-        providerInfoCollection);
+        providerInfos);
   }
 }

@@ -101,7 +101,7 @@ public class LegacyCompatibleRuleAnalysisComputation
             key.getBuildTarget(),
             targetNode.getConstructorArg());
 
-    return new ImmutableLegacyProviderRuleAnalysisResult(
+    return ImmutableLegacyProviderRuleAnalysisResult.of(
         key.getBuildTarget(), providerInfoCollection);
   }
 }

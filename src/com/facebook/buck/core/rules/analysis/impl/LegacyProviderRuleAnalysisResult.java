@@ -19,9 +19,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
-import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 /**
  * An implementation of the {@link RuleAnalysisResult} for legacy provider results from {@link
@@ -30,12 +30,15 @@ import java.util.Optional;
  *
  * <p>This implementation throws on any operation relating to {@link ActionAnalysisData}.
  */
-@BuckStyleValue
-abstract class LegacyProviderRuleAnalysisResult implements RuleAnalysisResult {
+@Value.Immutable(builder = false, copy = false)
+@Value.Style(visibility = Value.Style.ImplementationVisibility.PACKAGE)
+public abstract class LegacyProviderRuleAnalysisResult implements RuleAnalysisResult {
+  @Value.Parameter
   @Override
   public abstract BuildTarget getBuildTarget();
 
   /** @return a {@link ProviderInfoCollection} exported by the rule */
+  @Value.Parameter
   @Override
   public abstract ProviderInfoCollection getProviderInfos();
 
