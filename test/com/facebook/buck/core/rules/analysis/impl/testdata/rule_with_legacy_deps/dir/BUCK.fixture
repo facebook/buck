@@ -1,0 +1,5 @@
+legacy_rule(
+    name = "faz",
+    val = 0,
+    visibility = ["PUBLIC"],
+)

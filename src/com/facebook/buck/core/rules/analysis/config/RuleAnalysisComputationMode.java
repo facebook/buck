@@ -27,7 +27,13 @@ public enum RuleAnalysisComputationMode {
    * run in combination with existing {@link com.facebook.buck.core.rules.ActionGraphBuilder} for
    * compatibility
    */
-  COMPATIBLE;
+  COMPATIBLE,
+
+  /**
+   * same as {@link #COMPATIBLE}, but also with the ability for rule analysis to depend on providers
+   * from action graph
+   */
+  PROVIDER_COMPATIBLE;
 
   public static final RuleAnalysisComputationMode DEFAULT = DISABLED;
 }

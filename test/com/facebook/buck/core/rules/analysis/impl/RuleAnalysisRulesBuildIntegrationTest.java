@@ -186,6 +186,74 @@ public class RuleAnalysisRulesBuildIntegrationTest {
     assertThat(data, ruleOutputToMatchers(output));
   }
 
+  @Test
+  public void ruleAnalysisRuleWithLegacyCompatibilityBuilds() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "rule_with_legacy_deps", tmp);
+
+    workspace.setUp();
+
+    workspace.setKnownRuleTypesFactoryFactory(
+        (executor,
+            pluginManager,
+            sandboxExecutionStrategyFactory,
+            knownConfigurationDescriptions) ->
+            cell ->
+                KnownNativeRuleTypes.of(
+                    ImmutableList.of(new BasicRuleDescription(), new LegacyRuleDescription()),
+                    ImmutableList.of()));
+
+    Path resultPath = workspace.buildAndReturnOutput("//:bar");
+
+    /**
+     * we should get something like
+     *
+     * <pre>
+     * {
+     * target: bar
+     * val: 1
+     * dep: {
+     *    {
+     *      target: baz
+     *      val: 4
+     *      dep: {}
+     *    },
+     *    {
+     *      target: foo
+     *      val: 2
+     *      dep: {
+     *        {
+     *          target: baz
+     *          val: 4
+     *          dep: {}
+     *        }
+     *      }
+     *    },
+     *    {
+     *      target: faz
+     *      val: 0
+     *      dep: {}
+     *    },
+     *  }
+     * }
+     * </pre>
+     */
+    RuleOutput output =
+        new RuleOutput(
+            "bar",
+            1,
+            ImmutableList.of(
+                new RuleOutput("baz", 4, ImmutableList.of()),
+                new RuleOutput(
+                    "foo", 2, ImmutableList.of(new RuleOutput("baz", 4, ImmutableList.of()))),
+                new RuleOutput("faz", 0, ImmutableList.of())));
+
+    JsonParser parser = ObjectMappers.createParser(resultPath);
+    Map<String, Object> data = parser.readValueAs(Map.class);
+
+    assertThat(data, ruleOutputToMatchers(output));
+  }
+
   private static class RuleOutput {
     final String target;
     final int val;
