@@ -46,8 +46,8 @@ addition to the documentation here.
   <tr>
   <td><span><strong>Platform:</strong></span></td>
   <td>
-  <a href="javascript:void(0);" class="button-ios" onclick="display('platform', 'ios')">iOS</a>
   <a href="javascript:void(0);" class="button-android" onclick="display('platform', 'android')">Android</a>
+  <a href="javascript:void(0);" class="button-ios" onclick="display('platform', 'ios')">iOS</a>
   <a href="javascript:void(0);" class="button-java" onclick="display('platform', 'java')">Java</a>
   <a href="javascript:void(0);" class="button-other" onclick="display('platform', 'other')">Other</a>
   </td>
@@ -499,7 +499,7 @@ For some distros, the default packages may be older than what you would like. In
 
 <span><block class="mac linux windows android" /></span>
 
-<h3>Set Location of Android SDK and NDK</h3>
+<h3 id="locate-android-sdk">Set Location of Android SDK and NDK</h3>
 
 <p>
   You will need to tell Buck where to find the Android SDK and NDK.  
@@ -1065,7 +1065,7 @@ if (!foundHash) {
   var isMac = navigator.platform.toLowerCase().indexOf('mac') !== -1;
   var isLinux = navigator.platform.toLowerCase().indexOf('linux') !== -1;
   display('os', isMac ? 'mac' : (isLinux ? 'linux' : 'windows'));
-  display('platform', isMac ? 'ios' : 'android');
+  display('platform', 'android');
 }
 </script>
 {/literal}
