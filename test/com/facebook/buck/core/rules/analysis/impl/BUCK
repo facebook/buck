@@ -42,6 +42,7 @@ java_test(
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/graph/transformation/impl:testutil",
         "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/core/model/targetgraph/impl:testutil",
         "//test/com/facebook/buck/core/rules/actions:testutil",
         "//test/com/facebook/buck/event:testutil",
