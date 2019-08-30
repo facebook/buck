@@ -26,6 +26,7 @@ import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessingTool;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.CoreArg;
 import java.util.Objects;
@@ -87,6 +88,11 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   @Override
   public boolean shouldCompileAgainstAbis() {
     return kotlinBuckConfig.shouldCompileAgainstAbis();
+  }
+
+  @Override
+  public AbiGenerationMode getAbiGenerationMode() {
+    return kotlinBuckConfig.getAbiGenerationMode();
   }
 
   @Override

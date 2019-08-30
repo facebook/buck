@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -53,6 +54,11 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   @Override
   public boolean shouldCompileAgainstAbis() {
     return javaBuckConfig.shouldCompileAgainstAbis();
+  }
+
+  @Override
+  public AbiGenerationMode getAbiGenerationMode() {
+    return javaBuckConfig.getAbiGenerationMode();
   }
 
   @Override

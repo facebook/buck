@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.google.common.collect.ImmutableCollection;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -48,6 +49,10 @@ public abstract class ConfiguredCompilerFactory {
     // languages yet, so this is defaulted false.
     // See https://github.com/facebook/buck/issues/1386
     return false;
+  }
+
+  public AbiGenerationMode getAbiGenerationMode() {
+    return AbiGenerationMode.CLASS;
   }
 
   public boolean shouldGenerateSourceAbi() {

@@ -290,7 +290,7 @@ public abstract class DefaultJavaLibraryRules {
       result = args.getAbiGenerationMode().orElse(null);
     }
     if (result == null) {
-      result = Objects.requireNonNull(getJavaBuckConfig()).getAbiGenerationMode();
+      result = Objects.requireNonNull(getConfiguredCompilerFactory()).getAbiGenerationMode();
     }
 
     if (result == AbiGenerationMode.CLASS) {
@@ -496,7 +496,7 @@ public abstract class DefaultJavaLibraryRules {
         // Use the BuckConfig version (rather than the inferred one) because if any
         // targets are using source_only it can affect the output of other targets
         // in ways that are hard to simulate
-        : getJavaBuckConfig().getAbiGenerationMode();
+        : getConfiguredCompilerFactory().getAbiGenerationMode();
   }
 
   @Value.Lazy
