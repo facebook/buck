@@ -26,9 +26,12 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.FakeTargetNodeArg;
+import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.rules.ProviderCreationContext;
 import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
@@ -194,6 +197,88 @@ public class RuleAnalysisGraphImplTest {
 
     RuleAnalysisGraphImpl ruleAnalysisComputation =
         RuleAnalysisGraphImpl.of(targetGraph, depsAwareExecutor, cache, eventBus);
+
+    RuleAnalysisResult ruleAnalysisResult =
+        ruleAnalysisComputation.get(ImmutableRuleAnalysisKey.of(buildTarget));
+
+    // We shouldn't be making copies of the providers or build target in our transformation. It
+    // should be as given.
+    assertSame(expectedProviders, ruleAnalysisResult.getProviderInfos());
+    assertSame(buildTarget, ruleAnalysisResult.getBuildTarget());
+  }
+
+  @Test
+  public void transformNodeWithLegacyDelegationCorrectly() {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:target");
+    BuildTarget buildTarget2 = BuildTargetFactory.newInstance("//my:target2");
+
+    ProviderInfoCollection expectedProviders =
+        ProviderInfoCollectionImpl.builder()
+            .put(new FakeInfo(new FakeBuiltInProvider("myprovider")))
+            .build();
+
+    RuleDescription<FakeRuleDescriptionArg> ruleDescription =
+        new RuleDescription<FakeRuleDescriptionArg>() {
+          @Override
+          public ProviderInfoCollection ruleImpl(
+              RuleAnalysisContext context, BuildTarget target, FakeRuleDescriptionArg args) {
+            // here we use the deps
+            assertEquals(buildTarget, target);
+            return context.deps().get(buildTarget2);
+          }
+
+          @Override
+          public Class<FakeRuleDescriptionArg> getConstructorArgType() {
+            return FakeRuleDescriptionArg.class;
+          }
+        };
+    FakeTargetNodeBuilder.FakeDescription legacyDescription =
+        new FakeTargetNodeBuilder.FakeDescription() {
+          @Override
+          public ProviderInfoCollection createProviders(
+              ProviderCreationContext context, BuildTarget buildTarget, FakeTargetNodeArg args) {
+            return expectedProviders;
+          }
+        };
+
+    TargetNode<?> targetNode =
+        targetNodeFactory.createFromObject(
+            ruleDescription,
+            FakeRuleDescriptionArg.builder().setName("target").build(),
+            projectFilesystem,
+            buildTarget,
+            ImmutableSet.of(buildTarget2),
+            ImmutableSortedSet.of(),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
+            cellPathResolver);
+    TargetNode<?> targetNode2 =
+        targetNodeFactory.createFromObject(
+            legacyDescription,
+            FakeTargetNodeArg.builder().setName("target2").build(),
+            projectFilesystem,
+            buildTarget2,
+            ImmutableSet.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
+            cellPathResolver);
+
+    MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
+    graph.addNode(targetNode);
+    graph.addNode(targetNode2);
+    graph.addEdge(targetNode, targetNode2);
+    ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
+        ImmutableMap.of(buildTarget, targetNode, buildTarget2, targetNode2);
+    TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
+
+    RuleAnalysisGraphImpl ruleAnalysisComputation =
+        RuleAnalysisGraphImpl.of(
+            new LegacyCompatibleRuleAnalysisComputation(
+                new RuleAnalysisComputation(targetGraph, eventBus), targetGraph),
+            targetGraph,
+            depsAwareExecutor,
+            cache);
 
     RuleAnalysisResult ruleAnalysisResult =
         ruleAnalysisComputation.get(ImmutableRuleAnalysisKey.of(buildTarget));

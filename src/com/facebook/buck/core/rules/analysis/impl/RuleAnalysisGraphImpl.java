@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.analysis.impl;
 
+import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.GraphEngineCache;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
@@ -56,9 +57,21 @@ public class RuleAnalysisGraphImpl implements RuleAnalysisGraph {
       RuleAnalysisCache cache,
       BuckEventBus eventBus) {
     RuleAnalysisComputation transformer = new RuleAnalysisComputation(targetGraph, eventBus);
+    return of(transformer, targetGraph, depsAwareExecutor, cache);
+  }
+
+  /**
+   * creates a new computation with the supplied {@link DepsAwareExecutor} and using the given
+   * {@link GraphEngineCache}, and computation.
+   */
+  public static RuleAnalysisGraphImpl of(
+      GraphComputation<RuleAnalysisKey, RuleAnalysisResult> computation,
+      TargetGraph targetGraph,
+      DepsAwareExecutor<? super ComputeResult, ?> depsAwareExecutor,
+      RuleAnalysisCache cache) {
     GraphTransformationEngine engine =
         new DefaultGraphTransformationEngine(
-            ImmutableList.of(new GraphComputationStage<>(transformer, cache)),
+            ImmutableList.of(new GraphComputationStage<>(computation, cache)),
             targetGraph.getSize(),
             depsAwareExecutor);
     return new RuleAnalysisGraphImpl(engine);
