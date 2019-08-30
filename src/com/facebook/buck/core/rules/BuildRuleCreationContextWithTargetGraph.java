@@ -17,8 +17,10 @@
 package com.facebook.buck.core.rules;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
+import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import org.immutables.value.Value;
@@ -52,4 +54,11 @@ public interface BuildRuleCreationContextWithTargetGraph extends BuildRuleCreati
   @Value.Parameter
   @Override
   ConfigurationRuleRegistry getConfigurationRuleRegistry();
+
+  /**
+   * @return the {@link ProviderInfoCollection} that was created by the rules {@link
+   *     DescriptionWithTargetGraph#createProviders(ProviderCreationContext, BuildTarget, Object)}
+   */
+  @Value.Parameter
+  ProviderInfoCollection getProviderInfoCollection();
 }

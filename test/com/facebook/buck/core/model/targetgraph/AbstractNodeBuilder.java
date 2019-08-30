@@ -31,6 +31,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ImmutableBuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
+import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -144,7 +145,8 @@ public abstract class AbstractNodeBuilder<
                     filesystem,
                     cellRoots,
                     toolchainProvider,
-                    ConfigurationRuleRegistryFactory.createRegistry(targetGraph)),
+                    ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
+                    ProviderInfoCollectionImpl.builder().build()),
                 target,
                 params,
                 builtArg);

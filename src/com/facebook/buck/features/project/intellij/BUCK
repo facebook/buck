@@ -21,6 +21,8 @@ buck_module(
         "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
         "//src/com/facebook/buck/core/resources:resources",
         "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/analysis:analysis",
+        "//src/com/facebook/buck/core/rules/providers/impl:impl",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/core/util/graph:graph",
         "//src/com/facebook/buck/core/util/log:log",
