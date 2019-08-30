@@ -164,16 +164,18 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
                     .getActionDataKey()
                     .getID());
 
-    BuildRule buildRule =
+    RuleAnalysisLegacyBuildRuleView buildRule =
         new RuleAnalysisLegacyBuildRuleView(
             "my_type",
             ruleAnalysisResult.getBuildTarget(),
             actionWrapperData.getAction(),
             actionGraphBuilder,
-            projectFilesystem);
+            projectFilesystem,
+            providerInfoCollection);
 
     assertSame(buildTarget, buildRule.getBuildTarget());
     assertSame(projectFilesystem, buildRule.getProjectFilesystem());
+    assertSame(providerInfoCollection, buildRule.getProviderInfos());
     assertEquals("my_type", buildRule.getType());
     assertEquals(
         ExplicitBuildTargetSourcePath.of(buildTarget, packagePath.resolve("foo.output")),

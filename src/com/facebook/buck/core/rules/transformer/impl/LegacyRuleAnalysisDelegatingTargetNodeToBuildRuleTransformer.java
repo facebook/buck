@@ -89,7 +89,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
           result.getBuildTarget(),
           correspondingAction,
           graphBuilder,
-          targetNode.getFilesystem());
+          targetNode.getFilesystem(),
+          result.getProviderInfos());
     }
 
     return delegate.transform(

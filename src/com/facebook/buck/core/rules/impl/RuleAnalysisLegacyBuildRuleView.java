@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
+import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -54,6 +55,7 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
   @AddToRuleKey private final Action action;
   private Supplier<SortedSet<BuildRule>> buildDepsSupplier;
   private BuildRuleResolver ruleResolver;
+  private final ProviderInfoCollection providerInfoCollection;
 
   /**
    * @param type the type of this {@link BuildRule}
@@ -61,17 +63,20 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
    * @param action the action of the result for which we want to provide the {@link BuildRule} view
    * @param ruleResolver the current {@link BuildRuleResolver} to query dependent rules
    * @param projectFilesystem the filesystem
+   * @param providerInfoCollection
    */
   public RuleAnalysisLegacyBuildRuleView(
       String type,
       BuildTarget buildTarget,
       Action action,
       BuildRuleResolver ruleResolver,
-      ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem,
+      ProviderInfoCollection providerInfoCollection) {
     super(buildTarget, projectFilesystem);
     this.type = type;
     this.action = action;
     this.ruleResolver = ruleResolver;
+    this.providerInfoCollection = providerInfoCollection;
     this.buildDepsSupplier = MoreSuppliers.memoize(this::getBuildDepsSupplier);
   }
 
@@ -129,5 +134,10 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
   public void updateBuildRuleResolver(BuildRuleResolver ruleResolver) {
     this.ruleResolver = ruleResolver;
     this.buildDepsSupplier = MoreSuppliers.memoize(this::getBuildDepsSupplier);
+  }
+
+  /** @return the {@link ProviderInfoCollection} returned from rule analysis */
+  public ProviderInfoCollection getProviderInfos() {
+    return providerInfoCollection;
   }
 }
