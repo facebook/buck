@@ -16,19 +16,46 @@
 
 package com.facebook.buck.core.rules.transformer;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.ProviderCreationContext;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
+import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 
 public interface TargetNodeToBuildRuleTransformer {
 
+  default <T> BuildRule transform(
+      ToolchainProvider toolchainProvider,
+      TargetGraph targetGraph,
+      ConfigurationRuleRegistry configurationRuleRegistry,
+      ActionGraphBuilder graphBuilder,
+      TargetNode<T> targetNode) {
+    return transform(
+        toolchainProvider,
+        targetGraph,
+        configurationRuleRegistry,
+        graphBuilder,
+        targetNode,
+        ProviderInfoCollectionImpl.builder().build());
+  }
+
+  /**
+   * Converts a given {@link TargetNode} to a {@link BuildRule} as part of action graph
+   * construction. The providers computed from {@link
+   * com.facebook.buck.core.rules.DescriptionWithTargetGraph#createProviders(ProviderCreationContext,
+   * BuildTarget, Object)} will be passed to this function to be used to construct the {@link
+   * BuildRule}
+   */
   <T> BuildRule transform(
       ToolchainProvider toolchainProvider,
       TargetGraph targetGraph,
       ConfigurationRuleRegistry configurationRuleRegistry,
       ActionGraphBuilder graphBuilder,
-      TargetNode<T> targetNode);
+      TargetNode<T> targetNode,
+      ProviderInfoCollection providerInfoCollection);
 }

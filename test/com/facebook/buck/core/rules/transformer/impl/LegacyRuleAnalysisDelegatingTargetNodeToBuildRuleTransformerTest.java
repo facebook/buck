@@ -100,7 +100,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
               TargetGraph targetGraph,
               ConfigurationRuleRegistry configurationRuleRegistry,
               ActionGraphBuilder graphBuilder,
-              TargetNode<T> node) {
+              TargetNode<T> node,
+              ProviderInfoCollection providerInfoCollection) {
             assertSame(targetNode, node);
             return rule;
           }
@@ -194,7 +195,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
               TargetGraph targetGraph,
               ConfigurationRuleRegistry configurationRuleRegistry,
               ActionGraphBuilder graphBuilder,
-              TargetNode<T> node) {
+              TargetNode<T> node,
+              ProviderInfoCollection providerInfoCollection) {
             fail();
             return null;
           }
@@ -277,7 +279,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
               TargetGraph targetGraph,
               ConfigurationRuleRegistry configurationRuleRegistry,
               ActionGraphBuilder graphBuilder,
-              TargetNode<T> node) {
+              TargetNode<T> node,
+              ProviderInfoCollection providerInfoCollection) {
             fail();
             return null;
           }

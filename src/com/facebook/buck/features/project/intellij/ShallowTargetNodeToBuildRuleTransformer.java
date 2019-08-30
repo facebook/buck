@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ImmutableBuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
-import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.shell.AbstractGenruleDescription;
@@ -63,7 +63,8 @@ public class ShallowTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
       TargetGraph targetGraph,
       ConfigurationRuleRegistry configurationRuleRegistry,
       ActionGraphBuilder graphBuilder,
-      TargetNode<T> targetNode) {
+      TargetNode<T> targetNode,
+      ProviderInfoCollection providerInfoCollection) {
     DescriptionWithTargetGraph<T> description =
         (DescriptionWithTargetGraph<T>) targetNode.getDescription();
 
@@ -95,7 +96,7 @@ public class ShallowTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
               targetNode.getCellNames(),
               toolchainProvider,
               configurationRuleRegistry,
-              ProviderInfoCollectionImpl.builder().build());
+              providerInfoCollection);
 
       return description.createBuildRule(context, targetNode.getBuildTarget(), params, arg);
     }

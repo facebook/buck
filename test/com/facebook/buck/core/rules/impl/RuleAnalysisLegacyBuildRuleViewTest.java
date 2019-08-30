@@ -98,7 +98,8 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
                   TargetGraph targetGraph,
                   ConfigurationRuleRegistry configurationRuleRegistry,
                   ActionGraphBuilder graphBuilder,
-                  TargetNode<T> targetNode) {
+                  TargetNode<T> targetNode,
+                  ProviderInfoCollection providerInfoCollection) {
                 assertSame(depNode, targetNode);
                 return fakeDepRule;
               }

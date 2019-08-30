@@ -29,6 +29,7 @@ import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
+import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.util.RichStream;
@@ -58,7 +59,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
       TargetGraph targetGraph,
       ConfigurationRuleRegistry configurationRuleRegistry,
       ActionGraphBuilder graphBuilder,
-      TargetNode<T> targetNode) {
+      TargetNode<T> targetNode,
+      ProviderInfoCollection providerInfoCollection) {
     BaseDescription<T> description = targetNode.getDescription();
     if (description instanceof RuleDescription) {
       RuleDescription<T> legacyRuleDescription = (RuleDescription<T>) description;
@@ -91,6 +93,11 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
     }
 
     return delegate.transform(
-        toolchainProvider, targetGraph, configurationRuleRegistry, graphBuilder, targetNode);
+        toolchainProvider,
+        targetGraph,
+        configurationRuleRegistry,
+        graphBuilder,
+        targetNode,
+        providerInfoCollection);
   }
 }

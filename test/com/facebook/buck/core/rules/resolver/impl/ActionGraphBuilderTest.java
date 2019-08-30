@@ -39,6 +39,7 @@ import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -215,7 +216,8 @@ public class ActionGraphBuilderTest {
                   TargetGraph targetGraph,
                   ConfigurationRuleRegistry configurationRuleRegistry,
                   ActionGraphBuilder graphBuilder,
-                  TargetNode<T> targetNode) {
+                  TargetNode<T> targetNode,
+                  ProviderInfoCollection providerInfoCollection) {
                 Assert.assertFalse(graphBuilder.getRuleOptional(target).isPresent());
                 return graphBuilder.computeIfAbsent(target, FakeBuildRule::new);
               }
@@ -247,7 +249,8 @@ public class ActionGraphBuilderTest {
                   TargetGraph targetGraph,
                   ConfigurationRuleRegistry configurationRuleRegistry,
                   ActionGraphBuilder graphBuilder,
-                  TargetNode<T> targetNode) {
+                  TargetNode<T> targetNode,
+                  ProviderInfoCollection providerInfoCollection) {
                 Boolean existing = transformCalls.put(targetNode.getBuildTarget(), true);
                 assertEquals("Should only be called once for each build target", null, existing);
                 try {
