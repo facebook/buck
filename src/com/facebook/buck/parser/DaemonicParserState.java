@@ -382,7 +382,7 @@ public class DaemonicParserState {
    * types with generics. Care should be taken to ensure that the correct class object is passed in.
    */
   @SuppressWarnings("unchecked")
-  public <T> PipelineNodeCache.Cache<BuildTarget, T> getOrCreateNodeCache(Class<?> cacheType) {
+  public <T> PipelineNodeCache.Cache<BuildTarget, T> getOrCreateNodeCache(Class<T> cacheType) {
     try {
       return (PipelineNodeCache.Cache<BuildTarget, T>) typedNodeCaches.get(cacheType);
     } catch (ExecutionException e) {

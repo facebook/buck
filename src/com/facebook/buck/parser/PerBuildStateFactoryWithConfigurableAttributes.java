@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -200,9 +201,14 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
         MoreExecutors.listeningDecorator(
             createExecutorService(rootCell.getBuckConfig(), "configured-pipeline"));
 
+    @SuppressWarnings("unchecked")
+    PipelineNodeCache.Cache<BuildTarget, TargetNode<?>> nodeCache =
+        daemonicParserState.getOrCreateNodeCache(
+            (Class<TargetNode<?>>) (Class<?>) TargetNode.class);
+
     ParsePipeline<TargetNode<?>> targetNodeParsePipeline =
         new RawTargetNodeToTargetNodeParsePipeline(
-            daemonicParserState.getOrCreateNodeCache(TargetNode.class),
+            nodeCache,
             configuredPipelineExecutor,
             rawTargetNodePipeline,
             eventBus,
