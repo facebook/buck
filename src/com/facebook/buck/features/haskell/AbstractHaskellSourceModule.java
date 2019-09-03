@@ -62,6 +62,13 @@ abstract class AbstractHaskellSourceModule
         .build();
   }
 
+  public String getOutputPath(String suffix) {
+    if (getSourceType() == SourceType.HsBootFile) {
+      suffix = suffix + "-boot";
+    }
+    return getModuleName().replace('.', File.separatorChar) + "." + suffix;
+  }
+
   @Override
   public String toString() {
     if (getSourceType() == SourceType.HsBootFile) {

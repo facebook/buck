@@ -46,6 +46,7 @@ public class HaskellBinaryIntegrationTest {
         });
   }
 
+  private HaskellVersion version;
   private ProjectWorkspace workspace;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -64,7 +65,7 @@ public class HaskellBinaryIntegrationTest {
     assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
 
     // Verify that the system contains a compiler.
-    HaskellVersion version = HaskellTestUtils.assumeSystemCompiler();
+    version = HaskellTestUtils.assumeSystemCompiler();
 
     // Setup the workspace.
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "binary_test", tmp);
@@ -96,6 +97,16 @@ public class HaskellBinaryIntegrationTest {
         workspace.runBuckCommand("run", "//:dependent#default," + getLinkFlavor());
     result.assertSuccess();
     assertThat(result.getStdout(), Matchers.equalTo("5"));
+  }
+
+  @Test
+  public void mutuallyRecursive() {
+    // .hs-boot doesn't work well with -i (empty import directory list) for ghc <8
+    assumeThat(version.getMajorVersion(), Matchers.greaterThanOrEqualTo(8));
+    ProcessResult result =
+        workspace.runBuckCommand("run", "//:mutually_recursive#default," + getLinkFlavor());
+    result.assertSuccess();
+    assertThat(result.getStdout(), Matchers.equalTo("55\n"));
   }
 
   @Test

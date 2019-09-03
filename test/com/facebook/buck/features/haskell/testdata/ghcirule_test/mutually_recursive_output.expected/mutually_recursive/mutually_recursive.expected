@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Copyright 2016-present, Facebook, Inc.
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. An additional grant
+# of patent rights can be found in the PATENTS file in the same directory.
+
+DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+if ! test -d "$DIR"; then
+  echo Cannot locate directory containing GHCi script; exit 1
+fi
+rm -rf /tmp/mutually_recursive-$$
+mkdir -m 700 /tmp/mutually_recursive-$$
+cp $DIR/start.ghci /tmp/mutually_recursive-$$
+
+# We remove all paths from here since buck replaces them with the
+# temporary file path location and we cannot write a static '.expected' to
+# match against them
+-optP-undef -optP-traditional-cpp -I. -no-global-package-db -no-user-package-db -hide-all-packages   -fPIC -fexternal-dynamic-refs --interactive Boot/Bar.hs Boot/Foo.hs ${DIR}/libghci_dependencies.so -ghci-script /tmp/mutually_recursive-$$/start.ghci "$@"
+rm -rf /tmp/mutually_recursive-$$
+# StringTemplateStep adds a newline at the end of the generated script.
+# Using nuclide to edit .expected file might cause test failure.
+# .expected FILE MUST END WITH A NEWLINE
+

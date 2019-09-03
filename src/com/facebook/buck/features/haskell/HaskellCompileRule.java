@@ -55,7 +55,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
@@ -373,14 +372,15 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   }
 
   public ImmutableList<SourcePath> getObjects() {
-    String suffix = "." + getObjectSuffix();
-
     ImmutableList.Builder<SourcePath> objects = ImmutableList.builder();
-    for (String module : sources.getModuleNames()) {
-      objects.add(
-          ExplicitBuildTargetSourcePath.of(
-              getBuildTarget(),
-              getObjectDir().resolve(module.replace('.', File.separatorChar) + suffix)));
+    for (HaskellSourceModule module : sources.getModuleMap().keySet()) {
+      // We should not link the .o-boot files, they are empty stub files for
+      // incremental compilation.
+      if (module.getSourceType() == HaskellSourceModule.SourceType.HsSrcFile) {
+        objects.add(
+            ExplicitBuildTargetSourcePath.of(
+                getBuildTarget(), getObjectDir().resolve(module.getOutputPath(getObjectSuffix()))));
+      }
     }
     return objects.build();
   }
@@ -423,8 +423,8 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
                   // Only leave paths which would be overwritten when invoking the compiler.
                   private final Set<Path> allowedPaths =
-                      RichStream.from(sources.getModuleNames())
-                          .map(s -> root.resolve(s.replace('.', File.separatorChar) + "." + suffix))
+                      RichStream.from(sources.getOutputPaths(suffix))
+                          .map(path -> root.resolve(path))
                           .toImmutableSet();
 
                   @Override

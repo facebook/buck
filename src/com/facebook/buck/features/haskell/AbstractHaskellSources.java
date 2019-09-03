@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.util.Map;
 import org.immutables.value.Value;
 
@@ -71,6 +72,9 @@ abstract class AbstractHaskellSources implements AddsToRuleKey {
   public ImmutableCollection<SourcePath> getSourcePaths() {
     ImmutableCollection.Builder<SourcePath> builder = ImmutableList.builder();
     for (Map.Entry<HaskellSourceModule, SourcePath> ent : getModuleMap().entrySet()) {
+      // The compiler does not expect the .hs-boot file to be passed as argument. It must live in
+      // the same directory as its parent source file .hs instead no matter what the actual import
+      // directory list is.
       if (ent.getKey().getSourceType() == HaskellSourceModule.SourceType.HsSrcFile) {
         builder.add(ent.getValue());
       }
@@ -78,7 +82,11 @@ abstract class AbstractHaskellSources implements AddsToRuleKey {
     return builder.build();
   }
 
+  public Iterable<String> getOutputPaths(String suffix) {
+    return Iterables.transform(getModuleMap().keySet(), m -> m.getOutputPath(suffix));
+  }
+
   public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder.filterBuildRuleInputs(getSourcePaths());
+    return ruleFinder.filterBuildRuleInputs(getModuleMap().values());
   }
 }
