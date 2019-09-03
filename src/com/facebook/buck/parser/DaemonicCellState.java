@@ -62,6 +62,22 @@ class DaemonicCellState {
     public final ConcurrentMapCache<BuildTarget, T> allComputedNodes =
         new ConcurrentMapCache<>(parsingThreads);
 
+    /**
+     * Provides access to all flavored build targets created and stored in all of the caches for a
+     * given unflavored build target.
+     *
+     * <p>This map is used to locate all the build targets that need to be invalidated when a build
+     * build file that produced those build targets has changed.
+     */
+    @GuardedBy("rawAndComputedNodesLock")
+    private final SetMultimap<UnflavoredBuildTargetView, BuildTarget> targetsCornucopia =
+        HashMultimap.create();
+
+    private void invalidateFor(UnflavoredBuildTargetView target) {
+      Set<BuildTarget> keys = targetsCornucopia.removeAll(target);
+      allComputedNodes.invalidateAll(keys);
+    }
+
     public Optional<T> lookupComputedNode(BuildTarget target) throws BuildTargetException {
       try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
         return Optional.ofNullable(allComputedNodes.getIfPresent(target));
@@ -98,16 +114,6 @@ class DaemonicCellState {
    */
   @GuardedBy("rawAndComputedNodesLock")
   private final SetMultimap<Path, Path> buildFileDependents;
-
-  /**
-   * Provides access to all flavored build targets created and stored in all of the caches for a
-   * given unflavored build target.
-   *
-   * <p>This map is used to locate all the build targets that need to be invalidated when a build
-   * build file that produced those build targets has changed.
-   */
-  @GuardedBy("rawAndComputedNodesLock")
-  private final SetMultimap<UnflavoredBuildTargetView, BuildTarget> targetsCornucopia;
 
   /**
    * Contains environment variables used during parsing of a particular build file.
@@ -166,7 +172,6 @@ class DaemonicCellState {
     this.cellRoot = cell.getRoot();
     this.cellCanonicalName = cell.getCanonicalName();
     this.buildFileDependents = HashMultimap.create();
-    this.targetsCornucopia = HashMultimap.create();
     this.buildFileEnv = new HashMap<>();
     this.allBuildFileManifests = new ConcurrentMapCache<>(parsingThreads);
     this.allRawNodeTargets = new HashSet<>();
@@ -233,9 +238,8 @@ class DaemonicCellState {
                   cellRoot, cellCanonicalName, rawNode, path);
           LOG.debug("Invalidating target for path %s: %s", path, target);
           for (Cache<?> cache : typedNodeCaches()) {
-            cache.allComputedNodes.invalidateAll(targetsCornucopia.get(target));
+            cache.invalidateFor(target);
           }
-          targetsCornucopia.removeAll(target);
           allRawNodeTargets.remove(target);
         }
         allBuildFileManifests.invalidate(path);
