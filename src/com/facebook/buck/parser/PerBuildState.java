@@ -35,7 +35,7 @@ public class PerBuildState implements AutoCloseable {
 
   private final CellManager cellManager;
   private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
-  private final ParsePipeline<TargetNode<?>> targetNodeParsePipeline;
+  private final RawTargetNodeToTargetNodeParsePipeline targetNodeParsePipeline;
   private final ParsingContext parsingContext;
   private final SelectorListResolver selectorListResolver;
   private final SelectorListFactory selectorListFactory;
@@ -44,7 +44,7 @@ public class PerBuildState implements AutoCloseable {
   PerBuildState(
       CellManager cellManager,
       BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline,
-      ParsePipeline<TargetNode<?>> targetNodeParsePipeline,
+      RawTargetNodeToTargetNodeParsePipeline targetNodeParsePipeline,
       ParsingContext parsingContext,
       SelectorListResolver selectorListResolver,
       SelectorListFactory selectorListFactory,

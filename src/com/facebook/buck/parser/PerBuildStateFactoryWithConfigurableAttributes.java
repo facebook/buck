@@ -206,7 +206,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
         daemonicParserState.getOrCreateNodeCache(
             (Class<TargetNode<?>>) (Class<?>) TargetNode.class);
 
-    ParsePipeline<TargetNode<?>> targetNodeParsePipeline =
+    RawTargetNodeToTargetNodeParsePipeline targetNodeParsePipeline =
         new RawTargetNodeToTargetNodeParsePipeline(
             nodeCache,
             configuredPipelineExecutor,
