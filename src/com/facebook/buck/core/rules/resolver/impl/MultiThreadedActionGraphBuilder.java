@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.resolver.impl;
 
 import com.facebook.buck.core.cell.CellProvider;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
@@ -124,6 +125,16 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
   public Iterable<BuildRule> getBuildRules() {
     Preconditions.checkState(isValid);
     return buildRuleIndex.values().stream().map(Task::get).collect(ImmutableList.toImmutableList());
+  }
+
+  @Override
+  public Iterable<BuildRule> getSuccessfullyConstructedBuildRules() {
+    Preconditions.checkState(isValid);
+    return buildRuleIndex.values().stream()
+        .filter(task -> task.isDone() && !task.isCancelled())
+        .map(Task::getOrNullOnExecutionException)
+        .filter(buildRule -> buildRule != null)
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Override
@@ -305,6 +316,14 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
       return MoreFutures.getUncheckedInterruptibly(future);
     }
 
+    private @Nullable V getOrNullOnExecutionException() {
+      try {
+        return get();
+      } catch (BuckUncheckedExecutionException e) {
+        return null;
+      }
+    }
+
     private boolean isBeingWorkedOnByCurrentThread() {
       return Thread.currentThread() == workThread;
     }
@@ -332,6 +351,10 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
 
     private boolean isDone() {
       return future.isDone();
+    }
+
+    private boolean isCancelled() {
+      return future.isCancelled();
     }
 
     private void forceComplete(V value) {

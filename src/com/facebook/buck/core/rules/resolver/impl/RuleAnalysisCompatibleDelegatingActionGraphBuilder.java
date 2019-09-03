@@ -63,6 +63,11 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilder extends Abstract
   }
 
   @Override
+  public Iterable<BuildRule> getSuccessfullyConstructedBuildRules() {
+    return delegateActionGraphBuilder.getSuccessfullyConstructedBuildRules();
+  }
+
+  @Override
   public BuildRule computeIfAbsent(
       BuildTarget target, Function<BuildTarget, BuildRule> mappingFunction) {
     return delegateActionGraphBuilder.computeIfAbsent(target, mappingFunction);

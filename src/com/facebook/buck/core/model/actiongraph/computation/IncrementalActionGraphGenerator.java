@@ -126,7 +126,8 @@ public class IncrementalActionGraphGenerator {
       Set<UnflavoredBuildTargetView> invalidUnflavoredTargets) {
     int totalRuleCount = 0;
     int reusedRuleCount = 0;
-    for (BuildRule buildRule : lastActionGraphBuilder.getBuildRules()) {
+    for (BuildRule buildRule :
+        Objects.requireNonNull(lastActionGraphBuilder).getSuccessfullyConstructedBuildRules()) {
       UnflavoredBuildTargetView unflavoredTarget =
           buildRule.getBuildTarget().getUnflavoredBuildTarget();
       if (!invalidUnflavoredTargets.contains(unflavoredTarget)

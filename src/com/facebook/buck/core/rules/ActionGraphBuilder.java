@@ -26,8 +26,18 @@ import java.util.function.Function;
 
 /** Provides methods to interact with the ActionGraph. */
 public interface ActionGraphBuilder extends BuildRuleResolver {
-  /** @return an unmodifiable view of the rules in the index */
+  /**
+   * @return an unmodifiable view of the rules in the index. Throws an exception if construction
+   *     fails for any rule.
+   */
   Iterable<BuildRule> getBuildRules();
+
+  /**
+   * @return an unmodifiable view of the successfully constructed (i.e. didn't throw an exception
+   *     during construction) rules in the index. Does not throw an exception if construction failed
+   *     for any rule.
+   */
+  Iterable<BuildRule> getSuccessfullyConstructedBuildRules();
 
   /**
    * Retrieve the {@code BuildRule} for the given {@code BuildTarget}. If no rules are associated
