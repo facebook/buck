@@ -29,8 +29,6 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
-import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -43,10 +41,8 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.TargetSpecResolver.FlavorEnhancer;
-import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecResolver;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -60,7 +56,6 @@ import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
@@ -241,20 +236,7 @@ public class TargetSpecResolverTest {
         specs,
         EmptyTargetConfiguration.INSTANCE,
         flavorEnhancer,
-        new TargetNodeProviderForSpecResolver() {
-          @Override
-          public ListenableFuture<TargetNode<?>> getTargetNodeJob(BuildTarget target)
-              throws BuildTargetException {
-            return state.getTargetNodeJob(target);
-          }
-
-          @Override
-          public ListenableFuture<ImmutableList<TargetNode<?>>> getAllTargetNodesJob(
-              Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
-              throws BuildTargetException {
-            return state.getAllTargetNodesJob(cell, buildFile, targetConfiguration);
-          }
-        },
+        state,
         (spec, nodes) -> spec.filter(nodes));
   }
 }

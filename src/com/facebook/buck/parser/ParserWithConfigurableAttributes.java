@@ -34,11 +34,9 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeFilterForSpecResolver;
-import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecResolver;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.JsonTypeConcatenatingCoercerFactory;
@@ -77,24 +75,6 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       BuckEventBus eventBus) {
     super(daemonicParserState, perBuildStateFactory, eventBus);
     this.targetSpecResolver = targetSpecResolver;
-  }
-
-  static TargetNodeProviderForSpecResolver createTargetNodeProviderForSpecResolver(
-      PerBuildState state) {
-    return new TargetNodeProviderForSpecResolver() {
-      @Override
-      public ListenableFuture<TargetNode<?>> getTargetNodeJob(BuildTarget target)
-          throws BuildTargetException {
-        return state.getTargetNodeJob(target);
-      }
-
-      @Override
-      public ListenableFuture<ImmutableList<TargetNode<?>>> getAllTargetNodesJob(
-          Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
-          throws BuildTargetException {
-        return state.getAllTargetNodesJob(cell, buildFile, targetConfiguration);
-      }
-    };
   }
 
   @VisibleForTesting
@@ -289,9 +269,6 @@ class ParserWithConfigurableAttributes extends AbstractParser {
     try (PerBuildState state = perBuildStateFactory.create(parsingContext, permState)) {
       TargetNodeFilterForSpecResolver targetNodeFilter = TargetNodeSpec::filter;
 
-      TargetNodeProviderForSpecResolver targetNodeProvider =
-          createTargetNodeProviderForSpecResolver(state);
-
       ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
           targetSpecResolver.resolveTargetSpecs(
               parsingContext.getCell(),
@@ -303,7 +280,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
                       targetNode,
                       targetType,
                       parsingContext.getApplyDefaultFlavorsMode()),
-              targetNodeProvider,
+              state,
               targetNodeFilter);
 
       if (!state.getParsingContext().excludeUnsupportedTargets()) {
@@ -327,8 +304,6 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       TargetConfiguration targetConfiguration,
       boolean excludeConfigurationTargets)
       throws InterruptedException {
-    TargetNodeProviderForSpecResolver targetNodeProvider =
-        createTargetNodeProviderForSpecResolver(state);
 
     TargetNodeFilterForSpecResolver targetNodeFilter = TargetNodeSpec::filter;
 
@@ -349,7 +324,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
                     targetNode,
                     targetType,
                     parsingContext.getApplyDefaultFlavorsMode()),
-            targetNodeProvider,
+            state,
             targetNodeFilter);
 
     if (!state.getParsingContext().excludeUnsupportedTargets()) {

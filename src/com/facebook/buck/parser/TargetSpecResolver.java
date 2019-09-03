@@ -41,7 +41,6 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.util.MoreThrowables;
 import com.google.common.base.Preconditions;
@@ -154,7 +153,7 @@ public class TargetSpecResolver implements AutoCloseable {
       Iterable<? extends TargetNodeSpec> specs,
       TargetConfiguration targetConfiguration,
       FlavorEnhancer flavorEnhancer,
-      TargetNodeProviderForSpecResolver targetNodeProvider,
+      PerBuildState perBuildState,
       TargetNodeFilterForSpecResolver targetNodeFilter)
       throws BuildFileParseException, InterruptedException {
 
@@ -182,7 +181,7 @@ public class TargetSpecResolver implements AutoCloseable {
         TargetNodeSpec spec = orderedSpecs.get(index);
         handleTargetNodeSpec(
             flavorEnhancer,
-            targetNodeProvider,
+            perBuildState,
             targetNodeFilter,
             targetFutures,
             cell,
@@ -242,7 +241,7 @@ public class TargetSpecResolver implements AutoCloseable {
 
   private void handleTargetNodeSpec(
       FlavorEnhancer flavorEnhancer,
-      TargetNodeProviderForSpecResolver targetNodeProvider,
+      PerBuildState perBuildState,
       TargetNodeFilterForSpecResolver targetNodeFilter,
       List<ListenableFuture<Map.Entry<Integer, ImmutableSet<BuildTarget>>>> targetFutures,
       Cell cell,
@@ -254,7 +253,7 @@ public class TargetSpecResolver implements AutoCloseable {
       BuildTargetSpec buildTargetSpec = (BuildTargetSpec) spec;
       targetFutures.add(
           Futures.transform(
-              targetNodeProvider.getTargetNodeJob(
+              perBuildState.getTargetNodeJob(
                   buildTargetSpec.getUnconfiguredBuildTargetView().configure(targetConfiguration)),
               node -> {
                 ImmutableSet<BuildTarget> buildTargets =
@@ -271,7 +270,7 @@ public class TargetSpecResolver implements AutoCloseable {
       // Build up a list of all target nodes from the build file.
       targetFutures.add(
           Futures.transform(
-              targetNodeProvider.getAllTargetNodesJob(cell, buildFile, targetConfiguration),
+              perBuildState.getAllTargetNodesJob(cell, buildFile, targetConfiguration),
               nodes ->
                   new AbstractMap.SimpleEntry<>(
                       index, applySpecFilter(spec, nodes, flavorEnhancer, targetNodeFilter)),
@@ -332,16 +331,6 @@ public class TargetSpecResolver implements AutoCloseable {
   public interface FlavorEnhancer {
     BuildTarget enhanceFlavors(
         BuildTarget target, TargetNode<?> targetNode, TargetNodeSpec.TargetType targetType);
-  }
-
-  /** Provides target nodes of a given type. */
-  public interface TargetNodeProviderForSpecResolver {
-    ListenableFuture<TargetNode<?>> getTargetNodeJob(BuildTarget target)
-        throws BuildTargetException;
-
-    ListenableFuture<ImmutableList<TargetNode<?>>> getAllTargetNodesJob(
-        Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
-        throws BuildTargetException;
   }
 
   /** Performs filtering of target nodes using a given {@link TargetNodeSpec}. */
