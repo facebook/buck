@@ -39,7 +39,7 @@ import java.nio.file.Path;
 import java.util.function.Function;
 
 public class RawTargetNodeToTargetNodeParsePipeline
-    extends ConvertingPipeline<RawTargetNode, TargetNode<?>> {
+    extends ConvertingPipeline<RawTargetNode, TargetNode<?>, BuildTarget> {
 
   private static final Logger LOG = Logger.get(RawTargetNodeToTargetNodeParsePipeline.class);
 

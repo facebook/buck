@@ -40,7 +40,8 @@ import java.util.Map;
 import java.util.function.Function;
 
 /** Converts nodes in a raw form (taken from build file parsers) into {@link RawTargetNode}. */
-public class RawTargetNodePipeline extends ConvertingPipeline<Map<String, Object>, RawTargetNode> {
+public class RawTargetNodePipeline
+    extends ConvertingPipeline<Map<String, Object>, RawTargetNode, BuildTarget> {
 
   private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
   private final BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline;

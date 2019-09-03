@@ -38,8 +38,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * of type T.
  *
  * @param <T> The type of node this pipeline will produce (raw nodes, target nodes, etc)
+ * @param <K> Cache key (unconfigured target or configured target)
  */
-public abstract class ParsePipeline<T> implements AutoCloseable {
+public abstract class ParsePipeline<T, K> implements AutoCloseable {
 
   private final AtomicBoolean shuttingDown;
 
@@ -80,7 +81,7 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
    * @throws BuildFileParseException for syntax errors in the build file.
    * @throws BuildTargetException if the buildTarget is malformed
    */
-  public final T getNode(Cell cell, BuildTarget buildTarget)
+  public final T getNode(Cell cell, K buildTarget)
       throws BuildFileParseException, BuildTargetException {
     Preconditions.checkState(!shuttingDown.get());
 
@@ -123,7 +124,7 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
    * @return future.
    * @throws BuildTargetException when the buildTarget is malformed.
    */
-  public abstract ListenableFuture<T> getNodeJob(Cell cell, BuildTarget buildTarget)
+  public abstract ListenableFuture<T> getNodeJob(Cell cell, K buildTarget)
       throws BuildTargetException;
 
   @Override

@@ -16,7 +16,6 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.util.log.Logger;
@@ -42,12 +41,13 @@ import java.util.function.Function;
  *
  * @param <F> Type to convert from (raw nodes, for example)
  * @param <T> Type to convert to (TargetNode, for example)
+ * @param <K> Cache key
  */
-public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
+public abstract class ConvertingPipeline<F, T, K> extends ParsePipeline<T, K> {
   private static final Logger LOG = Logger.get(ConvertingPipeline.class);
 
   private final BuckEventBus eventBus;
-  private final PipelineNodeCache<BuildTarget, T> cache;
+  private final PipelineNodeCache<K, T> cache;
   private final ConcurrentHashMap<Path, ListenableFuture<ImmutableList<T>>> allNodeCache;
   protected final ListeningExecutorService executorService;
   private final SimplePerfEvent.Scope perfEventScope;
@@ -62,7 +62,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
 
   public ConvertingPipeline(
       ListeningExecutorService executorService,
-      Cache<BuildTarget, T> cache,
+      Cache<K, T> cache,
       BuckEventBus eventBus,
       Scope perfEventScope,
       PerfEventId perfEventId) {
@@ -98,7 +98,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
                     ImmutableList.builderWithExpectedSize(allToConvert.size());
 
                 for (F from : allToConvert) {
-                  BuildTarget target =
+                  K target =
                       getBuildTarget(
                           cell.getRoot(),
                           cell.getCanonicalName(),
@@ -121,8 +121,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
   }
 
   @Override
-  public ListenableFuture<T> getNodeJob(Cell cell, BuildTarget buildTarget)
-      throws BuildTargetException {
+  public ListenableFuture<T> getNodeJob(Cell cell, K buildTarget) throws BuildTargetException {
     return cache.getJobWithCacheLookup(
         cell,
         buildTarget,
@@ -134,7 +133,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
         eventBus);
   }
 
-  protected abstract BuildTarget getBuildTarget(
+  protected abstract K getBuildTarget(
       Path root,
       CanonicalCellName cellName,
       Path buildFile,
@@ -142,19 +141,16 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
       F from);
 
   protected abstract T computeNodeInScope(
-      Cell cell,
-      BuildTarget buildTarget,
-      F rawNode,
-      Function<PerfEventId, Scope> perfEventScopeFunction)
+      Cell cell, K buildTarget, F rawNode, Function<PerfEventId, Scope> perfEventScopeFunction)
       throws BuildTargetException;
 
   protected abstract ListenableFuture<ImmutableList<F>> getItemsToConvert(Cell cell, Path buildFile)
       throws BuildTargetException;
 
-  protected abstract ListenableFuture<F> getItemToConvert(Cell cell, BuildTarget buildTarget)
+  protected abstract ListenableFuture<F> getItemToConvert(Cell cell, K buildTarget)
       throws BuildTargetException;
 
-  private T computeNode(Cell cell, BuildTarget buildTarget, F rawNode) throws BuildTargetException {
+  private T computeNode(Cell cell, K buildTarget, F rawNode) throws BuildTargetException {
 
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scopeIgnoringShortEvents(
@@ -174,7 +170,7 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
     }
   }
 
-  private ListenableFuture<T> dispatchComputeNode(Cell cell, BuildTarget buildTarget, F from)
+  private ListenableFuture<T> dispatchComputeNode(Cell cell, K buildTarget, F from)
       throws BuildTargetException {
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();
