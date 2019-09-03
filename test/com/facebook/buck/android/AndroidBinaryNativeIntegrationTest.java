@@ -417,6 +417,37 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
     result.assertSuccess();
   }
 
+  @Test
+  public void testLibcxxUsesCorrectUnwinder() throws IOException, InterruptedException {
+    String target = "//apps/sample:app_with_exceptions";
+    Path output =
+        workspace.buildAndReturnOutput(
+            "-c",
+            "ndk.compiler=clang",
+            "-c",
+            "ndk.cxx_runtime=libcxx",
+            "-c",
+            "ndk.cxx_runtime_type=static",
+            // libcxx depends on posix_memalign, which doesn't exist in libc.so in
+            // the default app_platform (android-16)
+            "-c",
+            "ndk.app_platform=android-21",
+            target);
+
+    SymbolGetter symGetter = getSymbolGetter();
+    Symbols syms =
+        symGetter.getDynamicSymbols(output, "lib/armeabi-v7a/libnative_cxx_lib-with-exceptions.so");
+
+    // Test target throws an exception, which involves a call to __cxa_throw.
+    assertTrue(syms.all.contains("__cxa_throw"));
+
+    // For 32-bit ARM the NDK makes use of two unwinders: libgcc and LLVM's libunwind. Exception
+    // handling in libcxx depends on libunwind, so we need to make sure that unwind methods from
+    // libgcc are not inadvertently linked into the target binary. For more info see
+    // https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md#Unwinding
+    assertFalse(syms.all.contains("__gnu_Unwind_RaiseException"));
+  }
+
   private SymbolGetter getSymbolGetter() throws IOException {
     return AndroidNdkHelper.getSymbolGetter(filesystem, tmpFolder);
   }

@@ -153,3 +153,13 @@ cxx_library(
         "PUBLIC",
     ],
 )
+
+cxx_library(
+    name = "lib-with-exceptions",
+    srcs = glob(["lib3.cpp"]),
+    compiler_flags = ["-fexceptions"],
+    link_style = "static",
+    visibility = [
+        "PUBLIC",
+    ],
+)
