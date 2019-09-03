@@ -32,6 +32,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.TestExecutionContext;
@@ -145,7 +146,13 @@ public class JavacStepTest {
 
     // JavacStep itself writes stdout to the console on error; we expect the Build class to write
     // the stderr stream returned in the StepExecutionResult
-    assertThat(result, equalTo(StepExecutionResult.of(1, Optional.of("javac stderr\n"))));
+    assertThat(
+        result,
+        equalTo(
+            ImmutableStepExecutionResult.builder()
+                .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
+                .setStderr(Optional.of("javac stderr\n"))
+                .build()));
     assertThat(listener.getLogMessages(), equalTo(ImmutableList.of("javac stdout\n")));
   }
 

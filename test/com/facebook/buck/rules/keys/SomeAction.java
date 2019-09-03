@@ -21,6 +21,7 @@ import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
@@ -54,7 +55,8 @@ class SomeAction extends AbstractAction {
 
   @Override
   public ActionExecutionResult execute(ActionExecutionContext executionContext) {
-    return ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
+    return ImmutableActionExecutionSuccess.of(
+        Optional.empty(), Optional.empty(), ImmutableList.of());
   }
 
   @Override

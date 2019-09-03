@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
@@ -28,6 +29,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 
 /** A step that compiles Swift sources to a single module. */
 class SwiftCompileStep implements Step {
@@ -69,10 +71,11 @@ class SwiftCompileStep implements Step {
     Result processResult = context.getProcessExecutor().launchAndExecute(params);
 
     int result = processResult.getExitCode();
-    if (result != 0) {
-      LOG.error("Error running %s: %s", getDescription(context), processResult.getStderr());
+    Optional<String> stderr = processResult.getStderr();
+    if (result != StepExecutionResults.SUCCESS_EXIT_CODE) {
+      LOG.error("Error running %s: %s", getDescription(context), stderr);
     }
-    return StepExecutionResult.of(result, processResult.getStderr());
+    return StepExecutionResult.of(processResult);
   }
 
   @Override

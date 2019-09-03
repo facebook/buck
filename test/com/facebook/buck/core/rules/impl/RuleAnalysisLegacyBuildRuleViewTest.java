@@ -109,7 +109,9 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
     FakeActionAnalysisRegistry actionAnalysisRegistry = new FakeActionAnalysisRegistry();
 
     FakeAction.FakeActionExecuteLambda depActionFunction =
-        (ins, outs, ctx) -> ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
+        (ins, outs, ctx) ->
+            ImmutableActionExecutionSuccess.of(
+                Optional.empty(), Optional.empty(), ImmutableList.of());
 
     ActionRegistry actionRegistry =
         new DefaultActionRegistry(depTarget, actionAnalysisRegistry, filesystem);
@@ -134,7 +136,8 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
               ExplicitBuildTargetSourcePath.of(buildTarget, packagePath.resolve(outpath)),
               Iterables.getOnlyElement(outs).asBound().getSourcePath());
           functionCalled.set(true);
-          return ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
+          return ImmutableActionExecutionSuccess.of(
+              Optional.empty(), Optional.empty(), ImmutableList.of());
         };
 
     actionRegistry = new DefaultActionRegistry(buildTarget, actionAnalysisRegistry, filesystem);

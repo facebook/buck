@@ -93,7 +93,8 @@ public class RuleKeyBuilderTest {
   static {
     FakeAction.FakeActionExecuteLambda executeLambda =
         (ignored1, ignored2, ignored3) ->
-            ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
+            ImmutableActionExecutionSuccess.of(
+                Optional.empty(), Optional.empty(), ImmutableList.of());
 
     ActionRegistryForTests actionRegistry = new ActionRegistryForTests(TARGET_1);
     ACTION_1 =

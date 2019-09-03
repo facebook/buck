@@ -31,6 +31,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.StringTemplateStep;
 import com.google.common.collect.ImmutableList;
@@ -38,7 +39,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Optional;
 
 public class WriteStringTemplateRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
@@ -87,7 +87,7 @@ public class WriteStringTemplateRule extends AbstractBuildRuleWithDeclaredAndExt
             @Override
             public StepExecutionResult execute(ExecutionContext context) throws IOException {
               MostFiles.makeExecutable(getProjectFilesystem().resolve(output));
-              return StepExecutionResult.of(0, Optional.empty());
+              return StepExecutionResults.SUCCESS;
             }
           });
     }

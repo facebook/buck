@@ -53,6 +53,7 @@ import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -166,7 +167,8 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
 
                   FakeAction.FakeActionExecuteLambda actionFunction =
                       (ignored, ignored2, ignored3) ->
-                          ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
+                          ImmutableActionExecutionSuccess.of(
+                              Optional.empty(), Optional.empty(), ImmutableList.of());
 
                   new FakeAction(
                       actionRegistry, ImmutableSet.of(), ImmutableSet.of(artifact), actionFunction);

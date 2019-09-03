@@ -79,7 +79,8 @@ public class DefaultRuleKeyCacheTest {
             ImmutableSet.of(),
             ImmutableSet.of(),
             (ignored1, ignored2, ignored3) ->
-                ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty()));
+                ImmutableActionExecutionSuccess.of(
+                    Optional.empty(), Optional.empty(), ImmutableList.of()));
     cache.get(fakeAction, r -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of()));
     assertTrue(internalCache.isCached(fakeAction));
     cache.get(

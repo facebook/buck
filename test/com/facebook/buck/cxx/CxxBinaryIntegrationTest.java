@@ -22,6 +22,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.oneOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -52,6 +53,7 @@ import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.ProcessResult;
@@ -1526,7 +1528,7 @@ public class CxxBinaryIntegrationTest {
     buildLog.assertTargetBuiltLocally(compileTarget);
     assertThat(
         buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
-        Matchers.not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
+        not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
 
     // Clear for new build.
     workspace.resetBuildLogFile();
@@ -1614,7 +1616,7 @@ public class CxxBinaryIntegrationTest {
     buildLog.assertTargetBuiltLocally(compileTarget);
     assertThat(
         buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
-        Matchers.not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
+        not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
   }
 
   @Test
@@ -1741,7 +1743,7 @@ public class CxxBinaryIntegrationTest {
     buildLog.assertTargetBuiltLocally(compileTarget);
     assertThat(
         buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
-        Matchers.not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
+        not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
 
     // Clear for new build.
     workspace.resetBuildLogFile();
@@ -1921,10 +1923,9 @@ public class CxxBinaryIntegrationTest {
     // Verify that the preprocessed source contains no references to the symlink tree used to
     // setup the headers.
     String error = result.getStderr();
-    assertThat(
-        error, Matchers.not(containsString(filesystem.getBuckPaths().getScratchDir().toString())));
-    assertThat(
-        error, Matchers.not(containsString(filesystem.getBuckPaths().getGenDir().toString())));
+    BuckPaths buckPaths = filesystem.getBuckPaths();
+    assertThat(error, not(containsString(buckPaths.getScratchDir().toAbsolutePath().toString())));
+    assertThat(error, not(containsString(buckPaths.getGenDir().toString())));
     assertThat(error, containsString("In file included from lib1.h:1"));
     assertThat(error, containsString("from bin.h:1"));
     assertThat(error, containsString("from bin.cpp:1:"));
@@ -2223,7 +2224,7 @@ public class CxxBinaryIntegrationTest {
     assertThat(strippedOut, Matchers.containsStringIgnoringCase("dyld_stub_binder"));
     assertThat(unstrippedOut, Matchers.containsStringIgnoringCase("dyld_stub_binder"));
 
-    assertThat(strippedOut, Matchers.not(Matchers.containsStringIgnoringCase("test.cpp")));
+    assertThat(strippedOut, not(Matchers.containsStringIgnoringCase("test.cpp")));
     assertThat(unstrippedOut, Matchers.containsStringIgnoringCase("test.cpp"));
   }
 
@@ -2337,7 +2338,7 @@ public class CxxBinaryIntegrationTest {
 
     String strippedOutput = strippedResult.getStdout().split(" ")[1];
     String unstrippedOutput = unstrippedResult.getStdout().split(" ")[1];
-    assertThat(strippedOutput, Matchers.not(Matchers.equalTo(unstrippedOutput)));
+    assertThat(strippedOutput, not(Matchers.equalTo(unstrippedOutput)));
   }
 
   @Test
@@ -2551,7 +2552,7 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void testRunFlavors() throws IOException {
-    assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_flavors", tmp);

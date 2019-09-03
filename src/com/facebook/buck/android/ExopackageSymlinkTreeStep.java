@@ -28,6 +28,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -55,7 +56,7 @@ class ExopackageSymlinkTreeStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context) {
     executeStep();
-    return StepExecutionResult.of(0);
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

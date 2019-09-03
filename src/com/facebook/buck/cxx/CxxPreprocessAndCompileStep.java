@@ -227,7 +227,11 @@ class CxxPreprocessAndCompileStep implements Step {
     String err = getSanitizedStderr(result, context);
     result =
         new ProcessExecutor.Result(
-            result.getExitCode(), result.isTimedOut(), result.getStdout(), Optional.of(err));
+            result.getExitCode(),
+            result.isTimedOut(),
+            result.getStdout(),
+            Optional.of(err),
+            result.getCommand());
     processResult(result, context);
     return result;
   }

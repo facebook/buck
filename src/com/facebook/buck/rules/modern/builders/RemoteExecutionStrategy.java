@@ -47,7 +47,9 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.util.OutputsMaterializer.FilesystemFileMaterializer;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.step.AbstractExecutionStep;
+import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.concurrent.JobLimiter;
@@ -483,20 +485,23 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       RuleContext guardContext)
       throws IOException, StepFailedException {
     BuildTarget buildTarget = buildRule.getBuildTarget();
+    int exitCode = result.getExitCode();
     LOG.debug(
         "[RE] Built target [%s] with exit code [%d]. Action: [%s]. ActionResult: [%s]",
         buildTarget.getFullyQualifiedName(),
-        result.getExitCode(),
+        exitCode,
         actionDigest,
         result.getActionResultDigest());
-    if (result.getExitCode() != 0) {
+    if (exitCode != StepExecutionResults.SUCCESS_EXIT_CODE) {
+      Optional<String> stdout = result.getStdout();
+      Optional<String> stderr = result.getStderr();
       LOG.info(
           "[RE] Failed to build target [%s] with exit code [%d]. "
               + "stdout: [%s] stderr: [%s] metadata: [%s] action: [%s]",
           buildTarget.getFullyQualifiedName(),
-          result.getExitCode(),
-          result.getStdout().orElse("<empty>"),
-          result.getStderr().orElse("<empty>"),
+          exitCode,
+          stdout.orElse("<empty>"),
+          stderr.orElse("<empty>"),
           metadataProvider.toString(),
           actionDigest);
       throw StepFailedException.createForFailingStepWithExitCode(
@@ -507,7 +512,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
             }
           },
           strategyContext.getExecutionContext(),
-          StepExecutionResult.of(result.getExitCode(), result.getStderr()));
+          ImmutableStepExecutionResult.builder().setExitCode(exitCode).setStderr(stderr).build());
     }
 
     try (Scope ignored1 =

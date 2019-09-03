@@ -32,6 +32,7 @@ import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.CharStreams;
@@ -84,9 +85,10 @@ public class BasicRuleDescription implements RuleDescription<BasicRuleDescriptio
 
           } catch (IOException e) {
             return ImmutableActionExecutionFailure.of(
-                Optional.empty(), Optional.empty(), Optional.of(e));
+                Optional.empty(), Optional.empty(), ImmutableList.of(), Optional.of(e));
           }
-          return ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
+          return ImmutableActionExecutionSuccess.of(
+              Optional.empty(), Optional.empty(), ImmutableList.of());
         };
 
     ImmutableSet.Builder<Artifact> inputsBuilder = ImmutableSet.builder();

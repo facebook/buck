@@ -22,6 +22,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.TeeInputStream;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -248,12 +249,13 @@ class XctoolRunTestsStep implements Step {
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .setEnvironment(env);
 
+    Console console = context.getConsole();
     if (!testSelectorList.isEmpty()) {
       ImmutableList.Builder<String> xctoolFilterParamsBuilder = ImmutableList.builder();
       int returnCode =
           listAndFilterTestsThenFormatXctoolParams(
               context.getProcessExecutor(),
-              context.getConsole(),
+              console,
               testSelectorList,
               // Copy the entire xctool command and environment but add a -listTestsOnly arg.
               ProcessExecutorParams.builder()
@@ -262,18 +264,16 @@ class XctoolRunTestsStep implements Step {
                   .build(),
               xctoolFilterParamsBuilder);
       if (returnCode != 0) {
-        context.getConsole().printErrorText("Failed to query tests with xctool");
+        console.printErrorText("Failed to query tests with xctool");
         return StepExecutionResult.of(returnCode);
       }
       ImmutableList<String> xctoolFilterParams = xctoolFilterParamsBuilder.build();
       if (xctoolFilterParams.isEmpty()) {
-        context
-            .getConsole()
-            .printBuildFailure(
-                String.format(
-                    Locale.US,
-                    "No tests found matching specified filter (%s)",
-                    testSelectorList.getExplanation()));
+        console.printBuildFailure(
+            String.format(
+                Locale.US,
+                "No tests found matching specified filter (%s)",
+                testSelectorList.getExplanation()));
         return StepExecutionResults.SUCCESS;
       }
       processExecutorParamsBuilder.addAllCommand(xctoolFilterParams);
@@ -292,8 +292,8 @@ class XctoolRunTestsStep implements Step {
       ProcessExecutor.LaunchedProcess launchedProcess =
           context.getProcessExecutor().launchProcess(processExecutorParams);
 
-      int exitCode = -1;
-      String stderr = "Unexpected termination";
+      int exitCode;
+      String stderr;
       try {
         ProcessStdoutReader stdoutReader = new ProcessStdoutReader(launchedProcess);
         ProcessStderrReader stderrReader = new ProcessStderrReader(launchedProcess);
@@ -317,22 +317,21 @@ class XctoolRunTestsStep implements Step {
         context.getProcessExecutor().waitForLaunchedProcess(launchedProcess);
       }
 
-      if (exitCode != 0) {
+      if (exitCode != StepExecutionResults.SUCCESS_EXIT_CODE) {
         if (!stderr.isEmpty()) {
-          context
-              .getConsole()
-              .printErrorText(
-                  String.format(
-                      Locale.US, "xctool failed with exit code %d: %s", exitCode, stderr));
+          console.printErrorText(
+              String.format(Locale.US, "xctool failed with exit code %d: %s", exitCode, stderr));
         } else {
-          context
-              .getConsole()
-              .printErrorText(
-                  String.format(Locale.US, "xctool failed with exit code %d", exitCode));
+          console.printErrorText(
+              String.format(Locale.US, "xctool failed with exit code %d", exitCode));
         }
       }
 
-      return StepExecutionResult.of(exitCode);
+      return ImmutableStepExecutionResult.builder()
+          .setExitCode(exitCode)
+          .setExecutedCommand(launchedProcess.getCommand())
+          .setStderr(Optional.ofNullable(stderr))
+          .build();
 
     } finally {
       releaseStutterLock(stutterLockIsNotified);

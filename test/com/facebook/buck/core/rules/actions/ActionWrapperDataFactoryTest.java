@@ -32,6 +32,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -73,7 +74,8 @@ public class ActionWrapperDataFactoryTest {
 
     FakeAction.FakeActionExecuteLambda executeFunc =
         (inputs1, outputs1, executionContext) ->
-            ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
+            ImmutableActionExecutionSuccess.of(
+                Optional.empty(), Optional.empty(), ImmutableList.of());
 
     new FakeAction(actionRegistry, inputs, outputs, executeFunc);
 
@@ -118,7 +120,8 @@ public class ActionWrapperDataFactoryTest {
 
     FakeAction.FakeActionExecuteLambda executeFunc =
         (inputs1, outputs1, executionContext) ->
-            ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty());
+            ImmutableActionExecutionSuccess.of(
+                Optional.empty(), Optional.empty(), ImmutableList.of());
 
     new FakeAction(actionRegistry, inputs, ImmutableSet.of(output), executeFunc);
 

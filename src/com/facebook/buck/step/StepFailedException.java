@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.ExceptionWithContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.WrapsException;
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 public class StepFailedException extends Exception implements WrapsException, ExceptionWithContext {
@@ -44,6 +45,10 @@ public class StepFailedException extends Exception implements WrapsException, Ex
     int exitCode = executionResult.getExitCode();
     StringBuilder messageBuilder = new StringBuilder();
     messageBuilder.append(String.format("Command failed with exit code %d.", exitCode));
+    ImmutableList<String> executedCommand = executionResult.getExecutedCommand();
+    if (!executedCommand.isEmpty()) {
+      messageBuilder.append(System.lineSeparator()).append("command: ").append(executedCommand);
+    }
     executionResult
         .getStderr()
         .ifPresent(

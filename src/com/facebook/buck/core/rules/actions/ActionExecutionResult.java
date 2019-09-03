@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.actions;
 
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -27,6 +28,8 @@ public interface ActionExecutionResult {
   /** @return the stderr of the actions ran if any */
   Optional<String> getStdErr();
 
+  ImmutableList<String> getCommand();
+
   /** A successful action execution */
   @Value.Immutable(copy = false, builder = false)
   interface ActionExecutionSuccess extends ActionExecutionResult {
@@ -37,6 +40,10 @@ public interface ActionExecutionResult {
     @Value.Parameter
     @Override
     Optional<String> getStdErr();
+
+    @Value.Parameter
+    @Override
+    ImmutableList<String> getCommand();
   }
 
   /** execution that failed */
@@ -49,6 +56,10 @@ public interface ActionExecutionResult {
     @Value.Parameter
     @Override
     Optional<String> getStdErr();
+
+    @Value.Parameter
+    @Override
+    ImmutableList<String> getCommand();
 
     @Value.Parameter
     Optional<Exception> getException();

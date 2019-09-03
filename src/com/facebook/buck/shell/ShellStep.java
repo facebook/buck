@@ -19,8 +19,10 @@ package com.facebook.buck.shell;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Option;
@@ -88,7 +90,7 @@ public abstract class ShellStep implements Step {
       throws InterruptedException, IOException {
     ImmutableList<String> command = getShellCommand(context);
     if (command.isEmpty()) {
-      return StepExecutionResult.of(0);
+      return StepExecutionResults.SUCCESS;
     }
 
     // Kick off a Process in which this ShellCommand will be run.
@@ -109,7 +111,8 @@ public abstract class ShellStep implements Step {
 
     double initialLoad = OS_JMX.getSystemLoadAverage();
     startTime = System.currentTimeMillis();
-    int exitCode = launchAndInteractWithProcess(context, builder.build());
+    ProcessExecutor.Result result = launchAndInteractWithProcess(context, builder.build());
+    int exitCode = getExitCodeFromResult(context, result);
     endTime = System.currentTimeMillis();
     double endLoad = OS_JMX.getSystemLoadAverage();
 
@@ -129,7 +132,11 @@ public abstract class ShellStep implements Step {
           stderr.orElse(""));
     }
 
-    return StepExecutionResult.of(exitCode, stderr);
+    return ImmutableStepExecutionResult.builder()
+        .setExitCode(exitCode)
+        .setExecutedCommand(result.getCommand())
+        .setStderr(stderr)
+        .build();
   }
 
   @VisibleForTesting
@@ -157,7 +164,8 @@ public abstract class ShellStep implements Step {
   }
 
   @VisibleForTesting
-  int launchAndInteractWithProcess(ExecutionContext context, ProcessExecutorParams params)
+  ProcessExecutor.Result launchAndInteractWithProcess(
+      ExecutionContext context, ProcessExecutorParams params)
       throws InterruptedException, IOException {
     ImmutableSet.Builder<Option> options = ImmutableSet.builder();
 
@@ -182,7 +190,7 @@ public abstract class ShellStep implements Step {
       context.postEvent(ConsoleEvent.warning("%s", stderr.get()));
     }
 
-    return getExitCodeFromResult(context, result);
+    return result;
   }
 
   protected void addOptions(ImmutableSet.Builder<Option> options) {

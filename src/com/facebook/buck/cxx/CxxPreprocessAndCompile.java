@@ -45,6 +45,7 @@ import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -399,7 +400,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
                             + outputPath.toString()
                             + " does not exist.");
                   }
-                  return StepExecutionResult.of(0, Optional.empty());
+                  return StepExecutionResults.SUCCESS;
                 }
               })
           .build();

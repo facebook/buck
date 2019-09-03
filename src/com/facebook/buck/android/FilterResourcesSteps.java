@@ -27,6 +27,7 @@ import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.FilteredDirectoryCopier;
@@ -145,7 +146,7 @@ public class FilterResourcesSteps {
       // Create filtered copies of all resource directories. These will be passed to aapt instead.
       filteredDirectoryCopier.copyDirs(
           filesystem, inResDirToOutResDirMap, getFilteringPredicate(context));
-      return StepExecutionResult.of(0);
+      return StepExecutionResults.SUCCESS;
     }
 
     @Override
@@ -166,7 +167,7 @@ public class FilterResourcesSteps {
       if (canDownscale(context) && filterByDensity) {
         scaleUnmatchedDrawables(context);
       }
-      return StepExecutionResult.of(0);
+      return StepExecutionResults.SUCCESS;
     }
 
     @Override

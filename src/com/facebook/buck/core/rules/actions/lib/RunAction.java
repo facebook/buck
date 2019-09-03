@@ -82,12 +82,14 @@ public class RunAction extends AbstractAction {
       args.getStrings(filesystem).forEach(builder::add);
       commandLineArgs = builder.build();
     } catch (CommandLineArgException e) {
-      return ImmutableActionExecutionFailure.of(Optional.empty(), Optional.empty(), Optional.of(e));
+      return ImmutableActionExecutionFailure.of(
+          Optional.empty(), Optional.empty(), ImmutableList.of(), Optional.of(e));
     }
     if (commandLineArgs.isEmpty()) {
       return ImmutableActionExecutionFailure.of(
           Optional.empty(),
           Optional.empty(),
+          ImmutableList.of(),
           Optional.of(
               new HumanReadableException(
                   "Zero arguments were provided when invoking run() action")));
@@ -103,16 +105,21 @@ public class RunAction extends AbstractAction {
     try {
       ProcessExecutor.Result result =
           executionContext.getProcessExecutor().launchAndExecute(params);
+      Optional<String> stdout = result.getStdout();
+      Optional<String> stderr = result.getStderr();
+      ImmutableList<String> command = result.getCommand();
       if (result.getExitCode() == 0) {
-        return ImmutableActionExecutionSuccess.of(result.getStdout(), result.getStderr());
+        return ImmutableActionExecutionSuccess.of(stdout, stderr, command);
       } else {
         return ImmutableActionExecutionFailure.of(
-            result.getStdout(),
-            result.getStderr(),
+            stdout,
+            stderr,
+            command,
             Optional.of(new ProcessExecutionFailedException(result.getExitCode())));
       }
     } catch (InterruptedException | IOException e) {
-      return ImmutableActionExecutionFailure.of(Optional.empty(), Optional.empty(), Optional.of(e));
+      return ImmutableActionExecutionFailure.of(
+          Optional.empty(), Optional.empty(), ImmutableList.of(), Optional.of(e));
     }
   }
 

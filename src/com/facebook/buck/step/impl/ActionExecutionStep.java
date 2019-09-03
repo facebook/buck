@@ -21,8 +21,10 @@ import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionContext;
+import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import java.io.IOException;
 
 /**
@@ -65,13 +67,17 @@ public class ActionExecutionStep implements Step {
     executionContext.getArtifactFilesystem().removeBuildArtifacts(action.getOutputs());
 
     ActionExecutionResult result = action.execute(executionContext);
+    ImmutableStepExecutionResult.Builder stepExecutionResultBuilder =
+        ImmutableStepExecutionResult.builder()
+            .setExecutedCommand(result.getCommand())
+            .setStderr(result.getStdErr());
     if (result instanceof ActionExecutionResult.ActionExecutionSuccess) {
-      return StepExecutionResult.of(0, result.getStdErr());
-    } else if (result instanceof ActionExecutionResult.ActionExecutionFailure) {
-      return StepExecutionResult.of(-1, result.getStdErr());
-    } else {
-      throw new IllegalStateException("Unknown action execution result " + result);
+      return stepExecutionResultBuilder.setExitCode(StepExecutionResults.SUCCESS_EXIT_CODE).build();
     }
+    if (result instanceof ActionExecutionResult.ActionExecutionFailure) {
+      return stepExecutionResultBuilder.setExitCode(-1).build();
+    }
+    throw new IllegalStateException("Unknown action execution result " + result);
   }
 
   @Override

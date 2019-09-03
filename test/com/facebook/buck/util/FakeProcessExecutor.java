@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -99,7 +100,7 @@ public class FakeProcessExecutor extends DefaultProcessExecutor {
     try {
       FakeProcess fakeProcess = processFunction.apply(params);
       launchedProcesses.add(params);
-      return new LaunchedProcessImpl(fakeProcess);
+      return new LaunchedProcessImpl(fakeProcess, Collections.emptyList());
     } catch (IllegalArgumentException e) {
       throw new IOException(
           String.format(

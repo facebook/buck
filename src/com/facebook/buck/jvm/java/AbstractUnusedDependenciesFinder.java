@@ -32,8 +32,10 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
+import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -88,9 +90,12 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
 
     Optional<String> message = messageHandler.getFinalMessage();
     if (message.isPresent()) {
-      return StepExecutionResult.of(1, message);
+      return ImmutableStepExecutionResult.builder()
+          .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
+          .setStderr(message)
+          .build();
     } else {
-      return StepExecutionResult.of(0);
+      return StepExecutionResults.SUCCESS;
     }
   }
 

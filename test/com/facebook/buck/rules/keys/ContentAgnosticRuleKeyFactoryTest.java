@@ -138,7 +138,8 @@ public class ContentAgnosticRuleKeyFactoryTest {
             ImmutableSet.of(ImmutableSourceArtifactImpl.of(sourcePath)),
             ImmutableSet.of(artifact),
             (ignored1, ignored2, ignored3) ->
-                ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.empty()));
+                ImmutableActionExecutionSuccess.of(
+                    Optional.empty(), Optional.empty(), ImmutableList.of()));
     BuildRule rule =
         new RuleAnalysisLegacyBuildRuleView(
             "rule",

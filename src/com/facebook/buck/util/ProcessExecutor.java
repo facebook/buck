@@ -18,11 +18,13 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -113,6 +115,8 @@ public interface ProcessExecutor {
     /** @return false if process is killed, or true if it is alive. */
     boolean isAlive();
 
+    ImmutableList<String> getCommand();
+
     /**
      * Output stream that maps into stdin of the process. You'd write into process' stdin using it.
      */
@@ -132,14 +136,21 @@ public interface ProcessExecutor {
   @VisibleForTesting
   class LaunchedProcessImpl implements LaunchedProcess {
     public final Process process;
+    public final ImmutableList<String> command;
 
-    public LaunchedProcessImpl(Process process) {
+    public LaunchedProcessImpl(Process process, List<String> command) {
       this.process = process;
+      this.command = ImmutableList.copyOf(command);
     }
 
     @Override
     public boolean isAlive() {
       return process.isAlive();
+    }
+
+    @Override
+    public ImmutableList<String> getCommand() {
+      return command;
     }
 
     @Override
@@ -168,21 +179,27 @@ public interface ProcessExecutor {
     private final boolean timedOut;
     private final Optional<String> stdout;
     private final Optional<String> stderr;
+    public final ImmutableList<String> command;
 
     public Result(
-        int exitCode, boolean timedOut, Optional<String> stdout, Optional<String> stderr) {
+        int exitCode,
+        boolean timedOut,
+        Optional<String> stdout,
+        Optional<String> stderr,
+        ImmutableList<String> command) {
       this.exitCode = exitCode;
       this.timedOut = timedOut;
       this.stdout = stdout;
       this.stderr = stderr;
+      this.command = command;
     }
 
-    public Result(int exitCode, String stdout, String stderr) {
-      this(exitCode, /* timedOut */ false, Optional.of(stdout), Optional.of(stderr));
+    public Result(int exitCode, String stdout, String stderr, ImmutableList<String> command) {
+      this(exitCode, /* timedOut */ false, Optional.of(stdout), Optional.of(stderr), command);
     }
 
-    public Result(int exitCode) {
-      this(exitCode, /* timedOut */ false, Optional.empty(), Optional.empty());
+    public Result(int exitCode, ImmutableList<String> command) {
+      this(exitCode, /* timedOut */ false, Optional.empty(), Optional.empty(), command);
     }
 
     public int getExitCode() {
@@ -201,14 +218,27 @@ public interface ProcessExecutor {
       return stderr;
     }
 
+    public ImmutableList<String> getCommand() {
+      return command;
+    }
+
     public String getMessageForUnexpectedResult(String subject) {
       return getMessageForResult(subject + " finished with unexpected result");
     }
 
     public String getMessageForResult(String message) {
       return String.format(
-          "%s:\n" + "exit code: %s\n" + "stdout:\n" + "%s" + "\n" + "stderr:\n" + "%s" + "\n",
+          "%s:\n"
+              + "exit code: %s\n"
+              + "command: %s\n"
+              + "stdout:\n"
+              + "%s"
+              + "\n"
+              + "stderr:\n"
+              + "%s"
+              + "\n",
           message,
+          getCommand(),
           getExitCode(),
           MoreStrings.truncatePretty(getStdout().orElse("")),
           MoreStrings.truncatePretty(getStderr().orElse("")));

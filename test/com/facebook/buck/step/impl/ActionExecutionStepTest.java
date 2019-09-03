@@ -43,11 +43,12 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
-import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -82,7 +83,8 @@ public class ActionExecutionStepTest {
           assertFalse(ctx.getShouldDeleteTemporaries());
           ctx.logError(new RuntimeException("message"), "my error %s", 1);
           ctx.postEvent(ConsoleEvent.info("my test info"));
-          return ImmutableActionExecutionSuccess.of(Optional.empty(), Optional.of("my std err"));
+          return ImmutableActionExecutionSuccess.of(
+              Optional.empty(), Optional.of("my std err"), ImmutableList.of());
         };
 
     ActionRegistryForTests actionFactoryForTests = new ActionRegistryForTests(buildTarget);
@@ -101,7 +103,10 @@ public class ActionExecutionStepTest {
         new CapturingConsoleEventListener();
     testEventBus.register(consoleEventListener);
     assertEquals(
-        StepExecutionResult.of(0, Optional.of("my std err")),
+        ImmutableStepExecutionResult.builder()
+            .setExitCode(0)
+            .setStderr(Optional.of("my std err"))
+            .build(),
         step.execute(
             ExecutionContext.of(
                 Console.createNullConsole(),
@@ -138,7 +143,7 @@ public class ActionExecutionStepTest {
 
     ImmutableActionExecutionFailure result =
         ImmutableActionExecutionFailure.of(
-            Optional.empty(), Optional.of("my std err"), Optional.empty());
+            Optional.empty(), Optional.of("my std err"), ImmutableList.of(), Optional.empty());
 
     ActionRegistryForTests actionFactoryForTests = new ActionRegistryForTests(buildTarget);
     Artifact declaredArtifact = actionFactoryForTests.declareArtifact(output);
@@ -156,7 +161,10 @@ public class ActionExecutionStepTest {
 
     assertFalse(projectFilesystem.exists(packagePath));
     assertEquals(
-        StepExecutionResult.of(-1, Optional.of("my std err")),
+        ImmutableStepExecutionResult.builder()
+            .setExitCode(-1)
+            .setStderr(Optional.of("my std err"))
+            .build(),
         step.execute(
             ExecutionContext.of(
                 Console.createNullConsole(),
@@ -187,7 +195,7 @@ public class ActionExecutionStepTest {
 
     ImmutableActionExecutionFailure result =
         ImmutableActionExecutionFailure.of(
-            Optional.empty(), Optional.of("my std err"), Optional.empty());
+            Optional.empty(), Optional.of("my std err"), ImmutableList.of(), Optional.empty());
 
     ActionRegistryForTests actionFactoryForTests = new ActionRegistryForTests(buildTarget);
     Artifact declaredArtifact = actionFactoryForTests.declareArtifact(output);
@@ -208,7 +216,10 @@ public class ActionExecutionStepTest {
 
     assertTrue(projectFilesystem.exists(expectedPath));
     assertEquals(
-        StepExecutionResult.of(-1, Optional.of("my std err")),
+        ImmutableStepExecutionResult.builder()
+            .setExitCode(-1)
+            .setStderr(Optional.of("my std err"))
+            .build(),
         step.execute(
             ExecutionContext.of(
                 Console.createNullConsole(),
