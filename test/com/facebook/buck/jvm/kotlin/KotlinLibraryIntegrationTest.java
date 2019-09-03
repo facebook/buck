@@ -95,7 +95,7 @@ public class KotlinLibraryIntegrationTest {
           ImmutableSet.of(
               "META-INF/",
               "META-INF/MANIFEST.MF",
-              "META-INF/main.kotlin_module",
+              "META-INF/example.kotlin_module",
               "com/",
               "com/example/",
               "com/example/ap/",
