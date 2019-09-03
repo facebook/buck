@@ -186,7 +186,7 @@ if_statement ::= 'if' expression ':' suite ('elif' expression ':' suite)* ['else
 
 for_statement ::= 'for' simple_expression_list 'in' expression_list ':' suite
 
-suite ::= simple_statement | INDENT statement+ DEDENT
+suite ::= simple_statement | INDENT statement* DEDENT
 
 expression ::= or_expression [ 'if' or_expression 'else' expression ] {
   methods = [
