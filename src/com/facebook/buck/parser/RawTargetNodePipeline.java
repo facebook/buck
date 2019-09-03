@@ -17,10 +17,9 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.event.BuckEventBus;
@@ -41,7 +40,7 @@ import java.util.function.Function;
 
 /** Converts nodes in a raw form (taken from build file parsers) into {@link RawTargetNode}. */
 public class RawTargetNodePipeline
-    extends ConvertingPipeline<Map<String, Object>, RawTargetNode, BuildTarget> {
+    extends ConvertingPipeline<Map<String, Object>, RawTargetNode, UnconfiguredBuildTargetView> {
 
   private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
   private final BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline;
@@ -49,7 +48,7 @@ public class RawTargetNodePipeline
 
   public RawTargetNodePipeline(
       ListeningExecutorService executorService,
-      Cache<BuildTarget, RawTargetNode> cache,
+      Cache<UnconfiguredBuildTargetView, RawTargetNode> cache,
       BuckEventBus eventBus,
       BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline,
       BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline,
@@ -66,33 +65,27 @@ public class RawTargetNodePipeline
   }
 
   @Override
-  protected BuildTarget getBuildTarget(
+  protected UnconfiguredBuildTargetView getBuildTarget(
       Path root,
       CanonicalCellName cellName,
       Path buildFile,
       TargetConfiguration targetConfiguration,
       Map<String, Object> from) {
     return ImmutableUnconfiguredBuildTargetView.of(
-            UnflavoredBuildTargetFactory.createFromRawNode(root, cellName, from, buildFile))
-        // This pipeline provides access to RawTargetNode which doesn't know about target
-        // configuration. Using empty configuration here to make sure raw target nodes are not
-        // duplicated for different configurations.
-        // TODO: remove this when pipeline cache supports RawTargetNode
-        .configure(EmptyTargetConfiguration.INSTANCE);
+        UnflavoredBuildTargetFactory.createFromRawNode(root, cellName, from, buildFile));
   }
 
   @Override
   protected RawTargetNode computeNodeInScope(
       Cell cell,
-      BuildTarget buildTarget,
+      UnconfiguredBuildTargetView buildTarget,
       Map<String, Object> rawNode,
       Function<PerfEventId, Scope> perfEventScopeFunction)
       throws BuildTargetException {
     return rawTargetNodeFactory.create(
         cell,
-        cell.getBuckConfigView(ParserConfig.class)
-            .getAbsolutePathToBuildFile(cell, buildTarget.getUnconfiguredBuildTargetView()),
-        buildTarget.getUnconfiguredBuildTargetView(),
+        cell.getBuckConfigView(ParserConfig.class).getAbsolutePathToBuildFile(cell, buildTarget),
+        buildTarget,
         rawNode);
   }
 
@@ -107,8 +100,7 @@ public class RawTargetNodePipeline
 
   @Override
   protected ListenableFuture<Map<String, Object>> getItemToConvert(
-      Cell cell, BuildTarget buildTarget) throws BuildTargetException {
-    return buildTargetRawNodeParsePipeline.getNodeJob(
-        cell, buildTarget.getUnconfiguredBuildTargetView());
+      Cell cell, UnconfiguredBuildTargetView buildTarget) throws BuildTargetException {
+    return buildTargetRawNodeParsePipeline.getNodeJob(cell, buildTarget);
   }
 }

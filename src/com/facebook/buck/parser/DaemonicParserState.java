@@ -21,6 +21,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
@@ -100,24 +101,25 @@ public class DaemonicParserState {
   static final float DEFAULT_LOAD_FACTOR = 0.75f;
 
   /** Stateless view of caches on object that conforms to {@link PipelineNodeCache.Cache}. */
-  private class DaemonicCacheView<T> implements PipelineNodeCache.Cache<BuildTarget, T> {
+  private class DaemonicCacheView<K, T> implements PipelineNodeCache.Cache<K, T> {
 
-    private final DaemonicCellState.CellCacheType<T> type;
+    protected final DaemonicCellState.CellCacheType<K, T> type;
 
-    private DaemonicCacheView(DaemonicCellState.CellCacheType<T> type) {
+    private DaemonicCacheView(DaemonicCellState.CellCacheType<K, T> type) {
       this.type = type;
     }
 
     @Override
-    public Optional<T> lookupComputedNode(Cell cell, BuildTarget target, BuckEventBus eventBus)
+    public Optional<T> lookupComputedNode(Cell cell, K target, BuckEventBus eventBus)
         throws BuildTargetException {
       invalidateIfProjectBuildFileParserStateChanged(cell);
       Path buildFile =
           cell.getBuckConfigView(ParserConfig.class)
-              .getAbsolutePathToBuildFileUnsafe(cell, target.getUnconfiguredBuildTargetView());
+              .getAbsolutePathToBuildFileUnsafe(
+                  cell, type.convertToUnconfiguredBuildTargetView(target));
       invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile, eventBus);
 
-      DaemonicCellState.Cache<T> state = getCache(cell);
+      DaemonicCellState.Cache<K, T> state = getCache(cell);
       if (state == null) {
         return Optional.empty();
       }
@@ -125,8 +127,7 @@ public class DaemonicParserState {
     }
 
     @Override
-    public T putComputedNodeIfNotPresent(
-        Cell cell, BuildTarget target, T targetNode, BuckEventBus eventBus)
+    public T putComputedNodeIfNotPresent(Cell cell, K target, T targetNode, BuckEventBus eventBus)
         throws BuildTargetException {
 
       // Verify we don't invalidate the build file at this point, as, at this point, we should have
@@ -138,7 +139,8 @@ public class DaemonicParserState {
           target);
       Path buildFile =
           cell.getBuckConfigView(ParserConfig.class)
-              .getAbsolutePathToBuildFileUnsafe(cell, target.getUnconfiguredBuildTargetView());
+              .getAbsolutePathToBuildFileUnsafe(
+                  cell, type.convertToUnconfiguredBuildTargetView(target));
       Preconditions.checkState(
           !invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile, eventBus),
           "Unexpected invalidation due to config/env change for %s %s",
@@ -148,7 +150,7 @@ public class DaemonicParserState {
       return getOrCreateCache(cell).putComputedNodeIfNotPresent(target, targetNode);
     }
 
-    private @Nullable DaemonicCellState.Cache<T> getCache(Cell cell) {
+    private @Nullable DaemonicCellState.Cache<K, T> getCache(Cell cell) {
       DaemonicCellState cellState = getCellState(cell);
       if (cellState == null) {
         return null;
@@ -156,7 +158,7 @@ public class DaemonicParserState {
       return cellState.getCache(type);
     }
 
-    private DaemonicCellState.Cache<T> getOrCreateCache(Cell cell) {
+    private DaemonicCellState.Cache<K, T> getOrCreateCache(Cell cell) {
       return getOrCreateCellState(cell).getCache(type);
     }
   }
@@ -247,7 +249,7 @@ public class DaemonicParserState {
    *
    * <p>This is used to collect build files that contain configuration targets.
    */
-  private class DaemonicCacheViewWithTrackingBuildFiles<T> extends DaemonicCacheView<T> {
+  private class DaemonicCacheViewWithTrackingBuildFiles<K, T> extends DaemonicCacheView<K, T> {
 
     private final Set<Path> buildFiles;
 
@@ -256,18 +258,18 @@ public class DaemonicParserState {
      * through this view.
      */
     private DaemonicCacheViewWithTrackingBuildFiles(
-        DaemonicCellState.CellCacheType<T> type, Set<Path> buildFiles) {
+        DaemonicCellState.CellCacheType<K, T> type, Set<Path> buildFiles) {
       super(type);
       this.buildFiles = buildFiles;
     }
 
     @Override
-    public T putComputedNodeIfNotPresent(
-        Cell cell, BuildTarget target, T targetNode, BuckEventBus eventBus)
+    public T putComputedNodeIfNotPresent(Cell cell, K target, T targetNode, BuckEventBus eventBus)
         throws BuildTargetException {
       Path buildFile =
           cell.getBuckConfigView(ParserConfig.class)
-              .getAbsolutePathToBuildFileUnsafe(cell, target.getUnconfiguredBuildTargetView());
+              .getAbsolutePathToBuildFileUnsafe(
+                  cell, type.convertToUnconfiguredBuildTargetView(target));
       buildFiles.add(buildFile);
       return super.putComputedNodeIfNotPresent(cell, target, targetNode, eventBus);
     }
@@ -289,9 +291,9 @@ public class DaemonicParserState {
   @GuardedBy("cellStateLock")
   private final ConcurrentMap<Path, DaemonicCellState> cellPathToDaemonicState;
 
-  private final DaemonicCacheView<TargetNode<?>> targetNodeCache =
+  private final DaemonicCacheView<BuildTarget, TargetNode<?>> targetNodeCache =
       new DaemonicCacheView<>(DaemonicCellState.TARGET_NODE_CACHE_TYPE);
-  private final DaemonicCacheView<RawTargetNode> rawTargetNodeCache =
+  private final DaemonicCacheView<UnconfiguredBuildTargetView, RawTargetNode> rawTargetNodeCache =
       new DaemonicCacheView<>(DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
 
   /**
@@ -307,12 +309,12 @@ public class DaemonicParserState {
    * Cache similar to {@link #targetNodeCache}, but keeping information about all accessed build
    * files in {@link #configurationBuildFiles}.
    */
-  private final DaemonicCacheViewWithTrackingBuildFiles<TargetNode<?>>
+  private final DaemonicCacheViewWithTrackingBuildFiles<BuildTarget, TargetNode<?>>
       targetNodeCacheWithTrackingConfigurationBuildFiles =
           new DaemonicCacheViewWithTrackingBuildFiles<>(
               DaemonicCellState.TARGET_NODE_CACHE_TYPE, configurationBuildFiles);
 
-  private final DaemonicCacheViewWithTrackingBuildFiles<RawTargetNode>
+  private final DaemonicCacheViewWithTrackingBuildFiles<UnconfiguredBuildTargetView, RawTargetNode>
       rawTargetCacheWithTrackingConfigurationBuildFiles =
           new DaemonicCacheViewWithTrackingBuildFiles<>(
               DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE, configurationBuildFiles);
@@ -383,28 +385,29 @@ public class DaemonicParserState {
   }
 
   /** Type-safe accessor to one of state caches */
-  static final class CacheType<T> {
-    private final Function<DaemonicParserState, DaemonicCacheView<T>> getCacheView;
-    private final Function<DaemonicParserState, DaemonicCacheViewWithTrackingBuildFiles<T>>
+  static final class CacheType<K, T> {
+    private final Function<DaemonicParserState, DaemonicCacheView<K, T>> getCacheView;
+    private final Function<DaemonicParserState, DaemonicCacheViewWithTrackingBuildFiles<K, T>>
         getCacheViewWithTrackingBuildFiles;
 
     public CacheType(
-        Function<DaemonicParserState, DaemonicCacheView<T>> getCacheView,
-        Function<DaemonicParserState, DaemonicCacheViewWithTrackingBuildFiles<T>>
+        Function<DaemonicParserState, DaemonicCacheView<K, T>> getCacheView,
+        Function<DaemonicParserState, DaemonicCacheViewWithTrackingBuildFiles<K, T>>
             getCacheViewWithTrackingBuildFiles) {
       this.getCacheView = getCacheView;
       this.getCacheViewWithTrackingBuildFiles = getCacheViewWithTrackingBuildFiles;
     }
   }
 
-  public static final CacheType<TargetNode<?>> TARGET_NODE_CACHE_TYPE =
+  public static final CacheType<BuildTarget, TargetNode<?>> TARGET_NODE_CACHE_TYPE =
       new CacheType<>(
           state -> state.targetNodeCache,
           state -> state.targetNodeCacheWithTrackingConfigurationBuildFiles);
-  public static final CacheType<RawTargetNode> RAW_TARGET_NODE_CACHE_TYPE =
-      new CacheType<>(
-          state -> state.rawTargetNodeCache,
-          state -> state.rawTargetCacheWithTrackingConfigurationBuildFiles);
+  public static final CacheType<UnconfiguredBuildTargetView, RawTargetNode>
+      RAW_TARGET_NODE_CACHE_TYPE =
+          new CacheType<>(
+              state -> state.rawTargetNodeCache,
+              state -> state.rawTargetCacheWithTrackingConfigurationBuildFiles);
 
   /**
    * Retrieve the cache view for caching a particular type.
@@ -412,7 +415,7 @@ public class DaemonicParserState {
    * <p>Note that the output type is not constrained to the type of the Class object to allow for
    * types with generics. Care should be taken to ensure that the correct class object is passed in.
    */
-  public <T> PipelineNodeCache.Cache<BuildTarget, T> getOrCreateNodeCache(CacheType<T> cacheType) {
+  public <K, T> PipelineNodeCache.Cache<K, T> getOrCreateNodeCache(CacheType<K, T> cacheType) {
     return cacheType.getCacheView.apply(this);
   }
 
@@ -428,8 +431,8 @@ public class DaemonicParserState {
    * <p>Note that the output type is not constrained to the type of the Class object to allow for
    * types with generics. Care should be taken to ensure that the correct class object is passed in.
    */
-  public <T> PipelineNodeCache.Cache<BuildTarget, T> getOrCreateNodeCacheForConfigurationTargets(
-      CacheType<T> cacheType) {
+  public <K, T> PipelineNodeCache.Cache<K, T> getOrCreateNodeCacheForConfigurationTargets(
+      CacheType<K, T> cacheType) {
     return cacheType.getCacheViewWithTrackingBuildFiles.apply(this);
   }
 
