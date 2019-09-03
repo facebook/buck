@@ -96,7 +96,7 @@ public class TargetSpecResolverTest {
   private ConstructorArgMarshaller constructorArgMarshaller;
   private ListeningExecutorService executorService;
   private TargetSpecResolver targetNodeTargetSpecResolver;
-  private FlavorEnhancer<TargetNode<?>> flavorEnhancer;
+  private FlavorEnhancer flavorEnhancer;
 
   private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
       getManifestSupplier() {
@@ -241,7 +241,7 @@ public class TargetSpecResolverTest {
         specs,
         EmptyTargetConfiguration.INSTANCE,
         flavorEnhancer,
-        new TargetNodeProviderForSpecResolver<TargetNode<?>>() {
+        new TargetNodeProviderForSpecResolver() {
           @Override
           public ListenableFuture<TargetNode<?>> getTargetNodeJob(BuildTarget target)
               throws BuildTargetException {

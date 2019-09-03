@@ -16,7 +16,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.HasBuildTarget;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeFilterForSpecResolver;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
@@ -26,20 +26,20 @@ import java.util.function.Predicate;
  * A version of {@link TargetNodeFilterForSpecResolver} delegates filtering to another instance of
  * {@link TargetNodeFilterForSpecResolver} and performs additional filtering of nodes.
  */
-class TargetNodeFilterForSpecResolverWithNodeFiltering<T extends HasBuildTarget>
-    implements TargetNodeFilterForSpecResolver<T> {
+class TargetNodeFilterForSpecResolverWithNodeFiltering implements TargetNodeFilterForSpecResolver {
 
-  private final TargetNodeFilterForSpecResolver<T> filter;
-  private final Predicate<T> nodeFilter;
+  private final TargetNodeFilterForSpecResolver filter;
+  private final Predicate<TargetNode<?>> nodeFilter;
 
   protected TargetNodeFilterForSpecResolverWithNodeFiltering(
-      TargetNodeFilterForSpecResolver<T> filter, Predicate<T> nodeFilter) {
+      TargetNodeFilterForSpecResolver filter, Predicate<TargetNode<?>> nodeFilter) {
     this.filter = filter;
     this.nodeFilter = nodeFilter;
   }
 
   @Override
-  public ImmutableMap<BuildTarget, T> filter(TargetNodeSpec spec, Iterable<T> nodes) {
+  public ImmutableMap<BuildTarget, TargetNode<?>> filter(
+      TargetNodeSpec spec, Iterable<TargetNode<?>> nodes) {
     return filter.filter(spec, nodes).entrySet().stream()
         .filter(entry -> nodeFilter.test(entry.getValue()))
         .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));

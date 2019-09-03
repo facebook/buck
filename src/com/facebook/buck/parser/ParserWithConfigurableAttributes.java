@@ -79,9 +79,9 @@ class ParserWithConfigurableAttributes extends AbstractParser {
     this.targetSpecResolver = targetSpecResolver;
   }
 
-  static TargetNodeProviderForSpecResolver<TargetNode<?>> createTargetNodeProviderForSpecResolver(
+  static TargetNodeProviderForSpecResolver createTargetNodeProviderForSpecResolver(
       PerBuildState state) {
-    return new TargetNodeProviderForSpecResolver<TargetNode<?>>() {
+    return new TargetNodeProviderForSpecResolver() {
       @Override
       public ListenableFuture<TargetNode<?>> getTargetNodeJob(BuildTarget target)
           throws BuildTargetException {
@@ -287,10 +287,9 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       throws BuildFileParseException, InterruptedException {
 
     try (PerBuildState state = perBuildStateFactory.create(parsingContext, permState)) {
-      TargetNodeFilterForSpecResolver<TargetNode<?>> targetNodeFilter =
-          (spec, nodes) -> spec.filter(nodes);
+      TargetNodeFilterForSpecResolver targetNodeFilter = TargetNodeSpec::filter;
 
-      TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
+      TargetNodeProviderForSpecResolver targetNodeProvider =
           createTargetNodeProviderForSpecResolver(state);
 
       ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
@@ -328,15 +327,14 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       TargetConfiguration targetConfiguration,
       boolean excludeConfigurationTargets)
       throws InterruptedException {
-    TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
+    TargetNodeProviderForSpecResolver targetNodeProvider =
         createTargetNodeProviderForSpecResolver(state);
 
-    TargetNodeFilterForSpecResolver<TargetNode<?>> targetNodeFilter =
-        (spec, nodes) -> spec.filter(nodes);
+    TargetNodeFilterForSpecResolver targetNodeFilter = TargetNodeSpec::filter;
 
     if (excludeConfigurationTargets) {
       targetNodeFilter =
-          new TargetNodeFilterForSpecResolverWithNodeFiltering<>(
+          new TargetNodeFilterForSpecResolverWithNodeFiltering(
               targetNodeFilter, ParserWithConfigurableAttributes::filterOutNonBuildTargets);
     }
 

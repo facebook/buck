@@ -30,6 +30,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasBuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.BuildPackagePaths;
 import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathComputation;
 import com.facebook.buck.core.parser.ImmutableBuildTargetPatternToBuildPackagePathKey;
@@ -152,9 +153,9 @@ public class TargetSpecResolver implements AutoCloseable {
       Cell rootCell,
       Iterable<? extends TargetNodeSpec> specs,
       TargetConfiguration targetConfiguration,
-      FlavorEnhancer<T> flavorEnhancer,
-      TargetNodeProviderForSpecResolver<T> targetNodeProvider,
-      TargetNodeFilterForSpecResolver<T> targetNodeFilter)
+      FlavorEnhancer flavorEnhancer,
+      TargetNodeProviderForSpecResolver targetNodeProvider,
+      TargetNodeFilterForSpecResolver targetNodeFilter)
       throws BuildFileParseException, InterruptedException {
 
     // Convert the input spec iterable into a list so we have a fixed ordering, which we'll rely on
@@ -239,10 +240,10 @@ public class TargetSpecResolver implements AutoCloseable {
     return perBuildFileSpecs;
   }
 
-  private <T extends HasBuildTarget> void handleTargetNodeSpec(
-      FlavorEnhancer<T> flavorEnhancer,
-      TargetNodeProviderForSpecResolver<T> targetNodeProvider,
-      TargetNodeFilterForSpecResolver<T> targetNodeFilter,
+  private void handleTargetNodeSpec(
+      FlavorEnhancer flavorEnhancer,
+      TargetNodeProviderForSpecResolver targetNodeProvider,
+      TargetNodeFilterForSpecResolver targetNodeFilter,
       List<ListenableFuture<Map.Entry<Integer, ImmutableSet<BuildTarget>>>> targetFutures,
       Cell cell,
       Path buildFile,
@@ -305,14 +306,15 @@ public class TargetSpecResolver implements AutoCloseable {
     return targets.build();
   }
 
-  private <T extends HasBuildTarget> ImmutableSet<BuildTarget> applySpecFilter(
+  private ImmutableSet<BuildTarget> applySpecFilter(
       TargetNodeSpec spec,
-      ImmutableList<T> targetNodes,
-      FlavorEnhancer<T> flavorEnhancer,
-      TargetNodeFilterForSpecResolver<T> targetNodeFilter) {
+      ImmutableList<TargetNode<?>> targetNodes,
+      FlavorEnhancer flavorEnhancer,
+      TargetNodeFilterForSpecResolver targetNodeFilter) {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-    ImmutableMap<BuildTarget, T> partialTargets = targetNodeFilter.filter(spec, targetNodes);
-    for (Map.Entry<BuildTarget, T> partialTarget : partialTargets.entrySet()) {
+    ImmutableMap<BuildTarget, TargetNode<?>> partialTargets =
+        targetNodeFilter.filter(spec, targetNodes);
+    for (Map.Entry<BuildTarget, TargetNode<?>> partialTarget : partialTargets.entrySet()) {
       BuildTarget target =
           flavorEnhancer.enhanceFlavors(
               partialTarget.getKey(), partialTarget.getValue(), spec.getTargetType());
@@ -327,22 +329,24 @@ public class TargetSpecResolver implements AutoCloseable {
   }
 
   /** Allows to change flavors of some targets while performing the resolution. */
-  public interface FlavorEnhancer<T extends HasBuildTarget> {
+  public interface FlavorEnhancer {
     BuildTarget enhanceFlavors(
-        BuildTarget target, T targetNode, TargetNodeSpec.TargetType targetType);
+        BuildTarget target, TargetNode<?> targetNode, TargetNodeSpec.TargetType targetType);
   }
 
   /** Provides target nodes of a given type. */
-  public interface TargetNodeProviderForSpecResolver<T extends HasBuildTarget> {
-    ListenableFuture<T> getTargetNodeJob(BuildTarget target) throws BuildTargetException;
+  public interface TargetNodeProviderForSpecResolver {
+    ListenableFuture<TargetNode<?>> getTargetNodeJob(BuildTarget target)
+        throws BuildTargetException;
 
-    ListenableFuture<ImmutableList<T>> getAllTargetNodesJob(
+    ListenableFuture<ImmutableList<TargetNode<?>>> getAllTargetNodesJob(
         Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
         throws BuildTargetException;
   }
 
   /** Performs filtering of target nodes using a given {@link TargetNodeSpec}. */
-  public interface TargetNodeFilterForSpecResolver<T extends HasBuildTarget> {
-    ImmutableMap<BuildTarget, T> filter(TargetNodeSpec spec, Iterable<T> nodes);
+  public interface TargetNodeFilterForSpecResolver {
+    ImmutableMap<BuildTarget, TargetNode<?>> filter(
+        TargetNodeSpec spec, Iterable<TargetNode<?>> nodes);
   }
 }
