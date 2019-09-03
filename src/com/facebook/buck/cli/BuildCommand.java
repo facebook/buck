@@ -116,7 +116,6 @@ public class BuildCommand extends AbstractCommand {
   private static final String SHOW_FULL_JSON_OUTPUT_LONG_ARG = "--show-full-json-output";
   private static final String SHOW_RULEKEY_LONG_ARG = "--show-rulekey";
   private static final String LOCAL_BUILD_LONG_ARG = "--local";
-  private static final String DISTRIBUTED_LONG_ARG = "--distributed";
   static final String BUCK_BINARY_STRING_ARG = "--buck-binary";
   private static final String RULEKEY_LOG_PATH_LONG_ARG = "--rulekeys-log-path";
 
@@ -191,15 +190,9 @@ public class BuildCommand extends AbstractCommand {
   @Option(name = SHOW_RULEKEY_LONG_ARG, usage = "Print the rulekey for each of the built rules.")
   private boolean showRuleKey;
 
-  @Option(
-      name = LOCAL_BUILD_LONG_ARG,
-      usage = "Disable distributed build (overrides --distributed).")
+  @Option(name = LOCAL_BUILD_LONG_ARG, usage = "Disable distributed build.")
   private boolean forceDisableDistributedBuild = false;
 
-  @Option(
-      name = DISTRIBUTED_LONG_ARG,
-      usage = "Whether to run in distributed build mode. (experimental)",
-      hidden = true)
   private boolean useDistributedBuild = false; // Must be accessed via the getter method.
 
   @Nullable
