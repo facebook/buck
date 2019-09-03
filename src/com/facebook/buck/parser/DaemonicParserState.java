@@ -22,6 +22,8 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.counters.Counter;
 import com.facebook.buck.counters.IntegerCounter;
@@ -57,6 +59,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -99,9 +102,9 @@ public class DaemonicParserState {
   /** Stateless view of caches on object that conforms to {@link PipelineNodeCache.Cache}. */
   private class DaemonicCacheView<T> implements PipelineNodeCache.Cache<BuildTarget, T> {
 
-    private final Class<T> type;
+    private final DaemonicCellState.CellCacheType<T> type;
 
-    private DaemonicCacheView(Class<T> type) {
+    private DaemonicCacheView(DaemonicCellState.CellCacheType<T> type) {
       this.type = type;
     }
 
@@ -154,7 +157,7 @@ public class DaemonicParserState {
     }
 
     private DaemonicCellState.Cache<T> getOrCreateCache(Cell cell) {
-      return getOrCreateCellState(cell).getOrCreateCache(type);
+      return getOrCreateCellState(cell).getCache(type);
     }
   }
 
@@ -252,7 +255,8 @@ public class DaemonicParserState {
      * Creates a view that accumulates the paths of build files that contain targets accessed
      * through this view.
      */
-    private DaemonicCacheViewWithTrackingBuildFiles(Class<T> type, Set<Path> buildFiles) {
+    private DaemonicCacheViewWithTrackingBuildFiles(
+        DaemonicCellState.CellCacheType<T> type, Set<Path> buildFiles) {
       super(type);
       this.buildFiles = buildFiles;
     }
@@ -285,8 +289,10 @@ public class DaemonicParserState {
   @GuardedBy("cellStateLock")
   private final ConcurrentMap<Path, DaemonicCellState> cellPathToDaemonicState;
 
-  private final LoadingCache<Class<?>, DaemonicCacheView<?>> typedNodeCaches =
-      CacheBuilder.newBuilder().build(CacheLoader.from(cls -> new DaemonicCacheView<>(cls)));
+  private final DaemonicCacheView<TargetNode<?>> targetNodeCache =
+      new DaemonicCacheView<>(DaemonicCellState.TARGET_NODE_CACHE_TYPE);
+  private final DaemonicCacheView<RawTargetNode> rawTargetNodeCache =
+      new DaemonicCacheView<>(DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
 
   /**
    * Build files that contain configuration targets.
@@ -298,17 +304,18 @@ public class DaemonicParserState {
   private final Set<Path> configurationBuildFiles = ConcurrentHashMap.newKeySet();
 
   /**
-   * Cache similar to {@link #typedNodeCaches}, but keeping information about all accessed build
+   * Cache similar to {@link #targetNodeCache}, but keeping information about all accessed build
    * files in {@link #configurationBuildFiles}.
    */
-  private final LoadingCache<Class<?>, DaemonicCacheView<?>>
-      typedNodeCachesWithTrackingConfigurationBuildFiles =
-          CacheBuilder.newBuilder()
-              .build(
-                  CacheLoader.from(
-                      cls ->
-                          new DaemonicCacheViewWithTrackingBuildFiles<>(
-                              cls, configurationBuildFiles)));
+  private final DaemonicCacheViewWithTrackingBuildFiles<TargetNode<?>>
+      targetNodeCacheWithTrackingConfigurationBuildFiles =
+          new DaemonicCacheViewWithTrackingBuildFiles<>(
+              DaemonicCellState.TARGET_NODE_CACHE_TYPE, configurationBuildFiles);
+
+  private final DaemonicCacheViewWithTrackingBuildFiles<RawTargetNode>
+      rawTargetCacheWithTrackingConfigurationBuildFiles =
+          new DaemonicCacheViewWithTrackingBuildFiles<>(
+              DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE, configurationBuildFiles);
 
   private final DaemonicRawCacheView rawNodeCache;
 
@@ -375,19 +382,38 @@ public class DaemonicParserState {
     return buildFileTrees;
   }
 
+  /** Type-safe accessor to one of state caches */
+  static final class CacheType<T> {
+    private final Function<DaemonicParserState, DaemonicCacheView<T>> getCacheView;
+    private final Function<DaemonicParserState, DaemonicCacheViewWithTrackingBuildFiles<T>>
+        getCacheViewWithTrackingBuildFiles;
+
+    public CacheType(
+        Function<DaemonicParserState, DaemonicCacheView<T>> getCacheView,
+        Function<DaemonicParserState, DaemonicCacheViewWithTrackingBuildFiles<T>>
+            getCacheViewWithTrackingBuildFiles) {
+      this.getCacheView = getCacheView;
+      this.getCacheViewWithTrackingBuildFiles = getCacheViewWithTrackingBuildFiles;
+    }
+  }
+
+  public static final CacheType<TargetNode<?>> TARGET_NODE_CACHE_TYPE =
+      new CacheType<>(
+          state -> state.targetNodeCache,
+          state -> state.targetNodeCacheWithTrackingConfigurationBuildFiles);
+  public static final CacheType<RawTargetNode> RAW_TARGET_NODE_CACHE_TYPE =
+      new CacheType<>(
+          state -> state.rawTargetNodeCache,
+          state -> state.rawTargetCacheWithTrackingConfigurationBuildFiles);
+
   /**
    * Retrieve the cache view for caching a particular type.
    *
    * <p>Note that the output type is not constrained to the type of the Class object to allow for
    * types with generics. Care should be taken to ensure that the correct class object is passed in.
    */
-  @SuppressWarnings("unchecked")
-  public <T> PipelineNodeCache.Cache<BuildTarget, T> getOrCreateNodeCache(Class<T> cacheType) {
-    try {
-      return (PipelineNodeCache.Cache<BuildTarget, T>) typedNodeCaches.get(cacheType);
-    } catch (ExecutionException e) {
-      throw new IllegalStateException("typedNodeCaches CacheLoader should not throw.", e);
-    }
+  public <T> PipelineNodeCache.Cache<BuildTarget, T> getOrCreateNodeCache(CacheType<T> cacheType) {
+    return cacheType.getCacheView.apply(this);
   }
 
   /**
@@ -402,15 +428,9 @@ public class DaemonicParserState {
    * <p>Note that the output type is not constrained to the type of the Class object to allow for
    * types with generics. Care should be taken to ensure that the correct class object is passed in.
    */
-  @SuppressWarnings("unchecked")
   public <T> PipelineNodeCache.Cache<BuildTarget, T> getOrCreateNodeCacheForConfigurationTargets(
-      Class<?> cacheType) {
-    try {
-      return (PipelineNodeCache.Cache<BuildTarget, T>)
-          typedNodeCachesWithTrackingConfigurationBuildFiles.get(cacheType);
-    } catch (ExecutionException e) {
-      throw new IllegalStateException("typedNodeCaches CacheLoader should not throw.", e);
-    }
+      CacheType<T> cacheType) {
+    return cacheType.getCacheViewWithTrackingBuildFiles.apply(this);
   }
 
   public PipelineNodeCache.Cache<Path, BuildFileManifest> getRawNodeCache() {

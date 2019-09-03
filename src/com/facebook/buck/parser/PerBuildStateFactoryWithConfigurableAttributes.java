@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -139,7 +138,8 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
     RawTargetNodePipeline rawTargetNodePipeline =
         new RawTargetNodePipeline(
             pipelineExecutorService,
-            daemonicParserState.getOrCreateNodeCache(RawTargetNode.class),
+            daemonicParserState.getOrCreateNodeCache(
+                DaemonicParserState.RAW_TARGET_NODE_CACHE_TYPE),
             eventBus,
             buildFileRawNodeParsePipeline,
             buildTargetRawNodeParsePipeline,
@@ -164,7 +164,8 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
     // which can lead to deadlocks.
     ParsePipeline<TargetNode<?>> nonResolvingTargetNodeParsePipeline =
         new RawTargetNodeToTargetNodeParsePipeline(
-            daemonicParserState.getOrCreateNodeCacheForConfigurationTargets(TargetNode.class),
+            daemonicParserState.getOrCreateNodeCacheForConfigurationTargets(
+                DaemonicParserState.TARGET_NODE_CACHE_TYPE),
             MoreExecutors.newDirectExecutorService(),
             rawTargetNodePipeline,
             eventBus,
@@ -201,14 +202,9 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
         MoreExecutors.listeningDecorator(
             createExecutorService(rootCell.getBuckConfig(), "configured-pipeline"));
 
-    @SuppressWarnings("unchecked")
-    PipelineNodeCache.Cache<BuildTarget, TargetNode<?>> nodeCache =
-        daemonicParserState.getOrCreateNodeCache(
-            (Class<TargetNode<?>>) (Class<?>) TargetNode.class);
-
     RawTargetNodeToTargetNodeParsePipeline targetNodeParsePipeline =
         new RawTargetNodeToTargetNodeParsePipeline(
-            nodeCache,
+            daemonicParserState.getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE),
             configuredPipelineExecutor,
             rawTargetNodePipeline,
             eventBus,

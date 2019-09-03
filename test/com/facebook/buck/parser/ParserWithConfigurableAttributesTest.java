@@ -2057,7 +2057,7 @@ public class ParserWithConfigurableAttributesTest {
     for (BuildTarget target : buildTargets) {
       assertTrue(
           permState
-              .getOrCreateNodeCache(TargetNode.class)
+              .getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE)
               .lookupComputedNode(cell, target, eventBus)
               .isPresent());
     }
@@ -2328,11 +2328,11 @@ public class ParserWithConfigurableAttributesTest {
   @Test
   public void testGetCacheReturnsSame() {
     assertEquals(
-        parser.getPermState().getOrCreateNodeCache(TargetNode.class),
-        parser.getPermState().getOrCreateNodeCache(TargetNode.class));
+        parser.getPermState().getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE),
+        parser.getPermState().getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE));
     assertNotEquals(
-        parser.getPermState().getOrCreateNodeCache(TargetNode.class),
-        parser.getPermState().getOrCreateNodeCache(Map.class));
+        parser.getPermState().getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE),
+        parser.getPermState().getOrCreateNodeCache(DaemonicParserState.RAW_TARGET_NODE_CACHE_TYPE));
   }
 
   @Test

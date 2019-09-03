@@ -20,6 +20,8 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -40,8 +42,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import javax.annotation.concurrent.GuardedBy;
 
 class DaemonicCellState {
@@ -132,9 +134,28 @@ class DaemonicCellState {
   @GuardedBy("rawAndComputedNodesLock")
   private final Set<UnflavoredBuildTargetView> allRawNodeTargets;
 
+  /** Type-safe accessor to one of state caches */
+  static class CellCacheType<T> {
+    private final Function<DaemonicCellState, Cache<T>> getCache;
+
+    CellCacheType(Function<DaemonicCellState, Cache<T>> getCache) {
+      this.getCache = getCache;
+    }
+  }
+
+  static final CellCacheType<RawTargetNode> RAW_TARGET_NODE_CACHE_TYPE =
+      new CellCacheType<>(state -> state.rawTargetNodeCache);
+  static final CellCacheType<TargetNode<?>> TARGET_NODE_CACHE_TYPE =
+      new CellCacheType<>(state -> state.targetNodeCache);
+
+  private Cache<?>[] typedNodeCaches() {
+    return new Cache[] {targetNodeCache, rawTargetNodeCache};
+  }
+
   /** Keeps caches by the object type supported by the cache. */
-  @GuardedBy("rawAndComputedNodesLock")
-  private final ConcurrentMap<Class<?>, Cache<?>> typedNodeCaches;
+  private final Cache<TargetNode<?>> targetNodeCache;
+
+  private final Cache<RawTargetNode> rawTargetNodeCache;
 
   private final AutoCloseableReadWriteUpdateLock rawAndComputedNodesLock;
   private final int parsingThreads;
@@ -149,8 +170,9 @@ class DaemonicCellState {
     this.buildFileEnv = new HashMap<>();
     this.allBuildFileManifests = new ConcurrentMapCache<>(parsingThreads);
     this.allRawNodeTargets = new HashSet<>();
-    this.typedNodeCaches = Maps.newConcurrentMap();
     this.rawAndComputedNodesLock = new AutoCloseableReadWriteUpdateLock();
+    this.targetNodeCache = new Cache<>();
+    this.rawTargetNodeCache = new Cache<>();
   }
 
   // TODO(mzlee): Only needed for invalidateBasedOn which does not have access to cell metadata
@@ -162,25 +184,8 @@ class DaemonicCellState {
     return cellRoot;
   }
 
-  @SuppressWarnings("unchecked")
-  public <T> Cache<T> getOrCreateCache(Class<T> type) {
-    try (AutoCloseableLock updateLock = rawAndComputedNodesLock.updateLock()) {
-      Cache<?> cache = typedNodeCaches.get(type);
-      if (cache == null) {
-        try (AutoCloseableLock writeLock = rawAndComputedNodesLock.writeLock()) {
-          cache = new Cache<>();
-          typedNodeCaches.put(type, cache);
-        }
-      }
-      return (Cache<T>) cache;
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  public <T> Cache<T> getCache(Class<T> type) {
-    try (AutoCloseableLock readLock = rawAndComputedNodesLock.readLock()) {
-      return (Cache<T>) typedNodeCaches.get(type);
-    }
+  public <T> Cache<T> getCache(CellCacheType<T> type) {
+    return type.getCache.apply(this);
   }
 
   Optional<BuildFileManifest> lookupBuildFileManifest(Path buildFile) {
@@ -227,7 +232,7 @@ class DaemonicCellState {
               UnflavoredBuildTargetFactory.createFromRawNode(
                   cellRoot, cellCanonicalName, rawNode, path);
           LOG.debug("Invalidating target for path %s: %s", path, target);
-          for (Cache<?> cache : typedNodeCaches.values()) {
+          for (Cache<?> cache : typedNodeCaches()) {
             cache.allComputedNodes.invalidateAll(targetsCornucopia.get(target));
           }
           targetsCornucopia.removeAll(target);
