@@ -381,7 +381,9 @@ public class AppleTestDescription
                     .getDefaultTestRuleTimeoutMs()),
         args.getIsUiTest(),
         args.getSnapshotReferenceImagesPath(),
-        args.getEnv());
+        args.getEnv(),
+        appleConfig.useIdb(),
+        appleConfig.getIdbPath());
   }
 
   private Optional<SourcePath> getXctool(
