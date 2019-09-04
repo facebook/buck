@@ -107,6 +107,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private Optional<Long> testRuleTimeoutMs;
 
   private Optional<AppleTestXctoolStdoutReader> xctoolStdoutReader;
+  private Optional<AppleTestIdbStdoutReader> idbStdoutReader;
   private Optional<AppleTestXctestOutputReader> xctestOutputReader;
 
   private final String testLogDirectoryEnvironmentVariable;
@@ -141,6 +142,27 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     public ImmutableList<TestCaseSummary> getTestCaseSummaries() {
       return xctoolEventHandler.getTestCaseSummaries();
+    }
+  }
+
+  private static class AppleTestIdbStdoutReader implements IdbRunTestsStep.StdoutReadingCallback {
+
+    private final TestCaseSummariesBuildingIdb idbTestHandler;
+
+    public AppleTestIdbStdoutReader(TestRule.TestReportingCallback testReportingCallback) {
+      this.idbTestHandler = new TestCaseSummariesBuildingIdb(testReportingCallback);
+    }
+
+    @Override
+    public void readStdout(InputStream stdout) throws IOException {
+      try (InputStreamReader stdoutReader = new InputStreamReader(stdout, StandardCharsets.UTF_8);
+          BufferedReader bufferedReader = new BufferedReader(stdoutReader)) {
+        IdbOutputParsing.streamOutputFromReader(bufferedReader, idbTestHandler);
+      }
+    }
+
+    public ImmutableList<TestCaseSummary> getTestCaseSummaries() {
+      return idbTestHandler.getTestCaseSummaries();
     }
   }
 
