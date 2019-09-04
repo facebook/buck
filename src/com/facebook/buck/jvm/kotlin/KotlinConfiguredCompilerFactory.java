@@ -29,6 +29,7 @@ import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessingTool;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.CoreArg;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -63,9 +64,12 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       TargetConfiguration targetConfiguration,
       ToolchainProvider toolchainProvider) {
     CoreArg kotlinArgs = Objects.requireNonNull((CoreArg) args);
+    Path pathToAbiGenerationPluginJar =
+        shouldGenerateSourceAbi() ? kotlinBuckConfig.getPathToAbiGenerationPluginJar() : null;
     return new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinc(),
         kotlinBuckConfig.getKotlinHomeLibraries(),
+        pathToAbiGenerationPluginJar,
         kotlinArgs.getExtraKotlincArguments(),
         kotlinArgs.getKotlincPlugins(),
         kotlinArgs.getFriendPaths(),
