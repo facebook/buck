@@ -230,6 +230,7 @@ java_test(
         "//src/com/facebook/buck/util/cache:cache",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/hashing:hashing",
+        "//src/com/facebook/buck/util/json:json",
         "//src/com/facebook/buck/util/unarchive:unarchive",
         "//src/com/facebook/buck/util/zip:zip",
         "//src/com/facebook/buck/versions:translator",
