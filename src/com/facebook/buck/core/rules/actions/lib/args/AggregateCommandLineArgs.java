@@ -41,4 +41,9 @@ class AggregateCommandLineArgs implements CommandLineArgs {
   public int getEstimatedArgsCount() {
     return args.stream().map(CommandLineArgs::getEstimatedArgsCount).reduce(0, Integer::sum);
   }
+
+  @Override
+  public Stream<Object> getArgs() {
+    return args.stream().flatMap(CommandLineArgs::getArgs);
+  }
 }

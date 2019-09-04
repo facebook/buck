@@ -47,6 +47,11 @@ class ListCommandLineArgs implements CommandLineArgs {
   }
 
   @Override
+  public Stream<Object> getArgs() {
+    return objects.stream();
+  }
+
+  @Override
   public int getEstimatedArgsCount() {
     return objects.size();
   }

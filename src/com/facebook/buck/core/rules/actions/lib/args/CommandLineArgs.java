@@ -45,8 +45,13 @@ public interface CommandLineArgs extends AddsToRuleKey {
   Stream<String> getStrings(ArtifactFilesystem filesystem) throws CommandLineArgException;
 
   /**
-   * Get the approximate number of arguments that will be returned for {@link
-   * #getStrings(ArtifactFilesystem)}
+   * @return Get a stream of all raw argument objects that can be stringified with something like
+   *     {@link CommandLineArgStringifier#asString(ArtifactFilesystem, Object)}
+   */
+  Stream<Object> getArgs();
+
+  /**
+   * Get the approximate number of arguments that will be returned for {@link #getArgs()}
    *
    * <p>This can be handy to pre-size destination collections
    *
