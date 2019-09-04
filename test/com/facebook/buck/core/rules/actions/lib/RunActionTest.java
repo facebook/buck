@@ -20,10 +20,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgException;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsFactory;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.step.StepExecutionResult;
@@ -136,6 +138,34 @@ public class RunActionTest {
             ImmutableSet.of(),
             "list",
             CommandLineArgsFactory.from(ImmutableList.of(script, "--foo", "bar")),
+            ImmutableMap.of());
+
+    StepExecutionResult result = runner.runAction(action).getResult();
+    assertTrue(result.isSuccess());
+    assertEquals(expectedStderr, getStderr(result));
+  }
+
+  @Test
+  public void canRunBinariesAtWorkingDirRoot() throws CommandLineArgException, IOException {
+    Path sourceScriptPath = Platform.isWindows() ? Paths.get("script.bat") : Paths.get("script.sh");
+    Artifact sourceScript =
+        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, sourceScriptPath));
+
+    ImmutableList<String> expectedStderr =
+        ImmutableList.of(
+            "Message on stderr",
+            "arg[--foo]",
+            "arg[bar]",
+            String.format("PWD: %s", filesystem.getRootPath().toString()),
+            "CUSTOM_ENV:");
+
+    RunAction action =
+        new RunAction(
+            runner.getRegistry(),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
+            "list",
+            CommandLineArgsFactory.from(ImmutableList.of(sourceScript, "--foo", "bar")),
             ImmutableMap.of());
 
     StepExecutionResult result = runner.runAction(action).getResult();

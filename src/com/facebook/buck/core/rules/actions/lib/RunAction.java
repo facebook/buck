@@ -25,8 +25,10 @@ import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionFailure;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
+import com.facebook.buck.core.rules.actions.lib.args.CommandLine;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgException;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
+import com.facebook.buck.core.rules.actions.lib.args.ExecCompatibleCommandLineBuilder;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
@@ -75,17 +77,14 @@ public class RunAction extends AbstractAction {
   @Override
   public ActionExecutionResult execute(ActionExecutionContext executionContext) {
     ArtifactFilesystem filesystem = executionContext.getArtifactFilesystem();
-    ImmutableList<String> commandLineArgs;
+    CommandLine commandLine;
     try {
-      ImmutableList.Builder<String> builder =
-          ImmutableList.builderWithExpectedSize(args.getEstimatedArgsCount());
-      args.getStrings(filesystem).forEach(builder::add);
-      commandLineArgs = builder.build();
+      commandLine = new ExecCompatibleCommandLineBuilder(filesystem).build(args);
     } catch (CommandLineArgException e) {
       return ImmutableActionExecutionFailure.of(
           Optional.empty(), Optional.empty(), ImmutableList.of(), Optional.of(e));
     }
-    if (commandLineArgs.isEmpty()) {
+    if (commandLine.getCommandLineArgs().isEmpty()) {
       return ImmutableActionExecutionFailure.of(
           Optional.empty(),
           Optional.empty(),
@@ -95,11 +94,12 @@ public class RunAction extends AbstractAction {
                   "Zero arguments were provided when invoking run() action")));
     }
 
+    ImmutableList<String> stringifiedCommandLine = commandLine.getCommandLineArgs();
     ProcessExecutorParams params =
         ProcessExecutorParams.builder()
             .setEnvironment(getEnvironment(executionContext))
             .setDirectory(executionContext.getWorkingDirectory())
-            .setCommand(commandLineArgs)
+            .setCommand(stringifiedCommandLine)
             .build();
 
     try {
@@ -119,7 +119,7 @@ public class RunAction extends AbstractAction {
       }
     } catch (InterruptedException | IOException e) {
       return ImmutableActionExecutionFailure.of(
-          Optional.empty(), Optional.empty(), ImmutableList.of(), Optional.of(e));
+          Optional.empty(), Optional.empty(), stringifiedCommandLine, Optional.of(e));
     }
   }
 

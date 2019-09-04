@@ -456,10 +456,9 @@ public class SkylarkUserDefinedRuleIntegrationTest {
           "arg[--out]",
           String.format(
               "arg[%s]",
-              filesystem.resolve(
-                  BuildPaths.getGenDir(
-                          filesystem, BuildTargetFactory.newInstance("//foo:returning_one"))
-                      .resolve("out.txt"))),
+              BuildPaths.getGenDir(
+                      filesystem, BuildTargetFactory.newInstance("//foo:returning_one"))
+                  .resolve("out.txt")),
           "arg[--bar]",
           "arg[some]",
           "arg[arg]",
@@ -473,11 +472,9 @@ public class SkylarkUserDefinedRuleIntegrationTest {
           "arg[--out]",
           String.format(
               "arg[%s]",
-              filesystem.resolve(
-                  BuildPaths.getGenDir(
-                          filesystem,
-                          BuildTargetFactory.newInstance("//foo:returning_one_with_env"))
-                      .resolve("out.txt"))),
+              BuildPaths.getGenDir(
+                      filesystem, BuildTargetFactory.newInstance("//foo:returning_one_with_env"))
+                  .resolve("out.txt")),
           "arg[--bar]",
           "arg[some]",
           "arg[arg]",
