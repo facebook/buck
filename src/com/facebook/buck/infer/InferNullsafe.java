@@ -39,6 +39,7 @@ import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -127,8 +128,17 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
 
   /** {@link Buildable} that is responsible for running Nullsafe. */
   static class Impl implements Buildable {
-    private static final String INFER_REPORT_FILE_NAME = "report.json";
     private static final String INFER_DEFAULT_RESULT_DIR = "infer-out";
+
+    // This is the default name of the JSON report which is suitable for consumption
+    // by tools and automation.
+    private static final String INFER_JSON_REPORT_FILE = "report.json";
+
+    // Default name of the human-readable report is bugs.txt, renamed here for consistency.
+    // We produce this report so that a user can see the full list of warnings later on.
+    private static final String INFER_TXT_REPORT_FILE = "report.txt";
+
+    private static final String REPORTS_OUTPUT_DIR = ".";
 
     @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
     @AddToRuleKey private final ImmutableSortedSet<SourcePath> classpath;
@@ -138,8 +148,11 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
 
     @AddToRuleKey private final InferPlatform inferPlatform;
     @AddToRuleKey private final ImmutableList<String> nullsafeArgs;
-    @AddToRuleKey private final OutputPath reportJson = new OutputPath(INFER_REPORT_FILE_NAME);
     @AddToRuleKey @Nullable private final SourcePath generatedClasses;
+
+    @AddToRuleKey private final OutputPath reportsDir = new OutputPath(REPORTS_OUTPUT_DIR);
+    @AddToRuleKey private final OutputPath reportJson = reportsDir.resolve(INFER_JSON_REPORT_FILE);
+    @AddToRuleKey private final OutputPath reportTxt = reportsDir.resolve(INFER_TXT_REPORT_FILE);
 
     Impl(
         InferPlatform inferPlatform,
@@ -168,15 +181,18 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
         return ImmutableList.of();
       }
 
-      ImmutableList.Builder<Step> steps = ImmutableList.builder();
+      SourcePathResolver sourcePathResolver = buildContext.getSourcePathResolver();
+
       Path scratchDir = filesystem.resolve(outputPathResolver.getTempPath());
       Path argFilePath = filesystem.relativize(scratchDir.resolve("args.txt"));
       Path inferOutPath = filesystem.relativize(scratchDir.resolve(INFER_DEFAULT_RESULT_DIR));
-      Path inferReportPath = inferOutPath.resolve(INFER_REPORT_FILE_NAME);
-      SourcePathResolver sourcePathResolver = buildContext.getSourcePathResolver();
+      Path inferJsonReport = inferOutPath.resolve(INFER_JSON_REPORT_FILE);
+
+      ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
       // Prepare infer command line arguments and write them to args.txt
-      ImmutableList<String> argsBuilder = buildArgs(inferOutPath, filesystem, sourcePathResolver);
+      ImmutableList<String> argsBuilder =
+          buildArgs(inferOutPath, filesystem, sourcePathResolver, outputPathResolver);
       steps.add(
           new WriteFileStep(
               filesystem, Joiner.on(System.lineSeparator()).join(argsBuilder), argFilePath, false));
@@ -184,11 +200,18 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
       // Prepare and invoke cmd with appropriate environment
       ImmutableList<String> cmd = buildCommand(argFilePath, sourcePathResolver);
       ImmutableMap<String, String> cmdEnv = buildEnv(sourcePathResolver);
-      steps.add(new DefaultShellStep(filesystem.getRootPath(), cmd, cmdEnv));
+      steps.add(
+          new DefaultShellStep(filesystem.getRootPath(), cmd, cmdEnv) {
+            @Override
+            protected boolean shouldPrintStderr(Verbosity verbosity) {
+              // nullsafe is expected to produce output akin to compilation warnings
+              return true;
+            }
+          });
 
       steps.add(
           CopyStep.forFile(
-              filesystem, inferReportPath, outputPathResolver.resolvePath(reportJson)));
+              filesystem, inferJsonReport, outputPathResolver.resolvePath(reportJson)));
 
       return steps.build();
     }
@@ -215,13 +238,21 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
     }
 
     private ImmutableList<String> buildArgs(
-        Path inferOutPath, ProjectFilesystem filesystem, SourcePathResolver sourcePathResolver) {
+        Path inferOutPath,
+        ProjectFilesystem filesystem,
+        SourcePathResolver sourcePathResolver,
+        OutputPathResolver outputPathResolver) {
       ImmutableList.Builder<String> argsBuilder = ImmutableList.builder();
       argsBuilder.addAll(nullsafeArgs);
-      argsBuilder.addAll(
-          ImmutableList.of(
-              "--jobs", "1", "--genrule-mode", "--results-dir", inferOutPath.toString()));
-      argsBuilder.add("--project-root", filesystem.getRootPath().toString());
+      argsBuilder.add(
+          "--project-root",
+          filesystem.getRootPath().toString(),
+          "--jobs",
+          "1",
+          "--results-dir",
+          inferOutPath.toString(),
+          "--issues-txt",
+          outputPathResolver.resolvePath(reportTxt).toString());
 
       sources.stream()
           .map(s -> filesystem.relativize(sourcePathResolver.getAbsolutePath(s)))
