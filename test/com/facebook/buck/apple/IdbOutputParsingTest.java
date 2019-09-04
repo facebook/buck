@@ -15,14 +15,44 @@
  */
 package com.facebook.buck.apple;
 
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import org.junit.Test;
 
 public class IdbOutputParsingTest {
+
+  private static final float EPSILON = 1e-6f;
+
+  private static IdbOutputParsing.IdbResultCallback eventCallbackAddingEventsToList(
+      List<Object> streamedObjects) {
+    return new IdbOutputParsing.IdbResultCallback() {
+      @Override
+      public void handleTestResult(ImmutableIdbTestResult result) {
+        streamedObjects.add(result);
+      }
+
+      @Override
+      public void handleEndOfTests() {}
+    };
+  }
 
   @Test
   public void checkJsonParsingForTestResultObjects() throws IOException {
@@ -113,5 +143,121 @@ public class IdbOutputParsingTest {
                 new String[0]));
 
     assertEquals(results.build(), expectedResult);
+  }
+
+  @Test
+  public void streamingSimpleSuccess() throws IOException {
+    Path jsonPath = TestDataHelper.getTestDataDirectory(this).resolve("idb_output/testResults.txt");
+    List<Object> streamedObjects = new ArrayList<>();
+    try (Reader jsonReader = Files.newBufferedReader(jsonPath, StandardCharsets.UTF_8)) {
+      IdbOutputParsing.streamOutputFromReader(
+          jsonReader, eventCallbackAddingEventsToList(streamedObjects));
+    }
+    assertThat(streamedObjects, hasSize(6));
+
+    Iterator<Object> iter = streamedObjects.iterator();
+    Object nextStreamedObject;
+
+    nextStreamedObject = iter.next();
+    assertThat(nextStreamedObject, instanceOf(ImmutableIdbTestResult.class));
+    ImmutableIdbTestResult result = (ImmutableIdbTestResult) nextStreamedObject;
+    assertThat(result.getBundleName(), equalTo("FBActorKitTests"));
+    assertThat(result.getClassName(), equalTo("FBActorKitTests"));
+    assertThat(result.getMethodName(), equalTo("testActorProfilePictureForActor"));
+    assertThat(result.getLogs(), equalTo(new String[0]));
+    assertThat(result.getDuration(), equalTo(0.008090019226074219f));
+    assertThat(result.getPassed(), equalTo(true));
+    assertThat(result.getCrashed(), equalTo(false));
+    assertThat(result.getFailureInfo().getMessage(), equalTo(""));
+    assertThat(result.getFailureInfo().getFile(), equalTo(""));
+    assertThat(result.getFailureInfo().getLine(), equalTo(0));
+    assertThat(result.getActivityLogs(), equalTo(new String[0]));
+
+    nextStreamedObject = iter.next();
+    assertThat(nextStreamedObject, instanceOf(ImmutableIdbTestResult.class));
+    result = (ImmutableIdbTestResult) nextStreamedObject;
+    assertThat(result.getBundleName(), equalTo("FBActorKitTests"));
+    assertThat(result.getClassName(), equalTo("FBActorKitTests"));
+    assertThat(result.getMethodName(), equalTo("testActorProfilePictureForEvent"));
+    assertThat(result.getLogs(), equalTo(new String[0]));
+    assertThat(result.getDuration(), equalTo(0.0002620220184326172f));
+    assertThat(result.getPassed(), equalTo(true));
+    assertThat(result.getCrashed(), equalTo(false));
+    assertThat(result.getFailureInfo().getMessage(), equalTo(""));
+    assertThat(result.getFailureInfo().getFile(), equalTo(""));
+    assertThat(result.getFailureInfo().getLine(), equalTo(0));
+    assertThat(result.getActivityLogs(), equalTo(new String[0]));
+
+    nextStreamedObject = iter.next();
+    assertThat(nextStreamedObject, instanceOf(ImmutableIdbTestResult.class));
+    result = (ImmutableIdbTestResult) nextStreamedObject;
+    assertThat(result.getBundleName(), equalTo("FBActorKitTests"));
+    assertThat(result.getClassName(), equalTo("FBActorKitTests"));
+    assertThat(result.getMethodName(), equalTo("testActorProfilePictureForGroup"));
+    assertThat(result.getLogs(), equalTo(new String[0]));
+    assertThat(result.getDuration(), equalTo(0.00017404556274414062f));
+    assertThat(result.getPassed(), equalTo(true));
+    assertThat(result.getCrashed(), equalTo(false));
+    assertThat(result.getFailureInfo().getMessage(), equalTo(""));
+    assertThat(result.getFailureInfo().getFile(), equalTo(""));
+    assertThat(result.getFailureInfo().getLine(), equalTo(0));
+    assertThat(result.getActivityLogs(), equalTo(new String[0]));
+
+    nextStreamedObject = iter.next();
+    assertThat(nextStreamedObject, instanceOf(ImmutableIdbTestResult.class));
+    result = (ImmutableIdbTestResult) nextStreamedObject;
+    assertThat(result.getBundleName(), equalTo("FBActorKitTests"));
+    assertThat(result.getClassName(), equalTo("FBActorKitTests"));
+    assertThat(result.getMethodName(), equalTo("testActorProfilePictureForNilActor"));
+    assertThat(result.getLogs(), equalTo(new String[0]));
+    assertThat(result.getDuration(), equalTo(0.00012302398681640625f));
+    assertThat(result.getPassed(), equalTo(true));
+    assertThat(result.getCrashed(), equalTo(false));
+    assertThat(result.getFailureInfo().getMessage(), equalTo(""));
+    assertThat(result.getFailureInfo().getFile(), equalTo(""));
+    assertThat(result.getFailureInfo().getLine(), equalTo(0));
+    assertThat(result.getActivityLogs(), equalTo(new String[0]));
+
+    nextStreamedObject = iter.next();
+    assertThat(nextStreamedObject, instanceOf(ImmutableIdbTestResult.class));
+    result = (ImmutableIdbTestResult) nextStreamedObject;
+    assertThat(result.getBundleName(), equalTo("FBActorKitTests"));
+    assertThat(result.getClassName(), equalTo("FBActorKitTests"));
+    assertThat(result.getMethodName(), equalTo("testActorProfilePictureForPage"));
+    assertThat(result.getLogs(), equalTo(new String[0]));
+    assertThat(result.getDuration(), equalTo(0.00038802623748779297f));
+    assertThat(result.getPassed(), equalTo(false));
+    assertThat(result.getCrashed(), equalTo(false));
+    assertThat(
+        result.getFailureInfo().getMessage(),
+        equalTo("((pictureType != FBActorProfilePictureTypePage) is true) failed"));
+    assertThat(
+        result.getFailureInfo().getFile(),
+        equalTo("Libraries/FBActorKit/FBActorKitTests/FBActorKitTests.m"));
+    assertThat(result.getFailureInfo().getLine(), equalTo(58));
+    assertThat(result.getActivityLogs(), equalTo(new String[0]));
+
+    nextStreamedObject = iter.next();
+    assertThat(nextStreamedObject, instanceOf(ImmutableIdbTestResult.class));
+    result = (ImmutableIdbTestResult) nextStreamedObject;
+    assertThat(result.getBundleName(), equalTo("FBActorKitTests"));
+    assertThat(result.getClassName(), equalTo("FBActorKitTests"));
+    assertThat(result.getMethodName(), equalTo("testActorProfilePictureForPlace"));
+    assertThat(result.getLogs(), equalTo(new String[0]));
+    assertThat(result.getDuration(), equalTo(0.0002869367599487306f));
+    assertThat(result.getPassed(), equalTo(true));
+    assertThat(result.getCrashed(), equalTo(false));
+    assertThat(result.getFailureInfo().getMessage(), equalTo(""));
+    assertThat(result.getFailureInfo().getFile(), equalTo(""));
+    assertThat(result.getFailureInfo().getLine(), equalTo(0));
+    assertThat(result.getActivityLogs(), equalTo(new String[0]));
+  }
+
+  @Test
+  public void streamingEmptyReaderDoesNotCauseFailure() {
+    List<Object> streamedObjects = new ArrayList<>();
+    IdbOutputParsing.streamOutputFromReader(
+        new StringReader(""), eventCallbackAddingEventsToList(streamedObjects));
+    assertThat(streamedObjects, is(empty()));
   }
 }
