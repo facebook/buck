@@ -29,12 +29,24 @@ android_binary(
 )
 
 genrule(
-    name = "disassemble_app_with_d8",
-    out = "disassembled_d8.smali",
+    name = "disassemble_app_with_d8_for_canary",
+    out = "disassembled_d8_canary.smali",
     bash = " && ".join([
         "unzip -p $(location :app_with_d8) classes2.dex > $TMP/classes2.dex",
         "$(exe //third-party/smali:baksmali) d -o $TMP $TMP/classes2.dex",
         "cat $TMP/secondary/*/Canary.smali > $OUT",
+    ]),
+)
+
+genrule(
+    name = "disassemble_app_with_d8_for_jumbo_string",
+    out = "disassembled_d8_jumbo_string.smali",
+    bash = " && ".join([
+        "mkdir $TMP/dexes",
+        "mkdir $TMP/smali",
+        "unzip -j $(location :app_with_d8) *.dex -d $TMP/dexes",
+        "find $TMP/dexes/ -name *.dex -exec $(exe //third-party/smali:baksmali) d -o $TMP/smali {} \;",
+        "find $TMP/smali/ -name *.smali -exec cat {} \; > $OUT",
     ]),
 )
 

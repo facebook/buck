@@ -475,9 +475,29 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   @Test
   public void testD8AppWithMultidexContainsCanaryClasses() throws IOException {
     workspace.runBuckBuild("//apps/multidex:app_with_d8").assertSuccess();
-    final Path path = workspace.buildAndReturnOutput("//apps/multidex:disassemble_app_with_d8");
+    final Path path =
+        workspace.buildAndReturnOutput("//apps/multidex:disassemble_app_with_d8_for_canary");
     final List<String> smali = filesystem.readLines(path);
     assertFalse(smali.isEmpty());
+  }
+
+  @Test
+  public void testD8AppWithMultidexJumboString() throws IOException {
+    // FORCE_JUMBO should be set and D8 should respect that.
+    // FORCE_JUMBO is used when PreDexMerging is enabled (the default).
+    workspace.runBuckBuild("//apps/multidex:app_with_d8").assertSuccess();
+    final Path path =
+        workspace.buildAndReturnOutput("//apps/multidex:disassemble_app_with_d8_for_jumbo_string");
+    final List<String> smali = filesystem.readLines(path);
+    assertFalse(smali.isEmpty());
+    boolean foundString = false;
+    for (String line : smali) {
+      if (line.contains("const-string")) {
+        foundString = true;
+        assertTrue(line.contains("const-string/jumbo"));
+      }
+    }
+    assertTrue(foundString);
   }
 
   @Test
