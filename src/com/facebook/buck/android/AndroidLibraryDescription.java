@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.arg.HasProvidedDepsQuery;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
@@ -30,9 +31,14 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.infer.ImmutableInferConfig;
+import com.facebook.buck.infer.InferNullsafe;
+import com.facebook.buck.infer.UnresolvedInferPlatform;
+import com.facebook.buck.infer.toolchain.InferToolchain;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaSourceJar;
@@ -43,6 +49,7 @@ import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -64,6 +71,7 @@ public class AndroidLibraryDescription
   private final JavaBuckConfig javaBuckConfig;
   private final AndroidLibraryCompilerFactory compilerFactory;
   private final JavacFactory javacFactory;
+  private final Optional<UnresolvedInferPlatform> unresolvedInferPlatform;
 
   public AndroidLibraryDescription(
       JavaBuckConfig javaBuckConfig,
@@ -72,6 +80,10 @@ public class AndroidLibraryDescription
     this.javaBuckConfig = javaBuckConfig;
     this.compilerFactory = compilerFactory;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
+    this.unresolvedInferPlatform =
+        toolchainProvider
+            .getByNameIfPresent(InferToolchain.DEFAULT_NAME, InferToolchain.class)
+            .map(InferToolchain::getDefaultPlatform);
   }
 
   @Override
@@ -107,6 +119,25 @@ public class AndroidLibraryDescription
             buildTarget,
             context.getActionGraphBuilder(),
             args);
+    ConfiguredCompilerFactory compilerFactory =
+        this.compilerFactory.getCompiler(args.getLanguage().orElse(JvmLanguage.JAVA), javacFactory);
+
+    ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+
+    if (flavors.contains(InferNullsafe.INFER_NULLSAFE)) {
+      return InferNullsafe.create(
+          buildTarget,
+          projectFilesystem,
+          context.getActionGraphBuilder(),
+          javacOptions,
+          compilerFactory.getExtraClasspathProvider(toolchainProvider),
+          unresolvedInferPlatform.orElseThrow(
+              () ->
+                  new HumanReadableException(
+                      "Cannot use #nullsafe flavor: infer platform not configured")),
+          new ImmutableInferConfig(javaBuckConfig.getDelegate()));
+    }
+
     AndroidLibrary.Builder androidLibraryBuilder =
         AndroidLibrary.builder(
             buildTarget,
@@ -119,7 +150,7 @@ public class AndroidLibraryDescription
             javacFactory,
             javacOptions,
             args,
-            compilerFactory.getCompiler(args.getLanguage().orElse(JvmLanguage.JAVA), javacFactory));
+            compilerFactory);
 
     if (hasDummyRDotJavaFlavor) {
       return androidLibraryBuilder.buildDummyRDotJava();
@@ -137,7 +168,8 @@ public class AndroidLibraryDescription
         || flavors.equals(ImmutableSet.of(JavaAbis.CLASS_ABI_FLAVOR))
         || flavors.equals(ImmutableSet.of(JavaAbis.SOURCE_ABI_FLAVOR))
         || flavors.equals(ImmutableSet.of(JavaAbis.SOURCE_ONLY_ABI_FLAVOR))
-        || flavors.equals(ImmutableSet.of(JavaAbis.VERIFIED_SOURCE_ABI_FLAVOR));
+        || flavors.equals(ImmutableSet.of(JavaAbis.VERIFIED_SOURCE_ABI_FLAVOR))
+        || flavors.equals(ImmutableSet.of(InferNullsafe.INFER_NULLSAFE));
   }
 
   @Override
@@ -152,6 +184,11 @@ public class AndroidLibraryDescription
         .addTargetDeps(
             buildTarget.getTargetConfiguration(), extraDepsBuilder, targetGraphOnlyDepsBuilder);
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
+
+    unresolvedInferPlatform.ifPresent(
+        p ->
+            UnresolvedInferPlatform.addParseTimeDepsToInferFlavored(
+                targetGraphOnlyDepsBuilder, buildTarget, p));
   }
 
   public interface CoreArg

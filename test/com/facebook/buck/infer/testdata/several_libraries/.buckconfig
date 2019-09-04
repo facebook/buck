@@ -1,0 +1,3 @@
+[infer_java]
+  infer_version=5941f2dee2c3a54d756207479996920a43b08810
+  # TODO(arr): switch to 'latest' when supported by infer wrapper

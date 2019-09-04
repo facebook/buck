@@ -30,6 +30,7 @@ import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessingTool;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.CoreArg;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -73,6 +74,12 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         extraClasspathProviderSupplier.apply(toolchainProvider),
         getJavac(buildRuleResolver, args),
         javacOptions);
+  }
+
+  @Override
+  public Optional<ExtraClasspathProvider> getExtraClasspathProvider(
+      ToolchainProvider toolchainProvider) {
+    return Optional.ofNullable(extraClasspathProviderSupplier.apply(toolchainProvider));
   }
 
   private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {

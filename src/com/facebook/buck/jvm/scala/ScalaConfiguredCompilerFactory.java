@@ -31,6 +31,7 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.google.common.collect.ImmutableCollection;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -76,6 +77,12 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         getJavac(buildRuleResolver, arg),
         javacOptions,
         extraClasspathProviderSupplier.apply(toolchainProvider));
+  }
+
+  @Override
+  public Optional<ExtraClasspathProvider> getExtraClasspathProvider(
+      ToolchainProvider toolchainProvider) {
+    return Optional.of(extraClasspathProviderSupplier.apply(toolchainProvider));
   }
 
   @Override

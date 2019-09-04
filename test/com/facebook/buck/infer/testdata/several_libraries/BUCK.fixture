@@ -1,0 +1,17 @@
+java_library(
+    name = "l1",
+    srcs = ["L1.java"],
+    deps = ["buck//third-party/java/jsr:jsr305"],
+)
+
+java_library(
+    name = "j",
+    srcs = ["J.java"],
+    deps = [":l1"],
+)
+
+android_library(
+    name = "a",
+    srcs = ["A.java"],
+    deps = [":l1"],
+)

@@ -24,6 +24,7 @@ import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription.CoreArg;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
+import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.google.common.collect.ImmutableCollection;
@@ -51,6 +52,12 @@ public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         groovyBuckConfig.getGroovyc(targetConfiguration),
         Optional.of(groovyArgs.getExtraGroovycArguments()),
         javacOptions);
+  }
+
+  @Override
+  public Optional<ExtraClasspathProvider> getExtraClasspathProvider(
+      ToolchainProvider toolchainProvider) {
+    return Optional.empty();
   }
 
   @Override
