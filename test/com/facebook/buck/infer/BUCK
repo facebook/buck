@@ -9,8 +9,11 @@ standard_java_test(
     with_test_data = True,
     deps = [
         ":testutil",
+        "//src/com/facebook/buck/util/json:json",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/jackson:jackson-core",
+        "//third-party/java/jackson:jackson-databind",
         "//third-party/java/junit:junit",
     ],
 )

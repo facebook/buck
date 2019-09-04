@@ -28,6 +28,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
+import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
@@ -84,8 +85,27 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
     JavaLibrary baseLibrary = (JavaLibrary) graphBuilder.requireRule(unflavored);
 
     ImmutableSortedSet<SourcePath> sources = baseLibrary.getJavaSrcs();
-    ImmutableSortedSet<SourcePath> classpath =
-        ImmutableSortedSet.copyOf(baseLibrary.getTransitiveClasspaths());
+
+    // Add only those dependencies that contribute to "direct" classpath of base library.
+    // This includes direct deps and exported deps of direct deps.
+    ImmutableSortedSet.Builder<SourcePath> directClasspathBuilder =
+        ImmutableSortedSet.naturalOrder();
+    baseLibrary
+        .getDepsForTransitiveClasspathEntries()
+        .forEach(
+            dep -> {
+              if (dep instanceof JavaLibrary) {
+                directClasspathBuilder.addAll(
+                    JavaLibraryClasspathProvider.getOutputClasspathJars(
+                        (JavaLibrary) dep, Optional.ofNullable(dep.getSourcePathToOutput())));
+              }
+            });
+    // Add exported deps of base lib into classpath (since 2nd argument is empty the result doesn't
+    // include the lib itself).
+    directClasspathBuilder.addAll(
+        JavaLibraryClasspathProvider.getOutputClasspathJars(baseLibrary, Optional.empty()));
+    ImmutableSortedSet<SourcePath> directClasspath = directClasspathBuilder.build();
+
     SourcePath outputJar = baseLibrary.getSourcePathToOutput();
 
     InferPlatform platform =
@@ -99,7 +119,7 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
             platform,
             config.getNullsafeArgs(),
             sources,
-            classpath,
+            directClasspath,
             javacOptions,
             extraClasspathProvider,
             outputJar));

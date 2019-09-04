@@ -15,11 +15,16 @@
  */
 package com.facebook.buck.infer;
 
+import static org.junit.Assert.assertEquals;
+
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
+import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -39,8 +44,9 @@ public class InferJavaIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "several_libraries", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckBuild("//:j#nullsafe");
-    result.assertSuccess();
+    Path output = workspace.buildAndReturnOutput("//:j#nullsafe");
+    JsonNode issues = ObjectMappers.READER.readTree(workspace.getFileContents(output));
+    assertEquals("ERADICATE_RETURN_NOT_NULLABLE", issues.path(0).path("bug_type").asText());
   }
 
   @Test
