@@ -73,6 +73,41 @@
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'zip_srcs' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of zip files whose content to include in the output zip file.
+  <p>
+
+  Note that the order of files in <code>zip_srcs</code> matters because the same zip entry can be
+  included from multiple files. See the <code>on_duplicate_entry</code> argument to learn how to
+  control the behavior when there are multiple entries with the same name.
+
+  The entries from <code>zip_srcs</code> are added before files from <code>srcs</code>.
+
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'on_duplicate_entry' /}
+  {param default : 'overwrite' /}
+  {param desc}
+   Action performed when Buck detects that zip_file input contains multiple entries with the same
+   name.
+
+   <p>The valid values are:
+       <ul>
+         <li><code>overwrite</code> (default): the last entry overwrites all previous entries with
+         the same name.</li>
+         <li><code>append</code>: all entries are added to the output file.</li>
+         <li><code>fail</code>: fail the build when duplicate entries are present.</li>
+       </ul>
+     </p>
+
+  {/param}
+{/call}
+
 {/param} // close args
 
 {param examples}
