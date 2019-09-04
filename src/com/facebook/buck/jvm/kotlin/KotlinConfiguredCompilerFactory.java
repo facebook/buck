@@ -110,4 +110,9 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   public boolean shouldGenerateSourceAbi() {
     return kotlinBuckConfig.getAbiGenerationMode().isSourceAbi();
   }
+
+  @Override
+  public boolean sourceAbiCopiesFromLibraryTargetOutput() {
+    return true;
+  }
 }
