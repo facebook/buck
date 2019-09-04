@@ -24,10 +24,25 @@ public class CommandLineArgStringifier {
   private CommandLineArgStringifier() {}
 
   /**
+   * @param filesystem the filesystem to use to stringify {@link Artifact}s
+   * @param object the object to stringify
    * @return the string representation of an argument to pass to a command line application in an
    *     action
    */
-  public static String asString(ArtifactFilesystem filesystem, Object object)
+  public static String asString(ArtifactFilesystem filesystem, Object object) {
+    return asString(filesystem, true, object);
+  }
+
+  /**
+   * @param filesystem the filesystem to use to stringify {@link Artifact}s
+   * @param absolute If the path returned should be absolute. This can be necessary for functions
+   *     like {@link ProcessBuilder#start()}. On windows it does not do path resolution properly for
+   *     relative paths, even if the {@code directory} is set so an absolute path must be provided.
+   * @param object the object to stringify
+   * @return the string representation of an argument to pass to a command line application in an
+   *     action
+   */
+  public static String asString(ArtifactFilesystem filesystem, boolean absolute, Object object)
       throws CommandLineArgException {
     if (object instanceof String) {
       return (String) object;
@@ -36,7 +51,9 @@ public class CommandLineArgStringifier {
     } else if (object instanceof CommandLineItem) {
       return CommandLineItem.expandToCommandLine(object);
     } else if (object instanceof Artifact) {
-      return filesystem.stringifyForCommandLine((Artifact) object);
+      return absolute
+          ? filesystem.stringifyAbsolute((Artifact) object)
+          : filesystem.stringify((Artifact) object);
     } else {
       throw new CommandLineArgException(object);
     }

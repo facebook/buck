@@ -102,15 +102,22 @@ public class ArtifactFilesystem {
    * @param artifact a bound artifact whose path is requested
    * @return The path to an artifact as a string
    */
-  public String stringifyForCommandLine(Artifact artifact) {
-    /*
-     * We return an absolute path here because sometimes it's required. An example is when the
-     * artifact is a binary at the root of the tree. If you try to just run 'foo.sh' in exec, it
-     * will fail. This is cleaner cluttering the {@link
-     * CommandLineArgStringifier#asString(ArtifactFilesystem)} api that calls this method with "get relative"
-     * or "get absolute", but if it becomes a problem we can refactor that API
-     */
-    return filesystem.resolve(resolveToPath(artifact)).toAbsolutePath().toString();
+  public String stringify(Artifact artifact) {
+    return resolveToPath(artifact).toString();
+  }
+
+  /**
+   * Expand an artifact into a command line argument.
+   *
+   * <p>NOTE: This should not be used just to get a string version of a path. This API may become
+   * more restrictive in the future if necessary. When possible, then non-absolute version of this
+   * function ({@link #stringify(Artifact)} should be used.
+   *
+   * @param artifact a bound artifact whose path is requested
+   * @return The path to an artifact as a string
+   */
+  public String stringifyAbsolute(Artifact artifact) {
+    return filesystem.resolve(resolveToPath(artifact)).toString();
   }
 
   /** Create the package paths that actions will write into if it does not exist */

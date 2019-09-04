@@ -34,14 +34,15 @@ public class CommandLineArgStringifierTest {
     assertEquals(
         "foo",
         CommandLineArgStringifier.asString(
-            new ArtifactFilesystem(new FakeProjectFilesystem()), "foo"));
+            new ArtifactFilesystem(new FakeProjectFilesystem()), false, "foo"));
   }
 
   @Test
   public void convertsIntegerToString() {
     assertEquals(
         "1",
-        CommandLineArgStringifier.asString(new ArtifactFilesystem(new FakeProjectFilesystem()), 1));
+        CommandLineArgStringifier.asString(
+            new ArtifactFilesystem(new FakeProjectFilesystem()), false, 1));
   }
 
   @Test
@@ -50,6 +51,7 @@ public class CommandLineArgStringifierTest {
         "//foo:bar",
         CommandLineArgStringifier.asString(
             new ArtifactFilesystem(new FakeProjectFilesystem()),
+            false,
             Label.parseAbsolute("//foo:bar", ImmutableMap.of())));
   }
 
@@ -58,9 +60,28 @@ public class CommandLineArgStringifierTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Artifact artifact =
         ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("foo", "bar.cpp")));
+    Artifact shortArtifact =
+        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("foo")));
 
     assertEquals(
-        Paths.get("foo", "bar.cpp").toAbsolutePath().toString(),
+        Paths.get("foo", "bar.cpp").toString(),
+        CommandLineArgStringifier.asString(new ArtifactFilesystem(filesystem), false, artifact));
+    assertEquals(
+        Paths.get("foo").toString(),
+        CommandLineArgStringifier.asString(
+            new ArtifactFilesystem(filesystem), false, shortArtifact));
+    assertEquals(
+        filesystem.resolve(Paths.get("foo", "bar.cpp")).toAbsolutePath().toString(),
+        CommandLineArgStringifier.asString(new ArtifactFilesystem(filesystem), true, artifact));
+    assertEquals(
+        filesystem.resolve(Paths.get("foo")).toAbsolutePath().toString(),
+        CommandLineArgStringifier.asString(
+            new ArtifactFilesystem(filesystem), true, shortArtifact));
+    assertEquals(
+        filesystem.resolve(Paths.get("foo", "bar.cpp")).toAbsolutePath().toString(),
         CommandLineArgStringifier.asString(new ArtifactFilesystem(filesystem), artifact));
+    assertEquals(
+        filesystem.resolve(Paths.get("foo")).toAbsolutePath().toString(),
+        CommandLineArgStringifier.asString(new ArtifactFilesystem(filesystem), shortArtifact));
   }
 }

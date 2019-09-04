@@ -105,10 +105,17 @@ public class ArtifactFilesystemTest {
     ArtifactFilesystem artifactFilesystem = new ArtifactFilesystem(filesystem);
     ImmutableSourceArtifactImpl sourceArtifact =
         ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("bar", "baz")));
+    ImmutableSourceArtifactImpl shortArtifact =
+        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("foo")));
 
+    assertEquals(Paths.get("bar", "baz").toString(), artifactFilesystem.stringify(sourceArtifact));
+    assertEquals(Paths.get("foo").toString(), artifactFilesystem.stringify(shortArtifact));
     assertEquals(
-        filesystem.resolve("bar").resolve("baz").toAbsolutePath().toString(),
-        artifactFilesystem.stringifyForCommandLine(sourceArtifact));
+        filesystem.resolve(Paths.get("bar", "baz")).toAbsolutePath().toString(),
+        artifactFilesystem.stringifyAbsolute(sourceArtifact));
+    assertEquals(
+        filesystem.resolve("foo").toAbsolutePath().toString(),
+        artifactFilesystem.stringifyAbsolute(shortArtifact));
   }
 
   @Test

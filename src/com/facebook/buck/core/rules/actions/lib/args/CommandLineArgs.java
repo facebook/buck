@@ -46,7 +46,7 @@ public interface CommandLineArgs extends AddsToRuleKey {
 
   /**
    * @return Get a stream of all raw argument objects that can be stringified with something like
-   *     {@link CommandLineArgStringifier#asString(ArtifactFilesystem, Object)}
+   *     {@link CommandLineArgStringifier#asString(ArtifactFilesystem, boolean, Object)}
    */
   Stream<Object> getArgs();
 
