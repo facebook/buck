@@ -499,6 +499,11 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 new TestCaseSummariesBuildingXctestEventHandler(NOOP_REPORTING_CALLBACK);
             XctestOutputParsing.streamOutput(reader, xctestEventHandler);
             testCaseSummaries = xctestEventHandler.getTestCaseSummaries();
+          } else if (useIdb) {
+            TestCaseSummariesBuildingIdb idbEventHandler =
+                new TestCaseSummariesBuildingIdb(NOOP_REPORTING_CALLBACK);
+            IdbOutputParsing.streamOutputFromReader(reader, idbEventHandler);
+            testCaseSummaries = idbEventHandler.getTestCaseSummaries();
           } else {
             TestCaseSummariesBuildingXctoolEventHandler xctoolEventHandler =
                 new TestCaseSummariesBuildingXctoolEventHandler(NOOP_REPORTING_CALLBACK);

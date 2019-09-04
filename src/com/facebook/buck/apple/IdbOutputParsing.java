@@ -37,6 +37,8 @@ public class IdbOutputParsing {
   /** Callbacks invoked with events emitted by {@code idb}. */
   public interface IdbResultCallback {
     void handleTestResult(ImmutableIdbTestResult result);
+
+    void handleEndOfTests();
   }
 
   /**
@@ -61,6 +63,7 @@ public class IdbOutputParsing {
         resultCallback.handleTestResult(
             ObjectMappers.convertValue(element, ImmutableIdbTestResult.class));
       }
+      resultCallback.handleEndOfTests();
     } catch (IOException e) {
       LOG.warn(e, "Couldn't parse idb JSON stream");
     }
