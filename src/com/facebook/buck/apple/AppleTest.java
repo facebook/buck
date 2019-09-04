@@ -390,6 +390,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               testBundle,
               resolvedTestOutputPath,
               idbStdoutReader,
+              options.getTestSelectorList(),
               stutterTimeout,
               testRuleTimeoutMs,
               logicTestPathsBuilder.build(),

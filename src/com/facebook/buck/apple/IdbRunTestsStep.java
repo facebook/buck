@@ -23,8 +23,11 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.test.selectors.TestDescription;
+import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
@@ -67,11 +70,14 @@ public class IdbRunTestsStep implements Step {
     void readStdout(InputStream stdout) throws IOException;
   }
 
+  private final Path idbPath;
   private final ProjectFilesystem filesystem;
   private final Path outputPath;
   private final Optional<? extends StdoutReadingCallback> stdoutReadingCallback;
+  private final TestSelectorList testSelectorList;
   private final Optional<Long> idbStutterTimeout;
   private final Optional<Long> timeoutInMs;
+  private final String testBundleId;
   private final ImmutableList<String> command;
   private final ImmutableList<String> installCommand;
   private final ImmutableList<String> runCommand;
@@ -81,6 +87,7 @@ public class IdbRunTestsStep implements Step {
       ProjectFilesystem filesystem,
       Path outputPath,
       Optional<? extends StdoutReadingCallback> stdoutReadingCallback,
+      TestSelectorList testSelectorList,
       Optional<Long> idbStutterTimeout,
       Optional<Long> timeoutInMs,
       TestTypeEnum type,
@@ -88,11 +95,14 @@ public class IdbRunTestsStep implements Step {
       Path testBundlePath,
       Optional<Path> appTestBundlePath,
       Optional<Path> testHostAppBundlePath) {
+    this.idbPath = idbPath;
     this.filesystem = filesystem;
     this.outputPath = outputPath;
     this.stdoutReadingCallback = stdoutReadingCallback;
+    this.testSelectorList = testSelectorList;
     this.idbStutterTimeout = idbStutterTimeout;
     this.timeoutInMs = timeoutInMs;
+    this.testBundleId = testBundleId;
     ImmutableList.Builder<String> runCommandBuilder = ImmutableList.builder();
     this.installCommand =
         ImmutableList.of(idbPath.toString(), "xctest", "install", testBundlePath.toString());
@@ -130,6 +140,7 @@ public class IdbRunTestsStep implements Step {
       AppleBundle testBundle,
       Path outputPath,
       Optional<? extends StdoutReadingCallback> stdoutReadingCallback,
+      TestSelectorList testSelectorList,
       Optional<Long> idbStutterTimeout,
       Optional<Long> timeoutInMs,
       Collection<Path> logicTestBundlePaths,
@@ -144,6 +155,7 @@ public class IdbRunTestsStep implements Step {
               filesystem,
               outputPath,
               stdoutReadingCallback,
+              testSelectorList,
               idbStutterTimeout,
               timeoutInMs,
               TestTypeEnum.LOGIC,
@@ -160,6 +172,7 @@ public class IdbRunTestsStep implements Step {
               filesystem,
               outputPath,
               stdoutReadingCallback,
+              testSelectorList,
               idbStutterTimeout,
               timeoutInMs,
               TestTypeEnum.APP,
@@ -178,6 +191,7 @@ public class IdbRunTestsStep implements Step {
                 filesystem,
                 outputPath,
                 stdoutReadingCallback,
+                testSelectorList,
                 idbStutterTimeout,
                 timeoutInMs,
                 TestTypeEnum.UI,
@@ -223,12 +237,36 @@ public class IdbRunTestsStep implements Step {
       return StepExecutionResults.ERROR;
     }
 
-    processExecutorParams =
+    ProcessExecutorParams.Builder processExecutorParamsBuilder =
         ProcessExecutorParams.builder()
             .setCommand(runCommand)
             .setDirectory(filesystem.getRootPath().toAbsolutePath())
-            .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
-            .build();
+            .setRedirectOutput(ProcessBuilder.Redirect.PIPE);
+
+    if (!testSelectorList.isEmpty()) {
+      ImmutableList.Builder<String> idbFilterParamsBuilder = ImmutableList.builder();
+      int returnCode =
+          listAndFilterTestThenFormatIdbParams(
+              context.getProcessExecutor(), testSelectorList, idbFilterParamsBuilder);
+      if (returnCode != 0) {
+        context.getConsole().printErrorText("Failed to query tests with idb");
+        return StepExecutionResult.of(returnCode);
+      }
+      ImmutableList<String> idbFilterParams = idbFilterParamsBuilder.build();
+      if (idbFilterParams.isEmpty()) {
+        context
+            .getConsole()
+            .printBuildFailure(
+                String.format(
+                    Locale.US,
+                    "No tests found matching specified filter (%s)",
+                    testSelectorList.getExplanation()));
+        return StepExecutionResults.SUCCESS;
+      }
+      processExecutorParamsBuilder.addAllCommand(idbFilterParams);
+    }
+
+    processExecutorParams = processExecutorParamsBuilder.build();
 
     // Only launch one instance of idb at the time
     AtomicBoolean stutterLockIsNotified = new AtomicBoolean(false);
@@ -368,6 +406,68 @@ public class IdbRunTestsStep implements Step {
       return 0;
     } else {
       return processExitCode;
+    }
+  }
+
+  private int listAndFilterTestThenFormatIdbParams(
+      ProcessExecutor processExecutor,
+      TestSelectorList testSelectorList,
+      ImmutableList.Builder<String> filterParamsBuilder)
+      throws IOException, InterruptedException {
+    Preconditions.checkArgument(!testSelectorList.isEmpty());
+    LOG.debug("Filtering tests with selector list: %s", testSelectorList.getExplanation());
+
+    // Getting tests from the testBundle
+    ImmutableList<String> command =
+        ImmutableList.of(idbPath.toString(), "xctest", "list-bundle", testBundleId);
+    ProcessExecutorParams processExecutorParams =
+        ProcessExecutorParams.builder().setCommand(command).build();
+    Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
+    ProcessExecutor.Result result =
+        processExecutor.launchAndExecute(
+            processExecutorParams,
+            options,
+            /* stdin */ Optional.empty(),
+            /* timeOutMs */ Optional.empty(),
+            /* timeOutHandler */ Optional.empty());
+    if (result.getExitCode() != 0) {
+      LOG.error("Could not get tests from testBundle");
+      return result.getExitCode();
+    }
+    if (!result.getStdout().isPresent()) {
+      LOG.error("Could not find any tests in the testBundle");
+      return 1;
+    }
+    String[] testsInBundle = result.getStdout().get().split("\n");
+
+    // Checking to see if the selected tests are in the bundle
+    formatIdbTestListAndFilter(testsInBundle, testSelectorList, filterParamsBuilder);
+
+    return result.getExitCode();
+  }
+
+  private void formatIdbTestListAndFilter(
+      String[] testsInBundle,
+      TestSelectorList testSelectorList,
+      ImmutableList.Builder<String> filterParamsBuilder) {
+    StringBuilder sb = new StringBuilder();
+    boolean matched = false;
+    for (String test : testsInBundle) {
+      String[] testName = test.split("/");
+      TestDescription testDescription = new TestDescription(testName[0], testName[1]);
+      if (!testSelectorList.isIncluded(testDescription)) {
+        continue;
+      }
+      if (!matched) {
+        matched = true;
+      } else {
+        sb.append(',');
+      }
+      sb.append(test);
+    }
+    if (matched) {
+      filterParamsBuilder.add("--test-to-run");
+      filterParamsBuilder.add(sb.toString());
     }
   }
 
