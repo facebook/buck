@@ -46,14 +46,18 @@ public class CommandLineArgsFactoryTest {
     artifactFilesystem = new ArtifactFilesystem(filesystem);
   }
 
+  ImmutableList<String> stringify(CommandLineArgs args) {
+    return new ExecCompatibleCommandLineBuilder(artifactFilesystem)
+        .build(args)
+        .getCommandLineArgs();
+  }
+
   @Test
   public void handlesEmptyList() {
     CommandLineArgs args = CommandLineArgsFactory.from(ImmutableList.of());
 
     assertTrue(args instanceof ListCommandLineArgs);
-    assertEquals(
-        ImmutableList.of(),
-        args.getStrings(artifactFilesystem).collect(ImmutableList.toImmutableList()));
+    assertEquals(ImmutableList.of(), stringify(args));
   }
 
   @Test
@@ -67,9 +71,7 @@ public class CommandLineArgsFactoryTest {
                 ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, source))));
 
     assertTrue(args instanceof ListCommandLineArgs);
-    assertEquals(
-        ImmutableList.of("1", "foo", "//foo:bar", filesystem.resolve(source).toString()),
-        args.getStrings(artifactFilesystem).collect(ImmutableList.toImmutableList()));
+    assertEquals(ImmutableList.of("1", "foo", "//foo:bar", source.toString()), stringify(args));
   }
 
   @Test
@@ -83,9 +85,7 @@ public class CommandLineArgsFactoryTest {
                 CommandLineArgsFactory.from(ImmutableList.of("4"))));
 
     assertTrue(args instanceof AggregateCommandLineArgs);
-    assertEquals(
-        ImmutableList.of("1", "2", "3", "4"),
-        args.getStrings(artifactFilesystem).collect(ImmutableList.toImmutableList()));
+    assertEquals(ImmutableList.of("1", "2", "3", "4"), stringify(args));
   }
 
   @Test
@@ -101,9 +101,7 @@ public class CommandLineArgsFactoryTest {
 
     assertTrue(args instanceof AggregateCommandLineArgs);
     assertEquals(
-        ImmutableList.of(
-            "1", "foo", "//foo:bar", filesystem.resolve(source).toString(), "2", "bar"),
-        args.getStrings(artifactFilesystem).collect(ImmutableList.toImmutableList()));
+        ImmutableList.of("1", "foo", "//foo:bar", source.toString(), "2", "bar"), stringify(args));
   }
 
   @Test

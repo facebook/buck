@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.core.rules.actions.lib.args;
 
-import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import java.util.stream.Stream;
@@ -30,20 +29,6 @@ import java.util.stream.Stream;
  * collections.
  */
 public interface CommandLineArgs extends AddsToRuleKey {
-
-  /**
-   * Get a stream of strings that can be used to execute a program, utilizing information that is
-   * only known at action execution time.
-   *
-   * @param filesystem the {@link ArtifactFilesystem} that is required to stringify {@link Artifact}
-   *     objects
-   * @return a stream of stringified command line arguments
-   * @throws CommandLineArgException One of the objects contained in the backing structure was not
-   *     of a valid type to be considered a command line argument. See {@link
-   *     CommandLineArgStringifier}
-   */
-  Stream<String> getStrings(ArtifactFilesystem filesystem) throws CommandLineArgException;
-
   /**
    * @return Get a stream of all raw argument objects that can be stringified with something like
    *     {@link CommandLineArgStringifier#asString(ArtifactFilesystem, boolean, Object)}

@@ -77,11 +77,5 @@ public class CommandLineArgStringifierTest {
         filesystem.resolve(Paths.get("foo")).toAbsolutePath().toString(),
         CommandLineArgStringifier.asString(
             new ArtifactFilesystem(filesystem), true, shortArtifact));
-    assertEquals(
-        filesystem.resolve(Paths.get("foo", "bar.cpp")).toAbsolutePath().toString(),
-        CommandLineArgStringifier.asString(new ArtifactFilesystem(filesystem), artifact));
-    assertEquals(
-        filesystem.resolve(Paths.get("foo")).toAbsolutePath().toString(),
-        CommandLineArgStringifier.asString(new ArtifactFilesystem(filesystem), shortArtifact));
   }
 }

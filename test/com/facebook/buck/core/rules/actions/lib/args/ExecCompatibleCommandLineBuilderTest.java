@@ -46,12 +46,6 @@ public class ExecCompatibleCommandLineBuilderTest {
     CommandLineArgs args1 =
         new CommandLineArgs() {
           @Override
-          public Stream<String> getStrings(ArtifactFilesystem filesystem)
-              throws CommandLineArgException {
-            throw new UnsupportedOperationException();
-          }
-
-          @Override
           public Stream<Object> getArgs() {
             return ImmutableList.of(path1, path2, 1, "foo", "bar").stream();
           }
@@ -64,12 +58,6 @@ public class ExecCompatibleCommandLineBuilderTest {
 
     CommandLineArgs args2 =
         new CommandLineArgs() {
-          @Override
-          public Stream<String> getStrings(ArtifactFilesystem filesystem)
-              throws CommandLineArgException {
-            throw new UnsupportedOperationException();
-          }
-
           @Override
           public Stream<Object> getArgs() {
             return ImmutableList.of(path3, path2, 1, "foo", "bar").stream();
@@ -109,12 +97,6 @@ public class ExecCompatibleCommandLineBuilderTest {
 
     CommandLineArgs args =
         new CommandLineArgs() {
-          @Override
-          public Stream<String> getStrings(ArtifactFilesystem filesystem)
-              throws CommandLineArgException {
-            throw new UnsupportedOperationException();
-          }
-
           @Override
           public Stream<Object> getArgs() {
             return ImmutableList.<Object>of(ImmutableList.of("foo")).stream();

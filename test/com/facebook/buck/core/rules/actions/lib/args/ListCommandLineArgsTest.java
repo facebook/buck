@@ -17,9 +17,13 @@ package com.facebook.buck.core.rules.actions.lib.args;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
+import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -29,11 +33,19 @@ public class ListCommandLineArgsTest {
 
   @Test
   public void returnsProperStreamAndSize() {
-    CommandLineArgs args = new ListCommandLineArgs(ImmutableList.of(1, "foo"));
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Artifact path1 =
+        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
+    Artifact path2 =
+        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));
+    CommandLineArgs args = new ListCommandLineArgs(ImmutableList.of(path1, 1, "foo", path2));
+
     assertEquals(
-        ImmutableList.of("1", "foo"),
-        args.getStrings(new ArtifactFilesystem(new FakeProjectFilesystem()))
-            .collect(ImmutableList.toImmutableList()));
-    assertEquals(2, args.getEstimatedArgsCount());
+        ImmutableList.of(
+            filesystem.resolve("some_bin").toAbsolutePath().toString(), "1", "foo", "other_file"),
+        new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(filesystem))
+            .build(args)
+            .getCommandLineArgs());
+    assertEquals(4, args.getEstimatedArgsCount());
   }
 }

@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.core.rules.actions.lib.args;
 
-import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.google.common.collect.ImmutableList;
 import java.util.stream.Stream;
 
@@ -30,11 +29,6 @@ class AggregateCommandLineArgs implements CommandLineArgs {
 
   AggregateCommandLineArgs(ImmutableList<CommandLineArgs> args) {
     this.args = args;
-  }
-
-  @Override
-  public Stream<String> getStrings(ArtifactFilesystem filesystem) throws CommandLineArgException {
-    return args.stream().flatMap(arg -> arg.getStrings(filesystem));
   }
 
   @Override

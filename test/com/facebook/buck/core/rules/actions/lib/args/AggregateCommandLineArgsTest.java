@@ -17,25 +17,42 @@ package com.facebook.buck.core.rules.actions.lib.args;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
+import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Paths;
 import org.junit.Test;
 
 public class AggregateCommandLineArgsTest {
 
   @Test
   public void returnsProperStreamAndArgCount() {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Artifact path1 =
+        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
+    Artifact path2 =
+        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));
+
     CommandLineArgs args =
         new AggregateCommandLineArgs(
             ImmutableList.of(
-                CommandLineArgsFactory.from(ImmutableList.of(1)),
+                CommandLineArgsFactory.from(ImmutableList.of(path1)),
+                CommandLineArgsFactory.from(ImmutableList.of(path2, 1)),
                 CommandLineArgsFactory.from(ImmutableList.of("foo", "bar"))));
 
     assertEquals(
-        ImmutableList.of("1", "foo", "bar"),
-        args.getStrings(new ArtifactFilesystem(new FakeProjectFilesystem()))
-            .collect(ImmutableList.toImmutableList()));
-    assertEquals(3, args.getEstimatedArgsCount());
+        ImmutableList.of(
+            filesystem.resolve("some_bin").toAbsolutePath().toString(),
+            "other_file",
+            "1",
+            "foo",
+            "bar"),
+        new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(filesystem))
+            .build(args)
+            .getCommandLineArgs());
+    assertEquals(5, args.getEstimatedArgsCount());
   }
 }

@@ -18,6 +18,8 @@ package com.facebook.buck.core.starlark.rule.args;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
+import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
+import com.facebook.buck.core.rules.actions.lib.args.ExecCompatibleCommandLineBuilder;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -33,30 +35,35 @@ public class SkylarkRuleContextArgsTest {
 
   @Test
   public void addAddsArg() throws EvalException, LabelSyntaxException {
-    CommandLineArgsBuilder args = new CommandLineArgsBuilder();
-
-    assertEquals(
-        ImmutableList.of("1", "--foo", "//foo:bar"),
-        args.add(1, Runtime.UNBOUND, Location.BUILTIN)
+    CommandLineArgs args =
+        new CommandLineArgsBuilder()
+            .add(1, Runtime.UNBOUND, Location.BUILTIN)
             .add("--foo", Label.parseAbsolute("//foo:bar", ImmutableMap.of()), Location.BUILTIN)
-            .build()
-            .getStrings(new ArtifactFilesystem(new FakeProjectFilesystem()))
-            .collect(ImmutableList.toImmutableList()));
+            .build();
+    ImmutableList<String> stringified =
+        new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(new FakeProjectFilesystem()))
+            .build(args)
+            .getCommandLineArgs();
+
+    assertEquals(ImmutableList.of("1", "--foo", "//foo:bar"), stringified);
   }
 
   @Test
   public void addAllAddsArgs() throws EvalException, LabelSyntaxException {
-    CommandLineArgsBuilder args = new CommandLineArgsBuilder();
-
-    assertEquals(
-        ImmutableList.of("1", "--foo", "//foo:bar"),
-        args.addAll(
+    CommandLineArgs args =
+        new CommandLineArgsBuilder()
+            .addAll(
                 SkylarkList.createImmutable(
                     ImmutableList.of(
                         1, "--foo", Label.parseAbsolute("//foo:bar", ImmutableMap.of()))),
                 Location.BUILTIN)
-            .build()
-            .getStrings(new ArtifactFilesystem(new FakeProjectFilesystem()))
-            .collect(ImmutableList.toImmutableList()));
+            .build();
+
+    ImmutableList<String> stringified =
+        new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(new FakeProjectFilesystem()))
+            .build(args)
+            .getCommandLineArgs();
+
+    assertEquals(ImmutableList.of("1", "--foo", "//foo:bar"), stringified);
   }
 }
