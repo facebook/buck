@@ -93,12 +93,22 @@ public class TestCommandIntegrationTest {
 
   @Test
   public void testHtmlCodeCoverage() throws Exception {
+    workspace.enableDirCache();
     try (PropertySaver saver = new PropertySaver(getCodeCoverageProperties())) {
       ProcessResult result =
           workspace.runBuckCommand(
               "test", "--code-coverage", "--code-coverage-format", "HTML", "//test:simple_test");
-
       result.assertSuccess();
+
+      // Ensure we can still find artifacts for coverage when fetched from cache.
+      // We need:
+      // * The actual jar files for rules under test(not just the abis)
+      // * Any generated/materialized sources that went into those rules
+      workspace.runBuckCommand("clean", "--keep-cache");
+      workspace
+          .runBuckCommand(
+              "test", "--code-coverage", "--code-coverage-format", "HTML", "//test:simple_test")
+          .assertSuccess();
     }
 
     assertTrue(Files.exists(workspace.getPath(CODE_COVERAGE_SUBPATH).resolve("index.html")));
@@ -115,12 +125,12 @@ public class TestCommandIntegrationTest {
 
       result.assertSuccess();
     }
-
     assertTrue(Files.exists(workspace.getPath(CODE_COVERAGE_SUBPATH).resolve("coverage.xml")));
   }
 
   @Test
   public void testCodeCoverageFindsNonClasspathSources() throws Exception {
+    workspace.enableDirCache();
     try (PropertySaver saver = new PropertySaver(getCodeCoverageProperties())) {
       ProcessResult result =
           workspace.runBuckCommand(
@@ -130,11 +140,22 @@ public class TestCommandIntegrationTest {
               "CSV",
               "//test:wider_classpath_coverage_test");
       result.assertSuccess();
-    }
 
-    Path coverageOutput = workspace.getPath(CODE_COVERAGE_SUBPATH).resolve("coverage.csv");
-    // This file would not exist if no srcs were found
-    assertTrue(Files.exists(coverageOutput));
+      Path coverageOutput = workspace.getPath(CODE_COVERAGE_SUBPATH).resolve("coverage.csv");
+      // This file would not exist if no srcs were found
+      assertTrue(Files.exists(coverageOutput));
+
+      // Now ensure that when build results are cached, we still materialize the non-classpath deps
+      workspace.runBuckCommand("clean", "--keep-cache");
+      workspace
+          .runBuckCommand(
+              "test",
+              "--code-coverage",
+              "--code-coverage-format",
+              "CSV",
+              "//test:wider_classpath_coverage_test")
+          .assertSuccess();
+    }
   }
 
   @Test

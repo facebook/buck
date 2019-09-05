@@ -45,6 +45,7 @@ import com.facebook.buck.core.test.rule.ExternalTestSpec;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ImmutableTargetNodePredicateSpec;
@@ -557,6 +558,21 @@ public class TestCommand extends BuildCommand {
                 params.getBuckConfig(), targetGraphCreationResult.getBuildTargets(), testRules);
       }
 
+      ImmutableSet<BuildRule> rulesToMaterializeForAnalysis = ImmutableSet.of();
+      if (isCodeCoverageEnabled) {
+        // Ensure that the libraries that we want to inspect after the build are built/fetched.
+        // This requires that the rules under test are materialized as well as any generated srcs
+        // that they use
+        BuildRuleResolver ruleResolver = actionGraphAndBuilder.getActionGraphBuilder();
+        ImmutableSet<JavaLibrary> rulesUnderTest = TestRunning.getRulesUnderTest(testRules);
+        rulesToMaterializeForAnalysis =
+            RichStream.from(rulesUnderTest)
+                .flatMap(
+                    lib -> RichStream.from(ruleResolver.filterBuildRuleInputs(lib.getJavaSrcs())))
+                .concat(RichStream.from(rulesUnderTest))
+                .collect(ImmutableSet.toImmutableSet());
+      }
+
       CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
           params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
       try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
@@ -625,6 +641,8 @@ public class TestCommand extends BuildCommand {
                   .flatMap(
                       rule -> rule.getRuntimeDeps(actionGraphAndBuilder.getActionGraphBuilder()))
                   .concat(RichStream.from(testRules).map(TestRule::getBuildTarget))
+                  .concat(
+                      RichStream.from(rulesToMaterializeForAnalysis).map(BuildRule::getBuildTarget))
                   .toImmutableList();
           ExitCode exitCode =
               build.executeAndPrintFailuresToEventBus(
