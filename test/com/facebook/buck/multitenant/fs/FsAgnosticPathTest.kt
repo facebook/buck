@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.multitenant.fs
 
+import com.facebook.buck.util.json.ObjectMappers
 import org.hamcrest.Matchers
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -218,5 +219,20 @@ class FsAgnosticPathTest {
     fun nameFileBelowRoot() {
         assertEquals(FsAgnosticPath.of("bar"), FsAgnosticPath.of("foo/bar").name())
         assertEquals(FsAgnosticPath.of("baz"), FsAgnosticPath.of("foo/bar/baz").name())
+    }
+
+    @Test
+    fun canSerializeToJsonAsString() {
+        val path = FsAgnosticPath.of("bar/baz")
+        val data = ObjectMappers.WRITER.writeValueAsString(path)
+        assertEquals("\"bar/baz\"", data)
+    }
+
+    @Test
+    fun canDeserializeFromJsonString() {
+        val data = "\"bar/baz\""
+        val path =
+            ObjectMappers.READER.forType(FsAgnosticPath::class.java).readValue<FsAgnosticPath>(data)
+        assertEquals(FsAgnosticPath.of("bar/baz"), path)
     }
 }

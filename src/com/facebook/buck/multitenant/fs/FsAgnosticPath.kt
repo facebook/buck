@@ -16,6 +16,11 @@
 package com.facebook.buck.multitenant.fs
 
 import com.facebook.buck.io.pathformat.PathFormatter
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import java.nio.file.Path
@@ -31,6 +36,8 @@ private val PATH_CACHE: Cache<String, FsAgnosticPath> = CacheBuilder.newBuilder(
  *
  * Note this is not a `data class` because the `copy()` method would expose the private constructor.
  */
+@JsonSerialize(using = ToStringSerializer::class)
+@JsonDeserialize(using = FsAgnosticPathDeserializer::class)
 class FsAgnosticPath private constructor(private val path: String) : Comparable<FsAgnosticPath> {
     companion object {
         /**
@@ -157,5 +164,12 @@ private fun verifyPath(path: String) {
         if (component == "..") {
             throw IllegalArgumentException("'$path' contained illegal path component: '..'")
         }
+    }
+}
+
+class FsAgnosticPathDeserializer :
+    FromStringDeserializer<FsAgnosticPath>(FsAgnosticPath::class.java) {
+    override fun _deserialize(value: String, ctxt: DeserializationContext): FsAgnosticPath {
+        return FsAgnosticPath.of(value)
     }
 }
