@@ -55,7 +55,6 @@ public class ZipFileDescription
         args.getOut(),
         args.getSrcs(),
         zipSources,
-        args.getFlatten(),
         args.getEntriesToExclude(),
         args.getOnDuplicateEntry());
   }
@@ -71,11 +70,6 @@ public class ZipFileDescription
     @Value.Default
     default String getOut() {
       return getName() + ".zip";
-    }
-
-    @Value.Default
-    default boolean getFlatten() {
-      return false;
     }
 
     ImmutableSet<SourcePath> getSrcs();

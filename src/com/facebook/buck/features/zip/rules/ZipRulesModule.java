@@ -17,11 +17,7 @@
 package com.facebook.buck.features.zip.rules;
 
 import com.facebook.buck.core.module.BuckModule;
-import com.facebook.buck.features.filebundler.FileBundlerModule;
 
 /** A modules that provides `zip_rule` build rule. */
-@BuckModule(
-    dependencies = {
-      FileBundlerModule.class,
-    })
+@BuckModule
 public class ZipRulesModule {}

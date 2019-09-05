@@ -102,23 +102,6 @@ public class ZipRuleIntegrationTest {
   }
 
   @Test
-  public void shouldFlattenZipsIfRequested() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-flatten", tmp);
-    workspace.setUp();
-    // Warm the cache
-    Path zip = workspace.buildAndReturnOutput("//example:flatten");
-
-    try (ZipFile zipFile = new ZipFile(zip.toFile())) {
-      ZipArchiveEntry cake = zipFile.getEntry("cake.txt");
-      assertThat(cake, Matchers.notNullValue());
-
-      ZipArchiveEntry beans = zipFile.getEntry("beans.txt");
-      assertThat(beans, Matchers.notNullValue());
-    }
-  }
-
-  @Test
   public void shouldNotMergeSourceJarsIfRequested() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "zip-merge", tmp);

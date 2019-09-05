@@ -23,9 +23,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.features.filebundler.CopyingFileBundler;
-import com.facebook.buck.features.filebundler.FileBundler;
-import com.facebook.buck.features.filebundler.ZipFileExtractor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
@@ -33,14 +30,10 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.PatternsMatcher;
-import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.util.zip.collect.OnDuplicateEntry;
-import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 
@@ -49,7 +42,6 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
   @AddToRuleKey private final ImmutableSet<SourcePath> sources;
   @AddToRuleKey private final ImmutableList<SourcePath> zipSources;
   @AddToRuleKey private final OutputPath output;
-  @AddToRuleKey private final boolean flatten;
   @AddToRuleKey private final ImmutableSet<Pattern> entriesToExclude;
   @AddToRuleKey private final OnDuplicateEntry onDuplicateEntry;
 
@@ -60,7 +52,6 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
       String outputName,
       ImmutableSet<SourcePath> sources,
       ImmutableList<SourcePath> zipSources,
-      boolean flatten,
       ImmutableSet<Pattern> entriesToExclude,
       OnDuplicateEntry onDuplicateEntry) {
     super(buildTarget, projectFilesystem, ruleFinder, Zip.class);
@@ -69,7 +60,6 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
     this.sources = sources;
     this.zipSources = zipSources;
     this.output = new OutputPath(name);
-    this.flatten = flatten;
     this.entriesToExclude = entriesToExclude;
     this.onDuplicateEntry = onDuplicateEntry;
   }
@@ -82,71 +72,20 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
       BuildCellRelativePathFactory buildCellPathFactory) {
     Path outputPath = outputPathResolver.resolvePath(this.output);
 
-    if (flatten) {
-      return createLegacySteps(
-          buildContext, filesystem, outputPathResolver, buildCellPathFactory, outputPath);
-    } else {
-      SourcePathResolver sourcePathResolver = buildContext.getSourcePathResolver();
-      ImmutableMap<Path, Path> entryPathToAbsolutePathMap =
-          sourcePathResolver.createRelativeMap(
-              filesystem.resolve(getBuildTarget().getBasePath()), sources);
-      return ImmutableList.of(
-          new CopyToZipStep(
-              filesystem,
-              outputPath,
-              entryPathToAbsolutePathMap,
-              zipSources.stream()
-                  .map(sourcePathResolver::getAbsolutePath)
-                  .collect(ImmutableList.toImmutableList()),
-              entriesToExclude,
-              onDuplicateEntry));
-    }
-  }
-
-  private ImmutableList<Step> createLegacySteps(
-      BuildContext buildContext,
-      ProjectFilesystem filesystem,
-      OutputPathResolver outputPathResolver,
-      BuildCellRelativePathFactory buildCellPathFactory,
-      Path outputPath) {
-
-    ImmutableList.Builder<Step> steps = ImmutableList.builder();
-
-    PatternsMatcher excludedEntriesMatcher = new PatternsMatcher(entriesToExclude);
-    Path scratchDir = outputPathResolver.getTempPath();
-    FileBundler bundler;
-    if (!zipSources.isEmpty()) {
-      steps.addAll(
-          ZipFileExtractor.extractZipFiles(
-              filesystem,
-              scratchDir,
-              zipSources,
-              buildContext.getSourcePathResolver(),
-              excludedEntriesMatcher));
-      bundler = new CopyingFileBundler(filesystem, getBuildTarget());
-    } else {
-      bundler = new CopyingFileBundler(filesystem, getBuildTarget());
-    }
-
-    bundler.copy(
-        filesystem,
-        buildCellPathFactory,
-        steps,
-        scratchDir,
-        sources,
-        buildContext.getSourcePathResolver(),
-        excludedEntriesMatcher);
-
-    steps.add(
-        new ZipStep(
+    SourcePathResolver sourcePathResolver = buildContext.getSourcePathResolver();
+    ImmutableMap<Path, Path> entryPathToAbsolutePathMap =
+        sourcePathResolver.createRelativeMap(
+            filesystem.resolve(getBuildTarget().getBasePath()), sources);
+    return ImmutableList.of(
+        new CopyToZipStep(
             filesystem,
             outputPath,
-            ImmutableSortedSet.of(),
-            flatten,
-            ZipCompressionLevel.DEFAULT,
-            scratchDir));
-
-    return steps.build();
+            entryPathToAbsolutePathMap,
+            zipSources.stream()
+                .map(sourcePathResolver::getAbsolutePath)
+                .collect(ImmutableList.toImmutableList()),
+            entriesToExclude,
+            onDuplicateEntry));
   }
 
   @Override
