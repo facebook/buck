@@ -833,7 +833,7 @@ public class ProjectGenerator {
     ImmutableSet<AppleWrapperResourceArg> filteredWrapperResources =
         Sets.difference(allWrapperResources, coreDataResources).immutableCopy();
 
-    PBXNativeTarget target =
+    BinaryTargetGenerationResult result =
         generateBinaryTarget(
             project,
             Optional.of(targetNode),
@@ -855,6 +855,11 @@ public class ProjectGenerator {
             filteredWrapperResources,
             coreDataResources,
             bundleLoaderNode);
+
+    PBXNativeTarget target = result.target;
+    for (BuildTarget dependency : result.getDependencies()) {
+      addPBXTargetDependency(target, dependency);
+    }
 
     if (bundleLoaderNode.isPresent()) {
       LOG.debug(
@@ -947,7 +952,7 @@ public class ProjectGenerator {
   private PBXNativeTarget generateAppleBinaryTarget(
       PBXProject project, TargetNode<AppleNativeTargetDescriptionArg> targetNode)
       throws IOException {
-    PBXNativeTarget target =
+    BinaryTargetGenerationResult result =
         generateBinaryTarget(
             project,
             Optional.empty(),
@@ -963,6 +968,12 @@ public class ProjectGenerator {
             ImmutableSet.of(),
             ImmutableSet.of(),
             Optional.empty());
+
+    PBXNativeTarget target = result.getTarget();
+    for (BuildTarget dependency : result.getDependencies()) {
+      addPBXTargetDependency(target, dependency);
+    }
+
     LOG.debug(
         "Generated Apple binary target %s", targetNode.getBuildTarget().getFullyQualifiedName());
     return target;
@@ -996,7 +1007,7 @@ public class ProjectGenerator {
         targetNode.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR);
 
     ProductType productType = isShared ? ProductTypes.DYNAMIC_LIBRARY : ProductTypes.STATIC_LIBRARY;
-    PBXNativeTarget target =
+    BinaryTargetGenerationResult result =
         generateBinaryTarget(
             project,
             Optional.empty(),
@@ -1012,6 +1023,12 @@ public class ProjectGenerator {
             ImmutableSet.of(),
             ImmutableSet.of(),
             bundleLoaderNode);
+
+    PBXNativeTarget target = result.getTarget();
+    for (BuildTarget dependency : result.getDependencies()) {
+      addPBXTargetDependency(target, dependency);
+    }
+
     LOG.debug(
         "Generated Cxx library target %s", targetNode.getBuildTarget().getFullyQualifiedName());
     return target;
@@ -1248,7 +1265,26 @@ public class ProjectGenerator {
         parsed.build());
   }
 
-  private PBXNativeTarget generateBinaryTarget(
+  private static class BinaryTargetGenerationResult {
+    private final PBXNativeTarget target;
+    private final ImmutableList<BuildTarget> dependencies;
+
+    public BinaryTargetGenerationResult(
+        PBXNativeTarget target, ImmutableList<BuildTarget> dependencies) {
+      this.target = target;
+      this.dependencies = dependencies;
+    }
+
+    public PBXNativeTarget getTarget() {
+      return target;
+    }
+
+    public ImmutableList<BuildTarget> getDependencies() {
+      return dependencies;
+    }
+  }
+
+  private BinaryTargetGenerationResult generateBinaryTarget(
       PBXProject project,
       Optional<? extends TargetNode<? extends HasAppleBundleFields>> bundle,
       TargetNode<? extends CommonArg> targetNode,
@@ -1473,6 +1509,7 @@ public class ProjectGenerator {
             xcodeNativeTargetAttributesBuilder.build(), project);
 
     PBXNativeTarget target = targetBuilderResult.target;
+    ImmutableList.Builder<BuildTarget> dependencies = ImmutableList.builder();
 
     extraSettingsBuilder.putAll(swiftDepsSettingsBuilder.build());
 
@@ -1495,10 +1532,14 @@ public class ProjectGenerator {
       // build them properly within the IDE.  It is unable to match the implicit dependency because
       // of the different in flavor between the targets (iphoneos vs watchos).
       if (bundle.isPresent()) {
-        collectProjectTargetWatchDependencies(
-            targetNode.getBuildTarget().getFlavorPostfix(),
-            target,
-            targetGraph.getAll(bundle.get().getExtraDeps()));
+        for (TargetNode<?> watchTargetNode : targetGraph.getAll(bundle.get().getExtraDeps())) {
+          String targetNodeFlavorPostfix = watchTargetNode.getBuildTarget().getFlavorPostfix();
+          if (targetNodeFlavorPostfix.startsWith("#watch")
+              && !targetNodeFlavorPostfix.equals(targetNode.getBuildTarget().getFlavorPostfix())
+              && watchTargetNode.getDescription() instanceof AppleBundleDescription) {
+            dependencies.add(watchTargetNode.getBuildTarget());
+          }
+        }
       }
 
       // -- configurations
@@ -1509,7 +1550,7 @@ public class ProjectGenerator {
         if (bundleLoaderNode.isPresent()) {
           BuildTarget testTarget = bundleLoaderNode.get().getBuildTarget();
           extraSettingsBuilder.put("TEST_TARGET_NAME", getXcodeTargetName(testTarget));
-          addPBXTargetDependency(target, testTarget);
+          dependencies.add(testTarget);
         } else {
           throw new HumanReadableException(
               "The test rule '%s' is configured with 'is_ui_test' but has no test_host_app",
@@ -1580,7 +1621,7 @@ public class ProjectGenerator {
             .put("BUNDLE_LOADER", bundleLoaderOutputPathConditional)
             .put("TEST_HOST", "$(BUNDLE_LOADER)");
 
-        addPBXTargetDependency(target, bundleLoader.getBuildTarget());
+        dependencies.add(bundleLoader.getBuildTarget());
       }
       if (infoPlistOptional.isPresent()) {
         Path infoPlistPath = pathRelativizer.outputDirToRootRelative(infoPlistOptional.get());
@@ -1931,7 +1972,7 @@ public class ProjectGenerator {
       addEntitlementsPlistIntoTarget(bundle.get());
     }
 
-    return target;
+    return new BinaryTargetGenerationResult(target, dependencies.build());
   }
 
   /** Generate a mapping from libraries to the framework bundles that include them. */
@@ -2765,18 +2806,6 @@ public class ProjectGenerator {
         new ProjectFileWriter(
             xcodeProjectWriteOptions.project(), this.pathRelativizer, this::resolveSourcePath);
     return projectFileWriter.writeFilePath(xcconfigPath, Optional.empty()).getFileReference();
-  }
-
-  private void collectProjectTargetWatchDependencies(
-      String targetFlavorPostfix, PBXNativeTarget target, Iterable<TargetNode<?>> targetNodes) {
-    for (TargetNode<?> targetNode : targetNodes) {
-      String targetNodeFlavorPostfix = targetNode.getBuildTarget().getFlavorPostfix();
-      if (targetNodeFlavorPostfix.startsWith("#watch")
-          && !targetNodeFlavorPostfix.equals(targetFlavorPostfix)
-          && targetNode.getDescription() instanceof AppleBundleDescription) {
-        addPBXTargetDependency(target, targetNode.getBuildTarget());
-      }
-    }
   }
 
   /** Adds the set of headers defined by headerVisibility to the merged header maps. */
