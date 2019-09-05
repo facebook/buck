@@ -80,7 +80,7 @@ import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 
-public class NewNativeTargetProjectMutatorTest {
+public class XcodeNativeTargetProjectWriterTest {
   private PBXProject generatedProject;
   private PathRelativizer pathRelativizer;
   private SourcePathResolver sourcePathResolver;

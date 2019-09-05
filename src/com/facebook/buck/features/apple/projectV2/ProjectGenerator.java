@@ -663,16 +663,18 @@ public class ProjectGenerator {
     PBXShellScriptBuildPhase scriptPhase = new PBXShellScriptBuildPhase();
     scriptPhase.setShellScript(script.orElse(""));
 
-    NewNativeTargetProjectMutator mutator =
-        new NewNativeTargetProjectMutator(
-            pathRelativizer, this::resolveSourcePath, buildTarget, appleConfig);
+    XCodeNativeTargetAttributes.Builder xcodeNativeTargetAttributesBuilder =
+        XCodeNativeTargetAttributes.builder().setTarget(buildTarget).setAppleConfig(appleConfig);
 
-    mutator
+    xcodeNativeTargetAttributesBuilder
         .setTargetName(getXcodeTargetName(buildTarget))
-        .setProduct(ProductTypes.STATIC_LIBRARY, productName, outputPath);
+        .setProduct(new XcodeProductMetadata(ProductTypes.STATIC_LIBRARY, productName, outputPath));
 
-    NewNativeTargetProjectMutator.Result targetBuilderResult;
-    targetBuilderResult = mutator.buildTargetAndAddToProject(project);
+    XcodeNativeTargetProjectWriter nativeTargetProjectWriter =
+        new XcodeNativeTargetProjectWriter(this.pathRelativizer, this::resolveSourcePath);
+    XcodeNativeTargetProjectWriter.Result targetBuilderResult =
+        nativeTargetProjectWriter.writeTargetToProject(
+            xcodeNativeTargetAttributesBuilder.build(), project);
 
     BuildTarget compilerTarget =
         HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget);
@@ -1271,9 +1273,8 @@ public class ProjectGenerator {
 
     String buildTargetName = getProductNameForBuildTargetNode(buildTargetNode);
     CommonArg arg = targetNode.getConstructorArg();
-    NewNativeTargetProjectMutator mutator =
-        new NewNativeTargetProjectMutator(
-            pathRelativizer, this::resolveSourcePath, buildTarget, appleConfig);
+    XCodeNativeTargetAttributes.Builder xcodeNativeTargetAttributesBuilder =
+        XCodeNativeTargetAttributes.builder().setTarget(buildTarget).setAppleConfig(appleConfig);
 
     // Both exported headers and exported platform headers will be put into the symlink tree
     // exported platform headers will be excluded and then included by platform
@@ -1301,15 +1302,16 @@ public class ProjectGenerator {
       swiftVersion = swiftBuckConfig.getVersion();
     }
 
-    mutator
+    xcodeNativeTargetAttributesBuilder
         .setTargetName(getXcodeTargetName(buildTarget))
         .setProduct(
-            productType,
-            buildTargetName,
-            Paths.get(String.format(productOutputFormat, buildTargetName)));
+            new XcodeProductMetadata(
+                productType,
+                buildTargetName,
+                Paths.get(String.format(productOutputFormat, buildTargetName))));
 
     boolean isModularAppleLibrary = isModularAppleLibrary(targetNode);
-    mutator.setFrameworkHeadersEnabled(isModularAppleLibrary);
+    xcodeNativeTargetAttributesBuilder.setFrameworkHeadersEnabled(isModularAppleLibrary);
 
     Builder<String, String> swiftDepsSettingsBuilder = ImmutableMap.builder();
     ImmutableList.Builder<String> swiftDebugLinkerFlagsBuilder = ImmutableList.builder();
@@ -1374,7 +1376,7 @@ public class ProjectGenerator {
     if (!options.shouldGenerateHeaderSymlinkTreesOnly()) {
       filesAddedBuilder.addAll(
           allSrcs.stream().map(s -> s.getSourcePath()).collect(ImmutableList.toImmutableList()));
-      mutator
+      xcodeNativeTargetAttributesBuilder
           .setLangPreprocessorFlags(
               ImmutableMap.copyOf(
                   Maps.transformValues(
@@ -1391,17 +1393,17 @@ public class ProjectGenerator {
 
       if (bundle.isPresent()) {
         HasAppleBundleFields bundleArg = bundle.get().getConstructorArg();
-        mutator.setInfoPlist(Optional.of(bundleArg.getInfoPlist()));
+        xcodeNativeTargetAttributesBuilder.setInfoPlist(Optional.of(bundleArg.getInfoPlist()));
       }
 
-      mutator.setBridgingHeader(arg.getBridgingHeader());
+      xcodeNativeTargetAttributesBuilder.setBridgingHeader(arg.getBridgingHeader());
 
       if (!recursiveAssetCatalogs.isEmpty()) {
-        mutator.setRecursiveAssetCatalogs(recursiveAssetCatalogs);
+        xcodeNativeTargetAttributesBuilder.setRecursiveAssetCatalogs(recursiveAssetCatalogs);
       }
 
       if (!directAssetCatalogs.isEmpty()) {
-        mutator.setDirectAssetCatalogs(directAssetCatalogs);
+        xcodeNativeTargetAttributesBuilder.setDirectAssetCatalogs(directAssetCatalogs);
       }
 
       FluentIterable<TargetNode<?>> depTargetNodes = collectRecursiveLibraryDepTargets(targetNode);
@@ -1448,7 +1450,7 @@ public class ProjectGenerator {
     if (!options.shouldGenerateHeaderSymlinkTreesOnly()) {
       // Assume the BUCK file path is at the the base path of this target
       Path buckFilePath = buildTarget.getBasePath().resolve(buildFileName);
-      mutator.setBuckFilePath(Optional.of(buckFilePath));
+      xcodeNativeTargetAttributesBuilder.setBuckFilePath(Optional.of(buckFilePath));
     }
 
     Optional<TargetNode<AppleNativeTargetDescriptionArg>> appleTargetNode =
@@ -1461,11 +1463,15 @@ public class ProjectGenerator {
         coreDataFileBuilder.add(
             CoreDataResource.fromResourceArgs(appleWrapperResourceArg, projectFilesystem));
       }
-      mutator.setCoreDataResources(coreDataFileBuilder.build());
+      xcodeNativeTargetAttributesBuilder.setCoreDataResources(coreDataFileBuilder.build());
     }
 
-    NewNativeTargetProjectMutator.Result targetBuilderResult =
-        mutator.buildTargetAndAddToProject(project);
+    XcodeNativeTargetProjectWriter nativeTargetProjectWriter =
+        new XcodeNativeTargetProjectWriter(pathRelativizer, this::resolveSourcePath);
+    XcodeNativeTargetProjectWriter.Result targetBuilderResult =
+        nativeTargetProjectWriter.writeTargetToProject(
+            xcodeNativeTargetAttributesBuilder.build(), project);
+
     PBXNativeTarget target = targetBuilderResult.target;
 
     extraSettingsBuilder.putAll(swiftDepsSettingsBuilder.build());

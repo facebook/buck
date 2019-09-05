@@ -21,7 +21,6 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
 import com.facebook.buck.apple.AppleBundleDestination;
-import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleHeaderVisibilities;
 import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.AppleWrapperResourceArg;
@@ -55,7 +54,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -68,8 +66,8 @@ import java.util.stream.Collectors;
  * Configures a PBXProject by adding a PBXNativeTarget and its associated dependencies into a
  * PBXProject object graph.
  */
-class NewNativeTargetProjectMutator {
-  private static final Logger LOG = Logger.get(NewNativeTargetProjectMutator.class);
+class XcodeNativeTargetProjectWriter {
+  private static final Logger LOG = Logger.get(XcodeNativeTargetProjectWriter.class);
 
   public static class Result {
     public final PBXNativeTarget target;
@@ -81,167 +79,18 @@ class NewNativeTargetProjectMutator {
     }
   }
 
-  private final BuildTarget target;
-  private final Path shell;
-  private final Path buildScriptPath;
   private final PathRelativizer pathRelativizer;
   private final Function<SourcePath, Path> sourcePathResolver;
 
-  private ProductType productType = ProductTypes.BUNDLE;
-  private Path productOutputPath = Paths.get("");
-  private String productName = "";
-  private String targetName = "";
-  private boolean frameworkHeadersEnabled = false;
-  private ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags =
-      ImmutableMap.of();
-  private ImmutableSet<SourceWithFlags> sourcesWithFlags = ImmutableSet.of();
-  private ImmutableSet<SourcePath> extraXcodeSources = ImmutableSet.of();
-  private ImmutableSet<SourcePath> extraXcodeFiles = ImmutableSet.of();
-  private ImmutableSet<SourcePath> publicHeaders = ImmutableSet.of();
-  private ImmutableSet<SourcePath> privateHeaders = ImmutableSet.of();
-  private ImmutableList<CoreDataResource> coreDataResources = ImmutableList.of();
-  private Optional<SourcePath> prefixHeader = Optional.empty();
-  private Optional<SourcePath> infoPlist = Optional.empty();
-  private Optional<SourcePath> bridgingHeader = Optional.empty();
-  private Optional<Path> buckFilePath = Optional.empty();
-  private ImmutableSet<AppleResourceDescriptionArg> recursiveResources = ImmutableSet.of();
-  private ImmutableSet<AppleResourceDescriptionArg> directResources = ImmutableSet.of();
-  private ImmutableSet<AppleAssetCatalogDescriptionArg> recursiveAssetCatalogs = ImmutableSet.of();
-  private ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs = ImmutableSet.of();
-  private ImmutableSet<AppleWrapperResourceArg> wrapperResources = ImmutableSet.of();
-
-  public NewNativeTargetProjectMutator(
-      PathRelativizer pathRelativizer,
-      Function<SourcePath, Path> sourcePathResolver,
-      BuildTarget target,
-      AppleConfig appleConfig) {
-    this.target = target;
-    this.shell = appleConfig.shellPath();
-    this.buildScriptPath = appleConfig.buildScriptPath();
-
+  public XcodeNativeTargetProjectWriter(
+      PathRelativizer pathRelativizer, Function<SourcePath, Path> sourcePathResolver) {
     this.pathRelativizer = pathRelativizer;
     this.sourcePathResolver = sourcePathResolver;
   }
 
-  /**
-   * Set product related configuration.
-   *
-   * @param productType declared product type
-   * @param productName product display name
-   * @param productOutputPath build output relative product path.
-   */
-  public NewNativeTargetProjectMutator setProduct(
-      ProductType productType, String productName, Path productOutputPath) {
-    this.productName = productName;
-    this.productType = productType;
-    this.productOutputPath = productOutputPath;
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setTargetName(String targetName) {
-    this.targetName = targetName;
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setFrameworkHeadersEnabled(boolean enabled) {
-    this.frameworkHeadersEnabled = enabled;
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setLangPreprocessorFlags(
-      ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
-    this.langPreprocessorFlags = langPreprocessorFlags;
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setSourcesWithFlags(Set<SourceWithFlags> sourcesWithFlags) {
-    this.sourcesWithFlags = ImmutableSet.copyOf(sourcesWithFlags);
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setExtraXcodeSources(Set<SourcePath> extraXcodeSources) {
-    this.extraXcodeSources = ImmutableSet.copyOf(extraXcodeSources);
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setExtraXcodeFiles(Set<SourcePath> extraXcodeFiles) {
-    this.extraXcodeFiles = ImmutableSet.copyOf(extraXcodeFiles);
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setPublicHeaders(Set<SourcePath> publicHeaders) {
-    this.publicHeaders = ImmutableSet.copyOf(publicHeaders);
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setPrivateHeaders(Set<SourcePath> privateHeaders) {
-    this.privateHeaders = ImmutableSet.copyOf(privateHeaders);
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setPrefixHeader(Optional<SourcePath> prefixHeader) {
-    this.prefixHeader = prefixHeader;
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setInfoPlist(Optional<SourcePath> infoPlist) {
-    this.infoPlist = infoPlist;
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setBridgingHeader(Optional<SourcePath> bridgingHeader) {
-    this.bridgingHeader = bridgingHeader;
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setRecursiveResources(
-      Set<AppleResourceDescriptionArg> recursiveResources) {
-    this.recursiveResources = ImmutableSet.copyOf(recursiveResources);
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setDirectResources(
-      ImmutableSet<AppleResourceDescriptionArg> directResources) {
-    this.directResources = directResources;
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setWrapperResources(
-      ImmutableSet<AppleWrapperResourceArg> wrapperResources) {
-    this.wrapperResources = wrapperResources;
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setBuckFilePath(Optional<Path> buckFilePath) {
-    this.buckFilePath = buckFilePath;
-    return this;
-  }
-
-  public NewNativeTargetProjectMutator setCoreDataResources(
-      ImmutableList<CoreDataResource> coreDataResources) {
-    this.coreDataResources = coreDataResources;
-    return this;
-  }
-
-  /**
-   * @param recursiveAssetCatalogs List of asset catalog targets of targetNode and dependencies of
-   *     targetNode.
-   */
-  public NewNativeTargetProjectMutator setRecursiveAssetCatalogs(
-      Set<AppleAssetCatalogDescriptionArg> recursiveAssetCatalogs) {
-    this.recursiveAssetCatalogs = ImmutableSet.copyOf(recursiveAssetCatalogs);
-    return this;
-  }
-
-  /** @param directAssetCatalogs List of asset catalog targets targetNode directly depends on */
-  public NewNativeTargetProjectMutator setDirectAssetCatalogs(
-      Set<AppleAssetCatalogDescriptionArg> directAssetCatalogs) {
-    this.directAssetCatalogs = ImmutableSet.copyOf(directAssetCatalogs);
-    return this;
-  }
-
-  public Result buildTargetAndAddToProject(PBXProject project) {
-    PBXNativeTarget nativeTarget = new PBXNativeTarget(targetName);
+  public Result writeTargetToProject(
+      XCodeNativeTargetAttributes targetAttributes, PBXProject project) {
+    PBXNativeTarget nativeTarget = new PBXNativeTarget(targetAttributes.targetName());
     ProjectFileWriter projectFileWriter =
         new ProjectFileWriter(project, pathRelativizer, sourcePathResolver);
 
@@ -249,11 +98,20 @@ class NewNativeTargetProjectMutator {
     PBXHeadersBuildPhase headersBuildPhase = new PBXHeadersBuildPhase();
 
     // Phases
-    addPhasesAndGroupsForSources(projectFileWriter, sourcesBuildPhase, headersBuildPhase);
-    addResourcesFileReference(projectFileWriter);
-    addCopyResourcesToNonStdDestinations(projectFileWriter);
-    addResourcesBuildPhase(projectFileWriter);
-    addCoreDataModelBuildPhaseToProject(project, sourcesBuildPhase);
+    addPhasesAndGroupsForSources(
+        targetAttributes, projectFileWriter, sourcesBuildPhase, headersBuildPhase);
+    addResourcesFileReference(
+        targetAttributes.directResources(),
+        targetAttributes.directAssetCatalogs(),
+        projectFileWriter);
+    addCopyResourcesToNonStdDestinations(targetAttributes.recursiveResources(), projectFileWriter);
+    addResourcesBuildPhase(
+        targetAttributes.recursiveResources(),
+        targetAttributes.recursiveAssetCatalogs(),
+        targetAttributes.wrapperResources(),
+        projectFileWriter);
+    addCoreDataModelBuildPhaseToProject(
+        targetAttributes.coreDataResources(), project, sourcesBuildPhase);
 
     // Source files must be compiled in order to be indexed.
     if (!sourcesBuildPhase.getFiles().isEmpty()) {
@@ -273,10 +131,14 @@ class NewNativeTargetProjectMutator {
             ProductTypes.UI_TEST,
             ProductTypes.APP_EXTENSION,
             ProductTypes.WATCH_APPLICATION)
-        .contains(productType)) {
+        .contains(targetAttributes.product().getType())) {
       nativeTarget.getBuildPhases().clear();
     }
-    addBuckBuildPhase(nativeTarget);
+    addBuckBuildPhase(
+        targetAttributes.target(),
+        targetAttributes.shell(),
+        targetAttributes.buildScriptPath(),
+        nativeTarget);
 
     PBXGroup targetGroup = project.getMainGroup();
 
@@ -286,16 +148,19 @@ class NewNativeTargetProjectMutator {
     PBXFileReference productReference =
         productsGroup.getOrCreateFileReferenceBySourceTreePath(
             new SourceTreePath(
-                PBXReference.SourceTree.BUILT_PRODUCTS_DIR, productOutputPath, Optional.empty()));
-    nativeTarget.setProductName(productName);
+                PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+                targetAttributes.product().getOutputPath(),
+                Optional.empty()));
+    nativeTarget.setProductName(targetAttributes.product().getName());
     nativeTarget.setProductReference(productReference);
-    nativeTarget.setProductType(productType);
+    nativeTarget.setProductType(targetAttributes.product().getType());
 
     project.getTargets().add(nativeTarget);
     return new Result(nativeTarget, targetGroup);
   }
 
   private void addPhasesAndGroupsForSources(
+      XCodeNativeTargetAttributes targetAttributes,
       ProjectFileWriter projectFileWriter,
       PBXSourcesBuildPhase sourcesBuildPhase,
       PBXHeadersBuildPhase headersBuildPhase) {
@@ -303,26 +168,33 @@ class NewNativeTargetProjectMutator {
         projectFileWriter,
         sourcesBuildPhase,
         headersBuildPhase,
+        targetAttributes.langPreprocessorFlags(),
+        targetAttributes.frameworkHeadersEnabled(),
+        targetAttributes.product().getType(),
         RuleUtils.createGroupsFromSourcePaths(
             pathRelativizer::outputPathToSourcePath,
-            sourcesWithFlags,
-            extraXcodeSources,
-            extraXcodeFiles,
-            publicHeaders,
-            privateHeaders));
+            targetAttributes.sourcesWithFlags(),
+            targetAttributes.extraXcodeSources(),
+            targetAttributes.extraXcodeFiles(),
+            targetAttributes.publicHeaders(),
+            targetAttributes.privateHeaders()));
 
+    Optional<SourcePath> prefixHeader = targetAttributes.prefixHeader();
     if (prefixHeader.isPresent()) {
       projectFileWriter.writeSourcePath(prefixHeader.get());
     }
 
+    Optional<SourcePath> infoPlist = targetAttributes.infoPlist();
     if (infoPlist.isPresent()) {
       projectFileWriter.writeSourcePath(infoPlist.get());
     }
 
+    Optional<SourcePath> bridgingHeader = targetAttributes.bridgingHeader();
     if (bridgingHeader.isPresent()) {
       projectFileWriter.writeSourcePath(bridgingHeader.get());
     }
 
+    Optional<Path> buckFilePath = targetAttributes.buckFilePath();
     if (buckFilePath.isPresent()) {
       PBXFileReference buckFileReference =
           projectFileWriter.writeFilePath(buckFilePath.get(), Optional.empty()).getFileReference();
@@ -334,6 +206,9 @@ class NewNativeTargetProjectMutator {
       ProjectFileWriter projectFileWriter,
       PBXSourcesBuildPhase sourcesBuildPhase,
       PBXHeadersBuildPhase headersBuildPhase,
+      ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags,
+      boolean frameworkHeadersEnabled,
+      ProductType productType,
       Iterable<GroupedSource> groupedSources) {
     GroupedSource.Visitor visitor =
         new GroupedSource.Visitor() {
@@ -341,7 +216,8 @@ class NewNativeTargetProjectMutator {
           public void visitSourceWithFlags(SourceWithFlags sourceWithFlags) {
             ProjectFileWriter.Result result =
                 projectFileWriter.writeSourcePath(sourceWithFlags.getSourcePath());
-            addFileReferenceToSourcesBuildPhase(result, sourceWithFlags, sourcesBuildPhase);
+            addFileReferenceToSourcesBuildPhase(
+                result, sourceWithFlags, sourcesBuildPhase, langPreprocessorFlags);
           }
 
           @Override
@@ -354,7 +230,11 @@ class NewNativeTargetProjectMutator {
             PBXFileReference fileReference =
                 projectFileWriter.writeSourcePath(publicHeader).getFileReference();
             addFileReferenceToHeadersBuildPhase(
-                fileReference, headersBuildPhase, HeaderVisibility.PUBLIC);
+                fileReference,
+                headersBuildPhase,
+                HeaderVisibility.PUBLIC,
+                frameworkHeadersEnabled,
+                productType);
           }
 
           @Override
@@ -362,7 +242,11 @@ class NewNativeTargetProjectMutator {
             PBXFileReference fileReference =
                 projectFileWriter.writeSourcePath(privateHeader).getFileReference();
             addFileReferenceToHeadersBuildPhase(
-                fileReference, headersBuildPhase, HeaderVisibility.PRIVATE);
+                fileReference,
+                headersBuildPhase,
+                HeaderVisibility.PRIVATE,
+                frameworkHeadersEnabled,
+                productType);
           }
 
           @Override
@@ -371,7 +255,13 @@ class NewNativeTargetProjectMutator {
               Path sourceGroupPathRelativeToTarget,
               List<GroupedSource> sourceGroup) {
             traverseGroupsTreeAndHandleSources(
-                projectFileWriter, sourcesBuildPhase, headersBuildPhase, sourceGroup);
+                projectFileWriter,
+                sourcesBuildPhase,
+                headersBuildPhase,
+                langPreprocessorFlags,
+                frameworkHeadersEnabled,
+                productType,
+                sourceGroup);
           }
         };
     for (GroupedSource groupedSource : groupedSources) {
@@ -382,7 +272,8 @@ class NewNativeTargetProjectMutator {
   private void addFileReferenceToSourcesBuildPhase(
       ProjectFileWriter.Result result,
       SourceWithFlags sourceWithFlags,
-      PBXSourcesBuildPhase sourcesBuildPhase) {
+      PBXSourcesBuildPhase sourcesBuildPhase,
+      ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
     PBXFileReference fileReference = result.getFileReference();
     SourceTreePath sourceTreePath = result.getSourceTreePath();
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
@@ -411,13 +302,15 @@ class NewNativeTargetProjectMutator {
   private void addFileReferenceToHeadersBuildPhase(
       PBXFileReference fileReference,
       PBXHeadersBuildPhase headersBuildPhase,
-      HeaderVisibility visibility) {
+      HeaderVisibility visibility,
+      boolean frameworkHeadersEnabled,
+      ProductType productType) {
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
     if (visibility != HeaderVisibility.PRIVATE) {
 
-      if (this.frameworkHeadersEnabled
-          && (this.productType == ProductTypes.FRAMEWORK
-              || this.productType == ProductTypes.STATIC_FRAMEWORK)) {
+      if (frameworkHeadersEnabled
+          && (productType == ProductTypes.FRAMEWORK
+              || productType == ProductTypes.STATIC_FRAMEWORK)) {
         headersBuildPhase.getFiles().add(buildFile);
       }
 
@@ -431,7 +324,10 @@ class NewNativeTargetProjectMutator {
     }
   }
 
-  private void addResourcesFileReference(ProjectFileWriter projectFileWriter) {
+  private void addResourcesFileReference(
+      ImmutableSet<AppleResourceDescriptionArg> directResources,
+      ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs,
+      ProjectFileWriter projectFileWriter) {
     ImmutableSet.Builder<Path> resourceFiles = ImmutableSet.builder();
     ImmutableSet.Builder<Path> resourceDirs = ImmutableSet.builder();
     ImmutableSet.Builder<Path> variantResourceFiles = ImmutableSet.builder();
@@ -451,7 +347,9 @@ class NewNativeTargetProjectMutator {
         variantResourceFiles.build());
   }
 
-  private void addCopyResourcesToNonStdDestinations(ProjectFileWriter projectFileWriter) {
+  private void addCopyResourcesToNonStdDestinations(
+      ImmutableSet<AppleResourceDescriptionArg> recursiveResources,
+      ProjectFileWriter projectFileWriter) {
     List<AppleBundleDestination> allNonStandardDestinations =
         recursiveResources.stream()
             .map(AppleResourceDescriptionArg::getDestination)
@@ -462,12 +360,14 @@ class NewNativeTargetProjectMutator {
             .sorted(Comparator.naturalOrder())
             .collect(Collectors.toList());
     for (AppleBundleDestination destination : allNonStandardDestinations) {
-      addCopyResourcesToNonStdDestination(projectFileWriter, destination);
+      addCopyResourcesToNonStdDestination(recursiveResources, projectFileWriter, destination);
     }
   }
 
   private void addCopyResourcesToNonStdDestination(
-      ProjectFileWriter projectFileWriter, AppleBundleDestination destination) {
+      ImmutableSet<AppleResourceDescriptionArg> recursiveResources,
+      ProjectFileWriter projectFileWriter,
+      AppleBundleDestination destination) {
     Set<AppleResourceDescriptionArg> resourceDescriptionArgsForDestination =
         recursiveResources.stream()
             .filter(
@@ -478,7 +378,11 @@ class NewNativeTargetProjectMutator {
         projectFileWriter, resourceDescriptionArgsForDestination, new HashSet<>(), new HashSet<>());
   }
 
-  private void addResourcesBuildPhase(ProjectFileWriter projectFileWriter) {
+  private void addResourcesBuildPhase(
+      ImmutableSet<AppleResourceDescriptionArg> recursiveResources,
+      ImmutableSet<AppleAssetCatalogDescriptionArg> recursiveAssetCatalogs,
+      ImmutableSet<AppleWrapperResourceArg> wrapperResources,
+      ProjectFileWriter projectFileWriter) {
     Set<AppleResourceDescriptionArg> standardDestinationResources =
         recursiveResources.stream()
             .filter(
@@ -571,7 +475,8 @@ class NewNativeTargetProjectMutator {
    *
    * @param nativeTarget PBXNativeTarget to which to add the buck build phase.
    */
-  private void addBuckBuildPhase(PBXNativeTarget nativeTarget) {
+  private void addBuckBuildPhase(
+      BuildTarget target, Path shell, Path buildScriptPath, PBXNativeTarget nativeTarget) {
     PBXShellScriptBuildPhase buckBuildPhase = new PBXShellScriptBuildPhase();
     buckBuildPhase.setName(Optional.of("Buck Build"));
     buckBuildPhase.setShellPath(shell.toString());
@@ -590,7 +495,9 @@ class NewNativeTargetProjectMutator {
   }
 
   private void addCoreDataModelBuildPhaseToProject(
-      PBXProject project, PBXSourcesBuildPhase sourcesBuildPhase) {
+      ImmutableList<CoreDataResource> coreDataResources,
+      PBXProject project,
+      PBXSourcesBuildPhase sourcesBuildPhase) {
     for (CoreDataResource dataFile : coreDataResources) {
       // Core data models go in the resources group also.
       PBXGroup coreDataModelGroup;

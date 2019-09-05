@@ -51,7 +51,7 @@ import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 
-public class NewNativeTargetProjectMutatorTest {
+public class XcodeNativeTargetProjectWriterTest {
   private BuildTarget buildTarget;
   private AppleConfig appleConfig;
   private PBXProject generatedProject;
@@ -73,31 +73,42 @@ public class NewNativeTargetProjectMutatorTest {
 
   @Test
   public void shouldCreateTarget() throws NoSuchBuildTargetException {
-    NewNativeTargetProjectMutator mutator =
-        new NewNativeTargetProjectMutator(
-            pathRelativizer, sourcePathResolver::getRelativePath, buildTarget, appleConfig);
-    mutator
-        .setTargetName("TestTarget")
-        .setProduct(ProductTypes.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"))
-        .buildTargetAndAddToProject(generatedProject);
+    XCodeNativeTargetAttributes nativeTargetAttributes =
+        XCodeNativeTargetAttributes.builder()
+            .setTarget(buildTarget)
+            .setAppleConfig(appleConfig)
+            .setTargetName("TestTarget")
+            .setProduct(
+                new XcodeProductMetadata(
+                    ProductTypes.BUNDLE,
+                    "TestTargetProduct",
+                    Paths.get("TestTargetProduct.bundle")))
+            .build();
+
+    XcodeNativeTargetProjectWriter projectWriter =
+        new XcodeNativeTargetProjectWriter(pathRelativizer, sourcePathResolver::getRelativePath);
+    projectWriter.writeTargetToProject(nativeTargetAttributes, generatedProject);
 
     assertTargetExistsAndReturnTarget(generatedProject, "TestTarget");
   }
 
   @Test
   public void testSourceGroups() throws NoSuchBuildTargetException {
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
-
     SourcePath foo = FakeSourcePath.of("Group1/foo.m");
     SourcePath bar = FakeSourcePath.of("Group1/bar.m");
     SourcePath baz = FakeSourcePath.of("Group2/baz.m");
-    mutator.setSourcesWithFlags(
-        ImmutableSet.of(
-            SourceWithFlags.of(foo),
-            SourceWithFlags.of(bar, ImmutableList.of("-Wall")),
-            SourceWithFlags.of(baz)));
-    NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject);
+    XCodeNativeTargetAttributes nativeTargetAttributes =
+        builderWithCommonDefaults()
+            .setSourcesWithFlags(
+                ImmutableSet.of(
+                    SourceWithFlags.of(foo),
+                    SourceWithFlags.of(bar, ImmutableList.of("-Wall")),
+                    SourceWithFlags.of(baz)))
+            .build();
+    XcodeNativeTargetProjectWriter projectWriter =
+        new XcodeNativeTargetProjectWriter(pathRelativizer, sourcePathResolver::getRelativePath);
+    XcodeNativeTargetProjectWriter.Result result =
+        projectWriter.writeTargetToProject(nativeTargetAttributes, generatedProject);
 
     PBXGroup sourcesGroup = result.targetGroup;
 
@@ -116,15 +127,20 @@ public class NewNativeTargetProjectMutatorTest {
 
   @Test
   public void testLibraryHeaderGroups() throws NoSuchBuildTargetException {
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
-
     SourcePath foo = FakeSourcePath.of("HeaderGroup1/foo.h");
     SourcePath bar = FakeSourcePath.of("HeaderGroup1/bar.h");
     SourcePath baz = FakeSourcePath.of("HeaderGroup2/baz.h");
-    mutator.setPublicHeaders(ImmutableSet.of(bar, baz));
-    mutator.setPrivateHeaders(ImmutableSet.of(foo));
-    NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject);
+
+    XCodeNativeTargetAttributes targetAttributes =
+        builderWithCommonDefaults()
+            .setPublicHeaders(ImmutableSet.of(bar, baz))
+            .setPrivateHeaders(ImmutableSet.of(foo))
+            .build();
+
+    XcodeNativeTargetProjectWriter projectWriter =
+        new XcodeNativeTargetProjectWriter(pathRelativizer, sourcePathResolver::getRelativePath);
+    XcodeNativeTargetProjectWriter.Result result =
+        projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
     PBXGroup sourcesGroup = result.targetGroup;
 
@@ -144,12 +160,15 @@ public class NewNativeTargetProjectMutatorTest {
 
   @Test
   public void testPrefixHeaderInCorrectGroup() throws NoSuchBuildTargetException {
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
     SourcePath prefixHeader = FakeSourcePath.of("Group1/prefix.pch");
-    mutator.setPrefixHeader(Optional.of(prefixHeader));
 
-    NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject);
+    XCodeNativeTargetAttributes targetAttributes =
+        builderWithCommonDefaults().setPrefixHeader(Optional.of(prefixHeader)).build();
+
+    XcodeNativeTargetProjectWriter projectWriter =
+        new XcodeNativeTargetProjectWriter(pathRelativizer, sourcePathResolver::getRelativePath);
+    XcodeNativeTargetProjectWriter.Result result =
+        projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
     PBXGroup group1 = PBXTestUtils.assertHasSubgroupAndReturnIt(result.targetGroup, "Group1");
     PBXFileReference fileRef = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
@@ -158,11 +177,16 @@ public class NewNativeTargetProjectMutatorTest {
 
   @Test
   public void testBuckFileAddedInCorrectGroup() throws NoSuchBuildTargetException {
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
-    mutator.setBuckFilePath(Optional.of(Paths.get("MyApp/MyLib/BUCK")));
+    XCodeNativeTargetAttributes targetAttributes =
+        builderWithCommonDefaults()
+            .setBuckFilePath(Optional.of(Paths.get("MyApp/MyLib/BUCK")))
+            .build();
 
-    NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject);
+    XcodeNativeTargetProjectWriter projectWriter =
+        new XcodeNativeTargetProjectWriter(pathRelativizer, sourcePathResolver::getRelativePath);
+    XcodeNativeTargetProjectWriter.Result result =
+        projectWriter.writeTargetToProject(targetAttributes, generatedProject);
+
     PBXGroup myAppGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(result.targetGroup, "MyApp");
     PBXGroup filesGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(myAppGroup, "MyLib");
     PBXFileReference buckFileReference =
@@ -172,14 +196,21 @@ public class NewNativeTargetProjectMutatorTest {
 
   @Test
   public void testTargetHasBuildScriptPhase() {
-    NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
-    mutator.setProduct(
-        ProductTypes.APPLICATION,
-        buildTarget.getShortName(),
-        Paths.get(buildTarget.getShortName()));
+    XCodeNativeTargetAttributes targetAttributes =
+        XCodeNativeTargetAttributes.builder()
+            .setTarget(buildTarget)
+            .setAppleConfig(appleConfig)
+            .setProduct(
+                new XcodeProductMetadata(
+                    ProductTypes.APPLICATION,
+                    buildTarget.getShortName(),
+                    Paths.get(buildTarget.getShortName())))
+            .build();
 
-    NewNativeTargetProjectMutator.Result result =
-        mutator.buildTargetAndAddToProject(generatedProject);
+    XcodeNativeTargetProjectWriter projectWriter =
+        new XcodeNativeTargetProjectWriter(pathRelativizer, sourcePathResolver::getRelativePath);
+    XcodeNativeTargetProjectWriter.Result result =
+        projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
     PBXShellScriptBuildPhase phase =
         getSingleBuildPhaseOfType(result.target, PBXShellScriptBuildPhase.class);
@@ -190,24 +221,13 @@ public class NewNativeTargetProjectMutatorTest {
         is(equalTo("cd $SOURCE_ROOT/.. && ./build_script.sh")));
   }
 
-  private NewNativeTargetProjectMutator mutatorWithCommonDefaults() {
-    return mutator(sourcePathResolver, pathRelativizer);
-  }
-
-  private NewNativeTargetProjectMutator mutator(SourcePathResolver pathResolver) {
-    return mutator(
-        pathResolver, new PathRelativizer(Paths.get("_output"), pathResolver::getRelativePath));
-  }
-
-  private NewNativeTargetProjectMutator mutator(
-      SourcePathResolver pathResolver, PathRelativizer relativizer) {
-    NewNativeTargetProjectMutator mutator =
-        new NewNativeTargetProjectMutator(
-            relativizer, pathResolver::getRelativePath, buildTarget, appleConfig);
-    mutator
+  private XCodeNativeTargetAttributes.Builder builderWithCommonDefaults() {
+    return XCodeNativeTargetAttributes.builder()
+        .setTarget(buildTarget)
+        .setAppleConfig(appleConfig)
         .setTargetName("TestTarget")
         .setProduct(
-            ProductTypes.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"));
-    return mutator;
+            new XcodeProductMetadata(
+                ProductTypes.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle")));
   }
 }
