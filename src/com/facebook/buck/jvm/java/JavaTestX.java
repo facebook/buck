@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -36,13 +37,18 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -66,7 +72,10 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSet<String> contacts;
 
   private final ImmutableMap<String, Arg> specs;
+
   private final ExplicitBuildTargetSourcePath classPathOutput;
+
+  private final ExplicitBuildTargetSourcePath classPathFileOutput;
 
   public JavaTestX(
       BuildTarget buildTarget,
@@ -88,6 +97,10 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.classPathOutput =
         ExplicitBuildTargetSourcePath.of(
             buildTarget, BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve("classname"));
+    this.classPathFileOutput =
+        ExplicitBuildTargetSourcePath.of(
+            buildTarget,
+            BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve("classpath-file"));
   }
 
   @Override
@@ -106,13 +119,17 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
         getProjectFilesystem(), getBuildTarget(), "__java_test_%s_output__");
   }
 
+  private Path getClassPathFile() {
+    return this.classPathFileOutput.getResolvedPath();
+  }
+
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
+      BuildContext buildContext, BuildableContext buildableContext) {
     return ImmutableList.of(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
+                buildContext.getBuildCellRootPath(),
                 getProjectFilesystem(),
                 classPathOutput.getResolvedPath().getParent())),
         new WriteFileStep(
@@ -123,7 +140,17 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     new CompiledClassFileFinder(compiledTestsLibrary, sourcePathResolver)
                         .getClassNamesForSources()),
             classPathOutput.getResolvedPath(),
-            false));
+            false),
+        new AbstractExecutionStep("write classpath file") {
+          @Override
+          public StepExecutionResult execute(ExecutionContext context) throws IOException {
+            ImmutableSet<Path> classpathEntries = getRuntimeClasspath(buildContext);
+            getProjectFilesystem()
+                .writeLinesToPath(
+                    Iterables.transform(classpathEntries, Object::toString), getClassPathFile());
+            return StepExecutionResults.SUCCESS;
+          }
+        });
   }
 
   @Nullable
@@ -150,6 +177,20 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .map(BuildRule::getBuildTarget);
   }
 
+  /**
+   * @return a set of paths to the files which must be passed as the classpath to the java process
+   *     when this test is executed
+   */
+  protected ImmutableSet<Path> getRuntimeClasspath(BuildContext buildContext) {
+    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+    return builder
+        .addAll(
+            compiledTestsLibrary.getTransitiveClasspaths().stream()
+                .map(buildContext.getSourcePathResolver()::getAbsolutePath)
+                .collect(ImmutableSet.toImmutableSet()))
+        .build();
+  }
+
   @Override
   public ImmutableMap<String, String> getSpecs() {
     return ImmutableMap.copyOf(
@@ -164,6 +205,9 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
     if (name.equals("classnames")) {
       return classPathOutput;
+    }
+    if (name.equals("classpath-file")) {
+      return classPathFileOutput;
     }
     return null;
   }
