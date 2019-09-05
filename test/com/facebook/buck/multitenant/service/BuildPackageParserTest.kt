@@ -20,11 +20,11 @@ import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import io.mockk.every
 import io.mockk.slot
 import io.mockk.spyk
+import java.nio.file.Path
+import java.nio.file.Paths
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.nio.file.Path
-import java.nio.file.Paths
 
 class BuildPackageParserTest {
     @Test fun canParseOutputOfBuck() {
@@ -36,7 +36,35 @@ class BuildPackageParserTest {
 
         // Mock private function that calls buck with just writing a json to provided file
         every { parser["execBuck"](capture(patternsSlot), capture(outputFile)) } answers {
-            outputFile.captured.toFile().writeText("""
+            outputFile.captured.toFile().writeText(getData())
+        }
+
+        val packages =
+            parser.parsePackages(listOf(FsAgnosticPath.of("foo"), FsAgnosticPath.of("foo/bar")))
+
+        assertEquals(2, packages.size)
+        assertTrue(packages.any { p -> p.buildFileDirectory == FsAgnosticPath.of("foo") })
+        assertTrue(packages.any { p -> p.buildFileDirectory == FsAgnosticPath.of("foo/bar") })
+    }
+
+    @Test fun whenEmptyPackageListIsSpecifiedThenUniverseIsParsed() {
+        val parser = spyk(BuckShellBuildPackageParser(Paths.get("does_not_matter")))
+
+        val patternsSlot = slot<Path>()
+        val outputFile = slot<Path>()
+
+        // Mock private function that calls buck with just writing a json to provided file
+        every { parser["execBuck"](capture(patternsSlot), capture(outputFile)) } answers {
+            assertEquals("//..." + System.lineSeparator(), patternsSlot.captured.toFile().readText())
+            outputFile.captured.toFile().writeText(getData())
+        }
+        val packages = parser.parsePackages(listOf())
+        assertEquals(2, packages.size)
+        assertTrue(packages.any { p -> p.buildFileDirectory == FsAgnosticPath.of("foo") })
+        assertTrue(packages.any { p -> p.buildFileDirectory == FsAgnosticPath.of("foo/bar") })
+    }
+
+    private fun getData() = """
 [{
   "path" : "foo",
   "nodes" : {
@@ -81,15 +109,5 @@ class BuildPackageParserTest {
     }
   }
   }
-]
-            """.trimIndent())
-        }
-
-        val packages =
-            parser.parsePackages(listOf(FsAgnosticPath.of("foo"), FsAgnosticPath.of("foo/bar")))
-
-        assertEquals(2, packages.size)
-        assertTrue(packages.any { p -> p.buildFileDirectory == FsAgnosticPath.of("foo") })
-        assertTrue(packages.any { p -> p.buildFileDirectory == FsAgnosticPath.of("foo/bar") })
-    }
+]""".trimIndent()
 }

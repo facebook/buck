@@ -20,7 +20,6 @@ import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import java.io.BufferedInputStream
 import java.io.FileWriter
 import java.io.PrintWriter
-import java.lang.IllegalStateException
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -28,6 +27,9 @@ import java.nio.file.Path
  * Defines a translation from a path to a package to a parsed package
  */
 interface BuildPackageParser {
+    /**
+     * Parse packages at selected paths. If provided list is empty, parse all known packages in the universe.
+     */
     fun parsePackages(packagePaths: List<FsAgnosticPath>): List<BuildPackage>
 }
 
@@ -41,8 +43,13 @@ class BuckShellBuildPackageParser(private val root: Path) : BuildPackageParser {
         val patternsFilePath = Files.createTempFile("patterns", "")
         try {
             PrintWriter(FileWriter(patternsFilePath.toFile())).use { writer ->
-                // each package path can be represented as `//path/to/package:` pattern specification
-                packagePaths.asSequence().map { path -> "//$path:" }.forEach(writer::println)
+                if (packagePaths.isEmpty()) {
+                    // recursive specification to parse all packages under root
+                    writer.println("//...")
+                } else {
+                    // each package path can be represented as `//path/to/package:` pattern specification
+                    packagePaths.asSequence().map { path -> "//$path:" }.forEach(writer::println)
+                }
             }
 
             val outputFilePath = Files.createTempFile("bucktargets", "json")
@@ -64,7 +71,7 @@ class BuckShellBuildPackageParser(private val root: Path) : BuildPackageParser {
         val builder = ProcessBuilder("buck", "targets", "--show-parse-state",
             "@" + patternsFile.toString()).redirectOutput(outputFile.toFile())
             .directory(root.toFile())
-        builder.environment()["BUCK_EXTRA_JAVA_ARGS"] = "-Xmx24G"
+        builder.environment().putIfAbsent("BUCK_EXTRA_JAVA_ARGS", "-Xmx24G")
         val process = builder.start()
         val exitCode = process.waitFor()
         if (exitCode != 0) {
