@@ -20,11 +20,13 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.TeeInputStream;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.test.selectors.TestDescription;
 import com.facebook.buck.test.selectors.TestSelectorList;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Preconditions;
@@ -243,24 +245,23 @@ public class IdbRunTestsStep implements Step {
             .setDirectory(filesystem.getRootPath().toAbsolutePath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE);
 
+    Console console = context.getConsole();
     if (!testSelectorList.isEmpty()) {
       ImmutableList.Builder<String> idbFilterParamsBuilder = ImmutableList.builder();
       int returnCode =
           listAndFilterTestThenFormatIdbParams(
               context.getProcessExecutor(), testSelectorList, idbFilterParamsBuilder);
       if (returnCode != 0) {
-        context.getConsole().printErrorText("Failed to query tests with idb");
+        console.printErrorText("Failed to query tests with idb");
         return StepExecutionResult.of(returnCode);
       }
       ImmutableList<String> idbFilterParams = idbFilterParamsBuilder.build();
       if (idbFilterParams.isEmpty()) {
-        context
-            .getConsole()
-            .printBuildFailure(
-                String.format(
-                    Locale.US,
-                    "No tests found matching specified filter (%s)",
-                    testSelectorList.getExplanation()));
+        console.printBuildFailure(
+            String.format(
+                Locale.US,
+                "No tests found matching specified filter (%s)",
+                testSelectorList.getExplanation()));
         return StepExecutionResults.SUCCESS;
       }
       processExecutorParamsBuilder.addAllCommand(idbFilterParams);
@@ -279,8 +280,8 @@ public class IdbRunTestsStep implements Step {
       ProcessExecutor.LaunchedProcess launchedProcess =
           context.getProcessExecutor().launchProcess(processExecutorParams);
 
-      int exitCode = -1;
-      String stderr = "Unexpected termination";
+      int exitCode;
+      String stderr;
       try {
         ProcessStdoutReader stdoutReader = new ProcessStdoutReader(launchedProcess);
         ProcessStderrReader stderrReader = new ProcessStderrReader(launchedProcess);
@@ -304,20 +305,21 @@ public class IdbRunTestsStep implements Step {
         context.getProcessExecutor().waitForLaunchedProcess(launchedProcess);
       }
 
-      if (exitCode != 0) {
+      if (exitCode != StepExecutionResults.SUCCESS_EXIT_CODE) {
         if (!stderr.isEmpty()) {
-          context
-              .getConsole()
-              .printErrorText(
-                  String.format(Locale.US, "idb failed with exit code %d: %s", exitCode, stderr));
+          console.printErrorText(
+              String.format(Locale.US, "idb failed with exit code %d: %s", exitCode, stderr));
         } else {
-          context
-              .getConsole()
-              .printErrorText(String.format(Locale.US, "idb failed with exit code %d", exitCode));
+          console.printErrorText(
+              String.format(Locale.US, "idb failed with exit code %d", exitCode));
         }
       }
 
-      return StepExecutionResult.of(exitCode);
+      return ImmutableStepExecutionResult.builder()
+          .setExitCode(exitCode)
+          .setExecutedCommand(launchedProcess.getCommand())
+          .setStderr(Optional.ofNullable(stderr))
+          .build();
 
     } finally {
       releaseStutterLock(stutterLockIsNotified);
