@@ -90,6 +90,7 @@ public class GlobalStateManager {
                     ImmutableList.of(),
                     LogConfigSetup.DEFAULT_SETUP.getLogDir(),
                     false,
+                    "",
                     "")
                 .getLogFilePath());
     putReferenceCountedWriter(DEFAULT_LOG_FILE_WRITER_KEY, defaultWriter);

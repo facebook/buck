@@ -36,6 +36,7 @@ public class FakeInvocationInfoFactory {
         ImmutableList.of(),
         Paths.get(""),
         false,
-        "repository");
+        "repository",
+        /* watchmanVersion */ "");
   }
 }

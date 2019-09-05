@@ -104,6 +104,10 @@ abstract class AbstractInvocationInfo {
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract String getRepository();
 
+  @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract String getWatchmanVersion();
+
   public Path getLogDirectoryPath() {
     return getBuckLogDir().resolve(getLogDirectoryName());
   }

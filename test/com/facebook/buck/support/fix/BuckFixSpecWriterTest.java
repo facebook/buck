@@ -47,7 +47,8 @@ public class BuckFixSpecWriterTest {
             ImmutableList.of("//:target"),
             Paths.get("buck-out", "log"),
             false,
-            "repository");
+            "repository",
+            "");
 
     BuckFixSpecWriter.writeSpecToLogDir(tmp.getRoot(), info, specWithPaths);
 

@@ -51,7 +51,8 @@ public class WatchmanFactory {
           /* projectWatches */ ImmutableMap.of(),
           /* capabilities */ ImmutableSet.of(),
           /* clockIds */ ImmutableMap.of(),
-          /* transportPath */ Optional.empty()) {
+          /* transportPath */ Optional.empty(),
+          /* version */ "") {
         @Override
         public WatchmanClient createClient() throws IOException {
           throw new IOException("NULL_WATCHMAN cannot create a WatchmanClient.");
@@ -220,7 +221,12 @@ public class WatchmanFactory {
       LOG.warn("Could not get version response from Watchman, disabling Watchman");
       return NULL_WATCHMAN;
     }
-
+    Object versionRaw = result.get().get("version");
+    if (!(versionRaw instanceof String)) {
+      LOG.warn("Unexpected version format, disabling Watchman");
+      return NULL_WATCHMAN;
+    }
+    String version = (String) versionRaw;
     ImmutableSet.Builder<Capability> capabilitiesBuilder = ImmutableSet.builder();
     if (!extractCapabilities(result.get(), capabilitiesBuilder)) {
       LOG.warn("Could not extract capabilities, disabling Watchman");
@@ -255,7 +261,11 @@ public class WatchmanFactory {
     }
 
     return new Watchman(
-        projectWatches, capabilities, clockIdsBuilder.build(), Optional.of(transportPath)) {
+        projectWatches,
+        capabilities,
+        clockIdsBuilder.build(),
+        Optional.of(transportPath),
+        version) {
       @Override
       public WatchmanClient createClient() throws IOException {
         return createWatchmanClient(transportPath, console, clock);

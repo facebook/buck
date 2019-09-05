@@ -32,16 +32,19 @@ public abstract class Watchman {
   private final ImmutableSet<Capability> capabilities;
   private final ImmutableMap<String, String> clockIds;
   private final Optional<Path> transportPath;
+  private final String version;
 
   public Watchman(
       ImmutableMap<Path, ProjectWatch> projectWatches,
       ImmutableSet<Capability> capabilities,
       ImmutableMap<String, String> clockIds,
-      Optional<Path> transportPath) {
+      Optional<Path> transportPath,
+      String version) {
     this.projectWatches = projectWatches;
     this.capabilities = capabilities;
     this.clockIds = clockIds;
     this.transportPath = transportPath;
+    this.version = version;
   }
 
   public ImmutableMap<Path, WatchmanCursor> buildClockWatchmanCursorMap() {
@@ -81,6 +84,10 @@ public abstract class Watchman {
 
   public Optional<Path> getTransportPath() {
     return transportPath;
+  }
+
+  public String getVersion() {
+    return version;
   }
 
   /**

@@ -40,7 +40,8 @@ public class FakeWatchmanFactory {
         ImmutableSet.of(
             Capability.SUPPORTS_PROJECT_WATCH, Capability.DIRNAME, Capability.WILDMATCH_GLOB),
         ImmutableMap.of(),
-        Optional.of(Paths.get(".watchman-sock"))) {
+        Optional.of(Paths.get(".watchman-sock")),
+        /* version */ "") {
       @Override
       public WatchmanClient createClient() {
         return client;

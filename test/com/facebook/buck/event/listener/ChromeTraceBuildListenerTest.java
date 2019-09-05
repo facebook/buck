@@ -135,6 +135,7 @@ public class ChromeTraceBuildListenerTest {
             .setCommandArgs(ImmutableList.of("--config", "configvalue", "--foo", "--bar"))
             .setIsRemoteExecution(false)
             .setRepository("repository")
+            .setWatchmanVersion("3.1.0")
             .build();
     durationTracker = new BuildRuleDurationTracker();
     eventBus = new DefaultBuckEventBus(FAKE_CLOCK, BUILD_ID);

@@ -240,7 +240,8 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
               tmp.getRoot(), ProjectWatch.of(tmp.getRoot().toString(), Optional.empty())),
           ImmutableSet.of(),
           ImmutableMap.of(),
-          Optional.of(Paths.get("(MockWatchmanFactory socket)")));
+          Optional.of(Paths.get("(MockWatchmanFactory socket)")),
+          "");
     }
   }
 

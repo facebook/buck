@@ -947,7 +947,8 @@ public final class MainRunner {
               filteredUnexpandedArgsForLogging,
               filesystem.getBuckPaths().getLogDir(),
               isRemoteExecutionBuild,
-              cacheBuckConfig.getRepository());
+              cacheBuckConfig.getRepository(),
+              watchman.getVersion());
 
       RemoteExecutionConfig remoteExecutionConfig = buckConfig.getView(RemoteExecutionConfig.class);
       if (isRemoteExecutionBuild) {
