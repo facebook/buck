@@ -86,9 +86,9 @@ public class BuildTargetTest {
   @Test
   public void testBuildTargetWithFlavor() {
     BuildTarget target =
-        BuildTargetFactory.newInstance(ROOT, "//foo/bar", "baz", InternalFlavor.of("dex"));
-    assertEquals("baz#dex", target.getShortNameAndFlavorPostfix());
-    assertEquals(ImmutableSortedSet.of(InternalFlavor.of("dex")), target.getFlavors());
+        BuildTargetFactory.newInstance(ROOT, "//foo/bar", "baz", InternalFlavor.of("d8"));
+    assertEquals("baz#d8", target.getShortNameAndFlavorPostfix());
+    assertEquals(ImmutableSortedSet.of(InternalFlavor.of("d8")), target.getFlavors());
     assertTrue(target.isFlavored());
   }
 
@@ -113,17 +113,17 @@ public class BuildTargetTest {
   @Test
   public void testShortNameCannotContainHashWhenFlavorSet() {
     try {
-      BuildTargetFactory.newInstance(ROOT, "//foo/bar", "baz#dex", InternalFlavor.of("src-jar"));
+      BuildTargetFactory.newInstance(ROOT, "//foo/bar", "baz#d8", InternalFlavor.of("src-jar"));
       fail("Should have thrown IllegalArgumentException.");
     } catch (IllegalArgumentException e) {
-      assertEquals("Build target name cannot contain '#' but was: baz#dex.", e.getMessage());
+      assertEquals("Build target name cannot contain '#' but was: baz#d8.", e.getMessage());
     }
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testShortNamesMustNotContainTheFlavorSeparator() {
     @SuppressWarnings("unused")
-    BuildTarget unused = BuildTargetFactory.newInstance(ROOT, "//foo/bar", "baz#dex");
+    BuildTarget unused = BuildTargetFactory.newInstance(ROOT, "//foo/bar", "baz#d8");
   }
 
   @Test

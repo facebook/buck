@@ -113,7 +113,13 @@ public class DxStepTest {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
       DxStep dx =
-          new DxStep(filesystem, androidPlatformTarget, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
+          new DxStep(
+              filesystem,
+              androidPlatformTarget,
+              SAMPLE_OUTPUT_PATH,
+              SAMPLE_FILES_TO_DEX,
+              EnumSet.noneOf(DxStep.Option.class),
+              DxStep.DX);
 
       String expected =
           String.format(
@@ -165,7 +171,13 @@ public class DxStepTest {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
       DxStep dx =
-          new DxStep(filesystem, androidPlatformTarget, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
+          new DxStep(
+              filesystem,
+              androidPlatformTarget,
+              SAMPLE_OUTPUT_PATH,
+              SAMPLE_FILES_TO_DEX,
+              EnumSet.noneOf(DxStep.Option.class),
+              DxStep.DX);
 
       String expected =
           String.format(
@@ -193,7 +205,13 @@ public class DxStepTest {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
       DxStep dx =
-          new DxStep(filesystem, androidPlatformTarget, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
+          new DxStep(
+              filesystem,
+              androidPlatformTarget,
+              SAMPLE_OUTPUT_PATH,
+              SAMPLE_FILES_TO_DEX,
+              EnumSet.noneOf(DxStep.Option.class),
+              DxStep.DX);
 
       String expected =
           String.format(

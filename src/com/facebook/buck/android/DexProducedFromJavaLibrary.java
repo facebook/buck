@@ -120,7 +120,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
         ruleFinder,
         androidPlatformTarget,
         javaLibrary,
-        DxStep.DX,
+        DxStep.D8,
         1,
         ImmutableSortedSet.of());
   }
