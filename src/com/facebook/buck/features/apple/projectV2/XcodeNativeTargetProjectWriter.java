@@ -141,6 +141,31 @@ class XcodeNativeTargetProjectWriter {
         targetAttributes.buildScriptPath(),
         nativeTarget);
 
+    targetAttributes
+        .products()
+        .forEach(
+            product ->
+                project
+                    .getMainGroup()
+                    .getOrCreateChildGroupByName("Products")
+                    .getOrCreateFileReferenceBySourceTreePath(product));
+    targetAttributes
+        .frameworks()
+        .forEach(
+            framework ->
+                project
+                    .getMainGroup()
+                    .getOrCreateChildGroupByName("Frameworks")
+                    .getOrCreateFileReferenceBySourceTreePath(framework));
+    targetAttributes
+        .dependencies()
+        .forEach(
+            dep ->
+                project
+                    .getMainGroup()
+                    .getOrCreateChildGroupByName("Dependencies")
+                    .getOrCreateFileReferenceBySourceTreePath(dep));
+
     PBXGroup targetGroup = project.getMainGroup();
 
     // Product

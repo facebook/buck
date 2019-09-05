@@ -51,7 +51,6 @@ import com.facebook.buck.apple.clang.VFSOverlay;
 import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXContainerItemProxy;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
@@ -1455,7 +1454,7 @@ public class ProjectGenerator {
         }
       }
 
-      ImmutableSet<TargetNode<?>> swiftDepTargets =
+      FluentIterable<TargetNode<?>> swiftDepTargets =
           filterRecursiveLibraryDepTargetsWithSwiftSources(depTargetNodes);
 
       if (includeFrameworks
@@ -1731,7 +1730,8 @@ public class ProjectGenerator {
 
       Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
       appendConfigsBuilder.putAll(
-          getFrameworkAndLibrarySearchPathConfigs(targetNode, includeFrameworks));
+          getFrameworkAndLibrarySearchPathConfigs(
+              targetNode, xcodeNativeTargetAttributesBuilder, includeFrameworks));
       appendConfigsBuilder.put(
           "HEADER_SEARCH_PATHS",
           Joiner.on(' ')
@@ -2320,7 +2320,9 @@ public class ProjectGenerator {
   }
 
   private ImmutableMap<String, String> getFrameworkAndLibrarySearchPathConfigs(
-      TargetNode<? extends CommonArg> node, boolean includeFrameworks) {
+      TargetNode<? extends CommonArg> node,
+      XCodeNativeTargetAttributes.Builder nativeTargetBuilder,
+      boolean includeFrameworks) {
     HashSet<String> frameworkSearchPaths = new HashSet<>();
     frameworkSearchPaths.add("$BUILT_PRODUCTS_DIR");
     HashSet<String> librarySearchPaths = new HashSet<>();
@@ -2329,8 +2331,11 @@ public class ProjectGenerator {
     List<String> macOSLdRunpathSearchPaths = Lists.newArrayList();
 
     FluentIterable<TargetNode<?>> depTargetNodes = collectRecursiveLibraryDepTargets(node);
-    ImmutableSet<PBXFileReference> swiftDeps =
-        filterRecursiveLibraryDependenciesWithSwiftSources(depTargetNodes);
+    FluentIterable<TargetNode<?>> swiftDeps =
+        filterRecursiveLibraryDepTargetsWithSwiftSources(depTargetNodes);
+    for (TargetNode<?> swiftDep : swiftDeps) {
+      addLibraryFileReferenceToTarget(swiftDep, nativeTargetBuilder);
+    }
 
     Stream.concat(
             // Collect all the nodes that contribute to linking
@@ -3806,11 +3811,6 @@ public class ProjectGenerator {
     return isBuiltByCurrentProject(targetNode.getBuildTarget());
   }
 
-  private ImmutableSet<PBXFileReference> targetNodesSetToPBXFileReference(
-      ImmutableSet<TargetNode<?>> targetNodes) {
-    return FluentIterable.from(targetNodes).transform(this::getLibraryFileReference).toSet();
-  }
-
   private FluentIterable<TargetNode<?>> collectRecursiveLibraryDepTargets(
       TargetNode<?> targetNode) {
     FluentIterable<TargetNode<?>> allDeps =
@@ -3825,15 +3825,9 @@ public class ProjectGenerator {
     return allDeps.filter(this::isLibraryWithSourcesToCompile);
   }
 
-  private ImmutableSet<TargetNode<?>> filterRecursiveLibraryDepTargetsWithSwiftSources(
+  private FluentIterable<TargetNode<?>> filterRecursiveLibraryDepTargetsWithSwiftSources(
       FluentIterable<TargetNode<?>> targetNodes) {
-    return targetNodes.filter(this::isLibraryWithSwiftSources).toSet();
-  }
-
-  private ImmutableSet<PBXFileReference> filterRecursiveLibraryDependenciesWithSwiftSources(
-      FluentIterable<TargetNode<?>> targetNodes) {
-    return targetNodesSetToPBXFileReference(
-        filterRecursiveLibraryDepTargetsWithSwiftSources(targetNodes));
+    return targetNodes.filter(this::isLibraryWithSwiftSources);
   }
 
   boolean isFrameworkTarget(TargetNode<?> targetNode) {
@@ -4076,40 +4070,26 @@ public class ProjectGenerator {
     return productOutputName;
   }
 
-  private SourceTreePath getProductsSourceTreePath(TargetNode<?> targetNode) {
+  private void addLibraryFileReferenceToTarget(
+      TargetNode<?> targetNode, XCodeNativeTargetAttributes.Builder nativeTargetBuilder) {
     String productOutputName = getProductOutputNameWithExtension(targetNode);
     PBXReference.SourceTree path = PBXReference.SourceTree.BUILT_PRODUCTS_DIR;
     if (targetNode.getDescription() instanceof PrebuiltAppleFrameworkDescription) {
       path = PBXReference.SourceTree.SOURCE_ROOT;
     }
-    return new SourceTreePath(path, Paths.get(productOutputName), Optional.empty());
-  }
 
-  private PBXFileReference getLibraryFileReference(TargetNode<?> targetNode) {
-    // Don't re-use the productReference from other targets in this project.
-    // File references set as a productReference don't work with custom paths.
-    SourceTreePath productsPath = getProductsSourceTreePath(targetNode);
-
-    PBXProject project = xcodeProjectWriteOptions.project();
+    SourceTreePath productsPath =
+        new SourceTreePath(path, Paths.get(productOutputName), Optional.empty());
     if (isWatchApplicationNode(targetNode)) {
-      return project
-          .getMainGroup()
-          .getOrCreateChildGroupByName("Products")
-          .getOrCreateFileReferenceBySourceTreePath(productsPath);
+      nativeTargetBuilder.addProducts(productsPath);
     } else if (targetNode.getDescription() instanceof AppleLibraryDescription
         || targetNode.getDescription() instanceof AppleBundleDescription
         || targetNode.getDescription() instanceof CxxLibraryDescription
         || targetNode.getDescription() instanceof HalideLibraryDescription
         || targetNode.getDescription() instanceof PrebuiltAppleFrameworkDescription) {
-      return project
-          .getMainGroup()
-          .getOrCreateChildGroupByName("Frameworks")
-          .getOrCreateFileReferenceBySourceTreePath(productsPath);
+      nativeTargetBuilder.addFrameworks(productsPath);
     } else if (targetNode.getDescription() instanceof AppleBinaryDescription) {
-      return project
-          .getMainGroup()
-          .getOrCreateChildGroupByName("Dependencies")
-          .getOrCreateFileReferenceBySourceTreePath(productsPath);
+      nativeTargetBuilder.addDependencies(productsPath);
     } else {
       throw new RuntimeException("Unexpected type: " + targetNode.getDescription().getClass());
     }

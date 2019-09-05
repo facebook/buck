@@ -20,6 +20,7 @@ import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.AppleWrapperResourceArg;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
+import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
@@ -142,4 +143,19 @@ abstract class AbstractXCodeNativeTargetAttributes {
   }
 
   public abstract Optional<Path> entitlementsPlistPath();
+
+  @Value.Default
+  public ImmutableList<SourceTreePath> products() {
+    return ImmutableList.of();
+  }
+
+  @Value.Default
+  public ImmutableList<SourceTreePath> frameworks() {
+    return ImmutableList.of();
+  }
+
+  @Value.Default
+  public ImmutableList<SourceTreePath> dependencies() {
+    return ImmutableList.of();
+  }
 }
