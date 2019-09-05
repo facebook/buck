@@ -509,10 +509,7 @@ public class ProjectGenerator {
         outputConfig.setBuildSettings(projectBuildSettings);
       }
 
-      if (!options.shouldGenerateHeaderSymlinkTreesOnly()) {
-        writeProjectFile(project);
-      }
-
+      writeProjectFile();
       projectGenerated = true;
     } catch (UncheckedExecutionException e) {
       // if any code throws an exception, they tend to get wrapped in LoadingCache's
@@ -3042,7 +3039,9 @@ public class ProjectGenerator {
   }
 
   /** Create the project bundle structure and write {@code project.pbxproj}. */
-  private void writeProjectFile(PBXProject project) throws IOException {
+  private void writeProjectFile() throws IOException {
+    PBXProject project = xcodeProjectWriteOptions.project();
+
     XcodeprojSerializer serializer = new XcodeprojSerializer(gidGenerator, project);
     NSDictionary rootObject = serializer.toPlist();
     projectFilesystem.mkdirs(xcodeProjectWriteOptions.xcodeProjPath());
@@ -3056,7 +3055,7 @@ public class ProjectGenerator {
       LOG.debug("Regenerating project at %s", serializedProject);
       if (options.shouldGenerateReadOnlyFiles()) {
         projectFilesystem.writeContentsToPath(
-            contentsToWrite, serializedProject, READ_ONLY_FILE_ATTRIBUTE);
+            contentsToWrite, serializedProject, ProjectGenerator.READ_ONLY_FILE_ATTRIBUTE);
       } else {
         projectFilesystem.writeContentsToPath(contentsToWrite, serializedProject);
       }

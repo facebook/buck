@@ -24,6 +24,60 @@
 			<key>explicitFileType</key>
 			<string>text.script.python</string>
 		</dict>
+		<key>1DD70E2906C06BEE00000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>name</key>
+			<string>Info.plist</string>
+			<key>path</key>
+			<string>Info.plist</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+			<key>explicitFileType</key>
+			<string>text.plist</string>
+		</dict>
+		<key>1DD70E29BF88816E00000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>name</key>
+			<string>main.c</string>
+			<key>path</key>
+			<string>main.c</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.c.c</string>
+		</dict>
+		<key>B401C979001F3E9200000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXGroup</string>
+			<key>name</key>
+			<string>Apps</string>
+			<key>sourceTree</key>
+			<string><![CDATA[<group>]]></string>
+			<key>children</key>
+			<array>
+				<string>1DD70E29001F47FB00000000</string>
+				<string>1DD70E2906C06BEE00000000</string>
+				<string>1DD70E29BF88816E00000000</string>
+			</array>
+		</dict>
+		<key>1DD70E29001F47FB00000001</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>name</key>
+			<string>BUCK</string>
+			<key>path</key>
+			<string>../Libraries/BUCK</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+			<key>explicitFileType</key>
+			<string>text.script.python</string>
+		</dict>
 		<key>1DD70E29B0678B7700000000</key>
 		<dict>
 			<key>isa</key>
@@ -31,7 +85,7 @@
 			<key>name</key>
 			<string>dep1.c</string>
 			<key>path</key>
-			<string>dep1.c</string>
+			<string>../Libraries/dep1.c</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 			<key>lastKnownFileType</key>
@@ -44,7 +98,7 @@
 			<key>name</key>
 			<string>dep2.c</string>
 			<key>path</key>
-			<string>dep2.c</string>
+			<string>../Libraries/dep2.c</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 			<key>lastKnownFileType</key>
@@ -60,10 +114,34 @@
 			<string><![CDATA[<group>]]></string>
 			<key>children</key>
 			<array>
-				<string>1DD70E29001F47FB00000000</string>
+				<string>1DD70E29001F47FB00000001</string>
 				<string>1DD70E29B0678B7700000000</string>
 				<string>1DD70E29B0678F3800000000</string>
 			</array>
+		</dict>
+		<key>1DD70E291C9EF7C200000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>name</key>
+			<string>TestApp.app</string>
+			<key>path</key>
+			<string>TestApp.app</string>
+			<key>sourceTree</key>
+			<string>BUILT_PRODUCTS_DIR</string>
+			<key>explicitFileType</key>
+			<string>wrapper.application</string>
+		</dict>
+		<key>1DD70E299350A4F000000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>name</key>
+			<string>TestAppBinary</string>
+			<key>path</key>
+			<string>TestAppBinary</string>
+			<key>sourceTree</key>
+			<string>BUILT_PRODUCTS_DIR</string>
 		</dict>
 		<key>1DD70E291405A14500000000</key>
 		<dict>
@@ -101,8 +179,106 @@
 			<string><![CDATA[<group>]]></string>
 			<key>children</key>
 			<array>
+				<string>1DD70E291C9EF7C200000000</string>
+				<string>1DD70E299350A4F000000000</string>
 				<string>1DD70E291405A14500000000</string>
 				<string>1DD70E29FB8DD31500000000</string>
+			</array>
+		</dict>
+		<key>1DD70E29E4B004C600000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>name</key>
+			<string>TestApp-Debug.xcconfig</string>
+			<key>path</key>
+			<string>../buck-out/gen/Apps/TestApp-Debug.xcconfig</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+			<key>explicitFileType</key>
+			<string>text.xcconfig</string>
+		</dict>
+		<key>1DD70E295DE482B000000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>name</key>
+			<string>TestApp-Profile.xcconfig</string>
+			<key>path</key>
+			<string>../buck-out/gen/Apps/TestApp-Profile.xcconfig</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+			<key>explicitFileType</key>
+			<string>text.xcconfig</string>
+		</dict>
+		<key>1DD70E29D17B2E1200000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>name</key>
+			<string>TestApp-Release.xcconfig</string>
+			<key>path</key>
+			<string>../buck-out/gen/Apps/TestApp-Release.xcconfig</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+			<key>explicitFileType</key>
+			<string>text.xcconfig</string>
+		</dict>
+		<key>1DD70E29F3F495C500000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>name</key>
+			<string>TestAppBinary-Debug.xcconfig</string>
+			<key>path</key>
+			<string>../buck-out/gen/Apps/TestAppBinary-Debug.xcconfig</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+			<key>explicitFileType</key>
+			<string>text.xcconfig</string>
+		</dict>
+		<key>1DD70E29AE48CFEF00000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>name</key>
+			<string>TestAppBinary-Profile.xcconfig</string>
+			<key>path</key>
+			<string>../buck-out/gen/Apps/TestAppBinary-Profile.xcconfig</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+			<key>explicitFileType</key>
+			<string>text.xcconfig</string>
+		</dict>
+		<key>1DD70E2921DF7B5100000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>name</key>
+			<string>TestAppBinary-Release.xcconfig</string>
+			<key>path</key>
+			<string>../buck-out/gen/Apps/TestAppBinary-Release.xcconfig</string>
+			<key>sourceTree</key>
+			<string>SOURCE_ROOT</string>
+			<key>explicitFileType</key>
+			<string>text.xcconfig</string>
+		</dict>
+		<key>B401C979001F3E9200000001</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXGroup</string>
+			<key>name</key>
+			<string>Apps</string>
+			<key>sourceTree</key>
+			<string><![CDATA[<group>]]></string>
+			<key>children</key>
+			<array>
+				<string>1DD70E29E4B004C600000000</string>
+				<string>1DD70E295DE482B000000000</string>
+				<string>1DD70E29D17B2E1200000000</string>
+				<string>1DD70E29F3F495C500000000</string>
+				<string>1DD70E29AE48CFEF00000000</string>
+				<string>1DD70E2921DF7B5100000000</string>
 			</array>
 		</dict>
 		<key>1DD70E294C6E7E5300000000</key>
@@ -211,6 +387,7 @@
 			<string><![CDATA[<group>]]></string>
 			<key>children</key>
 			<array>
+				<string>B401C979001F3E9200000001</string>
 				<string>B401C979A7E3D27900000001</string>
 			</array>
 		</dict>
@@ -237,6 +414,7 @@
 			<string><![CDATA[<group>]]></string>
 			<key>children</key>
 			<array>
+				<string>B401C979001F3E9200000000</string>
 				<string>B401C979A7E3D27900000000</string>
 				<string>B401C979C806358400000000</string>
 				<string>B401C979A055FE7C00000000</string>
@@ -458,6 +636,26 @@
 			<key>buildConfigurationList</key>
 			<string>218C37090000000000000001</string>
 		</dict>
+		<key>E1F174220000000000000002</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXShellScriptBuildPhase</string>
+			<key>files</key>
+			<array>
+			</array>
+			<key>name</key>
+			<string>Buck Build</string>
+			<key>inputPaths</key>
+			<array>
+			</array>
+			<key>outputPaths</key>
+			<array>
+			</array>
+			<key>shellPath</key>
+			<string>/bin/sh</string>
+			<key>shellScript</key>
+			<string><![CDATA[cd $SOURCE_ROOT/.. && ./build_script.sh]]></string>
+		</dict>
 		<key>4952437303EDA63300000002</key>
 		<dict>
 			<key>isa</key>
@@ -466,9 +664,9 @@
 			<string>Debug</string>
 			<key>buildSettings</key>
 			<dict>
-				<key>BUCK_CELL_RELATIVE_PATH</key>
-				<string>..</string>
 			</dict>
+			<key>baseConfigurationReference</key>
+			<string>1DD70E29E4B004C600000000</string>
 		</dict>
 		<key>4952437350C7218900000002</key>
 		<dict>
@@ -478,9 +676,9 @@
 			<string>Profile</string>
 			<key>buildSettings</key>
 			<dict>
-				<key>BUCK_CELL_RELATIVE_PATH</key>
-				<string>..</string>
 			</dict>
+			<key>baseConfigurationReference</key>
+			<string>1DD70E295DE482B000000000</string>
 		</dict>
 		<key>49524373A439BFE700000002</key>
 		<dict>
@@ -490,9 +688,9 @@
 			<string>Release</string>
 			<key>buildSettings</key>
 			<dict>
-				<key>BUCK_CELL_RELATIVE_PATH</key>
-				<string>..</string>
 			</dict>
+			<key>baseConfigurationReference</key>
+			<string>1DD70E29D17B2E1200000000</string>
 		</dict>
 		<key>218C37090000000000000002</key>
 		<dict>
@@ -507,7 +705,186 @@
 			<key>defaultConfigurationIsVisible</key>
 			<false/>
 		</dict>
-		<key>96C84793A7E3D27900000000</key>
+		<key>E66DC04E0E6F340F00000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXNativeTarget</string>
+			<key>name</key>
+			<string>TestApp</string>
+			<key>productName</key>
+			<string>TestApp</string>
+			<key>productReference</key>
+			<string>1DD70E291C9EF7C200000000</string>
+			<key>productType</key>
+			<string>com.apple.product-type.application</string>
+			<key>dependencies</key>
+			<array>
+			</array>
+			<key>buildPhases</key>
+			<array>
+				<string>E1F174220000000000000002</string>
+			</array>
+			<key>buildConfigurationList</key>
+			<string>218C37090000000000000002</string>
+		</dict>
+		<key>E7A30F04BF88816E00000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>1DD70E29BF88816E00000000</string>
+		</dict>
+		<key>1870857F0000000000000002</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXSourcesBuildPhase</string>
+			<key>files</key>
+			<array>
+				<string>E7A30F04BF88816E00000000</string>
+			</array>
+		</dict>
+		<key>E1F174220000000000000003</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXShellScriptBuildPhase</string>
+			<key>files</key>
+			<array>
+			</array>
+			<key>name</key>
+			<string>Buck Build</string>
+			<key>inputPaths</key>
+			<array>
+			</array>
+			<key>outputPaths</key>
+			<array>
+			</array>
+			<key>shellPath</key>
+			<string>/bin/sh</string>
+			<key>shellScript</key>
+			<string><![CDATA[cd $SOURCE_ROOT/.. && ./build_script.sh]]></string>
+		</dict>
+		<key>4952437303EDA63300000003</key>
+		<dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Debug</string>
+			<key>buildSettings</key>
+			<dict>
+			</dict>
+			<key>baseConfigurationReference</key>
+			<string>1DD70E29F3F495C500000000</string>
+		</dict>
+		<key>4952437350C7218900000003</key>
+		<dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Profile</string>
+			<key>buildSettings</key>
+			<dict>
+			</dict>
+			<key>baseConfigurationReference</key>
+			<string>1DD70E29AE48CFEF00000000</string>
+		</dict>
+		<key>49524373A439BFE700000003</key>
+		<dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Release</string>
+			<key>buildSettings</key>
+			<dict>
+			</dict>
+			<key>baseConfigurationReference</key>
+			<string>1DD70E2921DF7B5100000000</string>
+		</dict>
+		<key>218C37090000000000000003</key>
+		<dict>
+			<key>isa</key>
+			<string>XCConfigurationList</string>
+			<key>buildConfigurations</key>
+			<array>
+				<string>4952437303EDA63300000003</string>
+				<string>4952437350C7218900000003</string>
+				<string>49524373A439BFE700000003</string>
+			</array>
+			<key>defaultConfigurationIsVisible</key>
+			<false/>
+		</dict>
+		<key>E66DC04E9350A4F000000000</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXNativeTarget</string>
+			<key>name</key>
+			<string>TestAppBinary</string>
+			<key>productName</key>
+			<string>TestAppBinary</string>
+			<key>productReference</key>
+			<string>1DD70E299350A4F000000000</string>
+			<key>productType</key>
+			<string>com.apple.product-type.tool</string>
+			<key>dependencies</key>
+			<array>
+			</array>
+			<key>buildPhases</key>
+			<array>
+				<string>1870857F0000000000000002</string>
+				<string>E1F174220000000000000003</string>
+			</array>
+			<key>buildConfigurationList</key>
+			<string>218C37090000000000000003</string>
+		</dict>
+		<key>4952437303EDA63300000004</key>
+		<dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Debug</string>
+			<key>buildSettings</key>
+			<dict>
+				<key>BUCK_CELL_RELATIVE_PATH</key>
+				<string>..</string>
+			</dict>
+		</dict>
+		<key>4952437350C7218900000004</key>
+		<dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Profile</string>
+			<key>buildSettings</key>
+			<dict>
+				<key>BUCK_CELL_RELATIVE_PATH</key>
+				<string>..</string>
+			</dict>
+		</dict>
+		<key>49524373A439BFE700000004</key>
+		<dict>
+			<key>isa</key>
+			<string>XCBuildConfiguration</string>
+			<key>name</key>
+			<string>Release</string>
+			<key>buildSettings</key>
+			<dict>
+				<key>BUCK_CELL_RELATIVE_PATH</key>
+				<string>..</string>
+			</dict>
+		</dict>
+		<key>218C37090000000000000004</key>
+		<dict>
+			<key>isa</key>
+			<string>XCConfigurationList</string>
+			<key>buildConfigurations</key>
+			<array>
+				<string>4952437303EDA63300000004</string>
+				<string>4952437350C7218900000004</string>
+				<string>49524373A439BFE700000004</string>
+			</array>
+			<key>defaultConfigurationIsVisible</key>
+			<false/>
+		</dict>
+		<key>96C847930E6F340F00000000</key>
 		<dict>
 			<key>isa</key>
 			<string>PBXProject</string>
@@ -517,9 +894,11 @@
 			<array>
 				<string>E66DC04E0020722200000000</string>
 				<string>E66DC04E0020722300000000</string>
+				<string>E66DC04E0E6F340F00000000</string>
+				<string>E66DC04E9350A4F000000000</string>
 			</array>
 			<key>buildConfigurationList</key>
-			<string>218C37090000000000000002</string>
+			<string>218C37090000000000000004</string>
 			<key>compatibilityVersion</key>
 			<string>Xcode 3.2</string>
 			<key>attributes</key>
@@ -530,6 +909,6 @@
 		</dict>
 	</dict>
 	<key>rootObject</key>
-	<string>96C84793A7E3D27900000000</string>
+	<string>96C847930E6F340F00000000</string>
 </dict>
 </plist>

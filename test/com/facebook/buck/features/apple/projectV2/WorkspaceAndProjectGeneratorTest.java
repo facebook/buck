@@ -22,8 +22,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -83,14 +81,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -271,35 +264,17 @@ public class WorkspaceAndProjectGeneratorTest {
             appleConfig,
             swiftBuckConfig,
             Optional.empty());
-    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(
-        projectGenerators, MoreExecutors.newDirectExecutorService());
+    WorkspaceAndProjectGenerator.Result result = generator.generateWorkspaceAndDependentProjects();
 
-    ProjectGenerator fooProjectGenerator = projectGenerators.get(Paths.get("foo"));
-    ProjectGenerator barProjectGenerator = projectGenerators.get(Paths.get("bar"));
-    ProjectGenerator bazProjectGenerator = projectGenerators.get(Paths.get("baz"));
-    ProjectGenerator quxProjectGenerator = projectGenerators.get(Paths.get("qux"));
-
-    assertNull("The Qux project should not be generated at all", quxProjectGenerator);
-
-    assertNotNull("The Foo project should have been generated", fooProjectGenerator);
-
-    assertNotNull("The Bar project should have been generated", barProjectGenerator);
-
-    assertNotNull("The Baz project should have been generated", bazProjectGenerator);
-
+    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(result.getProject(), "//foo:bin");
+    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(result.getProject(), "//foo:lib");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        fooProjectGenerator.getGeneratedProject(), "//foo:bin");
+        result.getProject(), "//foo:bin-xctest");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        fooProjectGenerator.getGeneratedProject(), "//foo:lib");
+        result.getProject(), "//foo:lib-xctest");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        fooProjectGenerator.getGeneratedProject(), "//foo:bin-xctest");
-    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        fooProjectGenerator.getGeneratedProject(), "//foo:lib-xctest");
-    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        barProjectGenerator.getGeneratedProject(), "//bar:libbar");
-    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        bazProjectGenerator.getGeneratedProject(), "//baz:lib");
+        result.getProject(), "//bar:libbar");
+    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(result.getProject(), "//baz:lib");
   }
 
   @Test
@@ -325,29 +300,12 @@ public class WorkspaceAndProjectGeneratorTest {
             appleConfig,
             swiftBuckConfig,
             Optional.empty());
-    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(
-        projectGenerators, MoreExecutors.newDirectExecutorService());
+    WorkspaceAndProjectGenerator.Result result = generator.generateWorkspaceAndDependentProjects();
 
-    ProjectGenerator fooProjectGenerator = projectGenerators.get(Paths.get("foo"));
-    ProjectGenerator barProjectGenerator = projectGenerators.get(Paths.get("bar"));
-    ProjectGenerator bazProjectGenerator = projectGenerators.get(Paths.get("baz"));
-    ProjectGenerator quxProjectGenerator = projectGenerators.get(Paths.get("qux"));
-
-    assertNull("The Qux project should not be generated at all", quxProjectGenerator);
-
-    assertNull("The Baz project should not be generated at all", bazProjectGenerator);
-
-    assertNotNull("The Foo project should have been generated", fooProjectGenerator);
-
-    assertNotNull("The Bar project should have been generated", barProjectGenerator);
-
+    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(result.getProject(), "//foo:bin");
+    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(result.getProject(), "//foo:lib");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        fooProjectGenerator.getGeneratedProject(), "//foo:bin");
-    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        fooProjectGenerator.getGeneratedProject(), "//foo:lib");
-    ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        barProjectGenerator.getGeneratedProject(), "//bar:libbar");
+        result.getProject(), "//bar:libbar");
   }
 
   @Test
@@ -378,12 +336,8 @@ public class WorkspaceAndProjectGeneratorTest {
             swiftBuckConfig,
             Optional.empty());
 
-    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(
-        projectGenerators, MoreExecutors.newDirectExecutorService());
-
-    // one scheme for the workspace and then one for each project
-    assertEquals(generator.getSchemeGenerators().size(), 3);
+    generator.generateWorkspaceAndDependentProjects();
+    assertEquals(generator.getSchemeGenerators().size(), 1);
 
     // validate main scheme values
     Optional<XCScheme> mainScheme =
@@ -416,60 +370,6 @@ public class WorkspaceAndProjectGeneratorTest {
     assertThat(mainSchemeTestAction.getTestables(), hasSize(1));
     assertThat( // foo:bin-xctest
         mainSchemeTestAction.getTestables(), hasItem(withName("bin-xctest")));
-
-    // validate project specific (foo) scheme values
-    SchemeGenerator fooSchemeGenerator = generator.getSchemeGenerators().get("foo");
-
-    assertThat(fooSchemeGenerator.getOutputDirectory(), is(Paths.get("foo/foo.xcodeproj")));
-
-    Optional<XCScheme> fooScheme = fooSchemeGenerator.getOutputScheme();
-
-    assertThat(fooScheme.isPresent(), is(true));
-
-    XCScheme.BuildAction fooSchemeBuildAction = fooScheme.get().getBuildAction().get();
-    List<BuildActionEntry> fooSchemeBuildActionEntries =
-        fooSchemeBuildAction.getBuildActionEntries();
-    assertThat(fooSchemeBuildActionEntries, hasSize(3));
-    assertThat( // foo:bin
-        fooSchemeBuildActionEntries,
-        hasItem(
-            withNameAndBuildingFor(
-                "bin", equalTo(XCScheme.BuildActionEntry.BuildFor.INDEXING_ONLY))));
-    assertThat( // foo:bin-xctest
-        fooSchemeBuildActionEntries,
-        hasItem(withNameAndBuildingFor("bin-xctest", equalTo(BuildFor.TEST_ONLY))));
-    assertThat( // foo:lib
-        fooSchemeBuildActionEntries,
-        hasItem(
-            withNameAndBuildingFor(
-                "lib", equalTo(XCScheme.BuildActionEntry.BuildFor.INDEXING_ONLY))));
-
-    XCScheme.TestAction fooSchemeTestAction = fooScheme.get().getTestAction().get();
-    assertThat(fooSchemeTestAction.getTestables(), hasSize(1));
-    assertThat( // foo:bin-xctest
-        fooSchemeTestAction.getTestables(), hasItem(withName("bin-xctest")));
-
-    // validate project specific (bar) scheme values
-    SchemeGenerator barSchemeGenerator = generator.getSchemeGenerators().get("bar");
-
-    assertThat(barSchemeGenerator.getOutputDirectory(), is(Paths.get("bar/bar.xcodeproj")));
-
-    Optional<XCScheme> barScheme = barSchemeGenerator.getOutputScheme();
-
-    assertThat(barScheme.isPresent(), is(true));
-
-    XCScheme.BuildAction barSchemeBuildAction = barScheme.get().getBuildAction().get();
-    List<BuildActionEntry> barSchemeBuildActionEntries =
-        barSchemeBuildAction.getBuildActionEntries();
-    assertThat(barSchemeBuildActionEntries, hasSize(1));
-    assertThat( // bar:libbar
-        barSchemeBuildActionEntries,
-        hasItem(
-            withNameAndBuildingFor(
-                "libbar", equalTo(XCScheme.BuildActionEntry.BuildFor.INDEXING_ONLY))));
-
-    XCScheme.TestAction barSchemeTestAction = barScheme.get().getTestAction().get();
-    assertThat(barSchemeTestAction.getTestables(), hasSize(0));
   }
 
   @Test
@@ -515,10 +415,8 @@ public class WorkspaceAndProjectGeneratorTest {
             appleConfig,
             swiftBuckConfig,
             Optional.empty());
-    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(
-        projectGenerators, MoreExecutors.newDirectExecutorService());
 
+    generator.generateWorkspaceAndDependentProjects();
     assertEquals(generator.getRequiredBuildTargets(), ImmutableSet.of(genruleTarget));
   }
 
@@ -669,37 +567,22 @@ public class WorkspaceAndProjectGeneratorTest {
             appleConfig,
             swiftBuckConfig,
             Optional.empty());
-    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(
-        projectGenerators, MoreExecutors.newDirectExecutorService());
-
-    ProjectGenerator fooProjectGenerator = projectGenerators.get(Paths.get("foo"));
-    ProjectGenerator barProjectGenerator = projectGenerators.get(Paths.get("bar"));
-    ProjectGenerator bazProjectGenerator = projectGenerators.get(Paths.get("baz"));
-    ProjectGenerator quxProjectGenerator = projectGenerators.get(Paths.get("qux"));
-
-    assertNotNull("The Qux project should have been generated", quxProjectGenerator);
-
-    assertNotNull("The Foo project should have been generated", fooProjectGenerator);
-
-    assertNotNull("The Bar project should have been generated", barProjectGenerator);
-
-    assertNotNull("The Baz project should have been generated", bazProjectGenerator);
+    WorkspaceAndProjectGenerator.Result result = generator.generateWorkspaceAndDependentProjects();
 
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        fooProjectGenerator.getGeneratedProject(), "//foo:FooBin");
+        result.getProject(), "//foo:FooBin");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        fooProjectGenerator.getGeneratedProject(), "//foo:FooLib");
+        result.getProject(), "//foo:FooLib");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        fooProjectGenerator.getGeneratedProject(), "//foo:FooBinTest");
+        result.getProject(), "//foo:FooBinTest");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        fooProjectGenerator.getGeneratedProject(), "//foo:FooLibTest");
+        result.getProject(), "//foo:FooLibTest");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        barProjectGenerator.getGeneratedProject(), "//bar:BarLib");
+        result.getProject(), "//bar:BarLib");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        bazProjectGenerator.getGeneratedProject(), "//baz:BazLib");
+        result.getProject(), "//baz:BazLib");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        quxProjectGenerator.getGeneratedProject(), "//qux:QuxBin");
+        result.getProject(), "//qux:QuxBin");
 
     XCScheme mainScheme = generator.getSchemeGenerators().get("workspace").getOutputScheme().get();
     XCScheme.BuildAction mainSchemeBuildAction = mainScheme.getBuildAction().get();
@@ -797,26 +680,14 @@ public class WorkspaceAndProjectGeneratorTest {
             appleConfig,
             swiftBuckConfig,
             Optional.empty());
-    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(
-        projectGenerators, MoreExecutors.newDirectExecutorService());
-
-    ProjectGenerator fooProjectGenerator = projectGenerators.get(Paths.get("foo"));
-    ProjectGenerator barProjectGenerator = projectGenerators.get(Paths.get("bar"));
-    ProjectGenerator bazProjectGenerator = projectGenerators.get(Paths.get("baz"));
-
-    assertNotNull("The Foo project should have been generated", fooProjectGenerator);
-
-    assertNotNull("The Bar project should have been generated", barProjectGenerator);
-
-    assertNotNull("The Baz project should have been generated", bazProjectGenerator);
+    WorkspaceAndProjectGenerator.Result result = generator.generateWorkspaceAndDependentProjects();
 
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        fooProjectGenerator.getGeneratedProject(), "//foo:FooLib");
+        result.getProject(), "//foo:FooLib");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        barProjectGenerator.getGeneratedProject(), "//bar:BarLib");
+        result.getProject(), "//bar:BarLib");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        bazProjectGenerator.getGeneratedProject(), "//baz:BazLib");
+        result.getProject(), "//baz:BazLib");
 
     XCScheme mainScheme = generator.getSchemeGenerators().get("workspace").getOutputScheme().get();
     XCScheme.BuildAction mainSchemeBuildAction = mainScheme.getBuildAction().get();
@@ -904,9 +775,7 @@ public class WorkspaceAndProjectGeneratorTest {
             appleConfig,
             swiftBuckConfig,
             Optional.empty());
-    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(
-        projectGenerators, MoreExecutors.newDirectExecutorService());
+    generator.generateWorkspaceAndDependentProjects();
 
     assertThat(
         generator.getSchemeGenerators().get("BarApp").getOutputScheme().isPresent(), is(true));
@@ -986,9 +855,7 @@ public class WorkspaceAndProjectGeneratorTest {
             appleConfig,
             swiftBuckConfig,
             Optional.empty());
-    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(
-        projectGenerators, MoreExecutors.newDirectExecutorService());
+    generator.generateWorkspaceAndDependentProjects();
 
     XCScheme mainScheme = generator.getSchemeGenerators().get("workspace").getOutputScheme().get();
     XCScheme.BuildAction mainSchemeBuildAction = mainScheme.getBuildAction().get();
@@ -1046,9 +913,7 @@ public class WorkspaceAndProjectGeneratorTest {
             appleConfig,
             swiftBuckConfig,
             Optional.empty());
-    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(
-        projectGenerators, MoreExecutors.newDirectExecutorService());
+    generator.generateWorkspaceAndDependentProjects();
 
     XCScheme mainScheme = generator.getSchemeGenerators().get("workspace").getOutputScheme().get();
     XCScheme.LaunchAction launchAction = mainScheme.getLaunchAction().get();
@@ -1110,9 +975,7 @@ public class WorkspaceAndProjectGeneratorTest {
             appleConfig,
             swiftBuckConfig,
             Optional.empty());
-    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
-    generator.generateWorkspaceAndDependentProjects(
-        projectGenerators, MoreExecutors.newDirectExecutorService());
+    generator.generateWorkspaceAndDependentProjects();
 
     XCScheme mainScheme = generator.getSchemeGenerators().get("workspace").getOutputScheme().get();
     XCScheme.BuildAction buildAction = mainScheme.getBuildAction().get();

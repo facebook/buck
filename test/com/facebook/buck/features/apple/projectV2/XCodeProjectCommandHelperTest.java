@@ -44,16 +44,13 @@ import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.SettableFakeClock;
 import com.facebook.buck.util.types.Either;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -366,19 +363,18 @@ public class XCodeProjectCommandHelperTest {
 
   @Test
   public void testTargetWithTests() throws IOException, InterruptedException {
-    Map<Path, ProjectGenerator> projectGenerators =
+    ImmutableList<XCodeProjectCommandHelper.Result> results =
         generateProjectsForTests(
             ImmutableSet.of(fooBinNode.getBuildTarget()),
             /* withTests = */ true,
             /* withDependenciesTests */ true);
 
-    ProjectGeneratorTestUtils.assertTargetExists(
-        projectGenerators.get(Paths.get("foo")), "bin-xctest");
-    ProjectGeneratorTestUtils.assertTargetExists(
-        projectGenerators.get(Paths.get("foo")), "lib-xctest");
+    XCodeProjectCommandHelper.Result result = results.get(0);
+    ProjectGeneratorTestUtils.assertTargetExists(result.getProject(), "bin-xctest");
+    ProjectGeneratorTestUtils.assertTargetExists(result.getProject(), "lib-xctest");
   }
 
-  private Map<Path, ProjectGenerator> generateProjectsForTests(
+  private ImmutableList<XCodeProjectCommandHelper.Result> generateProjectsForTests(
       ImmutableSet<BuildTarget> passedInTargetsSet,
       boolean isWithTests,
       boolean isWithDependenciesTests)
@@ -389,59 +385,55 @@ public class XCodeProjectCommandHelperTest {
 
   @Test
   public void testTargetWithoutDependenciesTests() throws IOException, InterruptedException {
-    Map<Path, ProjectGenerator> projectGenerators =
+    ImmutableList<XCodeProjectCommandHelper.Result> results =
         generateProjectsForTests(
             ImmutableSet.of(fooBinNode.getBuildTarget()),
             /* withTests = */ true,
             /* withDependenciesTests */ false);
 
-    ProjectGeneratorTestUtils.assertTargetExists(
-        projectGenerators.get(Paths.get("foo")), "bin-xctest");
-    ProjectGeneratorTestUtils.assertTargetDoesNotExists(
-        projectGenerators.get(Paths.get("foo")), "lib-xctest");
+    XCodeProjectCommandHelper.Result result = results.get(0);
+    ProjectGeneratorTestUtils.assertTargetExists(result.getProject(), "bin-xctest");
+    ProjectGeneratorTestUtils.assertTargetDoesNotExist(result.getProject(), "lib-xctest");
   }
 
   @Test
   public void testTargetWithoutTests() throws IOException, InterruptedException {
-    Map<Path, ProjectGenerator> projectGenerators =
+    ImmutableList<XCodeProjectCommandHelper.Result> results =
         generateProjectsForTests(
             ImmutableSet.of(fooBinNode.getBuildTarget()),
             /* withTests = */ false,
             /* withDependenciesTests */ false);
 
-    ProjectGeneratorTestUtils.assertTargetDoesNotExists(
-        projectGenerators.get(Paths.get("foo")), "bin-xctest");
-    ProjectGeneratorTestUtils.assertTargetDoesNotExists(
-        projectGenerators.get(Paths.get("foo")), "lib-xctest");
+    XCodeProjectCommandHelper.Result result = results.get(0);
+    ProjectGeneratorTestUtils.assertTargetDoesNotExist(result.getProject(), "bin-xctest");
+    ProjectGeneratorTestUtils.assertTargetDoesNotExist(result.getProject(), "lib-xctest");
   }
 
   @Test
   public void testWorkspaceWithoutDependenciesTests() throws IOException, InterruptedException {
-    Map<Path, ProjectGenerator> projectGenerators =
+    ImmutableList<XCodeProjectCommandHelper.Result> results =
         generateProjectsForTests(
             ImmutableSet.of(workspaceNode.getBuildTarget()),
             /* withTests = */ true,
             /* withDependenciesTests */ false);
 
-    ProjectGeneratorTestUtils.assertTargetExists(
-        projectGenerators.get(Paths.get("foo")), "bin-xctest");
-    ProjectGeneratorTestUtils.assertTargetDoesNotExists(
-        projectGenerators.get(Paths.get("foo")), "lib-xctest");
-    ProjectGeneratorTestUtils.assertTargetExists(
-        projectGenerators.get(Paths.get("foo")), "extra-xctest");
+    XCodeProjectCommandHelper.Result result = results.get(0);
+    ProjectGeneratorTestUtils.assertTargetExists(result.getProject(), "bin-xctest");
+    ProjectGeneratorTestUtils.assertTargetDoesNotExist(result.getProject(), "lib-xctest");
+    ProjectGeneratorTestUtils.assertTargetExists(result.getProject(), "extra-xctest");
   }
 
   @Test
   public void testWorkspaceWithoutExtraTestsWithoutDependenciesTests()
       throws IOException, InterruptedException {
-    Map<Path, ProjectGenerator> projectGenerators =
+    ImmutableList<XCodeProjectCommandHelper.Result> results =
         generateProjectsForTests(
             ImmutableSet.of(smallWorkspaceNode.getBuildTarget()),
             /* withTests = */ true,
             /* withDependenciesTests */ false);
-
-    ProjectGeneratorTestUtils.assertTargetExists(projectGenerators.get(Paths.get("baz")), "lib");
-    ProjectGeneratorTestUtils.assertTargetExists(projectGenerators.get(Paths.get("baz")), "xctest");
+    XCodeProjectCommandHelper.Result result = results.get(0);
+    ProjectGeneratorTestUtils.assertTargetExists(result.getProject(), "lib");
+    ProjectGeneratorTestUtils.assertTargetExists(result.getProject(), "xctest");
   }
 
   private static TargetGraph createTargetGraph(
@@ -479,7 +471,7 @@ public class XCodeProjectCommandHelperTest {
     return projectGraph.getSubgraph(Iterables.concat(projectRoots, associatedTests));
   }
 
-  private static Map<Path, ProjectGenerator> generateWorkspacesForTargets(
+  private static ImmutableList<XCodeProjectCommandHelper.Result> generateWorkspacesForTargets(
       TargetGraph originalTargetGraph,
       ImmutableSet<BuildTarget> passedInTargetsSet,
       boolean isWithTests,
@@ -489,12 +481,11 @@ public class XCodeProjectCommandHelperTest {
         createTargetGraph(
             originalTargetGraph, passedInTargetsSet, isWithTests, isWithDependenciesTests);
 
-    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     Cell cell =
         new TestCellBuilder()
             .setFilesystem(new FakeProjectFilesystem(SettableFakeClock.DO_NOT_CARE))
             .build();
-    XCodeProjectCommandHelper.generateWorkspacesForTargets(
+    return XCodeProjectCommandHelper.generateWorkspacesForTargets(
         BuckEventBusForTests.newInstance(),
         BuckPluginManagerFactory.createPluginManager(),
         cell,
@@ -515,9 +506,7 @@ public class XCodeProjectCommandHelperTest {
             .build(),
         ImmutableSet.of(),
         FocusedTargetMatcher.noFocus(),
-        projectGenerators,
         new NullPathOutputPresenter(),
         Optional.empty());
-    return projectGenerators;
   }
 }

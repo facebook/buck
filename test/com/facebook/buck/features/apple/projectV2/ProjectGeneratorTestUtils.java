@@ -66,16 +66,12 @@ public final class ProjectGeneratorTestUtils {
     return null;
   }
 
-  public static void assertTargetExists(ProjectGenerator generator, String name) {
-    assertNotNull(
-        "No generated target with name: " + name,
-        getTargetByName(generator.getGeneratedProject(), name));
+  public static void assertTargetExists(PBXProject project, String name) {
+    assertNotNull("No generated target with name: " + name, getTargetByName(project, name));
   }
 
-  public static void assertTargetDoesNotExists(ProjectGenerator generator, String name) {
-    assertNull(
-        "There is generated target with name: " + name,
-        getTargetByName(generator.getGeneratedProject(), name));
+  public static void assertTargetDoesNotExist(PBXProject project, String name) {
+    assertNull("There is generated target with name: " + name, getTargetByName(project, name));
   }
 
   public static void assertHasDependency(
