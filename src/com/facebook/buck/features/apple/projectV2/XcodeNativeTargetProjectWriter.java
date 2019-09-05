@@ -38,6 +38,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
+import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -154,6 +155,18 @@ class XcodeNativeTargetProjectWriter {
     nativeTarget.setProductName(targetAttributes.product().getName());
     nativeTarget.setProductReference(productReference);
     nativeTarget.setProductType(targetAttributes.product().getType());
+
+    for (XcconfigBaseConfiguration config : targetAttributes.xcconfigs()) {
+      XCBuildConfiguration outputConfiguration =
+          nativeTarget
+              .getBuildConfigurationList()
+              .getBuildConfigurationsByName()
+              .getUnchecked(config.getName());
+
+      PBXFileReference fileReference =
+          projectFileWriter.writeFilePath(config.getPath(), Optional.empty()).getFileReference();
+      outputConfiguration.setBaseConfigurationReference(fileReference);
+    }
 
     project.getTargets().add(nativeTarget);
     return new Result(nativeTarget, targetGroup);

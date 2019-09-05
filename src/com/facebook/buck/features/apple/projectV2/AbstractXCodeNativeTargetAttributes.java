@@ -135,4 +135,9 @@ abstract class AbstractXCodeNativeTargetAttributes {
   public ImmutableSet<AppleWrapperResourceArg> wrapperResources() {
     return ImmutableSet.of();
   }
+
+  @Value.Default
+  public ImmutableList<XcconfigBaseConfiguration> xcconfigs() {
+    return ImmutableList.of();
+  }
 }

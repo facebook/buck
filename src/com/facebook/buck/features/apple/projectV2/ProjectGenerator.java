@@ -670,12 +670,6 @@ public class ProjectGenerator {
         .setTargetName(getXcodeTargetName(buildTarget))
         .setProduct(new XcodeProductMetadata(ProductTypes.STATIC_LIBRARY, productName, outputPath));
 
-    XcodeNativeTargetProjectWriter nativeTargetProjectWriter =
-        new XcodeNativeTargetProjectWriter(this.pathRelativizer, this::resolveSourcePath);
-    XcodeNativeTargetProjectWriter.Result targetBuilderResult =
-        nativeTargetProjectWriter.writeTargetToProject(
-            xcodeNativeTargetAttributesBuilder.build(), project);
-
     BuildTarget compilerTarget =
         HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget);
     Path compilerPath = BuildTargetPaths.getGenPath(projectFilesystem, compilerTarget, "%s");
@@ -704,16 +698,22 @@ public class ProjectGenerator {
 
     Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs =
         getXcodeBuildConfigurationsForTargetNode(targetNode);
-    PBXNativeTarget target = targetBuilderResult.target;
     setTargetBuildConfigurations(
         buildTarget,
-        target,
+        xcodeNativeTargetAttributesBuilder,
         configs.get(),
         getTargetCxxBuildConfigurationForTargetNode(targetNode, appendedConfig),
         extraSettings,
         defaultSettingsBuilder.build(),
         appendedConfig);
-    return Optional.of(target);
+
+    XcodeNativeTargetProjectWriter nativeTargetProjectWriter =
+        new XcodeNativeTargetProjectWriter(this.pathRelativizer, this::resolveSourcePath);
+    XcodeNativeTargetProjectWriter.Result targetBuilderResult =
+        nativeTargetProjectWriter.writeTargetToProject(
+            xcodeNativeTargetAttributesBuilder.build(), project);
+
+    return Optional.of(targetBuilderResult.target);
   }
 
   private PBXTarget generateAppleTestTarget(TargetNode<AppleTestDescriptionArg> testTargetNode)
@@ -1502,13 +1502,6 @@ public class ProjectGenerator {
       xcodeNativeTargetAttributesBuilder.setCoreDataResources(coreDataFileBuilder.build());
     }
 
-    XcodeNativeTargetProjectWriter nativeTargetProjectWriter =
-        new XcodeNativeTargetProjectWriter(pathRelativizer, this::resolveSourcePath);
-    XcodeNativeTargetProjectWriter.Result targetBuilderResult =
-        nativeTargetProjectWriter.writeTargetToProject(
-            xcodeNativeTargetAttributesBuilder.build(), project);
-
-    PBXNativeTarget target = targetBuilderResult.target;
     ImmutableList.Builder<BuildTarget> dependencies = ImmutableList.builder();
 
     extraSettingsBuilder.putAll(swiftDepsSettingsBuilder.build());
@@ -1936,7 +1929,7 @@ public class ProjectGenerator {
           getXcodeBuildConfigurationsForTargetNode(targetNode);
       setTargetBuildConfigurations(
           buildTarget,
-          target,
+          xcodeNativeTargetAttributesBuilder,
           configs.get(),
           getTargetCxxBuildConfigurationForTargetNode(targetNode, appendedConfig),
           extraSettingsBuilder.build(),
@@ -1972,7 +1965,12 @@ public class ProjectGenerator {
       addEntitlementsPlistIntoTarget(bundle.get());
     }
 
-    return new BinaryTargetGenerationResult(target, dependencies.build());
+    XcodeNativeTargetProjectWriter nativeTargetProjectWriter =
+        new XcodeNativeTargetProjectWriter(pathRelativizer, this::resolveSourcePath);
+    XcodeNativeTargetProjectWriter.Result targetBuilderResult =
+        nativeTargetProjectWriter.writeTargetToProject(
+            xcodeNativeTargetAttributesBuilder.build(), project);
+    return new BinaryTargetGenerationResult(targetBuilderResult.target, dependencies.build());
   }
 
   /** Generate a mapping from libraries to the framework bundles that include them. */
@@ -2713,7 +2711,8 @@ public class ProjectGenerator {
   /**
    * Create target level configuration entries.
    *
-   * @param target Xcode target for which the configurations will be set.
+   * @param buildTarget Xcode target for which the configurations will be set.
+   * @param nativeTargetAttributes The native target builder to mutate.
    * @param configurations Configurations as extracted from the BUCK file.
    * @param overrideBuildSettings Build settings that will override ones defined elsewhere.
    * @param defaultBuildSettings Target-inline level build settings that will be set if not already
@@ -2723,7 +2722,7 @@ public class ProjectGenerator {
    */
   private void setTargetBuildConfigurations(
       BuildTarget buildTarget,
-      PBXTarget target,
+      XCodeNativeTargetAttributes.Builder nativeTargetAttributes,
       ImmutableMap<String, ImmutableMap<String, String>> configurations,
       ImmutableMap<String, String> cxxPlatformXcodeBuildSettings,
       ImmutableMap<String, String> overrideBuildSettings,
@@ -2739,12 +2738,6 @@ public class ProjectGenerator {
       targetConfigNamesBuilder.add(configurationEntry.getKey());
 
       ImmutableMap<String, String> targetLevelInlineSettings = configurationEntry.getValue();
-
-      XCBuildConfiguration outputConfiguration =
-          target
-              .getBuildConfigurationList()
-              .getBuildConfigurationsByName()
-              .getUnchecked(configurationEntry.getKey());
 
       HashMap<String, String> combinedOverrideConfigs = new HashMap<>(overrideBuildSettings);
       for (Map.Entry<String, String> entry : cxxPlatformXcodeBuildSettings.entrySet()) {
@@ -2793,19 +2786,12 @@ public class ProjectGenerator {
         }
       }
 
-      PBXFileReference fileReference = getConfigurationFileReference(xcconfigPath);
-      outputConfiguration.setBaseConfigurationReference(fileReference);
+      nativeTargetAttributes.addXcconfigs(
+          new XcconfigBaseConfiguration(configurationEntry.getKey(), xcconfigPath));
 
       xcconfigPathsBuilder.add(
           projectFilesystem.getPathForRelativePath(xcconfigPath).toAbsolutePath());
     }
-  }
-
-  private PBXFileReference getConfigurationFileReference(Path xcconfigPath) {
-    ProjectFileWriter projectFileWriter =
-        new ProjectFileWriter(
-            xcodeProjectWriteOptions.project(), this.pathRelativizer, this::resolveSourcePath);
-    return projectFileWriter.writeFilePath(xcconfigPath, Optional.empty()).getFileReference();
   }
 
   /** Adds the set of headers defined by headerVisibility to the merged header maps. */
