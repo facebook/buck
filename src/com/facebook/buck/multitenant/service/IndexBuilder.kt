@@ -100,6 +100,13 @@ fun serializePackagesToStream(packages: List<BuildPackage>, stream: OutputStream
     ObjectMappers.WRITER.writeValue(stream, packages)
 }
 
+/**
+ * Write paths to JSON
+ */
+fun serializePathsToStream(paths: List<FsAgnosticPath>, stream: OutputStream) {
+    ObjectMappers.WRITER.writeValue(stream, paths)
+}
+
 private fun createParser(stream: InputStream): JsonParser {
     return ObjectMappers.createParser(stream)
         .enable(JsonParser.Feature.ALLOW_COMMENTS)
