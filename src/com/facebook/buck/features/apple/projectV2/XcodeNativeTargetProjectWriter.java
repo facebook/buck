@@ -213,6 +213,10 @@ class XcodeNativeTargetProjectWriter {
           projectFileWriter.writeFilePath(buckFilePath.get(), Optional.empty()).getFileReference();
       buckFileReference.setExplicitFileType(Optional.of("text.script.python"));
     }
+
+    targetAttributes
+        .entitlementsPlistPath()
+        .ifPresent(path -> projectFileWriter.writeFilePath(path, Optional.empty()));
   }
 
   private void traverseGroupsTreeAndHandleSources(

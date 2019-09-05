@@ -140,4 +140,6 @@ abstract class AbstractXCodeNativeTargetAttributes {
   public ImmutableList<XcconfigBaseConfiguration> xcconfigs() {
     return ImmutableList.of();
   }
+
+  public abstract Optional<Path> entitlementsPlistPath();
 }

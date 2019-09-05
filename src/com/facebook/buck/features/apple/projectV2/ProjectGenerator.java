@@ -1962,7 +1962,7 @@ public class ProjectGenerator {
         options.shouldGenerateMissingUmbrellaHeader());
 
     if (bundle.isPresent() && !options.shouldGenerateHeaderSymlinkTreesOnly()) {
-      addEntitlementsPlistIntoTarget(bundle.get());
+      addEntitlementsPlistIntoTarget(bundle.get(), xcodeNativeTargetAttributesBuilder);
     }
 
     XcodeNativeTargetProjectWriter nativeTargetProjectWriter =
@@ -2671,7 +2671,8 @@ public class ProjectGenerator {
   }
 
   private void addEntitlementsPlistIntoTarget(
-      TargetNode<? extends HasAppleBundleFields> targetNode) {
+      TargetNode<? extends HasAppleBundleFields> targetNode,
+      XCodeNativeTargetAttributes.Builder nativeTargetBuilder) {
     ImmutableMap<String, String> infoPlistSubstitutions =
         targetNode.getConstructorArg().getInfoPlistSubstitutions();
 
@@ -2688,10 +2689,7 @@ public class ProjectGenerator {
                       "SOURCE_ROOT", targetPath,
                       "SRCROOT", targetPath)));
 
-      ProjectFileWriter projectFileWriter =
-          new ProjectFileWriter(
-              xcodeProjectWriteOptions.project(), this.pathRelativizer, this::resolveSourcePath);
-      projectFileWriter.writeFilePath(Paths.get(entitlementsPlistPath), Optional.empty());
+      nativeTargetBuilder.setEntitlementsPlistPath(Optional.of(Paths.get(entitlementsPlistPath)));
     }
   }
 
