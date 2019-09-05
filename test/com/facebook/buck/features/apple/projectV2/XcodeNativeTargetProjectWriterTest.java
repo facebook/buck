@@ -75,21 +75,22 @@ public class XcodeNativeTargetProjectWriterTest {
   public void shouldCreateTarget() throws NoSuchBuildTargetException {
     XCodeNativeTargetAttributes nativeTargetAttributes =
         XCodeNativeTargetAttributes.builder()
-            .setTarget(buildTarget)
+            .setTarget(Optional.of(buildTarget))
             .setAppleConfig(appleConfig)
-            .setTargetName("TestTarget")
             .setProduct(
-                new XcodeProductMetadata(
-                    ProductTypes.BUNDLE,
-                    "TestTargetProduct",
-                    Paths.get("TestTargetProduct.bundle")))
+                Optional.of(
+                    new XcodeProductMetadata(
+                        ProductTypes.BUNDLE,
+                        "TestTargetProduct",
+                        Paths.get("TestTargetProduct.bundle"))))
             .build();
 
     XcodeNativeTargetProjectWriter projectWriter =
-        new XcodeNativeTargetProjectWriter(pathRelativizer, sourcePathResolver::getRelativePath);
+        new XcodeNativeTargetProjectWriter(
+            pathRelativizer, sourcePathResolver::getRelativePath, true);
     projectWriter.writeTargetToProject(nativeTargetAttributes, generatedProject);
 
-    assertTargetExistsAndReturnTarget(generatedProject, "TestTarget");
+    assertTargetExistsAndReturnTarget(generatedProject, "bar");
   }
 
   @Test
@@ -106,11 +107,12 @@ public class XcodeNativeTargetProjectWriterTest {
                     SourceWithFlags.of(baz)))
             .build();
     XcodeNativeTargetProjectWriter projectWriter =
-        new XcodeNativeTargetProjectWriter(pathRelativizer, sourcePathResolver::getRelativePath);
+        new XcodeNativeTargetProjectWriter(
+            pathRelativizer, sourcePathResolver::getRelativePath, false);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(nativeTargetAttributes, generatedProject);
 
-    PBXGroup sourcesGroup = result.targetGroup;
+    PBXGroup sourcesGroup = result.getTargetGroup();
 
     PBXGroup group1 = PBXTestUtils.assertHasSubgroupAndReturnIt(sourcesGroup, "Group1");
     assertThat(group1.getChildren(), hasSize(2));
@@ -138,11 +140,12 @@ public class XcodeNativeTargetProjectWriterTest {
             .build();
 
     XcodeNativeTargetProjectWriter projectWriter =
-        new XcodeNativeTargetProjectWriter(pathRelativizer, sourcePathResolver::getRelativePath);
+        new XcodeNativeTargetProjectWriter(
+            pathRelativizer, sourcePathResolver::getRelativePath, false);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
-    PBXGroup sourcesGroup = result.targetGroup;
+    PBXGroup sourcesGroup = result.getTargetGroup();
 
     PBXGroup group1 = PBXTestUtils.assertHasSubgroupAndReturnIt(sourcesGroup, "HeaderGroup1");
     assertThat(group1.getChildren(), hasSize(2));
@@ -166,11 +169,12 @@ public class XcodeNativeTargetProjectWriterTest {
         builderWithCommonDefaults().setPrefixHeader(Optional.of(prefixHeader)).build();
 
     XcodeNativeTargetProjectWriter projectWriter =
-        new XcodeNativeTargetProjectWriter(pathRelativizer, sourcePathResolver::getRelativePath);
+        new XcodeNativeTargetProjectWriter(
+            pathRelativizer, sourcePathResolver::getRelativePath, false);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
-    PBXGroup group1 = PBXTestUtils.assertHasSubgroupAndReturnIt(result.targetGroup, "Group1");
+    PBXGroup group1 = PBXTestUtils.assertHasSubgroupAndReturnIt(result.getTargetGroup(), "Group1");
     PBXFileReference fileRef = (PBXFileReference) Iterables.get(group1.getChildren(), 0);
     assertEquals("prefix.pch", fileRef.getName());
   }
@@ -183,11 +187,13 @@ public class XcodeNativeTargetProjectWriterTest {
             .build();
 
     XcodeNativeTargetProjectWriter projectWriter =
-        new XcodeNativeTargetProjectWriter(pathRelativizer, sourcePathResolver::getRelativePath);
+        new XcodeNativeTargetProjectWriter(
+            pathRelativizer, sourcePathResolver::getRelativePath, false);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
-    PBXGroup myAppGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(result.targetGroup, "MyApp");
+    PBXGroup myAppGroup =
+        PBXTestUtils.assertHasSubgroupAndReturnIt(result.getTargetGroup(), "MyApp");
     PBXGroup filesGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(myAppGroup, "MyLib");
     PBXFileReference buckFileReference =
         PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(filesGroup, "BUCK");
@@ -198,22 +204,24 @@ public class XcodeNativeTargetProjectWriterTest {
   public void testTargetHasBuildScriptPhase() {
     XCodeNativeTargetAttributes targetAttributes =
         XCodeNativeTargetAttributes.builder()
-            .setTarget(buildTarget)
+            .setTarget(Optional.of(buildTarget))
             .setAppleConfig(appleConfig)
             .setProduct(
-                new XcodeProductMetadata(
-                    ProductTypes.APPLICATION,
-                    buildTarget.getShortName(),
-                    Paths.get(buildTarget.getShortName())))
+                Optional.of(
+                    new XcodeProductMetadata(
+                        ProductTypes.APPLICATION,
+                        buildTarget.getShortName(),
+                        Paths.get(buildTarget.getShortName()))))
             .build();
 
     XcodeNativeTargetProjectWriter projectWriter =
-        new XcodeNativeTargetProjectWriter(pathRelativizer, sourcePathResolver::getRelativePath);
+        new XcodeNativeTargetProjectWriter(
+            pathRelativizer, sourcePathResolver::getRelativePath, false);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
     PBXShellScriptBuildPhase phase =
-        getSingleBuildPhaseOfType(result.target, PBXShellScriptBuildPhase.class);
+        getSingleBuildPhaseOfType(result.getTarget().get(), PBXShellScriptBuildPhase.class);
 
     assertThat(
         "Buck build script command is as expected",
@@ -223,11 +231,13 @@ public class XcodeNativeTargetProjectWriterTest {
 
   private XCodeNativeTargetAttributes.Builder builderWithCommonDefaults() {
     return XCodeNativeTargetAttributes.builder()
-        .setTarget(buildTarget)
+        .setTarget(Optional.of(buildTarget))
         .setAppleConfig(appleConfig)
-        .setTargetName("TestTarget")
         .setProduct(
-            new XcodeProductMetadata(
-                ProductTypes.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle")));
+            Optional.of(
+                new XcodeProductMetadata(
+                    ProductTypes.BUNDLE,
+                    "TestTargetProduct",
+                    Paths.get("TestTargetProduct.bundle"))));
   }
 }

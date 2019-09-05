@@ -19,7 +19,6 @@ import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.AppleWrapperResourceArg;
-import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -30,7 +29,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -39,10 +37,9 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractXCodeNativeTargetAttributes {
   @Value.Parameter
-  public abstract BuildTarget target();
-
-  @Value.Parameter
   public abstract AppleConfig appleConfig();
+
+  public abstract Optional<BuildTarget> target();
 
   @Value.Derived
   public Path shell() {
@@ -54,15 +51,7 @@ abstract class AbstractXCodeNativeTargetAttributes {
     return appleConfig().buildScriptPath();
   }
 
-  @Value.Default
-  public XcodeProductMetadata product() {
-    return new XcodeProductMetadata(ProductTypes.BUNDLE, "", Paths.get(""));
-  }
-
-  @Value.Default
-  public String targetName() {
-    return "";
-  }
+  public abstract Optional<XcodeProductMetadata> product();
 
   @Value.Default
   public boolean frameworkHeadersEnabled() {
@@ -156,6 +145,11 @@ abstract class AbstractXCodeNativeTargetAttributes {
 
   @Value.Default
   public ImmutableList<SourceTreePath> dependencies() {
+    return ImmutableList.of();
+  }
+
+  @Value.Default
+  public ImmutableList<SourcePath> genruleFiles() {
     return ImmutableList.of();
   }
 }

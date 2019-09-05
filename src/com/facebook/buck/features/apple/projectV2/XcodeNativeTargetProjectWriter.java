@@ -71,27 +71,38 @@ class XcodeNativeTargetProjectWriter {
   private static final Logger LOG = Logger.get(XcodeNativeTargetProjectWriter.class);
 
   public static class Result {
-    public final PBXNativeTarget target;
-    public final PBXGroup targetGroup;
+    private final Optional<PBXNativeTarget> target;
+    private final PBXGroup targetGroup;
 
-    private Result(PBXNativeTarget target, PBXGroup targetGroup) {
+    private Result(Optional<PBXNativeTarget> target, PBXGroup targetGroup) {
       this.target = target;
       this.targetGroup = targetGroup;
+    }
+
+    public Optional<PBXNativeTarget> getTarget() {
+      return target;
+    }
+
+    public PBXGroup getTargetGroup() {
+      return targetGroup;
     }
   }
 
   private final PathRelativizer pathRelativizer;
   private final Function<SourcePath, Path> sourcePathResolver;
+  private final boolean shouldUseShortNamesForTargets;
 
   public XcodeNativeTargetProjectWriter(
-      PathRelativizer pathRelativizer, Function<SourcePath, Path> sourcePathResolver) {
+      PathRelativizer pathRelativizer,
+      Function<SourcePath, Path> sourcePathResolver,
+      boolean shouldUseShortNamesForTargets) {
     this.pathRelativizer = pathRelativizer;
     this.sourcePathResolver = sourcePathResolver;
+    this.shouldUseShortNamesForTargets = shouldUseShortNamesForTargets;
   }
 
   public Result writeTargetToProject(
       XCodeNativeTargetAttributes targetAttributes, PBXProject project) {
-    PBXNativeTarget nativeTarget = new PBXNativeTarget(targetAttributes.targetName());
     ProjectFileWriter projectFileWriter =
         new ProjectFileWriter(project, pathRelativizer, sourcePathResolver);
 
@@ -114,32 +125,81 @@ class XcodeNativeTargetProjectWriter {
     addCoreDataModelBuildPhaseToProject(
         targetAttributes.coreDataResources(), project, sourcesBuildPhase);
 
-    // Source files must be compiled in order to be indexed.
-    if (!sourcesBuildPhase.getFiles().isEmpty()) {
-      nativeTarget.getBuildPhases().add(sourcesBuildPhase);
-    }
+    Optional<PBXNativeTarget> generatedNativeTarget =
+        targetAttributes
+            .target()
+            .map(
+                buildTarget -> {
+                  PBXNativeTarget nativeTarget =
+                      new PBXNativeTarget(getXcodeTargetName(buildTarget));
+                  // Source files must be compiled in order to be indexed.
+                  if (!sourcesBuildPhase.getFiles().isEmpty()) {
+                    nativeTarget.getBuildPhases().add(sourcesBuildPhase);
+                  }
 
-    // TODO(chatatap): Verify if we still need header build phases (specifically for swift).
-    if (!headersBuildPhase.getFiles().isEmpty()) {
-      nativeTarget.getBuildPhases().add(headersBuildPhase);
-    }
+                  // TODO(chatatap): Verify if we still need header build phases (specifically for
+                  // swift).
+                  if (!headersBuildPhase.getFiles().isEmpty()) {
+                    nativeTarget.getBuildPhases().add(headersBuildPhase);
+                  }
 
-    // Using a buck build phase doesnt support having other build phases.
-    // TODO(chatatap): Find solutions around this, as this will likely break indexing.
-    if (ImmutableList.of(
-            ProductTypes.APPLICATION,
-            ProductTypes.UNIT_TEST,
-            ProductTypes.UI_TEST,
-            ProductTypes.APP_EXTENSION,
-            ProductTypes.WATCH_APPLICATION)
-        .contains(targetAttributes.product().getType())) {
-      nativeTarget.getBuildPhases().clear();
-    }
-    addBuckBuildPhase(
-        targetAttributes.target(),
-        targetAttributes.shell(),
-        targetAttributes.buildScriptPath(),
-        nativeTarget);
+                  // Using a buck build phase doesnt support having other build phases.
+                  // TODO(chatatap): Find solutions around this, as this will likely break indexing.
+                  targetAttributes
+                      .product()
+                      .ifPresent(
+                          product -> {
+                            if (ImmutableList.of(
+                                    ProductTypes.APPLICATION,
+                                    ProductTypes.UNIT_TEST,
+                                    ProductTypes.UI_TEST,
+                                    ProductTypes.APP_EXTENSION,
+                                    ProductTypes.WATCH_APPLICATION)
+                                .contains(product.getType())) {
+                              nativeTarget.getBuildPhases().clear();
+                            }
+                          });
+
+                  addBuckBuildPhase(
+                      buildTarget,
+                      targetAttributes.shell(),
+                      targetAttributes.buildScriptPath(),
+                      nativeTarget);
+
+                  targetAttributes
+                      .product()
+                      .ifPresent(
+                          product -> {
+                            PBXGroup productsGroup =
+                                project.getMainGroup().getOrCreateChildGroupByName("Products");
+                            PBXFileReference productReference =
+                                productsGroup.getOrCreateFileReferenceBySourceTreePath(
+                                    new SourceTreePath(
+                                        PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
+                                        product.getOutputPath(),
+                                        Optional.empty()));
+                            nativeTarget.setProductName(product.getName());
+                            nativeTarget.setProductReference(productReference);
+                            nativeTarget.setProductType(product.getType());
+                          });
+
+                  for (XcconfigBaseConfiguration config : targetAttributes.xcconfigs()) {
+                    XCBuildConfiguration outputConfiguration =
+                        nativeTarget
+                            .getBuildConfigurationList()
+                            .getBuildConfigurationsByName()
+                            .getUnchecked(config.getName());
+
+                    PBXFileReference fileReference =
+                        projectFileWriter
+                            .writeFilePath(config.getPath(), Optional.empty())
+                            .getFileReference();
+                    outputConfiguration.setBaseConfigurationReference(fileReference);
+                  }
+
+                  project.getTargets().add(nativeTarget);
+                  return nativeTarget;
+                });
 
     targetAttributes
         .products()
@@ -166,35 +226,13 @@ class XcodeNativeTargetProjectWriter {
                     .getOrCreateChildGroupByName("Dependencies")
                     .getOrCreateFileReferenceBySourceTreePath(dep));
 
+    targetAttributes
+        .genruleFiles()
+        .forEach(sourcePath -> projectFileWriter.writeSourcePath(sourcePath));
+
     PBXGroup targetGroup = project.getMainGroup();
 
-    // Product
-
-    PBXGroup productsGroup = project.getMainGroup().getOrCreateChildGroupByName("Products");
-    PBXFileReference productReference =
-        productsGroup.getOrCreateFileReferenceBySourceTreePath(
-            new SourceTreePath(
-                PBXReference.SourceTree.BUILT_PRODUCTS_DIR,
-                targetAttributes.product().getOutputPath(),
-                Optional.empty()));
-    nativeTarget.setProductName(targetAttributes.product().getName());
-    nativeTarget.setProductReference(productReference);
-    nativeTarget.setProductType(targetAttributes.product().getType());
-
-    for (XcconfigBaseConfiguration config : targetAttributes.xcconfigs()) {
-      XCBuildConfiguration outputConfiguration =
-          nativeTarget
-              .getBuildConfigurationList()
-              .getBuildConfigurationsByName()
-              .getUnchecked(config.getName());
-
-      PBXFileReference fileReference =
-          projectFileWriter.writeFilePath(config.getPath(), Optional.empty()).getFileReference();
-      outputConfiguration.setBaseConfigurationReference(fileReference);
-    }
-
-    project.getTargets().add(nativeTarget);
-    return new Result(nativeTarget, targetGroup);
+    return new Result(generatedNativeTarget, targetGroup);
   }
 
   private void addPhasesAndGroupsForSources(
@@ -208,7 +246,7 @@ class XcodeNativeTargetProjectWriter {
         headersBuildPhase,
         targetAttributes.langPreprocessorFlags(),
         targetAttributes.frameworkHeadersEnabled(),
-        targetAttributes.product().getType(),
+        targetAttributes.product().map(product -> product.getType()),
         RuleUtils.createGroupsFromSourcePaths(
             pathRelativizer::outputPathToSourcePath,
             targetAttributes.sourcesWithFlags(),
@@ -250,7 +288,7 @@ class XcodeNativeTargetProjectWriter {
       PBXHeadersBuildPhase headersBuildPhase,
       ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags,
       boolean frameworkHeadersEnabled,
-      ProductType productType,
+      Optional<ProductType> productType,
       Iterable<GroupedSource> groupedSources) {
     GroupedSource.Visitor visitor =
         new GroupedSource.Visitor() {
@@ -346,15 +384,16 @@ class XcodeNativeTargetProjectWriter {
       PBXHeadersBuildPhase headersBuildPhase,
       HeaderVisibility visibility,
       boolean frameworkHeadersEnabled,
-      ProductType productType) {
+      Optional<ProductType> productType) {
     PBXBuildFile buildFile = new PBXBuildFile(fileReference);
     if (visibility != HeaderVisibility.PRIVATE) {
-
-      if (frameworkHeadersEnabled
-          && (productType == ProductTypes.FRAMEWORK
-              || productType == ProductTypes.STATIC_FRAMEWORK)) {
-        headersBuildPhase.getFiles().add(buildFile);
-      }
+      productType.ifPresent(
+          type -> {
+            if (frameworkHeadersEnabled
+                && (type == ProductTypes.FRAMEWORK || type == ProductTypes.STATIC_FRAMEWORK)) {
+              headersBuildPhase.getFiles().add(buildFile);
+            }
+          });
 
       NSDictionary settings = new NSDictionary();
       settings.put(
@@ -596,5 +635,11 @@ class XcodeNativeTargetProjectWriter {
         sourcesBuildPhase.getFiles().add(buildFile);
       }
     }
+  }
+
+  private String getXcodeTargetName(BuildTarget target) {
+    return shouldUseShortNamesForTargets
+        ? target.getShortNameAndFlavorPostfix() // make sure Xcode UI shows unique names by flavor
+        : target.getFullyQualifiedName();
   }
 }

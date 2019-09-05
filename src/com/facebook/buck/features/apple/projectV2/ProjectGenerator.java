@@ -273,7 +273,6 @@ public class ProjectGenerator {
   private final ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
   private final ImmutableList.Builder<CopyInXcode> filesToCopyInXcodeBuilder =
       ImmutableList.builder();
-  private final ImmutableSet.Builder<SourcePath> genruleFiles = ImmutableSet.builder();
   private final ImmutableSet.Builder<SourcePath> filesAddedBuilder = ImmutableSet.builder();
   private final Set<BuildTarget> generatedTargets = new HashSet<>();
   /**
@@ -362,7 +361,7 @@ public class ProjectGenerator {
                 new CacheLoader<TargetNode<?>, Optional<PBXTarget>>() {
                   @Override
                   public Optional<PBXTarget> load(TargetNode<?> key) throws Exception {
-                    return generateProjectTarget(key);
+                    return generateProjectTarget(key).map(t -> t);
                   }
                 });
 
@@ -480,8 +479,6 @@ public class ProjectGenerator {
               input -> !workspaceTargetNode.isPresent() || !input.equals(workspaceTargetNode.get()))
           .forEach(input -> triggerLoadingCache(input));
 
-      addGenruleFiles();
-
       if (shouldMergeHeaderMaps() && isMainProject) {
         createMergedHeaderMap();
       }
@@ -525,28 +522,16 @@ public class ProjectGenerator {
     }
   }
 
-  /** Add all source files of genrules in a group "Other". */
-  private void addGenruleFiles() {
-    ImmutableSet<SourcePath> filesAdded = filesAddedBuilder.build();
-    ImmutableSet<SourcePath> files = genruleFiles.build();
-    ProjectFileWriter projectFileWriter =
-        new ProjectFileWriter(
-            xcodeProjectWriteOptions.project(), pathRelativizer, this::resolveSourcePath);
-    for (SourcePath sourcePath : files) {
-      // Make sure we don't add duplicates of existing files in this section.
-      if (filesAdded.contains(sourcePath)) {
-        continue;
-      }
-      projectFileWriter.writeSourcePath(sourcePath);
-    }
-  }
-
   @SuppressWarnings("unchecked")
-  private Optional<PBXTarget> generateProjectTarget(TargetNode<?> targetNode) throws IOException {
+  private Optional<PBXNativeTarget> generateProjectTarget(TargetNode<?> targetNode)
+      throws IOException {
     Preconditions.checkState(
         isBuiltByCurrentProject(targetNode.getBuildTarget()),
         "should not generate rule if it shouldn't be built by current project");
 
+    // Not sure if this is still needed -- IT excludes BUCK compilation targets, according to the
+    // comment
+    // Something we can revisit. (@cjjones)
     if (shouldExcludeLibraryFromProject(targetNode)) {
       return Optional.empty();
     }
@@ -564,20 +549,22 @@ public class ProjectGenerator {
     }
     generatedTargets.add(targetWithoutSpecificFlavors);
 
-    PBXProject project = xcodeProjectWriteOptions.project();
-    Optional<PBXTarget> result = Optional.empty();
+    XCodeNativeTargetAttributes.Builder nativeTargetBuilder =
+        XCodeNativeTargetAttributes.builder().setAppleConfig(appleConfig);
+
+    Optional<BinaryTargetGenerationResult> result = Optional.empty();
     if (targetNode.getDescription() instanceof AppleLibraryDescription) {
       result =
           Optional.of(
               generateAppleLibraryTarget(
-                  project,
+                  nativeTargetBuilder,
                   (TargetNode<AppleNativeTargetDescriptionArg>) targetNode,
                   Optional.empty()));
     } else if (targetNode.getDescription() instanceof CxxLibraryDescription) {
       result =
           Optional.of(
               generateCxxLibraryTarget(
-                  project,
+                  nativeTargetBuilder,
                   (TargetNode<CommonArg>) targetNode,
                   ImmutableSet.of(),
                   ImmutableSet.of(),
@@ -586,21 +573,23 @@ public class ProjectGenerator {
       result =
           Optional.of(
               generateAppleBinaryTarget(
-                  project, (TargetNode<AppleNativeTargetDescriptionArg>) targetNode));
+                  nativeTargetBuilder, (TargetNode<AppleNativeTargetDescriptionArg>) targetNode));
     } else if (targetNode.getDescription() instanceof AppleBundleDescription) {
       TargetNode<AppleBundleDescriptionArg> bundleTargetNode =
           (TargetNode<AppleBundleDescriptionArg>) targetNode;
       result =
           Optional.of(
               generateAppleBundleTarget(
-                  project,
+                  nativeTargetBuilder,
                   bundleTargetNode,
                   (TargetNode<AppleNativeTargetDescriptionArg>)
                       targetGraph.get(getBundleBinaryTarget(bundleTargetNode)),
                   Optional.empty()));
     } else if (targetNode.getDescription() instanceof AppleTestDescription) {
       result =
-          Optional.of(generateAppleTestTarget((TargetNode<AppleTestDescriptionArg>) targetNode));
+          Optional.of(
+              generateAppleTestTarget(
+                  (TargetNode<AppleTestDescriptionArg>) targetNode, nativeTargetBuilder));
     } else if (targetNode.getDescription() instanceof AppleResourceDescription) {
       checkAppleResourceTargetNodeReferencingValidContents(
           (TargetNode<AppleResourceDescriptionArg>) targetNode);
@@ -611,7 +600,8 @@ public class ProjectGenerator {
 
       // The generated target just runs a shell script that invokes the "compiler" with the
       // correct target architecture.
-      result = generateHalideLibraryTarget(project, halideTargetNode);
+      generateHalideLibraryTarget(nativeTargetBuilder, halideTargetNode);
+      result = Optional.of(new BinaryTargetGenerationResult(ImmutableList.of()));
 
       // Make sure the compiler gets built at project time, since we'll need
       // it to generate the shader code during the Xcode build.
@@ -636,10 +626,33 @@ public class ProjectGenerator {
     } else if (targetNode.getDescription() instanceof AbstractGenruleDescription) {
       TargetNode<AbstractGenruleDescription.CommonArg> genruleNode =
           (TargetNode<AbstractGenruleDescription.CommonArg>) targetNode;
-      genruleFiles.addAll(genruleNode.getConstructorArg().getSrcs().getPaths());
+
+      for (SourcePath genruleFilePath : genruleNode.getConstructorArg().getSrcs().getPaths()) {
+        nativeTargetBuilder.addGenruleFiles(genruleFilePath);
+      }
     }
+
+    XcodeNativeTargetProjectWriter nativeTargetProjectWriter =
+        new XcodeNativeTargetProjectWriter(
+            pathRelativizer, this::resolveSourcePath, options.shouldUseShortNamesForTargets());
+    XcodeNativeTargetProjectWriter.Result targetWriteResult =
+        nativeTargetProjectWriter.writeTargetToProject(
+            nativeTargetBuilder.build(), xcodeProjectWriteOptions.project());
+
+    result.ifPresent(
+        generationResult -> {
+          targetWriteResult
+              .getTarget()
+              .ifPresent(
+                  target -> {
+                    for (BuildTarget buildTarget : generationResult.getDependencies()) {
+                      addPBXTargetDependency(target, buildTarget);
+                    }
+                  });
+        });
+
     buckEventBus.post(ProjectGenerationEvent.processed());
-    return result;
+    return targetWriteResult.getTarget();
   }
 
   private static Path getHalideOutputPath(ProjectFilesystem filesystem, BuildTarget target) {
@@ -651,9 +664,13 @@ public class ProjectGenerator {
         .resolve(target.getShortName());
   }
 
-  private Optional<PBXTarget> generateHalideLibraryTarget(
-      PBXProject project, TargetNode<HalideLibraryDescriptionArg> targetNode) throws IOException {
+  private void generateHalideLibraryTarget(
+      XCodeNativeTargetAttributes.Builder xcodeNativeTargetAttributesBuilder,
+      TargetNode<HalideLibraryDescriptionArg> targetNode)
+      throws IOException {
     BuildTarget buildTarget = targetNode.getBuildTarget();
+    xcodeNativeTargetAttributesBuilder.setTarget(Optional.of(buildTarget));
+
     String productName = getProductNameForBuildTargetNode(targetNode);
     Path outputPath = getHalideOutputPath(targetNode.getFilesystem(), buildTarget);
 
@@ -662,12 +679,9 @@ public class ProjectGenerator {
     PBXShellScriptBuildPhase scriptPhase = new PBXShellScriptBuildPhase();
     scriptPhase.setShellScript(script.orElse(""));
 
-    XCodeNativeTargetAttributes.Builder xcodeNativeTargetAttributesBuilder =
-        XCodeNativeTargetAttributes.builder().setTarget(buildTarget).setAppleConfig(appleConfig);
-
-    xcodeNativeTargetAttributesBuilder
-        .setTargetName(getXcodeTargetName(buildTarget))
-        .setProduct(new XcodeProductMetadata(ProductTypes.STATIC_LIBRARY, productName, outputPath));
+    xcodeNativeTargetAttributesBuilder.setProduct(
+        Optional.of(
+            new XcodeProductMetadata(ProductTypes.STATIC_LIBRARY, productName, outputPath)));
 
     BuildTarget compilerTarget =
         HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget);
@@ -705,17 +719,11 @@ public class ProjectGenerator {
         extraSettings,
         defaultSettingsBuilder.build(),
         appendedConfig);
-
-    XcodeNativeTargetProjectWriter nativeTargetProjectWriter =
-        new XcodeNativeTargetProjectWriter(this.pathRelativizer, this::resolveSourcePath);
-    XcodeNativeTargetProjectWriter.Result targetBuilderResult =
-        nativeTargetProjectWriter.writeTargetToProject(
-            xcodeNativeTargetAttributesBuilder.build(), project);
-
-    return Optional.of(targetBuilderResult.target);
   }
 
-  private PBXTarget generateAppleTestTarget(TargetNode<AppleTestDescriptionArg> testTargetNode)
+  private BinaryTargetGenerationResult generateAppleTestTarget(
+      TargetNode<AppleTestDescriptionArg> testTargetNode,
+      XCodeNativeTargetAttributes.Builder nativeTargetBuilder)
       throws IOException {
     AppleTestDescriptionArg args = testTargetNode.getConstructorArg();
     Optional<BuildTarget> testTargetApp = extractTestTargetForTestDescriptionArg(args);
@@ -732,7 +740,7 @@ public class ProjectGenerator {
                       });
             });
     return generateAppleBundleTarget(
-        xcodeProjectWriteOptions.project(), testTargetNode, testTargetNode, testHostBundle);
+        nativeTargetBuilder, testTargetNode, testTargetNode, testHostBundle);
   }
 
   private Optional<BuildTarget> extractTestTargetForTestDescriptionArg(
@@ -766,8 +774,8 @@ public class ProjectGenerator {
     }
   }
 
-  private PBXNativeTarget generateAppleBundleTarget(
-      PBXProject project,
+  private BinaryTargetGenerationResult generateAppleBundleTarget(
+      XCodeNativeTargetAttributes.Builder nativeTargetBuilder,
       TargetNode<? extends HasAppleBundleFields> targetNode,
       TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode,
       Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode)
@@ -834,7 +842,7 @@ public class ProjectGenerator {
 
     BinaryTargetGenerationResult result =
         generateBinaryTarget(
-            project,
+            nativeTargetBuilder,
             Optional.of(targetNode),
             binaryNode,
             bundleToTargetProductType(targetNode, binaryNode),
@@ -855,11 +863,6 @@ public class ProjectGenerator {
             coreDataResources,
             bundleLoaderNode);
 
-    PBXNativeTarget target = result.target;
-    for (BuildTarget dependency : result.getDependencies()) {
-      addPBXTargetDependency(target, dependency);
-    }
-
     if (bundleLoaderNode.isPresent()) {
       LOG.debug(
           "Generated iOS bundle target %s with binarynode: %s bundleLoadernode: %s",
@@ -872,7 +875,8 @@ public class ProjectGenerator {
           targetNode.getBuildTarget().getFullyQualifiedName(),
           binaryNode.getBuildTarget().getFullyQualifiedName());
     }
-    return target;
+
+    return result;
   }
 
   /**
@@ -948,12 +952,13 @@ public class ProjectGenerator {
     return RichStream.from(copiedRules).filter(x -> !bundleLoader.equals(x)).toImmutableList();
   }
 
-  private PBXNativeTarget generateAppleBinaryTarget(
-      PBXProject project, TargetNode<AppleNativeTargetDescriptionArg> targetNode)
+  private BinaryTargetGenerationResult generateAppleBinaryTarget(
+      XCodeNativeTargetAttributes.Builder nativeTargetBuilder,
+      TargetNode<AppleNativeTargetDescriptionArg> targetNode)
       throws IOException {
     BinaryTargetGenerationResult result =
         generateBinaryTarget(
-            project,
+            nativeTargetBuilder,
             Optional.empty(),
             targetNode,
             ProductTypes.TOOL,
@@ -968,35 +973,30 @@ public class ProjectGenerator {
             ImmutableSet.of(),
             Optional.empty());
 
-    PBXNativeTarget target = result.getTarget();
-    for (BuildTarget dependency : result.getDependencies()) {
-      addPBXTargetDependency(target, dependency);
-    }
-
     LOG.debug(
         "Generated Apple binary target %s", targetNode.getBuildTarget().getFullyQualifiedName());
-    return target;
+    return result;
   }
 
-  private PBXNativeTarget generateAppleLibraryTarget(
-      PBXProject project,
+  private BinaryTargetGenerationResult generateAppleLibraryTarget(
+      XCodeNativeTargetAttributes.Builder nativeTargetBuilder,
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode)
       throws IOException {
-    PBXNativeTarget target =
+    BinaryTargetGenerationResult result =
         generateCxxLibraryTarget(
-            project,
+            nativeTargetBuilder,
             targetNode,
             AppleResources.collectDirectResources(targetGraph, targetNode),
             AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
             bundleLoaderNode);
     LOG.debug(
         "Generated iOS library target %s", targetNode.getBuildTarget().getFullyQualifiedName());
-    return target;
+    return result;
   }
 
-  private PBXNativeTarget generateCxxLibraryTarget(
-      PBXProject project,
+  private BinaryTargetGenerationResult generateCxxLibraryTarget(
+      XCodeNativeTargetAttributes.Builder nativeTargetBuilder,
       TargetNode<? extends CommonArg> targetNode,
       ImmutableSet<AppleResourceDescriptionArg> directResources,
       ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs,
@@ -1008,7 +1008,7 @@ public class ProjectGenerator {
     ProductType productType = isShared ? ProductTypes.DYNAMIC_LIBRARY : ProductTypes.STATIC_LIBRARY;
     BinaryTargetGenerationResult result =
         generateBinaryTarget(
-            project,
+            nativeTargetBuilder,
             Optional.empty(),
             targetNode,
             productType,
@@ -1023,14 +1023,9 @@ public class ProjectGenerator {
             ImmutableSet.of(),
             bundleLoaderNode);
 
-    PBXNativeTarget target = result.getTarget();
-    for (BuildTarget dependency : result.getDependencies()) {
-      addPBXTargetDependency(target, dependency);
-    }
-
     LOG.debug(
         "Generated Cxx library target %s", targetNode.getBuildTarget().getFullyQualifiedName());
-    return target;
+    return result;
   }
 
   private ImmutableList<String> convertStringWithMacros(
@@ -1265,17 +1260,10 @@ public class ProjectGenerator {
   }
 
   private static class BinaryTargetGenerationResult {
-    private final PBXNativeTarget target;
     private final ImmutableList<BuildTarget> dependencies;
 
-    public BinaryTargetGenerationResult(
-        PBXNativeTarget target, ImmutableList<BuildTarget> dependencies) {
-      this.target = target;
+    public BinaryTargetGenerationResult(ImmutableList<BuildTarget> dependencies) {
       this.dependencies = dependencies;
-    }
-
-    public PBXNativeTarget getTarget() {
-      return target;
     }
 
     public ImmutableList<BuildTarget> getDependencies() {
@@ -1284,7 +1272,7 @@ public class ProjectGenerator {
   }
 
   private BinaryTargetGenerationResult generateBinaryTarget(
-      PBXProject project,
+      XCodeNativeTargetAttributes.Builder xcodeNativeTargetAttributesBuilder,
       Optional<? extends TargetNode<? extends HasAppleBundleFields>> bundle,
       TargetNode<? extends CommonArg> targetNode,
       ProductType productType,
@@ -1306,10 +1294,10 @@ public class ProjectGenerator {
     BuildTarget buildTarget = buildTargetNode.getBuildTarget();
     boolean containsSwiftCode = projGenerationStateCache.targetContainsSwiftSourceCode(targetNode);
 
+    xcodeNativeTargetAttributesBuilder.setTarget(Optional.of(buildTarget));
+
     String buildTargetName = getProductNameForBuildTargetNode(buildTargetNode);
     CommonArg arg = targetNode.getConstructorArg();
-    XCodeNativeTargetAttributes.Builder xcodeNativeTargetAttributesBuilder =
-        XCodeNativeTargetAttributes.builder().setTarget(buildTarget).setAppleConfig(appleConfig);
 
     // Both exported headers and exported platform headers will be put into the symlink tree
     // exported platform headers will be excluded and then included by platform
@@ -1337,13 +1325,12 @@ public class ProjectGenerator {
       swiftVersion = swiftBuckConfig.getVersion();
     }
 
-    xcodeNativeTargetAttributesBuilder
-        .setTargetName(getXcodeTargetName(buildTarget))
-        .setProduct(
+    xcodeNativeTargetAttributesBuilder.setProduct(
+        Optional.of(
             new XcodeProductMetadata(
                 productType,
                 buildTargetName,
-                Paths.get(String.format(productOutputFormat, buildTargetName))));
+                Paths.get(String.format(productOutputFormat, buildTargetName)))));
 
     boolean isModularAppleLibrary = isModularAppleLibrary(targetNode);
     xcodeNativeTargetAttributesBuilder.setFrameworkHeadersEnabled(isModularAppleLibrary);
@@ -1541,7 +1528,7 @@ public class ProjectGenerator {
       if (productType == ProductTypes.UI_TEST) {
         if (bundleLoaderNode.isPresent()) {
           BuildTarget testTarget = bundleLoaderNode.get().getBuildTarget();
-          extraSettingsBuilder.put("TEST_TARGET_NAME", getXcodeTargetName(testTarget));
+          extraSettingsBuilder.put("TEST_TARGET_NAME", testTarget.getFullyQualifiedName());
           dependencies.add(testTarget);
         } else {
           throw new HumanReadableException(
@@ -1965,12 +1952,7 @@ public class ProjectGenerator {
       addEntitlementsPlistIntoTarget(bundle.get(), xcodeNativeTargetAttributesBuilder);
     }
 
-    XcodeNativeTargetProjectWriter nativeTargetProjectWriter =
-        new XcodeNativeTargetProjectWriter(pathRelativizer, this::resolveSourcePath);
-    XcodeNativeTargetProjectWriter.Result targetBuilderResult =
-        nativeTargetProjectWriter.writeTargetToProject(
-            xcodeNativeTargetAttributesBuilder.build(), project);
-    return new BinaryTargetGenerationResult(targetBuilderResult.target, dependencies.build());
+    return new BinaryTargetGenerationResult(dependencies.build());
   }
 
   /** Generate a mapping from libraries to the framework bundles that include them. */
@@ -4100,12 +4082,6 @@ public class ProjectGenerator {
    */
   private boolean isBuiltByCurrentProject(BuildTarget buildTarget) {
     return initialTargets.contains(buildTarget);
-  }
-
-  private String getXcodeTargetName(BuildTarget target) {
-    return options.shouldUseShortNamesForTargets()
-        ? target.getShortNameAndFlavorPostfix() // make sure Xcode UI shows unique names by flavor
-        : target.getFullyQualifiedName();
   }
 
   private ProductType bundleToTargetProductType(
