@@ -51,14 +51,8 @@
 {call buck.arg}
   {param name: 'srcs' /}
   {param desc}
-  The set of files to include in the zip. If any of these are source
-  zips (indicated by a file name ending in <code>-sources.jar</code>{sp}
-  or <code>.src.zip</code>) the contents of the source zip will be
-  added to the generated zip, rather than the source zip itself. This
-  provides a mechanism to roll up multiple source zips into a single
-  unit.
+  The set of files to include in the zip.
   <p>
-   
   Each <code>src</code> will be added to the zip as follows:
   <ul> 
   <li>If the <code>src</code> is the output of another rule, the output
@@ -66,8 +60,6 @@
   <li>If the <code>src</code> is a file relative to the rule's
       declaration, it will be included in the zip with its relative file
       name.
-  <li>If the <code>src</code> is a source zip, the contents of the
-      source zip will be added to the generated zip.
   </ul>
 
   {/param}
@@ -128,10 +120,11 @@ zip_file(
       # be found in the zip at "hello.txt"
       '//some/other:target',
   
-      # Whereas the contents of this zip will be added
-      # to the generated zip.
-      'amazing-library-1.0-sources.zip',
     ],
+  zip_srcs = [
+     # The contents of this zip will be added to the generated zip.
+    'amazing-library-1.0-sources.zip',
+  ],
 )
 </pre>{/literal}
 

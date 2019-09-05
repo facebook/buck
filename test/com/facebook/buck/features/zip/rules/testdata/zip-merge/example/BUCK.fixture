@@ -11,5 +11,4 @@ zip_file(
         ":cake",
         ":cake#src",
     ],
-    merge_source_zips = False,
 )

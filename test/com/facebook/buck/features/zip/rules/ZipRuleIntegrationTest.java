@@ -240,19 +240,6 @@ public class ZipRuleIntegrationTest {
   }
 
   @Test
-  public void shouldThrowExceptionWhenZipSourcesAndMergeSourcesDefined() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);
-    workspace.setUp();
-
-    ProcessResult processResult = workspace.runBuckBuild("//example:zipbreak");
-    processResult.assertExitCode(ExitCode.FATAL_GENERIC);
-    assertThat(
-        processResult.getStderr(),
-        containsString("Illegal to define merge_source_zips when zip_srcs is present"));
-  }
-
-  @Test
   public void shouldOnlyUnpackContentsOfZipSources() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "zip-rule", tmp);

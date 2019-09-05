@@ -25,7 +25,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.features.filebundler.CopyingFileBundler;
 import com.facebook.buck.features.filebundler.FileBundler;
-import com.facebook.buck.features.filebundler.SrcZipAwareFileBundler;
 import com.facebook.buck.features.filebundler.ZipFileExtractor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -51,7 +50,6 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
   @AddToRuleKey private final ImmutableList<SourcePath> zipSources;
   @AddToRuleKey private final OutputPath output;
   @AddToRuleKey private final boolean flatten;
-  @AddToRuleKey private final boolean mergeSourceZips;
   @AddToRuleKey private final ImmutableSet<Pattern> entriesToExclude;
   @AddToRuleKey private final OnDuplicateEntry onDuplicateEntry;
 
@@ -63,7 +61,6 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
       ImmutableSet<SourcePath> sources,
       ImmutableList<SourcePath> zipSources,
       boolean flatten,
-      boolean mergeSourceZips,
       ImmutableSet<Pattern> entriesToExclude,
       OnDuplicateEntry onDuplicateEntry) {
     super(buildTarget, projectFilesystem, ruleFinder, Zip.class);
@@ -73,7 +70,6 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
     this.zipSources = zipSources;
     this.output = new OutputPath(name);
     this.flatten = flatten;
-    this.mergeSourceZips = mergeSourceZips;
     this.entriesToExclude = entriesToExclude;
     this.onDuplicateEntry = onDuplicateEntry;
   }
@@ -86,7 +82,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
       BuildCellRelativePathFactory buildCellPathFactory) {
     Path outputPath = outputPathResolver.resolvePath(this.output);
 
-    if (flatten || mergeSourceZips) {
+    if (flatten) {
       return createLegacySteps(
           buildContext, filesystem, outputPathResolver, buildCellPathFactory, outputPath);
     } else {
@@ -128,8 +124,6 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
               buildContext.getSourcePathResolver(),
               excludedEntriesMatcher));
       bundler = new CopyingFileBundler(filesystem, getBuildTarget());
-    } else if (mergeSourceZips) {
-      bundler = new SrcZipAwareFileBundler(filesystem, getBuildTarget(), excludedEntriesMatcher);
     } else {
       bundler = new CopyingFileBundler(filesystem, getBuildTarget());
     }

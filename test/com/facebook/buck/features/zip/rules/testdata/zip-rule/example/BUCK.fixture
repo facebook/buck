@@ -24,8 +24,7 @@ zip_file(
 
 zip_file(
     name = "unrolled",
-    srcs = [":source-jar"],
-    merge_source_zips = True,
+    zip_srcs = [":source-jar"],
 )
 
 zip_file(
@@ -35,16 +34,6 @@ zip_file(
         "source-2.0-sources.jar",
     ],
     zip_srcs = ["source-1.0-sources.jar"],
-)
-
-zip_file(
-    name = "zipbreak",
-    srcs = [
-        "cake.txt",
-        "source-1.0-sources.jar",
-    ],
-    merge_source_zips = True,
-    zip_srcs = [":source-jar"],
 )
 
 zip_file(
@@ -63,23 +52,25 @@ zip_file(
     name = "excludecake",
     srcs = [
         "cake.txt",
-        "source-1.0-sources.jar",
     ],
     entries_to_exclude = ["ca.e.*"],
-    merge_source_zips = True,
+    zip_srcs = [
+        "source-1.0-sources.jar",
+    ],
 )
 
 zip_file(
     name = "excludenothing",
     srcs = [
         "cake.txt",
-        "source-1.0-sources.jar",
     ],
     entries_to_exclude = [
         "this.is.not.a.match",
         "neither.is.this",
     ],
-    merge_source_zips = True,
+    zip_srcs = [
+        "source-1.0-sources.jar",
+    ],
 )
 
 zip_file(
