@@ -267,53 +267,49 @@ public class WorkspaceAndProjectGenerator {
 
     writeWorkspaceMetaData(outputDirectory, workspaceName);
 
-    if (projectGeneratorOptions.shouldGenerateHeaderSymlinkTreesOnly()) {
-      return new Result(workspaceGenerator.getWorkspaceDir(), xcodeProjectWriteOptions.project());
-    } else {
-      ImmutableMap<BuildTarget, PBXTarget> buildTargetToPBXTarget =
-          buildTargetToPbxTargetMapBuilder.build();
-      ImmutableMap<PBXTarget, Path> targetToProjectPathMap = targetToProjectPathMapBuilder.build();
-      ImmutableSetMultimap<PBXProject, PBXTarget> generatedProjectToPbxTargets =
-          generatedProjectToPbxTargetsBuilder.build();
+    ImmutableMap<BuildTarget, PBXTarget> buildTargetToPBXTarget =
+        buildTargetToPbxTargetMapBuilder.build();
+    ImmutableMap<PBXTarget, Path> targetToProjectPathMap = targetToProjectPathMapBuilder.build();
+    ImmutableSetMultimap<PBXProject, PBXTarget> generatedProjectToPbxTargets =
+        generatedProjectToPbxTargetsBuilder.build();
 
-      ImmutableSetMultimap<String, PBXTarget> schemeBuildForTestNodeTargets =
-          WorkspaceAndProjectGenerator.mapFromSchemeToPBXProject(
-              buildForTestNodes, buildTargetToPBXTarget);
-      ImmutableSetMultimap<String, PBXTarget> schemeUngroupedTestTargets =
-          WorkspaceAndProjectGenerator.mapFromSchemeToPBXProject(tests, buildTargetToPBXTarget);
+    ImmutableSetMultimap<String, PBXTarget> schemeBuildForTestNodeTargets =
+        WorkspaceAndProjectGenerator.mapFromSchemeToPBXProject(
+            buildForTestNodes, buildTargetToPBXTarget);
+    ImmutableSetMultimap<String, PBXTarget> schemeUngroupedTestTargets =
+        WorkspaceAndProjectGenerator.mapFromSchemeToPBXProject(tests, buildTargetToPBXTarget);
 
-      if (projectGeneratorOptions.shouldGenerateProjectSchemes()) {
-        // compose the project targets of targets that are within the main (or extra) scheme's
-        // targets
-        ImmutableSet<PBXTarget> schemeTargets =
-            ImmutableSet.copyOf(
-                mapFromOptionalSchemeToPBXProject(schemeNameToSrcTargetNode, buildTargetToPBXTarget)
-                    .values());
+    if (projectGeneratorOptions.shouldGenerateProjectSchemes()) {
+      // compose the project targets of targets that are within the main (or extra) scheme's
+      // targets
+      ImmutableSet<PBXTarget> schemeTargets =
+          ImmutableSet.copyOf(
+              mapFromOptionalSchemeToPBXProject(schemeNameToSrcTargetNode, buildTargetToPBXTarget)
+                  .values());
 
-        LOG.debug("Generating schemes for all sub-projects.");
+      LOG.debug("Generating schemes for all sub-projects.");
 
-        writeWorkspaceSchemesForProjects(
-            xcodeProjectWriteOptions,
-            generatedProjectToPbxTargets.get(xcodeProjectWriteOptions.project()),
-            schemeTargets,
-            targetToProjectPathMap,
-            schemeBuildForTestNodeTargets,
-            schemeUngroupedTestTargets);
-      }
-
-      writeWorkspaceSchemes(
-          workspaceName,
-          outputDirectory,
-          schemeConfigs,
-          schemeNameToSrcTargetNode,
-          schemeBuildForTestNodeTargets,
-          schemeUngroupedTestTargets,
+      writeWorkspaceSchemesForProjects(
+          xcodeProjectWriteOptions,
+          generatedProjectToPbxTargets.get(xcodeProjectWriteOptions.project()),
+          schemeTargets,
           targetToProjectPathMap,
-          buildTargetToPBXTarget);
-
-      Path workspacePath = workspaceGenerator.writeWorkspace();
-      return new Result(workspacePath, xcodeProjectWriteOptions.project());
+          schemeBuildForTestNodeTargets,
+          schemeUngroupedTestTargets);
     }
+
+    writeWorkspaceSchemes(
+        workspaceName,
+        outputDirectory,
+        schemeConfigs,
+        schemeNameToSrcTargetNode,
+        schemeBuildForTestNodeTargets,
+        schemeUngroupedTestTargets,
+        targetToProjectPathMap,
+        buildTargetToPBXTarget);
+
+    Path workspacePath = workspaceGenerator.writeWorkspace();
+    return new Result(workspacePath, xcodeProjectWriteOptions.project());
   }
 
   /**

@@ -74,12 +74,6 @@ interface AbstractProjectGeneratorOptions {
     return false;
   }
 
-  /** Generates only headers symlink trees. */
-  @Value.Default
-  default boolean shouldGenerateHeaderSymlinkTreesOnly() {
-    return false;
-  }
-
   /** Generate an umbrella header for modular targets without one for use in a modulemap */
   @Value.Default
   default boolean shouldGenerateMissingUmbrellaHeader() {
