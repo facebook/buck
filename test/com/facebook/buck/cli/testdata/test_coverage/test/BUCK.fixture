@@ -21,3 +21,15 @@ java_test(
         "//:top",
     ],
 )
+
+java_test(
+    name = "test_setup_for_source_only_abi",
+    srcs = [
+        "MockTest.java",
+        "MockTest2.java",
+    ],
+    deps = [
+        "buck//third-party/java/junit:junit",
+        "//:foo",
+    ],
+)

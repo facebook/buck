@@ -129,10 +129,14 @@ public class JavaLibraryClasspathProvider {
     AbstractBreadthFirstTraversal.traverse(
         rules,
         (BuildRule rule) -> {
+          ImmutableSet.Builder<BuildRule> children = ImmutableSet.builder();
+          children.addAll(rule.getBuildDeps());
           if (rule instanceof JavaLibrary) {
-            builder.add((JavaLibrary) rule);
+            JavaLibrary javaLibrary = (JavaLibrary) rule;
+            builder.add(javaLibrary);
+            children.addAll(javaLibrary.getDepsForTransitiveClasspathEntries());
           }
-          return rule.getBuildDeps();
+          return children.build();
         });
     return builder.build();
   }

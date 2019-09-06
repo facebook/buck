@@ -89,6 +89,23 @@ public class TestCommandIntegrationTest {
     }
 
     assertTrue(Files.exists(workspace.getPath(CODE_COVERAGE_SUBPATH).resolve("coverage.csv")));
+
+    workspace.runBuckCommand("clean");
+    try (PropertySaver saver = new PropertySaver(getCodeCoverageProperties())) {
+      ProcessResult result =
+          workspace.runBuckCommand(
+              "test",
+              "--code-coverage",
+              "--code-coverage-format",
+              "CSV",
+              "//test:test_setup_for_source_only_abi",
+              "--config",
+              "java.abi_generation_mode=source_only",
+              "--config",
+              "java.compile_against_abis=true");
+      result.assertSuccess();
+    }
+    assertTrue(Files.exists(workspace.getPath(CODE_COVERAGE_SUBPATH).resolve("coverage.csv")));
   }
 
   @Test

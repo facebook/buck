@@ -5,6 +5,7 @@ java_library(
     ],
     tests = [
         "//test:simple_test",
+        "//test:test_setup_for_source_only_abi",
         "//test:wider_classpath_coverage_test",
     ],
     visibility = [
