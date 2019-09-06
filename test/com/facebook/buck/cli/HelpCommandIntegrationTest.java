@@ -65,7 +65,7 @@ public class HelpCommandIntegrationTest {
             "  parser-cache   Load and save state of the parser cache",
             "  project        generates project configuration files for an IDE",
             "  publish        builds and publishes a library to a central repository",
-            "  query          provides facilities to query information about the target nodes graph",
+            "  query          provides facilities to query information about the configured target nodes graph",
             "  rage           debug and fix issues of Buck commands",
             "  root           prints the absolute path to the root of the current buck project",
             "  run            runs a target as a command",
