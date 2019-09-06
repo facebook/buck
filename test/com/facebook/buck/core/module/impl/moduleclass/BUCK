@@ -29,13 +29,22 @@ export_file(
 
 # Replace real hash in the module jar with a known value
 genrule(
-    name = "test_module-jar-with-known-hash",
-    out = "test_module.jar",
+    name = "meta-inf",
+    out = "META-INF",
     cmd = " ".join([
-        "$(exe //py/buck/zip:append_with_copy)",
-        "$(location {}) $OUT".format("//test/com/facebook/buck/core/module/impl/moduleclass/test_module:test_module-module"),
-        "META-INF/module-binary-hash.txt $(location :{})".format("known-hash.txt"),
+        "mkdir $OUT && ",
+        "cp $(location :{}) $OUT/module-binary-hash.txt".format("known-hash.txt"),
     ]),
+)
+
+zip_file(
+    name = "test_module-jar-with-known-hash",
+    srcs = [
+        ":meta-inf",
+    ],
+    zip_srcs = [
+        "//test/com/facebook/buck/core/module/impl/moduleclass/test_module:test_module-module",
+    ],
 )
 
 # Copy modules to a place where they can be loaded by plugin manager
