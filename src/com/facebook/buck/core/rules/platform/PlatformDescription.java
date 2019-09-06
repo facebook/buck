@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -73,7 +74,7 @@ public class PlatformDescription implements ConfigurationRuleDescription<Platfor
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractPlatformArg {
+  interface AbstractPlatformArg extends ConstructorArg {
     String getName();
 
     @Value.NaturalOrder

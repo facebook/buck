@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -23,7 +24,7 @@ import com.google.common.collect.ImmutableMap;
 
 /**
  * The context given to {@link DescriptionWithTargetGraph#createProviders(ProviderCreationContext,
- * BuildTarget, Object)}.
+ * BuildTarget, ConstructorArg)}.
  *
  * <p>This is to be a subset of {@link BuildRuleCreationContextWithTargetGraph}, plus the {@link
  * ProviderInfoCollection} of all the dependencies.

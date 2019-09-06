@@ -17,6 +17,7 @@ package com.facebook.buck.core.rules.analysis.impl;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.RuleDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
@@ -27,6 +28,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ImmutableProviderCreationContext;
+import com.facebook.buck.core.rules.ProviderCreationContext;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisException;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
@@ -38,8 +40,8 @@ import com.google.common.collect.ImmutableSet;
 /**
  * The {@link GraphComputation} for performing the target graph to provider and action graph
  * transformation, with legacy compatible behaviour where we delegate to the {@link
- * com.facebook.buck.core.rules.DescriptionWithTargetGraph#createProviders(com.facebook.buck.core.rules.ProviderCreationContext,
- * BuildTarget, Object)}.
+ * com.facebook.buck.core.rules.DescriptionWithTargetGraph#createProviders(ProviderCreationContext,
+ * BuildTarget, ConstructorArg)}.
  */
 public class LegacyCompatibleRuleAnalysisComputation
     implements GraphComputation<RuleAnalysisKey, RuleAnalysisResult> {
@@ -85,7 +87,7 @@ public class LegacyCompatibleRuleAnalysisComputation
     return delegate.discoverPreliminaryDeps(key);
   }
 
-  private <T> RuleAnalysisResult computeLegacyProviders(
+  private <T extends ConstructorArg> RuleAnalysisResult computeLegacyProviders(
       RuleAnalysisKey key, ComputationEnvironment env, TargetNode<T> targetNode) {
     DescriptionWithTargetGraph<T> description =
         (DescriptionWithTargetGraph<T>) targetNode.getDescription();

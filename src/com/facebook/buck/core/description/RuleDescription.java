@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.description;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
@@ -25,12 +26,12 @@ import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
  * The new modern {@link Description} that we will use during the analysis of a rule.
  *
  * <p>The {@link RuleDescription} will offer {@link #ruleImpl(RuleAnalysisContext, BuildTarget,
- * Object)} method, which provides a set of restricted information via the {@link
+ * ConstructorArg)} method, which provides a set of restricted information via the {@link
  * RuleAnalysisContext} to run the rule implementation.
  *
  * @param <T> the type of args that the rule implementation uses
  */
-public interface RuleDescription<T> extends Description<T> {
+public interface RuleDescription<T extends ConstructorArg> extends Description<T> {
 
   @Override
   default boolean producesCacheableSubgraph() {

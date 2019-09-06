@@ -16,6 +16,7 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -256,7 +257,7 @@ public abstract class TargetNodeTranslator {
     return modified;
   }
 
-  private <A> Optional<A> translateConstructorArg(
+  private <A extends ConstructorArg> Optional<A> translateConstructorArg(
       CellPathResolver cellPathResolver, String targetBaseName, TargetNode<A> node) {
     A constructorArg = node.getConstructorArg();
     if (node.getDescription() instanceof TargetTranslatorOverridingDescription) {
@@ -283,7 +284,7 @@ public abstract class TargetNodeTranslator {
    * @return a copy of the given {@link TargetNode} with all found {@link BuildTarget}s translated,
    *     or {@link Optional#empty()} if the node requires no translation.
    */
-  public <A> Optional<TargetNode<A>> translateNode(TargetNode<A> node) {
+  public <A extends ConstructorArg> Optional<TargetNode<A>> translateNode(TargetNode<A> node) {
     CellPathResolver cellPathResolver = node.getCellNames();
     String targetBaseName = node.getBuildTarget().getBaseName();
 

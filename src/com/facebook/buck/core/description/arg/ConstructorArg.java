@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright 2019-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,12 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.facebook.buck.core.description.arg;
 
-package com.facebook.buck.versions;
-
-import com.facebook.buck.core.description.arg.ConstructorArg;
-import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-
-/** A node constitutes the body of a version sub-graph. */
-public interface VersionPropagator<A extends ConstructorArg>
-    extends DescriptionWithTargetGraph<A> {}
+/** Marker interface for all rule args including configuration rules. */
+public interface ConstructorArg {}

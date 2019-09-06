@@ -16,6 +16,8 @@
 
 package com.facebook.buck.core.description;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
+
 /**
  * Contains information regarding a specific {@link
  * com.facebook.buck.core.model.targetgraph.TargetNode} and the logic to create the corresponding
@@ -24,7 +26,7 @@ package com.facebook.buck.core.description;
  * @param <T> the argument type for the description to construct the {@link
  *     com.facebook.buck.core.rules.BuildRule}
  */
-public interface Description<T> extends BaseDescription<T> {
+public interface Description<T extends ConstructorArg> extends BaseDescription<T> {
 
   /**
    * Whether or not the build rule subgraph produced by this {@code Description} is safe to cache in

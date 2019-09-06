@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android.toolchain.platform;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -74,7 +75,7 @@ public class AndroidPlatformDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractAndroidPlatformArg {
+  interface AbstractAndroidPlatformArg extends ConstructorArg {
     String getName();
 
     UnconfiguredBuildTargetView getBasePlatform();

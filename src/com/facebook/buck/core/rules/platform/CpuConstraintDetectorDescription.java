@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.impl.CpuConstraintDetector;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
@@ -42,7 +43,7 @@ public class CpuConstraintDetectorDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractCpuConstraintDetectorArg {
+  interface AbstractCpuConstraintDetectorArg extends ConstructorArg {
     String getName();
   }
 }

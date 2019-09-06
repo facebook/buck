@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model.targetgraph;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.Flavor;
 import com.google.common.collect.ImmutableSet;
 
@@ -25,5 +26,6 @@ import com.google.common.collect.ImmutableSet;
  * <p>Primarily just used to break dependency between TargetNode and TargetNodeFactory.
  */
 public interface NodeCopier {
-  <T> TargetNode<T> copyNodeWithFlavors(TargetNode<T> node, ImmutableSet<Flavor> flavors);
+  <T extends ConstructorArg> TargetNode<T> copyNodeWithFlavors(
+      TargetNode<T> node, ImmutableSet<Flavor> flavors);
 }

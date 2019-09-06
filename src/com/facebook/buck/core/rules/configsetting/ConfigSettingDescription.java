@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.configsetting;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -70,7 +71,7 @@ public class ConfigSettingDescription implements ConfigurationRuleDescription<Co
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractConfigSettingArg {
+  interface AbstractConfigSettingArg extends ConstructorArg {
     String getName();
 
     @Value.NaturalOrder

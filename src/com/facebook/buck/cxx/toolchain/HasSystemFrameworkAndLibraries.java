@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain;
 
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
@@ -26,7 +27,7 @@ import org.immutables.value.Value;
  * <p>E.g. fields with members in the form of {@code $SDKROOT/user/lib/libz.dylib} or {@code
  * $SDKROOT/System/Library/Frameworks/Foundation.framework}.
  */
-public interface HasSystemFrameworkAndLibraries {
+public interface HasSystemFrameworkAndLibraries extends CommonDescriptionArg {
   @Value.NaturalOrder
   ImmutableSortedSet<FrameworkPath> getFrameworks();
 

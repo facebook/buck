@@ -16,6 +16,7 @@
 
 package com.facebook.buck.versions;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
@@ -59,7 +60,7 @@ class TargetGraphVersionTransformations {
         versionedDepsParam.get(node.getConstructorArg());
   }
 
-  public static <A> Iterable<BuildTarget> getDeps(
+  public static <A extends ConstructorArg> Iterable<BuildTarget> getDeps(
       TypeCoercerFactory typeCoercerFactory, TargetNode<A> node) {
     return Iterables.concat(
         node.getDeclaredDeps(),

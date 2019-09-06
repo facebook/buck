@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.RuleDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -96,7 +97,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
     TargetNodeToBuildRuleTransformer delegate =
         new TargetNodeToBuildRuleTransformer() {
           @Override
-          public <T> BuildRule transform(
+          public <T extends ConstructorArg> BuildRule transform(
               ToolchainProvider tool,
               TargetGraph targetGraph,
               ConfigurationRuleRegistry configurationRuleRegistry,
@@ -130,10 +131,10 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     RuleDescription<?> description =
-        new RuleDescription() {
+        new RuleDescription<FakeTargetNodeArg>() {
           @Override
           public ProviderInfoCollection ruleImpl(
-              RuleAnalysisContext context, BuildTarget target, Object args) {
+              RuleAnalysisContext context, BuildTarget target, FakeTargetNodeArg args) {
             return ProviderInfoCollectionImpl.builder().build();
           }
 
@@ -193,7 +194,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
     TargetNodeToBuildRuleTransformer delegate =
         new TargetNodeToBuildRuleTransformer() {
           @Override
-          public <T> BuildRule transform(
+          public <T extends ConstructorArg> BuildRule transform(
               ToolchainProvider tool,
               TargetGraph targetGraph,
               ConfigurationRuleRegistry configurationRuleRegistry,
@@ -235,10 +236,10 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     RuleDescription<?> description =
-        new RuleDescription() {
+        new RuleDescription<FakeTargetNodeArg>() {
           @Override
           public ProviderInfoCollection ruleImpl(
-              RuleAnalysisContext context, BuildTarget target, Object args) {
+              RuleAnalysisContext context, BuildTarget target, FakeTargetNodeArg args) {
             return ProviderInfoCollectionImpl.builder().build();
           }
 
@@ -277,7 +278,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
     TargetNodeToBuildRuleTransformer delegate =
         new TargetNodeToBuildRuleTransformer() {
           @Override
-          public <T> BuildRule transform(
+          public <T extends ConstructorArg> BuildRule transform(
               ToolchainProvider tool,
               TargetGraph targetGraph,
               ConfigurationRuleRegistry configurationRuleRegistry,

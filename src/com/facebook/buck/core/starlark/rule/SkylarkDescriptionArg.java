@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.starlark.rule;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.starlark.coercer.SkylarkDescriptionArgBuilder;
 import com.google.common.base.Preconditions;
 import java.util.HashMap;
@@ -25,7 +26,7 @@ import java.util.Map;
  * uses a backing store of attribute names -> coerced values, and makes the user's implementation
  * function available
  */
-public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder {
+public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, ConstructorArg {
   private boolean attrValuesAreMutable = true;
   private final SkylarkUserDefinedRule rule;
   private final Map<String, Object> coercedAttrValues;

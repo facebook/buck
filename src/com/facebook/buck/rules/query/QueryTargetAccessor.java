@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.query;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.QueryTarget;
@@ -37,7 +38,8 @@ public class QueryTargetAccessor {
 
   private QueryTargetAccessor() {}
 
-  public static <T> ImmutableSet<QueryTarget> getTargetsInAttribute(
+  /** Get targets in attribute. */
+  public static <T extends ConstructorArg> ImmutableSet<QueryTarget> getTargetsInAttribute(
       TypeCoercerFactory typeCoercerFactory, TargetNode<T> node, String attribute) {
     Class<?> constructorArgClass = node.getConstructorArg().getClass();
     ParamInfo info =
@@ -75,7 +77,7 @@ public class QueryTargetAccessor {
   }
 
   /** Filters the objects in the given attribute that satisfy the given predicate. */
-  public static <T> ImmutableSet<Object> filterAttributeContents(
+  public static <T extends ConstructorArg> ImmutableSet<Object> filterAttributeContents(
       TypeCoercerFactory typeCoercerFactory,
       TargetNode<T> node,
       String attribute,

@@ -18,6 +18,7 @@ package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -40,7 +41,7 @@ import java.util.Set;
  * responsible for processing the raw (python) inputs of a build rule, and gathering any build
  * targets and paths referenced from those inputs.
  */
-public interface TargetNode<T>
+public interface TargetNode<T extends ConstructorArg>
     extends Comparable<TargetNode<?>>, ObeysVisibility, HasBuildTarget, ComputeResult {
 
   @Override

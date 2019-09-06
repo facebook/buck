@@ -18,6 +18,7 @@ package com.facebook.buck.core.model.targetgraph.impl;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.attr.ImplicitInputsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -81,7 +82,7 @@ public class TargetNodeFactory implements NodeCopier {
    * Capture and Helper Methods</a>.
    */
   @SuppressWarnings("unchecked")
-  public <T, U extends BaseDescription<T>> TargetNode<T> createFromObject(
+  public <T extends ConstructorArg, U extends BaseDescription<T>> TargetNode<T> createFromObject(
       U description,
       Object constructorArg,
       ProjectFilesystem filesystem,
@@ -105,7 +106,7 @@ public class TargetNodeFactory implements NodeCopier {
   }
 
   @SuppressWarnings("unchecked")
-  private <T, U extends BaseDescription<T>> TargetNode<T> create(
+  private <T extends ConstructorArg, U extends BaseDescription<T>> TargetNode<T> create(
       U description,
       T constructorArg,
       ProjectFilesystem filesystem,
@@ -230,7 +231,7 @@ public class TargetNodeFactory implements NodeCopier {
   }
 
   @Override
-  public <T> TargetNode<T> copyNodeWithFlavors(
+  public <T extends ConstructorArg> TargetNode<T> copyNodeWithFlavors(
       TargetNode<T> originalNode, ImmutableSet<Flavor> flavors) {
     try {
       return create(

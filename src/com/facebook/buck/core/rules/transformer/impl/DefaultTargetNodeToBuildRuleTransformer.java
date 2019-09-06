@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.transformer.impl;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -45,7 +46,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
   }
 
   @Override
-  public <T> BuildRule transform(
+  public <T extends ConstructorArg> BuildRule transform(
       ToolchainProvider toolchainProvider,
       TargetGraph targetGraph,
       ConfigurationRuleRegistry configurationRuleRegistry,

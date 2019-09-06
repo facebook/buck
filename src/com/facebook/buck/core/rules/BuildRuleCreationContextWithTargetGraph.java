@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
@@ -57,7 +58,8 @@ public interface BuildRuleCreationContextWithTargetGraph extends BuildRuleCreati
 
   /**
    * @return the {@link ProviderInfoCollection} that was created by the rules {@link
-   *     DescriptionWithTargetGraph#createProviders(ProviderCreationContext, BuildTarget, Object)}
+   *     DescriptionWithTargetGraph#createProviders(ProviderCreationContext, BuildTarget,
+   *     ConstructorArg)}
    */
   @Value.Parameter
   ProviderInfoCollection getProviderInfoCollection();

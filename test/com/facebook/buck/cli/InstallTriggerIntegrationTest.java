@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -157,5 +158,5 @@ public class InstallTriggerIntegrationTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractInstallTriggerDescriptionArg extends HasDeclaredDeps {}
+  interface AbstractInstallTriggerDescriptionArg extends HasDeclaredDeps, ConstructorArg {}
 }

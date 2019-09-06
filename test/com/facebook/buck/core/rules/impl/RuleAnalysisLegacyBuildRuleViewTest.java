@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -93,7 +94,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
             targetGraph,
             new TargetNodeToBuildRuleTransformer() {
               @Override
-              public <T> BuildRule transform(
+              public <T extends ConstructorArg> BuildRule transform(
                   ToolchainProvider toolchainProvider,
                   TargetGraph targetGraph,
                   ConfigurationRuleRegistry configurationRuleRegistry,

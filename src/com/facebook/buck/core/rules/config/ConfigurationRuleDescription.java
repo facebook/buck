@@ -17,13 +17,14 @@
 package com.facebook.buck.core.rules.config;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 
 /**
  * This class describe a configuration rule - a rule that can be used during configuration of a
  * target graph.
  */
-public interface ConfigurationRuleDescription<T> extends BaseDescription<T> {
+public interface ConfigurationRuleDescription<T extends ConstructorArg> extends BaseDescription<T> {
   /** Creates a {@link ConfigurationRule} */
   ConfigurationRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver, BuildTarget buildTarget, T arg);

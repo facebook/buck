@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeFalse;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -118,7 +119,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractTouchOutputDescriptionArg extends HasDeclaredDeps {
+  interface AbstractTouchOutputDescriptionArg extends HasDeclaredDeps, ConstructorArg {
     String getOut();
   }
 
@@ -197,7 +198,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractLargeDynamicsArg extends HasDeclaredDeps {
+  interface AbstractLargeDynamicsArg extends HasDeclaredDeps, ConstructorArg {
     Optional<BuildTarget> getFirstRef();
 
     Optional<BuildTarget> getSecondRef();

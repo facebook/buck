@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -326,7 +327,7 @@ public class CxxGenruleDescriptionTest {
     assertFalse(genrule.isCacheable());
   }
 
-  private static <U> U extractArg(TargetNode<?> node, Class<U> clazz) {
+  private static <U extends ConstructorArg> U extractArg(TargetNode<?> node, Class<U> clazz) {
     return TargetNodes.castArg(node, clazz)
         .orElseThrow(
             () ->

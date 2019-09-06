@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.impl.OsConstraintDetector;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
@@ -42,7 +43,7 @@ public class OsConstraintDetectorDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractOsConstraintDetectorArg {
+  interface AbstractOsConstraintDetectorArg extends ConstructorArg {
     String getName();
   }
 }

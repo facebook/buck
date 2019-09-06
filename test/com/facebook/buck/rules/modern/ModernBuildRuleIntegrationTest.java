@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -94,7 +95,7 @@ public class ModernBuildRuleIntegrationTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractTemporaryWritingDescriptionArg {}
+  interface AbstractTemporaryWritingDescriptionArg extends ConstructorArg {}
 
   private static class TemporaryWritingDescription
       implements DescriptionWithTargetGraph<TemporaryWritingDescriptionArg> {

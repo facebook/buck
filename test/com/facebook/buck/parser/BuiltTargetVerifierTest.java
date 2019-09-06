@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -172,7 +173,8 @@ public class BuiltTargetVerifierTest {
         ImmutableMap.of("name", "c", "buck.base_path", "a/b"));
   }
 
-  private static class FlavoredDescription implements DescriptionWithTargetGraph<Object>, Flavored {
+  private static class FlavoredDescription
+      implements DescriptionWithTargetGraph<ConstructorArg>, Flavored {
 
     private final ImmutableSet<FlavorDomain<?>> flavorDomains;
 
@@ -185,12 +187,12 @@ public class BuiltTargetVerifierTest {
         BuildRuleCreationContextWithTargetGraph context,
         BuildTarget buildTarget,
         BuildRuleParams params,
-        Object args) {
+        ConstructorArg args) {
       throw new UnsupportedOperationException();
     }
 
     @Override
-    public Class<Object> getConstructorArgType() {
+    public Class<ConstructorArg> getConstructorArgType() {
       throw new UnsupportedOperationException();
     }
 
@@ -200,19 +202,20 @@ public class BuiltTargetVerifierTest {
     }
   }
 
-  private static class NonFlavoredDescription implements DescriptionWithTargetGraph<Object> {
+  private static class NonFlavoredDescription
+      implements DescriptionWithTargetGraph<ConstructorArg> {
 
     @Override
     public BuildRule createBuildRule(
         BuildRuleCreationContextWithTargetGraph context,
         BuildTarget buildTarget,
         BuildRuleParams params,
-        Object args) {
+        ConstructorArg args) {
       throw new UnsupportedOperationException();
     }
 
     @Override
-    public Class<Object> getConstructorArgType() {
+    public Class<ConstructorArg> getConstructorArgType() {
       throw new UnsupportedOperationException();
     }
   }

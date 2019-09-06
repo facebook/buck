@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model.targetgraph.impl;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -56,7 +57,8 @@ public class TargetNodes {
 
   /** Type safe checked cast of the constructor arg. */
   @SuppressWarnings("unchecked")
-  public static <V> Optional<TargetNode<V>> castArg(TargetNode<?> node, Class<V> cls) {
+  public static <V extends ConstructorArg> Optional<TargetNode<V>> castArg(
+      TargetNode<?> node, Class<V> cls) {
     if (cls.isInstance(node.getConstructorArg())) {
       return Optional.of((TargetNode<V>) node.copy());
     } else {

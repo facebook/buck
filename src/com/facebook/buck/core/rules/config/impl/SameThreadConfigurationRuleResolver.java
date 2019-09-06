@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.config.impl;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -61,7 +62,8 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
     return computeIfAbsent(buildTarget, this::createConfigurationRule);
   }
 
-  private <T> ConfigurationRule createConfigurationRule(BuildTarget buildTarget) {
+  private <T extends ConstructorArg> ConfigurationRule createConfigurationRule(
+      BuildTarget buildTarget) {
     @SuppressWarnings("unchecked")
     TargetNode<T> targetNode = (TargetNode<T>) targetNodeSupplier.apply(buildTarget);
     if (!(targetNode.getDescription() instanceof ConfigurationRuleDescription)) {

@@ -17,6 +17,7 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import java.util.Optional;
@@ -25,7 +26,8 @@ import java.util.Optional;
  * An interface used by descriptions which need to perform custom translations of their constructor
  * args to support versioning.
  */
-public interface TargetTranslatorOverridingDescription<A> extends DescriptionWithTargetGraph<A> {
+public interface TargetTranslatorOverridingDescription<A extends ConstructorArg>
+    extends DescriptionWithTargetGraph<A> {
 
   /** @return the translated constructor arg, if any translation was necessary. */
   Optional<A> translateConstructorArg(

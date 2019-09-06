@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.platform;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -69,7 +70,7 @@ public class ConstraintSettingDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractConstraintSettingArg {
+  interface AbstractConstraintSettingArg extends ConstructorArg {
     String getName();
 
     Optional<UnconfiguredBuildTargetView> getHostConstraintDetector();

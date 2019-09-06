@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
@@ -186,11 +187,11 @@ public class DefaultParserTargetNodeFactory
     }
   }
 
-  private TargetNode<?> createTargetNodeFromObject(
+  private <T extends ConstructorArg> TargetNode<?> createTargetNodeFromObject(
       Cell cell,
       Path buildFile,
       BuildTarget target,
-      BaseDescription<?> description,
+      BaseDescription<T> description,
       Object constructorArg,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,

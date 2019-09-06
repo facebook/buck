@@ -17,6 +17,7 @@ package com.facebook.buck.core.rules.transformer.impl;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.RuleDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -45,9 +46,9 @@ import com.google.common.base.Verify;
  *
  * <p>For any legacy rules, the {@link com.facebook.buck.core.rules.providers.Provider}s from {@link
  * com.facebook.buck.core.rules.DescriptionWithTargetGraph#createProviders(ProviderCreationContext,
- * BuildTarget, Object)} will be supplied to the {@link
+ * BuildTarget, ConstructorArg)} will be supplied to the {@link
  * com.facebook.buck.core.rules.DescriptionWithTargetGraph#createBuildRule(BuildRuleCreationContextWithTargetGraph,
- * BuildTarget, BuildRuleParams, Object)}
+ * BuildTarget, BuildRuleParams, ConstructorArg)}
  */
 public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransformer
     extends LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer {
@@ -58,7 +59,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
   }
 
   @Override
-  public <T> BuildRule transform(
+  public <T extends ConstructorArg> BuildRule transform(
       ToolchainProvider toolchainProvider,
       TargetGraph targetGraph,
       ConfigurationRuleRegistry configurationRuleRegistry,

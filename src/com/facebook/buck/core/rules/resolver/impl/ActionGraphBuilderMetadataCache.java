@@ -16,6 +16,7 @@
 package com.facebook.buck.core.rules.resolver.impl;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -67,7 +68,8 @@ final class ActionGraphBuilderMetadataCache {
     }
 
     @SuppressWarnings("unchecked")
-    private <T, U> Optional<U> load(TargetNode<T> node, Class<U> metadataClass) {
+    private <T extends ConstructorArg, U> Optional<U> load(
+        TargetNode<T> node, Class<U> metadataClass) {
       T arg = node.getConstructorArg();
       if (metadataClass.isAssignableFrom(arg.getClass())) {
         return Optional.of(metadataClass.cast(arg));

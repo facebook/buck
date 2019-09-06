@@ -16,11 +16,12 @@
 
 package com.facebook.buck.core.description;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.google.common.collect.ImmutableSet;
 
 /** Description common to both build and config rule types. */
-public interface BaseDescription<T> {
+public interface BaseDescription<T extends ConstructorArg> {
 
   /** The type of the constructor argument that is used by this description to create a rule */
   Class<T> getConstructorArgType();

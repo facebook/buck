@@ -16,11 +16,13 @@
 
 package com.facebook.buck.swift;
 
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
-public interface SwiftCommonArg {
+/** Common argument for swift rules */
+public interface SwiftCommonArg extends CommonDescriptionArg {
   ImmutableList<StringWithMacros> getSwiftCompilerFlags();
 
   Optional<String> getSwiftVersion();
