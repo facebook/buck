@@ -15,12 +15,19 @@
  */
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.parser.InternalTargetAttributeNames;
+import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.syntax.ListWithSelects;
+import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
@@ -32,6 +39,8 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -115,6 +124,9 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
 
     /** Format output as JSON */
     JSON,
+
+    /** Format output as JSON with targets having unconfigured attributes * */
+    JSON_UNCONFIGURED,
 
     /** Format output as Thrift binary */
     THRIFT,
@@ -366,6 +378,10 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
           printJsonOutput(params, env, queryResult, printStream);
           break;
 
+        case JSON_UNCONFIGURED:
+          printJsonUnconfiguredOutput(params, env, queryResult, printStream);
+          break;
+
         case THRIFT:
           printThriftOutput(params, env, asQueryBuildTargets(queryResult), printStream);
           break;
@@ -507,6 +523,121 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
 
     ThriftOutput<TargetNode<?>> thriftOutput = targetNodeBuilder.build();
     thriftOutput.writeOutput(printStream);
+  }
+
+  private Map<String, Object> getAllUnconfiguredAttributesForTarget(
+      CommandRunnerParams params, BuckQueryEnvironment env, QueryTarget target)
+      throws QueryException {
+    Cell cell = params.getCell();
+    BuildTarget buildTarget = env.getNode((QueryBuildTarget) target).getBuildTarget();
+    Cell owningCell = cell.getCell(buildTarget);
+    BuildFileManifest buildFileManifest =
+        env.getParserState()
+            .getBuildFileManifest(
+                owningCell,
+                cell.getBuckConfigView(ParserConfig.class)
+                    .getAbsolutePathToBuildFile(
+                        cell, buildTarget.getUnconfiguredBuildTargetView()));
+
+    String shortName = buildTarget.getShortName();
+    if (!buildFileManifest.getTargets().containsKey(shortName)) {
+      throw new QueryException(
+          "Could not find target " + target.toString() + " in the build manifest.");
+    }
+
+    return buildFileManifest.getTargets().get(shortName);
+  }
+
+  private Object resolveUnconfiguredAttribute(ListWithSelects unconfiguredSelect) {
+    List<Object> listWithSelects = unconfiguredSelect.getElements();
+    List<Object> unconfiguredAttribute = new ArrayList<>();
+    for (Object element : listWithSelects) {
+      if (element instanceof SelectorValue) {
+        Map<String, Object> selectDictionary = ((SelectorValue) element).getDictionary();
+        if (!selectDictionary.isEmpty()) {
+          String selectNoMatchError = ((SelectorValue) element).getNoMatchError();
+          unconfiguredAttribute.add(
+              ImmutableMap.of(
+                  "selectable",
+                  true,
+                  "conditions",
+                  selectDictionary,
+                  "no_match_error",
+                  selectNoMatchError));
+        }
+      } else {
+        unconfiguredAttribute.add(element);
+      }
+    }
+
+    return ImmutableMap.of("concatable", true, "elements", unconfiguredAttribute);
+  }
+
+  private SortedMap<String, Object> resolveAllUnconfiguredAttributesForTarget(
+      CommandRunnerParams params, BuckQueryEnvironment env, QueryBuildTarget target)
+      throws QueryException {
+    Map<String, Object> attributes = getAllUnconfiguredAttributesForTarget(params, env, target);
+    PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes());
+
+    SortedMap<String, Object> convertedAttributes = new TreeMap<>();
+    if (patternsMatcher.hasPatterns()) {
+      for (Map.Entry<String, Object> attribute : attributes.entrySet()) {
+        String attributeName = attribute.getKey();
+        String snakeCaseKey = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, attributeName);
+        if (!patternsMatcher.matches(snakeCaseKey)) {
+          continue;
+        }
+
+        Object jsonObject = attribute.getValue();
+        if (!(jsonObject instanceof ListWithSelects)) {
+          convertedAttributes.put(snakeCaseKey, jsonObject);
+          continue;
+        }
+
+        convertedAttributes.put(
+            snakeCaseKey, resolveUnconfiguredAttribute((ListWithSelects) jsonObject));
+      }
+    }
+
+    if (patternsMatcher.matches(InternalTargetAttributeNames.DIRECT_DEPENDENCIES)) {
+      convertedAttributes.put(
+          InternalTargetAttributeNames.DIRECT_DEPENDENCIES,
+          env.getNode(target).getParseDeps().stream()
+              .map(Object::toString)
+              .collect(ImmutableList.toImmutableList()));
+    }
+
+    return convertedAttributes;
+  }
+
+  /**
+   * Prints JSON format output where attributes that contained selects will be equal to a list of
+   * maps (all information from selects) and strings/lists, which would have been evaluated with a
+   * normal query
+   */
+  private void printJsonUnconfiguredOutput(
+      CommandRunnerParams params,
+      BuckQueryEnvironment env,
+      Set<QueryTarget> queryResult,
+      PrintStream printStream)
+      throws QueryException, IOException {
+
+    if (shouldOutputAttributes()) {
+      ImmutableSortedMap.Builder<String, SortedMap<String, Object>> unconfiguredTargets =
+          ImmutableSortedMap.naturalOrder();
+      for (QueryTarget target : queryResult) {
+        if (!(target instanceof QueryBuildTarget)) {
+          continue;
+        }
+
+        unconfiguredTargets.put(
+            ((QueryBuildTarget) target).getBuildTarget().getFullyQualifiedName(),
+            resolveAllUnconfiguredAttributesForTarget(params, env, ((QueryBuildTarget) target)));
+      }
+      printAttributesAsJson(unconfiguredTargets.build(), printStream);
+    } else {
+      CommandHelper.printJsonOutput(queryResult, printStream);
+    }
   }
 
   /**
