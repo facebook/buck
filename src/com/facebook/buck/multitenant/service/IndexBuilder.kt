@@ -19,6 +19,7 @@ package com.facebook.buck.multitenant.service
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.util.json.ObjectMappers
+import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonToken
 import com.fasterxml.jackson.databind.JsonNode
@@ -97,14 +98,15 @@ fun parsePackagesFromStream(stream: InputStream): MutableList<BuildPackage> {
  * Write packages to JSON
  */
 fun serializePackagesToStream(packages: List<BuildPackage>, stream: OutputStream) {
-    ObjectMappers.WRITER.writeValue(stream, packages)
+    ObjectMappers.WRITER.without(JsonGenerator.Feature.AUTO_CLOSE_TARGET)
+        .writeValue(stream, packages)
 }
 
 /**
  * Write paths to JSON
  */
 fun serializePathsToStream(paths: List<FsAgnosticPath>, stream: OutputStream) {
-    ObjectMappers.WRITER.writeValue(stream, paths)
+    ObjectMappers.WRITER.without(JsonGenerator.Feature.AUTO_CLOSE_TARGET).writeValue(stream, paths)
 }
 
 private fun createParser(stream: InputStream): JsonParser {
