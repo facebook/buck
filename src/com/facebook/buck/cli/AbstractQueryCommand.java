@@ -205,7 +205,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     return sane.size() > deprecated.size() ? sane : deprecated;
   }
 
-  private boolean shouldOutputAttributes() {
+  protected boolean shouldOutputAttributes() {
     return !outputAttributes().isEmpty();
   }
 
