@@ -17,6 +17,7 @@ package com.facebook.buck.apple.simulator;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.immutables.value.Value;
 
 /** Object that represents an Apple simulator or a physical device. Used with idb. */
 @BuckStyleValue
@@ -42,11 +43,20 @@ public interface AbstractAppleDevice {
   String getArchitecture();
 
   /** String that represents the host of the device */
-  String getHost();
+  @Value.Derived
+  default String getHost() {
+    return "";
+  }
 
   /** String that represents the port of the device */
-  String getPort();
+  @Value.Derived
+  default int getPort() {
+    return 0;
+  }
 
   /** String that indicates if the device is local or remote ("true" or "false") */
-  String getIs_local();
+  @Value.Derived
+  default boolean getIs_local() {
+    return true;
+  }
 }
