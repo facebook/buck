@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
@@ -79,6 +80,7 @@ public class ZipEntrySourceCollectionWriter {
           copyZip(
               zip,
               sourceFilePath,
+              seenFiles,
               sourceArchiveEntries.getOrDefault(sourceFilePath, HashMultimap.create()));
         }
       }
@@ -122,7 +124,10 @@ public class ZipEntrySourceCollectionWriter {
   }
 
   private static void copyZip(
-      CustomZipOutputStream out, Path from, Multimap<String, Integer> allowedEntries)
+      CustomZipOutputStream out,
+      Path from,
+      Set<Path> seenFiles,
+      Multimap<String, Integer> allowedEntries)
       throws IOException {
     try (ZipInputStream in =
         new ZipInputStream(new BufferedInputStream(Files.newInputStream(from)))) {
@@ -135,6 +140,9 @@ public class ZipEntrySourceCollectionWriter {
         }
         if (!allowedEntries.get(entry.getName()).contains(position)) {
           continue;
+        }
+        if (entry.isDirectory()) {
+          seenFiles.add(Paths.get(entry.getName()));
         }
         CustomZipEntry customEntry = new CustomZipEntry(entry);
         customEntry.setFakeTime();
