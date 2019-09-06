@@ -84,4 +84,9 @@ public abstract class AbstractParsingContext {
   public boolean enableTargetCompatibilityChecks() {
     return true;
   }
+
+  @Value.Default
+  public boolean useUnconfiguredSelectorResolver() {
+    return false;
+  }
 }
