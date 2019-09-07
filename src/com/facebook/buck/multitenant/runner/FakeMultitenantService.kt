@@ -39,8 +39,9 @@ class FakeMultitenantService(
         val generation = requireNotNull(indexAppender.getGeneration(changes.commit)) {
             "commit '${changes.commit}' not indexed by service"
         }
-        val changeTranslator =
-            DefaultFsToBuildPackageChangeTranslator(index, generation, buildFileName, projectRoot)
+        val changeTranslator = DefaultFsToBuildPackageChangeTranslator(buildFileName, projectRoot,
+            { path -> index.packageExists(generation, path) },
+            { buildPackage -> index.containsBuildPackage(generation, buildPackage) })
         val buildPackageChanges = changeTranslator.translateChanges(changes)
         val localizedIndex =
             index.createIndexForGenerationWithLocalChanges(generation, buildPackageChanges)

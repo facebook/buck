@@ -34,17 +34,20 @@ interface FsToBuildPackageChangeTranslator {
 /**
  * Simple implementation of [FsToBuildPackageChangeTranslator] that subshells to Buck to parse
  * packages
- * @param indexGenerationData Read-only index data to read build graph at current generation.
+ *
  * @param buildFileName Name of a build file (for example, `BUCK`) that defines targets
  * @param projectRoot Absolute path to a directory that is a project root for BUCK. Generally
- * speaking, this is the folder should contain .buckconfig. This Path does not necessarily need to
- * be physical and can potentially point to virtual filesystem.
+ *   speaking, this is the folder should contain .buckconfig. This Path does not necessarily need to
+ *   be physical and can potentially point to virtual filesystem.
+ * @param existenceChecker Should return true if a package with the same base path exists on base
+ *   revision
+ * @param equalityChecker Should return true if exactly same package exists on base revision
  */
 class DefaultFsToBuildPackageChangeTranslator(
-    private val index: Index,
-    private val generation: Generation,
     private val buildFileName: FsAgnosticPath,
-    private val projectRoot: Path
+    private val projectRoot: Path,
+    private val existenceChecker: (packagePath: FsAgnosticPath) -> Boolean,
+    private val equalityChecker: (buildPackage: BuildPackage) -> Boolean
 
 ) : FsToBuildPackageChangeTranslator {
     override fun translateChanges(
@@ -54,10 +57,9 @@ class DefaultFsToBuildPackageChangeTranslator(
         // TODO: implement parse dependency index
         val depToPackageIndex: Map<FsAgnosticPath, Set<FsAgnosticPath>> = mapOf()
 
-        val affectedPackagePaths = getPotentiallyAffectedBuildPackages(fsChanges, buildFileName,
-            depToPackageIndex) { packagePath ->
-            index.packageExists(generation, packagePath)
-        }
+        val affectedPackagePaths =
+            getPotentiallyAffectedBuildPackages(fsChanges, buildFileName, depToPackageIndex,
+                existenceChecker)
 
         val parser = BuckShellBuildPackageParser(projectRoot)
         val addedPackages = parser.parsePackages(affectedPackagePaths.added)
@@ -67,7 +69,7 @@ class DefaultFsToBuildPackageChangeTranslator(
             // Sometimes reparsing of a package does not really yield to a change in a package
             // contents. Compare parsed packages to the ones existing at base revision and only
             // take those that really changed.
-            modifiedBuildPackages = modifiedPackages.filter { !index.containsBuildPackage(generation, it) },
+            modifiedBuildPackages = modifiedPackages.filterNot(equalityChecker),
             removedBuildPackages = affectedPackagePaths.removed)
     }
 }
