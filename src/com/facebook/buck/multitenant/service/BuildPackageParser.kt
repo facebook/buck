@@ -28,9 +28,14 @@ import java.nio.file.Path
  */
 interface BuildPackageParser {
     /**
-     * Parse packages at selected paths. If provided list is empty, parse all known packages in the universe.
+     * Parse packages at selected paths
      */
     fun parsePackages(packagePaths: List<FsAgnosticPath>): List<BuildPackage>
+
+    /**
+     * Parse all packages known in current universe
+     */
+    fun parseUniverse(): List<BuildPackage>
 }
 
 /**
@@ -38,7 +43,14 @@ interface BuildPackageParser {
  */
 class BuckShellBuildPackageParser(private val root: Path) : BuildPackageParser {
     override fun parsePackages(packagePaths: List<FsAgnosticPath>): List<BuildPackage> {
+        return if (packagePaths.isEmpty()) listOf() else parse(packagePaths)
+    }
 
+    override fun parseUniverse(): List<BuildPackage> {
+        return parse()
+    }
+
+    private fun parse(packagePaths: List<FsAgnosticPath> = listOf()): List<BuildPackage> {
         // not using NamedTemporaryFile to reduce dependency set in multitenant
         val patternsFilePath = Files.createTempFile("patterns", "")
         try {

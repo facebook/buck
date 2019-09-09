@@ -47,7 +47,7 @@ class BuildPackageParserTest {
         assertTrue(packages.any { p -> p.buildFileDirectory == FsAgnosticPath.of("foo/bar") })
     }
 
-    @Test fun whenEmptyPackageListIsSpecifiedThenUniverseIsParsed() {
+    @Test fun canParseUniverse() {
         val parser = spyk(BuckShellBuildPackageParser(Paths.get("does_not_matter")))
 
         val patternsSlot = slot<Path>()
@@ -58,7 +58,7 @@ class BuildPackageParserTest {
             assertEquals("//..." + System.lineSeparator(), patternsSlot.captured.toFile().readText())
             outputFile.captured.toFile().writeText(getData())
         }
-        val packages = parser.parsePackages(listOf())
+        val packages = parser.parseUniverse()
         assertEquals(2, packages.size)
         assertTrue(packages.any { p -> p.buildFileDirectory == FsAgnosticPath.of("foo") })
         assertTrue(packages.any { p -> p.buildFileDirectory == FsAgnosticPath.of("foo/bar") })
