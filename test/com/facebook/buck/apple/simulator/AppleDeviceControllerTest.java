@@ -305,12 +305,12 @@ public class AppleDeviceControllerTest {
       FakeProcess fakeIdbList = new FakeProcess(0, stdin, stdout, stderr);
       ProcessExecutorParams processExecutorParams =
           ProcessExecutorParams.builder()
-              .setCommand(ImmutableList.of("/pathTo/idb", "list-targets", "--json"))
+              .setCommand(ImmutableList.of(IDB_PATH.toString(), "list-targets", "--json"))
               .build();
       FakeProcessExecutor fakeProcessExecutor =
           new FakeProcessExecutor(ImmutableMap.of(processExecutorParams, fakeIdbList));
       AppleDeviceController deviceController =
-          new AppleDeviceController(fakeProcessExecutor, Paths.get("/pathTo/idb"));
+          new AppleDeviceController(fakeProcessExecutor, IDB_PATH);
       simulators = deviceController.getSimulators();
     }
 
@@ -399,7 +399,32 @@ public class AppleDeviceControllerTest {
   }
 
   @Test
-  public void getBootedSimulatorDeviceUdidsTest() throws IOException, InterruptedException {
+  public void getPhysicalDevicesTest() throws IOException {
+    ImmutableSet<ImmutableAppleDevice> physicalDevices;
+    try (OutputStream stdin = new ByteArrayOutputStream();
+        InputStream stdout = getClass().getResourceAsStream("testdata/idb-list.txt");
+        InputStream stderr = new ByteArrayInputStream(new byte[0])) {
+      FakeProcess fakeIdbList = new FakeProcess(0, stdin, stdout, stderr);
+      ProcessExecutorParams processExecutorParams =
+          ProcessExecutorParams.builder()
+              .setCommand(ImmutableList.of(IDB_PATH.toString(), "list-targets", "--json"))
+              .build();
+      FakeProcessExecutor fakeProcessExecutor =
+          new FakeProcessExecutor(ImmutableMap.of(processExecutorParams, fakeIdbList));
+      AppleDeviceController deviceController =
+          new AppleDeviceController(fakeProcessExecutor, IDB_PATH);
+      physicalDevices = deviceController.getPhysicalDevices();
+    }
+
+    ImmutableSet<ImmutableAppleDevice> expected =
+        ImmutableSet.of(
+            new ImmutableAppleDevice("iPhone", "", "Booted", "device", "iOS 12.4", "arm64"));
+
+    assertEquals(physicalDevices, expected);
+  }
+
+  @Test
+  public void getBootedSimulatorDeviceUdidsTest() throws IOException {
     ImmutableSet<String> devices;
     try (OutputStream stdin = new ByteArrayOutputStream();
         InputStream stdout = getClass().getResourceAsStream("testdata/idb-list.txt");
@@ -407,13 +432,13 @@ public class AppleDeviceControllerTest {
       FakeProcess fakeIdbList = new FakeProcess(0, stdin, stdout, stderr);
       ProcessExecutorParams processExecutorParams =
           ProcessExecutorParams.builder()
-              .setCommand(ImmutableList.of("/pathTo/idb", "list-targets", "--json"))
+              .setCommand(ImmutableList.of(IDB_PATH.toString(), "list-targets", "--json"))
               .build();
       FakeProcessExecutor fakeProcessExecutor =
           new FakeProcessExecutor(ImmutableMap.of(processExecutorParams, fakeIdbList));
 
       AppleDeviceController deviceController =
-          new AppleDeviceController(fakeProcessExecutor, Paths.get("/pathTo/idb"));
+          new AppleDeviceController(fakeProcessExecutor, IDB_PATH);
       devices = deviceController.getBootedSimulatorsUdids();
     }
 
