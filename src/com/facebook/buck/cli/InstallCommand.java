@@ -65,6 +65,7 @@ import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.step.AdbOptions;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
@@ -479,14 +480,136 @@ public class InstallCommand extends BuildCommand {
             params, appleBundle, pathResolver, projectFilesystem, processExecutor);
     }
     if (isDevice(platformName)) {
-      return installAppleBundleForDevice(
-          params, appleBundle, projectFilesystem, processExecutor, pathResolver);
+      if (appleConfig.useIdb())
+        return installAppleBundleForDeviceIbd(
+            params, appleBundle, projectFilesystem, processExecutor, pathResolver);
+      else
+        return installAppleBundleForDevice(
+            params, appleBundle, projectFilesystem, processExecutor, pathResolver);
     }
     params
         .getConsole()
         .printBuildFailure(
             "Install not yet supported for platform " + appleBundle.getPlatformName() + ".");
     return FAILURE;
+  }
+
+  private InstallResult installAppleBundleForDeviceIbd(
+      CommandRunnerParams params,
+      AppleBundle appleBundle,
+      ProjectFilesystem projectFilesystem,
+      ProcessExecutor processExecutor,
+      SourcePathResolver pathResolver)
+      throws IOException, InterruptedException {
+
+    AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
+    AppleDeviceController appleDeviceController =
+        new AppleDeviceController(processExecutor, appleConfig.getIdbPath());
+    Console console = params.getConsole();
+
+    // Choose the physical device
+    ImmutableSet<ImmutableAppleDevice> physicalDevices = appleDeviceController.getPhysicalDevices();
+    if (physicalDevices.isEmpty()) {
+      console.printBuildFailure("Could not find any physical devices connected");
+      return FAILURE;
+    }
+
+    ImmutableAppleDevice chosenDevice = null;
+    if (targetDeviceOptions().getSerialNumber().isPresent()) {
+      String udidPrefix =
+          Assertions.assertNotNull(targetDeviceOptions().getSerialNumber().get()).toLowerCase();
+      for (ImmutableAppleDevice physicalDevice : physicalDevices) {
+        if (physicalDevice.getUdid().startsWith(udidPrefix)) {
+          chosenDevice = physicalDevice;
+          break;
+        }
+      }
+      if (chosenDevice == null) {
+        console.printBuildFailure(
+            String.format(
+                "Cannot install %s to the device %s (no connected devices with that UDID/prefix)",
+                appleBundle.getFullyQualifiedName(), udidPrefix));
+        return FAILURE;
+      }
+    } else {
+      if (physicalDevices.size() > 1) {
+        LOG.info(
+            "More than one connected device found, and no device ID specified.  A device will be"
+                + " arbitrarily picked.");
+      }
+      chosenDevice = physicalDevices.iterator().next();
+    }
+
+    // Install the bundle
+    if (!appleDeviceController.installBundle(
+        chosenDevice.getUdid(),
+        pathResolver.getAbsolutePath(
+            Objects.requireNonNull(appleBundle.getSourcePathToOutput())))) {
+      params
+          .getConsole()
+          .printBuildFailure(
+              String.format(
+                  "Cannot install %s (could not install bundle %s in simulator %s)",
+                  appleBundle.getFullyQualifiedName(),
+                  pathResolver.getAbsolutePath(appleBundle.getSourcePathToOutput()),
+                  chosenDevice.getName()));
+      return FAILURE;
+    }
+
+    // Launching the bundle
+    if (run) {
+      // Get the bundleID
+      Optional<String> appleBundleId = getAppleBundleId(appleBundle, projectFilesystem);
+      if (!appleBundleId.isPresent()) {
+        params
+            .getConsole()
+            .printBuildFailure(
+                String.format(
+                    "Cannot install %s (could not get bundle ID from %s)",
+                    appleBundle.getFullyQualifiedName(), appleBundle.getInfoPlistPath()));
+        return FAILURE;
+      }
+
+      // Launching
+      if (!appleDeviceController.launchInstalledBundle(
+          chosenDevice.getUdid(),
+          appleBundleId.get(),
+          waitForDebugger
+              ? AppleDeviceController.LaunchBehavior.WAIT_FOR_DEBUGGER
+              : AppleDeviceController.LaunchBehavior.DO_NOT_WAIT_FOR_DEBUGGER)) {
+        params
+            .getConsole()
+            .printBuildFailure(
+                String.format(
+                    "Cannot launch %s (failed to launch bundle ID %s)",
+                    appleBundle.getFullyQualifiedName(), appleBundleId.get()));
+        return FAILURE;
+      }
+      params
+          .getBuckEventBus()
+          .post(
+              ConsoleEvent.info(
+                  params
+                      .getConsole()
+                      .getAnsi()
+                      .asHighlightedSuccessText(
+                          "Successfully launched %s%s. To debug, run: lldb -p"),
+                  getArguments().get(0),
+                  waitForDebugger ? " (waiting for debugger)" : ""));
+    } else {
+      params
+          .getBuckEventBus()
+          .post(
+              ConsoleEvent.info(
+                  params
+                      .getConsole()
+                      .getAnsi()
+                      .asHighlightedSuccessText(
+                          "Successfully installed %s. (Use `buck install -r %s` to run.)"),
+                  getArguments().get(0),
+                  getArguments().get(0)));
+    }
+    return InstallResult.builder().setExitCode(ExitCode.SUCCESS).build();
   }
 
   private InstallResult installAppleBundleForDevice(

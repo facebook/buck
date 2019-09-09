@@ -107,6 +107,23 @@ public class AppleDeviceController {
     return simulators.build();
   }
 
+  /** @return the set of Apple physical devices */
+  public ImmutableSet<ImmutableAppleDevice> getPhysicalDevices() {
+    ImmutableSet<ImmutableAppleDevice> devices;
+    ImmutableSet.Builder<ImmutableAppleDevice> physicalDevices = ImmutableSet.builder();
+    try {
+      devices = getDevices();
+    } catch (IOException | InterruptedException e) {
+      e.printStackTrace();
+      devices = ImmutableSet.of();
+    }
+
+    for (ImmutableAppleDevice device : devices) {
+      if (device.getType().equals("device")) physicalDevices.add(device);
+    }
+    return physicalDevices.build();
+  }
+
   /** @return set of udids of the booted devices */
   public ImmutableSet<String> getBootedSimulatorsUdids() {
     ImmutableSet.Builder<String> bootedSimulatorUdids = ImmutableSet.builder();
