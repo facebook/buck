@@ -139,6 +139,10 @@ public class AssumeAndroidPlatform {
    *
    * <p>Versions are expected to be in format like "25.0.2".
    */
+  public static void assumeBuildToolsIsNewer(String expectedBuildToolsVersion) {
+    assumeBuildToolsIsNewer(getAndroidSdkLocation(), expectedBuildToolsVersion);
+  }
+
   private static void assumeBuildToolsIsNewer(
       AndroidSdkLocation androidSdkLocation, String expectedBuildToolsVersion) {
     AndroidBuildToolsResolver buildToolsResolver =
@@ -185,7 +189,7 @@ public class AssumeAndroidPlatform {
     assumeAapt2IsAvailable();
   }
 
-  private static void verifyAndroidSkdVersionIsAboveSpecified(String expectedBuildToolsVersion) {
+  public static void verifyAndroidSkdVersionIsAboveSpecified(String expectedBuildToolsVersion) {
     assumeBuildToolsIsNewer(getAndroidSdkLocation(), expectedBuildToolsVersion);
   }
 }

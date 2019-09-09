@@ -680,6 +680,7 @@ java_test(
     resources = glob(["testdata/**"]),
     deps = [
         ":testutil",
+        "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android/toolchain/ndk/impl:impl",
@@ -692,6 +693,8 @@ java_test(
         "//src/com/facebook/buck/util/json:json",
         "//src/com/facebook/buck/util/string:string",
         "//src/com/facebook/buck/util/zip:zip",
+        "//test/com/facebook/buck/android/toolchain:testutil",
+        "//test/com/facebook/buck/core/config:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/jvm/java/testutil:testutil",

@@ -116,6 +116,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
   @AddToRuleKey private final boolean shouldSplitDex;
   @AddToRuleKey private final String dexTool;
   @AddToRuleKey private final boolean desugarInterfaceMethods;
+  @AddToRuleKey private final Optional<Integer> minSdkVersion;
 
   private final AndroidPlatformTarget androidPlatformTarget;
   private final ListeningExecutorService dxExecutorService;
@@ -155,6 +156,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     Optional<SourcePath> getProguardConfigPath();
 
     boolean getShouldProguard();
+
+    Optional<Integer> getMinSdkVersion();
   }
 
   NonPreDexedDexBuildable(
@@ -202,6 +205,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     this.skipProguard = args.getSkipProguard();
     this.xzCompressionLevel = xzCompressionLevel;
     this.shouldSplitDex = shouldSplitDex;
+    this.minSdkVersion = args.getMinSdkVersion();
 
     this.buildDepsSupplier =
         MoreSuppliers.memoize(
@@ -876,7 +880,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
                 additionalJarsForProguardAndDesugar.stream()
                     .map(input -> buildContext.getSourcePathResolver().getAbsolutePath(input))
                     .collect(ImmutableSet.toImmutableSet())),
-            getBuildTarget());
+            getBuildTarget(),
+            minSdkVersion);
     steps.add(smartDexingCommand);
 
     if (reorderClassesIntraDex) {

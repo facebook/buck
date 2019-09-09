@@ -31,6 +31,11 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.android.apksig.ApkVerifier;
+import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.TestAndroidSdkLocationFactory;
+import com.facebook.buck.android.toolchain.impl.AndroidBuildToolsResolver;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -44,6 +49,8 @@ import com.facebook.buck.testutil.integration.DexInspector;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.collect.ImmutableMap;
@@ -774,5 +781,29 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
         Matchers.array(
             Matchers.containsString("//apps/sample:app"),
             Matchers.containsString("//java/com/sample/lib:lib")));
+  }
+
+  @Test
+  public void testMinApiDrivesDxToProduceHigherVersionedBytecode() throws Exception {
+    AssumeAndroidPlatform.assumeBuildToolsIsNewer("28.0.0");
+    Path outputApk = workspace.buildAndReturnOutput("//apps/sample:app_with_min_28");
+    workspace
+        .getBuildLog()
+        .assertTargetBuiltLocally("//apps/sample:app_with_min_28#class_file_to_dex_processing");
+    AndroidSdkLocation androidSdkLocation = TestAndroidSdkLocationFactory.create(filesystem);
+    AndroidBuildToolsResolver buildToolsResolver =
+        new AndroidBuildToolsResolver(
+            new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()),
+            androidSdkLocation);
+    AndroidBuildToolsLocation buildToolsLocation =
+        AndroidBuildToolsLocation.of(buildToolsResolver.getBuildToolsPath());
+    Path dexdumpLocation = buildToolsLocation.getBuildToolsPath().resolve("dexdump");
+    ProcessExecutor.Result result =
+        workspace.runCommand(dexdumpLocation.toString(), "-f", outputApk.toString());
+    assertTrue("dexdump did not produce output", result.getStdout().isPresent());
+    Matcher matcher = Pattern.compile("DEX version\\s*'(\\d+)'").matcher(result.getStdout().get());
+    assertTrue("Unable to find a match for the DEX version message", matcher.find());
+    int dexVersion = Integer.parseInt(matcher.group(1));
+    assertThat(dexVersion, Matchers.greaterThanOrEqualTo(38));
   }
 }

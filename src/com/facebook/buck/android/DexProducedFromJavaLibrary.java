@@ -214,7 +214,8 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
                 dexTool,
                 dexTool.equals(DxStep.D8),
                 getAbsolutePaths(desugarDeps, sourcePathResolver),
-                Optional.empty());
+                Optional.empty(),
+                Optional.empty() /* minSdkVersion */);
         steps.add(dx);
 
         // The `DxStep` delegates to android tools to build a ZIP with timestamps in it, making

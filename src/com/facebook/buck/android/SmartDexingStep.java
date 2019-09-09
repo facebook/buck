@@ -101,6 +101,7 @@ public class SmartDexingStep implements Step {
   private final boolean useDexBuckedId;
   private final Optional<Set<Path>> additonalDesugarDeps;
   private final BuildTarget buildTarget;
+  private final Optional<Integer> minSdkVersion;
 
   /**
    * @param primaryOutputPath Path for the primary dex artifact.
@@ -113,6 +114,7 @@ public class SmartDexingStep implements Step {
    *     invocation will be started with the corresponding jar files (value) as the input.
    * @param successDir Directory where success artifacts are written.
    * @param executorService The thread pool to execute the dx command on.
+   * @param minSdkVersion
    */
   public SmartDexingStep(
       AndroidPlatformTarget androidPlatformTarget,
@@ -132,7 +134,8 @@ public class SmartDexingStep implements Step {
       boolean desugarInterfaceMethods,
       boolean useDexBuckedId,
       Optional<Set<Path>> additonalDesugarDeps,
-      BuildTarget buildTarget) {
+      BuildTarget buildTarget,
+      Optional<Integer> minSdkVersion) {
     this.androidPlatformTarget = androidPlatformTarget;
     this.buildContext = buildContext;
     this.filesystem = filesystem;
@@ -158,6 +161,7 @@ public class SmartDexingStep implements Step {
     this.useDexBuckedId = useDexBuckedId;
     this.additonalDesugarDeps = additonalDesugarDeps;
     this.buildTarget = buildTarget;
+    this.minSdkVersion = minSdkVersion;
   }
 
   /**
@@ -334,7 +338,8 @@ public class SmartDexingStep implements Step {
                                 allDexInputPaths, ImmutableSet.copyOf(outputInputsPair.getValue())),
                             additonalDesugarDeps.orElse(ImmutableSet.of()))
                         : null,
-                    useDexBuckedId))
+                    useDexBuckedId,
+                    minSdkVersion))
         .filter(dxPseudoRule -> !dxPseudoRule.checkIsCached())
         .map(
             dxPseudoRule -> {
@@ -370,6 +375,7 @@ public class SmartDexingStep implements Step {
     private final String dexTool;
     @Nullable private final Collection<Path> classpathFiles;
     private final boolean useDexBuckedId;
+    private final Optional<Integer> minSdkVersion;
 
     public DxPseudoRule(
         AndroidPlatformTarget androidPlatformTarget,
@@ -384,7 +390,8 @@ public class SmartDexingStep implements Step {
         Optional<String> dxMaxHeapSize,
         String dexTool,
         @Nullable Collection<Path> classpathFiles,
-        boolean useDexBuckedId) {
+        boolean useDexBuckedId,
+        Optional<Integer> minSdkVersion) {
       this.androidPlatformTarget = androidPlatformTarget;
       this.buildContext = buildContext;
       this.filesystem = filesystem;
@@ -398,6 +405,7 @@ public class SmartDexingStep implements Step {
       this.dexTool = dexTool;
       this.classpathFiles = classpathFiles;
       this.useDexBuckedId = useDexBuckedId;
+      this.minSdkVersion = minSdkVersion;
     }
 
     /**
@@ -450,7 +458,8 @@ public class SmartDexingStep implements Step {
           dxMaxHeapSize,
           dexTool,
           classpathFiles,
-          useDexBuckedId);
+          useDexBuckedId,
+          minSdkVersion);
       steps.add(
           new WriteFileStep(filesystem, newInputsHash, outputHashPath, /* executable */ false));
     }
@@ -475,7 +484,8 @@ public class SmartDexingStep implements Step {
       Optional<String> dxMaxHeapSize,
       String dexTool,
       @Nullable Collection<Path> classpathFiles,
-      boolean useDexBuckedId) {
+      boolean useDexBuckedId,
+      Optional<Integer> minSdkVersion) {
 
     Optional<String> buckedId = Optional.empty();
     String output = outputPath.toString();
@@ -503,7 +513,8 @@ public class SmartDexingStep implements Step {
               dexTool,
               false,
               classpathFiles,
-              buckedId));
+              buckedId,
+              minSdkVersion));
       // We need to make sure classes.dex is STOREd in the .dex.jar file, otherwise .XZ
       // compression won't be effective.
       Path repackedJar = Paths.get(output.replaceAll("\\.xz$", ""));
@@ -542,7 +553,8 @@ public class SmartDexingStep implements Step {
               dexTool,
               false,
               classpathFiles,
-              buckedId));
+              buckedId,
+              minSdkVersion));
       steps.add(
           new RepackZipEntriesStep(
               filesystem,
@@ -575,7 +587,8 @@ public class SmartDexingStep implements Step {
               dexTool,
               false,
               classpathFiles,
-              buckedId));
+              buckedId,
+              minSdkVersion));
       if (DexStore.JAR.matchesPath(outputPath)) {
         steps.add(
             new DexJarAnalysisStep(

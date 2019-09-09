@@ -264,6 +264,39 @@ public class DxStepTest {
     }
   }
 
+  @Test
+  public void testMinSdkVersion() throws IOException {
+    try (ExecutionContext context = createExecutionContext(2)) {
+      ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+
+      DxStep dx =
+          new DxStep(
+              filesystem,
+              androidPlatformTarget,
+              SAMPLE_OUTPUT_PATH,
+              SAMPLE_FILES_TO_DEX,
+              EnumSet.noneOf(DxStep.Option.class),
+              Optional.empty(),
+              DxStep.DX,
+              false,
+              ImmutableSet.of(),
+              Optional.empty(),
+              Optional.of(28));
+
+      String expected =
+          String.format(
+              "%s --dex --min-sdk-version 28 --output %s %s",
+              BASE_DX_PREFIX,
+              SAMPLE_OUTPUT_PATH,
+              Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, filesystem::resolve)));
+      MoreAsserts.assertShellCommands(
+          "Ensure that the --min-sdk-version flag is present.",
+          ImmutableList.of(expected),
+          ImmutableList.of(dx),
+          context);
+    }
+  }
+
   private ExecutionContext createExecutionContext(int verbosityLevel) {
     Verbosity verbosity = VerbosityParser.getVerbosityForLevel(verbosityLevel);
     TestConsole console = new TestConsole(verbosity);
