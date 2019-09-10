@@ -410,6 +410,29 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testJavaBinaryPullsInJavaLibraryRuntimeDepsAfterClean() throws IOException {
+    compileAgainstAbisOnly();
+    setUpProjectWorkspaceForScenario("depends_on_runtime_deps");
+    workspace.enableDirCache();
+
+    // Build binary A
+    ProcessResult firstBuildResult = workspace.runBuckBuild("//:binary_a");
+    firstBuildResult.assertSuccess("Successful build should exit with 0.");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:binary_b");
+
+    // Perform clean
+    ProcessResult cleanResult = workspace.runBuckCommand("clean", "--keep-cache");
+    cleanResult.assertSuccess("Successful clean should exit with 0.");
+
+    // Rebuild binary A, but hitting cache.
+    ProcessResult secondBuildResult = workspace.runBuckBuild("//:binary_a");
+    secondBuildResult.assertSuccess("Successful second build should exit with 0.");
+
+    // Require runtime dep was built again.
+    workspace.getBuildLog().assertTargetBuiltLocally("//:binary_b");
+  }
+
+  @Test
   public void testCompileAgainstSourceOnlyAbisByDefault() throws IOException {
     compileAgainstAbisOnly();
     setUpProjectWorkspaceForScenario("depends_only_on_abi_test");

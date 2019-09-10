@@ -60,6 +60,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -104,6 +105,7 @@ public class DefaultJavaLibrary
   private final ImmutableSortedSet<BuildRule> fullJarExportedDeps;
   private final ImmutableSortedSet<BuildRule> fullJarProvidedDeps;
   private final ImmutableSortedSet<BuildRule> fullJarExportedProvidedDeps;
+  private final ImmutableSortedSet<BuildRule> runtimeDeps;
 
   private final Supplier<ImmutableSet<SourcePath>> outputClasspathEntriesSupplier;
   private final Supplier<ImmutableSet<SourcePath>> transitiveClasspathsSupplier;
@@ -159,6 +161,7 @@ public class DefaultJavaLibrary
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
       ImmutableSortedSet<BuildRule> fullJarExportedProvidedDeps,
+      ImmutableSortedSet<BuildRule> runtimeDeps,
       @Nullable BuildTarget abiJar,
       @Nullable BuildTarget sourceOnlyAbiJar,
       Optional<String> mavenCoords,
@@ -208,6 +211,7 @@ public class DefaultJavaLibrary
     this.fullJarExportedDeps = fullJarExportedDeps;
     this.fullJarProvidedDeps = fullJarProvidedDeps;
     this.fullJarExportedProvidedDeps = fullJarExportedProvidedDeps;
+    this.runtimeDeps = runtimeDeps;
     this.mavenCoords = mavenCoords;
     this.tests = tests;
     this.requiredForSourceOnlyAbi = requiredForSourceOnlyAbi;
@@ -423,6 +427,11 @@ public class DefaultJavaLibrary
             Sets.difference(
                 firstOrderPackageableDeps,
                 Sets.union(fullJarProvidedDeps, fullJarExportedProvidedDeps))));
+  }
+
+  @Override
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
+    return runtimeDeps.stream().map(BuildRule::getBuildTarget);
   }
 
   @Override

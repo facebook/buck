@@ -79,6 +79,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         /* exportedDeps */ ImmutableSortedSet.of(),
         /* providedDeps */ ImmutableSortedSet.of(),
         ImmutableSortedSet.of(),
+        /* runtimeDeps */ ImmutableSortedSet.of(),
         JavaAbis.getClassAbiJar(buildTarget),
         /* sourceOnlyAbiJar */ null,
         /* mavenCoords */ Optional.empty(),

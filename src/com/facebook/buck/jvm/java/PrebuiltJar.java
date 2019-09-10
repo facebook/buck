@@ -60,6 +60,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements AndroidPackageable,
@@ -258,6 +259,19 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public boolean hasAnnotationProcessing() {
     return false;
+  }
+
+  @Override
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
+    Stream<BuildTarget> transitiveRuntimeDeps = Stream.of();
+    for (JavaLibrary lib : getTransitiveClasspathDeps()) {
+      // Skip ourself to avoid infinite recursion.
+      if (lib == this) continue;
+
+      transitiveRuntimeDeps =
+          Stream.concat(transitiveRuntimeDeps, lib.getRuntimeDeps(buildRuleResolver));
+    }
+    return transitiveRuntimeDeps;
   }
 
   @Override

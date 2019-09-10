@@ -89,6 +89,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
             .build(),
         /* providedDeps */ ImmutableSortedSet.of(),
         ImmutableSortedSet.of(),
+        /* runtimeDeps */ ImmutableSortedSet.of(),
         JavaAbis.getClassAbiJar(androidLibraryBuildTarget),
         /* sourceOnlyAbiJar */ null,
         mavenCoords,
