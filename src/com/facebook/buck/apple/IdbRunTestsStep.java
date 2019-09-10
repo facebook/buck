@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.simulator.AppleDeviceController;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
@@ -83,6 +84,7 @@ public class IdbRunTestsStep implements Step {
   private final ImmutableList<String> command;
   private final ImmutableList<String> installCommand;
   private final ImmutableList<String> runCommand;
+  private final String deviceUdid;
 
   public IdbRunTestsStep(
       Path idbPath,
@@ -96,7 +98,8 @@ public class IdbRunTestsStep implements Step {
       String testBundleId,
       Path testBundlePath,
       Optional<Path> appTestBundlePath,
-      Optional<Path> testHostAppBundlePath) {
+      Optional<Path> testHostAppBundlePath,
+      String deviceUdid) {
     this.idbPath = idbPath;
     this.filesystem = filesystem;
     this.outputPath = outputPath;
@@ -105,9 +108,16 @@ public class IdbRunTestsStep implements Step {
     this.idbStutterTimeout = idbStutterTimeout;
     this.timeoutInMs = timeoutInMs;
     this.testBundleId = testBundleId;
+    this.deviceUdid = deviceUdid;
     ImmutableList.Builder<String> runCommandBuilder = ImmutableList.builder();
     this.installCommand =
-        ImmutableList.of(idbPath.toString(), "xctest", "install", testBundlePath.toString());
+        ImmutableList.of(
+            idbPath.toString(),
+            "xctest",
+            "install",
+            testBundlePath.toString(),
+            "--udid",
+            deviceUdid);
     runCommandBuilder.add(idbPath.toString(), "xctest", "run");
     switch (type) {
       case LOGIC:
@@ -121,7 +131,7 @@ public class IdbRunTestsStep implements Step {
             "ui", testBundleId, appTestBundlePath.toString(), testHostAppBundlePath.toString());
         break;
     }
-    runCommandBuilder.add("--json");
+    runCommandBuilder.add("--json", "--udid", deviceUdid);
     this.runCommand = runCommandBuilder.build();
 
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
@@ -147,7 +157,8 @@ public class IdbRunTestsStep implements Step {
       Optional<Long> timeoutInMs,
       Collection<Path> logicTestBundlePaths,
       Map<Path, Path> appTestBundleToHostAppPaths,
-      Map<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetAppPaths) {
+      Map<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetAppPaths,
+      String deviceUdid) {
     String testBundleId = getAppleBundleId(testBundle, filesystem).get();
     ImmutableList.Builder<IdbRunTestsStep> commandBuilder = ImmutableList.builder();
     for (Path bundlePath : logicTestBundlePaths) {
@@ -164,7 +175,8 @@ public class IdbRunTestsStep implements Step {
               testBundleId,
               bundlePath,
               Optional.empty(),
-              Optional.empty()));
+              Optional.empty(),
+              deviceUdid));
     }
     for (Map.Entry<Path, Path> appTestBundleToHostAppPath :
         appTestBundleToHostAppPaths.entrySet()) {
@@ -181,7 +193,8 @@ public class IdbRunTestsStep implements Step {
               testBundleId,
               appTestBundleToHostAppPath.getKey(),
               Optional.of(appTestBundleToHostAppPath.getValue()),
-              Optional.empty()));
+              Optional.empty(),
+              deviceUdid));
     }
     for (Map.Entry<Path, Map<Path, Path>> appTestPathToTestHostAppPathToTestTargetAppPath :
         appTestPathsToTestHostAppPathsToTestTargetAppPaths.entrySet()) {
@@ -200,7 +213,8 @@ public class IdbRunTestsStep implements Step {
                 testBundleId,
                 appTestPathToTestHostAppPathToTestTargetAppPath.getKey(),
                 Optional.of(testHostAppPathToTestTargetAppPath.getValue()),
-                Optional.of(testHostAppPathToTestTargetAppPath.getKey())));
+                Optional.of(testHostAppPathToTestTargetAppPath.getKey()),
+                deviceUdid));
       }
     }
 
@@ -239,6 +253,12 @@ public class IdbRunTestsStep implements Step {
       return StepExecutionResults.ERROR;
     }
 
+    // Booting the simulator for the test
+    AppleDeviceController appleDeviceController =
+        new AppleDeviceController(context.getProcessExecutor(), idbPath);
+    appleDeviceController.bootSimulator(deviceUdid);
+
+    // Preparing the run test command
     ProcessExecutorParams.Builder processExecutorParamsBuilder =
         ProcessExecutorParams.builder()
             .setCommand(runCommand)

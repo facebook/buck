@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.simulator.AppleDeviceController;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
@@ -329,7 +330,6 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       }
 
       xctoolStdoutReader = Optional.of(new AppleTestXctoolStdoutReader(testReportingCallback));
-      idbStdoutReader = Optional.of(new AppleTestIdbStdoutReader(testReportingCallback));
       Optional<String> destinationSpecifierArg;
       if (!destinationSpecifier.get().isEmpty()) {
         destinationSpecifierArg =
@@ -383,21 +383,31 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               Optional.of(testLogLevel),
               testRuleTimeoutMs,
               snapshotReferenceImagesPath);
-      ImmutableList<IdbRunTestsStep> idbSteps =
-          IdbRunTestsStep.createCommands(
-              idbPath,
-              getProjectFilesystem(),
-              testBundle,
-              resolvedTestOutputPath,
-              idbStdoutReader,
-              options.getTestSelectorList(),
-              stutterTimeout,
-              testRuleTimeoutMs,
-              logicTestPathsBuilder.build(),
-              appTestPathsToHostAppsBuilder.build(),
-              appTestPathsToTestHostAppPathsToTestTargetAppsBuilder.build());
 
       if (useIdb) {
+        idbStdoutReader = Optional.of(new AppleTestIdbStdoutReader(testReportingCallback));
+        AppleDeviceController appleDeviceController =
+            new AppleDeviceController(context.getProcessExecutor(), idbPath);
+        Optional<String> deviceUdid =
+            appleDeviceController.getUdidFromDeviceName(
+                destinationSpecifierArg.get().split("=")[1]);
+        if (!deviceUdid.isPresent()) {
+          throw new HumanReadableException("Could not get the udid of the specified device");
+        }
+        ImmutableList<IdbRunTestsStep> idbSteps =
+            IdbRunTestsStep.createCommands(
+                idbPath,
+                getProjectFilesystem(),
+                testBundle,
+                resolvedTestOutputPath,
+                idbStdoutReader,
+                options.getTestSelectorList(),
+                stutterTimeout,
+                testRuleTimeoutMs,
+                logicTestPathsBuilder.build(),
+                appTestPathsToHostAppsBuilder.build(),
+                appTestPathsToTestHostAppPathsToTestTargetAppsBuilder.build(),
+                deviceUdid.get());
         for (IdbRunTestsStep step : idbSteps) {
           steps.add(step);
         }
