@@ -73,13 +73,15 @@ public class ArchiveStepIntegrationTest {
     Path input = filesystem.getPath("input.dat");
     filesystem.writeContentsToPath("blah", input);
     Preconditions.checkState(filesystem.resolve(input).toFile().setExecutable(true));
+    ImmutableList<String> archiverCmd =
+        archiver.getCommandPrefix(ruleResolver.getSourcePathResolver());
 
     // Build an archive step.
     ArchiveStep archiveStep =
         new ArchiveStep(
             filesystem,
             archiver.getEnvironment(ruleResolver.getSourcePathResolver()),
-            archiver.getCommandPrefix(ruleResolver.getSourcePathResolver()),
+            archiverCmd,
             ImmutableList.of(),
             getArchiveOptions(false),
             output,
@@ -108,6 +110,10 @@ public class ArchiveStepIntegrationTest {
       assertEquals(0, entry.getGroupId());
       assertEquals(String.format("0%o", entry.getMode()), 0100644, entry.getMode());
     }
+
+    // test the beginning of description to make sure it matches the archive command
+    String desc = archiveStep.getDescription(executionContext);
+    assertThat(desc, Matchers.startsWith(archiverCmd.get(0)));
   }
 
   @Test
