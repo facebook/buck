@@ -16,7 +16,7 @@
 {"name": "iPhone 8", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
 {"name": "iPhone 8 Plus", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
 {"name": "iPhone SE", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
-{"name": "iPhone X", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
+{"name": "iPhone X", "udid": "DF85F9BE-70D1-4706-B95F-58CD25986051", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.4", "architecture": "x86_64"}
 {"name": "iPhone Xs", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
 {"name": "iPhone Xs Max", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}
 {"name": "iPhone X\u0280", "udid": "", "state": "Shutdown", "type": "simulator", "os_version": "iOS 12.2", "architecture": "x86_64", "host": "", "port": 0, "is_local": false}

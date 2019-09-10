@@ -36,6 +36,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -351,7 +352,12 @@ public class AppleDeviceControllerTest {
             (new ImmutableAppleDevice(
                 "iPhone SE", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
             (new ImmutableAppleDevice(
-                "iPhone X", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
+                "iPhone X",
+                "DF85F9BE-70D1-4706-B95F-58CD25986051",
+                "Shutdown",
+                "simulator",
+                "iOS 12.4",
+                "x86_64")),
             (new ImmutableAppleDevice(
                 "iPhone Xs", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
             (new ImmutableAppleDevice(
@@ -445,5 +451,28 @@ public class AppleDeviceControllerTest {
     ImmutableSet<String> expected = ImmutableSet.of("");
 
     assertEquals(devices, expected);
+  }
+
+  @Test
+  public void getUdidFromDeviceName() throws IOException {
+    Optional<String> udid;
+    try (OutputStream stdin = new ByteArrayOutputStream();
+        InputStream stdout = getClass().getResourceAsStream("testdata/idb-list.txt");
+        InputStream stderr = new ByteArrayInputStream(new byte[0])) {
+      FakeProcess fakeIdbList = new FakeProcess(0, stdin, stdout, stderr);
+      ProcessExecutorParams processExecutorParams =
+          ProcessExecutorParams.builder()
+              .setCommand(ImmutableList.of("/pathTo/idb", "list-targets", "--json"))
+              .build();
+      FakeProcessExecutor fakeProcessExecutor =
+          new FakeProcessExecutor(ImmutableMap.of(processExecutorParams, fakeIdbList));
+
+      AppleDeviceController deviceController =
+          new AppleDeviceController(fakeProcessExecutor, Paths.get("/pathTo/idb"));
+      udid = deviceController.getUdidFromDeviceName("iPhone X");
+    }
+
+    Optional<String> expected = Optional.of("DF85F9BE-70D1-4706-B95F-58CD25986051");
+    assertEquals(udid, expected);
   }
 }

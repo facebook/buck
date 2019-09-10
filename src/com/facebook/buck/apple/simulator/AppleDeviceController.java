@@ -139,6 +139,26 @@ public class AppleDeviceController {
   }
 
   /**
+   * @return the udid of the device that has the determined name. If no device is found with that
+   *     name, will return optional empty
+   */
+  public Optional<String> getUdidFromDeviceName(String name) {
+    ImmutableSet<ImmutableAppleDevice> devices;
+    try {
+      devices = getDevices();
+    } catch (IOException | InterruptedException e) {
+      e.printStackTrace();
+      return Optional.empty();
+    }
+    for (ImmutableAppleDevice device : devices) {
+      if (device.getName().equals(name)) {
+        return Optional.of(device.getUdid());
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
    * Starts up the iOS simulator using idb, which waits until the simulator is completely booted.
    *
    * <p>Call {@link #isSimulatorAvailable(String)} before invoking this method to ensure the
