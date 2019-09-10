@@ -21,6 +21,15 @@ import com.facebook.buck.multitenant.collect.GenerationMap
 import com.facebook.buck.multitenant.collect.MutableGenerationMap
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
+
+internal typealias BuildPackageMap = GenerationMap<FsAgnosticPath, BuildRuleNames, FsAgnosticPath>
+internal typealias MutableBuildPackageMap = MutableGenerationMap<FsAgnosticPath, BuildRuleNames, FsAgnosticPath>
+internal typealias RuleMap = GenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>
+internal typealias MutableRuleMap = MutableGenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>
+internal typealias RdepsMap = GenerationMap<BuildTargetId, RdepsSet, BuildTargetId>
+internal typealias MutableRdepsMap = MutableGenerationMap<BuildTargetId, RdepsSet, BuildTargetId>
 
 /**
  * Facilitates thread-safe, read-only access to the underlying data in an [Index].
@@ -29,17 +38,17 @@ internal interface IndexGenerationData {
     /**
      * @param action will be performed will the read lock is held for the [GenerationMap]
      */
-    fun <T> withBuildPackageMap(action: (map: GenerationMap<FsAgnosticPath, BuildRuleNames, FsAgnosticPath>) -> T): T
+    fun <T> withBuildPackageMap(action: (BuildPackageMap) -> T): T
 
     /**
      * @param action will be performed will the read lock is held for the [GenerationMap]
      */
-    fun <T> withRuleMap(action: (map: GenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>) -> T): T
+    fun <T> withRuleMap(action: (RuleMap) -> T): T
 
     /**
      * @param action will be performed will the read lock is held for the [GenerationMap]
      */
-    fun <T> withRdepsMap(action: (map: GenerationMap<BuildTargetId, RdepsSet, BuildTargetId>) -> T): T
+    fun <T> withRdepsMap(action: (RdepsMap) -> T): T
 
     /**
      * @return new IndexGenerationData based on this one with [GenerationMap]s that reflect the
@@ -60,21 +69,17 @@ internal interface MutableIndexGenerationData : IndexGenerationData {
     /**
      * @param action will be performed will the write lock is held for the [GenerationMap]
      */
-    fun <T> withMutableBuildPackageMap(
-        action: (map: MutableGenerationMap<FsAgnosticPath, BuildRuleNames, FsAgnosticPath>) -> T
-    ): T
+    fun <T> withMutableBuildPackageMap(action: (MutableBuildPackageMap) -> T): T
 
     /**
      * @param action will be performed will the write lock is held for the [GenerationMap]
      */
-    fun <T> withMutableRuleMap(
-        action: (map: MutableGenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>) -> T
-    ): T
+    fun <T> withMutableRuleMap(action: (MutableRuleMap) -> T): T
 
     /**
      * @param action will be performed will the write lock is held for the [GenerationMap]
      */
-    fun <T> withMutableRdepsMap(action: (map: MutableGenerationMap<BuildTargetId, RdepsSet, BuildTargetId>) -> T): T
+    fun <T> withMutableRdepsMap(action: (MutableRdepsMap) -> T): T
 }
 
 /**
@@ -86,96 +91,62 @@ internal interface MutableIndexGenerationData : IndexGenerationData {
  *     We also specify the key as the keyInfo so that we get it back when we use `getAllInfoValuePairsForGeneration()`.
  */
 internal open class DefaultIndexGenerationData(
-    protected val buildPackageMap: GenerationMap<FsAgnosticPath, BuildRuleNames, FsAgnosticPath> = DefaultGenerationMap { it },
-    protected val buildPackageMapLock: ReentrantReadWriteLock = ReentrantReadWriteLock(/*fair*/ true),
-    protected val ruleMap: GenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId> = DefaultGenerationMap { it },
-    protected val ruleMapLock: ReentrantReadWriteLock = ReentrantReadWriteLock(/*fair*/ true),
-    protected val rdepsMap: GenerationMap<BuildTargetId, RdepsSet, BuildTargetId> = DefaultGenerationMap { it },
-    protected val rdepsMapLock: ReentrantReadWriteLock = ReentrantReadWriteLock(/*fair*/ true)
+    val buildPackageMapPair: Pair<BuildPackageMap, ReentrantReadWriteLock> = createGenerationMapWithLock(),
+    val ruleMapPair: Pair<RuleMap, ReentrantReadWriteLock> = createGenerationMapWithLock(),
+    val rdepsMapPair: Pair<RdepsMap, ReentrantReadWriteLock> = createGenerationMapWithLock()
 ) : IndexGenerationData {
-    final override inline fun <T> withBuildPackageMap(
-        action: (map: GenerationMap<FsAgnosticPath, BuildRuleNames, FsAgnosticPath>) -> T
-    ): T {
-        val readLock = buildPackageMapLock.readLock()
-        readLock.lock()
-        try {
-            return action(buildPackageMap)
-        } finally {
-            readLock.unlock()
-        }
-    }
 
-    final override inline fun <T> withRuleMap(
-        action: (map: GenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>) -> T
-    ): T {
-        val readLock = ruleMapLock.readLock()
-        readLock.lock()
-        try {
-            return action(ruleMap)
-        } finally {
-            readLock.unlock()
-        }
-    }
+    final override inline fun <T> withBuildPackageMap(action: (BuildPackageMap) -> T): T =
+        buildPackageMapPair.readAction(action)
 
-    final override inline fun <T> withRdepsMap(
-        action: (map: GenerationMap<BuildTargetId, RdepsSet, BuildTargetId>) -> T
-    ): T {
-        val readLock = rdepsMapLock.readLock()
-        readLock.lock()
-        try {
-            return action(rdepsMap)
-        } finally {
-            readLock.unlock()
-        }
-    }
+    final override inline fun <T> withRuleMap(action: (RuleMap) -> T): T =
+        ruleMapPair.readAction(action)
+
+    final override inline fun <T> withRdepsMap(action: (RdepsMap) -> T): T =
+        rdepsMapPair.readAction(action)
 
     override fun createForwardingIndexGenerationData(
         generation: Int,
         localBuildPackageChanges: Map<FsAgnosticPath, BuildRuleNames?>,
         localRuleMapChanges: Map<BuildTargetId, InternalRawBuildRule?>,
         localRdepsRuleMapChanges: Map<BuildTargetId, RdepsSet?>
-    ): IndexGenerationData {
-        val forwardingBuildPackageMap = ForwardingGenerationMap(generation, localBuildPackageChanges, buildPackageMap)
-        val forwardingRuleMap = ForwardingGenerationMap(generation, localRuleMapChanges, ruleMap)
-        val forwardingRdepsRuleMap = ForwardingGenerationMap(generation, localRdepsRuleMapChanges, rdepsMap)
-        return DefaultIndexGenerationData(forwardingBuildPackageMap, buildPackageMapLock, forwardingRuleMap, ruleMapLock, forwardingRdepsRuleMap, rdepsMapLock)
-    }
+    ): IndexGenerationData =
+        DefaultIndexGenerationData(
+            buildPackageMapPair = of(generation, localBuildPackageChanges, buildPackageMapPair),
+            ruleMapPair = of(generation, localRuleMapChanges, ruleMapPair),
+            rdepsMapPair = of(generation, localRdepsRuleMapChanges, rdepsMapPair))
+
+    private inline fun <K : Any, V : Any> of(
+        generation: Int,
+        localChanges: Map<K, V?>,
+        pair: Pair<GenerationMap<K, V, K>, ReentrantReadWriteLock>
+    ) = ForwardingGenerationMap(
+        supportedGeneration = generation,
+        localChanges = localChanges,
+        delegate = pair.first) to pair.second
 }
 
-internal class DefaultMutableIndexGenerationData() : DefaultIndexGenerationData(), MutableIndexGenerationData {
-    override inline fun <T> withMutableBuildPackageMap(
-        action: (map: MutableGenerationMap<FsAgnosticPath, BuildRuleNames, FsAgnosticPath>) -> T
-    ): T {
-        val writeLock = buildPackageMapLock.writeLock()
-        writeLock.lock()
-        try {
-            return action(buildPackageMap as MutableGenerationMap)
-        } finally {
-            writeLock.unlock()
-        }
-    }
+internal class DefaultMutableIndexGenerationData : DefaultIndexGenerationData(),
+    MutableIndexGenerationData {
 
-    override inline fun <T> withMutableRuleMap(
-        action: (map: MutableGenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>) -> T
-    ): T {
-        val writeLock = ruleMapLock.writeLock()
-        writeLock.lock()
-        try {
-            return action(ruleMap as MutableGenerationMap)
-        } finally {
-            writeLock.unlock()
-        }
-    }
+    override inline fun <T> withMutableBuildPackageMap(action: (MutableBuildPackageMap) -> T): T =
+        buildPackageMapPair.writeAction(action)
 
-    override inline fun <T> withMutableRdepsMap(
-        action: (map: MutableGenerationMap<BuildTargetId, RdepsSet, BuildTargetId>) -> T
-    ): T {
-        val writeLock = rdepsMapLock.writeLock()
-        writeLock.lock()
-        try {
-            return action(rdepsMap as MutableGenerationMap)
-        } finally {
-            writeLock.unlock()
-        }
-    }
+    override inline fun <T> withMutableRuleMap(action: (MutableRuleMap) -> T): T =
+        ruleMapPair.writeAction(action)
+
+    override inline fun <T> withMutableRdepsMap(action: (MutableRdepsMap) -> T): T =
+        rdepsMapPair.writeAction(action)
 }
+
+private inline fun <K : Any, V : Any> createGenerationMapWithLock() =
+    DefaultGenerationMap<K, V, K> { it } to ReentrantReadWriteLock(/*fair*/ true)
+
+private inline fun <T, K : Any, V : Any> Pair<GenerationMap<K, V, K>, ReentrantReadWriteLock>.readAction(
+    action: GenerationMap<K, V, K>.() -> T
+): T = second.read { first.action() }
+
+@SuppressWarnings("UnsafeCast")
+private inline fun <T, K : Any, V : Any> Pair<GenerationMap<K, V, K>, ReentrantReadWriteLock>.writeAction(
+    action: MutableGenerationMap<K, V, K>.() -> T
+): T = second.write { (first as MutableGenerationMap).action() }
