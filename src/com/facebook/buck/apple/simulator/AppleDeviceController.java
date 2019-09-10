@@ -130,7 +130,8 @@ public class AppleDeviceController {
     ImmutableSet<ImmutableAppleDevice> allTargets = getSimulators();
 
     for (ImmutableAppleDevice target : allTargets) {
-      if (target.getState().equals("Booted") && target.getType().equals("simulator")) {
+      if (target.getState().toLowerCase().equals("booted")
+          && target.getType().equals("simulator")) {
         bootedSimulatorUdids.add(target.getUdid());
       }
     }

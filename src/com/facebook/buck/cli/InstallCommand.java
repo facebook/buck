@@ -811,7 +811,7 @@ public class InstallCommand extends BuildCommand {
     }
 
     // Boot the simulator
-    if (simulator.get().getState().equals("Shutdown")) {
+    if (simulator.get().getState().toLowerCase().equals("shutdown")) {
       LOG.debug("Starting up simulator %s", simulator.get());
 
       if (!appleDeviceController.bootSimulator(simulator.get().getUdid())) {
@@ -1194,7 +1194,7 @@ public class InstallCommand extends BuildCommand {
                 LOG.debug("Got default match (%s): %s", DEFAULT_APPLE_SIMULATOR_NAME, simulator);
                 defaultSimulator = Optional.of(simulator);
               }
-              if (simulator.getState().equals("Booted")) {
+              if (simulator.getState().toLowerCase().equals("booted")) {
                 bootedSimulator = Optional.of(simulator);
               }
             }
@@ -1206,7 +1206,7 @@ public class InstallCommand extends BuildCommand {
                 LOG.debug("Got default match (%s): %s", DEFAULT_APPLE_TV_SIMULATOR_NAME, simulator);
                 defaultSimulator = Optional.of(simulator);
               }
-              if (simulator.getState().equals("Booted")) {
+              if (simulator.getState().toLowerCase().equals("booted")) {
                 bootedSimulator = Optional.of(simulator);
               }
             }
