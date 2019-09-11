@@ -26,8 +26,6 @@ import com.facebook.buck.query.QueryEnvironment.TargetEvaluator;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.Set;
-import java.util.function.Predicate;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -133,7 +131,7 @@ public class QueryParserTest {
     }
   }
 
-  private static class TestQueryEnvironment implements QueryEnvironment<QueryBuildTarget> {
+  private static class TestQueryEnvironment extends StubQueryEnvironment<QueryBuildTarget> {
 
     private final TargetEvaluator targetEvaluator;
 
@@ -149,63 +147,6 @@ public class QueryParserTest {
     @Override
     public Iterable<QueryFunction<?, QueryBuildTarget>> getFunctions() {
       return ImmutableList.of(new DepsFunction(), new RdepsFunction(), new TestsOfFunction());
-    }
-
-    @Override
-    public ImmutableSet<QueryBuildTarget> getFwdDeps(Iterable<QueryBuildTarget> targets) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Set<QueryBuildTarget> getReverseDeps(Iterable<QueryBuildTarget> targets) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Set<QueryFileTarget> getInputs(QueryBuildTarget target) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Set<QueryBuildTarget> getTransitiveClosure(Set<QueryBuildTarget> targets) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void buildTransitiveClosure(Set<? extends QueryTarget> targetNodes, int maxDepth) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getTargetKind(QueryBuildTarget target) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ImmutableSet<QueryBuildTarget> getTestsForTarget(QueryBuildTarget target) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ImmutableSet<QueryFileTarget> getBuildFiles(Set<QueryBuildTarget> targets) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ImmutableSet<QueryBuildTarget> getFileOwners(ImmutableList<String> files) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ImmutableSet<? extends QueryTarget> getTargetsInAttribute(
-        QueryBuildTarget target, String attribute) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ImmutableSet<Object> filterAttributeContents(
-        QueryBuildTarget target, String attribute, Predicate<Object> predicate) {
-      throw new UnsupportedOperationException();
     }
   }
 }
