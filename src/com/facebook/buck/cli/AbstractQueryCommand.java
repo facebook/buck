@@ -631,7 +631,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
         }
 
         unconfiguredTargets.put(
-            ((QueryBuildTarget) target).getBuildTarget().getFullyQualifiedName(),
+            toPresentationForm(env.getNode((QueryBuildTarget) target)),
             resolveAllUnconfiguredAttributesForTarget(params, env, ((QueryBuildTarget) target)));
       }
       printAttributesAsJson(unconfiguredTargets.build(), printStream);
