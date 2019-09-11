@@ -40,6 +40,9 @@ public class KotlincStep implements Step {
 
   private static final String CLASSPATH_FLAG = "-classpath";
   private static final String DESTINATION_FLAG = "-d";
+  private static final String INCLUDE_RUNTIME_FLAG = "-include-runtime";
+  private static final String EXCLUDE_REFLECT = "-no-reflect";
+  private static final String VERBOSE = "-verbose";
 
   private final Kotlinc kotlinc;
   private final ImmutableSortedSet<Path> combinedClassPathEntries;
@@ -157,6 +160,10 @@ public class KotlincStep implements Step {
                       buildClasspathEntries,
                       path -> filesystem.resolve(path).toAbsolutePath().toString())));
     }
+
+    builder.add(INCLUDE_RUNTIME_FLAG);
+    builder.add(EXCLUDE_REFLECT);
+    builder.add(VERBOSE);
 
     if (!extraArguments.isEmpty()) {
       for (String extraArgument : extraArguments) {

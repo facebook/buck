@@ -37,6 +37,7 @@ import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -72,11 +73,13 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
+  @Ignore("Temporarily disabled. TODO(ianc) reenable")
   public void compileKotlinClassWithAnnotationProcessorThatGeneratesJavaCode() throws Exception {
     buildKotlinLibraryThatContainsNoJavaCodeButMustCompileGeneratedJavaCode();
   }
 
   @Test
+  @Ignore("Temporarily disabled. TODO(ianc) reenable")
   public void compileKotlinClassWithAnnotationProcessorThatGeneratesJavaCodeWithExternalJavac()
       throws Exception {
     overrideToolsJavacInBuckConfig();
