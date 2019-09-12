@@ -33,7 +33,7 @@ import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
-import com.facebook.buck.core.test.rule.HasTestRunnerLibrary;
+import com.facebook.buck.core.test.rule.HasTestRunner;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -165,7 +165,7 @@ public class JavaTestDescription
             .setExpanders(MACRO_EXPANDERS)
             .build();
 
-    Optional<BuildTarget> runner = args.getRunnerLibrary();
+    Optional<BuildTarget> runner = args.getRunner();
     Optional<ImmutableMap<String, StringWithMacros>> runnerSpecs = args.getSpecs();
     if (runnerSpecs.isPresent()) {
       JavaTestRunner testRunner;
@@ -306,7 +306,7 @@ public class JavaTestDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractJavaTestDescriptionArg extends CoreArg, HasTestRunnerLibrary {}
+  interface AbstractJavaTestDescriptionArg extends CoreArg, HasTestRunner {}
 
   public static class CxxLibraryEnhancement {
     public final BuildRuleParams updatedParams;

@@ -39,7 +39,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
-import com.facebook.buck.core.test.rule.HasTestRunnerLibrary;
+import com.facebook.buck.core.test.rule.HasTestRunner;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -260,10 +260,10 @@ public class GoTestDescription
     GoBinary testMain;
     if (args.getSpecs().isPresent()) {
       UserVerify.checkArgument(
-          args.getRunnerLibrary().isPresent(),
+          args.getRunner().isPresent(),
           "runner_library should be specified for rules implementing test protocol");
 
-      BuildRule library = graphBuilder.requireRule(args.getRunnerLibrary().get());
+      BuildRule library = graphBuilder.requireRule(args.getRunner().get());
       UserVerify.verify(
           library instanceof GoLibrary, "runner_library should be a go_library for go_test");
       GoLibrary runnerLibrary = (GoLibrary) library;
@@ -552,7 +552,7 @@ public class GoTestDescription
           HasContacts,
           HasDeclaredDeps,
           HasSrcs,
-          HasTestRunnerLibrary,
+          HasTestRunner,
           HasTestTimeout,
           HasGoLinkable {
     Optional<BuildTarget> getLibrary();

@@ -32,7 +32,7 @@ go_test(
         "resources_test.go",
     ],
     resources = ["testdata/input"],
-    runner_library = ":runner",
+    runner = ":runner",
     specs = {
         "my": "spec",
         "cmd": "out=\"$(abs_output testbin)\" && cd \$(dirname $out) && $out",

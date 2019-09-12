@@ -26,10 +26,10 @@ import java.util.Optional;
  *
  * <p>TODO(bobyf): need a slightly better api or a new rule as a library doesn't quite make sense.
  */
-public interface HasTestRunnerLibrary {
+public interface HasTestRunner {
 
   /** @return the target to the library containing the test runner */
-  Optional<BuildTarget> getRunnerLibrary();
+  Optional<BuildTarget> getRunner();
 
   /**
    * @return the freeform (for now) specs as required for running tests. For example, cmds,

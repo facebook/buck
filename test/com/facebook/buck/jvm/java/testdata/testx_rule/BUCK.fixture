@@ -7,7 +7,7 @@ java_test_runner(
 java_test(
     name = "some_test",
     srcs = ["SomeTest.java"],
-    runner_library = ":runner",
+    runner = ":runner",
     specs = {
         "my": "spec",
         "cmd": "java -jar $(abs_output testbin) $(abs_output classnames)",
