@@ -339,6 +339,8 @@ java_library_with_plugins(
         "JavaSourceJar.java",
         "JavaTest.java",
         "JavaTestDescription.java",
+        "JavaTestRunner.java",
+        "JavaTestRunnerDescription.java",
         "JavaTestX.java",
         "JavacFactory.java",
         "JavacOptionsFactory.java",
