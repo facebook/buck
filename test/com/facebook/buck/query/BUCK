@@ -116,7 +116,13 @@ DEPS = [
     "//third-party/java/thrift:libthrift",
 ]
 
+java_library(
+    name = "testutil",
+    srcs = ["BaseTestQueryEnvironment.java"],
+    deps = DEPS,
+)
+
 standard_java_test(
     name = "query",
-    deps = DEPS,
+    deps = [":testutil"] + DEPS,
 )

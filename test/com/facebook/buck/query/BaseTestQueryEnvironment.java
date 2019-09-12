@@ -25,9 +25,9 @@ import java.util.function.Predicate;
  *
  * @param <NODE_TYPE>
  */
-public class StubQueryEnvironment<NODE_TYPE> implements QueryEnvironment<NODE_TYPE> {
+public class BaseTestQueryEnvironment<NODE_TYPE> implements QueryEnvironment<NODE_TYPE> {
   @Override
-  public TargetEvaluator getTargetEvaluator() {
+  public QueryEnvironment.TargetEvaluator getTargetEvaluator() {
     throw new UnsupportedOperationException();
   }
 
@@ -90,7 +90,7 @@ public class StubQueryEnvironment<NODE_TYPE> implements QueryEnvironment<NODE_TY
   }
 
   @Override
-  public Iterable<QueryFunction<? extends QueryTarget, NODE_TYPE>> getFunctions() {
+  public Iterable<QueryEnvironment.QueryFunction<? extends QueryTarget, NODE_TYPE>> getFunctions() {
     throw new UnsupportedOperationException();
   }
 }

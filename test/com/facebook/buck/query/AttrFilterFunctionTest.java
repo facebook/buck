@@ -75,7 +75,7 @@ public class AttrFilterFunctionTest {
     return StringWithMacros.of(ImmutableList.of(Either.ofLeft(text)));
   }
 
-  private class TestQueryEnvironment extends StubQueryEnvironment<QueryBuildTarget> {
+  private class TestQueryEnvironment extends BaseTestQueryEnvironment<QueryBuildTarget> {
     private String attributeName;
     private Object attributeValue;
 

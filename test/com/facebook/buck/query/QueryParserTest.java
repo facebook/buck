@@ -131,7 +131,7 @@ public class QueryParserTest {
     }
   }
 
-  private static class TestQueryEnvironment extends StubQueryEnvironment<QueryBuildTarget> {
+  private static class TestQueryEnvironment extends BaseTestQueryEnvironment<QueryBuildTarget> {
 
     private final TargetEvaluator targetEvaluator;
 
