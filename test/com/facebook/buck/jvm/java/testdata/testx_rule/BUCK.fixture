@@ -1,15 +1,13 @@
-java_library(
+java_test_runner(
     name = "runner",
     srcs = ["SomeRunner.java"],
-    deps = [
-    ],
+    main_class = "test.SomeRunner",
 )
 
 java_test(
     name = "some_test",
     srcs = ["SomeTest.java"],
     runner_library = ":runner",
-    runner_main_class = "test.SomeRunner",
     specs = {
         "my": "spec",
         "cmd": "java -jar $(abs_output testbin) $(abs_output classnames)",

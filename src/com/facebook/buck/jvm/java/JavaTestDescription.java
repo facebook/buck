@@ -21,7 +21,6 @@ import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.exceptions.UserVerify;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -124,29 +123,6 @@ public class JavaTestDescription
             graphBuilder,
             args);
 
-    Optional<BuildTarget> runnerLibrary = args.getRunnerLibrary();
-    Optional<ImmutableMap<String, StringWithMacros>> runnerSpecs = args.getSpecs();
-
-    if (runnerSpecs.isPresent()) {
-      if (runnerLibrary.isPresent()) {
-        UserVerify.verify(
-            args.getRunnerMainClass().isPresent(),
-            "The main class of the runner should be specified via runner_main_class");
-        BuildRule library = graphBuilder.requireRule(runnerLibrary.get());
-        if (!(library instanceof JavaLibrary)) {
-          throw new HumanReadableException(
-              "Java tests should have a JavaLibrary as the runner library for test protocol");
-        }
-
-        params = params.copyAppendingExtraDeps(library);
-      } else {
-        throw new HumanReadableException(
-            "Java test should have a JavaLibrary as the runner library for test protocol");
-      }
-    } else if (runnerLibrary.isPresent()) {
-      throw new HumanReadableException("Should not have runner set when no specs are set");
-    }
-
     CxxLibraryEnhancement cxxLibraryEnhancement =
         new CxxLibraryEnhancement(
             buildTarget,
@@ -189,7 +165,24 @@ public class JavaTestDescription
             .setExpanders(MACRO_EXPANDERS)
             .build();
 
+    Optional<BuildTarget> runner = args.getRunnerLibrary();
+    Optional<ImmutableMap<String, StringWithMacros>> runnerSpecs = args.getSpecs();
     if (runnerSpecs.isPresent()) {
+      JavaTestRunner testRunner;
+      if (runner.isPresent()) {
+        BuildRule runnerRule = graphBuilder.requireRule(runner.get());
+        if (!(runnerRule instanceof JavaTestRunner)) {
+          throw new HumanReadableException(
+              "Java tests should have a java_test_runner as the runner for test protocol");
+        }
+        testRunner = (JavaTestRunner) runnerRule;
+
+      } else {
+        throw new HumanReadableException(
+            "Java test should have a java_test_runner as the runner for test protocol");
+      }
+
+      params = params.copyAppendingExtraDeps(testRunner.getCompiledTestsLibrary());
 
       // Construct the build rule to build the binary JAR.
       ImmutableSet<JavaLibrary> transitiveClasspathDeps =
@@ -204,7 +197,7 @@ public class JavaTestDescription
               javaOptionsForTests
                   .get()
                   .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
-              args.getRunnerMainClass().get(),
+              testRunner.getMainClass(),
               args.getManifestFile().orElse(null),
               true,
               false,
@@ -228,6 +221,8 @@ public class JavaTestDescription
           args.getContacts(),
           ImmutableMap.copyOf(
               Maps.transformValues(args.getSpecs().get(), macrosConverter::convert)));
+    } else if (runner.isPresent()) {
+      throw new HumanReadableException("Should not have runner set when no specs are set");
     }
 
     return new JavaTest(
@@ -311,10 +306,7 @@ public class JavaTestDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractJavaTestDescriptionArg extends CoreArg, HasTestRunnerLibrary {
-
-    Optional<String> getRunnerMainClass();
-  }
+  interface AbstractJavaTestDescriptionArg extends CoreArg, HasTestRunnerLibrary {}
 
   public static class CxxLibraryEnhancement {
     public final BuildRuleParams updatedParams;

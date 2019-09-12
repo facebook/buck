@@ -40,6 +40,7 @@ public class JavaDescriptionsProvider implements DescriptionProvider {
         new JavaAnnotationProcessorDescription(),
         new JavaPluginDescription(),
         new JavaLibraryDescription(toolchainProvider, javaConfig),
+        new JavaTestRunnerDescription(toolchainProvider, javaConfig),
         new JavaTestDescription(toolchainProvider, javaConfig),
         new KeystoreDescription());
   }
