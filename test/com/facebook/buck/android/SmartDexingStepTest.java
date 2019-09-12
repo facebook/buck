@@ -88,7 +88,7 @@ public class SmartDexingStepTest {
             EnumSet.of(DxStep.Option.NO_OPTIMIZE),
             XzStep.DEFAULT_COMPRESSION_LEVEL,
             Optional.empty(),
-            DxStep.D8,
+            DxStep.DX,
             null,
             false,
             Optional.empty());
@@ -123,7 +123,7 @@ public class SmartDexingStepTest {
         dxOptions,
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         Optional.empty(),
-        DxStep.D8,
+        DxStep.DX,
         null,
         false,
         Optional.empty());
@@ -168,7 +168,7 @@ public class SmartDexingStepTest {
         dxOptions,
         9,
         Optional.empty(),
-        DxStep.D8,
+        DxStep.DX,
         null,
         false,
         Optional.empty());
@@ -213,7 +213,7 @@ public class SmartDexingStepTest {
         dxOptions,
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         Optional.empty(),
-        DxStep.D8,
+        DxStep.DX,
         null,
         false,
         Optional.empty());
@@ -293,7 +293,7 @@ public class SmartDexingStepTest {
         dxOptions,
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         Optional.empty(),
-        DxStep.D8,
+        DxStep.DX,
         null,
         false,
         Optional.empty());
@@ -336,7 +336,7 @@ public class SmartDexingStepTest {
         dxOptions,
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         Optional.empty(),
-        DxStep.D8,
+        DxStep.DX,
         null,
         false,
         Optional.empty());

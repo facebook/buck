@@ -315,7 +315,7 @@ public class AndroidInstrumentationApkDescription
 
     @Value.Default
     default String getDexTool() {
-      return DxStep.D8;
+      return DxStep.DX;
     }
   }
 }

@@ -327,7 +327,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   @Test
   public void testDxFindsReferencedResources() {
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
-    BuildTarget dexTarget = BuildTargetFactory.newInstance("//java/com/sample/lib:lib#d8");
+    BuildTarget dexTarget = BuildTargetFactory.newInstance("//java/com/sample/lib:lib#dex");
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
     Optional<String> resourcesFromMetadata =
@@ -353,20 +353,20 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib#d8");
+    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib#dex");
 
     workspace.replaceFileContents(
         "java/com/sample/lib/Sample.java", "import", "import /* no output change */");
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
     buildLog = workspace.getBuildLog();
-    buildLog.assertNotTargetBuiltLocally("//java/com/sample/lib:lib#d8");
-    buildLog.assertTargetHadMatchingInputRuleKey("//java/com/sample/lib:lib#d8");
+    buildLog.assertNotTargetBuiltLocally("//java/com/sample/lib:lib#dex");
+    buildLog.assertTargetHadMatchingInputRuleKey("//java/com/sample/lib:lib#dex");
 
     workspace.replaceFileContents(
         "java/com/sample/lib/Sample.java", "import", "import /* \n some output change */");
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
     buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib#d8");
+    buildLog.assertTargetBuiltLocally("//java/com/sample/lib:lib#dex");
   }
 
   @Test

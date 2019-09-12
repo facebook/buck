@@ -73,6 +73,8 @@ public class AndroidBinaryCrossCellIntegrationTest extends AbiCompilationModeTes
     workspace.runBuckCommand("build", "other_repo//:app_with_mainlib").assertSuccess();
     workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand("build", "//:app_with_main_lib").assertSuccess();
-    workspace.getBuildLog().assertTargetWasFetchedFromCache("//java/com/sample/mainlib:mainlib#d8");
+    workspace
+        .getBuildLog()
+        .assertTargetWasFetchedFromCache("//java/com/sample/mainlib:mainlib#dex");
   }
 }
