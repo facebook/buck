@@ -476,44 +476,53 @@ public final class MainRunner {
           runMainWithExitCode(
               watchmanFreshInstanceAction, initTimestamp, ImmutableList.copyOf(args));
     } catch (Throwable t) {
-
-      HumanReadableExceptionAugmentor augmentor;
       try {
-        augmentor =
-            new HumanReadableExceptionAugmentor(
-                parsedRootConfig
-                    .map(buckConfig -> buckConfig.getView(ErrorHandlingBuckConfig.class))
-                    .map(ErrorHandlingBuckConfig::getErrorMessageAugmentations)
-                    .orElse(ImmutableMap.of()));
-      } catch (HumanReadableException e) {
-        console.printErrorText(e.getHumanReadableErrorMessage());
-        augmentor = new HumanReadableExceptionAugmentor(ImmutableMap.of());
-      }
-      ErrorLogger logger =
-          new ErrorLogger(
-              new LogImpl() {
-                @Override
-                public void logUserVisible(String message) {
-                  console.printFailure(message);
-                }
-
-                @Override
-                public void logUserVisibleInternalError(String message) {
-                  console.printFailure(linesToText("Buck encountered an internal error", message));
-                }
-
-                @Override
-                public void logVerbose(Throwable e) {
-                  String message = "Command failed:";
-                  if (e instanceof InterruptedException
-                      || e instanceof ClosedByInterruptException) {
-                    message = "Command was interrupted:";
+        HumanReadableExceptionAugmentor augmentor;
+        try {
+          augmentor =
+              new HumanReadableExceptionAugmentor(
+                  parsedRootConfig
+                      .map(buckConfig -> buckConfig.getView(ErrorHandlingBuckConfig.class))
+                      .map(ErrorHandlingBuckConfig::getErrorMessageAugmentations)
+                      .orElse(ImmutableMap.of()));
+        } catch (HumanReadableException e) {
+          console.printErrorText(e.getHumanReadableErrorMessage());
+          augmentor = new HumanReadableExceptionAugmentor(ImmutableMap.of());
+        }
+        ErrorLogger logger =
+            new ErrorLogger(
+                new LogImpl() {
+                  @Override
+                  public void logUserVisible(String message) {
+                    console.printFailure(message);
                   }
-                  LOG.info(e, message);
-                }
-              },
-              augmentor);
-      logger.logException(t);
+
+                  @Override
+                  public void logUserVisibleInternalError(String message) {
+                    console.printFailure(
+                        linesToText("Buck encountered an internal error", message));
+                  }
+
+                  @Override
+                  public void logVerbose(Throwable e) {
+                    String message = "Command failed:";
+                    if (e instanceof InterruptedException
+                        || e instanceof ClosedByInterruptException) {
+                      message = "Command was interrupted:";
+                    }
+                    LOG.info(e, message);
+                  }
+                },
+                augmentor);
+        logger.logException(t);
+      } catch (Throwable ignored) {
+        // In some very rare cases error processing may error itself
+        // One example is logger implementation to throw while trying to log the error message
+        // Even for this case, we want proper exit code to be emitted, so we print the original
+        // exception to stderr as a last resort
+        System.err.println(t.getMessage());
+        t.printStackTrace();
+      }
       exitCode = ExceptionHandlerRegistryFactory.create().handleException(t);
     } finally {
       LOG.debug("Done.");
