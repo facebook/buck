@@ -22,5 +22,6 @@
     <orderEntry type="library" name="fastutil-7.2.0" level="project" />
     <orderEntry type="library" scope="TEST" name="test-lib" level="project" />
     <orderEntry type="library" scope="TEST" name="mockk-runtime" level="project" />
+    <orderEntry type="library" name="jackson-module-kotlin-2.9.9" level="project" />
   </component>
 </module>

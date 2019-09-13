@@ -18,7 +18,6 @@ package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.RuleType
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.google.common.collect.ImmutableMap
@@ -343,7 +342,7 @@ class IndexTest {
 private fun loadIndex(resource: String): Pair<Index, List<Int>> {
     val (index, indexAppender) = IndexFactory.createIndex()
     val commits = populateIndexFromStream(indexAppender,
-        IndexTest::class.java.getResourceAsStream("data/$resource"))
+        IndexTest::class.java.getResourceAsStream("data/$resource"), ::buckJsonToBuildPackageParser)
     val generations = commits.map { requireNotNull(indexAppender.getGeneration(it)) }
     return Pair(index, generations)
 }
@@ -380,11 +379,13 @@ private fun String.buildTarget(): UnconfiguredBuildTarget {
 
 private fun createTargetNode(
     target: String,
-    attributes: Map<String, Any> = mapOf()): RawTargetNode =
+    attributes: Map<String, Any> = mapOf()
+): ServiceRawTargetNode =
     ServiceRawTargetNode(target.buildTarget(), JAVA_LIBRARY, ImmutableMap.copyOf(attributes))
 
 private fun createRawRule(
     target: String,
     deps: List<String>,
-    attributes: Map<String, Any> = mapOf()) =
+    attributes: Map<String, Any> = mapOf()
+) =
     RawBuildRule(createTargetNode(target, attributes), targetSet(*deps.toTypedArray()))

@@ -36,7 +36,8 @@ import java.io.OutputStream
  */
 fun populateIndexFromStream(
     indexAppender: IndexAppender,
-    stream: InputStream
+    stream: InputStream,
+    packageParser: (JsonNode) -> BuildPackage
 ): List<String> {
     val parser = ObjectMappers.createParser(stream)
             .enable(JsonParser.Feature.ALLOW_COMMENTS)
@@ -71,8 +72,8 @@ fun populateIndexFromStream(
                     check(parser.nextToken() == JsonToken.VALUE_STRING)
                     commit = parser.valueAsString
                 }
-                "added" -> parsePackages(parser, added)
-                "modified" -> parsePackages(parser, modified)
+                "added" -> parsePackages(parser, added, packageParser)
+                "modified" -> parsePackages(parser, modified, packageParser)
                 "removed" -> parsePaths(parser, removed)
                 else -> throw IllegalStateException("Unrecognized field $fieldName")
             }
@@ -87,10 +88,10 @@ fun populateIndexFromStream(
 /**
  * Read packages from JSON
  */
-fun parsePackagesFromStream(stream: InputStream): MutableList<BuildPackage> {
+fun parsePackagesFromStream(stream: InputStream, packageParser: (JsonNode) -> BuildPackage): MutableList<BuildPackage> {
     val parser = createParser(stream)
     val packages = mutableListOf<BuildPackage>()
-    parsePackages(parser, packages)
+    parsePackages(parser, packages, packageParser)
     return packages
 }
 
@@ -124,19 +125,33 @@ private fun parsePaths(parser: JsonParser, list: MutableList<FsAgnosticPath>) {
     }
 }
 
-private fun parsePackages(parser: JsonParser, list: MutableList<BuildPackage>) {
+private fun parsePackages(
+    parser: JsonParser,
+    list: MutableList<BuildPackage>,
+    packageParser: (JsonNode) -> BuildPackage
+) {
     check(parser.nextToken() == JsonToken.START_ARRAY)
     while (parser.nextToken() != JsonToken.END_ARRAY) {
         val packageNode = parser.readValueAsTree<JsonNode>()
         // 'removeNode' is an Object which is a fully parsed package node
         // with the same structure as RawTargetNodeWithDepsPackage
         if (packageNode !is NullNode) {
-            list.add(toBuildPackage(packageNode))
+            list.add(packageParser(packageNode))
         }
     }
 }
 
-private fun toBuildPackage(nodes: JsonNode): BuildPackage {
+/**
+ * Convert Json produced by multitenant service to [BuildPackage]
+ */
+fun multitenantJsonToBuildPackageParser(nodes: JsonNode): BuildPackage {
+    return ObjectMappers.READER.forType(BuildPackage::class.java).readValue(nodes)
+}
+
+/**
+ * Convert Json produced by BUCK to [BuildPackage]
+ */
+fun buckJsonToBuildPackageParser(nodes: JsonNode): BuildPackage {
     val path = FsAgnosticPath.of(nodes.get("path").asText())
     val rules = nodes.get("nodes").fields().asSequence().map { (name, rule) ->
         var ruleType: String? = null

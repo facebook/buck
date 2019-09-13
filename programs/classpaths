@@ -55,6 +55,7 @@ third-party/java/jackson/jackson-core-2.9.7.jar
 third-party/java/jackson/jackson-databind-2.9.7.jar
 third-party/java/jackson/jackson-datatype-guava-2.9.7.jar
 third-party/java/jackson/jackson-datatype-jdk8-2.9.7.jar
+third-party/java/jackson/jackson-module-kotlin-2.9.9.jar
 third-party/java/jdom/jdom-2.0.6.jar
 third-party/java/jetty/jetty-all-9.4.9.v20180320-uber.jar
 third-party/java/jna/jna-4.5.1.jar

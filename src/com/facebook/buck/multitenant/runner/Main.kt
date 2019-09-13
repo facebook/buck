@@ -19,14 +19,18 @@ package com.facebook.buck.multitenant.runner
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.FsChanges
 import com.facebook.buck.multitenant.service.IndexComponents
+import com.facebook.buck.multitenant.service.IndexFactory
 import com.facebook.buck.multitenant.service.InputSource
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
+import com.facebook.buck.multitenant.service.buckJsonToBuildPackageParser
+import com.facebook.buck.multitenant.service.populateIndexFromStream
+import java.io.InputStream
 import java.net.URI
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.system.measureTimeMillis
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 
 /**
  * Entry point for multitenant executable
@@ -162,4 +166,14 @@ private fun createOutputFromDescriptor(out: String): Output {
 
 private fun output(data: List<String>, where: String) {
     createOutputFromDescriptor(where).print(data)
+}
+
+/**
+ * Creates a map with a single Index based on the data from the specified file.
+ */
+private fun createIndex(stream: InputStream): IndexComponents {
+    val (index, appender) = IndexFactory.createIndex()
+    populateIndexFromStream(appender, stream, ::buckJsonToBuildPackageParser)
+
+    return IndexComponents(index, appender, mapOf("" to "BUCK"))
 }

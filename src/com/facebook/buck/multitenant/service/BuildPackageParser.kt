@@ -69,7 +69,7 @@ class BuckShellBuildPackageParser(private val root: Path) : BuildPackageParser {
                 execBuck(patternsFilePath, outputFilePath)
 
                 return BufferedInputStream(Files.newInputStream(outputFilePath)).use { stream ->
-                    parsePackagesFromStream(stream)
+                    parsePackagesFromStream(stream, ::buckJsonToBuildPackageParser)
                 }
             } finally {
                 Files.delete(outputFilePath)

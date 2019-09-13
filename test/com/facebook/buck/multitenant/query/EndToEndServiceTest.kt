@@ -27,6 +27,7 @@ import com.facebook.buck.multitenant.service.IndexFactory
 import com.facebook.buck.multitenant.service.RawBuildRule
 import com.facebook.buck.multitenant.service.RuleTypeFactory
 import com.facebook.buck.multitenant.service.ServiceRawTargetNode
+import com.facebook.buck.multitenant.service.buckJsonToBuildPackageParser
 import com.facebook.buck.multitenant.service.populateIndexFromStream
 import com.google.common.collect.ImmutableMap
 import org.junit.Assert.assertEquals
@@ -139,6 +140,7 @@ private fun createService(
 ): MultitenantServiceStub {
     val (index, indexAppender) = IndexFactory.createIndex()
     populateIndexFromStream(indexAppender,
-        EndToEndServiceTest::class.java.getResourceAsStream("data/$resource"))
+        EndToEndServiceTest::class.java.getResourceAsStream("data/$resource"),
+        ::buckJsonToBuildPackageParser)
     return MultitenantServiceStub(index, indexAppender, changeTranslator)
 }

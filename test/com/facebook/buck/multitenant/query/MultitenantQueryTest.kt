@@ -18,9 +18,10 @@ package com.facebook.buck.multitenant.query
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
-import com.facebook.buck.multitenant.service.populateIndexFromStream
 import com.facebook.buck.multitenant.service.BuildTargets
 import com.facebook.buck.multitenant.service.IndexFactory
+import com.facebook.buck.multitenant.service.buckJsonToBuildPackageParser
+import com.facebook.buck.multitenant.service.populateIndexFromStream
 import com.facebook.buck.query.QueryFileTarget
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -343,7 +344,8 @@ private fun asFileTargets(vararg path: String): Set<QueryFileTarget> {
 private fun loadIndex(resource: String, commitIndex: Int): MultitenantQueryEnvironment {
     val (index, indexAppender) = IndexFactory.createIndex()
     val commits = populateIndexFromStream(indexAppender,
-        MultitenantQueryTest::class.java.getResourceAsStream("data/$resource"))
+        MultitenantQueryTest::class.java.getResourceAsStream("data/$resource"),
+        ::buckJsonToBuildPackageParser)
     val generation = indexAppender.getGeneration(commits[commitIndex])
     requireNotNull(generation)
     val cellToBuildFileName = mapOf("" to "BUCK")

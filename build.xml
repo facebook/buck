@@ -123,6 +123,8 @@
     <include name="jackson/jackson-databind-2.9.7.jar" />
     <include name="jackson/jackson-datatype-jdk8-2.9.7.jar" />
     <include name="jackson/jackson-datatype-guava-2.9.7.jar" />
+    <include name="jackson/jackson-module-kotlin-2.9.9.jar" />
+    <include name="kotlin/kotlin-reflect-1.3.41.jar" />
     <include name="android/sdklib-25.3.0.jar" />
     <include name="nailgun/nailgun-server-1.0.0.jar" />
     <include name="jna/jna-4.5.1.jar" />
