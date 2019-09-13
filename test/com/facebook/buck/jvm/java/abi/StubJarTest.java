@@ -295,6 +295,117 @@ public class StubJarTest {
   }
 
   @Test
+  public void kotlinClassWithInlineMethodUsingDefaultParam() throws IOException {
+    if (!isValidForKotlin()) {
+      return;
+    }
+
+    tester = new Tester(Language.KOTLIN);
+    tester
+        .setSourceFile(
+            "A.kt",
+            "package com.example.buck",
+            "open class A {",
+            "  inline fun getString(str: String = \"default\"): String { return str }",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "  // compiled from: A.kt",
+            "  // debug info: SMAP",
+            "A.kt",
+            "Kotlin",
+            "*S Kotlin",
+            "*F",
+            "+ 1 A.kt",
+            "com/example/buck/A",
+            "*L",
+            "1#1,5:1",
+            "3#1:6",
+            "*E",
+            "",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u0012\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\u0008\\u0002\\n\\u0002\\u0010\\u000e\\n\\u0000\\u0008\\u0016\\u0018\\u00002\\u00020\\u0001B\\u0005\\u00a2\\u0006\\u0002\\u0010\\u0002J\\u0013\\u0010\\u0003\\u001a\\u00020\\u00042\\u0008\\u0008\\u0002\\u0010\\u0005\\u001a\\u00020\\u0004H\\u0086\\u0008\"}, d2={\"Lcom/example/buck/A;\", \"\", \"()V\", \"getString\", \"\", \"str\"})",
+            "",
+            "  // access flags 0x11",
+            "  public final getString(Ljava/lang/String;)Ljava/lang/String;",
+            "  @Lorg/jetbrains/annotations/NotNull;() // invisible",
+            "    // annotable parameter count: 1 (invisible)",
+            "    @Lorg/jetbrains/annotations/NotNull;() // invisible, parameter 0",
+            "   L0",
+            "    LDC 0",
+            "    ISTORE 2",
+            "   L1",
+            "    ALOAD 1",
+            "    LDC \"str\"",
+            "    INVOKESTATIC kotlin/jvm/internal/Intrinsics.checkParameterIsNotNull (Ljava/lang/Object;Ljava/lang/String;)V",
+            "   L2",
+            "    LINENUMBER 3 L2",
+            "    ALOAD 1",
+            "    ARETURN",
+            "   L3",
+            "    LOCALVARIABLE this Lcom/example/buck/A; L0 L3 0",
+            "    LOCALVARIABLE str Ljava/lang/String; L0 L3 1",
+            "    LOCALVARIABLE $i$f$getString I L1 L3 2",
+            "    MAXSTACK = 2",
+            "    MAXLOCALS = 3",
+            "",
+            "  // access flags 0x1009",
+            "  public static synthetic getString$default(Lcom/example/buck/A;Ljava/lang/String;ILjava/lang/Object;)Ljava/lang/String;",
+            "   L0",
+            "    ALOAD 3",
+            "    IFNULL L1",
+            "    NEW java/lang/UnsupportedOperationException",
+            "    DUP",
+            "    LDC \"Super calls with default arguments not supported in this target, function: getString\"",
+            "    INVOKESPECIAL java/lang/UnsupportedOperationException.<init> (Ljava/lang/String;)V",
+            "    ATHROW",
+            "   L1",
+            "    ILOAD 2",
+            "    ICONST_1",
+            "    IAND",
+            "    IFEQ L2",
+            "   L3",
+            "    LINENUMBER 3 L3",
+            "    LDC \"default\"",
+            "    ASTORE 1",
+            "   L2",
+            "    ICONST_0",
+            "    ISTORE 2",
+            "   L4",
+            "    ALOAD 1",
+            "    LDC \"str\"",
+            "    INVOKESTATIC kotlin/jvm/internal/Intrinsics.checkParameterIsNotNull (Ljava/lang/Object;Ljava/lang/String;)V",
+            "   L5",
+            "    LINENUMBER 6 L5",
+            "    ALOAD 1",
+            "    ARETURN",
+            "   L6",
+            "    LOCALVARIABLE this Lcom/example/buck/A; L0 L6 0",
+            "    LOCALVARIABLE str Ljava/lang/String; L0 L6 1",
+            "    LOCALVARIABLE $i$f$getString I L4 L6 2",
+            "    MAXSTACK = 3",
+            "    MAXLOCALS = 4",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .createAndCheckStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "B.kt",
+            "package com.example.buck",
+            "class B {",
+            "fun useInline(): String { return A().getString() }",
+            "}")
+        .testCanCompile();
+  }
+
+  @Test
   public void kotlinClassNoInlineMethod() throws IOException {
     if (!isValidForKotlin()) {
       return;
