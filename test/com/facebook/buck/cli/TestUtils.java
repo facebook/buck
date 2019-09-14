@@ -48,14 +48,15 @@ class TestUtils {
 
     String expectedResult =
         String.format(
-            workspace.getFileContents(expectedFileName),
-            (tmp.getRoot().toString()
-                    + "/buck-out/tmp/genrule-"
-                    + randomNumberPlaceholder
-                    + "."
-                    + extension)
-                .replace("/", File.separator)
-                .replace(File.separator, fileSeparator));
+                workspace.getFileContents(expectedFileName),
+                (tmp.getRoot().toString()
+                        + "/buck-out/tmp/genrule-"
+                        + randomNumberPlaceholder
+                        + "."
+                        + extension)
+                    .replace("/", File.separator)
+                    .replace(File.separator, fileSeparator))
+            .trim();
     assertEquals(expectedResult, buildReportContents);
   }
 }

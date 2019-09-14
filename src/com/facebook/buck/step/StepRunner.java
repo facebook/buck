@@ -50,7 +50,8 @@ public final class StepRunner {
     String stepDescription = step.getDescription(context);
     UUID stepUuid = UUID.randomUUID();
     StepEvent.Started started = StepEvent.started(stepShortName, stepDescription, stepUuid);
-    logStepEvent(started, buildTarget, ImmutableList.of());
+    String buildTargetName = buildTarget.map(BuildTarget::getFullyQualifiedName).orElse("N/A");
+    logStepEvent(context, started, buildTargetName);
     context.getBuckEventBus().post(started);
     StepExecutionResult executionResult = StepExecutionResults.ERROR;
     try {
@@ -59,7 +60,7 @@ public final class StepRunner {
       throw StepFailedException.createForFailingStepWithException(step, context, e);
     } finally {
       StepEvent.Finished finished = StepEvent.finished(started, executionResult.getExitCode());
-      logStepEvent(finished, buildTarget, executionResult.getExecutedCommand());
+      logStepEvent(context, finished, buildTargetName, executionResult.getExecutedCommand());
       context.getBuckEventBus().post(finished);
     }
     if (!executionResult.isSuccess()) {
@@ -68,14 +69,23 @@ public final class StepRunner {
   }
 
   private static void logStepEvent(
+      ExecutionContext context, StepEvent stepEvent, String buildTargetName) {
+    logStepEvent(context, stepEvent, buildTargetName, ImmutableList.of());
+  }
+
+  private static void logStepEvent(
+      ExecutionContext context,
       StepEvent stepEvent,
-      Optional<BuildTarget> buildTargetOptional,
+      String buildTargetName,
       ImmutableList<String> command) {
-    String buildTarget = buildTargetOptional.map(BuildTarget::getFullyQualifiedName).orElse("N/A");
     if (command.isEmpty()) {
-      LOG.verbose("%s for build rule <%s>", stepEvent, buildTarget);
+      LOG.verbose("%s for build rule <%s>", stepEvent, buildTargetName);
     } else {
-      LOG.verbose("%s for build rule <%s>, executed command: %s", stepEvent, buildTarget, command);
+      LOG.verbose(
+          "%s for build rule <%s>, executed command: %s", stepEvent, buildTargetName, command);
+      if (context.getVerbosity().shouldPrintCommand()) {
+        context.getStdErr().println(command);
+      }
     }
   }
 }
