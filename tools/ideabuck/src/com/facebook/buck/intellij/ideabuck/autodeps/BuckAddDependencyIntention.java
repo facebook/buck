@@ -42,7 +42,7 @@ import com.intellij.pom.Navigatable;
 import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiJavaCodeReferenceElement;
+import com.intellij.psi.PsiReference;
 import com.intellij.util.IncorrectOperationException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -76,13 +76,12 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
    * graph (or both).
    */
   @Nullable
-  public static BuckAddDependencyIntention create(
-      PsiJavaCodeReferenceElement referenceElement, PsiClass psiClass) {
-    VirtualFile editSourceFile = referenceElement.getContainingFile().getVirtualFile();
+  public static BuckAddDependencyIntention create(PsiReference reference, PsiClass psiClass) {
+    VirtualFile editSourceFile = reference.getElement().getContainingFile().getVirtualFile();
     if (editSourceFile == null) {
       return null;
     }
-    Project project = referenceElement.getProject();
+    Project project = reference.getElement().getProject();
     BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(project);
     VirtualFile editBuildFile =
         buckTargetLocator.findBuckFileForVirtualFile(editSourceFile).orElse(null);
@@ -128,7 +127,7 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
     }
     return new BuckAddDependencyIntention(
         project,
-        referenceElement,
+        reference,
         editBuildFile,
         editSourceFile,
         editSourceTarget,
@@ -142,8 +141,8 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
 
   private Project project;
 
-  // Fields pertaining to the element in the file being edited
-  private PsiJavaCodeReferenceElement referenceElement;
+  // Fields pertaining to the PsiReference in the file being edited
+  private PsiReference reference;
   private VirtualFile editBuildFile;
   private VirtualFile editSourceFile;
   private BuckTarget editSourceTarget;
@@ -160,7 +159,7 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
 
   BuckAddDependencyIntention(
       Project project,
-      PsiJavaCodeReferenceElement referenceElement,
+      PsiReference reference,
       VirtualFile editBuildFile,
       VirtualFile editSourceFile,
       BuckTarget editSourceTarget,
@@ -171,7 +170,7 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
       BuckTarget importSourceTarget,
       Module importModule) {
     this.project = project;
-    this.referenceElement = referenceElement;
+    this.reference = reference;
     this.editBuildFile = editBuildFile;
     this.editSourceFile = editSourceFile;
     this.editSourceTarget = editSourceTarget;
@@ -476,7 +475,7 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
                     + " on "
                     + importModule.getName());
           }
-          new AddImportAction(project, referenceElement, editor, psiClass).execute();
+          new AddImportAction(project, reference, editor, psiClass).execute();
         }));
   }
 }
