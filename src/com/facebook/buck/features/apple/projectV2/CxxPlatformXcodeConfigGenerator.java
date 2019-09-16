@@ -149,7 +149,7 @@ class CxxPlatformXcodeConfigGenerator {
 
   private static void removeArchsValue(
       List<String> notProcessedCxxFlags, Map<String, String> notProcessedAppendedConfig) {
-    // we need to get rid of ARCH setting so Xcode would be able to let user switch between
+    // We need to get rid of ARCH setting so Xcode would be able to let user switch between
     // iOS simulator and iOS device without forcing the ARCH of resulting binary
     getArchs(notProcessedAppendedConfig, notProcessedCxxFlags);
     notProcessedAppendedConfig.remove(ARCHS);

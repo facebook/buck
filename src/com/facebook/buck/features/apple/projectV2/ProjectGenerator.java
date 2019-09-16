@@ -116,6 +116,7 @@ import com.facebook.buck.features.halide.HalideLibraryDescription;
 import com.facebook.buck.features.halide.HalideLibraryDescriptionArg;
 import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
@@ -134,7 +135,6 @@ import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftCommonArg;
 import com.facebook.buck.swift.SwiftLibraryDescriptionArg;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
@@ -170,9 +170,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -226,13 +223,6 @@ public class ProjectGenerator {
 
   private static final ImmutableSet<AppleBundleExtension> APPLE_NATIVE_LIBRARY_BUNDLE_EXTENSIONS =
       ImmutableSet.of(AppleBundleExtension.FRAMEWORK);
-
-  private static final FileAttribute<?> READ_ONLY_FILE_ATTRIBUTE =
-      PosixFilePermissions.asFileAttribute(
-          ImmutableSet.of(
-              PosixFilePermission.OWNER_READ,
-              PosixFilePermission.GROUP_READ,
-              PosixFilePermission.OTHERS_READ));
 
   private final XcodeProjectWriteOptions xcodeProjectWriteOptions;
   private final XCodeDescriptions xcodeDescriptions;
@@ -776,16 +766,18 @@ public class ProjectGenerator {
     defaultSettingsBuilder.put("HALIDE_FUNC_NAME", buildTarget.getShortName());
     defaultSettingsBuilder.put(PRODUCT_NAME, productName);
 
-    Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs =
-        getXcodeBuildConfigurationsForTargetNode(targetNode);
-    setTargetBuildConfigurations(
+    BuildConfiguration.writeBuildConfigurationsForTarget(
+        targetNode,
         buildTarget,
+        defaultCxxPlatform,
         xcodeNativeTargetAttributesBuilder,
-        configs.get(),
-        getTargetCxxBuildConfigurationForTargetNode(targetNode, appendedConfig),
         extraSettings,
         defaultSettingsBuilder.build(),
-        appendedConfig);
+        appendedConfig,
+        projectFilesystem,
+        options.shouldGenerateReadOnlyFiles(),
+        targetConfigNamesBuilder,
+        xcconfigPathsBuilder);
   }
 
   private BinaryTargetGenerationResult generateAppleTestTarget(
@@ -1979,16 +1971,18 @@ public class ProjectGenerator {
 
     ImmutableMap<String, String> appendedConfig = appendConfigsBuilder.build();
 
-    Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs =
-        getXcodeBuildConfigurationsForTargetNode(targetNode);
-    setTargetBuildConfigurations(
+    BuildConfiguration.writeBuildConfigurationsForTarget(
+        targetNode,
         buildTarget,
+        defaultCxxPlatform,
         xcodeNativeTargetAttributesBuilder,
-        configs.get(),
-        getTargetCxxBuildConfigurationForTargetNode(targetNode, appendedConfig),
         extraSettingsBuilder.build(),
         defaultSettingsBuilder.build(),
-        appendedConfig);
+        appendedConfig,
+        projectFilesystem,
+        options.shouldGenerateReadOnlyFiles(),
+        targetConfigNamesBuilder,
+        xcconfigPathsBuilder);
 
     Optional<String> moduleName =
         isModularAppleLibrary ? Optional.of(getModuleName(targetNode)) : Optional.empty();
@@ -2657,75 +2651,6 @@ public class ProjectGenerator {
     return output.build();
   }
 
-  private Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>>
-      getXcodeBuildConfigurationsForTargetNode(TargetNode<?> targetNode) {
-    Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs = Optional.empty();
-    Optional<TargetNode<AppleNativeTargetDescriptionArg>> appleTargetNode =
-        TargetNodes.castArg(targetNode, AppleNativeTargetDescriptionArg.class);
-    Optional<TargetNode<HalideLibraryDescriptionArg>> halideTargetNode =
-        TargetNodes.castArg(targetNode, HalideLibraryDescriptionArg.class);
-    if (appleTargetNode.isPresent()) {
-      configs = Optional.of(appleTargetNode.get().getConstructorArg().getConfigs());
-    } else if (halideTargetNode.isPresent()) {
-      configs = Optional.of(halideTargetNode.get().getConstructorArg().getConfigs());
-    }
-
-    HashMap<String, HashMap<String, String>> combinedConfig =
-        new HashMap<String, HashMap<String, String>>();
-    combinedConfig.put(
-        CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME,
-        new HashMap<String, String>(getDefaultDebugBuildConfiguration()));
-    combinedConfig.put(
-        CxxPlatformXcodeConfigGenerator.PROFILE_BUILD_CONFIGURATION_NAME,
-        new HashMap<String, String>());
-    combinedConfig.put(
-        CxxPlatformXcodeConfigGenerator.RELEASE_BUILD_CONFIGURATION_NAME,
-        new HashMap<String, String>());
-
-    if (configs.isPresent()
-        && !configs.get().isEmpty()
-        && !(targetNode.getDescription() instanceof CxxLibraryDescription)) {
-      for (Map.Entry<String, ImmutableMap<String, String>> targetLevelConfig :
-          configs.get().entrySet()) {
-        HashMap<String, String> pendingConfig =
-            new HashMap<String, String>(targetLevelConfig.getValue());
-        String configTarget = targetLevelConfig.getKey();
-        if (combinedConfig.containsKey(configTarget)) {
-          combinedConfig.get(configTarget).putAll(pendingConfig);
-        } else {
-          combinedConfig.put(configTarget, pendingConfig);
-        }
-      }
-    }
-
-    ImmutableSortedMap.Builder<String, ImmutableMap<String, String>> configBuilder =
-        ImmutableSortedMap.naturalOrder();
-    for (Map.Entry<String, HashMap<String, String>> config : combinedConfig.entrySet()) {
-      configBuilder.put(config.getKey(), ImmutableMap.copyOf(config.getValue()));
-    }
-
-    return Optional.of(configBuilder.build());
-  }
-
-  private static ImmutableMap<String, String> getDefaultDebugBuildConfiguration() {
-    return new Builder<String, String>()
-        .put("DEAD_CODE_STRIPPING", "NO")
-        .put("ONLY_ACTIVE_ARCH", "YES")
-        .put("GCC_SYMBOLS_PRIVATE_EXTERN", "NO")
-        .build();
-  }
-
-  private ImmutableMap<String, String> getTargetCxxBuildConfigurationForTargetNode(
-      TargetNode<?> targetNode, Map<String, String> appendedConfig) {
-    if (targetNode.getDescription() instanceof CxxLibraryDescription) {
-      return CxxPlatformXcodeConfigGenerator.getCxxXcodeTargetBuildConfigurationsFromCxxPlatform(
-          defaultCxxPlatform, appendedConfig);
-    } else {
-      return CxxPlatformXcodeConfigGenerator.getAppleXcodeTargetBuildConfigurationsFromCxxPlatform(
-          defaultCxxPlatform, appendedConfig);
-    }
-  }
-
   private void addEntitlementsPlistIntoTarget(
       TargetNode<? extends HasAppleBundleFields> targetNode,
       XCodeNativeTargetAttributes.Builder nativeTargetBuilder) {
@@ -2749,98 +2674,12 @@ public class ProjectGenerator {
     }
   }
 
-  private Path getConfigurationXcconfigPath(BuildTarget buildTarget, String input) {
-    return BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s-" + input + ".xcconfig");
-  }
-
   @VisibleForTesting
   static Iterable<SourcePath> getHeaderSourcePaths(SourceSortedSet headers) {
     if (headers.getUnnamedSources().isPresent()) {
       return headers.getUnnamedSources().get();
     } else {
       return headers.getNamedSources().get().values();
-    }
-  }
-
-  /**
-   * Create target level configuration entries.
-   *
-   * @param buildTarget Xcode target for which the configurations will be set.
-   * @param nativeTargetAttributes The native target builder to mutate.
-   * @param configurations Configurations as extracted from the BUCK file.
-   * @param overrideBuildSettings Build settings that will override ones defined elsewhere.
-   * @param defaultBuildSettings Target-inline level build settings that will be set if not already
-   *     defined.
-   * @param appendBuildSettings Target-inline level build settings that will incorporate the
-   *     existing value or values at a higher level.
-   */
-  private void setTargetBuildConfigurations(
-      BuildTarget buildTarget,
-      XCodeNativeTargetAttributes.Builder nativeTargetAttributes,
-      ImmutableMap<String, ImmutableMap<String, String>> configurations,
-      ImmutableMap<String, String> cxxPlatformXcodeBuildSettings,
-      ImmutableMap<String, String> overrideBuildSettings,
-      ImmutableMap<String, String> defaultBuildSettings,
-      ImmutableMap<String, String> appendBuildSettings)
-      throws IOException {
-    for (Map.Entry<String, ImmutableMap<String, String>> configurationEntry :
-        configurations.entrySet()) {
-      targetConfigNamesBuilder.add(configurationEntry.getKey());
-
-      ImmutableMap<String, String> targetLevelInlineSettings = configurationEntry.getValue();
-
-      HashMap<String, String> combinedOverrideConfigs = new HashMap<>(overrideBuildSettings);
-      for (Map.Entry<String, String> entry : cxxPlatformXcodeBuildSettings.entrySet()) {
-        String existingSetting = targetLevelInlineSettings.get(entry.getKey());
-        if (existingSetting == null) {
-          combinedOverrideConfigs.put(entry.getKey(), entry.getValue());
-        }
-      }
-
-      for (Map.Entry<String, String> entry : defaultBuildSettings.entrySet()) {
-        String existingSetting = targetLevelInlineSettings.get(entry.getKey());
-        if (existingSetting == null) {
-          combinedOverrideConfigs.put(entry.getKey(), entry.getValue());
-        }
-      }
-
-      for (Map.Entry<String, String> entry : appendBuildSettings.entrySet()) {
-        String existingSetting = targetLevelInlineSettings.get(entry.getKey());
-        String settingPrefix = existingSetting != null ? existingSetting : "$(inherited)";
-        combinedOverrideConfigs.put(entry.getKey(), settingPrefix + " " + entry.getValue());
-      }
-
-      ImmutableSortedMap<String, String> mergedSettings =
-          MoreMaps.mergeSorted(targetLevelInlineSettings, combinedOverrideConfigs);
-      Path xcconfigPath = getConfigurationXcconfigPath(buildTarget, configurationEntry.getKey());
-      projectFilesystem.mkdirs(Objects.requireNonNull(xcconfigPath).getParent());
-
-      StringBuilder stringBuilder = new StringBuilder();
-      for (Map.Entry<String, String> entry : mergedSettings.entrySet()) {
-        stringBuilder.append(entry.getKey());
-        stringBuilder.append(" = ");
-        stringBuilder.append(entry.getValue());
-        stringBuilder.append('\n');
-      }
-      String xcconfigContents = stringBuilder.toString();
-
-      if (MoreProjectFilesystems.fileContentsDiffer(
-          new ByteArrayInputStream(xcconfigContents.getBytes(Charsets.UTF_8)),
-          xcconfigPath,
-          projectFilesystem)) {
-        if (options.shouldGenerateReadOnlyFiles()) {
-          projectFilesystem.writeContentsToPath(
-              xcconfigContents, xcconfigPath, READ_ONLY_FILE_ATTRIBUTE);
-        } else {
-          projectFilesystem.writeContentsToPath(xcconfigContents, xcconfigPath);
-        }
-      }
-
-      nativeTargetAttributes.addXcconfigs(
-          new XcconfigBaseConfiguration(configurationEntry.getKey(), xcconfigPath));
-
-      xcconfigPathsBuilder.add(
-          projectFilesystem.getPathForRelativePath(xcconfigPath).toAbsolutePath());
     }
   }
 
@@ -3129,7 +2968,7 @@ public class ProjectGenerator {
       LOG.debug("Regenerating project at %s", serializedProject);
       if (options.shouldGenerateReadOnlyFiles()) {
         projectFilesystem.writeContentsToPath(
-            contentsToWrite, serializedProject, ProjectGenerator.READ_ONLY_FILE_ATTRIBUTE);
+            contentsToWrite, serializedProject, MorePosixFilePermissions.READ_ONLY_FILE_ATTRIBUTE);
       } else {
         projectFilesystem.writeContentsToPath(contentsToWrite, serializedProject);
       }
