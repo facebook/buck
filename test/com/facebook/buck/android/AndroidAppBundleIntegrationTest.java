@@ -16,21 +16,19 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.android.bundle.Config.BundleConfig;
-import com.android.bundle.Config.Bundletool;
 import com.android.bundle.Config.Compression;
 import com.android.bundle.Config.Optimizations;
 import com.android.bundle.Config.SplitDimension;
 import com.android.bundle.Config.SplitsConfig;
 import com.android.bundle.Files.Assets;
 import com.android.bundle.Files.NativeLibraries;
-import com.android.bundle.Files.TargetedAssetsDirectory;
 import com.android.bundle.Files.TargetedNativeDirectory;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -53,14 +51,12 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
 
   private ProjectWorkspace workspace;
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
   private ProjectFilesystem filesystem;
-  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void setUp() throws IOException {
@@ -76,6 +72,7 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testAppBundleHaveDeterministicTimestamps() throws IOException {
+    // TODO(bduff): a lot of this tests the operation of bundletool. We probably don't need to.
     String target = "//apps/sample:app_bundle_1";
     ProcessResult result = workspace.runBuckCommand("build", target);
     result.assertSuccess();
@@ -105,23 +102,22 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileExists("base/assets/secondary-program-dex-jars/secondary-1.dex.jar");
     NativeLibraries nativeLibraries =
         NativeLibraries.parseFrom(zipInspector.getFileContents("base/native.pb"));
-    assertEquals(3, nativeLibraries.getDirectoryList().size());
+
+    // Two abis under lib that have at least 1 file (armeabi-v7a, x86)
+    assertEquals(2, nativeLibraries.getDirectoryList().size());
     for (TargetedNativeDirectory targetedNativeDirectory : nativeLibraries.getDirectoryList()) {
-      assertTrue(targetedNativeDirectory.hasTargeting());
       assertTrue(targetedNativeDirectory.getTargeting().hasAbi());
     }
 
     Assets assets = Assets.parseFrom(zipInspector.getFileContents("base/assets.pb"));
-    for (TargetedAssetsDirectory targetedAssetsDirectory : assets.getDirectoryList()) {
-      assertTrue(targetedAssetsDirectory.hasTargeting());
-      assertTrue(targetedAssetsDirectory.getTargeting().hasAbi());
-    }
+    assertEquals(2, assets.getDirectoryList().size());
 
     BundleConfig bundleConfig =
         BundleConfig.parseFrom(zipInspector.getFileContents("BundleConfig.pb"));
 
+    System.err.println(bundleConfig);
+
     assertTrue(bundleConfig.hasBundletool());
-    assertBundletool(bundleConfig.getBundletool());
 
     assertTrue(bundleConfig.hasOptimizations());
     assertOptimizations(bundleConfig.getOptimizations());
@@ -151,19 +147,14 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     assertEquals(0, compression.getUncompressedGlobCount());
   }
 
-  public void assertBundletool(Bundletool bundletool) {
-    assertEquals("", bundletool.getVersion());
-  }
-
   @Test
   public void testAppBundleHaveCorrectAaptMode() {
     String target = "//apps/sample:app_bundle_wrong_aapt_mode";
-
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        "Android App Bundle can only be built with aapt2, but " + target + " is using aapt1.");
-
-    workspace.runBuckBuild(target);
+    ProcessResult result = workspace.runBuckBuild(target).assertFailure();
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "Android App Bundle can only be built with aapt2, but " + target + " is using aapt1."));
   }
 
   @Test
@@ -179,11 +170,11 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
 
     ZipInspector zipInspector = new ZipInspector(aab);
     zipInspector.assertFileExists("small_with_no_resource_deps/assets.pb");
-    zipInspector.assertFileExists("small_with_no_resource_deps/native.pb");
     zipInspector.assertFileExists(
         "small_with_no_resource_deps/assets/small_with_no_resource_deps/metadata.txt");
     zipInspector.assertFileExists(
         "small_with_no_resource_deps/assets/small_with_no_resource_deps/libs.xzs");
+    zipInspector.assertFileExists("small_with_no_resource_deps/dex/classes.dex");
     zipInspector.assertFileExists("base/dex/classes.dex");
     zipInspector.assertFileExists("base/dex/classes2.dex");
     zipInspector.assertFileExists("small_with_no_resource_deps/manifest/AndroidManifest.xml");

@@ -58,10 +58,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
 
-/**
- * Merges resources into a final Android App Bundle. This code is based off of the now deprecated
- * apkbuilder tool:
- */
+/** Merges resources into a final Android App Bundle using bundletool. */
 public class AabBuilderStep implements Step {
 
   private final ProjectFilesystem filesystem;
@@ -108,10 +105,10 @@ public class AabBuilderStep implements Step {
 
     ImmutableList.Builder<Path> modulesPathsBuilder = new Builder<>();
     File fakeResApk = filesystem.createTempFile("fake", ".txt").toFile();
-    Set<String> addedFiles = new HashSet<>();
-    Set<Path> addedSourceFiles = new HashSet<>();
 
     for (ModuleInfo moduleInfo : modulesInfo) {
+      Set<String> addedFiles = new HashSet<>();
+      Set<Path> addedSourceFiles = new HashSet<>();
       Path moduleGenPath = getPathForModule(moduleInfo);
       StepExecutionResult moduleBuildResult =
           addModule(
@@ -119,12 +116,12 @@ public class AabBuilderStep implements Step {
       if (!moduleBuildResult.isSuccess()) {
         return moduleBuildResult;
       }
-      modulesPathsBuilder.add(moduleGenPath);
+      modulesPathsBuilder.add(filesystem.getPathForRelativePath(moduleGenPath));
     }
 
     BuildBundleCommand.Builder bundleBuilder =
         BuildBundleCommand.builder()
-            .setOutputPath(pathToOutputAabFile)
+            .setOutputPath(filesystem.getPathForRelativePath(pathToOutputAabFile))
             .setModulesPaths(modulesPathsBuilder.build());
 
     if (pathToBundleConfigFile.isPresent()) {
@@ -160,6 +157,7 @@ public class AabBuilderStep implements Step {
       Set<String> addedFiles,
       Set<Path> addedSourceFiles)
       throws SealedApkException, DuplicateFileException, ApkCreationException {
+
     if (addedFiles.contains(destination) || addedSourceFiles.contains(file)) {
       return;
     }
@@ -188,7 +186,13 @@ public class AabBuilderStep implements Step {
 
     try {
       ApkBuilder moduleBuilder =
-          new ApkBuilder(moduleGenPath.toFile(), fakeResApk, null, null, null, verboseStream);
+          new ApkBuilder(
+              filesystem.getPathForRelativePath(moduleGenPath).toFile(),
+              filesystem.getPathForRelativePath(fakeResApk.getPath()).toFile(),
+              null,
+              null,
+              null,
+              verboseStream);
       addModuleFiles(moduleBuilder, moduleInfo, addedFiles, addedSourceFiles);
       // Build the APK
       moduleBuilder.sealApk();
@@ -214,23 +218,12 @@ public class AabBuilderStep implements Step {
     moduleBuilder.setDebugMode(debugMode);
     if (moduleInfo.getDexFile() != null) {
       for (Path dexFile : moduleInfo.getDexFile()) {
-        if (moduleInfo.isBaseModule()) {
-          addFile(
-              moduleBuilder,
-              filesystem.getPathForRelativePath(dexFile),
-              getDexFileName(addedFiles),
-              addedFiles,
-              addedSourceFiles);
-        } else {
-          addFile(
-              moduleBuilder,
-              filesystem.getPathForRelativePath(dexFile),
-              Paths.get(BundleModule.ASSETS_DIRECTORY.toString())
-                  .resolve(dexFile.getFileName())
-                  .toString(),
-              addedFiles,
-              addedSourceFiles);
-        }
+        addFile(
+            moduleBuilder,
+            filesystem.getPathForRelativePath(dexFile),
+            getDexFileName(addedFiles),
+            addedFiles,
+            addedSourceFiles);
       }
     }
     if (moduleInfo.getResourceApk() != null) {
@@ -521,7 +514,7 @@ public class AabBuilderStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     String summaryOfModules = Joiner.on(',').join(moduleNames);
-    return String.format("Build a Bundle contains following modules: %s", summaryOfModules);
+    return String.format("Build an app bundle containing these modules: %s", summaryOfModules);
   }
 
   @Override
