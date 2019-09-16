@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>3.8.3-SNAPSHOT</version>
+  <version>3.9.0-SNAPSHOT</version>
   <category>Build</category>
   <vendor email="fb-plugins@fb.com" url="www.facebook.com">Facebook, Inc.</vendor>
 
@@ -10,9 +10,11 @@
   ]]></description>
 
   <change-notes><![CDATA[
-<h3>3.8.3</h3>
+<h3>3.9.0</h3>
 <ul>
-  <li></li>
+  <li>Fix parsing of trailing indents</li>
+  <li>Add extension point for transforming target metadata</li>
+  <li>Allow BuckAddDependencyIntention to work with other languages</li>
 </ul>
 <h3>3.8.2</h3>
 <ul>
