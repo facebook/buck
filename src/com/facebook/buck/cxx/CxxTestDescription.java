@@ -291,7 +291,8 @@ public class CxxTestDescription
                               .getDelegate()
                               .getView(TestBuckConfig.class)
                               .getDefaultTestRuleTimeoutMs()),
-                  cxxBuckConfig.getMaximumTestOutputSize());
+                  cxxBuckConfig.getMaximumTestOutputSize(),
+                  cxxBuckConfig.checkGTestTestList());
           break;
         }
       case BOOST:

@@ -117,6 +117,8 @@ public class CxxBuckConfig {
   private static final String TOOLCHAIN_TARGET = "toolchain_target";
   private static final String FILEPATH_LENGTH_LIMITED = "filepath_length_limited";
 
+  private static final String CHECK_GTEST_TEST_LIST = "check_gtest_test_list";
+
   private static final String OBJCOPY = "objcopy";
   private static final String NM = "nm";
   private static final String STRIP = "strip";
@@ -467,6 +469,10 @@ public class CxxBuckConfig {
 
   public boolean shouldCacheBinaries() {
     return delegate.getBooleanValue(cxxSection, CACHE_BINARIES, false);
+  }
+
+  public boolean checkGTestTestList() {
+    return delegate.getBooleanValue(cxxSection, CHECK_GTEST_TEST_LIST, false);
   }
 
   public boolean isPCHEnabled() {
