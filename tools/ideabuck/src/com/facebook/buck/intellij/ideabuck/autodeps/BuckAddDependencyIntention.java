@@ -46,12 +46,9 @@ import com.intellij.psi.PsiReference;
 import com.intellij.util.IncorrectOperationException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.swing.event.HyperlinkEvent;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nls.Capitalization;
@@ -204,84 +201,6 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
     queryBuckForTargets(editor);
   }
 
-  /** Helper class to handle deserialization of buck query. */
-  static class TargetMetadata {
-    public BuckTarget target;
-    public @Nullable List<BuckTarget> deps;
-    public @Nullable List<BuckTargetPattern> visibility; // null means PUBLIC
-    public @Nullable List<String> srcs;
-    public @Nullable List<String> resources;
-
-    static TargetMetadata from(
-        BuckTargetLocator buckTargetLocator, BuckTarget target, JsonObject payload) {
-      TargetMetadata targetMetadata = new TargetMetadata();
-      targetMetadata.target = target;
-      targetMetadata.srcs = stringListOrNull(payload.get("srcs"));
-      targetMetadata.resources = stringListOrNull(payload.get("resources"));
-
-      // Deps are a list of BuckTargets
-      targetMetadata.deps =
-          Optional.ofNullable(stringListOrNull(payload.get("deps")))
-              .map(
-                  deps ->
-                      deps.stream()
-                          .map(
-                              s -> BuckTarget.parse(s).map(buckTargetLocator::resolve).orElse(null))
-                          .collect(Collectors.toList()))
-              .orElse(null);
-
-      // Visibilility falls in one of three cases:
-      //   (1) if unspecified => means visibility is limited to the current package
-      //   (2) contains "PUBLIC" => available everywhere
-      //   (3) otherwise is a list of buck target patterns where it is visible
-      List<String> optionalVisibility = stringListOrNull(payload.get("visibility"));
-      if (optionalVisibility == null) {
-        targetMetadata.visibility =
-            Collections.singletonList(target.asPattern().asPackageMatchingPattern());
-      } else if (optionalVisibility.contains("PUBLIC")) {
-        targetMetadata.visibility = null; //
-      } else {
-        targetMetadata.visibility =
-            optionalVisibility.stream()
-                .map(p -> BuckTargetPattern.parse(p).map(buckTargetLocator::resolve).orElse(null))
-                .collect(Collectors.toList());
-      }
-
-      return targetMetadata;
-    }
-
-    static @Nullable List<String> stringListOrNull(@Nullable JsonElement jsonElement) {
-      if (jsonElement == null) {
-        return null;
-      }
-      return new Gson().fromJson(jsonElement, new TypeToken<List<String>>() {}.getType());
-    }
-
-    boolean isVisibleTo(BuckTarget target) {
-      if (visibility == null) {
-        return true;
-      }
-      return visibility.stream().anyMatch(pattern -> pattern.matches(target));
-    }
-
-    boolean hasDependencyOn(BuckTarget target) {
-      if (deps == null) {
-        return false;
-      } else {
-        return deps.stream().anyMatch(dep -> dep.equals(target));
-      }
-    }
-
-    boolean contains(BuckTarget targetFile) {
-      if (!target.asPattern().asPackageMatchingPattern().matches(targetFile)) {
-        return false;
-      }
-      String relativeToBuildFile = targetFile.getRuleName();
-      return (srcs != null && srcs.contains(relativeToBuildFile))
-          || (resources != null && resources.contains(relativeToBuildFile));
-    }
-  }
-
   /** Queries buck for targets that own the editSourceFile and the importSourceFile. */
   private void queryBuckForTargets(Editor editor) {
     BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(project);
@@ -314,10 +233,12 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
                 List<TargetMetadata> importTargets = new ArrayList<>();
                 for (TargetMetadata targetMetadata : results) {
                   if (targetMetadata.contains(editSourceTarget)) {
-                    editTargets.add(targetMetadata);
+                    editTargets.add(
+                        TargetMetadataTransformer.transformEditedTarget(project, targetMetadata));
                   }
                   if (targetMetadata.contains(importSourceTarget)) {
-                    importTargets.add(targetMetadata);
+                    importTargets.add(
+                        TargetMetadataTransformer.transformImportedTarget(project, targetMetadata));
                   }
                 }
                 updateDependencies(editor, editTargets, importTargets);
