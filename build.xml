@@ -164,7 +164,7 @@
     <include name="eclipse/org.eclipse.core.runtime_3.14.0.v20180417-0825.jar"/>
     <include name="eclipse/org.eclipse.equinox.common_3.10.0.v20180412-1130.jar"/>
     <include name="eclipse/org.eclipse.equinox.preferences_3.7.100.v20180510-1129.jar"/>
-    <include name="eclipse/org.eclipse.jdt.core_3.14.0.v20180528-0519.jar"/>
+    <include name="eclipse/org.eclipse.jdt.core_3.16.0.v20181130-1748.jar"/>
     <include name="eclipse/org.eclipse.osgi_3.13.0.v20180409-1500.jar"/>
     <include name="eden/eden.jar" />
     <include name="fbthrift/java-thrift-dependencies.jar" />
