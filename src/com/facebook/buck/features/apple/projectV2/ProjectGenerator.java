@@ -220,6 +220,13 @@ public class ProjectGenerator {
   private static final ImmutableSet<AppleBundleExtension> APPLE_NATIVE_BUNDLE_EXTENSIONS =
       ImmutableSet.of(AppleBundleExtension.APP, AppleBundleExtension.FRAMEWORK);
 
+  private static final ImmutableSet<Class<? extends DescriptionWithTargetGraph<?>>>
+      APPLE_NATIVE_LIBRARY_DESCRIPTION_CLASSES =
+          ImmutableSet.of(AppleLibraryDescription.class, CxxLibraryDescription.class);
+
+  private static final ImmutableSet<AppleBundleExtension> APPLE_NATIVE_LIBRARY_BUNDLE_EXTENSIONS =
+      ImmutableSet.of(AppleBundleExtension.FRAMEWORK);
+
   private static final FileAttribute<?> READ_ONLY_FILE_ATTRIBUTE =
       PosixFilePermissions.asFileAttribute(
           ImmutableSet.of(
@@ -3279,25 +3286,27 @@ public class ProjectGenerator {
         .join("$BUILT_PRODUCTS_DIR", getBuiltProductsRelativeTargetOutputPath(targetNode));
   }
 
-  @SuppressWarnings("unchecked")
+  /**
+   * @return The {@code targetNode} if it is of an description type contained within {@nodeTypes} or
+   *     the node set as the binary if {@code targetNode} is a valid bundle contained in {@code
+   *     bundleExtensions}.
+   */
   private static Optional<TargetNode<CommonArg>> getAppleNativeNodeOfType(
       TargetGraph targetGraph,
       TargetNode<?> targetNode,
       Set<Class<? extends DescriptionWithTargetGraph<?>>> nodeTypes,
       Set<AppleBundleExtension> bundleExtensions) {
-    Optional<TargetNode<CommonArg>> nativeNode = Optional.empty();
     if (nodeTypes.contains(targetNode.getDescription().getClass())) {
-      nativeNode = Optional.of((TargetNode<CommonArg>) targetNode);
+      return TargetNodes.castArg(targetNode, CommonArg.class);
     } else if (targetNode.getDescription() instanceof AppleBundleDescription) {
       TargetNode<AppleBundleDescriptionArg> bundle =
-          (TargetNode<AppleBundleDescriptionArg>) targetNode;
+          TargetNodes.castArg(targetNode, AppleBundleDescriptionArg.class).get();
       Either<AppleBundleExtension, String> extension = bundle.getConstructorArg().getExtension();
       if (extension.isLeft() && bundleExtensions.contains(extension.getLeft())) {
-        nativeNode =
-            Optional.of((TargetNode<CommonArg>) targetGraph.get(getBundleBinaryTarget(bundle)));
+        return TargetNodes.castArg(targetGraph.get(getBundleBinaryTarget(bundle)), CommonArg.class);
       }
     }
-    return nativeNode;
+    return Optional.empty();
   }
 
   private static BuildTarget getBundleBinaryTarget(TargetNode<AppleBundleDescriptionArg> bundle) {
@@ -3310,19 +3319,27 @@ public class ProjectGenerator {
                     "apple_bundle rules without binary attribute are not supported."));
   }
 
+  /**
+   * @return The Apple description compatible target node, which may be the @{code targetNode} or a
+   *     node set as the binary if {@code targetNode} is a bundle description type.
+   */
   private static Optional<TargetNode<CommonArg>> getAppleNativeNode(
       TargetGraph targetGraph, TargetNode<?> targetNode) {
     return getAppleNativeNodeOfType(
         targetGraph, targetNode, APPLE_NATIVE_DESCRIPTION_CLASSES, APPLE_NATIVE_BUNDLE_EXTENSIONS);
   }
 
+  /**
+   * @return The Apple library description compatible target node, which may be the @{code
+   *     targetNode} or a node set as the binary if {@code targetNode} is a bundle description type.
+   */
   private static Optional<TargetNode<CommonArg>> getLibraryNode(
       TargetGraph targetGraph, TargetNode<?> targetNode) {
     return getAppleNativeNodeOfType(
         targetGraph,
         targetNode,
-        ImmutableSet.of(AppleLibraryDescription.class, CxxLibraryDescription.class),
-        ImmutableSet.of(AppleBundleExtension.FRAMEWORK));
+        APPLE_NATIVE_LIBRARY_DESCRIPTION_CLASSES,
+        APPLE_NATIVE_LIBRARY_BUNDLE_EXTENSIONS);
   }
 
   private ImmutableSet<Path> collectRecursiveHeaderSearchPaths(
@@ -3392,7 +3409,6 @@ public class ProjectGenerator {
     return builder.build();
   }
 
-  @SuppressWarnings("unchecked")
   private ImmutableSet<Path> collectRecursiveHalideLibraryHeaderPaths(
       TargetNode<? extends CommonArg> targetNode) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
@@ -3405,7 +3421,7 @@ public class ProjectGenerator {
             targetNode,
             Optional.of(ImmutableSet.of(HalideLibraryDescription.class)))) {
       TargetNode<HalideLibraryDescriptionArg> halideNode =
-          (TargetNode<HalideLibraryDescriptionArg>) input;
+          TargetNodes.castArg(input, HalideLibraryDescriptionArg.class).get();
       BuildTarget buildTarget = halideNode.getBuildTarget();
       builder.add(
           pathRelativizer.outputDirToRootRelative(
@@ -3451,7 +3467,7 @@ public class ProjectGenerator {
         ImmutableSet.copyOf(targetGraph.getAll(targetNode.getBuildDeps()));
     for (TargetNode<?> dependency : directDependencies) {
       Optional<TargetNode<CommonArg>> nativeNode = getAppleNativeNode(targetGraph, dependency);
-      if (nativeNode.isPresent() && isSourceUnderTest(dependency, nativeNode.get(), targetNode)) {
+      if (nativeNode.isPresent() && isSourceUnderTest(nativeNode.get(), dependency, targetNode)) {
         visitor.accept(nativeNode.get(), HeaderVisibility.PRIVATE);
       }
     }
@@ -3482,8 +3498,12 @@ public class ProjectGenerator {
     return builder.build();
   }
 
+  /**
+   * @return Whether the {@code testNode} is listed as a test of {@code nativeNode} or {@code
+   *     dependencyNode}.
+   */
   private boolean isSourceUnderTest(
-      TargetNode<?> dependencyNode, TargetNode<CommonArg> nativeNode, TargetNode<?> testNode) {
+      TargetNode<CommonArg> nativeNode, TargetNode<?> dependencyNode, TargetNode<?> testNode) {
     boolean isSourceUnderTest =
         nativeNode.getConstructorArg().getTests().contains(testNode.getBuildTarget());
 
