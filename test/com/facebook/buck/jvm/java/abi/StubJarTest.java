@@ -2523,6 +2523,71 @@ public class StubJarTest {
   }
 
   @Test
+  public void kotlinStubsPrivateInnerClasses() throws IOException {
+    if (!isValidForKotlin()) {
+      return;
+    }
+
+    if (testingMode.equals(MODE_SOURCE_BASED)) {
+      // Source produces some different metadata.
+      return;
+    }
+
+    tester = new Tester(Language.KOTLIN);
+    tester
+        .setSourceFile(
+            "A.kt",
+            "package com.example.buck;",
+            "open class A {",
+            "  private class B {",
+            "    val count: Int = 0",
+            "    fun foo() {",
+            "      // some thing here",
+            "    }",
+            "  }",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A$B",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x30",
+            "final class com/example/buck/A$B {",
+            "",
+            "  // compiled from: A.kt",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u0018\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\u0008\\u0002\\n\\u0002\\u0010\\u0008\\n\\u0002\\u0008\\u0003\\n\\u0002\\u0010\\u0002\\u0008\\u0002\\u0018\\u00002\\u00020\\u0001B\\u0005\\u00a2\\u0006\\u0002\\u0010\\u0002J\\u0006\\u0010\\u0007\\u001a\\u00020\\u0008R\\u0014\\u0010\\u0003\\u001a\\u00020\\u0004X\\u0086D\\u00a2\\u0006\\u0008\\n\\u0000\\u001a\\u0004\\u0008\\u0005\\u0010\\u0006\"}, d2={\"Lcom/example/buck/A$B;\", \"\", \"()V\", \"count\", \"\", \"getCount\", \"()I\", \"foo\", \"\"})",
+            "  // access flags 0x1A",
+            "  private final static INNERCLASS com/example/buck/A$B com/example/buck/A B",
+            "",
+            "  // access flags 0x11",
+            "  public final getCount()I",
+            "",
+            "  // access flags 0x11",
+            "  public final foo()V",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "  // compiled from: A.kt",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u000c\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\u0008\\u0002\\u0008\\u0016\\u0018\\u00002\\u00020\\u0001:\\u0001\\u0003B\\u0005\\u00a2\\u0006\\u0002\\u0010\\u0002\"}, d2={\"Lcom/example/buck/A;\", \"\", \"()V\", \"B\"})",
+            "  // access flags 0x1A",
+            "  private final static INNERCLASS com/example/buck/A$B com/example/buck/A B",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
   public void stubsInnerEnums() throws IOException {
     tester
         .setSourceFile(
@@ -3827,6 +3892,48 @@ public class StubJarTest {
   }
 
   @Test
+  public void kotlinIgnoresAnonymousClasses() throws IOException {
+    if (!isValidForKotlin()) {
+      return;
+    }
+
+    if (testingMode.equals(MODE_SOURCE_BASED)) {
+      // Source does not strip anonymous classes.
+      return;
+    }
+
+    tester = new Tester(Language.KOTLIN);
+    tester
+        .setSourceFile(
+            "A.kt",
+            "package com.example.buck;",
+            "open class A {",
+            "  val r: Runnable = Runnable() {",
+            "    fun run() { }",
+            "  };",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "  // compiled from: A.kt",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u0014\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\u0008\\u0002\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0008\\u0002\\u0008\\u0016\\u0018\\u00002\\u00020\\u0001B\\u0005\\u00a2\\u0006\\u0002\\u0010\\u0002R\\u0011\\u0010\\u0003\\u001a\\u00020\\u0004\\u00a2\\u0006\\u0008\\n\\u0000\\u001a\\u0004\\u0008\\u0005\\u0010\\u0006\"}, d2={\"Lcom/example/buck/A;\", \"\", \"()V\", \"r\", \"Ljava/lang/Runnable;\", \"getR\", \"()Ljava/lang/Runnable;\"})",
+            "",
+            "  // access flags 0x11",
+            "  public final getR()Ljava/lang/Runnable;",
+            "  @Lorg/jetbrains/annotations/NotNull;() // invisible",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
   public void ignoresInnerClassesOfAnonymousClasses() throws IOException {
     tester
         .setSourceFile(
@@ -3879,6 +3986,47 @@ public class StubJarTest {
             "",
             "  // access flags 0x1",
             "  public method()V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
+  public void kotlinIgnoresLocalClasses() throws IOException {
+    if (!isValidForKotlin()) {
+      return;
+    }
+
+    if (testingMode.equals(MODE_SOURCE_BASED)) {
+      // Source does not strip local classes.
+      return;
+    }
+
+    tester = new Tester(Language.KOTLIN);
+    tester
+        .setSourceFile(
+            "A.kt",
+            "package com.example.buck;",
+            "open class A {",
+            "  fun method() {",
+            "    class Local { }",
+            "  }",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "  // compiled from: A.kt",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u0010\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\u0008\\u0002\\n\\u0002\\u0010\\u0002\\u0008\\u0016\\u0018\\u00002\\u00020\\u0001B\\u0005\\u00a2\\u0006\\u0002\\u0010\\u0002J\\u0006\\u0010\\u0003\\u001a\\u00020\\u0004\"}, d2={\"Lcom/example/buck/A;\", \"\", \"()V\", \"method\", \"\"})",
+            "",
+            "  // access flags 0x11",
+            "  public final method()V",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
             "}")
         .createAndCheckStubJar();
   }
