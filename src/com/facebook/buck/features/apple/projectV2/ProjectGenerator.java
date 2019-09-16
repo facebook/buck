@@ -590,7 +590,8 @@ public class ProjectGenerator {
                   nativeTargetBuilder,
                   bundleTargetNode,
                   (TargetNode<AppleNativeTargetDescriptionArg>)
-                      targetGraph.get(getBundleBinaryTarget(bundleTargetNode)),
+                      targetGraph.get(
+                          XcodeNativeTargetGenerator.getBundleBinaryTarget(bundleTargetNode)),
                   Optional.empty()));
     } else if (targetNode.getDescription() instanceof AppleTestDescription) {
       result =
@@ -911,7 +912,6 @@ public class ProjectGenerator {
             nativeTargetBuilder,
             Optional.of(targetNode),
             binaryNode,
-            bundleToTargetProductType(targetNode, binaryNode),
             "%s." + getExtensionString(targetNode.getConstructorArg().getExtension()),
             Optional.of(infoPlistPath),
             /* includeFrameworks */ true,
@@ -1027,7 +1027,6 @@ public class ProjectGenerator {
             nativeTargetBuilder,
             Optional.empty(),
             targetNode,
-            ProductTypes.TOOL,
             "%s",
             Optional.empty(),
             /* includeFrameworks */ true,
@@ -1071,13 +1070,11 @@ public class ProjectGenerator {
     boolean isShared =
         targetNode.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR);
 
-    ProductType productType = isShared ? ProductTypes.DYNAMIC_LIBRARY : ProductTypes.STATIC_LIBRARY;
     BinaryTargetGenerationResult result =
         generateBinaryTarget(
             nativeTargetBuilder,
             Optional.empty(),
             targetNode,
-            productType,
             AppleBuildRules.getOutputFileNameFormatForLibrary(isShared),
             Optional.empty(),
             /* includeFrameworks */ isShared,
@@ -1341,7 +1338,6 @@ public class ProjectGenerator {
       XCodeNativeTargetAttributes.Builder xcodeNativeTargetAttributesBuilder,
       Optional<? extends TargetNode<? extends HasAppleBundleFields>> bundle,
       TargetNode<? extends CommonArg> targetNode,
-      ProductType productType,
       String productOutputFormat,
       Optional<Path> infoPlistOptional,
       boolean includeFrameworks,
@@ -1357,6 +1353,16 @@ public class ProjectGenerator {
     LOG.debug("Generating binary target for node %s", targetNode);
 
     TargetNode<?> buildTargetNode = bundle.isPresent() ? bundle.get() : targetNode;
+
+    XcodeNativeTargetGenerator xcodeNativeTargetGenerator =
+        new XcodeNativeTargetGenerator(buildTargetNode, targetGraph);
+    GeneratedTargetAttributes targetAttributes = xcodeNativeTargetGenerator.generate();
+
+    // TODO(chatatap): Whenever generateBinaryTarget is called, productType should be set. As we
+    // upstream XcodeNativeTargetGenerator, this should become a precondition check for any of its
+    // uses.
+    ProductType productType = targetAttributes.productType().get();
+
     BuildTarget buildTarget = buildTargetNode.getBuildTarget();
     boolean containsSwiftCode = projGenerationStateCache.targetContainsSwiftSourceCode(targetNode);
 
@@ -3303,20 +3309,12 @@ public class ProjectGenerator {
           TargetNodes.castArg(targetNode, AppleBundleDescriptionArg.class).get();
       Either<AppleBundleExtension, String> extension = bundle.getConstructorArg().getExtension();
       if (extension.isLeft() && bundleExtensions.contains(extension.getLeft())) {
-        return TargetNodes.castArg(targetGraph.get(getBundleBinaryTarget(bundle)), CommonArg.class);
+        return TargetNodes.castArg(
+            targetGraph.get(XcodeNativeTargetGenerator.getBundleBinaryTarget(bundle)),
+            CommonArg.class);
       }
     }
     return Optional.empty();
-  }
-
-  private static BuildTarget getBundleBinaryTarget(TargetNode<AppleBundleDescriptionArg> bundle) {
-    return bundle
-        .getConstructorArg()
-        .getBinary()
-        .orElseThrow(
-            () ->
-                new HumanReadableException(
-                    "apple_bundle rules without binary attribute are not supported."));
   }
 
   /**
@@ -4159,48 +4157,6 @@ public class ProjectGenerator {
     return initialTargets.contains(buildTarget);
   }
 
-  private ProductType bundleToTargetProductType(
-      TargetNode<? extends HasAppleBundleFields> targetNode,
-      TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode) {
-    if (targetNode.getConstructorArg().getXcodeProductType().isPresent()) {
-      return ProductType.of(targetNode.getConstructorArg().getXcodeProductType().get());
-    } else if (targetNode.getConstructorArg().getExtension().isLeft()) {
-      AppleBundleExtension extension = targetNode.getConstructorArg().getExtension().getLeft();
-
-      boolean nodeIsAppleLibrary = binaryNode.getDescription() instanceof AppleLibraryDescription;
-      boolean nodeIsCxxLibrary =
-          ((DescriptionWithTargetGraph<?>) binaryNode.getDescription())
-              instanceof CxxLibraryDescription;
-      if (nodeIsAppleLibrary || nodeIsCxxLibrary) {
-        if (binaryNode
-            .getBuildTarget()
-            .getFlavors()
-            .contains(CxxDescriptionEnhancer.SHARED_FLAVOR)) {
-          Optional<ProductType> productType = dylibProductTypeByBundleExtension(extension);
-          if (productType.isPresent()) {
-            return productType.get();
-          }
-        } else if (extension == AppleBundleExtension.FRAMEWORK) {
-          return ProductTypes.STATIC_FRAMEWORK;
-        }
-      } else if (binaryNode.getDescription() instanceof AppleBinaryDescription) {
-        if (extension == AppleBundleExtension.APP) {
-          return ProductTypes.APPLICATION;
-        }
-      } else if (binaryNode.getDescription() instanceof AppleTestDescription) {
-        TargetNode<AppleTestDescriptionArg> testNode =
-            TargetNodes.castArg(binaryNode, AppleTestDescriptionArg.class).get();
-        if (testNode.getConstructorArg().getIsUiTest()) {
-          return ProductTypes.UI_TEST;
-        } else {
-          return ProductTypes.UNIT_TEST;
-        }
-      }
-    }
-
-    return ProductTypes.BUNDLE;
-  }
-
   private static String getExtensionString(Either<AppleBundleExtension, String> extension) {
     return extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
   }
@@ -4286,24 +4242,6 @@ public class ProjectGenerator {
   private boolean isLibraryWithSwiftSources(TargetNode<?> input) {
     Optional<TargetNode<CommonArg>> library = getLibraryNode(targetGraph, input);
     return library.filter(projGenerationStateCache::targetContainsSwiftSourceCode).isPresent();
-  }
-
-  /** @return product type of a bundle containing a dylib. */
-  private static Optional<ProductType> dylibProductTypeByBundleExtension(
-      AppleBundleExtension extension) {
-    switch (extension) {
-      case FRAMEWORK:
-        return Optional.of(ProductTypes.FRAMEWORK);
-      case APPEX:
-        return Optional.of(ProductTypes.APP_EXTENSION);
-      case BUNDLE:
-        return Optional.of(ProductTypes.BUNDLE);
-      case XCTEST:
-        return Optional.of(ProductTypes.UNIT_TEST);
-        // $CASES-OMITTED$
-      default:
-        return Optional.empty();
-    }
   }
 
   /**
