@@ -480,7 +480,7 @@ public class WorkspaceAndProjectGenerator {
 
     return GenerationResult.of(
         generator.getXcodeProjPath(),
-        generator.isProjectGenerated(),
+        true,
         result.requiredBuildTargets,
         result.xcconfigPaths,
         ImmutableList.of(),

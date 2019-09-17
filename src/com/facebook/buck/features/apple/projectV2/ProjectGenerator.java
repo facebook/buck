@@ -235,7 +235,6 @@ public class ProjectGenerator {
   private final CxxPlatform defaultCxxPlatform;
 
   // These fields are created/filled when creating the projects.
-  private boolean projectGenerated;
   private final List<Path> headerSymlinkTrees;
   private final Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode;
   private final SourcePathResolver defaultPathResolver;
@@ -367,12 +366,6 @@ public class ProjectGenerator {
     return options.shouldMergeHeaderMaps()
         && workspaceTarget.isPresent()
         && options.shouldUseHeaderMaps();
-  }
-
-  // Returns true if we ran the project generation and we decided to eventually generate
-  // the project.
-  public boolean isProjectGenerated() {
-    return projectGenerated;
   }
 
   /** The output from generating an Xcode project. */
@@ -522,7 +515,6 @@ public class ProjectGenerator {
             targetNode.getBuildTarget(), targetNodeToGeneratedProjectTarget.get(targetNode));
       }
 
-      projectGenerated = true;
       return new Result(
           project,
           buildTargetToPbxTargetMap.build(),
