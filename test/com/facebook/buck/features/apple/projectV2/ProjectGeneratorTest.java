@@ -4096,14 +4096,12 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node));
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result = projectGenerator.createXcodeProjects();
 
     assertEquals(
-        buildTarget,
-        Iterables.getOnlyElement(projectGenerator.getBuildTargetToGeneratedTargetMap().keySet()));
+        buildTarget, Iterables.getOnlyElement(result.buildTargetsToGeneratedTargetMap.keySet()));
 
-    PBXTarget target =
-        Iterables.getOnlyElement(projectGenerator.getBuildTargetToGeneratedTargetMap().values());
+    PBXTarget target = Iterables.getOnlyElement(result.buildTargetsToGeneratedTargetMap.values());
     assertHasSingleSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(
@@ -4147,16 +4145,15 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(explicitStaticNode, implicitStaticNode),
             Optional.of(explicitStaticBuildTarget));
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result = projectGenerator.createXcodeProjects();
 
     // `implicitStaticBuildTarget` should be filtered out since it duplicates
     // `explicitStaticBuildTarget`, the workspace target, which takes precedence.
     assertEquals(
         explicitStaticBuildTarget,
-        Iterables.getOnlyElement(projectGenerator.getBuildTargetToGeneratedTargetMap().keySet()));
+        Iterables.getOnlyElement(result.buildTargetsToGeneratedTargetMap.keySet()));
 
-    PBXTarget target =
-        Iterables.getOnlyElement(projectGenerator.getBuildTargetToGeneratedTargetMap().values());
+    PBXTarget target = Iterables.getOnlyElement(result.buildTargetsToGeneratedTargetMap.values());
     assertHasSingleSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(

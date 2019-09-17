@@ -467,18 +467,17 @@ public class WorkspaceAndProjectGenerator {
             appleConfig,
             swiftBuckConfig,
             sharedLibraryToBundle);
-    ImmutableSet<BuildTarget> requiredBuildTargets = ImmutableSet.of();
-    ImmutableMap<BuildTarget, PBXTarget> buildTargetToGeneratedTargetMap = ImmutableMap.of();
-    ImmutableSetMultimap<PBXProject, PBXTarget> generatedProjectToGeneratedTargets =
-        ImmutableSetMultimap.of();
 
-    generator.createXcodeProjects();
+    ProjectGenerator.Result result = generator.createXcodeProjects();
 
-    if (generator.isProjectGenerated()) {
-      requiredBuildTargets = generator.getRequiredBuildTargets();
-      buildTargetToGeneratedTargetMap = generator.getBuildTargetToGeneratedTargetMap();
-      generatedProjectToGeneratedTargets = generator.getGeneratedProjectToGeneratedTargets();
-    }
+    ImmutableSet<BuildTarget> requiredBuildTargets = generator.getRequiredBuildTargets();
+    ImmutableMap<BuildTarget, PBXTarget> buildTargetToGeneratedTargetMap =
+        result.buildTargetsToGeneratedTargetMap;
+
+    ImmutableSetMultimap.Builder<PBXProject, PBXTarget> targetMapBuilder =
+        ImmutableSetMultimap.builder();
+    targetMapBuilder.putAll(
+        xcodeProjectWriteOptions.project(), buildTargetToGeneratedTargetMap.values());
 
     return GenerationResult.of(
         generator.getXcodeProjPath(),
@@ -487,7 +486,7 @@ public class WorkspaceAndProjectGenerator {
         generator.getXcconfigPaths(),
         generator.getFilesToCopyInXcode(),
         buildTargetToGeneratedTargetMap,
-        generatedProjectToGeneratedTargets);
+        targetMapBuilder.build());
   }
 
   private void buildWorkspaceSchemes(
