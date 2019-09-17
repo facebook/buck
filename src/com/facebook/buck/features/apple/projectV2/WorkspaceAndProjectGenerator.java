@@ -482,7 +482,7 @@ public class WorkspaceAndProjectGenerator {
         generator.getXcodeProjPath(),
         generator.isProjectGenerated(),
         result.requiredBuildTargets,
-        generator.getXcconfigPaths(),
+        result.xcconfigPaths,
         generator.getFilesToCopyInXcode(),
         buildTargetToGeneratedTargetMap,
         targetMapBuilder.build());
