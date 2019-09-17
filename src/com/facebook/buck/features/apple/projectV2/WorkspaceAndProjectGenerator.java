@@ -483,7 +483,7 @@ public class WorkspaceAndProjectGenerator {
         generator.isProjectGenerated(),
         result.requiredBuildTargets,
         result.xcconfigPaths,
-        generator.getFilesToCopyInXcode(),
+        ImmutableList.of(),
         buildTargetToGeneratedTargetMap,
         targetMapBuilder.build());
   }

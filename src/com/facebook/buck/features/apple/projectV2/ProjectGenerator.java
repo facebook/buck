@@ -258,8 +258,6 @@ public class ProjectGenerator {
   private final boolean isMainProject;
   private final Optional<BuildTarget> workspaceTarget;
   private final ImmutableSet<BuildTarget> targetsInRequiredProjects;
-  private final ImmutableList.Builder<CopyInXcode> filesToCopyInXcodeBuilder =
-      ImmutableList.builder();
   private final ImmutableSet.Builder<SourcePath> filesAddedBuilder = ImmutableSet.builder();
   private final Set<BuildTarget> generatedTargets = new HashSet<>();
   /**
@@ -369,11 +367,6 @@ public class ProjectGenerator {
     return options.shouldMergeHeaderMaps()
         && workspaceTarget.isPresent()
         && options.shouldUseHeaderMaps();
-  }
-
-  // Returns the list of infos about the files that we need to copy during Xcode build.
-  public ImmutableList<CopyInXcode> getFilesToCopyInXcode() {
-    return filesToCopyInXcodeBuilder.build();
   }
 
   // Returns true if we ran the project generation and we decided to eventually generate
