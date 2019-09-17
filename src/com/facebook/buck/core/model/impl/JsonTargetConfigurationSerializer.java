@@ -39,10 +39,6 @@ import java.util.function.Function;
 public class JsonTargetConfigurationSerializer implements TargetConfigurationSerializer {
 
   private static final ImmutableMap<String, Boolean>
-      HOST_TARGET_CONFIGURATION_ATTRIBUTES_FOR_SERIALIZATION =
-          ImmutableMap.of("hostPlatform", true);
-
-  private static final ImmutableMap<String, Boolean>
       TARGET_CONFIGURATION_FOR_CONFIGURATION_ATTRIBUTES_FOR_SERIALIZATION =
           ImmutableMap.of("configuration", true);
 
@@ -66,10 +62,7 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
   @Override
   public String serialize(TargetConfiguration targetConfiguration) {
     try {
-      if (targetConfiguration instanceof HostTargetConfiguration) {
-        return objectWriter.writeValueAsString(
-            HOST_TARGET_CONFIGURATION_ATTRIBUTES_FOR_SERIALIZATION);
-      } else if (targetConfiguration instanceof ConfigurationForConfigurationTargets) {
+      if (targetConfiguration instanceof ConfigurationForConfigurationTargets) {
         return objectWriter.writeValueAsString(
             TARGET_CONFIGURATION_FOR_CONFIGURATION_ATTRIBUTES_FOR_SERIALIZATION);
       } else {
@@ -94,9 +87,6 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
     }
     if (node.has("configuration")) {
       return ConfigurationForConfigurationTargets.INSTANCE;
-    }
-    if (node.has("hostPlatform")) {
-      return HostTargetConfiguration.INSTANCE;
     }
     JsonNode targetPlatformNode =
         Preconditions.checkNotNull(

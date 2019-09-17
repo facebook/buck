@@ -21,7 +21,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.impl.HostTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldSerializationTag;
@@ -438,8 +437,6 @@ public class Deserializer {
       switch (type) {
         case Serializer.TARGET_CONFIGURATION_TYPE_EMPTY:
           return EmptyTargetConfiguration.INSTANCE;
-        case Serializer.TARGET_CONFIGURATION_TYPE_HOST:
-          return HostTargetConfiguration.INSTANCE;
         case Serializer.TARGET_CONFIGURATION_TYPE_DEFAULT:
           BuildTarget targetPlatform = BuildTargetTypeInfo.INSTANCE.createNotNull(this);
           return ImmutableDefaultTargetConfiguration.of(targetPlatform);

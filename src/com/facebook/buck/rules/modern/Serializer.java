@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
-import com.facebook.buck.core.model.impl.HostTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
 import com.facebook.buck.core.rulekey.CustomFieldSerializationTag;
@@ -80,7 +79,6 @@ import javax.annotation.Nullable;
 public class Serializer {
 
   public static final int TARGET_CONFIGURATION_TYPE_EMPTY = 0;
-  public static final int TARGET_CONFIGURATION_TYPE_HOST = 1;
   public static final int TARGET_CONFIGURATION_TYPE_DEFAULT = 2;
   public static final int TARGET_CONFIGURATION_TYPE_CONFIGURATION = 3;
 
@@ -432,8 +430,6 @@ public class Serializer {
     public void visitTargetConfiguration(TargetConfiguration value) throws IOException {
       if (value instanceof EmptyTargetConfiguration) {
         stream.writeInt(TARGET_CONFIGURATION_TYPE_EMPTY);
-      } else if (value instanceof HostTargetConfiguration) {
-        stream.writeInt(TARGET_CONFIGURATION_TYPE_HOST);
       } else if (value instanceof DefaultTargetConfiguration) {
         stream.writeInt(TARGET_CONFIGURATION_TYPE_DEFAULT);
         BuildTargetTypeInfo.INSTANCE.visit(

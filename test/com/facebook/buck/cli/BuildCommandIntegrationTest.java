@@ -41,7 +41,6 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreStringsForTests;
 import com.facebook.buck.util.ThriftRuleKeyDeserializer;
-import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -495,29 +494,6 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
-  public void hostOsConstraintsAreResolved() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
-    workspace.setUp();
-
-    Path output = workspace.buildAndReturnOutput("//:platform_dependent_genrule");
-
-    workspace.getBuildLog().assertTargetBuiltLocally("//:platform_dependent_genrule");
-
-    String expected;
-    Platform platform = Platform.detect();
-    if (platform == Platform.LINUX) {
-      expected = "linux";
-    } else if (platform == Platform.MACOS) {
-      expected = "osx";
-    } else {
-      expected = "unknown";
-    }
-
-    assertEquals(expected, workspace.getFileContents(output).trim());
-  }
-
-  @Test
   public void hostOsConstraintsAreResolvedWithCustomPlatform() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
@@ -534,27 +510,6 @@ public class BuildCommandIntegrationTest {
     workspace.getBuildLog().assertTargetBuiltLocally("//:platform_dependent_genrule");
 
     String expected = (platform == Platform.LINUX) ? "osx" : "linux";
-    assertEquals(expected, workspace.getFileContents(output).trim());
-  }
-
-  @Test
-  public void hostCpuConstraintsAreResolved() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
-    workspace.setUp();
-
-    Path output = workspace.buildAndReturnOutput("//:cpu_dependent_genrule");
-
-    workspace.getBuildLog().assertTargetBuiltLocally("//:cpu_dependent_genrule");
-
-    String expected;
-    Architecture architecture = Architecture.detect();
-    if (architecture == Architecture.X86_64) {
-      expected = "x86_64";
-    } else {
-      expected = "unknown";
-    }
-
     assertEquals(expected, workspace.getFileContents(output).trim());
   }
 

@@ -51,14 +51,6 @@ public class JsonTargetConfigurationSerializerTest {
   }
 
   @Test
-  public void hostTargetConfigurationSerializesToString() {
-    assertEquals(
-        "{\"hostPlatform\":true}",
-        new JsonTargetConfigurationSerializer(buildTargetProvider)
-            .serialize(HostTargetConfiguration.INSTANCE));
-  }
-
-  @Test
   public void defaultTargetConfigurationSerializesToString() {
     assertEquals(
         "{\"targetPlatform\":\"//platform:platform\"}",
@@ -73,14 +65,6 @@ public class JsonTargetConfigurationSerializerTest {
     assertEquals(
         EmptyTargetConfiguration.INSTANCE,
         new JsonTargetConfigurationSerializer(buildTargetProvider).deserialize("{}"));
-  }
-
-  @Test
-  public void hostTargetConfigurationDeserializesFromString() {
-    assertEquals(
-        HostTargetConfiguration.INSTANCE,
-        new JsonTargetConfigurationSerializer(buildTargetProvider)
-            .deserialize("{\"hostPlatform\":true}"));
   }
 
   @Test

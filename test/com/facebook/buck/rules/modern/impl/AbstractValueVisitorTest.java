@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.impl.HostTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -127,9 +126,6 @@ public abstract class AbstractValueVisitorTest {
 
   @Test
   public abstract void buildTargetWithConfigurationForConfigurationTargets() throws Exception;
-
-  @Test
-  public abstract void buildTargetWithHostConfiguration() throws Exception;
 
   @Test
   public abstract void pattern() throws Exception;
@@ -270,14 +266,6 @@ public abstract class AbstractValueVisitorTest {
         someBuildTarget
             .getUnconfiguredBuildTargetView()
             .configure(ConfigurationForConfigurationTargets.INSTANCE);
-  }
-
-  public static class WithBuildTargetWithHostConfiguration implements FakeBuildable {
-    @AddToRuleKey
-    final BuildTarget target =
-        someBuildTarget
-            .getUnconfiguredBuildTargetView()
-            .configure(HostTargetConfiguration.INSTANCE);
   }
 
   public static class WithOutputPath implements FakeBuildable {

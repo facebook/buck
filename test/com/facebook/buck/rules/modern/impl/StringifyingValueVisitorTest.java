@@ -218,19 +218,6 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
         stringify(new WithBuildTargetWithConfigurationForConfigurationTargets()));
   }
 
-  @Test
-  @Override
-  public void buildTargetWithHostConfiguration() {
-    assertEquals(
-        "target:path($OTHER$)Optional<\n"
-            + "  string(other)\n"
-            + ">string(//some)string(target)SortedSet<\n"
-            + "  string(flavor1)\n"
-            + "  string(flavor2)\n"
-            + ">configuration<hostPlatform>",
-        stringify(new WithBuildTargetWithHostConfiguration()));
-  }
-
   private String stringify(Buildable value) {
     StringifyingValueVisitor visitor = new StringifyingValueVisitor();
     DefaultClassInfoFactory.forInstance(value).visit(value, visitor);
