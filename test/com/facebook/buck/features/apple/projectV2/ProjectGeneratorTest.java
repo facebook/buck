@@ -2128,7 +2128,7 @@ public class ProjectGeneratorTest {
     TargetNode<?> lib = new HalideLibraryBuilder(libTarget).build();
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(compiler, lib));
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result = projectGenerator.createXcodeProjects();
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
@@ -2145,7 +2145,7 @@ public class ProjectGeneratorTest {
     // library target are present in the requiredBuildTargets, so that both the
     // compiler and the generated header for the pipeline will be available for
     // use by the Xcode compilation step.
-    ImmutableSet<BuildTarget> requiredBuildTargets = projectGenerator.getRequiredBuildTargets();
+    ImmutableSet<BuildTarget> requiredBuildTargets = result.requiredBuildTargets;
     assertTrue(requiredBuildTargets.contains(compilerTarget));
     assertThat(
         requiredBuildTargets,
@@ -2508,14 +2508,13 @@ public class ProjectGeneratorTest {
         createProjectGenerator(
             ImmutableSet.of(node, genruleNode, exportFileNode, transitiveDepOfGenruleNode));
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result = projectGenerator.createXcodeProjects();
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
 
     assertThat(
-        projectGenerator.getRequiredBuildTargets(),
-        equalTo(ImmutableSet.of(genruleTarget, exportFileTarget)));
+        result.requiredBuildTargets, equalTo(ImmutableSet.of(genruleTarget, exportFileTarget)));
 
     ImmutableSet<TargetNode<?>> nodes =
         ImmutableSet.of(genruleNode, node, exportFileNode, transitiveDepOfGenruleNode);

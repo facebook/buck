@@ -237,8 +237,6 @@ public class ProjectGenerator {
   // These fields are created/filled when creating the projects.
   private boolean projectGenerated;
   private final List<Path> headerSymlinkTrees;
-  private final ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder =
-      ImmutableSet.builder();
   private final Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode;
   private final SourcePathResolver defaultPathResolver;
   private final BuckEventBus buckEventBus;
@@ -374,11 +372,6 @@ public class ProjectGenerator {
         && options.shouldUseHeaderMaps();
   }
 
-  public ImmutableSet<BuildTarget> getRequiredBuildTargets() {
-    Preconditions.checkState(projectGenerated, "Must have called createXcodeProjects");
-    return requiredBuildTargetsBuilder.build();
-  }
-
   // Returns a set of generated xcconfig files.
   public ImmutableSet<Path> getXcconfigPaths() {
     return xcconfigPathsBuilder.build();
@@ -398,13 +391,16 @@ public class ProjectGenerator {
   /** The output from generating an Xcode project. */
   public static class Result {
     PBXProject generatedProject;
-    public ImmutableMap<BuildTarget, PBXTarget> buildTargetsToGeneratedTargetMap;
+    public final ImmutableMap<BuildTarget, PBXTarget> buildTargetsToGeneratedTargetMap;
+    public final ImmutableSet<BuildTarget> requiredBuildTargets;
 
     public Result(
         PBXProject generatedProject,
-        ImmutableMap<BuildTarget, PBXTarget> buildTargetsToGeneratedTargetMap) {
+        ImmutableMap<BuildTarget, PBXTarget> buildTargetsToGeneratedTargetMap,
+        ImmutableSet<BuildTarget> requiredBuildTargets) {
       this.generatedProject = generatedProject;
       this.buildTargetsToGeneratedTargetMap = buildTargetsToGeneratedTargetMap;
+      this.requiredBuildTargets = requiredBuildTargets;
     }
   }
 
@@ -435,6 +431,7 @@ public class ProjectGenerator {
       }
       final ImmutableSet<TargetNode<?>> projectTargets = projectTargetsBuilder.build();
 
+      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
       ImmutableList.Builder<ProjectTargetGenerationResult> generationResultsBuilder =
           ImmutableList.builder();
 
@@ -443,7 +440,8 @@ public class ProjectGenerator {
       final Optional<TargetNode<?>> workspaceTargetNode =
           workspaceTarget.map(target -> targetGraph.get(target));
       if (workspaceTargetNode.isPresent() && projectTargets.contains(workspaceTargetNode.get())) {
-        ProjectTargetGenerationResult result = generateProjectTarget(workspaceTargetNode.get());
+        ProjectTargetGenerationResult result =
+            generateProjectTarget(workspaceTargetNode.get(), requiredBuildTargetsBuilder);
         generationResultsBuilder.add(result);
       }
 
@@ -454,7 +452,8 @@ public class ProjectGenerator {
                   input ->
                       !workspaceTargetNode.isPresent() || !input.equals(workspaceTargetNode.get()))
               .collect(Collectors.toSet())) {
-        ProjectTargetGenerationResult result = generateProjectTarget(input);
+        ProjectTargetGenerationResult result =
+            generateProjectTarget(input, requiredBuildTargetsBuilder);
         generationResultsBuilder.add(result);
       }
 
@@ -471,7 +470,7 @@ public class ProjectGenerator {
             nativeTargetProjectWriter.writeTargetToProject(
                 nativeTargetAttributes, xcodeProjectWriteOptions.project());
 
-        addRequiredBuildTargetsFromAttributes(nativeTargetAttributes);
+        addRequiredBuildTargetsFromAttributes(nativeTargetAttributes, requiredBuildTargetsBuilder);
         targetWriteResult
             .getTarget()
             .ifPresent(
@@ -496,7 +495,7 @@ public class ProjectGenerator {
       buckEventBus.post(ProjectGenerationEvent.processed());
 
       if (shouldMergeHeaderMaps() && isMainProject) {
-        createMergedHeaderMap();
+        createMergedHeaderMap(requiredBuildTargetsBuilder);
       }
 
       PBXProject project = xcodeProjectWriteOptions.project();
@@ -531,7 +530,8 @@ public class ProjectGenerator {
       }
 
       projectGenerated = true;
-      return new Result(project, buildTargetToPbxTargetMap.build());
+      return new Result(
+          project, buildTargetToPbxTargetMap.build(), requiredBuildTargetsBuilder.build());
     } catch (UncheckedExecutionException e) {
       // if any code throws an exception, they tend to get wrapped in LoadingCache's
       // UncheckedExecutionException. Unwrap it if its cause is HumanReadable.
@@ -568,7 +568,8 @@ public class ProjectGenerator {
   }
 
   @SuppressWarnings("unchecked")
-  private ProjectTargetGenerationResult generateProjectTarget(TargetNode<?> targetNode)
+  private ProjectTargetGenerationResult generateProjectTarget(
+      TargetNode<?> targetNode, ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder)
       throws IOException {
     Preconditions.checkState(
         isBuiltByCurrentProject(targetNode.getBuildTarget()),
@@ -602,12 +603,14 @@ public class ProjectGenerator {
       dependencies =
           generateAppleLibraryTarget(
               nativeTargetBuilder,
+              requiredBuildTargetsBuilder,
               (TargetNode<AppleNativeTargetDescriptionArg>) targetNode,
               Optional.empty());
     } else if (targetNode.getDescription() instanceof CxxLibraryDescription) {
       dependencies =
           generateCxxLibraryTarget(
               nativeTargetBuilder,
+              requiredBuildTargetsBuilder,
               (TargetNode<CommonArg>) targetNode,
               ImmutableSet.of(),
               ImmutableSet.of(),
@@ -615,7 +618,9 @@ public class ProjectGenerator {
     } else if (targetNode.getDescription() instanceof AppleBinaryDescription) {
       dependencies =
           generateAppleBinaryTarget(
-              nativeTargetBuilder, (TargetNode<AppleNativeTargetDescriptionArg>) targetNode);
+              nativeTargetBuilder,
+              requiredBuildTargetsBuilder,
+              (TargetNode<AppleNativeTargetDescriptionArg>) targetNode);
     } else if (targetNode.getDescription() instanceof AppleBundleDescription) {
       TargetNode<AppleBundleDescriptionArg> bundleTargetNode =
           (TargetNode<AppleBundleDescriptionArg>) targetNode;
@@ -623,6 +628,7 @@ public class ProjectGenerator {
       dependencies =
           generateAppleBundleTarget(
               nativeTargetBuilder,
+              requiredBuildTargetsBuilder,
               bundleTargetNode,
               (TargetNode<AppleNativeTargetDescriptionArg>)
                   targetGraph.get(XcodeNativeTargetGenerator.getBundleBinaryTarget(bundleTargetNode)),
@@ -630,7 +636,9 @@ public class ProjectGenerator {
     } else if (targetNode.getDescription() instanceof AppleTestDescription) {
       dependencies =
           generateAppleTestTarget(
-              (TargetNode<AppleTestDescriptionArg>) targetNode, nativeTargetBuilder);
+              (TargetNode<AppleTestDescriptionArg>) targetNode,
+              requiredBuildTargetsBuilder,
+              nativeTargetBuilder);
     } else if (targetNode.getDescription() instanceof AppleResourceDescription) {
       checkAppleResourceTargetNodeReferencingValidContents(
           (TargetNode<AppleResourceDescriptionArg>) targetNode);
@@ -676,9 +684,10 @@ public class ProjectGenerator {
   }
 
   private void addRequiredBuildTargetsFromAttributes(
-      XCodeNativeTargetAttributes nativeTargetAttributes) {
+      XCodeNativeTargetAttributes nativeTargetAttributes,
+      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder) {
     for (SourceWithFlags source : nativeTargetAttributes.sourcesWithFlags()) {
-      addRequiredBuildTargetFromSourcePath(source.getSourcePath());
+      addRequiredBuildTargetFromSourcePath(source.getSourcePath(), requiredBuildTargetsBuilder);
     }
 
     Streams.concat(
@@ -687,29 +696,62 @@ public class ProjectGenerator {
             nativeTargetAttributes.extraXcodeSources().stream(),
             nativeTargetAttributes.extraXcodeFiles().stream(),
             nativeTargetAttributes.genruleFiles().stream())
-        .forEach(this::addRequiredBuildTargetFromSourcePath);
+        .forEach(
+            sourcePath ->
+                addRequiredBuildTargetFromSourcePath(sourcePath, requiredBuildTargetsBuilder));
 
     Streams.concat(
             nativeTargetAttributes.directResources().stream(),
             nativeTargetAttributes.recursiveResources().stream())
         .forEach(
             arg -> {
-              arg.getFiles().stream().forEach(this::addRequiredBuildTargetFromSourcePath);
-              arg.getDirs().stream().forEach(this::addRequiredBuildTargetFromSourcePath);
-              arg.getVariants().stream().forEach(this::addRequiredBuildTargetFromSourcePath);
+              arg.getFiles().stream()
+                  .forEach(
+                      sourcePath ->
+                          addRequiredBuildTargetFromSourcePath(
+                              sourcePath, requiredBuildTargetsBuilder));
+              arg.getDirs().stream()
+                  .forEach(
+                      sourcePath ->
+                          addRequiredBuildTargetFromSourcePath(
+                              sourcePath, requiredBuildTargetsBuilder));
+              arg.getVariants().stream()
+                  .forEach(
+                      sourcePath ->
+                          addRequiredBuildTargetFromSourcePath(
+                              sourcePath, requiredBuildTargetsBuilder));
             });
 
     Streams.concat(
             nativeTargetAttributes.directAssetCatalogs().stream(),
             nativeTargetAttributes.recursiveAssetCatalogs().stream())
-        .forEach(arg -> arg.getDirs().stream().forEach(this::addRequiredBuildTargetFromSourcePath));
+        .forEach(
+            arg ->
+                arg.getDirs().stream()
+                    .forEach(
+                        sourcePath ->
+                            addRequiredBuildTargetFromSourcePath(
+                                sourcePath, requiredBuildTargetsBuilder)));
 
-    nativeTargetAttributes.infoPlist().ifPresent(this::addRequiredBuildTargetFromSourcePath);
-    nativeTargetAttributes.prefixHeader().ifPresent(this::addRequiredBuildTargetFromSourcePath);
-    nativeTargetAttributes.bridgingHeader().ifPresent(this::addRequiredBuildTargetFromSourcePath);
+    nativeTargetAttributes
+        .infoPlist()
+        .ifPresent(
+            sourcePath ->
+                addRequiredBuildTargetFromSourcePath(sourcePath, requiredBuildTargetsBuilder));
+    nativeTargetAttributes
+        .prefixHeader()
+        .ifPresent(
+            sourcePath ->
+                addRequiredBuildTargetFromSourcePath(sourcePath, requiredBuildTargetsBuilder));
+    nativeTargetAttributes
+        .bridgingHeader()
+        .ifPresent(
+            sourcePath ->
+                addRequiredBuildTargetFromSourcePath(sourcePath, requiredBuildTargetsBuilder));
   }
 
-  private void addRequiredBuildTargetFromSourcePath(SourcePath sourcePath) {
+  private void addRequiredBuildTargetFromSourcePath(
+      SourcePath sourcePath, ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder) {
     if (sourcePath instanceof PathSourcePath) {
       return;
     }
@@ -801,6 +843,7 @@ public class ProjectGenerator {
 
   private ImmutableList<BuildTarget> generateAppleTestTarget(
       TargetNode<AppleTestDescriptionArg> testTargetNode,
+      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       XCodeNativeTargetAttributes.Builder nativeTargetBuilder)
       throws IOException {
     AppleTestDescriptionArg args = testTargetNode.getConstructorArg();
@@ -818,7 +861,11 @@ public class ProjectGenerator {
                       });
             });
     return generateAppleBundleTarget(
-        nativeTargetBuilder, testTargetNode, testTargetNode, testHostBundle);
+        nativeTargetBuilder,
+        requiredBuildTargetsBuilder,
+        testTargetNode,
+        testTargetNode,
+        testHostBundle);
   }
 
   private Optional<BuildTarget> extractTestTargetForTestDescriptionArg(
@@ -854,6 +901,7 @@ public class ProjectGenerator {
 
   private ImmutableList<BuildTarget> generateAppleBundleTarget(
       XCodeNativeTargetAttributes.Builder nativeTargetBuilder,
+      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       TargetNode<? extends HasAppleBundleFields> targetNode,
       TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode,
       Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode)
@@ -921,6 +969,7 @@ public class ProjectGenerator {
     ImmutableList<BuildTarget> result =
         generateBinaryTarget(
             nativeTargetBuilder,
+            requiredBuildTargetsBuilder,
             Optional.of(targetNode),
             binaryNode,
             "%s." + getExtensionString(targetNode.getConstructorArg().getExtension()),
@@ -1031,11 +1080,13 @@ public class ProjectGenerator {
 
   private ImmutableList<BuildTarget> generateAppleBinaryTarget(
       XCodeNativeTargetAttributes.Builder nativeTargetBuilder,
+      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       TargetNode<AppleNativeTargetDescriptionArg> targetNode)
       throws IOException {
     ImmutableList<BuildTarget> result =
         generateBinaryTarget(
             nativeTargetBuilder,
+            requiredBuildTargetsBuilder,
             Optional.empty(),
             targetNode,
             "%s",
@@ -1056,12 +1107,14 @@ public class ProjectGenerator {
 
   private ImmutableList<BuildTarget> generateAppleLibraryTarget(
       XCodeNativeTargetAttributes.Builder nativeTargetBuilder,
+      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode)
       throws IOException {
     ImmutableList<BuildTarget> result =
         generateCxxLibraryTarget(
             nativeTargetBuilder,
+            requiredBuildTargetsBuilder,
             targetNode,
             AppleResources.collectDirectResources(targetGraph, targetNode),
             AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
@@ -1073,6 +1126,7 @@ public class ProjectGenerator {
 
   private ImmutableList<BuildTarget> generateCxxLibraryTarget(
       XCodeNativeTargetAttributes.Builder nativeTargetBuilder,
+      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       TargetNode<? extends CommonArg> targetNode,
       ImmutableSet<AppleResourceDescriptionArg> directResources,
       ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs,
@@ -1084,6 +1138,7 @@ public class ProjectGenerator {
     ImmutableList<BuildTarget> result =
         generateBinaryTarget(
             nativeTargetBuilder,
+            requiredBuildTargetsBuilder,
             Optional.empty(),
             targetNode,
             AppleBuildRules.getOutputFileNameFormatForLibrary(isShared),
@@ -1103,7 +1158,9 @@ public class ProjectGenerator {
   }
 
   private ImmutableList<String> convertStringWithMacros(
-      TargetNode<?> node, Iterable<StringWithMacros> flags) {
+      TargetNode<?> node,
+      Iterable<StringWithMacros> flags,
+      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder) {
 
     // TODO(cjhopman): This seems really broken, it's totally inconsistent about what graphBuilder
     // is
@@ -1158,7 +1215,8 @@ public class ProjectGenerator {
 
   private ImmutableMultimap<String, ImmutableList<String>> convertPlatformFlags(
       TargetNode<?> node,
-      Iterable<PatternMatchedCollection<ImmutableList<StringWithMacros>>> matchers) {
+      Iterable<PatternMatchedCollection<ImmutableList<StringWithMacros>>> matchers,
+      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder) {
     ImmutableMultimap.Builder<String, ImmutableList<String>> flagsBuilder =
         ImmutableMultimap.builder();
 
@@ -1166,7 +1224,8 @@ public class ProjectGenerator {
       for (Flavor flavor : appleCxxFlavors) {
         String platform = flavor.toString();
         for (ImmutableList<StringWithMacros> flags : matcher.getMatchingValues(platform)) {
-          flagsBuilder.put(platform, convertStringWithMacros(node, flags));
+          flagsBuilder.put(
+              platform, convertStringWithMacros(node, flags, requiredBuildTargetsBuilder));
         }
       }
     }
@@ -1335,6 +1394,7 @@ public class ProjectGenerator {
 
   private ImmutableList<BuildTarget> generateBinaryTarget(
       XCodeNativeTargetAttributes.Builder xcodeNativeTargetAttributesBuilder,
+      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       Optional<? extends TargetNode<? extends HasAppleBundleFields>> bundle,
       TargetNode<? extends CommonArg> targetNode,
       String productOutputFormat,
@@ -1472,7 +1532,8 @@ public class ProjectGenerator {
         .setLangPreprocessorFlags(
             ImmutableMap.copyOf(
                 Maps.transformValues(
-                    langPreprocessorFlags, f -> convertStringWithMacros(targetNode, f))))
+                    langPreprocessorFlags,
+                    f -> convertStringWithMacros(targetNode, f, requiredBuildTargetsBuilder))))
         .setPublicHeaders(exportedHeaders)
         .setPrefixHeader(getPrefixHeaderSourcePath(arg))
         .setSourcesWithFlags(ImmutableSet.copyOf(allSrcs))
@@ -1564,7 +1625,11 @@ public class ProjectGenerator {
         recursiveAssetCatalogs, directAssetCatalogs, buildTarget, defaultSettingsBuilder);
 
     ImmutableSortedMap<Path, SourcePath> publicCxxHeaders = getPublicCxxHeaders(targetNode);
-    publicCxxHeaders.values().forEach(this::addRequiredBuildTargetFromSourcePath);
+    publicCxxHeaders
+        .values()
+        .forEach(
+            sourcePath ->
+                addRequiredBuildTargetFromSourcePath(sourcePath, requiredBuildTargetsBuilder));
 
     if (isModularAppleLibrary(targetNode) && isFrameworkProductType(productType)) {
       // Modular frameworks should not include Buck-generated hmaps as they break the VFS overlay
@@ -1814,7 +1879,9 @@ public class ProjectGenerator {
             .map(
                 x ->
                     convertStringWithMacros(
-                        targetNode, x.getConstructorArg().getSwiftCompilerFlags()))
+                        targetNode,
+                        x.getConstructorArg().getSwiftCompilerFlags(),
+                        requiredBuildTargetsBuilder))
             .orElse(ImmutableList.of()));
 
     if (containsSwiftCode && isModularAppleLibrary && publicCxxHeaders.size() > 0) {
@@ -1833,16 +1900,24 @@ public class ProjectGenerator {
             ImmutableList.<String>builder()
                 .addAll(
                     convertStringWithMacros(
-                        targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
+                        targetNode,
+                        collectRecursiveExportedPreprocessorFlags(targetNode),
+                        requiredBuildTargetsBuilder))
                 .addAll(
                     convertStringWithMacros(
-                        targetNode, targetNode.getConstructorArg().getCompilerFlags()))
+                        targetNode,
+                        targetNode.getConstructorArg().getCompilerFlags(),
+                        requiredBuildTargetsBuilder))
                 .addAll(
                     convertStringWithMacros(
-                        targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
+                        targetNode,
+                        targetNode.getConstructorArg().getPreprocessorFlags(),
+                        requiredBuildTargetsBuilder))
                 .addAll(
                     convertStringWithMacros(
-                        targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
+                        targetNode,
+                        collectRecursiveSystemPreprocessorFlags(targetNode),
+                        requiredBuildTargetsBuilder))
                 .addAll(systemIncludeDirectoryFlags)
                 .addAll(testingOverlay)
                 .build());
@@ -1851,16 +1926,24 @@ public class ProjectGenerator {
             ImmutableList.<String>builder()
                 .addAll(
                     convertStringWithMacros(
-                        targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
+                        targetNode,
+                        collectRecursiveExportedPreprocessorFlags(targetNode),
+                        requiredBuildTargetsBuilder))
                 .addAll(
                     convertStringWithMacros(
-                        targetNode, targetNode.getConstructorArg().getCompilerFlags()))
+                        targetNode,
+                        targetNode.getConstructorArg().getCompilerFlags(),
+                        requiredBuildTargetsBuilder))
                 .addAll(
                     convertStringWithMacros(
-                        targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
+                        targetNode,
+                        targetNode.getConstructorArg().getPreprocessorFlags(),
+                        requiredBuildTargetsBuilder))
                 .addAll(
                     convertStringWithMacros(
-                        targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
+                        targetNode,
+                        collectRecursiveSystemPreprocessorFlags(targetNode),
+                        requiredBuildTargetsBuilder))
                 .addAll(systemIncludeDirectoryFlags)
                 .addAll(testingOverlay)
                 .build());
@@ -1899,7 +1982,8 @@ public class ProjectGenerator {
                     targetNode,
                     Iterables.concat(
                         targetNode.getConstructorArg().getLinkerFlags(),
-                        collectRecursiveExportedLinkerFlags(targetNode))))
+                        collectRecursiveExportedLinkerFlags(targetNode)),
+                    requiredBuildTargetsBuilder))
             .addAll(swiftDebugLinkerFlagsBuilder.build())
             .build();
 
@@ -1912,7 +1996,8 @@ public class ProjectGenerator {
             Iterables.concat(
                 ImmutableList.of(targetNode.getConstructorArg().getPlatformCompilerFlags()),
                 ImmutableList.of(targetNode.getConstructorArg().getPlatformPreprocessorFlags()),
-                collectRecursiveExportedPlatformPreprocessorFlags(targetNode)));
+                collectRecursiveExportedPlatformPreprocessorFlags(targetNode)),
+            requiredBuildTargetsBuilder);
     for (Flavor platformFlavor : appleCxxFlavors) {
       Optional<CxxBuckConfig> platformConfig =
           Optional.ofNullable(platformCxxBuckConfigs.get(platformFlavor));
@@ -1964,7 +2049,8 @@ public class ProjectGenerator {
             targetNode,
             Iterables.concat(
                 ImmutableList.of(targetNode.getConstructorArg().getPlatformLinkerFlags()),
-                collectRecursiveExportedPlatformLinkerFlags(targetNode)));
+                collectRecursiveExportedPlatformLinkerFlags(targetNode)),
+            requiredBuildTargetsBuilder);
     for (String platform : platformLinkerFlags.keySet()) {
       appendConfigsBuilder.put(
           generateConfigKey("OTHER_LDFLAGS", platform),
@@ -1996,6 +2082,7 @@ public class ProjectGenerator {
     // -- phases
     createHeaderSymlinkTree(
         publicCxxHeaders,
+        requiredBuildTargetsBuilder,
         getSwiftPublicHeaderMapEntriesForTarget(targetNode),
         moduleName,
         getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC),
@@ -2006,9 +2093,14 @@ public class ProjectGenerator {
         options.shouldGenerateMissingUmbrellaHeader());
 
     ImmutableSortedMap<Path, SourcePath> privateCxxHeaders = getPrivateCxxHeaders(targetNode);
-    privateCxxHeaders.values().forEach(this::addRequiredBuildTargetFromSourcePath);
+    privateCxxHeaders
+        .values()
+        .forEach(
+            sourcePath ->
+                addRequiredBuildTargetFromSourcePath(sourcePath, requiredBuildTargetsBuilder));
     createHeaderSymlinkTree(
         privateCxxHeaders,
+        requiredBuildTargetsBuilder,
         ImmutableMap.of(), // private interfaces never have a modulemap
         Optional.empty(),
         getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE),
@@ -2693,7 +2785,9 @@ public class ProjectGenerator {
 
   /** Adds the set of headers defined by headerVisibility to the merged header maps. */
   private void addToMergedHeaderMap(
-      TargetNode<? extends CommonArg> targetNode, HeaderMap.Builder headerMapBuilder) {
+      TargetNode<? extends CommonArg> targetNode,
+      HeaderMap.Builder headerMapBuilder,
+      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder) {
     CommonArg arg = targetNode.getConstructorArg();
     boolean shouldCreateHeadersSymlinks =
         arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled());
@@ -2706,7 +2800,11 @@ public class ProjectGenerator {
       basePath = projectFilesystem.getRootPath();
     }
     ImmutableSortedMap<Path, SourcePath> publicCxxHeaders = getPublicCxxHeaders(targetNode);
-    publicCxxHeaders.values().forEach(this::addRequiredBuildTargetFromSourcePath);
+    publicCxxHeaders
+        .values()
+        .forEach(
+            sourcePath ->
+                addRequiredBuildTargetFromSourcePath(sourcePath, requiredBuildTargetsBuilder));
     for (Map.Entry<Path, SourcePath> entry : publicCxxHeaders.entrySet()) {
       Path path;
       if (shouldCreateHeadersSymlinks) {
@@ -2729,7 +2827,8 @@ public class ProjectGenerator {
   }
 
   /** Generates the merged header maps and write it to the public header symlink tree location. */
-  private void createMergedHeaderMap() throws IOException {
+  private void createMergedHeaderMap(ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder)
+      throws IOException {
     HeaderMap.Builder headerMapBuilder = new HeaderMap.Builder();
 
     Set<TargetNode<? extends CommonArg>> processedNodes = new HashSet<>();
@@ -2746,7 +2845,8 @@ public class ProjectGenerator {
                           return;
                         }
                         if (headerVisibility == HeaderVisibility.PUBLIC) {
-                          addToMergedHeaderMap(depNativeNode, headerMapBuilder);
+                          addToMergedHeaderMap(
+                              depNativeNode, headerMapBuilder, requiredBuildTargetsBuilder);
                           processedNodes.add(depNativeNode);
                         }
                       }));
@@ -2764,6 +2864,7 @@ public class ProjectGenerator {
 
   private void createHeaderSymlinkTree(
       Map<Path, SourcePath> contents,
+      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableMap<Path, Path> nonSourcePaths,
       Optional<String> moduleName,
       Path headerSymlinkTreeRoot,
@@ -2781,7 +2882,7 @@ public class ProjectGenerator {
     for (Map.Entry<Path, SourcePath> entry : contents.entrySet()) {
       Path link = headerSymlinkTreeRoot.resolve(entry.getKey());
       Path existing = projectFilesystem.resolve(resolveSourcePath(entry.getValue()));
-      addRequiredBuildTargetFromSourcePath(entry.getValue());
+      addRequiredBuildTargetFromSourcePath(entry.getValue(), requiredBuildTargetsBuilder);
       resolvedContentsBuilder.put(link, existing);
     }
     for (Map.Entry<Path, Path> entry : nonSourcePaths.entrySet()) {

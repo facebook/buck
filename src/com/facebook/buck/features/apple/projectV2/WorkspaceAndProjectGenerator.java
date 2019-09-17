@@ -470,7 +470,6 @@ public class WorkspaceAndProjectGenerator {
 
     ProjectGenerator.Result result = generator.createXcodeProjects();
 
-    ImmutableSet<BuildTarget> requiredBuildTargets = generator.getRequiredBuildTargets();
     ImmutableMap<BuildTarget, PBXTarget> buildTargetToGeneratedTargetMap =
         result.buildTargetsToGeneratedTargetMap;
 
@@ -482,7 +481,7 @@ public class WorkspaceAndProjectGenerator {
     return GenerationResult.of(
         generator.getXcodeProjPath(),
         generator.isProjectGenerated(),
-        requiredBuildTargets,
+        result.requiredBuildTargets,
         generator.getXcconfigPaths(),
         generator.getFilesToCopyInXcode(),
         buildTargetToGeneratedTargetMap,
