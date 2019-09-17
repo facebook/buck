@@ -42,9 +42,9 @@ public class AndroidPlatformTargetFactory implements ToolchainFactory<AndroidPla
         new AndroidBuckConfig(context.getBuckConfig(), Platform.detect());
 
     String androidPlatformTargetId;
-    Optional<String> target = androidBuckConfig.getAndroidTarget();
-    if (target.isPresent()) {
-      androidPlatformTargetId = target.get();
+    Optional<String> compileSdkVersion = androidBuckConfig.getAndroidCompileSdkVersion();
+    if (compileSdkVersion.isPresent()) {
+      androidPlatformTargetId = compileSdkVersion.get();
     } else {
       androidPlatformTargetId = AndroidPlatformTarget.DEFAULT_ANDROID_PLATFORM_TARGET;
       LOG.debug("No Android platform target specified. Using default: %s", androidPlatformTargetId);

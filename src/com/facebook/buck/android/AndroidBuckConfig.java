@@ -82,7 +82,14 @@ public class AndroidBuckConfig {
     this.platform = platform;
   }
 
-  public Optional<String> getAndroidTarget() {
+  public Optional<String> getAndroidCompileSdkVersion() {
+    Optional<String> compileSdkVersion = delegate.getValue("android", "compile_sdk_version");
+    return compileSdkVersion.isPresent() ? compileSdkVersion : getAndroidTarget();
+  }
+
+  /** @deprecated Renamed to {@link #getAndroidCompileSdkVersion()} to make the purpose clearer. */
+  @Deprecated
+  private Optional<String> getAndroidTarget() {
     return delegate.getValue("android", "target");
   }
 
