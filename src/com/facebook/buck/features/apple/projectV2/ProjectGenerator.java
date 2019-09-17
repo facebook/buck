@@ -251,7 +251,7 @@ public class ProjectGenerator {
   private final boolean isMainProject;
   private final Optional<BuildTarget> workspaceTarget;
   private final ImmutableSet<BuildTarget> targetsInRequiredProjects;
-  private final Set<BuildTarget> generatedTargets = new HashSet<>();
+
   /**
    * Mapping from an apple_library target to the associated apple_bundle which names it as its
    * 'binary'
@@ -409,6 +409,8 @@ public class ProjectGenerator {
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
       ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
       ImmutableSet.Builder<String> targetConfigNamesBuilder = ImmutableSet.builder();
+      // Does not need to be Immutable because this should not leave the stack.
+      Set<BuildTarget> generatedTargets = new HashSet<>();
 
       ImmutableList.Builder<ProjectTargetGenerationResult> generationResultsBuilder =
           ImmutableList.builder();
@@ -423,7 +425,8 @@ public class ProjectGenerator {
                 workspaceTargetNode.get(),
                 requiredBuildTargetsBuilder,
                 xcconfigPathsBuilder,
-                targetConfigNamesBuilder);
+                targetConfigNamesBuilder,
+                generatedTargets);
         generationResultsBuilder.add(result);
       }
 
@@ -436,7 +439,11 @@ public class ProjectGenerator {
               .collect(Collectors.toSet())) {
         ProjectTargetGenerationResult result =
             generateProjectTarget(
-                input, requiredBuildTargetsBuilder, xcconfigPathsBuilder, targetConfigNamesBuilder);
+                input,
+                requiredBuildTargetsBuilder,
+                xcconfigPathsBuilder,
+                targetConfigNamesBuilder,
+                generatedTargets);
         generationResultsBuilder.add(result);
       }
 
@@ -557,7 +564,8 @@ public class ProjectGenerator {
       TargetNode<?> targetNode,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
-      ImmutableSet.Builder<String> targetConfigNamesBuilder)
+      ImmutableSet.Builder<String> targetConfigNamesBuilder,
+      Set<BuildTarget> generatedTargets)
       throws IOException {
     Preconditions.checkState(
         isBuiltByCurrentProject(targetNode.getBuildTarget()),
