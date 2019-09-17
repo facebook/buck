@@ -251,7 +251,6 @@ public class ProjectGenerator {
   private final boolean isMainProject;
   private final Optional<BuildTarget> workspaceTarget;
   private final ImmutableSet<BuildTarget> targetsInRequiredProjects;
-  private final ImmutableSet.Builder<SourcePath> filesAddedBuilder = ImmutableSet.builder();
   private final Set<BuildTarget> generatedTargets = new HashSet<>();
   /**
    * Mapping from an apple_library target to the associated apple_bundle which names it as its
@@ -1550,8 +1549,6 @@ public class ProjectGenerator {
 
     ImmutableSortedSet<SourceWithFlags> allSrcs = allSrcsBuilder.build();
 
-    filesAddedBuilder.addAll(
-        allSrcs.stream().map(s -> s.getSourcePath()).collect(ImmutableList.toImmutableList()));
     xcodeNativeTargetAttributesBuilder
         .setLangPreprocessorFlags(
             ImmutableMap.copyOf(
