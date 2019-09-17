@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
-import com.android.bundle.Config.BundleConfig;
 import com.android.common.SdkConstants;
 import com.android.common.sdklib.build.ApkBuilder;
 import com.android.sdklib.build.ApkCreationException;
@@ -27,7 +26,6 @@ import com.android.sdklib.build.IArchiveBuilder;
 import com.android.sdklib.build.SealedApkException;
 import com.android.tools.build.bundletool.commands.BuildBundleCommand;
 import com.android.tools.build.bundletool.model.BundleModule;
-import com.android.tools.build.bundletool.utils.files.BufferedIo;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -39,13 +37,10 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSet;
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.util.JsonFormat;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -125,29 +120,10 @@ public class AabBuilderStep implements Step {
             .setModulesPaths(modulesPathsBuilder.build());
 
     if (pathToBundleConfigFile.isPresent()) {
-      bundleBuilder.setBundleConfig(parseBundleConfigJson(pathToBundleConfigFile.get()));
+      bundleBuilder.setBundleConfig(pathToBundleConfigFile.get());
     }
     bundleBuilder.build().execute();
     return StepExecutionResults.SUCCESS;
-  }
-
-  // To be removed when https://github.com/google/bundletool/issues/63 is fixed
-  private static BundleConfig parseBundleConfigJson(Path bundleConfigJsonPath) {
-    BundleConfig.Builder bundleConfig = BundleConfig.newBuilder();
-    try (Reader bundleConfigReader = BufferedIo.reader(bundleConfigJsonPath)) {
-      JsonFormat.parser().merge(bundleConfigReader, bundleConfig);
-    } catch (InvalidProtocolBufferException e) {
-      throw new HumanReadableException(
-          e,
-          String.format(
-              "The file '%s' is not a valid BundleConfig JSON file.", bundleConfigJsonPath));
-    } catch (IOException e) {
-      throw new HumanReadableException(
-          e,
-          String.format(
-              "An error occurred while trying to read the file '%s'.", bundleConfigJsonPath));
-    }
-    return bundleConfig.build();
   }
 
   private void addFile(
@@ -344,7 +320,8 @@ public class AabBuilderStep implements Step {
                 .toString(),
             addedFiles,
             addedSourceFiles);
-      } else if (file.getName().equals(BundleModule.RESOURCES_PROTO_PATH.toString())) {
+      } else if (file.getName()
+          .equals(BundleModule.SpecialModuleEntry.RESOURCE_TABLE.getPath().toString())) {
         addFile(
             builder,
             file.toPath(),
