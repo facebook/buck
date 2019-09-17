@@ -241,12 +241,6 @@ public class ProjectGenerator {
   private final BuckEventBus buckEventBus;
   private final RuleKeyConfiguration ruleKeyConfiguration;
 
-  /**
-   * Populated while generating project configurations, in order to collect the possible
-   * project-level configurations to set.
-   */
-  private final ImmutableSet.Builder<String> targetConfigNamesBuilder;
-
   private final GidGenerator gidGenerator;
   private final ImmutableSet<Flavor> appleCxxFlavors;
   private final HalideBuckConfig halideBuckConfig;
@@ -338,7 +332,6 @@ public class ProjectGenerator {
 
     this.headerSymlinkTrees = new ArrayList<>();
 
-    targetConfigNamesBuilder = ImmutableSet.builder();
     this.halideBuckConfig = halideBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.platformCxxBuckConfigs = cxxBuckConfig.getFlavoredConfigs();
@@ -416,6 +409,7 @@ public class ProjectGenerator {
 
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
       ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
+      ImmutableSet.Builder<String> targetConfigNamesBuilder = ImmutableSet.builder();
 
       ImmutableList.Builder<ProjectTargetGenerationResult> generationResultsBuilder =
           ImmutableList.builder();
@@ -427,7 +421,10 @@ public class ProjectGenerator {
       if (workspaceTargetNode.isPresent() && projectTargets.contains(workspaceTargetNode.get())) {
         ProjectTargetGenerationResult result =
             generateProjectTarget(
-                workspaceTargetNode.get(), requiredBuildTargetsBuilder, xcconfigPathsBuilder);
+                workspaceTargetNode.get(),
+                requiredBuildTargetsBuilder,
+                xcconfigPathsBuilder,
+                targetConfigNamesBuilder);
         generationResultsBuilder.add(result);
       }
 
@@ -439,7 +436,8 @@ public class ProjectGenerator {
                       !workspaceTargetNode.isPresent() || !input.equals(workspaceTargetNode.get()))
               .collect(Collectors.toSet())) {
         ProjectTargetGenerationResult result =
-            generateProjectTarget(input, requiredBuildTargetsBuilder, xcconfigPathsBuilder);
+            generateProjectTarget(
+                input, requiredBuildTargetsBuilder, xcconfigPathsBuilder, targetConfigNamesBuilder);
         generationResultsBuilder.add(result);
       }
 
@@ -559,7 +557,8 @@ public class ProjectGenerator {
   private ProjectTargetGenerationResult generateProjectTarget(
       TargetNode<?> targetNode,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
-      ImmutableSet.Builder<Path> xcconfigPathsBuilder)
+      ImmutableSet.Builder<Path> xcconfigPathsBuilder,
+      ImmutableSet.Builder<String> targetConfigNamesBuilder)
       throws IOException {
     Preconditions.checkState(
         isBuiltByCurrentProject(targetNode.getBuildTarget()),
@@ -595,6 +594,7 @@ public class ProjectGenerator {
               nativeTargetBuilder,
               requiredBuildTargetsBuilder,
               xcconfigPathsBuilder,
+              targetConfigNamesBuilder,
               (TargetNode<AppleNativeTargetDescriptionArg>) targetNode,
               Optional.empty());
     } else if (targetNode.getDescription() instanceof CxxLibraryDescription) {
@@ -603,6 +603,7 @@ public class ProjectGenerator {
               nativeTargetBuilder,
               requiredBuildTargetsBuilder,
               xcconfigPathsBuilder,
+              targetConfigNamesBuilder,
               (TargetNode<CommonArg>) targetNode,
               ImmutableSet.of(),
               ImmutableSet.of(),
@@ -613,6 +614,7 @@ public class ProjectGenerator {
               nativeTargetBuilder,
               requiredBuildTargetsBuilder,
               xcconfigPathsBuilder,
+              targetConfigNamesBuilder,
               (TargetNode<AppleNativeTargetDescriptionArg>) targetNode);
     } else if (targetNode.getDescription() instanceof AppleBundleDescription) {
       TargetNode<AppleBundleDescriptionArg> bundleTargetNode =
@@ -623,6 +625,7 @@ public class ProjectGenerator {
               nativeTargetBuilder,
               requiredBuildTargetsBuilder,
               xcconfigPathsBuilder,
+              targetConfigNamesBuilder,
               bundleTargetNode,
               (TargetNode<AppleNativeTargetDescriptionArg>)
                   targetGraph.get(XcodeNativeTargetGenerator.getBundleBinaryTarget(bundleTargetNode)),
@@ -633,6 +636,7 @@ public class ProjectGenerator {
               (TargetNode<AppleTestDescriptionArg>) targetNode,
               requiredBuildTargetsBuilder,
               xcconfigPathsBuilder,
+              targetConfigNamesBuilder,
               nativeTargetBuilder);
     } else if (targetNode.getDescription() instanceof AppleResourceDescription) {
       checkAppleResourceTargetNodeReferencingValidContents(
@@ -644,7 +648,8 @@ public class ProjectGenerator {
 
       // The generated target just runs a shell script that invokes the "compiler" with the
       // correct target architecture.
-      generateHalideLibraryTarget(nativeTargetBuilder, xcconfigPathsBuilder, halideTargetNode);
+      generateHalideLibraryTarget(
+          nativeTargetBuilder, xcconfigPathsBuilder, targetConfigNamesBuilder, halideTargetNode);
 
       // Make sure the compiler gets built at project time, since we'll need
       // it to generate the shader code during the Xcode build.
@@ -780,6 +785,7 @@ public class ProjectGenerator {
   private void generateHalideLibraryTarget(
       XCodeNativeTargetAttributes.Builder xcodeNativeTargetAttributesBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
+      ImmutableSet.Builder<String> targetConfigNamesBuilder,
       TargetNode<HalideLibraryDescriptionArg> targetNode)
       throws IOException {
     BuildTarget buildTarget = targetNode.getBuildTarget();
@@ -841,6 +847,7 @@ public class ProjectGenerator {
       TargetNode<AppleTestDescriptionArg> testTargetNode,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
+      ImmutableSet.Builder<String> targetConfigNamesBuilder,
       XCodeNativeTargetAttributes.Builder nativeTargetBuilder)
       throws IOException {
     AppleTestDescriptionArg args = testTargetNode.getConstructorArg();
@@ -861,6 +868,7 @@ public class ProjectGenerator {
         nativeTargetBuilder,
         requiredBuildTargetsBuilder,
         xcconfigPathsBuilder,
+        targetConfigNamesBuilder,
         testTargetNode,
         testTargetNode,
         testHostBundle);
@@ -901,6 +909,7 @@ public class ProjectGenerator {
       XCodeNativeTargetAttributes.Builder nativeTargetBuilder,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
+      ImmutableSet.Builder<String> targetConfigNamesBuilder,
       TargetNode<? extends HasAppleBundleFields> targetNode,
       TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode,
       Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode)
@@ -970,6 +979,7 @@ public class ProjectGenerator {
             nativeTargetBuilder,
             requiredBuildTargetsBuilder,
             xcconfigPathsBuilder,
+            targetConfigNamesBuilder,
             Optional.of(targetNode),
             binaryNode,
             "%s." + getExtensionString(targetNode.getConstructorArg().getExtension()),
@@ -1082,6 +1092,7 @@ public class ProjectGenerator {
       XCodeNativeTargetAttributes.Builder nativeTargetBuilder,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
+      ImmutableSet.Builder<String> targetConfigNamesBuilder,
       TargetNode<AppleNativeTargetDescriptionArg> targetNode)
       throws IOException {
     ImmutableList<BuildTarget> result =
@@ -1089,6 +1100,7 @@ public class ProjectGenerator {
             nativeTargetBuilder,
             requiredBuildTargetsBuilder,
             xcconfigPathsBuilder,
+            targetConfigNamesBuilder,
             Optional.empty(),
             targetNode,
             "%s",
@@ -1111,6 +1123,7 @@ public class ProjectGenerator {
       XCodeNativeTargetAttributes.Builder nativeTargetBuilder,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
+      ImmutableSet.Builder<String> targetConfigNamesBuilder,
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode)
       throws IOException {
@@ -1119,6 +1132,7 @@ public class ProjectGenerator {
             nativeTargetBuilder,
             requiredBuildTargetsBuilder,
             xcconfigPathsBuilder,
+            targetConfigNamesBuilder,
             targetNode,
             AppleResources.collectDirectResources(targetGraph, targetNode),
             AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
@@ -1132,6 +1146,7 @@ public class ProjectGenerator {
       XCodeNativeTargetAttributes.Builder nativeTargetBuilder,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
+      ImmutableSet.Builder<String> targetConfigNamesBuilder,
       TargetNode<? extends CommonArg> targetNode,
       ImmutableSet<AppleResourceDescriptionArg> directResources,
       ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs,
@@ -1145,6 +1160,7 @@ public class ProjectGenerator {
             nativeTargetBuilder,
             requiredBuildTargetsBuilder,
             xcconfigPathsBuilder,
+            targetConfigNamesBuilder,
             Optional.empty(),
             targetNode,
             AppleBuildRules.getOutputFileNameFormatForLibrary(isShared),
@@ -1402,6 +1418,7 @@ public class ProjectGenerator {
       XCodeNativeTargetAttributes.Builder xcodeNativeTargetAttributesBuilder,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
+      ImmutableSet.Builder<String> targetConfigNamesBuilder,
       Optional<? extends TargetNode<? extends HasAppleBundleFields>> bundle,
       TargetNode<? extends CommonArg> targetNode,
       String productOutputFormat,
