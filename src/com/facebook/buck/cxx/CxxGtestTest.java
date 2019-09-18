@@ -21,10 +21,8 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
-import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -67,7 +65,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -294,16 +291,6 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
   private TestResultSummary reportNotExecutedTest(String testCaseName, String testName) {
     return new TestResultSummary(
         testCaseName, testName, ResultType.FAILURE, 0, "Test wasn't run", "", "", "");
-  }
-
-  // The C++ test rules just wrap a test binary produced by another rule, so make sure that's
-  // always available to run the test.
-  @Override
-  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
-    return Stream.concat(
-        super.getRuntimeDeps(buildRuleResolver),
-        BuildableSupport.getDeps(getExecutableCommand(), buildRuleResolver)
-            .map(BuildRule::getBuildTarget));
   }
 
   @Override

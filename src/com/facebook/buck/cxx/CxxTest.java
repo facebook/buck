@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
+import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -261,9 +262,13 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return false;
   }
 
+  // The C++ test rules just wrap a test binary produced by another rule, so make sure that's
+  // always available to run the test.
   @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
-    return additionalDeps.get(() -> additionalDepsSupplier.apply(buildRuleResolver)).stream()
+    return Stream.concat(
+            additionalDeps.get(() -> additionalDepsSupplier.apply(buildRuleResolver)).stream(),
+            BuildableSupport.getDeps(getExecutableCommand(), buildRuleResolver))
         .map(BuildRule::getBuildTarget);
   }
 
