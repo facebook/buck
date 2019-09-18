@@ -59,8 +59,6 @@ import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -70,7 +68,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentMap;
@@ -158,7 +155,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       ExecutionEnvironment executionEnvironment,
       Locale locale,
       Path testLogPath,
-      TimeZone timeZone,
       BuildId buildId,
       boolean printBuildId,
       Optional<String> buildDetailsTemplate,
@@ -172,7 +168,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         executionEnvironment,
         locale,
         testLogPath,
-        timeZone,
         500L,
         500L,
         1000L,
@@ -193,7 +188,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       ExecutionEnvironment executionEnvironment,
       Locale locale,
       Path testLogPath,
-      TimeZone timeZone,
       long minimumDurationMillisecondsToShowParse,
       long minimumDurationMillisecondsToShowActionGraph,
       long minimumDurationMillisecondsToShowWatchman,
@@ -241,9 +235,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         minimumDurationMillisecondsToShowActionGraph;
     this.minimumDurationMillisecondsToShowWatchman = minimumDurationMillisecondsToShowWatchman;
     this.hideEmptyDownload = hideEmptyDownload;
-
-    DateFormat dateFormat = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]", this.locale);
-    dateFormat.setTimeZone(timeZone);
 
     int outputMaxColumns = 80;
     if (config.getThreadLineOutputMaxColumns().isPresent()) {

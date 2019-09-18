@@ -259,7 +259,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalLong;
-import java.util.TimeZone;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -2263,7 +2262,6 @@ public final class MainRunner {
               executionEnvironment,
               locale,
               testLogPath,
-              TimeZone.getDefault(),
               buildId,
               printBuildId,
               buildDetailsTemplate,
