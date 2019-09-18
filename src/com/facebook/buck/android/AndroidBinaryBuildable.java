@@ -318,8 +318,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               bundleConfigPath,
               buildTarget,
               false,
-              modulesInfo.build(),
-              moduleNames));
+              modulesInfo.build()));
     }
 
     // The `ApkBuilderStep` delegates to android tools to build a ZIP with timestamps in it, making

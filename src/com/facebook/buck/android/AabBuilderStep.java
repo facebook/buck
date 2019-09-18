@@ -66,7 +66,6 @@ public class AabBuilderStep implements Step {
   private static final Pattern PATTERN_BITCODELIB_EXT =
       Pattern.compile("^.+\\.bc$", Pattern.CASE_INSENSITIVE);
   private final ImmutableSet<ModuleInfo> modulesInfo;
-  private final ImmutableSet<String> moduleNames;
 
   /**
    * @param modulesInfo A set of ModuleInfo containing information about modules to be built within
@@ -80,15 +79,23 @@ public class AabBuilderStep implements Step {
       Optional<Path> pathToBundleConfigFile,
       BuildTarget buildTarget,
       boolean debugMode,
-      ImmutableSet<ModuleInfo> modulesInfo,
-      ImmutableSet<String> moduleNames) {
+      ImmutableSet<ModuleInfo> modulesInfo) {
     this.filesystem = filesystem;
     this.pathToOutputAabFile = pathToOutputAabFile;
     this.pathToBundleConfigFile = pathToBundleConfigFile;
     this.buildTarget = buildTarget;
     this.debugMode = debugMode;
     this.modulesInfo = modulesInfo;
-    this.moduleNames = moduleNames;
+  }
+
+  private ImmutableList<Path> getModulesPaths() {
+    ImmutableList.Builder<Path> modulesPathsBuilder = new Builder<>();
+
+    for (ModuleInfo moduleInfo : modulesInfo) {
+      Path moduleGenPath = getPathForModule(moduleInfo);
+      modulesPathsBuilder.add(filesystem.getPathForRelativePath(moduleGenPath));
+    }
+    return modulesPathsBuilder.build();
   }
 
   @Override
@@ -98,26 +105,28 @@ public class AabBuilderStep implements Step {
       output = context.getStdOut();
     }
 
-    ImmutableList.Builder<Path> modulesPathsBuilder = new Builder<>();
     File fakeResApk = filesystem.createTempFile("fake", ".txt").toFile();
-
     for (ModuleInfo moduleInfo : modulesInfo) {
       Set<String> addedFiles = new HashSet<>();
       Set<Path> addedSourceFiles = new HashSet<>();
-      Path moduleGenPath = getPathForModule(moduleInfo);
       StepExecutionResult moduleBuildResult =
           addModule(
-              context, moduleGenPath, fakeResApk, output, moduleInfo, addedFiles, addedSourceFiles);
+              context,
+              getPathForModule(moduleInfo),
+              fakeResApk,
+              output,
+              moduleInfo,
+              addedFiles,
+              addedSourceFiles);
       if (!moduleBuildResult.isSuccess()) {
         return moduleBuildResult;
       }
-      modulesPathsBuilder.add(filesystem.getPathForRelativePath(moduleGenPath));
     }
 
     BuildBundleCommand.Builder bundleBuilder =
         BuildBundleCommand.builder()
             .setOutputPath(filesystem.getPathForRelativePath(pathToOutputAabFile))
-            .setModulesPaths(modulesPathsBuilder.build());
+            .setModulesPaths(getModulesPaths());
 
     if (pathToBundleConfigFile.isPresent()) {
       bundleBuilder.setBundleConfig(pathToBundleConfigFile.get());
@@ -490,8 +499,20 @@ public class AabBuilderStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    String summaryOfModules = Joiner.on(',').join(moduleNames);
-    return String.format("Build an app bundle containing these modules: %s", summaryOfModules);
+    ImmutableList.Builder<String> args =
+        ImmutableList.<String>builder()
+            .add("bundletool")
+            .add("build-bundle")
+            .add("--output")
+            .add("\"" + filesystem.getPathForRelativePath(pathToOutputAabFile).toString() + "\"")
+            .add("--modules")
+            .add("\"" + Joiner.on(",").join(getModulesPaths()) + "\"");
+
+    if (pathToBundleConfigFile.isPresent()) {
+      args.add("--config").add("\"" + pathToBundleConfigFile.get().toString() + "\"");
+    }
+
+    return Joiner.on(" ").join(args.build());
   }
 
   @Override
