@@ -17,11 +17,11 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.multitenant.collect.Generation
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import it.unimi.dsi.fastutil.ints.IntArrayFIFOQueue
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet
-import java.util.ArrayList
 
 /**
  * View of build graph data across a range of generations. Because this is a "view," it is not
@@ -86,8 +86,11 @@ class Index internal constructor(
                 buildTargetCache.get(buildTarget) to newNodeAndDeps
             }.toMap()
         val indexData =
-            indexGenerationData.createForwardingIndexGenerationData(generation, buildPackageMap,
-                ruleMap, deltas.rdepsDeltas)
+            indexGenerationData.createForwardingIndexGenerationData(
+                generation = generation,
+                localBuildPackageChanges = buildPackageMap,
+                localRuleMapChanges = ruleMap,
+                localRdepsRuleMapChanges = deltas.rdepsDeltas)
         return Index(indexData, buildTargetCache)
     }
 
@@ -175,7 +178,7 @@ class Index internal constructor(
             }
 
             // now traverse all deps recursively
-            while (!queue.isEmpty()) {
+            while (!queue.isEmpty) {
                 val targetId = queue.dequeueInt()
                 visitDeps(targetId)
             }
@@ -325,7 +328,7 @@ class Index internal constructor(
 
         // TODO: check for errors sizes to be equal
 
-        if (!buildPackage.rules.isEmpty()) {
+        if (buildPackage.rules.isNotEmpty()) {
             val rulesEquals = indexGenerationData.withRuleMap { ruleMap ->
                 buildPackage.rules.all { rule ->
                     val buildTargetId = buildTargetCache.get(rule.targetNode.buildTarget)
@@ -356,7 +359,7 @@ class Index internal constructor(
             }
         }
 
-        if (!buildPackage.errors.isEmpty()) {
+        if (buildPackage.errors.isNotEmpty()) {
             // TODO: compare errors
         }
 

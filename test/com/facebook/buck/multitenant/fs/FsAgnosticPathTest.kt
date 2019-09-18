@@ -27,7 +27,7 @@ import org.junit.rules.ExpectedException
 
 class FsAgnosticPathTest {
     @get:Rule
-    val thrown = ExpectedException.none()
+    val thrown: ExpectedException = ExpectedException.none()
 
     @Test
     fun emptyPathIsOk() {

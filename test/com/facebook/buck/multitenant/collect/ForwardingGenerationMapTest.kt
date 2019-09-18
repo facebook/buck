@@ -24,7 +24,7 @@ class ForwardingGenerationMapTest {
     fun localNonNullVersionShadowsDelegate() {
         val delegate = createDelegate()
         val changes = mapOf("foo" to "baz")
-        var forwardingMap = ForwardingGenerationMap(1, changes, delegate)
+        val forwardingMap = ForwardingGenerationMap(1, changes, delegate)
         assertEquals("baz", forwardingMap.getVersion("foo", 1))
     }
 
@@ -32,7 +32,7 @@ class ForwardingGenerationMapTest {
     fun localNullVersionShadowsDelegate() {
         val delegate = createDelegate()
         val changes = mapOf("foo" to null)
-        var forwardingMap = ForwardingGenerationMap(1, changes, delegate)
+        val forwardingMap = ForwardingGenerationMap(1, changes, delegate)
         assertEquals(null, forwardingMap.getVersion("foo", 1))
     }
 
@@ -40,7 +40,7 @@ class ForwardingGenerationMapTest {
     fun noLocalVersionForwardsToDelegateNonNull() {
         val delegate = createDelegate()
         val changes: Map<String, String> = mapOf()
-        var forwardingMap = ForwardingGenerationMap(1, changes, delegate)
+        val forwardingMap = ForwardingGenerationMap(1, changes, delegate)
         assertEquals("bar1", forwardingMap.getVersion("foo", 1))
     }
 
@@ -48,7 +48,7 @@ class ForwardingGenerationMapTest {
     fun noLocalVersionForwardsToDelegateNull() {
         val delegate = createDelegate()
         val changes: Map<String, String> = mapOf()
-        var forwardingMap = ForwardingGenerationMap(1, changes, delegate)
+        val forwardingMap = ForwardingGenerationMap(1, changes, delegate)
         assertEquals(null, forwardingMap.getVersion("fizz", 1))
     }
 
@@ -56,10 +56,10 @@ class ForwardingGenerationMapTest {
     fun noLocalChangesWhenCallingGetEntries() {
         val delegate = createDelegate()
         val changes: Map<String, String> = mapOf()
-        var forwardingMap = ForwardingGenerationMap(0, changes, delegate)
+        val forwardingMap = ForwardingGenerationMap(0, changes, delegate)
         val pairs = forwardingMap.getEntries(0).toSet()
         assertEquals(setOf(Pair("foo", "bar0"), Pair("fizz", "buzz")), pairs)
-        val filteredPairs = forwardingMap.getEntries(0, { it == "foo" }).toSet()
+        val filteredPairs = forwardingMap.getEntries(0) { it == "foo" }.toSet()
         assertEquals(setOf(Pair("foo", "bar0")), filteredPairs)
     }
 
@@ -67,10 +67,10 @@ class ForwardingGenerationMapTest {
     fun additiveLocalChangesWhenCallingGetEntries() {
         val delegate = createDelegate()
         val changes = mapOf("A" to "T", "C" to "G")
-        var forwardingMap = ForwardingGenerationMap(0, changes, delegate)
+        val forwardingMap = ForwardingGenerationMap(0, changes, delegate)
         val pairs = forwardingMap.getEntries(0).toSet()
         assertEquals(setOf(Pair("foo", "bar0"), Pair("fizz", "buzz"), Pair("A", "T"), Pair("C", "G")), pairs)
-        val filteredPairs = forwardingMap.getEntries(0, { it == "A" }).toSet()
+        val filteredPairs = forwardingMap.getEntries(0) { it == "A" }.toSet()
         assertEquals(setOf(Pair("A", "T")), filteredPairs)
     }
 
@@ -78,10 +78,10 @@ class ForwardingGenerationMapTest {
     fun destructiveLocalChangesWhenCallingGetEntries() {
         val delegate = createDelegate()
         val changes = mapOf("foo" to null)
-        var forwardingMap = ForwardingGenerationMap(0, changes, delegate)
+        val forwardingMap = ForwardingGenerationMap(0, changes, delegate)
         val pairs = forwardingMap.getEntries(0).toSet()
         assertEquals(setOf(Pair("fizz", "buzz")), pairs)
-        val filteredPairs = forwardingMap.getEntries(0, { it == "foo" }).toSet()
+        val filteredPairs = forwardingMap.getEntries(0) { it == "foo" }.toSet()
         assertEquals(setOf<Pair<String, String>>(), filteredPairs)
     }
 
@@ -89,10 +89,10 @@ class ForwardingGenerationMapTest {
     fun differingLocalChangesWhenCallingGetEntries() {
         val delegate = createDelegate()
         val changes = mapOf("foo" to "z")
-        var forwardingMap = ForwardingGenerationMap(0, changes, delegate)
+        val forwardingMap = ForwardingGenerationMap(0, changes, delegate)
         val pairs = forwardingMap.getEntries(0).toSet()
         assertEquals(setOf(Pair("foo", "z"), Pair("fizz", "buzz")), pairs)
-        val filteredPairs = forwardingMap.getEntries(0, { it == "foo" }).toSet()
+        val filteredPairs = forwardingMap.getEntries(0) { it == "foo" }.toSet()
         assertEquals(setOf(Pair("foo", "z")), filteredPairs)
     }
 
@@ -100,7 +100,7 @@ class ForwardingGenerationMapTest {
     fun unsupportedGenerationThrows() {
         val delegate = createDelegate()
         val changes = mapOf("foo" to "baz")
-        var forwardingMap = ForwardingGenerationMap(1, changes, delegate)
+        val forwardingMap = ForwardingGenerationMap(1, changes, delegate)
         forwardingMap.getVersion("foo", 2)
     }
 

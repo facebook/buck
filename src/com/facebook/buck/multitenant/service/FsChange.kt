@@ -19,6 +19,7 @@ package com.facebook.buck.multitenant.service
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.FsChange.Added
 import com.facebook.buck.multitenant.service.FsChange.Modified
+import com.facebook.buck.multitenant.service.FsChange.Removed
 
 /**
  * Represents a local change to a regular file from a user. For [Added] and [Modified],
@@ -37,6 +38,7 @@ sealed class FsChange {
  */
 data class FsChanges(
     val commit: Commit,
-    val added: List<FsChange.Added> = emptyList(),
-    val modified: List<FsChange.Modified> = emptyList(),
-    val removed: List<FsChange.Removed> = emptyList())
+    val added: List<Added> = emptyList(),
+    val modified: List<Modified> = emptyList(),
+    val removed: List<Removed> = emptyList()
+)

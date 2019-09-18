@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.multitenant.service
 
+import com.facebook.buck.multitenant.collect.Generation
 import io.vavr.collection.HashSet
 import io.vavr.collection.Set
 import it.unimi.dsi.fastutil.ints.IntArrayList
@@ -154,8 +155,8 @@ internal fun aggregateDeltaDeriveInfos(
         out[buildTargetId] = if (oldRdeps == null) {
             // No one was depending on this rule at the previous generation. All of the
             // deltas must be of type Add.
-            if (!deltas.all { it is BuildTargetSetDelta.Add }) {
-                throw IllegalStateException("There was a 'Remove' delta for a non-existent set.")
+            check(deltas.all { it is BuildTargetSetDelta.Add }) {
+                "There was a 'Remove' delta for a non-existent set."
             }
             deltas.sort()
             val buildTargetIds = IntArray(deltas.size) { index ->
@@ -177,7 +178,7 @@ internal fun aggregateDeltaDeriveInfos(
  * NOTE: we should use telemetry to determine the right value for this constant. Currently, it is
  * completely pulled out of thin air.
  */
-internal val THRESHOLD_FOR_UNIQUE_VS_PERSISTENT = 10
+internal const val THRESHOLD_FOR_UNIQUE_VS_PERSISTENT = 10
 
 /**
  * Derives a new RdepsSet from an existing one by applying some deltas. If applying all of the
@@ -193,27 +194,31 @@ private fun applyDeltas(oldRdeps: RdepsSet, deltas: MutableList<BuildTargetSetDe
             is BuildTargetSetDelta.Remove -> acc - 1
         }
     }
-    return if (size == 0) {
-        null
-    } else if (size < THRESHOLD_FOR_UNIQUE_VS_PERSISTENT) {
-        createSimpleSet(oldRdeps, deltas, size)
-    } else {
-        val existingRdeps = when (oldRdeps) {
-            is RdepsSet.Unique -> {
-                // The old version was Unique, but now we have exceeded
-                // THRESHOLD_FOR_UNIQUE_VS_PERSISTENT, so now we want to use Persistent for the new
-                // version.
-                HashSet.ofAll(oldRdeps)
+    return when {
+        size == 0 -> null
+        size < THRESHOLD_FOR_UNIQUE_VS_PERSISTENT -> createSimpleSet(oldRdeps, deltas, size)
+        else -> {
+            val existingRdeps = when (oldRdeps) {
+                is RdepsSet.Unique -> {
+                    // The old version was Unique, but now we have exceeded
+                    // THRESHOLD_FOR_UNIQUE_VS_PERSISTENT, so now we want to use Persistent for the new
+                    // version.
+                    HashSet.ofAll(oldRdeps)
+                }
+                is RdepsSet.Persistent -> {
+                    oldRdeps.rdeps
+                }
             }
-            is RdepsSet.Persistent -> {
-                oldRdeps.rdeps
-            }
+            deriveNewPersistentSet(existingRdeps, deltas)
         }
-        deriveNewPersistentSet(existingRdeps, deltas)
     }
 }
 
-private fun createSimpleSet(oldRdeps: RdepsSet, deltas: MutableList<BuildTargetSetDelta>, expectedSize: Int): RdepsSet.Unique {
+private fun createSimpleSet(
+    oldRdeps: RdepsSet,
+    deltas: MutableList<BuildTargetSetDelta>,
+    expectedSize: Int
+): RdepsSet.Unique {
     val oldRdepsSorted: IntArray = when (oldRdeps) {
         is RdepsSet.Unique -> oldRdeps.rdeps
         is RdepsSet.Persistent -> {
@@ -248,18 +253,15 @@ private fun createSimpleSet(oldRdeps: RdepsSet, deltas: MutableList<BuildTargetS
                         ++deltaIndex
                     }
                     is BuildTargetSetDelta.Remove -> {
-                        throw IllegalStateException(
-                                "Should not Remove when $deltaBuildTargetId does not exist in oldRdeps."
-                        )
+                        error(
+                            "Should not Remove when $deltaBuildTargetId does not exist in oldRdeps.")
                     }
                 }
             }
             else /* oldBuildTargetId == deltaBuildTargetId */ -> {
                 when (delta) {
                     is BuildTargetSetDelta.Add -> {
-                        throw IllegalStateException(
-                                "Should not Add when $deltaBuildTargetId already exists in oldRdeps."
-                        )
+                        error("Should not Add when $deltaBuildTargetId already exists in oldRdeps.")
                     }
                     is BuildTargetSetDelta.Remove -> {
                         // We should omit this buildTargetId from the output, so
@@ -275,32 +277,32 @@ private fun createSimpleSet(oldRdeps: RdepsSet, deltas: MutableList<BuildTargetS
         newBuildTargetSet[index++] = oldRdepsSorted[oldIndex++]
     }
     while (deltaIndex < deltas.size) {
-        val delta = deltas[deltaIndex++]
-        when (delta) {
+        when (val delta = deltas[deltaIndex++]) {
             is BuildTargetSetDelta.Add -> {
                 newBuildTargetSet[index++] = delta.buildTargetId
             }
             is BuildTargetSetDelta.Remove -> {
-                throw IllegalStateException(
-                        "Should not Remove when ${delta.buildTargetId} does not exist in oldReps."
-                )
+                error("Should not Remove when ${delta.buildTargetId} does not exist in oldReps.")
             }
         }
     }
 
     if (index != expectedSize) {
-        throw IllegalStateException("Only assigned $index out of $expectedSize slots in output.")
+        error("Only assigned $index out of $expectedSize slots in output.")
     }
 
     return RdepsSet.Unique(newBuildTargetSet)
 }
 
-private fun deriveNewPersistentSet(oldRdeps: Set<BuildTargetId>, deltas: List<BuildTargetSetDelta>): RdepsSet.Persistent {
+private fun deriveNewPersistentSet(
+    oldRdeps: Set<BuildTargetId>,
+    deltas: List<BuildTargetSetDelta>
+): RdepsSet.Persistent {
     var out = oldRdeps
     deltas.forEach { delta ->
-        when (delta) {
-            is BuildTargetSetDelta.Add -> out = out.add(delta.buildTargetId)
-            is BuildTargetSetDelta.Remove -> out = out.remove(delta.buildTargetId)
+        out = when (delta) {
+            is BuildTargetSetDelta.Add -> out.add(delta.buildTargetId)
+            is BuildTargetSetDelta.Remove -> out.remove(delta.buildTargetId)
         }
     }
     return RdepsSet.Persistent(out)

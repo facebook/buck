@@ -11,6 +11,7 @@ kotlin_test(
         "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
         "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
         "//src/com/facebook/buck/core/parser/buildtargetpattern:buildtargetpattern",
+        "//src/com/facebook/buck/multitenant/collect:collect",
         "//src/com/facebook/buck/multitenant/fs:fs",
         "//src/com/facebook/buck/multitenant/service:RuleTypeFactory",
         "//src/com/facebook/buck/multitenant/service:service",

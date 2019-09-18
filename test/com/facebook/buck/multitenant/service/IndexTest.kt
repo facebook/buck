@@ -19,6 +19,7 @@ package com.facebook.buck.multitenant.service
 import com.facebook.buck.core.model.RuleType
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser
+import com.facebook.buck.multitenant.collect.Generation
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.google.common.collect.ImmutableMap
 import org.junit.Assert.assertEquals
@@ -247,7 +248,7 @@ class IndexTest {
             targetSet("//:A", "//:D", "//:E", "//:F", "//:G"),
             index.getReverseDeps(generation1, targetList("//:I")))
 
-        fun performAssertions(generation: Int, index: Index) {
+        fun performAssertions(generation: Generation, index: Index) {
             assertEquals("//:A is removed in generation2.", targetSet(),
                 index.getReverseDeps(generation, targetList("//:A")))
             assertEquals(targetSet("//:F", "//:G", "//:Z"),
@@ -300,37 +301,26 @@ class IndexTest {
         val (index, generations) = loadIndex("index_test_targets_and_deps.json")
         val generation1 = generations[1]
 
-        buildPackageOf().let {
-            assertTrue(index.containsBuildPackage(generation1, it))
-        }
+        assertTrue(index.containsBuildPackage(generation1, buildPackageOf()))
 
-        buildPackageOf(packagePath = "java/com/facebook/buck/non_existent_package").let {
-            assertFalse(index.containsBuildPackage(generation1, it))
-        }
+        assertFalse(index.containsBuildPackage(generation1,
+            buildPackageOf(packagePath = "java/com/facebook/buck/non_existent_package")))
 
-        buildPackageOf(targetName = "non_existent_target").let {
-            assertFalse(index.containsBuildPackage(generation1, it))
-        }
+        assertFalse(index.containsBuildPackage(generation1,
+            buildPackageOf(targetName = "non_existent_target")))
 
-        buildPackageOf(deps = listOf()).let {
-            assertFalse(index.containsBuildPackage(generation1, it))
-        }
+        assertFalse(index.containsBuildPackage(generation1, buildPackageOf(deps = listOf())))
 
-        buildPackageOf(deps = listOf("//non/existent:dep")).let {
-            assertFalse(index.containsBuildPackage(generation1, it))
-        }
+        assertFalse(index.containsBuildPackage(generation1,
+            buildPackageOf(deps = listOf("//non/existent:dep"))))
 
-        buildPackageOf(deps = listOf("//java/com/facebook/buck/base:base", "//second:dep")).let {
-            assertFalse(index.containsBuildPackage(generation1, it))
-        }
+        assertFalse(index.containsBuildPackage(generation1,
+            buildPackageOf(deps = listOf("//java/com/facebook/buck/base:base", "//second:dep"))))
 
-        buildPackageOf(attributes = mapOf("non_existent" to "attribute")).let {
-            assertFalse(index.containsBuildPackage(generation1, it))
-        }
+        assertFalse(index.containsBuildPackage(generation1,
+            buildPackageOf(attributes = mapOf("non_existent" to "attribute"))))
 
-        buildPackageOf(attributes = mapOf()).let {
-            assertFalse(index.containsBuildPackage(generation1, it))
-        }
+        assertFalse(index.containsBuildPackage(generation1, buildPackageOf(attributes = mapOf())))
 
         buildPackageOf(
             attributes = mapOf("buck.type" to "java_library", "new" to "attribute")).let {
@@ -383,9 +373,9 @@ private fun createTargetNode(
 ): ServiceRawTargetNode =
     ServiceRawTargetNode(target.buildTarget(), JAVA_LIBRARY, ImmutableMap.copyOf(attributes))
 
+@SuppressWarnings("SpreadOperator")
 private fun createRawRule(
     target: String,
     deps: List<String>,
     attributes: Map<String, Any> = mapOf()
-) =
-    RawBuildRule(createTargetNode(target, attributes), targetSet(*deps.toTypedArray()))
+) = RawBuildRule(createTargetNode(target, attributes), targetSet(*deps.toTypedArray()))

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.multitenant.collect
 
-import java.util.*
+typealias Generation = Int
 
-private data class GenerationValue<VALUE>(val generation: Int, val value: VALUE?)
+private data class GenerationValue<VALUE>(val generation: Generation, val value: VALUE?)
 
 /**
  * A bucket is a pair of:
@@ -34,12 +34,12 @@ private class Bucket<INFO, VALUE : Any>(val info: INFO) {
      */
     private val versions: MutableList<GenerationValue<VALUE>> = mutableListOf()
 
-    fun addVersion(generation: Int, value: VALUE?) {
+    fun addVersion(generation: Generation, value: VALUE?) {
         val generationValue = GenerationValue(generation, value)
         versions.add(generationValue)
     }
 
-    fun getVersion(generation: Int): VALUE? {
+    fun getVersion(generation: Generation): VALUE? {
         // We expect that the caller is more often interested in recent versions of a bucket rather
         // than older versions. To that end, we attempt a reverse linear search rather than a binary
         // search.
@@ -74,17 +74,17 @@ private class GenerationList<INFO, VALUE : Any> {
         return index
     }
 
-    fun addVersion(bucketIndex: Int, value: VALUE?, generation: Int) {
+    fun addVersion(bucketIndex: Int, value: VALUE?, generation: Generation) {
         val bucket = buckets[bucketIndex]
         bucket.addVersion(generation, value)
     }
 
-    fun getVersion(bucketIndex: Int, generation: Int): VALUE? {
+    fun getVersion(bucketIndex: Int, generation: Generation): VALUE? {
         val bucket = buckets[bucketIndex]
         return bucket.getVersion(generation)
     }
 
-    fun getAllInfoValuePairsForGeneration(generation: Int): Sequence<Pair<INFO, VALUE>> {
+    fun getAllInfoValuePairsForGeneration(generation: Generation): Sequence<Pair<INFO, VALUE>> {
         return buckets.asSequence().map {
             val value = it.getVersion(generation)
             if (value != null) {
@@ -95,7 +95,7 @@ private class GenerationList<INFO, VALUE : Any> {
         }.filterNotNull()
     }
 
-    fun filterEntriesByKeyInfo(generation: Int, filter: (keyInfo: INFO) -> Boolean): Sequence<Pair<INFO, VALUE>> {
+    fun filterEntriesByKeyInfo(generation: Generation, filter: (keyInfo: INFO) -> Boolean): Sequence<Pair<INFO, VALUE>> {
         return buckets.asSequence().map {
             val value = it.getVersion(generation)
             if (value != null && filter(it.info)) {
@@ -111,18 +111,18 @@ private class GenerationList<INFO, VALUE : Any> {
  * [GenerationMap] provides a view over a glorified append-only multimap.
  */
 interface GenerationMap<KEY : Any, VALUE : Any, KEY_INFO> {
-    fun getVersion(key: KEY, generation: Int): VALUE?
+    fun getVersion(key: KEY, generation: Generation): VALUE?
     /**
      * @param filter if null, all entries for the generation will be returned.
      */
-    fun getEntries(generation: Int, filter: ((keyInfo: KEY_INFO) -> Boolean)? = null): Sequence<Pair<KEY_INFO, VALUE>>
+    fun getEntries(generation: Generation, filter: ((keyInfo: KEY_INFO) -> Boolean)? = null): Sequence<Pair<KEY_INFO, VALUE>>
 }
 
 /**
  * [MutableGenerationMap] is a glorified append-only multimap.
  */
 interface MutableGenerationMap<KEY : Any, VALUE : Any, KEY_INFO> : GenerationMap<KEY, VALUE, KEY_INFO> {
-    fun addVersion(key: KEY, value: VALUE?, generation: Int)
+    fun addVersion(key: KEY, value: VALUE?, generation: Generation)
 }
 
 /**
@@ -136,17 +136,17 @@ class DefaultGenerationMap<KEY : Any, VALUE : Any, KEY_INFO>(val keyInfoDeriver:
     private val generationList = GenerationList<KEY_INFO, VALUE>()
     private val keyToBucketIndex = HashMap<KEY, Int>()
 
-    override fun addVersion(key: KEY, value: VALUE?, generation: Int) {
+    override fun addVersion(key: KEY, value: VALUE?, generation: Generation) {
         val bucketIndex = findOrCreateBucketIndex(key)
         generationList.addVersion(bucketIndex, value, generation)
     }
 
-    override fun getVersion(key: KEY, generation: Int): VALUE? {
+    override fun getVersion(key: KEY, generation: Generation): VALUE? {
         val bucketIndex = findOrCreateBucketIndex(key)
         return generationList.getVersion(bucketIndex, generation)
     }
 
-    override fun getEntries(generation: Int, filter: ((keyInfo: KEY_INFO) -> Boolean)?): Sequence<Pair<KEY_INFO, VALUE>> {
+    override fun getEntries(generation: Generation, filter: ((keyInfo: KEY_INFO) -> Boolean)?): Sequence<Pair<KEY_INFO, VALUE>> {
         // One thing that is special about iterating the generationList rather than the
         // keyToBucketIndex is that we can ensure we return a parallel Stream. Note that the
         // parallelStream() method defined on java.util.Collection (which includes the Set returned

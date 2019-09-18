@@ -17,6 +17,7 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.multitenant.collect.Generation
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
@@ -72,13 +73,16 @@ class DefaultIndexAppender internal constructor(
         // First, determine if any of the changes from the commits require new values to be added
         // to the generation map.
         val currentGeneration = generation.get()
-        val deltas =
-            determineDeltas(currentGeneration, changes, indexGenerationData, buildTargetCache)
+        val deltas = determineDeltas(
+            generation = currentGeneration,
+            changes = changes,
+            indexGenerationData = indexGenerationData,
+            buildTargetCache = buildTargetCache)
 
         // If there are no updates to any of the generation maps, add a new entry for the current
         // commit using the existing generation in the commitToGeneration map.
         if (deltas.isEmpty()) {
-            addMapping(commit, currentGeneration, updateGeneration = false)
+            addMapping(commit = commit, nextGeneration = currentGeneration, updateGeneration = false)
             return
         }
 
@@ -88,7 +92,7 @@ class DefaultIndexAppender internal constructor(
         // all of the maps, insert all of the new values into the maps, and as a final step, add a
         // new entry to commitToGeneration with the new generation value.
         indexGenerationData.withMutableBuildPackageMap { buildPackageMap ->
-            for (delta in deltas.buildPackageDeltas) {
+            deltas.buildPackageDeltas.forEach { delta ->
                 when (delta) {
                     is BuildPackageDelta.Updated -> {
                         buildPackageMap.addVersion(delta.directory, delta.rules, nextGeneration)
@@ -101,7 +105,7 @@ class DefaultIndexAppender internal constructor(
         }
 
         indexGenerationData.withMutableRuleMap { ruleMap ->
-            for (delta in deltas.ruleDeltas) {
+            deltas.ruleDeltas.forEach { delta ->
                 val (buildTarget, newNodeAndDeps) = when (delta) {
                     is RuleDelta.Added -> {
                         Pair(delta.rule.targetNode.buildTarget, delta.rule)
@@ -119,12 +123,12 @@ class DefaultIndexAppender internal constructor(
         }
 
         indexGenerationData.withMutableRdepsMap { rdepsMap ->
-            deltas.rdepsDeltas.forEach { buildTargetId, rdepsSet ->
+            deltas.rdepsDeltas.forEach { (buildTargetId, rdepsSet) ->
                 rdepsMap.addVersion(buildTargetId, rdepsSet, nextGeneration)
             }
         }
 
-        addMapping(commit, nextGeneration, updateGeneration = true)
+        addMapping(commit = commit, nextGeneration = nextGeneration, updateGeneration = true)
     }
 
     private fun addMapping(commit: Commit, nextGeneration: Generation, updateGeneration: Boolean) {

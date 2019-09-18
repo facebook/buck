@@ -21,7 +21,6 @@ import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import java.util.Objects
 
 typealias Commit = String
-typealias Generation = Int
 
 internal typealias BuildTargetId = Int
 
@@ -35,7 +34,10 @@ internal typealias BuildTargetSet = IntArray
  * This is a RawTargetNode paired with its deps as determined by configuring the RawTargetNode with
  * the empty configuration.
  */
-data class RawBuildRule(val targetNode: ServiceRawTargetNode, val deps: Set<UnconfiguredBuildTarget>)
+data class RawBuildRule(
+    val targetNode: ServiceRawTargetNode,
+    val deps: Set<UnconfiguredBuildTarget>
+)
 
 /**
  * Represents an error happened during parsing a package
@@ -45,7 +47,10 @@ data class BuildPackageParsingError(val message: String, val stacktrace: List<St
 /**
  * @param[deps] must be sorted in ascending order!!!
  */
-internal data class InternalRawBuildRule(val targetNode: ServiceRawTargetNode, val deps: BuildTargetSet) {
+internal data class InternalRawBuildRule(
+    val targetNode: ServiceRawTargetNode,
+    val deps: BuildTargetSet
+) {
     /*
      * Because RawTargetNodeAndDeps contains an IntArray field, which does not play well with
      * `.equals()` (or `hashCode()`, for that matter), we have to do a bit of work to implement
@@ -82,7 +87,10 @@ data class BuildPackage(
     val errors: List<BuildPackageParsingError> = emptyList()
 )
 
-internal data class InternalBuildPackage(val buildFileDirectory: FsAgnosticPath, val rules: Set<InternalRawBuildRule>)
+internal data class InternalBuildPackage(
+    val buildFileDirectory: FsAgnosticPath,
+    val rules: Set<InternalRawBuildRule>
+)
 
 /**
  * By construction, the Path for each BuildPackage should be distinct across all of the

@@ -26,7 +26,8 @@ data class PotentiallyAffectedBuildPackages(
     val commit: Commit,
     val added: List<FsAgnosticPath> = emptyList(),
     val modified: List<FsAgnosticPath> = emptyList(),
-    val removed: List<FsAgnosticPath> = emptyList())
+    val removed: List<FsAgnosticPath> = emptyList()
+)
 
 /**
  * Based on changed input files, determines packages that might have changed. We use defensive

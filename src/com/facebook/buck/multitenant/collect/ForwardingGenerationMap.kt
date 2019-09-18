@@ -41,11 +41,11 @@ private val SENTINEL: Object = Object()
  *     access to this ForwardingGenerationMap.
  */
 class ForwardingGenerationMap<KEY : Any, VALUE : Any>(
-    private val supportedGeneration: Int,
+    private val supportedGeneration: Generation,
     private val localChanges: Map<KEY, VALUE?>,
     private val delegate: GenerationMap<KEY, VALUE, KEY>
 ) : GenerationMap<KEY, VALUE, KEY> {
-    override fun getVersion(key: KEY, generation: Int): VALUE? {
+    override fun getVersion(key: KEY, generation: Generation): VALUE? {
         assertGeneration(generation)
         // Incidentally, this cast is a complete lie, but we do not appear to encounter a
         // ClassCastException, so we're good!
@@ -61,7 +61,7 @@ class ForwardingGenerationMap<KEY : Any, VALUE : Any>(
         }
     }
 
-    override fun getEntries(generation: Int, filter: ((keyInfo: KEY) -> Boolean)?): Sequence<Pair<KEY, VALUE>> {
+    override fun getEntries(generation: Generation, filter: ((keyInfo: KEY) -> Boolean)?): Sequence<Pair<KEY, VALUE>> {
         assertGeneration(generation)
         val localEntries = localChanges.entries.asSequence().filter { (key, value) ->
             value != null && (filter == null || filter(key))
@@ -78,7 +78,7 @@ class ForwardingGenerationMap<KEY : Any, VALUE : Any>(
         return localEntries + delegateEntries
     }
 
-    private fun assertGeneration(generation: Int) {
+    private fun assertGeneration(generation: Generation) {
         if (supportedGeneration != generation) {
             throw IllegalArgumentException("Expected generation $supportedGeneration but was $generation")
         }

@@ -21,9 +21,9 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern.Kind
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser
+import com.facebook.buck.multitenant.collect.Generation
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.facebook.buck.multitenant.service.BuildTargets
-import com.facebook.buck.multitenant.service.Generation
 import com.facebook.buck.multitenant.service.Index
 import com.facebook.buck.multitenant.service.RawBuildRule
 import com.facebook.buck.query.AllPathsFunction

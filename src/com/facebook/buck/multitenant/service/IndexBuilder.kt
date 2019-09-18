@@ -40,8 +40,8 @@ fun populateIndexFromStream(
     packageParser: (JsonNode) -> BuildPackage
 ): List<String> {
     val parser = ObjectMappers.createParser(stream)
-            .enable(JsonParser.Feature.ALLOW_COMMENTS)
-            .enable(JsonParser.Feature.ALLOW_TRAILING_COMMA)
+        .enable(JsonParser.Feature.ALLOW_COMMENTS)
+        .enable(JsonParser.Feature.ALLOW_TRAILING_COMMA)
 
     val result = mutableListOf<String>()
 
@@ -66,8 +66,7 @@ fun populateIndexFromStream(
             // 'added' and 'modified' contain a list of packages
             // 'removed' contain a list of paths denoting removed packages
             check(parser.currentToken == JsonToken.FIELD_NAME)
-            val fieldName = parser.currentName()
-            when (fieldName) {
+            when (val fieldName = parser.currentName()) {
                 "commit" -> {
                     check(parser.nextToken() == JsonToken.VALUE_STRING)
                     commit = parser.valueAsString
@@ -88,7 +87,10 @@ fun populateIndexFromStream(
 /**
  * Read packages from JSON
  */
-fun parsePackagesFromStream(stream: InputStream, packageParser: (JsonNode) -> BuildPackage): MutableList<BuildPackage> {
+fun parsePackagesFromStream(
+    stream: InputStream,
+    packageParser: (JsonNode) -> BuildPackage
+): MutableList<BuildPackage> {
     val parser = createParser(stream)
     val packages = mutableListOf<BuildPackage>()
     parsePackages(parser, packages, packageParser)
@@ -111,8 +113,7 @@ fun serializePathsToStream(paths: List<FsAgnosticPath>, stream: OutputStream) {
 }
 
 private fun createParser(stream: InputStream): JsonParser {
-    return ObjectMappers.createParser(stream)
-        .enable(JsonParser.Feature.ALLOW_COMMENTS)
+    return ObjectMappers.createParser(stream).enable(JsonParser.Feature.ALLOW_COMMENTS)
         .enable(JsonParser.Feature.ALLOW_TRAILING_COMMA)
 }
 
@@ -152,7 +153,7 @@ fun multitenantJsonToBuildPackageParser(nodes: JsonNode): BuildPackage {
  * Convert Json produced by BUCK to [BuildPackage]
  */
 fun buckJsonToBuildPackageParser(nodes: JsonNode): BuildPackage {
-    val path = FsAgnosticPath.of(nodes.get("path").asText())
+    val path = FsAgnosticPath.of(nodes.toText("path"))
     val rules = nodes.get("nodes").fields().asSequence().map { (name, rule) ->
         var ruleType: String? = null
         val deps = mutableSetOf<String>()
@@ -161,8 +162,7 @@ fun buckJsonToBuildPackageParser(nodes: JsonNode): BuildPackage {
             when (field.key) {
                 "attributes" -> {
                     for (attr in field.value.fields()) {
-                        attrs.put(attr.key.intern(),
-                            normalizeJsonValue(attr.value))
+                        attrs.put(attr.key.intern(), normalizeJsonValue(attr.value))
                         if (attr.key == "buck.type") {
                             ruleType = attr.value.asText()
                         }
@@ -174,19 +174,30 @@ fun buckJsonToBuildPackageParser(nodes: JsonNode): BuildPackage {
         requireNotNull(ruleType)
         val buildTarget = BuildTargets.createBuildTargetFromParts(path, name)
         val depsAsTargets = deps.map { BuildTargets.parseOrThrow(it) }.toSet()
-        createRawRule(buildTarget, ruleType, depsAsTargets,
-            attrs.build())
+        createRawRule(buildTarget, ruleType, depsAsTargets, attrs.build())
     }.toSet()
-    val nodesErrors = nodes.get("errors")
-    val errors = if (nodesErrors == null) {
-        listOf()
-    } else {
-        nodesErrors.elements().asSequence().map { error ->
-            BuildPackageParsingError(error.get("message").asText(), error.get(
-                "stacktrace").elements().asSequence().map { stacktrace -> stacktrace.asText() }.toList())
-        }.toList()
-    }
-    return BuildPackage(path, rules, errors)
+
+    val errors = nodes.mapIterable("errors") { error ->
+        BuildPackageParsingError(error.toText("message"),
+            error.mapIterable("stacktrace") { it.asText() }?.toList() ?: listOf())
+    }?.toList() ?: listOf()
+
+    return BuildPackage(
+        buildFileDirectory = path,
+        rules = rules,
+        errors = errors
+    )
+}
+
+private fun JsonNode.toText(nodeName: String): String {
+    return get(nodeName).asText()
+}
+
+private fun <R> JsonNode.mapIterable(
+    iterableNodeName: String,
+    transform: (JsonNode) -> R
+): Sequence<R>? {
+    return get(iterableNodeName)?.elements()?.asSequence()?.map(transform)
 }
 
 private fun normalizeJsonValue(value: JsonNode): Any {
@@ -219,7 +230,6 @@ private fun createRawRule(
     deps: Set<UnconfiguredBuildTarget>,
     attrs: ImmutableMap<String, Any>
 ): RawBuildRule {
-    val node = ServiceRawTargetNode(target,
-        RuleTypeFactory.createBuildRule(ruleType), attrs)
+    val node = ServiceRawTargetNode(target, RuleTypeFactory.createBuildRule(ruleType), attrs)
     return RawBuildRule(node, deps)
 }

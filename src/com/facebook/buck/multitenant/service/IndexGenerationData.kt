@@ -17,6 +17,7 @@ package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.multitenant.collect.DefaultGenerationMap
 import com.facebook.buck.multitenant.collect.ForwardingGenerationMap
+import com.facebook.buck.multitenant.collect.Generation
 import com.facebook.buck.multitenant.collect.GenerationMap
 import com.facebook.buck.multitenant.collect.MutableGenerationMap
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
@@ -26,8 +27,10 @@ import kotlin.concurrent.write
 
 internal typealias BuildPackageMap = GenerationMap<FsAgnosticPath, BuildRuleNames, FsAgnosticPath>
 internal typealias MutableBuildPackageMap = MutableGenerationMap<FsAgnosticPath, BuildRuleNames, FsAgnosticPath>
+
 internal typealias RuleMap = GenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>
 internal typealias MutableRuleMap = MutableGenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>
+
 internal typealias RdepsMap = GenerationMap<BuildTargetId, RdepsSet, BuildTargetId>
 internal typealias MutableRdepsMap = MutableGenerationMap<BuildTargetId, RdepsSet, BuildTargetId>
 
@@ -55,7 +58,7 @@ internal interface IndexGenerationData {
      *     specified local changes
      */
     fun createForwardingIndexGenerationData(
-        generation: Int,
+        generation: Generation,
         localBuildPackageChanges: Map<FsAgnosticPath, BuildRuleNames?>,
         localRuleMapChanges: Map<BuildTargetId, InternalRawBuildRule?>,
         localRdepsRuleMapChanges: Map<BuildTargetId, RdepsSet?>
@@ -91,62 +94,71 @@ internal interface MutableIndexGenerationData : IndexGenerationData {
  *     We also specify the key as the keyInfo so that we get it back when we use `getAllInfoValuePairsForGeneration()`.
  */
 internal open class DefaultIndexGenerationData(
-    val buildPackageMapPair: Pair<BuildPackageMap, ReentrantReadWriteLock> = createGenerationMapWithLock(),
-    val ruleMapPair: Pair<RuleMap, ReentrantReadWriteLock> = createGenerationMapWithLock(),
-    val rdepsMapPair: Pair<RdepsMap, ReentrantReadWriteLock> = createGenerationMapWithLock()
+    val buildPackageMapWithLock: Pair<BuildPackageMap, ReentrantReadWriteLock> = createGenerationMapWithLock(),
+    val ruleMapWithLock: Pair<RuleMap, ReentrantReadWriteLock> = createGenerationMapWithLock(),
+    val rdepsMapWithLock: Pair<RdepsMap, ReentrantReadWriteLock> = createGenerationMapWithLock()
 ) : IndexGenerationData {
 
     final override inline fun <T> withBuildPackageMap(action: (BuildPackageMap) -> T): T =
-        buildPackageMapPair.readAction(action)
+        buildPackageMapWithLock.readAction(action)
 
     final override inline fun <T> withRuleMap(action: (RuleMap) -> T): T =
-        ruleMapPair.readAction(action)
+        ruleMapWithLock.readAction(action)
 
     final override inline fun <T> withRdepsMap(action: (RdepsMap) -> T): T =
-        rdepsMapPair.readAction(action)
+        rdepsMapWithLock.readAction(action)
 
     override fun createForwardingIndexGenerationData(
-        generation: Int,
+        generation: Generation,
         localBuildPackageChanges: Map<FsAgnosticPath, BuildRuleNames?>,
         localRuleMapChanges: Map<BuildTargetId, InternalRawBuildRule?>,
         localRdepsRuleMapChanges: Map<BuildTargetId, RdepsSet?>
     ): IndexGenerationData =
         DefaultIndexGenerationData(
-            buildPackageMapPair = of(generation, localBuildPackageChanges, buildPackageMapPair),
-            ruleMapPair = of(generation, localRuleMapChanges, ruleMapPair),
-            rdepsMapPair = of(generation, localRdepsRuleMapChanges, rdepsMapPair))
+            buildPackageMapWithLock = of(generation, localBuildPackageChanges,
+                buildPackageMapWithLock),
+            ruleMapWithLock = of(generation, localRuleMapChanges, ruleMapWithLock),
+            rdepsMapWithLock = of(generation, localRdepsRuleMapChanges, rdepsMapWithLock))
 
     private inline fun <K : Any, V : Any> of(
-        generation: Int,
+        generation: Generation,
         localChanges: Map<K, V?>,
-        pair: Pair<GenerationMap<K, V, K>, ReentrantReadWriteLock>
-    ) = ForwardingGenerationMap(
-        supportedGeneration = generation,
-        localChanges = localChanges,
-        delegate = pair.first) to pair.second
+        delegate: Pair<GenerationMap<K, V, K>, ReentrantReadWriteLock>
+    ) =
+        forwardingGenerationMap(generation, localChanges, delegate.first) to delegate.second
+
+    private fun <K : Any, V : Any> forwardingGenerationMap(
+        generation: Generation,
+        localChanges: Map<K, V?>,
+        delegate: GenerationMap<K, V, K>
+    ) =
+        ForwardingGenerationMap(supportedGeneration = generation, localChanges = localChanges,
+            delegate = delegate)
 }
 
 internal class DefaultMutableIndexGenerationData : DefaultIndexGenerationData(),
     MutableIndexGenerationData {
 
     override inline fun <T> withMutableBuildPackageMap(action: (MutableBuildPackageMap) -> T): T =
-        buildPackageMapPair.writeAction(action)
+        buildPackageMapWithLock.writeAction(action)
 
     override inline fun <T> withMutableRuleMap(action: (MutableRuleMap) -> T): T =
-        ruleMapPair.writeAction(action)
+        ruleMapWithLock.writeAction(action)
 
     override inline fun <T> withMutableRdepsMap(action: (MutableRdepsMap) -> T): T =
-        rdepsMapPair.writeAction(action)
+        rdepsMapWithLock.writeAction(action)
 }
 
 private inline fun <K : Any, V : Any> createGenerationMapWithLock() =
-    DefaultGenerationMap<K, V, K> { it } to ReentrantReadWriteLock(/*fair*/ true)
+    defaultGenerationMap<K, V>() to createFairLock()
 
-private inline fun <T, K : Any, V : Any> Pair<GenerationMap<K, V, K>, ReentrantReadWriteLock>.readAction(
-    action: GenerationMap<K, V, K>.() -> T
-): T = second.read { first.action() }
+private inline fun <K : Any, V : Any> defaultGenerationMap() = DefaultGenerationMap<K, V, K> { it }
+
+private inline fun createFairLock() = ReentrantReadWriteLock(true)
+
+private inline fun <T, U> Pair<U, ReentrantReadWriteLock>.readAction(action: U.() -> T): T =
+    second.read { first.action() }
 
 @SuppressWarnings("UnsafeCast")
-private inline fun <T, K : Any, V : Any> Pair<GenerationMap<K, V, K>, ReentrantReadWriteLock>.writeAction(
-    action: MutableGenerationMap<K, V, K>.() -> T
-): T = second.write { (first as MutableGenerationMap).action() }
+private inline fun <T, U, V> Pair<U, ReentrantReadWriteLock>.writeAction(action: V.() -> T): T =
+    second.write { (first as V).action() }

@@ -94,11 +94,8 @@ public class RawTargetNodeWithDepsPackageTest {
 
   @Test
   public void canSerializeAndDeserializeJson() throws IOException {
-
     RawTargetNodeWithDepsPackage rawTargetNodeWithDepsPackage = getData();
-
     byte[] data = ObjectMappers.WRITER_WITH_TYPE.writeValueAsBytes(rawTargetNodeWithDepsPackage);
-
     RawTargetNodeWithDepsPackage rawTargetNodeWithDepsPackageDeserialized =
         ObjectMappers.READER_WITH_TYPE
             .forType(ImmutableRawTargetNodeWithDepsPackage.class)
@@ -110,9 +107,7 @@ public class RawTargetNodeWithDepsPackageTest {
   @Test
   public void canSerializeWithoutTypeAndFlatten() throws IOException {
     RawTargetNodeWithDepsPackage rawTargetNodeWithDepsPackage = getData();
-
     String data = ObjectMappers.WRITER.writeValueAsString(rawTargetNodeWithDepsPackage);
-
     ObjectMapper mapper = new ObjectMapper();
     JsonNode node = mapper.readTree(data);
 
