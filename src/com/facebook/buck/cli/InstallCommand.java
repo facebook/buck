@@ -541,10 +541,12 @@ public class InstallCommand extends BuildCommand {
     }
 
     // Install the bundle
-    if (!appleDeviceController.installBundle(
-        chosenDevice.getUdid(),
-        pathResolver.getAbsolutePath(
-            Objects.requireNonNull(appleBundle.getSourcePathToOutput())))) {
+    if (!appleDeviceController
+        .installBundle(
+            chosenDevice.getUdid(),
+            pathResolver.getAbsolutePath(
+                Objects.requireNonNull(appleBundle.getSourcePathToOutput())))
+        .isPresent()) {
       params
           .getConsole()
           .printBuildFailure(
@@ -832,10 +834,12 @@ public class InstallCommand extends BuildCommand {
     }
 
     // Install the bundle
-    if (!appleDeviceController.installBundle(
-        simulator.get().getUdid(),
-        pathResolver.getAbsolutePath(
-            Objects.requireNonNull(appleBundle.getSourcePathToOutput())))) {
+    if (!appleDeviceController
+        .installBundle(
+            simulator.get().getUdid(),
+            pathResolver.getAbsolutePath(
+                Objects.requireNonNull(appleBundle.getSourcePathToOutput())))
+        .isPresent()) {
       params
           .getConsole()
           .printBuildFailure(

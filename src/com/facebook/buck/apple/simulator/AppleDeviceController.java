@@ -216,19 +216,32 @@ public class AppleDeviceController {
    *
    * @return true if the bundle was installed, false otherwise.
    */
-  public boolean installBundle(String deviceUdid, Path bundlePath)
+  public Optional<String> installBundle(String deviceUdid, Path bundlePath)
       throws IOException, InterruptedException {
     ImmutableList<String> command =
         ImmutableList.of(
             idbPath.toString(), "install", "--udid", deviceUdid, bundlePath.toString());
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder().setCommand(command).build();
-    ProcessExecutor.Result result = processExecutor.launchAndExecute(processExecutorParams);
+    Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
+    ProcessExecutor.Result result =
+        processExecutor.launchAndExecute(
+            processExecutorParams,
+            options,
+            /* stdin */ Optional.empty(),
+            /* timeOutMs */ Optional.empty(),
+            /* timeOutHandler */ Optional.empty());
     if (result.getExitCode() != 0) {
       LOG.error(result.getMessageForUnexpectedResult(command.toString()));
-      return false;
+      return Optional.empty();
     }
-    return true;
+    if (!result.getStdout().isPresent()) {
+      LOG.error("Could not get the bundle id of the installed app");
+      return Optional.empty();
+    }
+
+    String output[] = result.getStdout().get().split(" ");
+    return Optional.of(output[1]);
   }
 
   /**

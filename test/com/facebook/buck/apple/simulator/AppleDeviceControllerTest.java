@@ -204,7 +204,8 @@ public class AppleDeviceControllerTest {
 
   @Test
   public void installingBundleInSimulatorWorks() throws IOException, InterruptedException {
-    FakeProcess fakeInstallProcess = new FakeProcess(0);
+    FakeProcess fakeInstallProcess =
+        new FakeProcess(0, "Installed: com.MyNeatApp 9CBB9A6E-A511-C503-F000-7EB616BE0CBC", "");
     ProcessExecutorParams fakeInstallParams =
         ProcessExecutorParams.builder()
             .setCommand(
@@ -219,10 +220,10 @@ public class AppleDeviceControllerTest {
         new FakeProcessExecutor(ImmutableMap.of(fakeInstallParams, fakeInstallProcess));
     AppleDeviceController deviceController =
         new AppleDeviceController(fakeProcessExecutor, IDB_PATH);
-    boolean installed =
+    Optional<String> installedResult =
         deviceController.installBundle(
             "70200ED8-EEF1-4BDB-BCCF-3595B137D67D", Paths.get("Path/To/MyNeatApp.app"));
-    assertThat(installed, is(true));
+    assertThat(installedResult.get(), is("com.MyNeatApp"));
   }
 
   @Test
