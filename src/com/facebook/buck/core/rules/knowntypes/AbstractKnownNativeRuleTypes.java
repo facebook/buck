@@ -18,6 +18,7 @@ package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.Description;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -91,7 +92,7 @@ public abstract class AbstractKnownNativeRuleTypes implements KnownRuleTypes {
   }
 
   @Override
-  public <T> ConstructorArgBuilder<T> getConstructorArgBuilder(
+  public <T extends ConstructorArg> ConstructorArgBuilder<T> getConstructorArgBuilder(
       TypeCoercerFactory typeCoercerFactory,
       RuleType ruleType,
       Class<T> dtoClass,

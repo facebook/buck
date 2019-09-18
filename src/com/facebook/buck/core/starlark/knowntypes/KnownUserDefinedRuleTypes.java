@@ -16,6 +16,7 @@
 package com.facebook.buck.core.starlark.knowntypes;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
@@ -99,7 +100,7 @@ public class KnownUserDefinedRuleTypes implements KnownRuleTypes {
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T> ConstructorArgBuilder<T> getConstructorArgBuilder(
+  public <T extends ConstructorArg> ConstructorArgBuilder<T> getConstructorArgBuilder(
       TypeCoercerFactory typeCoercerFactory,
       RuleType ruleType,
       Class<T> dtoClass,

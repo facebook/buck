@@ -202,7 +202,7 @@ public class TargetNodeFactory implements NodeCopier {
       ImmutableSet.Builder<BuildTarget> depsBuilder,
       ImmutableSet.Builder<Path> pathsBuilder,
       ParamInfo info,
-      Object constructorArg)
+      ConstructorArg constructorArg)
       throws NoSuchBuildTargetException {
     // We'll make no test for optionality here. Let's assume it's done elsewhere.
 

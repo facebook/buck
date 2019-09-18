@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -51,7 +52,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
 
   @CheckReturnValue
   @Override
-  public <T> T populate(
+  public <T extends ConstructorArg> T populate(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
@@ -94,7 +95,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
   }
 
   @Override
-  public <T> T populateWithConfiguringAttributes(
+  public <T extends ConstructorArg> T populateWithConfiguringAttributes(
       CellPathResolver cellPathResolver,
       ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,

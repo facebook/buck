@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
@@ -116,7 +117,7 @@ public class TargetCompatibilityCheckerTest {
 
   @Test
   public void testTargetNodeIsCompatibleWithEmptyConstraintList() throws Exception {
-    Object targetNodeArg = createTargetNodeArg(ImmutableMap.of());
+    ConstructorArg targetNodeArg = createTargetNodeArg(ImmutableMap.of());
     assertTrue(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
             configurationRuleRegistry, targetNodeArg, platform));
@@ -124,7 +125,7 @@ public class TargetCompatibilityCheckerTest {
 
   @Test
   public void testTargetNodeIsCompatibleWithMatchingConstraintList() throws Exception {
-    Object targetNodeArg =
+    ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
                 "targetCompatibleWith",
@@ -136,7 +137,7 @@ public class TargetCompatibilityCheckerTest {
 
   @Test
   public void testTargetNodeIsNotCompatibleWithNonMatchingConstraintList() throws Exception {
-    Object targetNodeArg =
+    ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
                 "targetCompatibleWith",
@@ -149,7 +150,7 @@ public class TargetCompatibilityCheckerTest {
   @Test
   public void testTargetNodeIsNotCompatibleWithNonMatchingPlatformAndNonMatchingConstraintList()
       throws Exception {
-    Object targetNodeArg =
+    ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
                 "targetCompatiblePlatforms",
@@ -164,7 +165,7 @@ public class TargetCompatibilityCheckerTest {
   @Test
   public void testTargetNodeIsNotCompatibleWithNonMatchingPlatformListAndMatchingConstraintList()
       throws Exception {
-    Object targetNodeArg =
+    ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
                 "targetCompatiblePlatforms",
@@ -179,7 +180,7 @@ public class TargetCompatibilityCheckerTest {
   @Test
   public void testTargetNodeIsNotCompatibleWithMatchingPlatformListAndNonMatchingConstraintList()
       throws Exception {
-    Object targetNodeArg =
+    ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
                 "targetCompatiblePlatforms",
@@ -193,7 +194,7 @@ public class TargetCompatibilityCheckerTest {
 
   @Test
   public void testTargetNodeIsNotCompatibleWithNonMatchingPlatformList() throws Exception {
-    Object targetNodeArg =
+    ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
                 "targetCompatiblePlatforms", ImmutableList.of(nonCompatiblePlatform.toString())));
@@ -204,7 +205,7 @@ public class TargetCompatibilityCheckerTest {
 
   @Test
   public void testTargetNodeIsCompatibleWithMatchingPlatformList() throws Exception {
-    Object targetNodeArg =
+    ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
                 "targetCompatiblePlatforms",
@@ -217,7 +218,7 @@ public class TargetCompatibilityCheckerTest {
   @Test
   public void testTargetNodeIsCompatibleWithMatchingPlatformListAndMatchingConstraintList()
       throws Exception {
-    Object targetNodeArg =
+    ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
                 "targetCompatiblePlatforms",
@@ -229,7 +230,7 @@ public class TargetCompatibilityCheckerTest {
             configurationRuleRegistry, targetNodeArg, platform));
   }
 
-  private Object createTargetNodeArg(Map<String, Object> rawNode) throws Exception {
+  private ConstructorArg createTargetNodeArg(Map<String, Object> rawNode) throws Exception {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller(typeCoercerFactory);

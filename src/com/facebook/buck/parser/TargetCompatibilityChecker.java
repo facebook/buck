@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.parser;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.arg.HasTargetCompatibleWith;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
@@ -38,7 +39,7 @@ class TargetCompatibilityChecker {
    */
   public static boolean targetNodeArgMatchesPlatform(
       ConfigurationRuleRegistry configurationRuleRegistry,
-      Object targetNodeArg,
+      ConstructorArg targetNodeArg,
       Platform platform) {
     if (!(targetNodeArg instanceof HasTargetCompatibleWith)) {
       return true;

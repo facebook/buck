@@ -15,13 +15,14 @@
  */
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
 import java.util.function.Function;
 
 /** Class that contains the values needed to build a DescriptionArg */
 @BuckStyleValue
-public abstract class ConstructorArgBuilder<T> {
+public abstract class ConstructorArgBuilder<T extends ConstructorArg> {
 
   /**
    * Get the builder for a constructor arg.

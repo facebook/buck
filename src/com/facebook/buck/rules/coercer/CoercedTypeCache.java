@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -60,7 +61,7 @@ public class CoercedTypeCache {
    * finished being populated.
    */
   @SuppressWarnings("unchecked")
-  public static <T> ConstructorArgBuilder<T> instantiateSkeleton(
+  public static <T extends ConstructorArg> ConstructorArgBuilder<T> instantiateSkeleton(
       TypeCoercerFactory typeCoercerFactory, Class<T> dtoType, BuildTarget buildTarget) {
     try {
       Object builder = dtoType.getMethod("builder").invoke(null);

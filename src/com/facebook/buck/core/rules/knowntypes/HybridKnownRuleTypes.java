@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.knowntypes;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
@@ -66,7 +67,7 @@ public class HybridKnownRuleTypes implements KnownRuleTypes {
   }
 
   @Override
-  public <T> ConstructorArgBuilder<T> getConstructorArgBuilder(
+  public <T extends ConstructorArg> ConstructorArgBuilder<T> getConstructorArgBuilder(
       TypeCoercerFactory typeCoercerFactory,
       RuleType ruleType,
       Class<T> dtoClass,
