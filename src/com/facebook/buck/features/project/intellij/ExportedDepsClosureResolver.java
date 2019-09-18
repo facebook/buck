@@ -56,7 +56,11 @@ public class ExportedDepsClosureResolver {
     if (targetNode.getConstructorArg() instanceof JavaLibraryDescription.CoreArg) {
       JavaLibraryDescription.CoreArg arg =
           (JavaLibraryDescription.CoreArg) targetNode.getConstructorArg();
-      exportedDeps = arg.getExportedDeps();
+      exportedDeps =
+          ImmutableSet.<BuildTarget>builder()
+              .addAll(arg.getExportedDeps())
+              .addAll(arg.getExportedProvidedDeps())
+              .build();
     } else if (targetNode.getConstructorArg() instanceof PrebuiltJarDescriptionArg) {
       PrebuiltJarDescriptionArg arg = (PrebuiltJarDescriptionArg) targetNode.getConstructorArg();
       exportedDeps = arg.getDeps();
