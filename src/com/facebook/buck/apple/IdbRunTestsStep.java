@@ -42,6 +42,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Locale;
@@ -81,6 +82,9 @@ public class IdbRunTestsStep implements Step {
   private final Optional<Long> idbStutterTimeout;
   private final Optional<Long> timeoutInMs;
   private final String testBundleId;
+  private final TestTypeEnum type;
+  private final Optional<Path> appTestBundlePath;
+  private final Optional<Path> testHostAppBundlePath;
   private final ImmutableList<String> command;
   private final ImmutableList<String> installCommand;
   private final ImmutableList<String> runCommand;
@@ -108,6 +112,9 @@ public class IdbRunTestsStep implements Step {
     this.idbStutterTimeout = idbStutterTimeout;
     this.timeoutInMs = timeoutInMs;
     this.testBundleId = testBundleId;
+    this.type = type;
+    this.appTestBundlePath = parseBuckAppPath(appTestBundlePath);
+    this.testHostAppBundlePath = parseBuckAppPath(testHostAppBundlePath);
     this.deviceUdid = deviceUdid;
     ImmutableList.Builder<String> runCommandBuilder = ImmutableList.builder();
     this.installCommand =
@@ -121,14 +128,13 @@ public class IdbRunTestsStep implements Step {
     runCommandBuilder.add(idbPath.toString(), "xctest", "run");
     switch (type) {
       case LOGIC:
-        runCommandBuilder.add("logic", testBundleId);
+        runCommandBuilder.add("logic");
         break;
       case APP:
-        runCommandBuilder.add("app", testBundleId, appTestBundlePath.toString());
+        runCommandBuilder.add("app");
         break;
       case UI:
-        runCommandBuilder.add(
-            "ui", testBundleId, appTestBundlePath.toString(), testHostAppBundlePath.toString());
+        runCommandBuilder.add("ui");
         break;
     }
     runCommandBuilder.add("--json", "--udid", deviceUdid);
@@ -258,6 +264,32 @@ public class IdbRunTestsStep implements Step {
         new AppleDeviceController(context.getProcessExecutor(), idbPath);
     appleDeviceController.bootSimulator(deviceUdid);
 
+    // Install necessary apps for the tests
+    Optional<String> testApp = Optional.empty();
+    if (type == TestTypeEnum.APP || type == TestTypeEnum.UI) {
+      if (!appTestBundlePath.isPresent()) {
+        LOG.error("Could not find the path to the test app");
+        return StepExecutionResults.ERROR;
+      }
+      testApp = appleDeviceController.installBundle(deviceUdid, appTestBundlePath.get());
+      if (!testApp.isPresent()) {
+        LOG.error("Could not install the test app");
+        return StepExecutionResults.ERROR;
+      }
+    }
+    Optional<String> hostTestApp = Optional.empty();
+    if (type == TestTypeEnum.UI) {
+      if (!testHostAppBundlePath.isPresent()) {
+        LOG.error("Could not find the path to the host app");
+        return StepExecutionResults.ERROR;
+      }
+      hostTestApp = appleDeviceController.installBundle(deviceUdid, testHostAppBundlePath.get());
+      if (!hostTestApp.isPresent()) {
+        LOG.error("Could not install the host test app");
+        return StepExecutionResults.ERROR;
+      }
+    }
+
     // Preparing the run test command
     ProcessExecutorParams.Builder processExecutorParamsBuilder =
         ProcessExecutorParams.builder()
@@ -285,6 +317,18 @@ public class IdbRunTestsStep implements Step {
         return StepExecutionResults.SUCCESS;
       }
       processExecutorParamsBuilder.addAllCommand(idbFilterParams);
+    }
+
+    switch (type) {
+      case LOGIC:
+        processExecutorParamsBuilder.addCommand(testBundleId);
+        break;
+      case APP:
+        processExecutorParamsBuilder.addCommand(testBundleId, testApp.get());
+        break;
+      case UI:
+        processExecutorParamsBuilder.addCommand(testBundleId, testApp.get(), hostTestApp.get());
+        break;
     }
 
     processExecutorParams = processExecutorParamsBuilder.build();
@@ -472,7 +516,6 @@ public class IdbRunTestsStep implements Step {
       String[] testsInBundle,
       TestSelectorList testSelectorList,
       ImmutableList.Builder<String> filterParamsBuilder) {
-    StringBuilder sb = new StringBuilder();
     boolean matched = false;
     for (String test : testsInBundle) {
       String[] testName = test.split("/");
@@ -482,14 +525,12 @@ public class IdbRunTestsStep implements Step {
       }
       if (!matched) {
         matched = true;
-      } else {
-        sb.append(',');
+        filterParamsBuilder.add("--tests-to-run");
       }
-      sb.append(test);
+      filterParamsBuilder.add(test);
     }
     if (matched) {
-      filterParamsBuilder.add("--test-to-run");
-      filterParamsBuilder.add(sb.toString());
+      filterParamsBuilder.add("--");
     }
   }
 
@@ -536,6 +577,15 @@ public class IdbRunTestsStep implements Step {
       LOG.error("Could not get apple bundle ID");
     }
     return appleBundleId;
+  }
+
+  /** Parses the path of the app buck creates in order to pass it to idb */
+  private static Optional<Path> parseBuckAppPath(Optional<Path> path) {
+    if (!path.isPresent()) {
+      return Optional.empty();
+    }
+    String stringPath = path.get().toString().split(".app")[0];
+    return Optional.of(Paths.get(stringPath.concat(".app")));
   }
 
   public ImmutableList<String> getCommand() {
