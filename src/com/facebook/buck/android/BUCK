@@ -126,6 +126,7 @@ RULES_SRCS = [
     "ResourcesFilter.java",
     "RobolectricTest.java",
     "RobolectricTestDescription.java",
+    "RobolectricTestHelper.java",
     "SplitResources.java",
     "StripLinkable.java",
     "TrimUberRDotJava.java",
