@@ -21,10 +21,12 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
+import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -47,16 +49,17 @@ class TargetCompatibilityChecker {
     HasTargetCompatibleWith argWithTargetCompatible = (HasTargetCompatibleWith) targetNodeArg;
     ConstraintResolver constraintResolver = configurationRuleRegistry.getConstraintResolver();
 
-    boolean matchesConstraints =
-        platform.matchesAll(
-            argWithTargetCompatible.getTargetCompatibleWith().stream()
-                .map(BuildTarget::getUnconfiguredBuildTargetView)
-                .map(ConfigurationBuildTargets::convert)
-                .map(constraintResolver::getConstraintValue)
-                .collect(Collectors.toList()));
-
-    if (!matchesConstraints) {
-      return false;
+    List<ConstraintValue> targetCompatibleWithConstraints =
+        argWithTargetCompatible.getTargetCompatibleWith().stream()
+            .map(BuildTarget::getUnconfiguredBuildTargetView)
+            .map(ConfigurationBuildTargets::convert)
+            .map(constraintResolver::getConstraintValue)
+            .collect(Collectors.toList());
+    if (!targetCompatibleWithConstraints.isEmpty()) {
+      // Empty `target_compatible_with` means target is compatible.
+      if (!platform.matchesAll(targetCompatibleWithConstraints)) {
+        return false;
+      }
     }
 
     if (argWithTargetCompatible.getTargetCompatiblePlatforms().isEmpty()) {

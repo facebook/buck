@@ -434,6 +434,21 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
+  public void testSelectWithoutTargetPlatform() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "select_without_target_platform", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("build", "//:test-library");
+    result.assertFailure();
+    MatcherAssert.assertThat(
+        result.getStderr(),
+        MoreStringsForTests.containsIgnoringPlatformNewlines(
+            "Cannot use select() expression when target platform is not specified"));
+  }
+
+  @Test
   public void testBuildFailsWhenNonConfigurableAttributeUsesSelect() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);

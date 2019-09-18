@@ -31,7 +31,7 @@ import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
-import com.facebook.buck.core.model.platform.impl.DefaultPlatform;
+import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDepsPackage;
 import com.facebook.buck.core.parser.BuildPackagePaths;
@@ -149,7 +149,7 @@ public class GraphEngineFactory {
     // COMPUTATION: raw target node to raw target node with deps
 
     // TODO: replace with TargetPlatformResolver
-    TargetPlatformResolver targetPlatformResolver = targetConfiguration -> DefaultPlatform.INSTANCE;
+    TargetPlatformResolver targetPlatformResolver = targetConfiguration -> EmptyPlatform.INSTANCE;
     RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
         new RawTargetNodeToTargetNodeFactory(
             params.getTypeCoercerFactory(),
