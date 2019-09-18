@@ -19,7 +19,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
-import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
+import com.facebook.buck.core.model.platform.impl.DefaultPlatform;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
@@ -63,7 +63,7 @@ public class ConfigurationRuleRegistryFactory {
                     configurationRuleResolver, ruleBasedPlatformResolver)));
     TargetPlatformResolver targetPlatformResolver =
         new DefaultTargetPlatformResolver(
-            new RuleBasedTargetPlatformResolver(platformResolver), EmptyPlatform.INSTANCE);
+            new RuleBasedTargetPlatformResolver(platformResolver), DefaultPlatform.INSTANCE);
 
     return new ImmutableConfigurationRuleRegistry(
         configurationRuleResolver, constraintResolver, platformResolver, targetPlatformResolver);

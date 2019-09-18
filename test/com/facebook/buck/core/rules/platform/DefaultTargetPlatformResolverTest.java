@@ -26,7 +26,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
-import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
+import com.facebook.buck.core.model.platform.impl.DefaultPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -42,7 +42,7 @@ public class DefaultTargetPlatformResolverTest {
 
   @Test
   public void returnCorrectPlatformForEmptyTargetConfiguration() {
-    Platform emptyTargetConfigurationPlatform = EmptyPlatform.INSTANCE;
+    Platform emptyTargetConfigurationPlatform = DefaultPlatform.INSTANCE;
     DefaultTargetPlatformResolver targetPlatformResolver =
         new DefaultTargetPlatformResolver(
             new RuleBasedTargetPlatformResolver(
@@ -56,7 +56,7 @@ public class DefaultTargetPlatformResolverTest {
 
   @Test
   public void returnCorrectPlatformForConfigurationForConfigurationTargets() {
-    Platform emptyTargetConfigurationPlatform = EmptyPlatform.INSTANCE;
+    Platform emptyTargetConfigurationPlatform = DefaultPlatform.INSTANCE;
     DefaultTargetPlatformResolver targetPlatformResolver =
         new DefaultTargetPlatformResolver(
             new RuleBasedTargetPlatformResolver(
@@ -70,7 +70,7 @@ public class DefaultTargetPlatformResolverTest {
 
   @Test
   public void returnCorrectPlatformForDefaultTargetConfiguration() {
-    Platform emptyTargetConfigurationPlatform = EmptyPlatform.INSTANCE;
+    Platform emptyTargetConfigurationPlatform = DefaultPlatform.INSTANCE;
 
     BuildTarget platformTarget =
         ConfigurationBuildTargetFactoryForTests.newInstance("//platform:platform");
@@ -122,7 +122,7 @@ public class DefaultTargetPlatformResolverTest {
 
   @Test
   public void requestingPlatformForWrongTypeThrowsException() {
-    Platform emptyTargetConfigurationPlatform = EmptyPlatform.INSTANCE;
+    Platform emptyTargetConfigurationPlatform = DefaultPlatform.INSTANCE;
     DefaultTargetPlatformResolver targetPlatformResolver =
         new DefaultTargetPlatformResolver(
             new RuleBasedTargetPlatformResolver(

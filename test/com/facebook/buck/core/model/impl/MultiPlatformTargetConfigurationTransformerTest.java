@@ -25,7 +25,7 @@ import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
-import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
+import com.facebook.buck.core.model.platform.impl.DefaultPlatform;
 import com.facebook.buck.core.model.platform.impl.MultiPlatform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -52,7 +52,7 @@ public class MultiPlatformTargetConfigurationTransformerTest {
   @Test
   public void noTransformationForEmptyPlatform() {
     MultiPlatformTargetConfigurationTransformer transformer =
-        new MultiPlatformTargetConfigurationTransformer(configuration -> EmptyPlatform.INSTANCE);
+        new MultiPlatformTargetConfigurationTransformer(configuration -> DefaultPlatform.INSTANCE);
 
     assertFalse(transformer.needsTransformation(EmptyTargetConfiguration.INSTANCE));
   }

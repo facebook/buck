@@ -31,7 +31,7 @@ import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
-import com.facebook.buck.core.model.platform.impl.EmptyPlatform;
+import com.facebook.buck.core.model.platform.impl.DefaultPlatform;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
@@ -112,7 +112,7 @@ public class TargetCompatibilityCheckerTest {
             DummyConfigurationRule::of,
             constraintResolver,
             platformResolver,
-            configuration -> EmptyPlatform.INSTANCE);
+            configuration -> DefaultPlatform.INSTANCE);
   }
 
   @Test

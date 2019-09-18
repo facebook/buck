@@ -27,13 +27,13 @@ import java.util.Collection;
  *
  * <p>Can be used in places that don't have enough information about constraints.
  */
-public class EmptyPlatform implements Platform {
+public class DefaultPlatform implements Platform {
 
-  public static final EmptyPlatform INSTANCE = new EmptyPlatform();
+  public static final DefaultPlatform INSTANCE = new DefaultPlatform();
 
-  private final int hashCode = EmptyPlatform.class.getName().hashCode();
+  private final int hashCode = DefaultPlatform.class.getName().hashCode();
 
-  private EmptyPlatform() {}
+  private DefaultPlatform() {}
 
   @Override
   public boolean matchesAll(Collection<ConstraintValue> constraintValues) {
@@ -42,7 +42,7 @@ public class EmptyPlatform implements Platform {
 
   @Override
   public String toString() {
-    return "EmptyPlatform";
+    return "DefaultPlatform";
   }
 
   @Override
@@ -52,6 +52,6 @@ public class EmptyPlatform implements Platform {
 
   @Override
   public boolean equals(Object obj) {
-    return obj instanceof EmptyPlatform;
+    return obj instanceof DefaultPlatform;
   }
 }
