@@ -46,6 +46,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.AbsoluteOutputMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
@@ -61,6 +62,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -164,6 +166,7 @@ public class JavaTestDescription
             .setActionGraphBuilder(graphBuilder)
             .setExpanders(MACRO_EXPANDERS)
             .build();
+    List<Arg> vmArgs = Lists.transform(args.getVmArgs(), macrosConverter::convert);
 
     Optional<BuildTarget> runner = args.getRunner();
     Optional<ImmutableMap<String, StringWithMacros>> runnerSpecs = args.getSpecs();
@@ -220,7 +223,8 @@ public class JavaTestDescription
           args.getLabels(),
           args.getContacts(),
           ImmutableMap.copyOf(
-              Maps.transformValues(args.getSpecs().get(), macrosConverter::convert)));
+              Maps.transformValues(args.getSpecs().get(), macrosConverter::convert)),
+          vmArgs);
     } else if (runner.isPresent()) {
       throw new HumanReadableException("Should not have runner set when no specs are set");
     }
@@ -238,7 +242,7 @@ public class JavaTestDescription
         javaOptionsForTests
             .get()
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
-        Lists.transform(args.getVmArgs(), macrosConverter::convert),
+        vmArgs,
         cxxLibraryEnhancement.nativeLibsEnvironment,
         args.getTestRuleTimeoutMs()
             .map(Optional::of)

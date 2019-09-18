@@ -411,4 +411,31 @@ public class JavaTestIntegrationTest {
             ProcessExecutorParams.builder().addCommand(cmd.split(" ")).build());
     assertEquals(0, processResult.getExitCode());
   }
+
+  @Test
+  public void testProtocolJavaTestWithJVMArgsRuleShouldBuildAndGenerateSpec() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "testx_rule", temp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
+    ProcessResult resultWithJVMArgs = workspace.runBuckCommand("test", "//:some_test_with_jvm");
+    resultWithJVMArgs.assertSuccess();
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    JsonParser parser = ObjectMappers.createParser(specOutput);
+
+    ArrayNode node = parser.readValueAsTree();
+    JsonNode spec = node.get(0);
+    String cmd = spec.get("cmd").textValue();
+
+    DefaultProcessExecutor processExecutor =
+        new DefaultProcessExecutor(Console.createNullConsole());
+    ProcessExecutor.Result processResult =
+        processExecutor.launchAndExecute(
+            ProcessExecutorParams.builder().addCommand(cmd.split(" ")).build());
+    assertEquals(0, processResult.getExitCode());
+    assertTrue(processResult.getStdout().isPresent());
+    assertEquals(processResult.getStdout().get(), "-DHasVMArgs" + System.lineSeparator());
+  }
 }

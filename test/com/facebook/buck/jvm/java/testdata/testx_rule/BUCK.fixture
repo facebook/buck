@@ -16,3 +16,17 @@ java_test(
         "buck//third-party/java/junit:junit",
     ],
 )
+
+java_test(
+    name = "some_test_with_jvm",
+    srcs = ["SomeTest.java"],
+    runner = ":runner",
+    specs = {
+        "my": "spec",
+        "cmd": "cat $(abs_output jvm-args)",
+    },
+    vm_args = ["-DHasVMArgs"],
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+)

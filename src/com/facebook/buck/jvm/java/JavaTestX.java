@@ -50,6 +50,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -73,9 +74,13 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final ImmutableMap<String, Arg> specs;
 
+  private final ImmutableList<Arg> vmArgs;
+
   private final ExplicitBuildTargetSourcePath classPathOutput;
 
   private final ExplicitBuildTargetSourcePath classPathFileOutput;
+
+  private final ExplicitBuildTargetSourcePath jvmArgsOutput;
 
   public JavaTestX(
       BuildTarget buildTarget,
@@ -86,7 +91,8 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
       JavaLibrary compiledTestsLibrary,
       Set<String> labels,
       Set<String> contacts,
-      ImmutableMap<String, Arg> specs) {
+      ImmutableMap<String, Arg> specs,
+      List<Arg> vmArg) {
     super(buildTarget, projectFilesystem, params);
     this.sourcePathResolver = sourcePathResolver;
     this.compiledTestsBinary = compiledTestsBinary;
@@ -94,6 +100,7 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.labels = ImmutableSet.copyOf(labels);
     this.contacts = ImmutableSet.copyOf(contacts);
     this.specs = specs;
+    this.vmArgs = ImmutableList.copyOf(vmArg);
     this.classPathOutput =
         ExplicitBuildTargetSourcePath.of(
             buildTarget, BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve("classname"));
@@ -101,6 +108,9 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
         ExplicitBuildTargetSourcePath.of(
             buildTarget,
             BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve("classpath-file"));
+    this.jvmArgsOutput =
+        ExplicitBuildTargetSourcePath.of(
+            buildTarget, BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve("jvm-args"));
   }
 
   @Override
@@ -140,6 +150,11 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     new CompiledClassFileFinder(compiledTestsLibrary, sourcePathResolver)
                         .getClassNamesForSources()),
             classPathOutput.getResolvedPath(),
+            false),
+        new WriteFileStep(
+            getProjectFilesystem(),
+            () -> String.join(System.lineSeparator(), getJvmArgs(sourcePathResolver)),
+            jvmArgsOutput.getResolvedPath(),
             false),
         new AbstractExecutionStep("write classpath file") {
           @Override
@@ -191,6 +206,11 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .build();
   }
 
+  /** @return a list of JVM args that should be passed to JVM to run the command properly */
+  protected ImmutableList<String> getJvmArgs(SourcePathResolver sourcePathResolver) {
+    return ImmutableList.copyOf(Arg.stringify(this.vmArgs, sourcePathResolver));
+  }
+
   @Override
   public ImmutableMap<String, String> getSpecs() {
     return ImmutableMap.copyOf(
@@ -208,6 +228,9 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
     if (name.equals("classpath-file")) {
       return classPathFileOutput;
+    }
+    if (name.equals("jvm-args")) {
+      return jvmArgsOutput;
     }
     return null;
   }
