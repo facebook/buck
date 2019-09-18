@@ -27,6 +27,7 @@ import com.facebook.buck.features.project.intellij.model.IjModuleType;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class AndroidBinaryModuleRule extends AndroidModuleRule<AndroidBinaryDescriptionArg> {
 
@@ -56,10 +57,16 @@ public class AndroidBinaryModuleRule extends AndroidModuleRule<AndroidBinaryDesc
     Path manifestPath = moduleFactoryResolver.getAndroidManifestPath(target);
     androidFacetBuilder.addManifestPaths(manifestPath);
 
-    Path projectManifestPath = projectFilesystem.getPathForRelativePath(manifestPath);
-    androidManifestParser
-        .parseMinSdkVersion(projectManifestPath)
-        .ifPresent(androidFacetBuilder::addMinSdkVersions);
+    Optional<Integer> targetMinSdkVersion =
+        target.getConstructorArg().getManifestEntries().getMinSdkVersion();
+    if (targetMinSdkVersion.isPresent()) {
+      androidFacetBuilder.addMinSdkVersions(targetMinSdkVersion.get().toString());
+    } else {
+      Path projectManifestPath = projectFilesystem.getPathForRelativePath(manifestPath);
+      androidManifestParser
+          .parseMinSdkVersion(projectManifestPath)
+          .ifPresent(androidFacetBuilder::addMinSdkVersions);
+    }
   }
 
   @Override
