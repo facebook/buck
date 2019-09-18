@@ -25,6 +25,7 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -48,7 +49,9 @@ public abstract class ConvertingPipeline<F, T, K> extends ParsePipeline<T, K> {
 
   private final BuckEventBus eventBus;
   private final PipelineNodeCache<K, T> cache;
-  private final ConcurrentHashMap<Path, ListenableFuture<ImmutableList<T>>> allNodeCache;
+  private final ConcurrentHashMap<
+          Pair<Path, TargetConfiguration>, ListenableFuture<ImmutableList<T>>>
+      allNodeCache;
   protected final ListeningExecutorService executorService;
   private final SimplePerfEvent.Scope perfEventScope;
   private final PerfEventId perfEventId;
@@ -79,7 +82,9 @@ public abstract class ConvertingPipeline<F, T, K> extends ParsePipeline<T, K> {
   public ListenableFuture<ImmutableList<T>> getAllNodesJob(
       Cell cell, Path buildFile, TargetConfiguration targetConfiguration) {
     SettableFuture<ImmutableList<T>> future = SettableFuture.create();
-    ListenableFuture<ImmutableList<T>> cachedFuture = allNodeCache.putIfAbsent(buildFile, future);
+    Pair<Path, TargetConfiguration> pathCacheKey = new Pair<>(buildFile, targetConfiguration);
+    ListenableFuture<ImmutableList<T>> cachedFuture =
+        allNodeCache.putIfAbsent(pathCacheKey, future);
 
     if (cachedFuture != null) {
       return cachedFuture;
