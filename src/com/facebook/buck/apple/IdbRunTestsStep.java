@@ -484,10 +484,13 @@ public class IdbRunTestsStep implements Step {
     LOG.debug("Filtering tests with selector list: %s", testSelectorList.getExplanation());
 
     // Getting tests from the testBundle
-    ImmutableList<String> command =
-        ImmutableList.of(idbPath.toString(), "xctest", "list-bundle", testBundleId);
+    ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
+    commandBuilder.add(idbPath.toString(), "xctest", "list-bundle", testBundleId);
+    if (type == TestTypeEnum.APP) {
+      commandBuilder.add("--app-path", appTestBundlePath.get().toString());
+    }
     ProcessExecutorParams processExecutorParams =
-        ProcessExecutorParams.builder().setCommand(command).build();
+        ProcessExecutorParams.builder().setCommand(commandBuilder.build()).build();
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
     ProcessExecutor.Result result =
         processExecutor.launchAndExecute(
