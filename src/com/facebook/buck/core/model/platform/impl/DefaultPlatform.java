@@ -18,6 +18,7 @@ package com.facebook.buck.core.model.platform.impl;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * A platform that doesn't match any constraints.
@@ -31,7 +32,7 @@ public class DefaultPlatform implements Platform {
 
   public static final DefaultPlatform INSTANCE = new DefaultPlatform();
 
-  private final int hashCode = DefaultPlatform.class.getName().hashCode();
+  private final int hashCode = Objects.hash(DefaultPlatform.class);
 
   private DefaultPlatform() {}
 

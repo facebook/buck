@@ -16,6 +16,7 @@
 package com.facebook.buck.core.model;
 
 import com.google.common.collect.ImmutableSet;
+import java.util.Objects;
 
 /**
  * Special configuration that is used together with {@link UnconfiguredBuildTarget} that represent
@@ -25,7 +26,7 @@ public class ConfigurationForConfigurationTargets implements TargetConfiguration
   public static final ConfigurationForConfigurationTargets INSTANCE =
       new ConfigurationForConfigurationTargets();
 
-  private final int hashCode = ConfigurationForConfigurationTargets.class.getName().hashCode();
+  private final int hashCode = Objects.hash(ConfigurationForConfigurationTargets.class);
 
   private ConfigurationForConfigurationTargets() {}
 
