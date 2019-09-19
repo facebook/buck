@@ -117,12 +117,6 @@ public class ConfigSettingSelectable implements Selectable {
         constraintValuesTargets.stream()
             .map(constraintResolver::getConstraintValue)
             .collect(ImmutableList.toImmutableList());
-
-    if (constraintValues.isEmpty()) {
-      // buckconfig only matcher, no need ask platform to match
-      return true;
-    }
-
     return targetPlatform.matchesAll(constraintValues);
   }
 

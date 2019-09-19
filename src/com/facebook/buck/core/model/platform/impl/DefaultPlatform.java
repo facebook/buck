@@ -15,15 +15,17 @@
  */
 package com.facebook.buck.core.model.platform.impl;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
 import java.util.Collection;
 
 /**
- * A platform that fails when constraints are checked.
+ * A platform that doesn't match any constraints.
  *
- * <p>Used by default when platform is not specified.
+ * <p>Note that this platform matches an empty list of constraints. The behavior of this platform is
+ * equivalent to {@link ConstraintBasedPlatform} with an empty list of constraints.
+ *
+ * <p>Can be used in places that don't have enough information about constraints.
  */
 public class DefaultPlatform implements Platform {
 
@@ -35,8 +37,7 @@ public class DefaultPlatform implements Platform {
 
   @Override
   public boolean matchesAll(Collection<ConstraintValue> constraintValues) {
-    throw new HumanReadableException(
-        "Cannot use select() expression when target platform is not specified");
+    return constraintValues.isEmpty();
   }
 
   @Override
