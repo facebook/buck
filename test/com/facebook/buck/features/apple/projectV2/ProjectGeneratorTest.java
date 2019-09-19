@@ -1764,11 +1764,11 @@ public class ProjectGeneratorTest {
         "test binary should use header symlink trees for both public and non-public headers "
             + "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) "
-            + "../buck-out/gen/_p/LpygK8zq5F-priv/.hmap "
-            + "../buck-out/gen/_p/LpygK8zq5F-pub/.hmap "
-            + "../buck-out/gen/_p/CwkbTNOBmb-pub/.hmap "
-            + "../buck-out/gen/_p/CwkbTNOBmb-priv/.hmap "
-            + "../buck-out",
+            + String.format("%s/buck-out/gen/_p/LpygK8zq5F-priv/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/LpygK8zq5F-pub/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/CwkbTNOBmb-pub/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/CwkbTNOBmb-priv/.hmap ", rootPath)
+            + String.format("%s/buck-out", rootPath),
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         "USER_HEADER_SEARCH_PATHS should not be set",
@@ -1803,7 +1803,7 @@ public class ProjectGeneratorTest {
         createProjectGenerator(
             allNodes,
             allNodes,
-            ProjectGeneratorOptions.builder().setShouldUseAbsoluteHeaderMapPaths(true).build(),
+            ProjectGeneratorOptions.builder().build(),
             ImmutableSet.of(),
             Optional.empty());
 
@@ -1949,11 +1949,11 @@ public class ProjectGeneratorTest {
         "test binary should use header symlink trees for both public and non-public headers "
             + "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) "
-            + "../buck-out/gen/_p/LpygK8zq5F-priv/.hmap "
-            + "../buck-out/gen/_p/LpygK8zq5F-pub/.hmap "
-            + "../buck-out/gen/_p/CwkbTNOBmb-pub/.hmap "
-            + "../buck-out/gen/_p/CwkbTNOBmb-priv/.hmap "
-            + "../buck-out",
+            + String.format("%s/buck-out/gen/_p/LpygK8zq5F-priv/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/LpygK8zq5F-pub/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/CwkbTNOBmb-pub/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/CwkbTNOBmb-priv/.hmap ", rootPath)
+            + String.format("%s/buck-out", rootPath),
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         "USER_HEADER_SEARCH_PATHS should not be set",
@@ -2005,11 +2005,11 @@ public class ProjectGeneratorTest {
         "test binary should use header symlink trees for both public and non-public headers "
             + "of the tested binary in HEADER_SEARCH_PATHS",
         "$(inherited) "
-            + "../buck-out/gen/_p/LpygK8zq5F-priv/.hmap "
-            + "../buck-out/gen/_p/LpygK8zq5F-pub/.hmap "
-            + "../buck-out/gen/_p/4UdYl649ee-pub/.hmap "
-            + "../buck-out/gen/_p/4UdYl649ee-priv/.hmap "
-            + "../buck-out",
+            + String.format("%s/buck-out/gen/_p/LpygK8zq5F-priv/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/LpygK8zq5F-pub/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/4UdYl649ee-pub/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/4UdYl649ee-priv/.hmap ", rootPath)
+            + String.format("%s/buck-out", rootPath),
         buildSettings.get("HEADER_SEARCH_PATHS"));
     assertEquals(
         "USER_HEADER_SEARCH_PATHS should not be set",
@@ -3387,10 +3387,10 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
     assertEquals(
         "$(inherited) "
-            + "../buck-out/gen/_p/ptQfVNNRRE-priv/.hmap "
-            + "../buck-out/gen/_p/ptQfVNNRRE-pub/.hmap "
-            + "../buck-out/gen/_p/CwkbTNOBmb-pub/.hmap "
-            + "../buck-out",
+            + String.format("%s/buck-out/gen/_p/ptQfVNNRRE-priv/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/ptQfVNNRRE-pub/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/CwkbTNOBmb-pub/.hmap ", rootPath)
+            + String.format("%s/buck-out", rootPath),
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(null, settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals("$(inherited) $BUILT_PRODUCTS_DIR", settings.get("LIBRARY_SEARCH_PATHS"));
@@ -3449,10 +3449,10 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
     assertEquals(
         "headers "
-            + "../buck-out/gen/_p/ptQfVNNRRE-priv/.hmap "
-            + "../buck-out/gen/_p/ptQfVNNRRE-pub/.hmap "
-            + "../buck-out/gen/_p/CwkbTNOBmb-pub/.hmap "
-            + "../buck-out",
+            + String.format("%s/buck-out/gen/_p/ptQfVNNRRE-priv/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/ptQfVNNRRE-pub/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/CwkbTNOBmb-pub/.hmap ", rootPath)
+            + String.format("%s/buck-out", rootPath),
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals("user_headers", settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals("libraries $BUILT_PRODUCTS_DIR", settings.get("LIBRARY_SEARCH_PATHS"));
@@ -3520,11 +3520,11 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
     assertEquals(
         "$(inherited) "
-            + "../buck-out/gen/_p/ptQfVNNRRE-priv/.hmap "
-            + "../buck-out/gen/_p/ptQfVNNRRE-pub/.hmap "
-            + "../buck-out/gen/_p/zAW4E7kxsV-pub/.hmap "
-            + "../buck-out/gen/_p/CwkbTNOBmb-pub/.hmap "
-            + "../buck-out",
+            + String.format("%s/buck-out/gen/_p/ptQfVNNRRE-priv/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/ptQfVNNRRE-pub/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/zAW4E7kxsV-pub/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/CwkbTNOBmb-pub/.hmap ", rootPath)
+            + String.format("%s/buck-out", rootPath),
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals(null, settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals("$(inherited) " + "$BUILT_PRODUCTS_DIR", settings.get("LIBRARY_SEARCH_PATHS"));
@@ -3610,10 +3610,10 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
     assertEquals(
         "headers "
-            + "../buck-out/gen/_p/ptQfVNNRRE-priv/.hmap "
-            + "../buck-out/gen/_p/ptQfVNNRRE-pub/.hmap "
-            + "../buck-out/gen/_p/CwkbTNOBmb-pub/.hmap "
-            + "../buck-out",
+            + String.format("%s/buck-out/gen/_p/ptQfVNNRRE-priv/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/ptQfVNNRRE-pub/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/CwkbTNOBmb-pub/.hmap ", rootPath)
+            + String.format("%s/buck-out", rootPath),
         settings.get("HEADER_SEARCH_PATHS"));
     assertEquals("libraries $BUILT_PRODUCTS_DIR", settings.get("LIBRARY_SEARCH_PATHS"));
 
@@ -4871,47 +4871,6 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryWithoutHeaderMaps() throws IOException {
-    ImmutableSortedMap<String, ImmutableMap<String, String>> configs =
-        ImmutableSortedMap.of("Debug", ImmutableMap.of());
-
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
-    TargetNode<?> libraryNode =
-        AppleLibraryBuilder.createBuilder(libraryTarget)
-            .setConfigs(configs)
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.m"))))
-            .build();
-
-    BuildTarget testTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "xctest");
-    TargetNode<?> testNode =
-        AppleTestBuilder.createBuilder(testTarget)
-            .setConfigs(configs)
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("fooTest.m"))))
-            .setDeps(ImmutableSortedSet.of(libraryTarget))
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(libraryNode, testNode),
-            ProjectGeneratorOptions.builder().setShouldUseHeaderMaps(false).build());
-
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:xctest");
-
-    ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
-    assertEquals(
-        "$(inherited) "
-            + "../buck-out/gen/_p/ptQfVNNRRE-priv "
-            + "../buck-out/gen/_p/ptQfVNNRRE-pub "
-            + "../buck-out/gen/_p/CwkbTNOBmb-pub "
-            + "../buck-out",
-        settings.get("HEADER_SEARCH_PATHS"));
-  }
-
-  @Test
   public void testGeneratedProjectStructureAndSettingsWithBridgingHeader() throws IOException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
     TargetNode<?> node =
@@ -5351,7 +5310,7 @@ public class ProjectGeneratorTest {
             projectCell,
             "BUCK",
             XcodeProjectWriteOptions.of(new PBXProject(PROJECT_NAME), OUTPUT_DIRECTORY),
-            ProjectGeneratorOptions.builder().setShouldMergeHeaderMaps(true).build(),
+            ProjectGeneratorOptions.builder().build(),
             TestRuleKeyConfigurationFactory.create(),
             false, /* isMainProject */
             Optional.of(lib1Target),
@@ -5382,8 +5341,8 @@ public class ProjectGeneratorTest {
         "test binary should use header symlink trees for both public and non-public headers "
             + "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) "
-            + "../buck-out/gen/_p/YAYFR3hXIb-priv/.hmap "
-            + "../buck-out/gen/_p/pub-hmap/.hmap",
+            + String.format("%s/buck-out/gen/_p/YAYFR3hXIb-priv/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/pub-hmap/.hmap", rootPath),
         buildSettings2.get("HEADER_SEARCH_PATHS"));
 
     ProjectGenerator projectGeneratorLib1 =
@@ -5396,7 +5355,7 @@ public class ProjectGeneratorTest {
             projectCell,
             "BUCK",
             XcodeProjectWriteOptions.of(new PBXProject(PROJECT_NAME), OUTPUT_DIRECTORY),
-            ProjectGeneratorOptions.builder().setShouldMergeHeaderMaps(true).build(),
+            ProjectGeneratorOptions.builder().build(),
             TestRuleKeyConfigurationFactory.create(),
             true, /* isMainProject */
             Optional.of(lib1Target),
@@ -5437,8 +5396,8 @@ public class ProjectGeneratorTest {
         "test binary should use header symlink trees for both public and non-public headers "
             + "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) "
-            + "../buck-out/gen/_p/WNl0jZWMBk-priv/.hmap "
-            + "../buck-out/gen/_p/pub-hmap/.hmap",
+            + String.format("%s/buck-out/gen/_p/WNl0jZWMBk-priv/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/pub-hmap/.hmap", rootPath),
         buildSettings1.get("HEADER_SEARCH_PATHS"));
 
     // For //foo:test
@@ -5451,9 +5410,9 @@ public class ProjectGeneratorTest {
         "test binary should use header symlink trees for both public and non-public headers "
             + "of the tested library in HEADER_SEARCH_PATHS",
         "$(inherited) "
-            + "../buck-out/gen/_p/LpygK8zq5F-priv/.hmap "
-            + "../buck-out/gen/_p/pub-hmap/.hmap "
-            + "../buck-out/gen/_p/WNl0jZWMBk-priv/.hmap",
+            + String.format("%s/buck-out/gen/_p/LpygK8zq5F-priv/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/pub-hmap/.hmap ", rootPath)
+            + String.format("%s/buck-out/gen/_p/WNl0jZWMBk-priv/.hmap", rootPath),
         buildSettingsTest.get("HEADER_SEARCH_PATHS"));
   }
 
@@ -5517,10 +5476,7 @@ public class ProjectGeneratorTest {
             projectCell,
             "BUCK",
             XcodeProjectWriteOptions.of(new PBXProject(PROJECT_NAME), OUTPUT_DIRECTORY),
-            ProjectGeneratorOptions.builder()
-                .setShouldMergeHeaderMaps(true)
-                .setShouldUseAbsoluteHeaderMapPaths(true)
-                .build(),
+            ProjectGeneratorOptions.builder().build(),
             TestRuleKeyConfigurationFactory.create(),
             false, /* isMainProject */
             Optional.of(lib1Target),
@@ -5570,10 +5526,7 @@ public class ProjectGeneratorTest {
             projectCell,
             "BUCK",
             XcodeProjectWriteOptions.of(new PBXProject(PROJECT_NAME), OUTPUT_DIRECTORY),
-            ProjectGeneratorOptions.builder()
-                .setShouldMergeHeaderMaps(true)
-                .setShouldUseAbsoluteHeaderMapPaths(true)
-                .build(),
+            ProjectGeneratorOptions.builder().build(),
             TestRuleKeyConfigurationFactory.create(),
             true, /* isMainProject */
             Optional.of(lib1Target),

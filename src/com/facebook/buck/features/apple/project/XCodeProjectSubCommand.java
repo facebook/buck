@@ -169,7 +169,6 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
                   executor,
                   params.getDepsAwareExecutorSupplier(),
                   appleCxxPlatformsProvider.getAppleCxxPlatforms().getFlavors(),
-                  getAbsoluteHeaderMapPaths(params.getBuckConfig()),
                   getSharedLibrariesInBundles(params.getBuckConfig()),
                   projectGeneratorParameters.getEnableParserProfiling(),
                   projectGeneratorParameters.isWithTests(),

@@ -355,9 +355,7 @@ public class ProjectGenerator {
   }
 
   private boolean shouldMergeHeaderMaps() {
-    return options.shouldMergeHeaderMaps()
-        && workspaceTarget.isPresent()
-        && options.shouldUseHeaderMaps();
+    return workspaceTarget.isPresent();
   }
 
   /** The output from generating an Xcode project. */
@@ -2116,7 +2114,6 @@ public class ProjectGenerator {
         moduleName,
         getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC),
         arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled())
-            || !options.shouldUseHeaderMaps()
             || isModularAppleLibrary,
         !shouldMergeHeaderMaps(),
         options.shouldGenerateMissingUmbrellaHeader());
@@ -2134,9 +2131,8 @@ public class ProjectGenerator {
         Optional.empty(),
         getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE),
         arg.getXcodePrivateHeadersSymlinks()
-                .orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled())
-            || !options.shouldUseHeaderMaps(),
-        options.shouldUseHeaderMaps(),
+            .orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled()),
+        true,
         options.shouldGenerateMissingUmbrellaHeader());
 
     if (bundle.isPresent()) {
@@ -3212,11 +3208,7 @@ public class ProjectGenerator {
   private Path getHeaderSymlinkTreePath(
       TargetNode<? extends CommonArg> targetNode, HeaderVisibility headerVisibility) {
     Path treeRoot = getAbsolutePathToHeaderSymlinkTree(targetNode, headerVisibility);
-    if (options.shouldUseAbsoluteHeaderMapPaths()) {
-      return treeRoot;
-    } else {
-      return projectFilesystem.resolve(xcodeProjectWriteOptions.sourceRoot()).relativize(treeRoot);
-    }
+    return treeRoot;
   }
 
   private Path getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
@@ -3233,19 +3225,7 @@ public class ProjectGenerator {
   }
 
   private Path getHeaderSearchPathFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
-    if (!options.shouldUseHeaderMaps()) {
-      return headerSymlinkTreeRoot;
-    } else {
-      return getHeaderMapLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot);
-    }
-  }
-
-  private Path getRelativePathToMergedHeaderMap() {
-    Path treeRoot = getPathToMergedHeaderMap();
-    Path cellRoot =
-        MorePaths.relativize(
-            projectFilesystem.getRootPath(), getCellPathForTarget(workspaceTarget.get()));
-    return pathRelativizer.outputDirToRootRelative(cellRoot.resolve(treeRoot));
+    return getHeaderMapLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot);
   }
 
   private String getBuiltProductsRelativeTargetOutputPath(TargetNode<?> targetNode) {
@@ -3325,13 +3305,9 @@ public class ProjectGenerator {
       builder.add(
           getHeaderSearchPathFromSymlinkTreeRoot(
               getHeaderSymlinkTreePath(targetNode, HeaderVisibility.PRIVATE)));
-      if (options.shouldUseAbsoluteHeaderMapPaths()) {
-        Cell workspaceCell = projectCell.getCell(workspaceTarget.get());
-        Path absolutePath = workspaceCell.getFilesystem().resolve(getPathToMergedHeaderMap());
-        builder.add(getHeaderSearchPathFromSymlinkTreeRoot(absolutePath));
-      } else {
-        builder.add(getHeaderSearchPathFromSymlinkTreeRoot(getRelativePathToMergedHeaderMap()));
-      }
+      Cell workspaceCell = projectCell.getCell(workspaceTarget.get());
+      Path absolutePath = workspaceCell.getFilesystem().resolve(getPathToMergedHeaderMap());
+      builder.add(getHeaderSearchPathFromSymlinkTreeRoot(absolutePath));
       visitRecursivePrivateHeaderSymlinkTreesForTests(
           targetNode,
           (nativeNode, headerVisibility) -> {
@@ -3361,24 +3337,9 @@ public class ProjectGenerator {
       visitRecursiveHeaderSymlinkTrees(
           targetNode,
           (nativeNode, headerVisibility) -> {
-            if (options.shouldUseAbsoluteHeaderMapPaths()) {
-              ProjectFilesystem filesystem = nativeNode.getFilesystem();
-              Path buckOut = filesystem.resolve(filesystem.getBuckPaths().getConfiguredBuckOut());
-              builder.add(buckOut.toAbsolutePath().normalize());
-            } else {
-              builder.add(
-                  targetNode
-                      .getFilesystem()
-                      .resolve(xcodeProjectWriteOptions.sourceRoot())
-                      .relativize(
-                          nativeNode
-                              .getFilesystem()
-                              .resolve(
-                                  nativeNode
-                                      .getFilesystem()
-                                      .getBuckPaths()
-                                      .getConfiguredBuckOut())));
-            }
+            ProjectFilesystem filesystem = nativeNode.getFilesystem();
+            Path buckOut = filesystem.resolve(filesystem.getBuckPaths().getConfiguredBuckOut());
+            builder.add(buckOut.toAbsolutePath().normalize());
           });
     }
     return builder.build();

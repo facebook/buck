@@ -53,27 +53,6 @@ interface AbstractProjectGeneratorOptions {
     return false;
   }
 
-  /** Use header maps as header search paths */
-  @Value.Default
-  default boolean shouldUseHeaderMaps() {
-    return true;
-  }
-
-  /** Use absolute header map paths in .xcconfig files */
-  @Value.Default
-  default boolean shouldUseAbsoluteHeaderMapPaths() {
-    return false;
-  }
-
-  /**
-   * Generate one header map containing all the headers it's using and reference only this header
-   * map in the header search paths.
-   */
-  @Value.Default
-  default boolean shouldMergeHeaderMaps() {
-    return false;
-  }
-
   /** Generate an umbrella header for modular targets without one for use in a modulemap */
   @Value.Default
   default boolean shouldGenerateMissingUmbrellaHeader() {

@@ -131,7 +131,6 @@ public class XCodeProjectCommandHelper {
   private final ImmutableMap<String, String> environment;
   private final ListeningExecutorService executorService;
   private final List<String> arguments;
-  private final boolean absoluteHeaderMapPaths;
   private final boolean sharedLibrariesInBundles;
   private final boolean withTests;
   private final boolean withoutTests;
@@ -166,7 +165,6 @@ public class XCodeProjectCommandHelper {
       ListeningExecutorService parsingExecutorService,
       CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutor,
       ImmutableSet<Flavor> appleCxxFlavors,
-      boolean absoluteHeaderMapPaths,
       boolean sharedLibrariesInBundles,
       boolean enableParserProfiling,
       boolean withTests,
@@ -197,7 +195,6 @@ public class XCodeProjectCommandHelper {
     this.environment = environment;
     this.executorService = executorService;
     this.arguments = arguments;
-    this.absoluteHeaderMapPaths = absoluteHeaderMapPaths;
     this.sharedLibrariesInBundles = sharedLibrariesInBundles;
     this.withTests = withTests;
     this.withoutTests = withoutTests;
@@ -362,9 +359,6 @@ public class XCodeProjectCommandHelper {
             .setShouldGenerateReadOnlyFiles(readOnly)
             .setShouldIncludeTests(isWithTests(buckConfig))
             .setShouldIncludeDependenciesTests(isWithDependenciesTests(buckConfig))
-            .setShouldUseHeaderMaps(true)
-            .setShouldUseAbsoluteHeaderMapPaths(absoluteHeaderMapPaths)
-            .setShouldMergeHeaderMaps(true)
             .setShouldAddLinkedLibrariesAsFlags(appleConfig.shouldAddLinkedLibrariesAsFlags())
             .setShouldForceLoadLinkWholeLibraries(
                 appleConfig.shouldAddLinkerFlagsForLinkWholeLibraries())

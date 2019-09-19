@@ -497,8 +497,6 @@ public class XCodeProjectCommandHelperTest {
             .setShouldGenerateReadOnlyFiles(false)
             .setShouldIncludeTests(isWithTests)
             .setShouldIncludeDependenciesTests(isWithDependenciesTests)
-            .setShouldUseHeaderMaps(true)
-            .setShouldMergeHeaderMaps(false)
             .setShouldForceLoadLinkWholeLibraries(false)
             .setShouldGenerateMissingUmbrellaHeader(false)
             .setShouldUseShortNamesForTargets(true)
