@@ -27,8 +27,6 @@ import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
-import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
-import com.facebook.buck.core.test.rule.ExternalTestSpec;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -114,7 +112,8 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
         labels,
         contacts,
         runTestSeparately,
-        testRuleTimeoutMs);
+        testRuleTimeoutMs,
+        CxxTestType.GTEST);
     this.binary = binary;
     this.maxTestOutputSize = maxTestOutputSize;
     this.checkGTestTestList = checkGTestTestList;
@@ -291,28 +290,6 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
   private TestResultSummary reportNotExecutedTest(String testCaseName, String testName) {
     return new TestResultSummary(
         testCaseName, testName, ResultType.FAILURE, 0, "Test wasn't run", "", "", "");
-  }
-
-  @Override
-  public ExternalTestSpec getExternalTestRunnerSpec(
-      ExecutionContext executionContext,
-      TestRunningOptions testRunningOptions,
-      BuildContext buildContext) {
-    return ExternalTestRunnerTestSpec.builder()
-        .setCwd(getProjectFilesystem().getRootPath())
-        .setTarget(getBuildTarget())
-        .setType("gtest")
-        .addAllCommand(
-            getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()))
-        .addAllCommand(Arg.stringify(getArgs(), buildContext.getSourcePathResolver()))
-        .putAllEnv(getEnv(buildContext.getSourcePathResolver()))
-        .addAllLabels(getLabels())
-        .addAllContacts(getContacts())
-        .addAllAdditionalCoverageTargets(
-            buildContext
-                .getSourcePathResolver()
-                .getAllAbsolutePaths(getAdditionalCoverageTargets()))
-        .build();
   }
 
   private class WriteTestListToFileStep extends ShellStep {

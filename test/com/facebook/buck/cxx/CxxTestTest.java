@@ -76,7 +76,8 @@ public class CxxTestTest {
           ImmutableSet.of(),
           ImmutableSet.of(),
           /* runTestSeparately */ false,
-          TEST_TIMEOUT_MS);
+          TEST_TIMEOUT_MS,
+          CxxTestType.GTEST);
     }
 
     @Override

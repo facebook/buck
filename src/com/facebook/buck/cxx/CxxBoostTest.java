@@ -16,8 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -26,14 +24,10 @@ import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
-import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
-import com.facebook.buck.core.test.rule.ExternalTestSpec;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.test.TestResultSummary;
-import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.xml.XmlDomParser;
 import com.google.common.base.Charsets;
@@ -62,7 +56,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunnerRule {
+class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
 
   private static final Pattern SUITE_START = Pattern.compile("^Entering test suite \"(.*)\"$");
   private static final Pattern SUITE_END = Pattern.compile("^Leaving test suite \"(.*)\"$");
@@ -103,7 +97,8 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
         labels,
         contacts,
         runTestSeparately,
-        testRuleTimeoutMs);
+        testRuleTimeoutMs,
+        CxxTestType.BOOST);
     this.binary = binary;
   }
 
@@ -227,27 +222,5 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
     visitTestSuite(summariesBuilder, messages, stdout, times, "", testSuite);
 
     return summariesBuilder.build();
-  }
-
-  @Override
-  public ExternalTestSpec getExternalTestRunnerSpec(
-      ExecutionContext executionContext,
-      TestRunningOptions testRunningOptions,
-      BuildContext buildContext) {
-    return ExternalTestRunnerTestSpec.builder()
-        .setCwd(getProjectFilesystem().getRootPath())
-        .setTarget(getBuildTarget())
-        .setType("boost")
-        .addAllCommand(
-            getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()))
-        .addAllCommand(Arg.stringify(getArgs(), buildContext.getSourcePathResolver()))
-        .putAllEnv(getEnv(buildContext.getSourcePathResolver()))
-        .addAllLabels(getLabels())
-        .addAllContacts(getContacts())
-        .addAllAdditionalCoverageTargets(
-            buildContext
-                .getSourcePathResolver()
-                .getAllAbsolutePaths(getAdditionalCoverageTargets()))
-        .build();
   }
 }

@@ -18,6 +18,13 @@ package com.facebook.buck.cxx;
 
 /** Enumerate the C/C++ testing frameworks we support. */
 enum CxxTestType {
-  GTEST,
-  BOOST,
+  GTEST("gtest"),
+  BOOST("boost"),
+  ;
+
+  public final String testSpecType;
+
+  CxxTestType(String testSpecType) {
+    this.testSpecType = testSpecType;
+  }
 }

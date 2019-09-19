@@ -32,6 +32,9 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
+import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
+import com.facebook.buck.core.test.rule.ExternalTestSpec;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -62,7 +65,7 @@ import java.util.stream.Stream;
 
 /** A no-op {@link BuildRule} which houses the logic to run and form the results for C/C++ tests. */
 public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements TestRule, HasRuntimeDeps, BinaryBuildRule {
+    implements TestRule, HasRuntimeDeps, BinaryBuildRule, ExternalTestRunnerRule {
 
   private final ImmutableMap<String, Arg> env;
   private final ImmutableList<Arg> args;
@@ -80,6 +83,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSet<String> contacts;
   private final boolean runTestSeparately;
   private final Optional<Long> testRuleTimeoutMs;
+  private final CxxTestType cxxTestType;
 
   public CxxTest(
       BuildTarget buildTarget,
@@ -94,7 +98,8 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<String> labels,
       ImmutableSet<String> contacts,
       boolean runTestSeparately,
-      Optional<Long> testRuleTimeoutMs) {
+      Optional<Long> testRuleTimeoutMs,
+      CxxTestType cxxTestType) {
     super(buildTarget, projectFilesystem, params);
     this.executable = executable;
     this.env = env;
@@ -106,6 +111,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.contacts = contacts;
     this.runTestSeparately = runTestSeparately;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.cxxTestType = cxxTestType;
   }
 
   @Override
@@ -270,6 +276,28 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             additionalDeps.get(() -> additionalDepsSupplier.apply(buildRuleResolver)).stream(),
             BuildableSupport.getDeps(getExecutableCommand(), buildRuleResolver))
         .map(BuildRule::getBuildTarget);
+  }
+
+  @Override
+  public ExternalTestSpec getExternalTestRunnerSpec(
+      ExecutionContext executionContext,
+      TestRunningOptions testRunningOptions,
+      BuildContext buildContext) {
+    return ExternalTestRunnerTestSpec.builder()
+        .setCwd(getProjectFilesystem().getRootPath())
+        .setTarget(getBuildTarget())
+        .setType(cxxTestType.testSpecType)
+        .addAllCommand(
+            getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()))
+        .addAllCommand(Arg.stringify(getArgs(), buildContext.getSourcePathResolver()))
+        .putAllEnv(getEnv(buildContext.getSourcePathResolver()))
+        .addAllLabels(getLabels())
+        .addAllContacts(getContacts())
+        .addAllAdditionalCoverageTargets(
+            buildContext
+                .getSourcePathResolver()
+                .getAllAbsolutePaths(getAdditionalCoverageTargets()))
+        .build();
   }
 
   protected ImmutableMap<String, String> getEnv(SourcePathResolver pathResolver) {
