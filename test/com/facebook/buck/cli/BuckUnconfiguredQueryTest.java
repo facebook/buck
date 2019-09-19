@@ -197,6 +197,17 @@ public class BuckUnconfiguredQueryTest {
         is(equalTo(parseJSON(processResult.getStdout()))));
   }
 
+  @Test
+  public void testTargetCompatibilityIgnored() throws IOException {
+    // Explicitly test that unconfigured query does not filter targets
+    ProcessResult processResult = workspace.runBuckCommand("uquery", "//compatible:");
+    processResult.assertSuccess();
+
+    sortOutputLinesAndCompare(
+        processResult.getStdout(),
+        "//compatible:incompatible_platforms\n//compatible:incompatible_with\n");
+  }
+
   private void assertBehavesLikeConfiguredQuery(String target) {
     ProcessResult resultUncofigured = workspace.runBuckCommand("uquery", target);
     resultUncofigured.assertSuccess();
