@@ -455,7 +455,6 @@ public class WorkspaceAndProjectGenerator {
             xcodeProjectWriteOptions,
             projectGeneratorOptions,
             ruleKeyConfiguration,
-            true,
             workspaceArguments.getSrcTarget().get(),
             targetsInRequiredProjects,
             defaultCxxPlatform,

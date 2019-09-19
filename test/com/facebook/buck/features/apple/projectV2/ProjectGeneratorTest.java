@@ -5319,50 +5319,10 @@ public class ProjectGeneratorTest {
     XCodeDescriptions xcodeDescriptions =
         XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
 
-    ProjectGenerator projectGeneratorLib2 =
-        new ProjectGenerator(
-            xcodeDescriptions,
-            targetGraph,
-            cache,
-            projStateCache,
-            ImmutableSet.of(lib2Target),
-            projectCell,
-            "BUCK",
-            XcodeProjectWriteOptions.of(new PBXProject(PROJECT_NAME), OUTPUT_DIRECTORY),
-            ProjectGeneratorOptions.builder().build(),
-            TestRuleKeyConfigurationFactory.create(),
-            false, /* isMainProject */
-            lib1Target,
-            ImmutableSet.of(lib1Target, lib4Target),
-            DEFAULT_PLATFORM,
-            ImmutableSet.of(),
-            getActionGraphBuilderNodeFunction(targetGraph),
-            getFakeBuckEventBus(),
-            halideBuckConfig,
-            cxxBuckConfig,
-            appleConfig,
-            swiftBuckConfig,
-            Optional.empty());
-
-    projectGeneratorLib2.createXcodeProjects();
-
     // The merged header map should not generated at this point.
     Path hmapPath = Paths.get("buck-out/gen/_p/pub-hmap/.hmap");
     assertFalse(hmapPath + " should NOT exist.", projectFilesystem.isFile(hmapPath));
     // Checks the content of the header search paths.
-    PBXProject project2 = projectGeneratorLib2.getGeneratedProject();
-    PBXTarget testPBXTarget2 = assertTargetExistsAndReturnTarget(project2, "//bar:lib2");
-
-    ImmutableMap<String, String> buildSettings2 =
-        getBuildSettings(lib2Target, testPBXTarget2, "Default");
-
-    assertEquals(
-        "test binary should use header symlink trees for both public and non-public headers "
-            + "of the tested library in HEADER_SEARCH_PATHS",
-        "$(inherited) "
-            + String.format("%s/buck-out/gen/_p/YAYFR3hXIb-priv/.hmap ", rootPath)
-            + String.format("%s/buck-out/gen/_p/pub-hmap/.hmap", rootPath),
-        buildSettings2.get("HEADER_SEARCH_PATHS"));
 
     ProjectGenerator projectGeneratorLib1 =
         new ProjectGenerator(
@@ -5376,7 +5336,6 @@ public class ProjectGeneratorTest {
             XcodeProjectWriteOptions.of(new PBXProject(PROJECT_NAME), OUTPUT_DIRECTORY),
             ProjectGeneratorOptions.builder().build(),
             TestRuleKeyConfigurationFactory.create(),
-            true, /* isMainProject */
             lib1Target,
             ImmutableSet.of(lib1Target, lib4Target),
             DEFAULT_PLATFORM,
@@ -5485,55 +5444,12 @@ public class ProjectGeneratorTest {
     XCodeDescriptions xcodeDescriptions =
         XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
 
-    ProjectGenerator projectGeneratorLib2 =
-        new ProjectGenerator(
-            xcodeDescriptions,
-            targetGraph,
-            cache,
-            projStateCache,
-            ImmutableSet.of(lib2Target),
-            projectCell,
-            "BUCK",
-            XcodeProjectWriteOptions.of(new PBXProject(PROJECT_NAME), OUTPUT_DIRECTORY),
-            ProjectGeneratorOptions.builder().build(),
-            TestRuleKeyConfigurationFactory.create(),
-            false, /* isMainProject */
-            lib1Target,
-            ImmutableSet.of(lib1Target, lib4Target),
-            DEFAULT_PLATFORM,
-            ImmutableSet.of(),
-            getActionGraphBuilderNodeFunction(targetGraph),
-            getFakeBuckEventBus(),
-            halideBuckConfig,
-            cxxBuckConfig,
-            appleConfig,
-            swiftBuckConfig,
-            Optional.empty());
-
-    projectGeneratorLib2.createXcodeProjects();
-
     // The merged header map should not generated at this point.
     Path hmapPath = Paths.get("buck-out/gen/_p/pub-hmap/.hmap");
     assertFalse(hmapPath + " should NOT exist.", projectFilesystem.isFile(hmapPath));
     // Checks the content of the header search paths.
-    PBXProject project2 = projectGeneratorLib2.getGeneratedProject();
-    PBXTarget testPBXTarget2 = assertTargetExistsAndReturnTarget(project2, "//bar:lib2");
-
-    ImmutableMap<String, String> buildSettings2 =
-        getBuildSettings(lib2Target, testPBXTarget2, "Default");
 
     Path currentDirectory = Paths.get(".").toAbsolutePath();
-    assertEquals(
-        "test binary should use header symlink trees with absolute paths for both public and non-public headers "
-            + "of the tested library in HEADER_SEARCH_PATHS",
-        "$(inherited) "
-            + currentDirectory
-                .resolve("buck-out/gen/_p/YAYFR3hXIb-priv/.hmap")
-                .normalize()
-                .toString()
-            + " "
-            + currentDirectory.resolve("buck-out/gen/_p/pub-hmap/.hmap").normalize().toString(),
-        buildSettings2.get("HEADER_SEARCH_PATHS"));
 
     ProjectGenerator projectGeneratorLib1 =
         new ProjectGenerator(
@@ -5547,7 +5463,6 @@ public class ProjectGeneratorTest {
             XcodeProjectWriteOptions.of(new PBXProject(PROJECT_NAME), OUTPUT_DIRECTORY),
             ProjectGeneratorOptions.builder().build(),
             TestRuleKeyConfigurationFactory.create(),
-            true, /* isMainProject */
             lib1Target,
             ImmutableSet.of(lib1Target, lib4Target),
             DEFAULT_PLATFORM,
@@ -5690,7 +5605,6 @@ public class ProjectGeneratorTest {
         XcodeProjectWriteOptions.of(new PBXProject(PROJECT_NAME), OUTPUT_DIRECTORY),
         projectGeneratorOptions,
         TestRuleKeyConfigurationFactory.create(),
-        true, /* isMainProject */
         workspaceTarget,
         ImmutableSet.of(),
         DEFAULT_PLATFORM,
@@ -5892,34 +5806,6 @@ public class ProjectGeneratorTest {
       assertFalse(
           "Build phase should not contain this file " + filePath,
           absoluteSources.contains(filePath));
-    }
-  }
-
-  private void assertHasSingleResourcesPhaseWithEntries(PBXTarget target, String... resources) {
-    PBXResourcesBuildPhase buildPhase =
-        ProjectGeneratorTestUtils.getSingleBuildPhaseOfType(target, PBXResourcesBuildPhase.class);
-    assertEquals(
-        "Resources phase should have right number of elements",
-        resources.length,
-        buildPhase.getFiles().size());
-
-    ImmutableSet.Builder<String> expectedResourceSetBuilder = ImmutableSet.builder();
-    for (String resource : resources) {
-      expectedResourceSetBuilder.add(
-          projectFilesystem
-              .getRootPath()
-              .resolve(resource)
-              .toAbsolutePath()
-              .normalize()
-              .toString());
-    }
-    ImmutableSet<String> expectedResourceSet = expectedResourceSetBuilder.build();
-
-    for (PBXBuildFile file : buildPhase.getFiles()) {
-      String source = assertFileRefIsRelativeAndResolvePath(file.getFileRef());
-      assertTrue(
-          "Resource should be in list of expected resources: " + source,
-          expectedResourceSet.contains(source));
     }
   }
 

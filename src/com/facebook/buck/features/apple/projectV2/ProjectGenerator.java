@@ -248,7 +248,6 @@ public class ProjectGenerator {
   private final ImmutableMap<Flavor, CxxBuckConfig> platformCxxBuckConfigs;
   private final SwiftBuckConfig swiftBuckConfig;
   private final AppleConfig appleConfig;
-  private final boolean isMainProject;
   private final BuildTarget workspaceTarget;
   private final ImmutableSet<BuildTarget> targetsInRequiredProjects;
 
@@ -269,7 +268,6 @@ public class ProjectGenerator {
       XcodeProjectWriteOptions xcodeProjectWriteOptions,
       ProjectGeneratorOptions options,
       RuleKeyConfiguration ruleKeyConfiguration,
-      boolean isMainProject,
       BuildTarget workspaceTarget,
       ImmutableSet<BuildTarget> targetsInRequiredProjects,
       CxxPlatform defaultCxxPlatform,
@@ -292,7 +290,6 @@ public class ProjectGenerator {
     this.buildFileName = buildFileName;
     this.options = options;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
-    this.isMainProject = isMainProject;
     this.workspaceTarget = workspaceTarget;
     this.targetsInRequiredProjects = targetsInRequiredProjects;
     this.defaultCxxPlatform = defaultCxxPlatform;
@@ -479,7 +476,7 @@ public class ProjectGenerator {
 
       buckEventBus.post(ProjectGenerationEvent.processed());
 
-      if (shouldMergeHeaderMaps() && isMainProject) {
+      if (shouldMergeHeaderMaps()) {
         createMergedHeaderMap(requiredBuildTargetsBuilder);
       }
 
