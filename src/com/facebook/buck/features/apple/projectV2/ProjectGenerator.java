@@ -2799,6 +2799,8 @@ public class ProjectGenerator {
       HeaderMap.Builder headerMapBuilder,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder) {
     CommonArg arg = targetNode.getConstructorArg();
+    // If the target uses header symlinks, we need to use symlinks in the header map to support
+    // accurate indexing/mapping of headers.
     boolean shouldCreateHeadersSymlinks =
         arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled());
     Path headerSymlinkTreeRoot = getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC);
@@ -2851,14 +2853,14 @@ public class ProjectGenerator {
                   visitRecursiveHeaderSymlinkTrees(
                       argTargetNode,
                       (depNativeNode, headerVisibility) -> {
-                        if (processedNodes.contains(depNativeNode)) {
+                        // Skip nodes we've already processed and headers that are not public
+                        if (processedNodes.contains(depNativeNode)
+                            || headerVisibility != HeaderVisibility.PUBLIC) {
                           return;
                         }
-                        if (headerVisibility == HeaderVisibility.PUBLIC) {
-                          addToMergedHeaderMap(
-                              depNativeNode, headerMapBuilder, requiredBuildTargetsBuilder);
-                          processedNodes.add(depNativeNode);
-                        }
+                        addToMergedHeaderMap(
+                            depNativeNode, headerMapBuilder, requiredBuildTargetsBuilder);
+                        processedNodes.add(depNativeNode);
                       }));
     }
 

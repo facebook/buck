@@ -25,6 +25,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertEquals;
@@ -168,6 +169,7 @@ public class ProjectGeneratorTest {
   private static final Flavor DEFAULT_FLAVOR = InternalFlavor.of("default");
   private static final String WATCH_EXTENSION_PRODUCT_TYPE =
       "com.apple.product-type.watchkit2-extension";
+  private static final Path PUBLIC_HEADER_MAP_PATH = Paths.get("buck-out/gen/_p/pub-hmap");
   private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
   private Cell projectCell;
@@ -201,12 +203,15 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of(
             "cxx",
-            ImmutableMap.of(
-                "cflags", "-Wno-deprecated -Wno-conversion",
-                "cppflags", "-DDEBUG=1",
-                "cxxppflags", "-DDEBUG=1",
-                "cxxflags", "-Wundeclared-selector -Wno-objc-designated-initializers",
-                "ldflags", "-fatal_warnings"),
+            ImmutableMap.<String, String>builder()
+                .put("cflags", "-Wno-deprecated -Wno-conversion")
+                .put("cppflags", "-DDEBUG=1")
+                .put("cxxppflags", "-DDEBUG=1")
+                .put("cxxflags", "-Wundeclared-selector -Wno-objc-designated-initializers")
+                .put("ldflags", "-fatal_warnings")
+                .put("exported_headers_symlinks_enabled", "false")
+                .put("headers_symlinks_enabled", "false")
+                .build(),
             "cxx#appletvos-armv7",
             ImmutableMap.of("cflags", "-Wno-nullability-completeness"),
             "apple",
@@ -741,15 +746,12 @@ public class ProjectGeneratorTest {
     assertNotNull(project);
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
-    assertThat(headerSymlinkTrees, hasSize(6));
-
+    assertThat(headerSymlinkTrees, hasSize(4));
     assertTrue(headerSymlinkTrees.contains(Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub")));
 
-    // TODO(chatatap): We're removing support for symlinks and moving to use merged header maps.
-    // However, merged header maps require providing a workspace target and having the project pass
-    // true for isMainProject. This has other side affects that must be handled further up the diff
-    // stack prior to updating the remainder of the test to look for the appropriate header entry.
-    // assertThatHeaderMapWithoutSymLinksIsEmpty(Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"));
+    assertThatHeaderMapWithoutSymLinksContains(
+        PUBLIC_HEADER_MAP_PATH,
+        ImmutableMap.of("lib/bar.h", rootPath.resolve("HeaderGroup1/bar.h").toString()));
   }
 
   @Test
@@ -782,13 +784,9 @@ public class ProjectGeneratorTest {
     // And that the public is the first
     assertThat(headerSymlinkTrees.get(0).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
 
-    // TODO(chatatap): We're removing support for symlinks and moving to use merged header maps.
-    // However, merged header maps require providing a workspace target and having the project pass
-    // true for isMainProject. This has other side affects that must be handled further up the diff
-    // stack prior to updating the remainder of the test to look for the appropriate header entry.
-    //    assertThatHeaderSymlinkTreeContains(
-    //        Paths.get("buck-out/gen/_p/pub-hmap"),
-    //        ImmutableMap.of("lib/bar.h", "HeaderGroup1/bar.h"));
+    assertThatHeaderMapWithoutSymLinksContains(
+        PUBLIC_HEADER_MAP_PATH,
+        ImmutableMap.of("lib/bar.h", rootPath.resolve("HeaderGroup1/bar.h").toString()));
   }
 
   @Test
@@ -927,9 +925,9 @@ public class ProjectGeneratorTest {
                 "-Xcc -ivfsoverlay -Xcc '$REPO_ROOT/buck-out/gen/_p/CwkbTNOBmb-pub/objc-module-overlay.yaml'")));
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
-    assertThat(headerSymlinkTrees, hasSize(2));
+    assertThat(headerSymlinkTrees, hasSize(1));
 
-    assertEquals("buck-out/gen/_p/CwkbTNOBmb-pub", headerSymlinkTrees.get(0).toString());
+    assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(0).toString());
     assertFalse(
         projectFilesystem.isFile(headerSymlinkTrees.get(0).resolve("objc-module-overlay.yaml")));
     assertFalse(
@@ -1124,45 +1122,39 @@ public class ProjectGeneratorTest {
             .count());
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
-    assertThat(headerSymlinkTrees, hasSize(2));
+    assertThat(headerSymlinkTrees, hasSize(1));
 
-    assertEquals("buck-out/gen/_p/CwkbTNOBmb-pub", headerSymlinkTrees.get(0).toString());
-    // TODO(chatatap): We're removing support for symlinks and moving to use merged header maps.
-    // However, merged header maps require providing a workspace target and having the project pass
-    // true for isMainProject. This has other side affects that must be handled further up the diff
-    // stack prior to updating the remainder of the test to look for the appropriate header entry.
-    //    assertThatHeaderSymlinkTreeContains(
-    //        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
-    //        ImmutableMap.<String, String>builder()
-    //            .put("lib/bar.h", "HeaderGroup1/bar.h")
-    //            .put("lib/foo3.h", "HeaderGroup2/foo3.h")
-    //            .build());
-    //
-    //    assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(1).toString());
-    //    assertThatHeaderSymlinkTreeContains(
-    //        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
-    //        ImmutableMap.<String, String>builder()
-    //            .put("lib/foo.h", "HeaderGroup1/foo.h")
-    //            .put("lib/baz.h", "HeaderGroup2/baz.h")
-    //            .put("foo.h", "HeaderGroup1/foo.h")
-    //            .put("bar.h", "HeaderGroup1/bar.h")
-    //            .put("baz.h", "HeaderGroup2/baz.h")
-    //            .put("lib/foo1.h", "HeaderGroup1/foo1.h")
-    //            .put("foo1.h", "HeaderGroup1/foo1.h")
-    //            .put("lib/foo2.h", "HeaderGroup1/foo2.h")
-    //            .put("foo2.h", "HeaderGroup1/foo2.h")
-    //            .put("foo3.h", "HeaderGroup2/foo3.h")
-    //            .build());
-    //
-    //    ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target,
-    // "Default");
-    //
-    //    assertEquals(
-    //        "'../HeaderGroup1/foo1.h' '../HeaderGroup1/foo2.h' '../HeaderGroup2/foo3.h'",
-    //        buildSettings.get("EXCLUDED_SOURCE_FILE_NAMES"));
-    //    assertEquals(
-    //        "'../HeaderGroup1/foo1.h' '../HeaderGroup2/foo3.h'",
-    //        buildSettings.get("INCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*][arch=i386]"));
+    assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(0).toString());
+    assertThatHeaderMapWithoutSymLinksContains(
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
+        ImmutableMap.<String, String>builder()
+            .put("lib/foo.h", "HeaderGroup1/foo.h")
+            .put("lib/baz.h", "HeaderGroup2/baz.h")
+            .put("foo.h", "HeaderGroup1/foo.h")
+            .put("bar.h", "HeaderGroup1/bar.h")
+            .put("baz.h", "HeaderGroup2/baz.h")
+            .put("lib/foo1.h", "HeaderGroup1/foo1.h")
+            .put("foo1.h", "HeaderGroup1/foo1.h")
+            .put("lib/foo2.h", "HeaderGroup1/foo2.h")
+            .put("foo2.h", "HeaderGroup1/foo2.h")
+            .put("foo3.h", "HeaderGroup2/foo3.h")
+            .build());
+
+    assertThatHeaderMapWithoutSymLinksContains(
+        PUBLIC_HEADER_MAP_PATH,
+        ImmutableMap.<String, String>builder()
+            .put("lib/bar.h", "HeaderGroup1/bar.h")
+            .put("lib/foo3.h", "HeaderGroup2/foo3.h")
+            .build());
+
+    ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target, "Default");
+
+    assertEquals(
+        "'../HeaderGroup1/foo1.h' '../HeaderGroup1/foo2.h' '../HeaderGroup2/foo3.h'",
+        buildSettings.get("EXCLUDED_SOURCE_FILE_NAMES"));
+    assertEquals(
+        "'../HeaderGroup1/foo1.h' '../HeaderGroup2/foo3.h'",
+        buildSettings.get("INCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*][arch=i386]"));
   }
 
   @Test
@@ -1253,38 +1245,32 @@ public class ProjectGeneratorTest {
             .count());
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
-    assertThat(headerSymlinkTrees, hasSize(2));
+    assertThat(headerSymlinkTrees, hasSize(1));
 
-    assertEquals("buck-out/gen/_p/CwkbTNOBmb-pub", headerSymlinkTrees.get(0).toString());
-    // TODO(chatatap): We're removing support for symlinks and moving to use merged header maps.
-    // However, merged header maps require providing a workspace target and having the project pass
-    // true for isMainProject. This has other side affects that must be handled further up the diff
-    // stack prior to updating the remainder of the test to look for the appropriate header entry.
-    //    assertThatHeaderSymlinkTreeContains(
-    //        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
-    //        ImmutableMap.of(
-    //            "yet/another/name.h", "HeaderGroup1/bar.h",
-    //            "and/one/more.h", "foo/generated2.h",
-    //            "any/name2.h", "HeaderGroup2/foo2.h"));
-    //
-    //    assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(1).toString());
-    //    assertThatHeaderSymlinkTreeContains(
-    //        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
-    //        ImmutableMap.of(
-    //            "any/name.h", "HeaderGroup1/foo.h",
-    //            "different/name.h", "HeaderGroup2/baz.h",
-    //            "one/more/name.h", "foo/generated1.h",
-    //            "any/name1.h", "HeaderGroup1/foo1.h"));
-    //
-    //    ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target,
-    // "Default");
-    //
-    //    assertEquals(
-    //        "'../HeaderGroup1/foo1.h' '../HeaderGroup2/foo2.h'",
-    //        buildSettings.get("EXCLUDED_SOURCE_FILE_NAMES"));
-    //    assertEquals(
-    //        "'../HeaderGroup1/foo1.h'",
-    //        buildSettings.get("INCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*][arch=i386]"));
+    assertThatHeaderMapWithoutSymLinksContains(
+        PUBLIC_HEADER_MAP_PATH,
+        ImmutableMap.of(
+            "yet/another/name.h", absolutePathForHeader("HeaderGroup1/bar.h"),
+            "and/one/more.h", absolutePathForHeader("foo/generated2.h"),
+            "any/name2.h", absolutePathForHeader("HeaderGroup2/foo2.h")));
+
+    assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(0).toString());
+    assertThatHeaderMapWithoutSymLinksContains(
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
+        ImmutableMap.of(
+            "any/name.h", absolutePathForHeader("HeaderGroup1/foo.h"),
+            "different/name.h", absolutePathForHeader("HeaderGroup2/baz.h"),
+            "one/more/name.h", absolutePathForHeader("foo/generated1.h"),
+            "any/name1.h", absolutePathForHeader("HeaderGroup1/foo1.h")));
+
+    ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target, "Default");
+
+    assertEquals(
+        "'../HeaderGroup1/foo1.h' '../HeaderGroup2/foo2.h'",
+        buildSettings.get("EXCLUDED_SOURCE_FILE_NAMES"));
+    assertEquals(
+        "'../HeaderGroup1/foo1.h'",
+        buildSettings.get("INCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*][arch=i386]"));
   }
 
   @Test
@@ -1318,33 +1304,30 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
-    assertThat(headerSymlinkTrees, hasSize(2));
 
-    assertThat(headerSymlinkTrees.get(0).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
-    // TODO(chatatap): We're removing support for symlinks and moving to use merged header maps.
-    // However, merged header maps require providing a workspace target and having the project pass
-    // true for isMainProject. This has other side affects that must be handled further up the diff
-    // stack prior to updating the remainder of the test to look for the appropriate header entry.
-    //    assertThatHeaderSymlinkTreeContains(
-    //        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
-    //        ImmutableMap.<String, String>builder()
-    //            .put("foo/dir1/bar.h", "foo/dir1/bar.h")
-    //            .put("foo/HeaderGroup2/foo3.h", "foo/HeaderGroup2/foo3.h")
-    //            .build());
+    // We expect one private header symlink tree
+    assertThat(headerSymlinkTrees, hasSize(1));
 
     assertThat(
-        headerSymlinkTrees.get(1).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
-    // TODO(chatatap): We're removing support for symlinks and moving to use merged header maps.
-    // However, merged header maps require providing a workspace target and having the project pass
-    // true for isMainProject. This has other side affects that must be handled further up the diff
-    // stack prior to updating the remainder of the test to look for the appropriate header entry.
-    //    assertThatHeaderSymlinkTreeContains(
-    //        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
-    //        ImmutableMap.<String, String>builder()
-    //            .put("foo/dir1/foo.h", "foo/dir1/foo.h")
-    //            .put("foo/dir2/baz.h", "foo/dir2/baz.h")
-    //            .put("foo/HeaderGroup1/foo1.h", "foo/HeaderGroup1/foo1.h")
-    //            .build());
+        headerSymlinkTrees.get(0).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
+    assertThatHeaderMapWithoutSymLinksContains(
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
+        ImmutableMap.<String, String>builder()
+            .put("foo/dir1/foo.h", absolutePathForHeader("foo/dir1/foo.h"))
+            .put("foo/dir2/baz.h", absolutePathForHeader("foo/dir2/baz.h"))
+            .put("foo/HeaderGroup1/foo1.h", absolutePathForHeader("foo/HeaderGroup1/foo1.h"))
+            .build());
+
+    assertThatHeaderMapWithoutSymLinksContains(
+        PUBLIC_HEADER_MAP_PATH,
+        ImmutableMap.<String, String>builder()
+            .put("foo/dir1/bar.h", absolutePathForHeader("foo/dir1/bar.h"))
+            .put("foo/HeaderGroup2/foo3.h", absolutePathForHeader("foo/HeaderGroup2/foo3.h"))
+            .build());
+  }
+
+  private String absolutePathForHeader(String relativePath) {
+    return rootPath.resolve(relativePath).toString();
   }
 
   @Test
@@ -1425,33 +1408,24 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
-    assertThat(headerSymlinkTrees, hasSize(2));
-
-    assertThat(headerSymlinkTrees.get(0).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
-    // TODO(chatatap): We're removing support for symlinks and moving to use merged header maps.
-    // However, merged header maps require providing a workspace target and having the project pass
-    // true for isMainProject. This has other side affects that must be handled further up the diff
-    // stack prior to updating the remainder of the test to look for the appropriate header entry.
-    //    assertThatHeaderSymlinkTreeContains(
-    //        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
-    //        ImmutableMap.<String, String>builder()
-    //            .put("name/space/dir1/bar.h", "foo/dir1/bar.h")
-    //            .put("name/space/HeaderGroup2/foo3.h", "foo/HeaderGroup2/foo3.h")
-    //            .build());
+    assertThat(headerSymlinkTrees, hasSize(1));
 
     assertThat(
-        headerSymlinkTrees.get(1).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
-    // TODO(chatatap): We're removing support for symlinks and moving to use merged header maps.
-    // However, merged header maps require providing a workspace target and having the project pass
-    // true for isMainProject. This has other side affects that must be handled further up the diff
-    // stack prior to updating the remainder of the test to look for the appropriate header entry.
-    //    assertThatHeaderSymlinkTreeContains(
-    //        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
-    //        ImmutableMap.<String, String>builder()
-    //            .put("name/space/dir1/foo.h", "foo/dir1/foo.h")
-    //            .put("name/space/dir2/baz.h", "foo/dir2/baz.h")
-    //            .put("name/space/HeaderGroup1/foo1.h", "foo/HeaderGroup1/foo1.h")
-    //            .build());
+        headerSymlinkTrees.get(0).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
+    assertThatHeaderMapWithoutSymLinksContains(
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
+        ImmutableMap.<String, String>builder()
+            .put("name/space/dir1/foo.h", absolutePathForHeader("foo/dir1/foo.h"))
+            .put("name/space/dir2/baz.h", absolutePathForHeader("foo/dir2/baz.h"))
+            .put("name/space/HeaderGroup1/foo1.h", absolutePathForHeader("foo/HeaderGroup1/foo1.h"))
+            .build());
+
+    assertThatHeaderMapWithoutSymLinksContains(
+        PUBLIC_HEADER_MAP_PATH,
+        ImmutableMap.<String, String>builder()
+            .put("name/space/dir1/bar.h", absolutePathForHeader("foo/dir1/bar.h"))
+            .put("name/space/HeaderGroup2/foo3.h", absolutePathForHeader("foo/HeaderGroup2/foo3.h"))
+            .build());
   }
 
   @Test
@@ -1505,33 +1479,24 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
-    assertThat(headerSymlinkTrees, hasSize(2));
-
-    assertThat(headerSymlinkTrees.get(0).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
-    // TODO(chatatap): We're removing support for symlinks and moving to use merged header maps.
-    // However, merged header maps require providing a workspace target and having the project pass
-    // true for isMainProject. This has other side affects that must be handled further up the diff
-    // stack prior to updating the remainder of the test to look for the appropriate header entry.
-    //    assertThatHeaderSymlinkTreeContains(
-    //        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
-    //        ImmutableMap.of(
-    //            "foo/yet/another/name.h", "foo/dir1/bar.h",
-    //            "foo/and/one/more.h", "foo/generated2.h",
-    //            "foo/any/name2.h", "HeaderGroup2/foo2.h"));
+    assertThat(headerSymlinkTrees, hasSize(1));
 
     assertThat(
-        headerSymlinkTrees.get(1).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
-    // TODO(chatatap): We're removing support for symlinks and moving to use merged header maps.
-    // However, merged header maps require providing a workspace target and having the project pass
-    // true for isMainProject. This has other side affects that must be handled further up the diff
-    // stack prior to updating the remainder of the test to look for the appropriate header entry.
-    //    assertThatHeaderSymlinkTreeContains(
-    //        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
-    //        ImmutableMap.of(
-    //            "foo/any/name.h", "foo/dir1/foo.h",
-    //            "foo/different/name.h", "foo/dir2/baz.h",
-    //            "foo/one/more/name.h", "foo/generated1.h",
-    //            "foo/any/name1.h", "HeaderGroup1/foo1.h"));
+        headerSymlinkTrees.get(0).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
+    assertThatHeaderMapWithoutSymLinksContains(
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
+        ImmutableMap.of(
+            "foo/any/name.h", "foo/dir1/foo.h",
+            "foo/different/name.h", "foo/dir2/baz.h",
+            "foo/one/more/name.h", "foo/generated1.h",
+            "foo/any/name1.h", "HeaderGroup1/foo1.h"));
+
+    assertThatHeaderMapWithoutSymLinksContains(
+        PUBLIC_HEADER_MAP_PATH,
+        ImmutableMap.of(
+            "foo/yet/another/name.h", "foo/dir1/bar.h",
+            "foo/and/one/more.h", "foo/generated2.h",
+            "foo/any/name2.h", "HeaderGroup2/foo2.h"));
   }
 
   @Test
@@ -1591,33 +1556,25 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
-    assertThat(headerSymlinkTrees, hasSize(2));
-
-    assertThat(headerSymlinkTrees.get(0).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
-    // TODO(chatatap): We're removing support for symlinks and moving to use merged header maps.
-    // However, merged header maps require providing a workspace target and having the project pass
-    // true for isMainProject. This has other side affects that must be handled further up the diff
-    // stack prior to updating the remainder of the test to look for the appropriate header entry.
-    //    assertThatHeaderSymlinkTreeContains(
-    //        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
-    //        ImmutableMap.of(
-    //            "foo/yet/another/name.h", "foo/dir1/bar.h",
-    //            "foo/and/one/more.h", "foo/generated2.h",
-    //            "foo/any/name2.h", "HeaderGroup2/foo2.h"));
+    assertThat(headerSymlinkTrees, hasSize(1));
 
     assertThat(
-        headerSymlinkTrees.get(1).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
-    // TODO(chatatap): We're removing support for symlinks and moving to use merged header maps.
-    // However, merged header maps require providing a workspace target and having the project pass
-    // true for isMainProject. This has other side affects that must be handled further up the diff
-    // stack prior to updating the remainder of the test to look for the appropriate header entry.
-    //    assertThatHeaderSymlinkTreeContains(
-    //        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
-    //        ImmutableMap.of(
-    //            "foo/any/name.h", "foo/dir1/foo.h",
-    //            "foo/different/name.h", "foo/dir2/baz.h",
-    //            "foo/one/more/name.h", "foo/generated1.h",
-    //            "foo/any/name1.h", "HeaderGroup1/foo1.h"));
+        headerSymlinkTrees.get(0).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
+
+    assertThatHeaderMapWithoutSymLinksContains(
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
+        ImmutableMap.of(
+            "foo/any/name.h", "foo/dir1/foo.h",
+            "foo/different/name.h", "foo/dir2/baz.h",
+            "foo/one/more/name.h", "foo/generated1.h",
+            "foo/any/name1.h", "HeaderGroup1/foo1.h"));
+
+    assertThatHeaderMapWithoutSymLinksContains(
+        PUBLIC_HEADER_MAP_PATH,
+        ImmutableMap.of(
+            "foo/yet/another/name.h", "foo/dir1/bar.h",
+            "foo/and/one/more.h", "foo/generated2.h",
+            "foo/any/name2.h", "HeaderGroup2/foo2.h"));
   }
 
   @Test
@@ -1672,33 +1629,24 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
-    assertThat(headerSymlinkTrees, hasSize(2));
-
-    assertThat(headerSymlinkTrees.get(0).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
-    // TODO(chatatap): We're removing support for symlinks and moving to use merged header maps.
-    // However, merged header maps require providing a workspace target and having the project pass
-    // true for isMainProject. This has other side affects that must be handled further up the diff
-    // stack prior to updating the remainder of the test to look for the appropriate header entry.
-    //    assertThatHeaderSymlinkTreeContains(
-    //        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
-    //        ImmutableMap.of(
-    //            "name/space/yet/another/name.h", "foo/dir1/bar.h",
-    //            "name/space/and/one/more.h", "foo/generated2.h",
-    //            "name/space/any/name2.h", "HeaderGroup2/foo2.h"));
+    assertThat(headerSymlinkTrees, hasSize(1));
 
     assertThat(
-        headerSymlinkTrees.get(1).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
-    // TODO(chatatap): We're removing support for symlinks and moving to use merged header maps.
-    // However, merged header maps require providing a workspace target and having the project pass
-    // true for isMainProject. This has other side affects that must be handled further up the diff
-    // stack prior to updating the remainder of the test to look for the appropriate header entry.
-    //    assertThatHeaderSymlinkTreeContains(
-    //        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
-    //        ImmutableMap.of(
-    //            "name/space/any/name.h", "foo/dir1/foo.h",
-    //            "name/space/different/name.h", "foo/dir2/baz.h",
-    //            "name/space/one/more/name.h", "foo/generated1.h",
-    //            "name/space/any/name1.h", "HeaderGroup1/foo1.h"));
+        headerSymlinkTrees.get(0).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
+    assertThatHeaderMapWithoutSymLinksContains(
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
+        ImmutableMap.of(
+            "name/space/any/name.h", "foo/dir1/foo.h",
+            "name/space/different/name.h", "foo/dir2/baz.h",
+            "name/space/one/more/name.h", "foo/generated1.h",
+            "name/space/any/name1.h", "HeaderGroup1/foo1.h"));
+
+    assertThatHeaderMapWithoutSymLinksContains(
+        PUBLIC_HEADER_MAP_PATH,
+        ImmutableMap.of(
+            "name/space/yet/another/name.h", "foo/dir1/bar.h",
+            "name/space/and/one/more.h", "foo/generated2.h",
+            "name/space/any/name2.h", "HeaderGroup2/foo2.h"));
   }
 
   @Test
@@ -1722,10 +1670,10 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
-    assertThat(headerSymlinkTrees, hasSize(2));
+    assertThat(headerSymlinkTrees, hasSize(1));
 
-    assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(1).toString());
-    assertThatHeaderSymlinkTreeContains(
+    assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(0).toString());
+    assertThatHeaderMapWithoutSymLinksContains(
         Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
         ImmutableMap.of("key.h", "value.h", "key1.h", "value1.h"));
 
@@ -1740,13 +1688,13 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
-    assertThat(headerSymlinkTrees, hasSize(2));
+    assertThat(headerSymlinkTrees, hasSize(1));
 
-    assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(1).toString());
+    assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(0).toString());
     assertFalse(
         projectFilesystem.isSymLink(
             Paths.get("buck-out/gen/foo/lib-private-header-symlink-tree/key.h")));
-    assertThatHeaderSymlinkTreeContains(
+    assertThatHeaderMapWithoutSymLinksContains(
         Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"), ImmutableMap.of("new-key.h", "value.h"));
   }
 
@@ -1764,10 +1712,10 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
-    assertThat(headerSymlinkTrees, hasSize(2));
+    assertThat(headerSymlinkTrees, hasSize(1));
 
-    assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(1).toString());
-    assertThatHeaderSymlinkTreeContains(
+    assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(0).toString());
+    assertThatHeaderMapWithoutSymLinksContains(
         Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"), ImmutableMap.of("key.h", "value.h"));
 
     node =
@@ -1781,10 +1729,10 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProjects();
 
     headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
-    assertThat(headerSymlinkTrees, hasSize(2));
+    assertThat(headerSymlinkTrees, hasSize(1));
 
-    assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(1).toString());
-    assertThatHeaderSymlinkTreeContains(
+    assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(0).toString());
+    assertThatHeaderMapWithoutSymLinksContains(
         Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"), ImmutableMap.of("key.h", "new-value.h"));
   }
 
@@ -1944,7 +1892,9 @@ public class ProjectGeneratorTest {
             "-ivfsoverlay '$REPO_ROOT/buck-out/gen/_p/CwkbTNOBmb-pub/testing-overlay.yaml'"));
 
     List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
-    assertThat(headerSymlinkTrees, hasSize(4));
+
+    // We expect 2 private symlink paths and one public one with testing modulemaps/overlays.
+    assertThat(headerSymlinkTrees, hasSize(3));
 
     Path libSymlinktreePublic = Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub");
     assertTrue(headerSymlinkTrees.contains(libSymlinktreePublic));
@@ -2174,7 +2124,7 @@ public class ProjectGeneratorTest {
     TargetNode<?> lib = new HalideLibraryBuilder(libTarget).build();
 
     ProjectGenerator projectGenerator =
-      createProjectGenerator(ImmutableSet.of(compiler, lib), libTarget);
+        createProjectGenerator(ImmutableSet.of(compiler, lib), libTarget);
     ProjectGenerator.Result result = projectGenerator.createXcodeProjects();
 
     PBXTarget target =
@@ -5097,8 +5047,6 @@ public class ProjectGeneratorTest {
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
             .setSwiftVersion(Optional.of("3.0"))
-            .setXcodePublicHeadersSymlinks(false)
-            .setXcodePrivateHeadersSymlinks(false)
             .build();
 
     ProjectGenerator projectGenerator =
@@ -5112,37 +5060,25 @@ public class ProjectGeneratorTest {
 
     projectGenerator.createXcodeProjects();
 
-    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
-    assertThat(headerSymlinkTrees, hasSize(1));
+    HeaderMap headerMap = getHeaderMapInDir(PUBLIC_HEADER_MAP_PATH);
+    assertThat(headerMap.getNumEntries(), equalTo(1));
 
-    String privateHeaderMapDir = "buck-out/gen/_p/CwkbTNOBmb-priv";
-    assertThat(headerSymlinkTrees.get(0).toString(), is(equalTo(privateHeaderMapDir)));
+    String objCGeneratedHeaderName = "lib-Swift.h";
+    String derivedSourcesUserDir =
+        "buck-out/xcode/derived-sources/lib-0b091b4cd38199b85fed37557a12c08fbbca9b32";
+    String objCGeneratedHeaderPathName = headerMap.lookup("lib/lib-Swift.h");
+    assertTrue(
+        objCGeneratedHeaderPathName.endsWith(
+            derivedSourcesUserDir + "/" + objCGeneratedHeaderName));
 
-    // TODO(chatatap): We're removing support for symlinks and moving to use merged header maps.
-    // However, merged header maps require providing a workspace target and having the project pass
-    // true for isMainProject. This has other side affects that must be handled further up the diff
-    // stack prior to updating the remainder of the test to look for the appropriate header entry.
-    //    HeaderMap headerMap = getHeaderMapInDir(Paths.get(privateHeaderMapDir));
-    //    assertThat(headerMap.getNumEntries(), equalTo(1));
-    //
-    //    String objCGeneratedHeaderName = "lib-Swift.h";
-    //    String derivedSourcesUserDir =
-    //        "buck-out/xcode/derived-sources/lib-0b091b4cd38199b85fed37557a12c08fbbca9b32";
-    //    String objCGeneratedHeaderPathName = headerMap.lookup("lib/lib-Swift.h");
-    //    assertTrue(
-    //        objCGeneratedHeaderPathName.endsWith(
-    //            derivedSourcesUserDir + "/" + objCGeneratedHeaderName));
-    //
-    //    PBXProject pbxProject = projectGenerator.getGeneratedProject();
-    //    PBXTarget pbxTarget = assertTargetExistsAndReturnTarget(pbxProject, "//foo:lib");
-    //    ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, pbxTarget,
-    // "Debug");
-    //
-    //    assertThat(buildSettings.get("DERIVED_FILE_DIR"), startsWith("/"));
-    //    assertTrue(buildSettings.get("DERIVED_FILE_DIR").endsWith(derivedSourcesUserDir));
-    //    assertThat(
-    //        buildSettings.get("SWIFT_OBJC_INTERFACE_HEADER_NAME"),
-    // equalTo(objCGeneratedHeaderName));
+    PBXProject pbxProject = projectGenerator.getGeneratedProject();
+    PBXTarget pbxTarget = assertTargetExistsAndReturnTarget(pbxProject, "//foo:lib");
+    ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, pbxTarget, "Debug");
+
+    assertThat(buildSettings.get("DERIVED_FILE_DIR"), startsWith("/"));
+    assertTrue(buildSettings.get("DERIVED_FILE_DIR").endsWith(derivedSourcesUserDir));
+    assertThat(
+        buildSettings.get("SWIFT_OBJC_INTERFACE_HEADER_NAME"), equalTo(objCGeneratedHeaderName));
   }
 
   @Test
@@ -5353,14 +5289,14 @@ public class ProjectGeneratorTest {
     // The merged header map should not generated at this point.
     assertTrue(hmapPath + " should exist.", projectFilesystem.isFile(hmapPath));
     assertThatHeaderMapWithoutSymLinksContains(
-        Paths.get("buck-out/gen/_p/pub-hmap"),
+        PUBLIC_HEADER_MAP_PATH,
         ImmutableMap.of(
             "lib1/lib1.h",
-            "buck-out/gen/_p/WNl0jZWMBk-pub/lib1/lib1.h",
+            absolutePathForHeader("lib1.h"),
             "lib2/lib2.h",
-            "buck-out/gen/_p/YAYFR3hXIb-pub/lib2/lib2.h",
+            absolutePathForHeader("lib2.h"),
             "lib4/lib4.h",
-            "buck-out/gen/_p/nmnbF8ID6C-pub/lib4/lib4.h"));
+            absolutePathForHeader("lib4.h")));
     // Checks the content of the header search paths.
     PBXProject project1 = projectGeneratorLib1.getGeneratedProject();
 
@@ -5480,14 +5416,14 @@ public class ProjectGeneratorTest {
     // The merged header map should not generated at this point.
     assertTrue(hmapPath + " should exist.", projectFilesystem.isFile(hmapPath));
     assertThatHeaderMapWithoutSymLinksContains(
-        Paths.get("buck-out/gen/_p/pub-hmap"),
+        PUBLIC_HEADER_MAP_PATH,
         ImmutableMap.of(
             "lib1/lib1.h",
-            "buck-out/gen/_p/WNl0jZWMBk-pub/lib1/lib1.h",
+            absolutePathForHeader("lib1.h"),
             "lib2/lib2.h",
-            "buck-out/gen/_p/YAYFR3hXIb-pub/lib2/lib2.h",
+            absolutePathForHeader("lib2.h"),
             "lib4/lib4.h",
-            "buck-out/gen/_p/nmnbF8ID6C-pub/lib4/lib4.h"));
+            absolutePathForHeader("lib4.h")));
     // Checks the content of the header search paths.
     PBXProject project1 = projectGeneratorLib1.getGeneratedProject();
 
@@ -5580,15 +5516,26 @@ public class ProjectGeneratorTest {
       ProjectGeneratorOptions projectGeneratorOptions,
       ImmutableSet<Flavor> appleCxxFlavors,
       Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibrariesToBundles) {
+    XCodeDescriptions xcodeDescriptions =
+        XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
+
+    // The graph should contain all nodes
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
+
+    // Initial targets are all targets that are "focused" on
     ImmutableSet<BuildTarget> initialBuildTargets =
         initialTargetNodes.stream()
             .map(TargetNode::getBuildTarget)
             .collect(ImmutableSet.toImmutableSet());
 
-    XCodeDescriptions xcodeDescriptions =
-        XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
+    // Here we assume that all initial targets and workspace targets are ones that we want. Not
+    // necessarily all nodes in the graph.
+    ImmutableSet<BuildTarget> targetsInRequiredProjects =
+        new ImmutableSet.Builder<BuildTarget>()
+            .addAll(initialBuildTargets)
+            .add(workspaceTarget)
+            .build();
 
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
     Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode =
         getActionGraphBuilderNodeFunction(targetGraph);
 
@@ -5606,7 +5553,7 @@ public class ProjectGeneratorTest {
         projectGeneratorOptions,
         TestRuleKeyConfigurationFactory.create(),
         workspaceTarget,
-        ImmutableSet.of(),
+        targetsInRequiredProjects,
         DEFAULT_PLATFORM,
         appleCxxFlavors,
         actionGraphBuilderForNode,
