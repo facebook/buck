@@ -456,7 +456,7 @@ public class WorkspaceAndProjectGenerator {
             projectGeneratorOptions,
             ruleKeyConfiguration,
             true,
-            workspaceArguments.getSrcTarget(),
+            workspaceArguments.getSrcTarget().get(),
             targetsInRequiredProjects,
             defaultCxxPlatform,
             appleCxxFlavors,

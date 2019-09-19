@@ -249,7 +249,7 @@ public class ProjectGenerator {
   private final SwiftBuckConfig swiftBuckConfig;
   private final AppleConfig appleConfig;
   private final boolean isMainProject;
-  private final Optional<BuildTarget> workspaceTarget;
+  private final BuildTarget workspaceTarget;
   private final ImmutableSet<BuildTarget> targetsInRequiredProjects;
 
   /**
@@ -270,7 +270,7 @@ public class ProjectGenerator {
       ProjectGeneratorOptions options,
       RuleKeyConfiguration ruleKeyConfiguration,
       boolean isMainProject,
-      Optional<BuildTarget> workspaceTarget,
+      BuildTarget workspaceTarget,
       ImmutableSet<BuildTarget> targetsInRequiredProjects,
       CxxPlatform defaultCxxPlatform,
       ImmutableSet<Flavor> appleCxxFlavors,
@@ -355,7 +355,7 @@ public class ProjectGenerator {
   }
 
   private boolean shouldMergeHeaderMaps() {
-    return workspaceTarget.isPresent();
+    return true;
   }
 
   /** The output from generating an Xcode project. */
@@ -415,25 +415,22 @@ public class ProjectGenerator {
 
       // Handle the workspace target if it's in the project. This ensures the
       // workspace target isn't filtered later by loading it first.
-      final Optional<TargetNode<?>> workspaceTargetNode =
-          workspaceTarget.map(target -> targetGraph.get(target));
-      if (workspaceTargetNode.isPresent() && projectTargets.contains(workspaceTargetNode.get())) {
+      final TargetNode<?> workspaceTargetNode = targetGraph.get(workspaceTarget);
+      if (projectTargets.contains(workspaceTargetNode)) {
         ProjectTargetGenerationResult result =
-            generateProjectTarget(
-                workspaceTargetNode.get(),
-                requiredBuildTargetsBuilder,
-                xcconfigPathsBuilder,
-                targetConfigNamesBuilder,
-                generatedTargets);
+          generateProjectTarget(
+            workspaceTargetNode,
+            requiredBuildTargetsBuilder,
+            xcconfigPathsBuilder,
+            targetConfigNamesBuilder,
+            generatedTargets);
         generationResultsBuilder.add(result);
       }
 
-      // Exclude the workspace target since it's loaded above.
       for (TargetNode<?> input :
           projectTargets.stream()
               .filter(
-                  input ->
-                      !workspaceTargetNode.isPresent() || !input.equals(workspaceTargetNode.get()))
+                  input -> !input.equals(workspaceTargetNode))
               .collect(Collectors.toSet())) {
         ProjectTargetGenerationResult result =
             generateProjectTarget(
@@ -2880,7 +2877,7 @@ public class ProjectGenerator {
     // Writes the resulting header map.
     Path mergedHeaderMapRoot = getPathToMergedHeaderMap();
     Path headerMapLocation = getHeaderMapLocationFromSymlinkTreeRoot(mergedHeaderMapRoot);
-    Cell workspaceCell = projectCell.getCell(workspaceTarget.get());
+    Cell workspaceCell = projectCell.getCell(workspaceTarget);
     workspaceCell.getFilesystem().mkdirs(mergedHeaderMapRoot);
     workspaceCell
         .getFilesystem()
@@ -3305,7 +3302,7 @@ public class ProjectGenerator {
       builder.add(
           getHeaderSearchPathFromSymlinkTreeRoot(
               getHeaderSymlinkTreePath(targetNode, HeaderVisibility.PRIVATE)));
-      Cell workspaceCell = projectCell.getCell(workspaceTarget.get());
+      Cell workspaceCell = projectCell.getCell(workspaceTarget);
       Path absolutePath = workspaceCell.getFilesystem().resolve(getPathToMergedHeaderMap());
       builder.add(getHeaderSearchPathFromSymlinkTreeRoot(absolutePath));
       visitRecursivePrivateHeaderSymlinkTreesForTests(
@@ -4273,6 +4270,6 @@ public class ProjectGenerator {
   }
 
   private Path getPathToMergedHeaderMap() {
-    return getPathToHeaderMapsRoot(Optional.of(workspaceTarget.get())).resolve("pub-hmap");
+    return getPathToHeaderMapsRoot(Optional.of(workspaceTarget)).resolve("pub-hmap");
   }
 }
