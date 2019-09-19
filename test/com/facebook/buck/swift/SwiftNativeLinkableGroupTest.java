@@ -18,6 +18,9 @@ package com.facebook.buck.swift;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.apple.toolchain.AppleSdk;
+import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -29,22 +32,70 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.impl.SwiftPlatformFactory;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class SwiftNativeLinkableGroupTest {
 
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
+
   private Tool swiftcTool;
   private Tool swiftStdTool;
   private SourcePathResolver sourcePathResolver;
+  private AppleSdk iphoneSdk;
+  private AppleSdkPaths iphoneSdkPaths;
+  private AppleSdk macosxSdk;
+  private AppleSdkPaths macosxSdkPaths;
+
+  private void setUpAppleSdks() {
+    Path developerDir;
+    try {
+      developerDir = tmp.newFolder("Developer");
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    iphoneSdk =
+        AppleSdk.builder()
+            .setApplePlatform(ApplePlatform.IPHONEOS)
+            .setName("iphoneos8.0")
+            .setVersion("8.0")
+            .setToolchains(ImmutableList.of())
+            .build();
+    iphoneSdkPaths =
+        AppleSdkPaths.builder()
+            .setDeveloperPath(developerDir)
+            .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform"))
+            .setSdkPath(
+                developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
+            .build();
+    macosxSdk =
+        AppleSdk.builder()
+            .setApplePlatform(ApplePlatform.MACOSX)
+            .setName("macosx10.14")
+            .setVersion("10.14")
+            .setToolchains(ImmutableList.of())
+            .build();
+    macosxSdkPaths =
+        AppleSdkPaths.builder()
+            .setDeveloperPath(developerDir)
+            .setPlatformPath(developerDir.resolve("Platforms/MacOSX.platform"))
+            .setSdkPath(
+                developerDir.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14sdk"))
+            .build();
+  }
 
   @Before
   public void setUp() {
     swiftcTool = VersionedTool.of(FakeSourcePath.of("swiftc"), "foo", "1.0");
     swiftStdTool = VersionedTool.of(FakeSourcePath.of("swift-std"), "foo", "1.0");
+
+    setUpAppleSdks();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
     sourcePathResolver = buildRuleResolver.getSourcePathResolver();
@@ -54,7 +105,7 @@ public class SwiftNativeLinkableGroupTest {
   public void testStaticLinkerFlagsOnMobile() {
     SwiftPlatform swiftPlatform =
         SwiftPlatformFactory.build(
-            "iphoneos", ImmutableSet.of(), swiftcTool, Optional.of(swiftStdTool), true);
+            iphoneSdk, iphoneSdkPaths, swiftcTool, Optional.of(swiftStdTool), true);
 
     ImmutableList.Builder<Arg> staticArgsBuilder = ImmutableList.builder();
     SwiftRuntimeNativeLinkableGroup.populateLinkerArguments(
@@ -90,7 +141,7 @@ public class SwiftNativeLinkableGroupTest {
   public void testStaticLinkerFlagsOnMac() {
     SwiftPlatform swiftPlatform =
         SwiftPlatformFactory.build(
-            "macosx", ImmutableSet.of(), swiftcTool, Optional.of(swiftStdTool), true);
+            macosxSdk, macosxSdkPaths, swiftcTool, Optional.of(swiftStdTool), true);
 
     ImmutableList.Builder<Arg> sharedArgsBuilder = ImmutableList.builder();
     SwiftRuntimeNativeLinkableGroup.populateLinkerArguments(

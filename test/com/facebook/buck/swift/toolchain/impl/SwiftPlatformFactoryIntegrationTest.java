@@ -21,12 +21,16 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
+import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.apple.toolchain.AppleSdk;
+import com.facebook.buck.apple.toolchain.AppleSdkPaths;
+import com.facebook.buck.apple.toolchain.AppleToolchain;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -38,6 +42,37 @@ public class SwiftPlatformFactoryIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
+  private AppleToolchain createAppleToolchain(Path toolchainPath) {
+    return AppleToolchain.builder()
+        .setIdentifier("com.apple.dt.toolchain.XcodeDefault")
+        .setPath(toolchainPath)
+        .setVersion("1")
+        .build();
+  }
+
+  private AppleSdk createAppleSdk(AppleToolchain... toolchain) {
+    AppleSdk.Builder appleSdkBuilder =
+        AppleSdk.builder()
+            .setApplePlatform(ApplePlatform.IPHONEOS)
+            .setName("iphoneos8.0")
+            .setVersion("8.0");
+    appleSdkBuilder.setToolchains(ImmutableList.copyOf(toolchain));
+    return appleSdkBuilder.build();
+  }
+
+  private AppleSdkPaths createAppleSdkPaths(Path developerDir, Path... toolchainPaths) {
+    AppleSdkPaths.Builder appleSdkPathsBuilder =
+        AppleSdkPaths.builder()
+            .setDeveloperPath(developerDir)
+            .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform"))
+            .setSdkPath(
+                developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"));
+    for (Path toolchainPath : toolchainPaths) {
+      appleSdkPathsBuilder.addToolchainPaths(toolchainPath);
+    }
+    return appleSdkPathsBuilder.build();
+  }
+
   private Tool swiftcTool;
   private Tool swiftStdTool;
 
@@ -48,43 +83,55 @@ public class SwiftPlatformFactoryIntegrationTest {
   }
 
   @Test
-  public void testBuildSwiftPlatformWithEmptyToolchainPaths() {
+  public void testBuildSwiftPlatformWithEmptyToolchainPaths() throws IOException {
+    Path developerDir = tmp.newFolder("Developer");
     SwiftPlatform swiftPlatform =
         SwiftPlatformFactory.build(
-            "iphoneos", ImmutableSet.of(), swiftcTool, Optional.of(swiftStdTool), true);
+            createAppleSdk(),
+            createAppleSdkPaths(developerDir),
+            swiftcTool,
+            Optional.of(swiftStdTool),
+            true);
     assertThat(swiftPlatform.getSwiftStdlibTool().get(), equalTo(swiftStdTool));
     assertThat(swiftPlatform.getSwiftc(), equalTo(swiftcTool));
-    assertThat(swiftPlatform.getSwiftRuntimePaths(), empty());
+    assertThat(swiftPlatform.getSwiftRuntimePathsForBundling(), empty());
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), empty());
   }
 
   @Test
   public void testBuildSwiftPlatformWithNonEmptyLookupPathWithoutTools() throws IOException {
-    Path dir = tmp.newFolder("foo");
+    Path developerDir = tmp.newFolder("Developer");
+    Path toolchainDir = tmp.newFolder("foo");
     SwiftPlatform swiftPlatform =
         SwiftPlatformFactory.build(
-            "iphoneos", ImmutableSet.of(dir), swiftcTool, Optional.of(swiftStdTool), true);
-    assertThat(swiftPlatform.getSwiftRuntimePaths(), empty());
+            createAppleSdk(createAppleToolchain(toolchainDir)),
+            createAppleSdkPaths(developerDir, toolchainDir),
+            swiftcTool,
+            Optional.of(swiftStdTool),
+            true);
+    assertThat(swiftPlatform.getSwiftRuntimePathsForBundling(), empty());
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), empty());
   }
 
   @Test
   public void testBuildSwiftPlatformWithNonEmptyLookupPathWithTools() throws IOException {
+    Path developerDir = tmp.newFolder("Developer");
     tmp.newFolder("foo/usr/lib/swift/iphoneos");
     tmp.newFile("foo/usr/lib/swift/iphoneos/libswiftCore.dylib");
     tmp.newFolder("foo2/usr/lib/swift_static/iphoneos");
     tmp.newFolder("foo3/usr/lib/swift_static/iphoneos");
     SwiftPlatform swiftPlatform =
         SwiftPlatformFactory.build(
-            "iphoneos",
-            ImmutableSet.of(
+            createAppleSdk(),
+            createAppleSdkPaths(
+                developerDir,
                 tmp.getRoot().resolve("foo"),
                 tmp.getRoot().resolve("foo2"),
                 tmp.getRoot().resolve("foo3")),
             swiftcTool,
             Optional.of(swiftStdTool),
             true);
-    assertThat(swiftPlatform.getSwiftRuntimePaths(), hasSize(1));
+    assertThat(swiftPlatform.getSwiftRuntimePathsForBundling(), hasSize(1));
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), hasSize(2));
   }
 }

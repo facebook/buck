@@ -17,6 +17,8 @@
 package com.facebook.buck.swift.toolchain.impl;
 
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
+import com.facebook.buck.apple.toolchain.AppleSdk;
+import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
@@ -38,11 +40,13 @@ public class SwiftPlatformFactory {
   private SwiftPlatformFactory() {}
 
   public static SwiftPlatform build(
-      String platformName,
-      Set<Path> toolchainPaths,
+      AppleSdk sdk,
+      AppleSdkPaths sdkPaths,
       Tool swiftc,
       Optional<Tool> swiftStdLibTool,
       boolean shouldLinkSystemSwift) {
+    String platformName = sdk.getApplePlatform().getName();
+    Set<Path> toolchainPaths = sdkPaths.getToolchainPaths();
     SwiftPlatform.Builder builder =
         SwiftPlatform.builder()
             .setSwiftc(swiftc)
@@ -51,21 +55,31 @@ public class SwiftPlatformFactory {
                 buildSharedRunPaths(platformName, shouldLinkSystemSwift));
 
     for (Path toolchainPath : toolchainPaths) {
-      Optional<Path> foundSwiftRuntimePath = findSwiftRuntimePath(toolchainPath, platformName);
-      if (foundSwiftRuntimePath.isPresent()) {
-        builder.addSwiftRuntimePaths(foundSwiftRuntimePath.get());
+      Optional<Path> swiftRuntimePathForBundling =
+          findSwiftRuntimePath(toolchainPath, platformName);
+      if (swiftRuntimePathForBundling.isPresent()) {
+        builder.addSwiftRuntimePathsForBundling(swiftRuntimePathForBundling.get());
       }
 
       Optional<Path> foundSwiftCompatibilityRuntimePath =
           findSwiftCompatibilityRuntimePath(toolchainPath, platformName);
       if (foundSwiftCompatibilityRuntimePath.isPresent()) {
-        builder.addSwiftRuntimePaths(foundSwiftCompatibilityRuntimePath.get());
+        builder.addSwiftRuntimePathsForBundling(foundSwiftCompatibilityRuntimePath.get());
       }
 
       Path swiftStaticRuntimePath =
           toolchainPath.resolve("usr/lib/swift_static").resolve(platformName);
       if (Files.isDirectory(swiftStaticRuntimePath)) {
         builder.addSwiftStaticRuntimePaths(swiftStaticRuntimePath);
+      }
+    }
+
+    ImmutableList<Path> linkPaths =
+        SwiftSdkLayoutType.getLinkPaths(sdk, sdkPaths, sdk.getApplePlatform().getPlatformName());
+    for (Path linkPath : linkPaths) {
+      if (Files.isDirectory(linkPath)) {
+        LOG.debug("Found swift link path at %s", linkPath);
+        builder.addSwiftRuntimePathsForLinking(linkPath);
       }
     }
     return builder.build();

@@ -464,12 +464,12 @@ public class AppleCxxPlatforms {
     AppleSdkPaths.Builder swiftSdkPathsBuilder = AppleSdkPaths.builder().from(sdkPaths);
     Optional<SwiftPlatform> swiftPlatform =
         getSwiftPlatform(
-            applePlatform.getName(),
             targetArchitecture
                 + "-apple-"
                 + applePlatform.getSwiftName().orElse(applePlatform.getName())
                 + minVersion,
             version,
+            targetSdk,
             swiftSdkPathsBuilder.build(),
             appleConfig.shouldLinkSystemSwift(),
             swiftOverrideSearchPathBuilder.addAll(toolSearchPaths).build(),
@@ -503,9 +503,9 @@ public class AppleCxxPlatforms {
   }
 
   private static Optional<SwiftPlatform> getSwiftPlatform(
-      String platformName,
       String targetArchitectureName,
       String version,
+      AppleSdk sdk,
       AppleSdkPaths sdkPaths,
       boolean shouldLinkSystemSwift,
       ImmutableList<Path> toolSearchPaths,
@@ -519,6 +519,7 @@ public class AppleCxxPlatforms {
             "-target",
             targetArchitectureName);
 
+    String platformName = sdk.getApplePlatform().getName();
     ImmutableList.Builder<String> swiftStdlibToolParamsBuilder = ImmutableList.builder();
     swiftStdlibToolParamsBuilder
         .add("--copy")
@@ -546,11 +547,7 @@ public class AppleCxxPlatforms {
     return swiftc.map(
         tool ->
             SwiftPlatformFactory.build(
-                platformName,
-                sdkPaths.getToolchainPaths(),
-                tool,
-                swiftStdLibTool,
-                shouldLinkSystemSwift));
+                sdk, sdkPaths, tool, swiftStdLibTool, shouldLinkSystemSwift));
   }
 
   private static void applySourceLibrariesParamIfNeeded(

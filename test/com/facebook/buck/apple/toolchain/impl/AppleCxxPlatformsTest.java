@@ -1143,7 +1143,7 @@ public class AppleCxxPlatformsTest {
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
         path.getRelativePath().toString());
 
-    assertThat(swiftPlatformOptional.get().getSwiftRuntimePaths(), Matchers.empty());
+    assertThat(swiftPlatformOptional.get().getSwiftRuntimePathsForBundling(), Matchers.empty());
   }
 
   @Test

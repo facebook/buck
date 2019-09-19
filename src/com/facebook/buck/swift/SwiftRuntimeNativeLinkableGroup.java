@@ -119,7 +119,7 @@ public final class SwiftRuntimeNativeLinkableGroup implements NativeLinkableGrou
         argsBuilder.addAll(StringArg.from("-Xlinker", "-rpath", "-Xlinker", rpath.toString()));
       }
 
-      swiftRuntimePaths = swiftPlatform.getSwiftRuntimePaths();
+      swiftRuntimePaths = swiftPlatform.getSwiftRuntimePathsForLinking();
     } else {
       // Static linking requires force-loading Swift libs, since the dependency
       // discovery mechanism is disabled otherwise.
