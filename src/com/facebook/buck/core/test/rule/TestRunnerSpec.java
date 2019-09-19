@@ -31,7 +31,7 @@ import org.immutables.value.Value;
 public abstract class TestRunnerSpec {
 
   @Value.Parameter
-  protected abstract Object getData();
+  public abstract Object getData();
 
   @Value.Check
   protected void check() {

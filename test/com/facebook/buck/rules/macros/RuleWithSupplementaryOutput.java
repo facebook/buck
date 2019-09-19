@@ -30,7 +30,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
 
-final class RuleWithSupplementaryOutput extends AbstractBuildRule
+public final class RuleWithSupplementaryOutput extends AbstractBuildRule
     implements HasSupplementaryOutputs {
 
   public RuleWithSupplementaryOutput(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
