@@ -1156,6 +1156,153 @@ public class StubJarTest {
   }
 
   @Test
+  public void kotlinClassWithInlineExtensionMethodThatUsesRunnable() throws IOException {
+    if (!isValidForKotlin()) {
+      return;
+    }
+
+    if (testingMode.equals(MODE_SOURCE_BASED)) {
+      // TODO T53836707 the methods in the synthetic class are wrongly stripped, preventing
+      //  compilation
+      return;
+    }
+
+    tester = new Tester(Language.KOTLIN);
+    tester
+        .setSourceFile(
+            "A.java",
+            "package com.example.buck;",
+            "public class A {",
+            "  public final boolean postDelayed(Runnable r, long delayMillis) {",
+            "    throw new RuntimeException(\"Stub!\");",
+            "  }",
+            "}")
+        .setLanguage(Language.JAVA)
+        .createStubJar()
+        .setLanguage(Language.KOTLIN)
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "B.kt",
+            "package com.example.buck",
+            "inline fun A.postDelayed(delay: Long, noinline block: () -> Unit) { postDelayed(block, delay) }",
+            "fun A.postDelayedNotInlined(delay: Long, block: () -> Unit) { postDelayed(block, delay) }")
+        .addExpectedStub(
+            "com/example/buck/BKt",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x31",
+            "public final class com/example/buck/BKt {",
+            "",
+            "  // compiled from: B.kt",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=2, d1={\"\\u0000\\u0018\\n\\u0000\\n\\u0002\\u0010\\u0002\\n\\u0002\\u0018\\u0002\\n\\u0000\\n\\u0002\\u0010\\u0009\\n\\u0000\\n\\u0002\\u0018\\u0002\\n\\u0000\\u001a%\\u0010\\u0000\\u001a\\u00020\\u0001*\\u00020\\u00022\\u0006\\u0010\\u0003\\u001a\\u00020\\u00042\\u000e\\u0008\\u0008\\u0010\\u0005\\u001a\\u0008\\u0012\\u0004\\u0012\\u00020\\u00010\\u0006H\\u0086\\u0008\\u001a \\u0010\\u0007\\u001a\\u00020\\u0001*\\u00020\\u00022\\u0006\\u0010\\u0003\\u001a\\u00020\\u00042\\u000c\\u0010\\u0005\\u001a\\u0008\\u0012\\u0004\\u0012\\u00020\\u00010\\u0006\"}, d2={\"postDelayed\", \"\", \"Lcom/example/buck/A;\", \"delay\", \"\", \"block\", \"Lkotlin/Function0;\", \"postDelayedNotInlined\"})",
+            "",
+            "  // access flags 0x19",
+            "  // signature (Lcom/example/buck/A;JLkotlin/jvm/functions/Function0<Lkotlin/Unit;>;)V",
+            "  // declaration: void postDelayed(com.example.buck.A, long, kotlin.jvm.functions.Function0<kotlin.Unit>)",
+            "  public final static postDelayed(Lcom/example/buck/A;JLkotlin/jvm/functions/Function0;)V",
+            "    // annotable parameter count: 3 (invisible)",
+            "    @Lorg/jetbrains/annotations/NotNull;() // invisible, parameter 0",
+            "    @Lorg/jetbrains/annotations/NotNull;() // invisible, parameter 2",
+            "   L0",
+            "    LDC 0",
+            "    ISTORE 4",
+            "   L1",
+            "    ALOAD 0",
+            "    LDC \"$this$postDelayed\"",
+            "    INVOKESTATIC kotlin/jvm/internal/Intrinsics.checkParameterIsNotNull (Ljava/lang/Object;Ljava/lang/String;)V",
+            "    ALOAD 3",
+            "    LDC \"block\"",
+            "    INVOKESTATIC kotlin/jvm/internal/Intrinsics.checkParameterIsNotNull (Ljava/lang/Object;Ljava/lang/String;)V",
+            "   L2",
+            "    LINENUMBER 2 L2",
+            "    ALOAD 0",
+            "    ALOAD 3",
+            "    ASTORE 5",
+            "    NEW com/example/buck/BKt$sam$i$java_lang_Runnable$0",
+            "    DUP",
+            "    ALOAD 5",
+            "    INVOKESPECIAL com/example/buck/BKt$sam$i$java_lang_Runnable$0.<init> (Lkotlin/jvm/functions/Function0;)V",
+            "    CHECKCAST java/lang/Runnable",
+            "    LLOAD 1",
+            "    INVOKEVIRTUAL com/example/buck/A.postDelayed (Ljava/lang/Runnable;J)Z",
+            "    POP",
+            "    RETURN",
+            "   L3",
+            "    LOCALVARIABLE $this$postDelayed Lcom/example/buck/A; L0 L3 0",
+            "    LOCALVARIABLE delay J L0 L3 1",
+            "    LOCALVARIABLE block Lkotlin/jvm/functions/Function0; L0 L3 3",
+            "    LOCALVARIABLE $i$f$postDelayed I L1 L3 4",
+            "    MAXSTACK = 4",
+            "    MAXLOCALS = 6",
+            "",
+            "  // access flags 0x19",
+            "  // signature (Lcom/example/buck/A;JLkotlin/jvm/functions/Function0<Lkotlin/Unit;>;)V",
+            "  // declaration: void postDelayedNotInlined(com.example.buck.A, long, kotlin.jvm.functions.Function0<kotlin.Unit>)",
+            "  public final static postDelayedNotInlined(Lcom/example/buck/A;JLkotlin/jvm/functions/Function0;)V",
+            "    // annotable parameter count: 3 (invisible)",
+            "    @Lorg/jetbrains/annotations/NotNull;() // invisible, parameter 0",
+            "    @Lorg/jetbrains/annotations/NotNull;() // invisible, parameter 2",
+            "",
+            "  // access flags 0x2",
+            "  private <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/BKt$sam$i$java_lang_Runnable$0",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x31",
+            "public final class com/example/buck/BKt$sam$i$java_lang_Runnable$0 implements java/lang/Runnable {",
+            "",
+            "  // compiled from: B.kt",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=3)",
+            "",
+            "  // access flags 0x1",
+            "  public <init>(Lkotlin/jvm/functions/Function0;)V",
+            "    ALOAD 0",
+            "    INVOKESPECIAL java/lang/Object.<init> ()V",
+            "    ALOAD 0",
+            "    ALOAD 1",
+            "    PUTFIELD com/example/buck/BKt$sam$i$java_lang_Runnable$0.function : Lkotlin/jvm/functions/Function0;",
+            "    RETURN",
+            "    MAXSTACK = 2",
+            "    MAXLOCALS = 2",
+            "",
+            "  // access flags 0x1011",
+            "  public final synthetic run()V",
+            "   L0",
+            "    ALOAD 0",
+            "    GETFIELD com/example/buck/BKt$sam$i$java_lang_Runnable$0.function : Lkotlin/jvm/functions/Function0;",
+            "    INVOKEINTERFACE kotlin/jvm/functions/Function0.invoke ()Ljava/lang/Object; (itf)",
+            "    DUP",
+            "    LDC \"invoke(...)\"",
+            "    INVOKESTATIC kotlin/jvm/internal/Intrinsics.checkExpressionValueIsNotNull (Ljava/lang/Object;Ljava/lang/String;)V",
+            "    POP",
+            "    RETURN",
+            "   L1",
+            "    LOCALVARIABLE this Ljava/lang/Runnable; L0 L1 0",
+            "    MAXSTACK = 3",
+            "    MAXLOCALS = 1",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/BKt$sam$java_lang_Runnable$0",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x30",
+            "final class com/example/buck/BKt$sam$java_lang_Runnable$0 implements java/lang/Runnable {",
+            "",
+            "  // compiled from: B.kt",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=3)",
+            "",
+            "  // access flags 0x0",
+            "  <init>(Lkotlin/jvm/functions/Function0;)V",
+            "}")
+        .createAndCheckStubJar();
+  }
+
+  @Test
   public void stubsOverloadedMethods() throws IOException {
     tester
         .setSourceFile(
@@ -6440,7 +6587,6 @@ public class StubJarTest {
   }
 
   private final class Tester {
-    private final Language language;
     private final List<String> expectedStubDirectory = new ArrayList<>();
     private final List<String> actualStubDirectory = new ArrayList<>();
     private final List<String> actualFullDirectory = new ArrayList<>();
@@ -6450,6 +6596,7 @@ public class StubJarTest {
     private final Map<String, List<String>> actualStubs = new HashMap<>();
     private final List<String> expectedCompileErrors = new ArrayList<>();
     private final List<String> additionalOptions = new ArrayList<>();
+    private Language language;
     private DeterministicManifest manifest;
     private List<String> expectedStubManifest;
     private List<String> actualStubManifest;
@@ -6605,6 +6752,11 @@ public class StubJarTest {
             Joiner.on('\n').join(expectedStubManifest), Joiner.on('\n').join(actualStubManifest));
       }
 
+      return this;
+    }
+
+    public Tester setLanguage(Language language) {
+      this.language = language;
       return this;
     }
 
