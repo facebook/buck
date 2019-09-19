@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.features.project.intellij;
 
-import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -236,20 +235,12 @@ public final class IjModuleGraphFactory {
       if (!seenModules.add(module)) {
         continue;
       }
-      BuildTarget dummyRDotJavaTarget =
-          ruleAndModule.getKey().withFlavors(AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR);
 
       Map<IjProjectElement, DependencyType> moduleDeps = new LinkedHashMap<>();
 
-      if (!module.getExtraClassPathDependencies().isEmpty()) {
-        IjLibrary extraClassPathLibrary =
-            IjLibrary.builder()
-                .setBinaryJars(module.getExtraClassPathDependencies())
-                .setTargets(ImmutableSet.of(dummyRDotJavaTarget))
-                .setName(dummyRDotJavaTarget.getFullyQualifiedName())
-                .build();
-        moduleDeps.put(extraClassPathLibrary, DependencyType.PROD);
-      }
+      module
+          .getExtraLibraryDependencies()
+          .forEach(library -> moduleDeps.put(library, DependencyType.PROD));
 
       if (extraCompileOutputRootPath.isPresent()
           && !module.getExtraModuleDependencies().isEmpty()) {

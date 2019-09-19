@@ -25,11 +25,13 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.android.AndroidBinaryDescriptionArg;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidLibraryDescription;
+import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.AndroidResourceBuilder;
 import com.facebook.buck.android.AndroidResourceDescriptionArg;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -466,6 +468,16 @@ public class IjModuleGraphTest {
                 BuildTargetFactory.newInstance("//java/src/com/facebook/product:product"))
             .addSrc(Paths.get("java/src/com/facebook/File.java"))
             .build();
+    BuildTarget dummyRDotJavaTarget =
+        productTarget
+            .getBuildTarget()
+            .withFlavors(AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR);
+    IjLibrary extraClassPathLibrary =
+        IjLibrary.builder()
+            .setBinaryJars(ImmutableSet.of(rDotJavaClassPath))
+            .setTargets(ImmutableSet.of(dummyRDotJavaTarget))
+            .setName(dummyRDotJavaTarget.getFullyQualifiedName())
+            .build();
 
     IjModuleGraph moduleGraph =
         createModuleGraph(
@@ -482,7 +494,8 @@ public class IjModuleGraphTest {
     IjLibrary rDotJavaLibrary =
         FluentIterable.from(moduleGraph.getNodes()).filter(IjLibrary.class).first().get();
 
-    assertEquals(ImmutableSet.of(rDotJavaClassPath), productModule.getExtraClassPathDependencies());
+    assertEquals(
+        ImmutableSet.of(extraClassPathLibrary), productModule.getExtraLibraryDependencies());
     assertEquals(ImmutableSet.of(rDotJavaClassPath), rDotJavaLibrary.getBinaryJars());
     assertEquals(
         moduleGraph.getDependentLibrariesFor(productModule),

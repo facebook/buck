@@ -16,17 +16,21 @@
 package com.facebook.buck.features.project.intellij.lang.android;
 
 import com.facebook.buck.android.AndroidLibraryDescription;
+import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.features.project.intellij.JavaLanguageLevelHelper;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
 import com.facebook.buck.features.project.intellij.lang.java.JavaLibraryRuleHelper;
+import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjModuleAndroidFacet;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.features.project.intellij.model.IjModuleType;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -56,7 +60,15 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
     JavaLibraryRuleHelper.addNonSourceBuildTargets(target, context);
     Optional<Path> dummyRDotJavaClassPath = moduleFactoryResolver.getDummyRDotJavaPath(target);
     if (dummyRDotJavaClassPath.isPresent()) {
-      context.addExtraClassPathDependency(dummyRDotJavaClassPath.get());
+      BuildTarget dummyRDotJavaTarget =
+          target.getBuildTarget().withFlavors(AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR);
+      IjLibrary extraLibraryDependency =
+          IjLibrary.builder()
+              .setBinaryJars(ImmutableSet.of(dummyRDotJavaClassPath.get()))
+              .setTargets(ImmutableSet.of(dummyRDotJavaTarget))
+              .setName(dummyRDotJavaTarget.getFullyQualifiedName())
+              .build();
+      context.addExtraLibraryDependency(extraLibraryDependency);
       context.addExtraModuleDependency(dummyRDotJavaClassPath.get());
     }
 
