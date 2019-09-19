@@ -94,9 +94,9 @@ public class BuildConfigurationTest {
     assertEquals(3, nativeTargetAttributes.build().xcconfigs().size());
     assertEquals(
         ImmutableSet.of(
-            CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME,
-            CxxPlatformXcodeConfigGenerator.PROFILE_BUILD_CONFIGURATION_NAME,
-            CxxPlatformXcodeConfigGenerator.RELEASE_BUILD_CONFIGURATION_NAME),
+            BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME,
+            BuildConfiguration.PROFILE_BUILD_CONFIGURATION_NAME,
+            BuildConfiguration.RELEASE_BUILD_CONFIGURATION_NAME),
         targetConfigNamesBuilder.build());
     for (Path xcconfigPath : xcconfigPathsBuilder.build()) {
       assertTrue(
@@ -120,8 +120,7 @@ public class BuildConfigurationTest {
 
     ImmutableMap<String, String> debugConfig =
         ImmutableMap.<String, String>builder().put("someKey", "someValue").build();
-    testConfigsBuilder.put(
-        CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME, debugConfig);
+    testConfigsBuilder.put(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME, debugConfig);
 
     TargetNode fooTargetNode =
         AppleLibraryBuilder.createBuilder(fooBuildTarget)
@@ -133,7 +132,7 @@ public class BuildConfigurationTest {
 
     verifyExpectedBuildConfigurationsExist(buildConfigs, Optional.empty());
     verifyBuildConfigurationExists(
-        buildConfigs, CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME, debugConfig);
+        buildConfigs, BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME, debugConfig);
   }
 
   @Test
@@ -184,9 +183,7 @@ public class BuildConfigurationTest {
   public void testGetConfigurationXcconfigPath() {
     Path xcconfigPath =
         BuildConfiguration.getXcconfigPath(
-            projectFilesystem,
-            fooBuildTarget,
-            CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME);
+            projectFilesystem, fooBuildTarget, BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
     assertEquals(Paths.get("buck-out/gen/bar/foo-Debug.xcconfig"), xcconfigPath);
   }
 
@@ -229,18 +226,9 @@ public class BuildConfigurationTest {
     }
 
     assertEquals(3 + additionalConfigs.size(), buildConfigs.size());
-    assertTrue(
-        buildConfigs
-            .keySet()
-            .contains(CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME));
-    assertTrue(
-        buildConfigs
-            .keySet()
-            .contains(CxxPlatformXcodeConfigGenerator.PROFILE_BUILD_CONFIGURATION_NAME));
-    assertTrue(
-        buildConfigs
-            .keySet()
-            .contains(CxxPlatformXcodeConfigGenerator.RELEASE_BUILD_CONFIGURATION_NAME));
+    assertTrue(buildConfigs.keySet().contains(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME));
+    assertTrue(buildConfigs.keySet().contains(BuildConfiguration.PROFILE_BUILD_CONFIGURATION_NAME));
+    assertTrue(buildConfigs.keySet().contains(BuildConfiguration.RELEASE_BUILD_CONFIGURATION_NAME));
 
     for (Map.Entry<String, ImmutableMap<String, String>> entry : additionalConfigs.entrySet()) {
       assertTrue(buildConfigs.keySet().contains(entry.getKey()));

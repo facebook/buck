@@ -5883,9 +5883,9 @@ public class ProjectGeneratorTest {
     Map<String, XCBuildConfiguration> buildConfigurationMap =
         target.getBuildConfigurationList().getBuildConfigurationsByName().asMap();
     HashSet<String> configs = new HashSet<String>();
-    configs.add(CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME);
-    configs.add(CxxPlatformXcodeConfigGenerator.PROFILE_BUILD_CONFIGURATION_NAME);
-    configs.add(CxxPlatformXcodeConfigGenerator.RELEASE_BUILD_CONFIGURATION_NAME);
+    configs.add(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
+    configs.add(BuildConfiguration.PROFILE_BUILD_CONFIGURATION_NAME);
+    configs.add(BuildConfiguration.RELEASE_BUILD_CONFIGURATION_NAME);
     for (String config : names) {
       configs.add(config);
     }

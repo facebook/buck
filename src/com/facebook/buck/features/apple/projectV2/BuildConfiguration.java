@@ -43,6 +43,10 @@ import java.util.Optional;
 /** Helper methods to process xcconfig build configuration for a target node. */
 public class BuildConfiguration {
 
+  public static final String DEBUG_BUILD_CONFIGURATION_NAME = "Debug";
+  public static final String PROFILE_BUILD_CONFIGURATION_NAME = "Profile";
+  public static final String RELEASE_BUILD_CONFIGURATION_NAME = "Release";
+
   /**
    * Write xcconfig build configuration files for each configuration available for a target.
    * TODO(chatatap): Investigate scenarios where the buildTarget cannot be derived from the
@@ -126,15 +130,9 @@ public class BuildConfiguration {
     // Create empty mappings for each desired configuration
     HashMap<String, HashMap<String, String>> combinedConfig =
         new HashMap<String, HashMap<String, String>>();
-    combinedConfig.put(
-        CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME,
-        new HashMap<String, String>());
-    combinedConfig.put(
-        CxxPlatformXcodeConfigGenerator.PROFILE_BUILD_CONFIGURATION_NAME,
-        new HashMap<String, String>());
-    combinedConfig.put(
-        CxxPlatformXcodeConfigGenerator.RELEASE_BUILD_CONFIGURATION_NAME,
-        new HashMap<String, String>());
+    combinedConfig.put(DEBUG_BUILD_CONFIGURATION_NAME, new HashMap<String, String>());
+    combinedConfig.put(PROFILE_BUILD_CONFIGURATION_NAME, new HashMap<String, String>());
+    combinedConfig.put(RELEASE_BUILD_CONFIGURATION_NAME, new HashMap<String, String>());
 
     // Put any configuration defined on the target into the combinedConfig. CxxLibrary targets
     // configs are extracted separately in {@code getTargetCxxBuildConfigurationForTargetNode}.
@@ -169,10 +167,10 @@ public class BuildConfiguration {
       Map<String, String> appendedConfig,
       CxxPlatform defaultCxxPlatform) {
     if (targetNode.getDescription() instanceof CxxLibraryDescription) {
-      return CxxPlatformXcodeConfigGenerator.getCxxXcodeTargetBuildConfigurationsFromCxxPlatform(
+      return CxxPlatformBuildConfiguration.getCxxLibraryBuildSettings(
           defaultCxxPlatform, appendedConfig);
     } else {
-      return CxxPlatformXcodeConfigGenerator.getAppleXcodeTargetBuildConfigurationsFromCxxPlatform(
+      return CxxPlatformBuildConfiguration.getGenericTargetBuildSettings(
           defaultCxxPlatform, appendedConfig);
     }
   }
