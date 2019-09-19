@@ -165,7 +165,7 @@ private fun lookupBuildPackages(
         internalChanges.modifiedBuildPackages.mapTo(modified) { modified ->
             val oldRuleNames = requireNotNull(
                 buildPackageMap.getVersion(modified.buildFileDirectory, generation)) {
-                "No version found for build file in ${modified.buildFileDirectory} for " + "generation $generation"
+                "No version found for build file in ${modified.buildFileDirectory} for generation $generation"
             }
             Pair(modified, oldRuleNames)
         }
@@ -208,8 +208,7 @@ private fun lookupBuildRules(
         modified.mapTo(modifiedRulesToProcess) { (internalBuildPackage, oldRuleNames, oldBuildTargetIds) ->
             val oldRules = oldBuildTargetIds.map { oldBuildTargetId ->
                 requireNotNull(ruleMap.getVersion(oldBuildTargetId, generation)) {
-                    "Missing deps for '${buildTargetCache.getByIndex(oldBuildTargetId)}' "
-                    "at generation $generation"
+                    "Missing deps for '${buildTargetCache.getByIndex(oldBuildTargetId)}' at generation $generation"
                 }
             }
             ModifiedPackageByRules(internalBuildPackage, oldRuleNames, oldRules)
@@ -217,8 +216,7 @@ private fun lookupBuildRules(
 
         buildTargetIdsOfRemovedRules.mapTo(removedRulesToProcess) { buildTargetId ->
             val removedRule = requireNotNull(ruleMap.getVersion(buildTargetId, generation)) {
-                "No rule found for '${buildTargetCache.getByIndex(
-                    buildTargetId)}' at generation $generation"
+                "No rule found for '${buildTargetCache.getByIndex(buildTargetId)}' at generation $generation"
             }
             Pair(buildTargetId, removedRule)
         }
