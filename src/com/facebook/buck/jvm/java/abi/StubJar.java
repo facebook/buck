@@ -17,13 +17,14 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.util.zip.JarBuilder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -94,22 +95,29 @@ public class StubJar {
 
   private void writeTo(LibraryReader input, StubJarWriter writer) throws IOException {
     List<Path> relativePaths = input.getRelativePaths();
+    Comparator<Path> visitOuterClassesFirst = Comparator.comparing(StubJar::pathWithoutClassSuffix);
     List<Path> paths =
-        relativePaths.stream()
-            .sorted(Comparator.comparing(PathFormatter::pathWithUnixSeparators))
-            .collect(Collectors.toList());
+        relativePaths.stream().sorted(visitOuterClassesFirst).collect(Collectors.toList());
+
+    Map<String, List<String>> inlineFunctions = new HashMap<>();
 
     boolean isKotlinModule = isKotlinModule(relativePaths);
     for (Path path : paths) {
-      StubJarEntry entry = StubJarEntry.of(input, path, compatibilityMode, isKotlinModule);
+      StubJarEntry entry =
+          StubJarEntry.of(input, path, compatibilityMode, isKotlinModule, inlineFunctions);
       if (entry == null) {
         continue;
       }
       entry.write(writer);
+      inlineFunctions.put(pathWithoutClassSuffix(path), entry.getInlineMethods());
     }
   }
 
   private boolean isKotlinModule(List<Path> relativePaths) {
     return relativePaths.stream().anyMatch(path -> path.toString().endsWith(".kotlin_module"));
+  }
+
+  private static String pathWithoutClassSuffix(Path path) {
+    return path.toString().substring(0, path.toString().length() - ".class".length());
   }
 }
