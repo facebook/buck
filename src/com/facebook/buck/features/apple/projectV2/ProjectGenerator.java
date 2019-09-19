@@ -351,10 +351,6 @@ public class ProjectGenerator {
     return xcodeProjectWriteOptions.xcodeProjPath();
   }
 
-  private boolean shouldMergeHeaderMaps() {
-    return true;
-  }
-
   /** The output from generating an Xcode project. */
   public static class Result {
     PBXProject generatedProject;
@@ -415,19 +411,18 @@ public class ProjectGenerator {
       final TargetNode<?> workspaceTargetNode = targetGraph.get(workspaceTarget);
       if (projectTargets.contains(workspaceTargetNode)) {
         ProjectTargetGenerationResult result =
-          generateProjectTarget(
-            workspaceTargetNode,
-            requiredBuildTargetsBuilder,
-            xcconfigPathsBuilder,
-            targetConfigNamesBuilder,
-            generatedTargets);
+            generateProjectTarget(
+                workspaceTargetNode,
+                requiredBuildTargetsBuilder,
+                xcconfigPathsBuilder,
+                targetConfigNamesBuilder,
+                generatedTargets);
         generationResultsBuilder.add(result);
       }
 
       for (TargetNode<?> input :
           projectTargets.stream()
-              .filter(
-                  input -> !input.equals(workspaceTargetNode))
+              .filter(input -> !input.equals(workspaceTargetNode))
               .collect(Collectors.toSet())) {
         ProjectTargetGenerationResult result =
             generateProjectTarget(
@@ -476,9 +471,7 @@ public class ProjectGenerator {
 
       buckEventBus.post(ProjectGenerationEvent.processed());
 
-      if (shouldMergeHeaderMaps()) {
-        createMergedHeaderMap(requiredBuildTargetsBuilder);
-      }
+      createMergedHeaderMap(requiredBuildTargetsBuilder);
 
       PBXProject project = xcodeProjectWriteOptions.project();
       for (String configName : targetConfigNamesBuilder.build()) {
@@ -1865,7 +1858,6 @@ public class ProjectGenerator {
             .collect(Collectors.toList());
 
     ImmutableSet<Path> recursiveHeaderSearchPaths = collectRecursiveHeaderSearchPaths(targetNode);
-    ImmutableSet<Path> headerMapBases = collectRecursiveHeaderMapBases(targetNode);
 
     Builder<String, String> appendConfigsBuilder = ImmutableMap.builder();
     appendConfigsBuilder.putAll(
@@ -1877,7 +1869,6 @@ public class ProjectGenerator {
             .join(
                 Iterables.concat(
                     recursiveHeaderSearchPaths,
-                    headerMapBases,
                     recursivePublicSystemIncludeDirectories,
                     recursivePublicIncludeDirectories,
                     includeDirectories)));
@@ -2109,7 +2100,7 @@ public class ProjectGenerator {
         getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC),
         arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled())
             || isModularAppleLibrary,
-        !shouldMergeHeaderMaps(),
+        false,
         options.shouldGenerateMissingUmbrellaHeader());
 
     ImmutableSortedMap<Path, SourcePath> privateCxxHeaders = getPrivateCxxHeaders(targetNode);
@@ -3295,47 +3286,24 @@ public class ProjectGenerator {
       TargetNode<? extends CommonArg> targetNode) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
 
-    if (shouldMergeHeaderMaps()) {
-      builder.add(
-          getHeaderSearchPathFromSymlinkTreeRoot(
-              getHeaderSymlinkTreePath(targetNode, HeaderVisibility.PRIVATE)));
-      Cell workspaceCell = projectCell.getCell(workspaceTarget);
-      Path absolutePath = workspaceCell.getFilesystem().resolve(getPathToMergedHeaderMap());
-      builder.add(getHeaderSearchPathFromSymlinkTreeRoot(absolutePath));
-      visitRecursivePrivateHeaderSymlinkTreesForTests(
-          targetNode,
-          (nativeNode, headerVisibility) -> {
-            builder.add(
-                getHeaderSearchPathFromSymlinkTreeRoot(
-                    getHeaderSymlinkTreePath(nativeNode, headerVisibility)));
-          });
-    } else {
-      for (Path headerSymlinkTreePath : collectRecursiveHeaderSymlinkTrees(targetNode)) {
-        builder.add(getHeaderSearchPathFromSymlinkTreeRoot(headerSymlinkTreePath));
-      }
-    }
+    builder.add(
+        getHeaderSearchPathFromSymlinkTreeRoot(
+            getHeaderSymlinkTreePath(targetNode, HeaderVisibility.PRIVATE)));
+    Cell workspaceCell = projectCell.getCell(workspaceTarget);
+    Path absolutePath = workspaceCell.getFilesystem().resolve(getPathToMergedHeaderMap());
+    builder.add(getHeaderSearchPathFromSymlinkTreeRoot(absolutePath));
+    visitRecursivePrivateHeaderSymlinkTreesForTests(
+        targetNode,
+        (nativeNode, headerVisibility) -> {
+          builder.add(
+              getHeaderSearchPathFromSymlinkTreeRoot(
+                  getHeaderSymlinkTreePath(nativeNode, headerVisibility)));
+        });
 
     for (Path halideHeaderPath : collectRecursiveHalideLibraryHeaderPaths(targetNode)) {
       builder.add(halideHeaderPath);
     }
 
-    return builder.build();
-  }
-
-  private ImmutableSet<Path> collectRecursiveHeaderMapBases(
-      TargetNode<? extends CommonArg> targetNode) {
-    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
-    if (shouldMergeHeaderMaps()) {
-      return ImmutableSet.of();
-    } else {
-      visitRecursiveHeaderSymlinkTrees(
-          targetNode,
-          (nativeNode, headerVisibility) -> {
-            ProjectFilesystem filesystem = nativeNode.getFilesystem();
-            Path buckOut = filesystem.resolve(filesystem.getBuckPaths().getConfiguredBuckOut());
-            builder.add(buckOut.toAbsolutePath().normalize());
-          });
-    }
     return builder.build();
   }
 
@@ -3401,17 +3369,6 @@ public class ProjectGenerator {
         visitor.accept(nativeNode.get(), HeaderVisibility.PRIVATE);
       }
     }
-  }
-
-  private ImmutableSet<Path> collectRecursiveHeaderSymlinkTrees(
-      TargetNode<? extends CommonArg> targetNode) {
-    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
-    visitRecursiveHeaderSymlinkTrees(
-        targetNode,
-        (nativeNode, headerVisibility) -> {
-          builder.add(getHeaderSymlinkTreePath(nativeNode, headerVisibility));
-        });
-    return builder.build();
   }
 
   private ImmutableSet<Path> collectRecursiveSwiftIncludePaths(
