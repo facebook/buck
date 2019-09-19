@@ -30,6 +30,7 @@ import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
+import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
@@ -58,6 +59,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
@@ -69,6 +71,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final ImmutableMap<String, Arg> env;
   private final ImmutableList<Arg> args;
+  private final BuildRule binary;
   private final Tool executable;
 
   @AddToRuleKey
@@ -89,6 +92,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
+      BuildRule binary,
       Tool executable,
       ImmutableMap<String, Arg> env,
       ImmutableList<Arg> args,
@@ -101,6 +105,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Long> testRuleTimeoutMs,
       CxxTestType cxxTestType) {
     super(buildTarget, projectFilesystem, params);
+    this.binary = binary;
     this.executable = executable;
     this.env = env;
     this.args = args;
@@ -112,6 +117,12 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.runTestSeparately = runTestSeparately;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.cxxTestType = cxxTestType;
+  }
+
+  @Override
+  public SourcePath getSourcePathToOutput() {
+    return ForwardingBuildTargetSourcePath.of(
+        getBuildTarget(), Objects.requireNonNull(binary.getSourcePathToOutput()));
   }
 
   @Override

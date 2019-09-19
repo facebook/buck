@@ -23,7 +23,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
-import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
@@ -78,7 +77,6 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
   private static final String TEST_MARKER = "  ";
   private static final String TEST_LIST = "testList";
 
-  private final BuildRule binary;
   private final long maxTestOutputSize;
   private final boolean checkGTestTestList;
 
@@ -103,6 +101,7 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
         buildTarget,
         projectFilesystem,
         params,
+        binary,
         executable,
         env,
         args,
@@ -114,15 +113,8 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
         runTestSeparately,
         testRuleTimeoutMs,
         CxxTestType.GTEST);
-    this.binary = binary;
     this.maxTestOutputSize = maxTestOutputSize;
     this.checkGTestTestList = checkGTestTestList;
-  }
-
-  @Override
-  public SourcePath getSourcePathToOutput() {
-    return ForwardingBuildTargetSourcePath.of(
-        getBuildTarget(), Objects.requireNonNull(binary.getSourcePathToOutput()));
   }
 
   @Override

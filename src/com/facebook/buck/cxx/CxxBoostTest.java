@@ -21,7 +21,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
-import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -67,8 +66,6 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
 
   private static final Pattern ERROR = Pattern.compile("^.*\\(\\d+\\): error .*");
 
-  private final BuildRule binary;
-
   public CxxBoostTest(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -88,6 +85,7 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
         buildTarget,
         projectFilesystem,
         params,
+        binary,
         executable,
         env,
         args,
@@ -99,13 +97,6 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
         runTestSeparately,
         testRuleTimeoutMs,
         CxxTestType.BOOST);
-    this.binary = binary;
-  }
-
-  @Override
-  public SourcePath getSourcePathToOutput() {
-    return ForwardingBuildTargetSourcePath.of(
-        getBuildTarget(), Objects.requireNonNull(binary.getSourcePathToOutput()));
   }
 
   @Override
