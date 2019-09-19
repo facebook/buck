@@ -13,10 +13,28 @@ constraint_value(
     ],
 )
 
+constraint_value(
+    name = "banana",
+    constraint_setting = ":fruit",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
 platform(
     name = "apple-platform",
     constraint_values = [
         ":apple",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+platform(
+    name = "banana-platform",
+    constraint_values = [
+        ":banana",
     ],
     visibility = [
         "PUBLIC",

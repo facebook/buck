@@ -24,12 +24,27 @@ import com.facebook.buck.query.QueryException;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Buck subcommand which relies on the unconfigured target graph, whose nodes contain all the
  * information inside selects
  */
 public class UnconfiguredQueryCommand extends AbstractQueryCommand {
+
+  // explicitly ignore --target-platforms= and --exclude-incompatible-targets=
+  // arguments because uquery output should be the same even when uquery is used
+  // with mode files (which often specify these arguments)
+
+  @Override
+  public ImmutableList<String> getTargetPlatforms() {
+    return ImmutableList.of();
+  }
+
+  @Override
+  public boolean getExcludeIncompatibleTargets() {
+    return false;
+  }
 
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {

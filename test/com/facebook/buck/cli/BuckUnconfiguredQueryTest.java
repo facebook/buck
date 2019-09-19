@@ -200,7 +200,12 @@ public class BuckUnconfiguredQueryTest {
   @Test
   public void testTargetCompatibilityIgnored() throws IOException {
     // Explicitly test that unconfigured query does not filter targets
-    ProcessResult processResult = workspace.runBuckCommand("uquery", "//compatible:");
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "uquery",
+            "--target-platforms=//compatible/config:banana-platform",
+            "--exclude-incompatible-targets",
+            "//compatible:");
     processResult.assertSuccess();
 
     sortOutputLinesAndCompare(
