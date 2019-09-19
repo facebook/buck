@@ -172,4 +172,8 @@ class FsAgnosticPathDeserializer :
     override fun _deserialize(value: String, ctxt: DeserializationContext): FsAgnosticPath {
         return FsAgnosticPath.of(value)
     }
+
+    override fun _deserializeFromEmptyString(): FsAgnosticPath {
+        return FsAgnosticPath.of("")
+    }
 }

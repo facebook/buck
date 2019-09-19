@@ -235,4 +235,12 @@ class FsAgnosticPathTest {
             ObjectMappers.READER.forType(FsAgnosticPath::class.java).readValue<FsAgnosticPath>(data)
         assertEquals(FsAgnosticPath.of("bar/baz"), path)
     }
+
+    @Test
+    fun canDeserializeFromEmptyString() {
+        val data = "\"\""
+        val path =
+            ObjectMappers.READER.forType(FsAgnosticPath::class.java).readValue<FsAgnosticPath>(data)
+        assertEquals(FsAgnosticPath.of(""), path)
+    }
 }

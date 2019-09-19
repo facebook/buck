@@ -72,4 +72,22 @@ class BuildPackageTest {
         assertEquals(1, deserializedPackages.size)
         assertEquals(buildPackage, deserializedPackages.first())
     }
+
+    @Test fun canSerializeAndDeserializeBuildPackageWithEmptyPath() {
+        val buildPackage = BuildPackage(
+            buildFileDirectory = FsAgnosticPath.of(""),
+            rules = setOf(),
+            errors = listOf()
+        )
+
+        val stream = ByteArrayOutputStream()
+
+        serializePackagesToStream(listOf(buildPackage), stream)
+
+        val deserializedPackages = parsePackagesFromStream(
+            ByteArrayInputStream(stream.toByteArray()), ::multitenantJsonToBuildPackageParser)
+
+        assertEquals(1, deserializedPackages.size)
+        assertEquals(buildPackage, deserializedPackages.first())
+    }
 }
