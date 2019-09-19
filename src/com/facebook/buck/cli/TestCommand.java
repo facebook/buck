@@ -662,7 +662,6 @@ public class TestCommand extends BuildCommand {
                 filterTestRules(
                     params.getBuckConfig(), targetGraphCreationResult.getBuildTargets(), testRules);
           }
-
           BuildContext buildContext =
               BuildContext.builder()
                   .setSourcePathResolver(

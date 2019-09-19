@@ -29,18 +29,15 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.test.rule.CoercedTestRunnerSpec;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.TestXRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -53,26 +50,23 @@ public class GoTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
         ExternalTestRunnerRule,
         BinaryBuildRule {
 
-  private final SourcePathResolver sourcePathResolver;
   private final GoBinary testMain;
 
   private final ImmutableSet<String> labels;
   private final ImmutableSet<String> contacts;
   private final ImmutableSortedSet<SourcePath> resources;
-  private final ImmutableMap<String, Arg> specs;
+  private final CoercedTestRunnerSpec specs;
 
   public GoTestX(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathResolver sourcePathResolver,
       BuildRuleParams buildRuleParams,
       GoBinary testMain,
       ImmutableSet<String> labels,
       ImmutableSet<String> contacts,
-      ImmutableMap<String, Arg> specs,
+      CoercedTestRunnerSpec specs,
       ImmutableSortedSet<SourcePath> resources) {
     super(buildTarget, projectFilesystem, buildRuleParams);
-    this.sourcePathResolver = sourcePathResolver;
     this.testMain = testMain;
     this.labels = labels;
     this.contacts = contacts;
@@ -81,9 +75,8 @@ public class GoTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public ImmutableMap<String, String> getSpecs() {
-    return ImmutableMap.copyOf(
-        Maps.transformValues(specs, spec -> Arg.stringify(spec, sourcePathResolver)));
+  public CoercedTestRunnerSpec getSpecs() {
+    return specs;
   }
 
   @Override

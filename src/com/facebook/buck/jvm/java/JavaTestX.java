@@ -31,6 +31,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.test.rule.CoercedTestRunnerSpec;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.TestXRule;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -44,10 +45,8 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -66,13 +65,11 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final JavaBinary compiledTestsBinary;
   private final JavaLibrary compiledTestsLibrary;
 
-  private final SourcePathResolver sourcePathResolver;
-
   private final ImmutableSet<String> labels;
 
   private final ImmutableSet<String> contacts;
 
-  private final ImmutableMap<String, Arg> specs;
+  private final CoercedTestRunnerSpec specs;
 
   private final ImmutableList<Arg> vmArgs;
 
@@ -86,15 +83,13 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathResolver sourcePathResolver,
       JavaBinary compiledTestsBinary,
       JavaLibrary compiledTestsLibrary,
       Set<String> labels,
       Set<String> contacts,
-      ImmutableMap<String, Arg> specs,
+      CoercedTestRunnerSpec specs,
       List<Arg> vmArg) {
     super(buildTarget, projectFilesystem, params);
-    this.sourcePathResolver = sourcePathResolver;
     this.compiledTestsBinary = compiledTestsBinary;
     this.compiledTestsLibrary = compiledTestsLibrary;
     this.labels = ImmutableSet.copyOf(labels);
@@ -147,13 +142,16 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
             () ->
                 String.join(
                     System.lineSeparator(),
-                    new CompiledClassFileFinder(compiledTestsLibrary, sourcePathResolver)
+                    new CompiledClassFileFinder(
+                            compiledTestsLibrary, buildContext.getSourcePathResolver())
                         .getClassNamesForSources()),
             classPathOutput.getResolvedPath(),
             false),
         new WriteFileStep(
             getProjectFilesystem(),
-            () -> String.join(System.lineSeparator(), getJvmArgs(sourcePathResolver)),
+            () ->
+                String.join(
+                    System.lineSeparator(), getJvmArgs(buildContext.getSourcePathResolver())),
             jvmArgsOutput.getResolvedPath(),
             false),
         new AbstractExecutionStep("write classpath file") {
@@ -212,9 +210,8 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public ImmutableMap<String, String> getSpecs() {
-    return ImmutableMap.copyOf(
-        Maps.transformValues(specs, spec -> Arg.stringify(spec, sourcePathResolver)));
+  public CoercedTestRunnerSpec getSpecs() {
+    return specs;
   }
 
   @Nullable

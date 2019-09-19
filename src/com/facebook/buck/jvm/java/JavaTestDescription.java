@@ -32,8 +32,9 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.test.rule.HasTestRunner;
+import com.facebook.buck.core.test.rule.TestRunnerSpec;
+import com.facebook.buck.core.test.rule.coercer.TestRunnerSpecCoercer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -169,7 +170,7 @@ public class JavaTestDescription
     List<Arg> vmArgs = Lists.transform(args.getVmArgs(), macrosConverter::convert);
 
     Optional<BuildTarget> runner = args.getRunner();
-    Optional<ImmutableMap<String, StringWithMacros>> runnerSpecs = args.getSpecs();
+    Optional<TestRunnerSpec> runnerSpecs = args.getSpecs();
     if (runnerSpecs.isPresent()) {
       JavaTestRunner testRunner;
       if (runner.isPresent()) {
@@ -217,13 +218,11 @@ public class JavaTestDescription
           buildTarget,
           projectFilesystem,
           params.copyAppendingExtraDeps(javaBinary),
-          DefaultSourcePathResolver.from(graphBuilder),
           javaBinary,
           testsLibrary,
           args.getLabels(),
           args.getContacts(),
-          ImmutableMap.copyOf(
-              Maps.transformValues(args.getSpecs().get(), macrosConverter::convert)),
+          TestRunnerSpecCoercer.coerce(args.getSpecs().get(), macrosConverter),
           vmArgs);
     } else if (runner.isPresent()) {
       throw new HumanReadableException("Should not have runner set when no specs are set");

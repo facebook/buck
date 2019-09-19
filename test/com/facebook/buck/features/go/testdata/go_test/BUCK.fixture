@@ -34,6 +34,11 @@ go_test(
     runner = ":runner",
     specs = {
         "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+            },
+        ],
         "cmd": "out=\"$(abs_output testbin)\" && cd \$(dirname $out) && $out",
     },
     deps = [":base"],

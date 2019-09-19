@@ -10,6 +10,11 @@ java_test(
     runner = ":runner",
     specs = {
         "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+            },
+        ],
         "cmd": "java -jar $(abs_output testbin) $(abs_output classnames)",
     },
     deps = [
@@ -23,6 +28,11 @@ java_test(
     runner = ":runner",
     specs = {
         "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+            },
+        ],
         "cmd": "cat $(abs_output jvm-args)",
     },
     vm_args = ["-DHasVMArgs"],

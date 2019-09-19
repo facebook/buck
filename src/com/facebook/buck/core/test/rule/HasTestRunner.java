@@ -16,8 +16,6 @@
 package com.facebook.buck.core.test.rule;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.rules.macros.StringWithMacros;
-import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
 /**
@@ -35,5 +33,5 @@ public interface HasTestRunner {
    * @return the freeform (for now) specs as required for running tests. For example, cmds,
    *     contacts, etc. This is serialized as json for for the external test runner.
    */
-  Optional<ImmutableMap<String, StringWithMacros>> getSpecs();
+  Optional<TestRunnerSpec> getSpecs();
 }

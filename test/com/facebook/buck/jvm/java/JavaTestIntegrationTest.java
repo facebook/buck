@@ -399,9 +399,14 @@ public class JavaTestIntegrationTest {
     JsonParser parser = ObjectMappers.createParser(specOutput);
 
     ArrayNode node = parser.readValueAsTree();
-    JsonNode spec = node.get(0);
+    JsonNode spec = node.get(0).get("specs");
 
     assertEquals("spec", spec.get("my").textValue());
+
+    JsonNode other = spec.get("other");
+    assertTrue(other.isArray());
+    assertTrue(other.has(0));
+    assertEquals("stuff", other.get(0).get("complicated").textValue());
 
     String cmd = spec.get("cmd").textValue();
     DefaultProcessExecutor processExecutor =
@@ -426,16 +431,21 @@ public class JavaTestIntegrationTest {
     JsonParser parser = ObjectMappers.createParser(specOutput);
 
     ArrayNode node = parser.readValueAsTree();
-    JsonNode spec = node.get(0);
-    String cmd = spec.get("cmd").textValue();
+    JsonNode spec = node.get(0).get("specs");
 
+    assertEquals("spec", spec.get("my").textValue());
+
+    JsonNode other = spec.get("other");
+    assertTrue(other.isArray());
+    assertTrue(other.has(0));
+    assertEquals("stuff", other.get(0).get("complicated").textValue());
+
+    String cmd = spec.get("cmd").textValue();
     DefaultProcessExecutor processExecutor =
         new DefaultProcessExecutor(Console.createNullConsole());
     ProcessExecutor.Result processResult =
         processExecutor.launchAndExecute(
             ProcessExecutorParams.builder().addCommand(cmd.split(" ")).build());
     assertEquals(0, processResult.getExitCode());
-    assertTrue(processResult.getStdout().isPresent());
-    assertEquals(processResult.getStdout().get(), "-DHasVMArgs" + System.lineSeparator());
   }
 }

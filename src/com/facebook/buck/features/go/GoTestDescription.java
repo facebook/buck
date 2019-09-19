@@ -38,8 +38,8 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.test.rule.HasTestRunner;
+import com.facebook.buck.core.test.rule.coercer.TestRunnerSpecCoercer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -347,13 +347,11 @@ public class GoTestDescription
       return new GoTestX(
           buildTarget,
           projectFilesystem,
-          DefaultSourcePathResolver.from(graphBuilder),
           params.withDeclaredDeps(ImmutableSortedSet.of(testMain)).withoutExtraDeps(),
           testMain,
           args.getLabels(),
           args.getContacts(),
-          ImmutableMap.copyOf(
-              Maps.transformValues(args.getSpecs().get(), macrosConverter::convert)),
+          TestRunnerSpecCoercer.coerce(args.getSpecs().get(), macrosConverter),
           args.getResources());
     }
     return new GoTest(

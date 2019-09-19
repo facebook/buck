@@ -24,7 +24,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.util.concurrent.Callable;
 import javax.annotation.Nullable;
 
@@ -42,7 +41,7 @@ public interface TestXRule extends TestRule, ExternalTestRunnerRule, HasSuppleme
   }
 
   /** @return the specs from the test protocol defined in BUCK files */
-  ImmutableMap<String, String> getSpecs();
+  CoercedTestRunnerSpec getSpecs();
 
   @Override
   default ImmutableList<Step> runTests(
@@ -76,7 +75,8 @@ public interface TestXRule extends TestRule, ExternalTestRunnerRule, HasSuppleme
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
-    return new ImmutableExternalRunnerTestProtocol(getBuildTarget(), getSpecs());
+    return new ImmutableExternalRunnerTestProtocol(
+        getBuildTarget(), getSpecs(), buildContext.getSourcePathResolver());
   }
 
   @Override

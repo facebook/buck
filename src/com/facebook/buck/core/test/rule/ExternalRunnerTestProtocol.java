@@ -17,17 +17,16 @@
 package com.facebook.buck.core.test.rule;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.util.Map;
 
 /** The JSON serializable object for test protocol */
 @BuckStyleValue
-abstract class ExternalRunnerTestProtocol implements ExternalTestSpec {
+public abstract class ExternalRunnerTestProtocol implements ExternalTestSpec {
 
   /** @return the build target of this rule. */
   protected abstract BuildTarget getTarget();
@@ -36,16 +35,17 @@ abstract class ExternalRunnerTestProtocol implements ExternalTestSpec {
    * @return the test protocol specs defined in the BUCK file. This is a free form dictionary that
    *     will be serialized and passed to the test runners.
    */
-  protected abstract ImmutableMap<String, String> getSpecs();
+  protected abstract CoercedTestRunnerSpec getSpecs();
+
+  protected abstract SourcePathResolver getSourcePathResolver();
 
   @Override
   public void serialize(JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
       throws IOException {
     jsonGenerator.writeStartObject();
     jsonGenerator.writeStringField("target", getTarget().toString());
-    for (Map.Entry<String, String> entry : getSpecs().entrySet()) {
-      jsonGenerator.writeStringField(entry.getKey(), entry.getValue());
-    }
+    jsonGenerator.writeFieldName("specs");
+    getSpecs().serialize(jsonGenerator, getSourcePathResolver());
     jsonGenerator.writeEndObject();
   }
 
