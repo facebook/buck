@@ -297,17 +297,28 @@ public class GoTestDescription
               args.getExternalLinkerFlags(),
               platform);
     } else {
+      Path packageName = getGoPackageName(graphBuilder, buildTarget, args);
+      GoTestMain generatedTestMain =
+          requireTestMainGenRule(
+              buildTarget,
+              projectFilesystem,
+              params,
+              graphBuilder,
+              platform,
+              srcs.build(),
+              ImmutableMap.of(packageName, coverVariables),
+              coverageMode,
+              packageName);
+
       testMain =
           createTestMainRule(
               buildTarget,
               projectFilesystem,
               params.copyAppendingExtraDeps(extraDeps.build()),
               graphBuilder,
-              srcs.build(),
-              coverVariables,
-              coverageMode,
               args,
-              platform);
+              platform,
+              generatedTestMain);
     }
     graphBuilder.addToIndex(testMain);
 
@@ -357,12 +368,9 @@ public class GoTestDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      ImmutableSet<SourcePath> srcs,
-      ImmutableMap<String, Path> coverVariables,
-      GoTestCoverStep.Mode coverageMode,
       GoTestDescriptionArg args,
-      GoPlatform platform) {
-    Path packageName = getGoPackageName(graphBuilder, buildTarget, args);
+      GoPlatform platform,
+      GoTestMain generatedTestMain) {
     boolean createResourcesSymlinkTree =
         goBuckConfig
             .getDelegate()
@@ -374,18 +382,6 @@ public class GoTestDescription
         new NoopBuildRuleWithDeclaredAndExtraDeps(
             buildTarget.withAppendedFlavors(TEST_LIBRARY_FLAVOR), projectFilesystem, params);
     graphBuilder.addToIndex(testLibrary);
-
-    BuildRule generatedTestMain =
-        requireTestMainGenRule(
-            buildTarget,
-            projectFilesystem,
-            params,
-            graphBuilder,
-            platform,
-            srcs,
-            ImmutableMap.of(packageName, coverVariables),
-            coverageMode,
-            packageName);
 
     GoBinary testMain =
         GoDescriptors.createGoBinaryRule(
