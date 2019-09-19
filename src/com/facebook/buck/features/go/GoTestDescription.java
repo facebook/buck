@@ -257,48 +257,60 @@ public class GoTestDescription
           platform);
     }
 
+    Path packageName = getGoPackageName(graphBuilder, buildTarget, args);
+
     GoBinary testMain;
+    GoTestMain generatedTestMain;
     if (args.getSpecs().isPresent()) {
       UserVerify.checkArgument(
           args.getRunner().isPresent(),
-          "runner_library should be specified for rules implementing test protocol");
+          "runner should be specified for rules implementing test protocol");
 
-      BuildRule library = graphBuilder.requireRule(args.getRunner().get());
+      BuildRule runner = graphBuilder.requireRule(args.getRunner().get());
       UserVerify.verify(
-          library instanceof GoLibrary, "runner_library should be a go_library for go_test");
-      GoLibrary runnerLibrary = (GoLibrary) library;
+          runner instanceof GoTestRunner, "runner should be a go_test_runner for go_test");
+      GoTestRunner testRunner = (GoTestRunner) runner;
 
-      BuildRule testLibrary =
-          new GoLibrary(
-              buildTarget.withAppendedFlavors(TEST_LIBRARY_FLAVOR),
-              projectFilesystem,
-              params,
-              srcs.build());
-      graphBuilder.addToIndex(testLibrary);
+      GoBinary testMainGeneratorRule =
+          (GoBinary)
+              graphBuilder.computeIfAbsent(
+                  buildTarget.withFlavors(InternalFlavor.of("make-test-main-gen")),
+                  target ->
+                      GoDescriptors.createGoBinaryRule(
+                          target,
+                          projectFilesystem,
+                          params.withoutDeclaredDeps(),
+                          graphBuilder,
+                          goBuckConfig,
+                          Linker.LinkableDepType.STATIC_PIC,
+                          Optional.empty(),
+                          ImmutableSet.of(testRunner.getTestRunnerGenerator()),
+                          ImmutableSortedSet.of(),
+                          ImmutableList.of(),
+                          ImmutableList.of(),
+                          ImmutableList.of(),
+                          ImmutableList.of(),
+                          platform));
 
-      // TODO(bobyf): this doesn't quite work the way we want since the runner code has hard coded
-      // imports based on the test itself. We need some code gen/template like the existing gotest
-      testMain =
-          GoDescriptors.createGoBinaryRule(
-              buildTarget.withAppendedFlavors(InternalFlavor.of("test-main")),
+      Tool testMainGenerator = testMainGeneratorRule.getExecutableCommand();
+
+      generatedTestMain =
+          new GoTestMain(
+              buildTarget.withAppendedFlavors(InternalFlavor.of("test-main-src")),
               projectFilesystem,
-              params
-                  .copyAppendingExtraDeps(extraDeps.add(runnerLibrary).build())
-                  .withDeclaredDeps(ImmutableSortedSet.of(testLibrary)),
-              graphBuilder,
-              goBuckConfig,
-              args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC_PIC),
-              args.getLinkMode(),
-              runnerLibrary.getSrcs(),
-              args.getResources(),
-              args.getCompilerFlags(),
-              args.getAssemblerFlags(),
-              args.getLinkerFlags(),
-              args.getExternalLinkerFlags(),
-              platform);
+              params.withDeclaredDeps(
+                  ImmutableSortedSet.<BuildRule>naturalOrder()
+                      .addAll(BuildableSupport.getDepsCollection(testMainGenerator, graphBuilder))
+                      .build()),
+              testMainGenerator,
+              srcs.build(),
+              packageName,
+              platform,
+              ImmutableMap.of(packageName, coverVariables),
+              coverageMode);
+      graphBuilder.addToIndex(generatedTestMain);
     } else {
-      Path packageName = getGoPackageName(graphBuilder, buildTarget, args);
-      GoTestMain generatedTestMain =
+      generatedTestMain =
           requireTestMainGenRule(
               buildTarget,
               projectFilesystem,
@@ -309,17 +321,18 @@ public class GoTestDescription
               ImmutableMap.of(packageName, coverVariables),
               coverageMode,
               packageName);
-
-      testMain =
-          createTestMainRule(
-              buildTarget,
-              projectFilesystem,
-              params.copyAppendingExtraDeps(extraDeps.build()),
-              graphBuilder,
-              args,
-              platform,
-              generatedTestMain);
     }
+
+    testMain =
+        createTestMainRule(
+            buildTarget,
+            projectFilesystem,
+            params.copyAppendingExtraDeps(extraDeps.build()),
+            graphBuilder,
+            args,
+            platform,
+            generatedTestMain);
+
     graphBuilder.addToIndex(testMain);
 
     StringWithMacrosConverter macrosConverter =

@@ -17,10 +17,9 @@ go_library(
     deps = [":base"],
 )
 
-go_library(
+go_test_runner(
     name = "runner",
-    package_name = "main",
-    srcs = ["runner.go"],
+    test_runner_generator = "test_runner_generator.go",
 )
 
 go_test(
