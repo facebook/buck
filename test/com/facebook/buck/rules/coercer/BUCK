@@ -12,6 +12,7 @@ standard_java_test(
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
         "//src/com/facebook/buck/core/rules/platform:platform",
         "//src/com/facebook/buck/core/select/impl:impl",
+        "//src/com/facebook/buck/core/test/rule:rule",
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/parser/syntax:syntax",
         "//src/com/facebook/buck/query:query",
