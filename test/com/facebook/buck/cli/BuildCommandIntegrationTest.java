@@ -341,11 +341,11 @@ public class BuildCommandIntegrationTest {
             "--target-platforms",
             "//config:osx_x86_64",
             "--exclude-incompatible-targets",
-            "//:")
+            "//target_compatible_with:")
         .assertSuccess();
 
-    workspace.getBuildLog().assertTargetBuiltLocally("//:cat_on_osx");
-    workspace.getBuildLog().assertTargetIsAbsent("//:cat_on_linux");
+    workspace.getBuildLog().assertTargetBuiltLocally("//target_compatible_with:cat_on_osx");
+    workspace.getBuildLog().assertTargetIsAbsent("//target_compatible_with:cat_on_linux");
 
     workspace
         .runBuckCommand(
@@ -353,11 +353,11 @@ public class BuildCommandIntegrationTest {
             "--target-platforms",
             "//config:linux_x86_64",
             "--exclude-incompatible-targets",
-            "//:")
+            "//target_compatible_with:")
         .assertSuccess();
 
-    workspace.getBuildLog().assertTargetBuiltLocally("//:cat_on_linux");
-    workspace.getBuildLog().assertTargetIsAbsent("//:cat_on_osx");
+    workspace.getBuildLog().assertTargetBuiltLocally("//target_compatible_with:cat_on_linux");
+    workspace.getBuildLog().assertTargetIsAbsent("//target_compatible_with:cat_on_osx");
   }
 
   @Test
