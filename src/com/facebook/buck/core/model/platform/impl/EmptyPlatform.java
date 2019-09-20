@@ -15,34 +15,36 @@
  */
 package com.facebook.buck.core.model.platform.impl;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
 import java.util.Collection;
 import java.util.Objects;
 
 /**
- * A platform that fails when constraints are checked.
+ * A platform that doesn't match any constraints.
  *
- * <p>Used by default when platform is not specified.
+ * <p>Note that this platform matches an empty list of constraints. The behavior of this platform is
+ * equivalent to {@link ConstraintBasedPlatform} with an empty list of constraints.
+ *
+ * <p>Can be used in places when some platform is needed, but {@link DefaultPlatform} does not work
+ * because it if effectively prohibits using platforms.
  */
-public class DefaultPlatform implements Platform {
+public class EmptyPlatform implements Platform {
 
-  public static final DefaultPlatform INSTANCE = new DefaultPlatform();
+  public static final EmptyPlatform INSTANCE = new EmptyPlatform();
 
-  private final int hashCode = Objects.hash(DefaultPlatform.class);
+  private final int hashCode = Objects.hash(EmptyPlatform.class);
 
-  private DefaultPlatform() {}
+  private EmptyPlatform() {}
 
   @Override
   public boolean matchesAll(Collection<ConstraintValue> constraintValues) {
-    throw new HumanReadableException(
-        "Cannot use select() expression when target platform is not specified");
+    return constraintValues.isEmpty();
   }
 
   @Override
   public String toString() {
-    return "DefaultPlatform";
+    return "EmptyPlatform";
   }
 
   @Override
@@ -52,6 +54,6 @@ public class DefaultPlatform implements Platform {
 
   @Override
   public boolean equals(Object obj) {
-    return obj instanceof DefaultPlatform;
+    return obj instanceof EmptyPlatform;
   }
 }

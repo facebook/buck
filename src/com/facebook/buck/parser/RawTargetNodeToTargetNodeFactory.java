@@ -120,7 +120,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
               declaredDeps,
               configurationDeps,
               rawTargetNode.getAttributes());
-    } catch (CoerceFailedException e) {
+    } catch (HumanReadableException | CoerceFailedException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }
 
