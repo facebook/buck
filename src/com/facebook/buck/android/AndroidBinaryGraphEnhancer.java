@@ -723,9 +723,7 @@ public class AndroidBinaryGraphEnhancer {
             dxExecutorService,
             xzCompressionLevel,
             dxConfig.getDxMaxHeapSize(),
-            // Always merge with dx even if we dexed with D8.
-            // TODO Convert this to D8 once its fast enough
-            DxStep.DX);
+            dexTool);
     graphBuilder.addToIndex(preDexMerge);
 
     return preDexMerge;
