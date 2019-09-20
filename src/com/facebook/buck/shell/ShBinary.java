@@ -329,4 +329,11 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
     return Paths.get(ROOT_CELL_LINK_NAME).resolve(resolver.getRelativePath(sourcePath));
   }
+
+  @Override
+  public boolean isCacheable() {
+    // Caching for ShBinary rules is broken, as the runtime resources symlinks
+    // currently don't get created if the script is retrieved from the cache.
+    return false;
+  }
 }
