@@ -32,4 +32,8 @@ public interface HasTargetCompatibleWith {
   /** A list of platforms a target is compatible with. */
   @Hint(isDep = false, isConfigurable = false)
   ImmutableList<UnconfiguredBuildTargetView> getTargetCompatiblePlatforms();
+
+  /** A list of {@code config_setting} a target is compatible with. */
+  @Hint(isDep = false, isConfigurable = false)
+  ImmutableList<UnconfiguredBuildTargetView> getCompatibleWith();
 }

@@ -330,7 +330,7 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
-  public void testTargetsInFileFilteredByTargetPlatform() throws IOException {
+  public void targetsInFileFilteredByConstraints() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_target_filtering", tmp);
     workspace.setUp();
@@ -358,6 +358,37 @@ public class BuildCommandIntegrationTest {
 
     workspace.getBuildLog().assertTargetBuiltLocally("//target_compatible_with:cat_on_linux");
     workspace.getBuildLog().assertTargetIsAbsent("//target_compatible_with:cat_on_osx");
+  }
+
+  @Test
+  public void targetsInFileFilteredByConfigs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_target_filtering", tmp);
+    workspace.setUp();
+
+    workspace
+        .runBuckCommand(
+            "build",
+            "--target-platforms",
+            "//config:osx_x86_64",
+            "--exclude-incompatible-targets",
+            "//compatible_with:")
+        .assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//compatible_with:cat_on_osx");
+    workspace.getBuildLog().assertTargetIsAbsent("//compatible_with:cat_on_linux");
+
+    workspace
+        .runBuckCommand(
+            "build",
+            "--target-platforms",
+            "//config:linux_x86_64",
+            "--exclude-incompatible-targets",
+            "//compatible_with:")
+        .assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//compatible_with:cat_on_linux");
+    workspace.getBuildLog().assertTargetIsAbsent("//compatible_with:cat_on_osx");
   }
 
   @Test
@@ -405,7 +436,8 @@ public class BuildCommandIntegrationTest {
         result.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
             "Build target //:dep is restricted to constraints "
-                + "in \"target_compatible_with\" and \"target_compatible_platforms\" "
+                + "in \"target_compatible_with\", \"compatible_with\" "
+                + "and \"target_compatible_platforms\" "
                 + "that do not match the target platform //config:osx_x86-64.\n"
                 + "Target constraints:\nbuck//config/constraints:linux"));
   }
@@ -428,7 +460,8 @@ public class BuildCommandIntegrationTest {
         result.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
             "Build target //:dep_with_compatible_platform is restricted to constraints "
-                + "in \"target_compatible_with\" and \"target_compatible_platforms\" "
+                + "in \"target_compatible_with\", \"compatible_with\" "
+                + "and \"target_compatible_platforms\" "
                 + "that do not match the target platform //config:osx_x86-64.\n"
                 + "Target compatible with platforms:\n//config:linux_x86-64"));
   }

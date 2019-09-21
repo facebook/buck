@@ -377,10 +377,21 @@ class ParserWithConfigurableAttributes extends AbstractParser {
                         .append(target.getFullyQualifiedName())
                         .append(System.lineSeparator()));
       }
+      if (!argWithTargetCompatible.getCompatibleWith().isEmpty()) {
+        diagnostics.append("%nTarget compatible with configurations:%n");
+        argWithTargetCompatible
+            .getCompatibleWith()
+            .forEach(
+                target ->
+                    diagnostics
+                        .append(target.getFullyQualifiedName())
+                        .append(System.lineSeparator()));
+      }
 
       throw new HumanReadableException(
-          "Build target %s is restricted to constraints in \"target_compatible_with\""
-              + " and \"target_compatible_platforms\" that do not match the target platform %s."
+          "Build target %s is restricted to constraints in \"target_compatible_with\","
+              + " \"compatible_with\" and \"target_compatible_platforms\""
+              + " that do not match the target platform %s."
               + diagnostics,
           targetNode.getBuildTarget(),
           targetPlatform);

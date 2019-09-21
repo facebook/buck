@@ -17,6 +17,8 @@
 package com.facebook.buck.core.select;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.platform.ConstraintResolver;
+import com.facebook.buck.core.model.platform.Platform;
 
 /**
  * A condition in <code>select</code> statements.
@@ -29,6 +31,9 @@ public interface Selectable {
 
   /** @return <code>true</code> if this condition matches the configuration */
   boolean matches(SelectableConfigurationContext configurationContext);
+
+  /** @return <code>true</code> if this condition matches the platform */
+  boolean matchesPlatform(Platform platform, ConstraintResolver constraintResolver);
 
   /** @return <code>true</code> if this condition is more specialized than the given one */
   boolean refines(Selectable other);

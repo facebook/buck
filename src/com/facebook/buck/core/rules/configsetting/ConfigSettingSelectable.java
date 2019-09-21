@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.configsetting;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintValue;
@@ -60,6 +61,21 @@ public class ConfigSettingSelectable implements Selectable {
         context.getPlatformProvider().getTargetPlatform(context.getTargetConfiguration()),
         constraintValues,
         values);
+  }
+
+  @Override
+  public boolean matchesPlatform(Platform platform, ConstraintResolver constraintResolver) {
+    if (!values.isEmpty()) {
+      // It should be relatively easy to add buckconfig matching,
+      // but we probably don't want to open this door.
+      throw new HumanReadableException(
+          "config_setting with values cannot be used to match platforms");
+    }
+    ImmutableList<ConstraintValue> constraintValues =
+        this.constraintValues.stream()
+            .map(constraintResolver::getConstraintValue)
+            .collect(ImmutableList.toImmutableList());
+    return platform.matchesAll(constraintValues);
   }
 
   /**

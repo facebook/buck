@@ -25,7 +25,9 @@ import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
+import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
+import com.facebook.buck.core.rules.configsetting.ConfigSettingRule;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -62,23 +64,49 @@ class TargetCompatibilityChecker {
       }
     }
 
-    if (argWithTargetCompatible.getTargetCompatiblePlatforms().isEmpty()) {
-      return true;
-    }
+    if (!argWithTargetCompatible.getTargetCompatiblePlatforms().isEmpty()) {
+      PlatformResolver platformResolver = configurationRuleRegistry.getPlatformResolver();
+      boolean compatible = false;
+      for (UnconfiguredBuildTargetView compatiblePlatformTarget :
+          argWithTargetCompatible.getTargetCompatiblePlatforms()) {
+        ConstraintBasedPlatform compatiblePlatform =
+            (ConstraintBasedPlatform)
+                platformResolver.getPlatform(
+                    ConfigurationBuildTargets.convert(compatiblePlatformTarget));
 
-    PlatformResolver platformResolver = configurationRuleRegistry.getPlatformResolver();
-    for (UnconfiguredBuildTargetView compatiblePlatformTarget :
-        argWithTargetCompatible.getTargetCompatiblePlatforms()) {
-      ConstraintBasedPlatform compatiblePlatform =
-          (ConstraintBasedPlatform)
-              platformResolver.getPlatform(
-                  ConfigurationBuildTargets.convert(compatiblePlatformTarget));
+        if (platform.matchesAll(compatiblePlatform.getConstraintValues())) {
+          compatible = true;
+          break;
+        }
+      }
 
-      if (platform.matchesAll(compatiblePlatform.getConstraintValues())) {
-        return true;
+      if (!compatible) {
+        return false;
       }
     }
 
-    return false;
+    if (!argWithTargetCompatible.getCompatibleWith().isEmpty()) {
+      ConfigurationRuleResolver configurationRuleResolver =
+          configurationRuleRegistry.getConfigurationRuleResolver();
+      boolean compatible = false;
+      for (UnconfiguredBuildTargetView compatibleConfigTarget :
+          argWithTargetCompatible.getCompatibleWith()) {
+        ConfigSettingRule configSettingRule =
+            (ConfigSettingRule)
+                configurationRuleResolver.getRule(
+                    ConfigurationBuildTargets.convert(compatibleConfigTarget));
+
+        if (configSettingRule.getSelectable().matchesPlatform(platform, constraintResolver)) {
+          compatible = true;
+          break;
+        }
+      }
+
+      if (!compatible) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }

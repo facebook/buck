@@ -17,6 +17,8 @@
 package com.facebook.buck.core.select;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.platform.ConstraintResolver;
+import com.facebook.buck.core.model.platform.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 
@@ -40,6 +42,11 @@ public class TestSelectable implements Selectable {
   @Override
   public boolean matches(SelectableConfigurationContext configurationContext) {
     return matches;
+  }
+
+  @Override
+  public boolean matchesPlatform(Platform platform, ConstraintResolver constraintResolver) {
+    throw new RuntimeException("not implemented");
   }
 
   @Override
