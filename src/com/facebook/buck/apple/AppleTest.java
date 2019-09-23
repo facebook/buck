@@ -388,12 +388,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         idbStdoutReader = Optional.of(new AppleTestIdbStdoutReader(testReportingCallback));
         AppleDeviceController appleDeviceController =
             new AppleDeviceController(context.getProcessExecutor(), idbPath);
-        Optional<String> deviceUdid =
-            appleDeviceController.getUdidFromDeviceName(
-                destinationSpecifierArg.get().split("=")[1]);
-        if (!deviceUdid.isPresent()) {
-          throw new HumanReadableException("Could not get the udid of the specified device");
-        }
+        Optional<String> deviceUdid = appleDeviceController.getSimulatorUdidForTest();
         ImmutableList<IdbRunTestsStep> idbSteps =
             IdbRunTestsStep.createCommands(
                 idbPath,
@@ -407,7 +402,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 logicTestPathsBuilder.build(),
                 appTestPathsToHostAppsBuilder.build(),
                 appTestPathsToTestHostAppPathsToTestTargetAppsBuilder.build(),
-                deviceUdid.get());
+                deviceUdid);
         for (IdbRunTestsStep step : idbSteps) {
           steps.add(step);
         }

@@ -88,7 +88,7 @@ public class IdbRunTestsStep implements Step {
   private final ImmutableList<String> command;
   private final ImmutableList<String> installCommand;
   private final ImmutableList<String> runCommand;
-  private final String deviceUdid;
+  private final Optional<String> deviceUdid;
 
   public IdbRunTestsStep(
       Path idbPath,
@@ -103,7 +103,7 @@ public class IdbRunTestsStep implements Step {
       Path testBundlePath,
       Optional<Path> appTestBundlePath,
       Optional<Path> testHostAppBundlePath,
-      String deviceUdid) {
+      Optional<String> deviceUdid) {
     this.idbPath = idbPath;
     this.filesystem = filesystem;
     this.outputPath = outputPath;
@@ -116,15 +116,15 @@ public class IdbRunTestsStep implements Step {
     this.appTestBundlePath = parseBuckAppPath(appTestBundlePath);
     this.testHostAppBundlePath = parseBuckAppPath(testHostAppBundlePath);
     this.deviceUdid = deviceUdid;
+    if (!deviceUdid.isPresent()) {
+      if (type == TestTypeEnum.LOGIC) {
+        LOG.warn(
+            "Could not find any simulator to run the tests, this will cause a slower execution");
+      } else throw new HumanReadableException("Cannot run app or ui tests without a simulator");
+    }
+    ImmutableList.Builder<String> installCommandBuilder = ImmutableList.builder();
     ImmutableList.Builder<String> runCommandBuilder = ImmutableList.builder();
-    this.installCommand =
-        ImmutableList.of(
-            idbPath.toString(),
-            "xctest",
-            "install",
-            testBundlePath.toString(),
-            "--udid",
-            deviceUdid);
+    installCommandBuilder.add(idbPath.toString(), "xctest", "install", testBundlePath.toString());
     runCommandBuilder.add(idbPath.toString(), "xctest", "run");
     switch (type) {
       case LOGIC:
@@ -137,7 +137,12 @@ public class IdbRunTestsStep implements Step {
         runCommandBuilder.add("ui");
         break;
     }
-    runCommandBuilder.add("--json", "--udid", deviceUdid);
+    runCommandBuilder.add("--json");
+    if (deviceUdid.isPresent()) {
+      installCommandBuilder.add("--udid", deviceUdid.get());
+      runCommandBuilder.add("--udid", deviceUdid.get());
+    }
+    this.installCommand = installCommandBuilder.build();
     this.runCommand = runCommandBuilder.build();
 
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
@@ -164,7 +169,7 @@ public class IdbRunTestsStep implements Step {
       Collection<Path> logicTestBundlePaths,
       Map<Path, Path> appTestBundleToHostAppPaths,
       Map<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetAppPaths,
-      String deviceUdid) {
+      Optional<String> deviceUdid) {
     String testBundleId = getAppleBundleId(testBundle, filesystem).get();
     ImmutableList.Builder<IdbRunTestsStep> commandBuilder = ImmutableList.builder();
     for (Path bundlePath : logicTestBundlePaths) {
@@ -262,7 +267,9 @@ public class IdbRunTestsStep implements Step {
     // Booting the simulator for the test
     AppleDeviceController appleDeviceController =
         new AppleDeviceController(context.getProcessExecutor(), idbPath);
-    appleDeviceController.bootSimulator(deviceUdid);
+    if (deviceUdid.isPresent()) {
+      appleDeviceController.bootSimulator(deviceUdid.get());
+    }
 
     // Install necessary apps for the tests
     Optional<String> testApp = Optional.empty();
@@ -271,7 +278,7 @@ public class IdbRunTestsStep implements Step {
         LOG.error("Could not find the path to the test app");
         return StepExecutionResults.ERROR;
       }
-      testApp = appleDeviceController.installBundle(deviceUdid, appTestBundlePath.get());
+      testApp = appleDeviceController.installBundle(deviceUdid.get(), appTestBundlePath.get());
       if (!testApp.isPresent()) {
         LOG.error("Could not install the test app");
         return StepExecutionResults.ERROR;
@@ -283,7 +290,8 @@ public class IdbRunTestsStep implements Step {
         LOG.error("Could not find the path to the host app");
         return StepExecutionResults.ERROR;
       }
-      hostTestApp = appleDeviceController.installBundle(deviceUdid, testHostAppBundlePath.get());
+      hostTestApp =
+          appleDeviceController.installBundle(deviceUdid.get(), testHostAppBundlePath.get());
       if (!hostTestApp.isPresent()) {
         LOG.error("Could not install the host test app");
         return StepExecutionResults.ERROR;

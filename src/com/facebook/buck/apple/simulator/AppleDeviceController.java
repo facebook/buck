@@ -159,6 +159,30 @@ public class AppleDeviceController {
   }
 
   /**
+   * Picks the simulator to be used for testing
+   *
+   * @return the udid of any booted simulator (iphone) and if there are none returns any simulator.
+   *     If there are none, returns optional empty
+   */
+  public Optional<String> getSimulatorUdidForTest() {
+    ImmutableSet<ImmutableAppleDevice> simulators = getSimulators();
+    if (simulators.isEmpty()) {
+      return Optional.empty();
+    }
+    for (ImmutableAppleDevice simulator : simulators) {
+      if (simulator.getState().toLowerCase().equals("booted")) {
+        return Optional.of(simulator.getUdid());
+      }
+    }
+    for (ImmutableAppleDevice simulator : simulators) {
+      if (getDeviceKind(simulator) == AppleDeviceKindEnum.MOBILE) {
+        return Optional.of(simulator.getUdid());
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
    * Starts up the iOS simulator using idb, which waits until the simulator is completely booted.
    *
    * <p>Call {@link #isSimulatorAvailable(String)} before invoking this method to ensure the
