@@ -24,9 +24,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -37,7 +35,7 @@ import org.objectweb.asm.tree.InnerClassNode;
 
 class StubJarClassEntry extends StubJarEntry {
   @Nullable private final Set<String> referencedClassNames;
-  private final List<String> methodBodiesToRetain;
+  private final List<String> inlineMethods;
   private final Path path;
   private final ClassNode stub;
 
@@ -46,34 +44,19 @@ class StubJarClassEntry extends StubJarEntry {
       LibraryReader input,
       Path path,
       @Nullable AbiGenerationMode compatibilityMode,
-      boolean isKotlinModule,
-      Map<String, List<String>> inlineFunctionsMap)
+      boolean isKotlinModule)
       throws IOException {
     ClassNode stub = new ClassNode(Opcodes.ASM7);
 
     // Kotlin has the concept of "inline functions", which means that we need to retain the body
     // of these functions so that the compiler is able to inline them.
-    List<String> methodBodiesToRetain = Collections.emptyList();
+    List<String> inlineFunctions = Collections.emptyList();
     boolean isKotlinClass = false;
-    boolean retainAllMethodBodies = false;
-
     if (isKotlinModule) {
       AnnotationNode kotlinMetadataAnnotation = findKotlinMetadataAnnotation(input, path);
       if (kotlinMetadataAnnotation != null) {
         isKotlinClass = true;
-        ClassNode dummyStub = new ClassNode(Opcodes.ASM7);
-        input.visitClass(path, dummyStub, true);
-        retainAllMethodBodies =
-            retainAllMethodBodies(
-                inlineFunctionsMap, path, dummyStub.outerClass, dummyStub.outerMethod);
-        if (retainAllMethodBodies) {
-          methodBodiesToRetain =
-              dummyStub.methods.stream()
-                  .map(methodNode -> methodNode.name)
-                  .collect(Collectors.toList());
-        } else {
-          methodBodiesToRetain = KotlinMetadataReader.getInlineFunctions(kotlinMetadataAnnotation);
-        }
+        inlineFunctions = KotlinMetadataReader.getInlineFunctions(kotlinMetadataAnnotation);
       }
     }
 
@@ -82,7 +65,7 @@ class StubJarClassEntry extends StubJarEntry {
     // ABI methods and fields, and will use that information later to filter the InnerClasses table.
     ClassReferenceTracker referenceTracker = new ClassReferenceTracker(stub);
     ClassVisitor firstLevelFiltering =
-        new AbiFilteringClassVisitor(referenceTracker, methodBodiesToRetain);
+        new AbiFilteringClassVisitor(referenceTracker, inlineFunctions);
 
     // If we want ABIs that are compatible with those generated from source, we add a visitor
     // at the very start of the chain which transforms the event stream coming out of `ClassNode`
@@ -94,25 +77,20 @@ class StubJarClassEntry extends StubJarEntry {
 
     // The synthetic package-info class is how package annotations are recorded; that one is
     // actually used by the compiler
-    if (!isAnonymousOrLocalOrSyntheticClass(stub)
-        || retainAllMethodBodies
-        || stub.name.endsWith("/package-info")) {
+    if (!isAnonymousOrLocalOrSyntheticClass(stub) || stub.name.endsWith("/package-info")) {
       return new StubJarClassEntry(
-          path, stub, referenceTracker.getReferencedClassNames(), methodBodiesToRetain);
+          path, stub, referenceTracker.getReferencedClassNames(), inlineFunctions);
     }
 
     return null;
   }
 
   private StubJarClassEntry(
-      Path path,
-      ClassNode stub,
-      Set<String> referencedClassNames,
-      List<String> methodBodiesToRetain) {
+      Path path, ClassNode stub, Set<String> referencedClassNames, List<String> inlineMethods) {
     this.path = path;
     this.stub = stub;
     this.referencedClassNames = referencedClassNames;
-    this.methodBodiesToRetain = methodBodiesToRetain;
+    this.inlineMethods = inlineMethods;
   }
 
   @Override
@@ -120,16 +98,11 @@ class StubJarClassEntry extends StubJarEntry {
     writer.writeEntry(path, this::openInputStream);
   }
 
-  @Override
-  public List<String> getInlineMethods() {
-    return methodBodiesToRetain;
-  }
-
   private InputStream openInputStream() {
     ClassWriter writer = new ClassWriter(0);
     ClassVisitor visitor = writer;
     visitor = new InnerClassSortingClassVisitor(stub.name, visitor);
-    visitor = new AbiFilteringClassVisitor(visitor, methodBodiesToRetain, referencedClassNames);
+    visitor = new AbiFilteringClassVisitor(visitor, inlineMethods, referencedClassNames);
     stub.accept(visitor);
 
     return new ByteArrayInputStream(writer.toByteArray());
@@ -149,29 +122,6 @@ class StubJarClassEntry extends StubJarEntry {
     }
 
     return false;
-  }
-
-  /**
-   * If this is a class that was created for a method that needs to be inlined, then we need to make
-   * sure that we retain its methods.
-   */
-  private static boolean retainAllMethodBodies(
-      Map<String, List<String>> inlineFunctionsMap,
-      Path path,
-      String outerClass,
-      String outerMethod) {
-    if (path.toString().contains("$$inlined$")) {
-      // These classes are created when a function calls an inline function with a crossinline
-      // parameter.
-      return true;
-    }
-
-    final List<String> inlineFunctions = inlineFunctionsMap.get(outerClass);
-    if (inlineFunctions == null) {
-      return false;
-    }
-
-    return inlineFunctions.contains(outerMethod);
   }
 
   @Nullable

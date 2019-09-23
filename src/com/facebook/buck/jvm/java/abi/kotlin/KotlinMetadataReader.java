@@ -24,7 +24,6 @@ import java.util.stream.Stream;
 import kotlinx.metadata.Flag;
 import kotlinx.metadata.KmDeclarationContainer;
 import kotlinx.metadata.KmFunction;
-import kotlinx.metadata.KmProperty;
 import kotlinx.metadata.jvm.KotlinClassHeader;
 import kotlinx.metadata.jvm.KotlinClassMetadata;
 import org.objectweb.asm.tree.AnnotationNode;
@@ -55,11 +54,6 @@ public class KotlinMetadataReader {
             .filter(function -> Flag.Function.IS_INLINE.invoke(function.getFlags()))
             .map(KmFunction::getName);
 
-    Stream<String> inlineProperties =
-        container.getProperties().stream()
-            .filter(property -> Flag.PropertyAccessor.IS_INLINE.invoke(property.getGetterFlags()))
-            .map(KmProperty::getName);
-
     Stream<String> inlineGetters =
         container.getProperties().stream()
             .filter(property -> Flag.PropertyAccessor.IS_INLINE.invoke(property.getGetterFlags()))
@@ -70,9 +64,7 @@ public class KotlinMetadataReader {
             .filter(function -> Flag.PropertyAccessor.IS_INLINE.invoke(function.getSetterFlags()))
             .map(property -> getPropertySetterName(property.getName()));
 
-    return Stream.concat(
-            Stream.concat(Stream.concat(inlineFunctions, inlineGetters), inlineSetters),
-            inlineProperties)
+    return Stream.concat(Stream.concat(inlineFunctions, inlineGetters), inlineSetters)
         .collect(Collectors.toList());
   }
 

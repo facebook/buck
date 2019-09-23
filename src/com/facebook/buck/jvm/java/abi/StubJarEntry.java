@@ -18,31 +18,23 @@ package com.facebook.buck.jvm.java.abi;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
 import javax.annotation.Nullable;
 
 public abstract class StubJarEntry {
   @Nullable
   static StubJarEntry of(
-      LibraryReader input,
-      Path path,
-      AbiGenerationMode compatibilityMode,
-      boolean isKotlinModule,
-      Map<String, List<String>> inlineFunctions)
+      LibraryReader input, Path path, AbiGenerationMode compatibilityMode, boolean isKotlinModule)
       throws IOException {
     if (isStubbableResource(input, path)) {
       return StubJarResourceEntry.of(input, path);
     } else if (input.isClass(path)) {
-      return StubJarClassEntry.of(input, path, compatibilityMode, isKotlinModule, inlineFunctions);
+      return StubJarClassEntry.of(input, path, compatibilityMode, isKotlinModule);
     }
 
     return null;
   }
 
   public abstract void write(StubJarWriter writer);
-
-  public abstract List<String> getInlineMethods();
 
   private static boolean isStubbableResource(LibraryReader input, Path path) {
     return input.isResource(path);
