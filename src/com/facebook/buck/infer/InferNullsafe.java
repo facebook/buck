@@ -140,6 +140,11 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
 
     private static final String REPORTS_OUTPUT_DIR = ".";
 
+    // This flag instructs infer to run only nullsafe related checks. In practice, we may want to
+    // add some other checks to run alongside nullsafe.
+    private static final ImmutableList<String> NULLSAFE_DEFAULT_ARGS =
+        ImmutableList.of("--eradicate-only");
+
     @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
     @AddToRuleKey private final ImmutableSortedSet<SourcePath> classpath;
 
@@ -163,7 +168,14 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
         Optional<ExtraClasspathProvider> extraClasspathProvider,
         @Nullable SourcePath generatedClasses) {
       this.inferPlatform = inferPlatform;
-      this.nullsafeArgs = nullsafeArgs;
+
+      // Ensure sensible default behavior
+      if (nullsafeArgs.isEmpty()) {
+        this.nullsafeArgs = NULLSAFE_DEFAULT_ARGS;
+      } else {
+        this.nullsafeArgs = nullsafeArgs;
+      }
+
       this.sources = sources;
       this.classpath = classpath;
       this.javacOptions = javacOptions;
