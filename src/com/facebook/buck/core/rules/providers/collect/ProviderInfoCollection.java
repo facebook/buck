@@ -41,6 +41,9 @@ public interface ProviderInfoCollection extends SkylarkIndexable {
    */
   <T extends ProviderInfo<T>> boolean contains(Provider<T> provider);
 
+  /** @return the {@link DefaultInfo} contained in this collection */
+  DefaultInfo getDefaultInfo();
+
   interface Builder {
 
     /**

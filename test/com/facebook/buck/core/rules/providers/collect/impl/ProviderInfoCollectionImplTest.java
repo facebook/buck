@@ -107,6 +107,14 @@ public class ProviderInfoCollectionImplTest {
   }
 
   @Test
+  public void getDefaultInfoCorrectly() {
+    ProviderInfoCollection providerInfoCollection =
+        ProviderInfoCollectionImpl.builder().build(DEFAULT_INFO);
+
+    assertEquals(DEFAULT_INFO, providerInfoCollection.getDefaultInfo());
+  }
+
+  @Test
   public void containsIsCorrect() {
     Provider<FakeInfo> provider = new FakeBuiltInProvider("fake");
     Provider<FakeInfo> missingProvider = new FakeBuiltInProvider("fake");

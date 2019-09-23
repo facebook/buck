@@ -67,4 +67,12 @@ public class LegacyProviderInfoCollectionImplTest {
 
     assertFalse(providerInfoCollection.contains(provider));
   }
+
+  @Test
+  public void getDefaultInfoThrows() throws Exception {
+    expectedException.expect(IllegalStateException.class);
+
+    ProviderInfoCollection providerInfoCollection = LegacyProviderInfoCollectionImpl.of();
+    providerInfoCollection.getDefaultInfo();
+  }
 }

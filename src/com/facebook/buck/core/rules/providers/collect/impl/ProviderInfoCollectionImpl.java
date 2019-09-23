@@ -71,6 +71,11 @@ public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
     return infoMap.containsKey(provider.getKey());
   }
 
+  @Override
+  public DefaultInfo getDefaultInfo() {
+    return get(DefaultInfo.PROVIDER).get();
+  }
+
   @SuppressWarnings("unchecked")
   @Nullable
   private <T extends ProviderInfo<T>> T getNullable(Provider<T> provider) {

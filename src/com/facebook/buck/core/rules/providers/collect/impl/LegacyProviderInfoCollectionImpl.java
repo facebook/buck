@@ -18,6 +18,7 @@ package com.facebook.buck.core.rules.providers.collect.impl;
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.StarlarkContext;
 import com.google.devtools.build.lib.syntax.EvalException;
@@ -60,6 +61,12 @@ public class LegacyProviderInfoCollectionImpl implements ProviderInfoCollection 
   @Override
   public <T extends ProviderInfo<T>> boolean contains(Provider<T> provider) {
     return false;
+  }
+
+  @Override
+  public DefaultInfo getDefaultInfo() {
+    throw new IllegalStateException(
+        "Attempting to access DefaultInfo on a legacy rule that does not expose providers");
   }
 
   private void verifyKeyIsProvider(Object key, Location loc, String s) throws EvalException {
