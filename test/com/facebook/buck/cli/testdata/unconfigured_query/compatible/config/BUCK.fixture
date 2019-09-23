@@ -21,6 +21,16 @@ constraint_value(
     ],
 )
 
+config_setting(
+    name = "apple-config",
+    constraint_values = [
+        ":apple",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
 platform(
     name = "apple-platform",
     constraint_values = [

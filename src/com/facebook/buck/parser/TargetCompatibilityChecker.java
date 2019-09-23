@@ -23,8 +23,6 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
-import com.facebook.buck.core.model.platform.PlatformResolver;
-import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.configsetting.ConfigSettingRule;
@@ -60,27 +58,6 @@ class TargetCompatibilityChecker {
     if (!targetCompatibleWithConstraints.isEmpty()) {
       // Empty `target_compatible_with` means target is compatible.
       if (!platform.matchesAll(targetCompatibleWithConstraints)) {
-        return false;
-      }
-    }
-
-    if (!argWithTargetCompatible.getTargetCompatiblePlatforms().isEmpty()) {
-      PlatformResolver platformResolver = configurationRuleRegistry.getPlatformResolver();
-      boolean compatible = false;
-      for (UnconfiguredBuildTargetView compatiblePlatformTarget :
-          argWithTargetCompatible.getTargetCompatiblePlatforms()) {
-        ConstraintBasedPlatform compatiblePlatform =
-            (ConstraintBasedPlatform)
-                platformResolver.getPlatform(
-                    ConfigurationBuildTargets.convert(compatiblePlatformTarget));
-
-        if (platform.matchesAll(compatiblePlatform.getConstraintValues())) {
-          compatible = true;
-          break;
-        }
-      }
-
-      if (!compatible) {
         return false;
       }
     }

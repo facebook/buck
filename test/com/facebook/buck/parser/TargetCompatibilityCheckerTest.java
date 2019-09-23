@@ -34,12 +34,13 @@ import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.impl.DefaultPlatform;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
+import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.config.registry.ImmutableConfigurationRuleRegistry;
+import com.facebook.buck.core.rules.configsetting.ConfigSettingRule;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.platform.ConstraintSettingRule;
 import com.facebook.buck.core.rules.platform.ConstraintValueRule;
-import com.facebook.buck.core.rules.platform.DummyConfigurationRule;
 import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -72,8 +73,8 @@ public class TargetCompatibilityCheckerTest {
 
   private Platform platform;
   private ConfigurationRuleRegistry configurationRuleRegistry;
-  private ConstraintBasedPlatform compatiblePlatform;
-  private ConstraintBasedPlatform nonCompatiblePlatform;
+  private ConfigSettingRule compatibleConfigSetting;
+  private ConfigSettingRule nonCompatibleConfigSetting;
 
   @Before
   public void setUp() {
@@ -91,25 +92,35 @@ public class TargetCompatibilityCheckerTest {
                     buildTarget, buildTarget.getShortName(), cs1.getBuildTarget());
               }
             });
-    compatiblePlatform =
-        new ConstraintBasedPlatform(
-            BuildTargetFactory.newInstance("//platforms:p1"), ImmutableSet.of(cs1v1));
-    nonCompatiblePlatform =
-        new ConstraintBasedPlatform(
-            BuildTargetFactory.newInstance("//platforms:p2"), ImmutableSet.of(cs1v2));
+    compatibleConfigSetting =
+        new ConfigSettingRule(
+            BuildTargetFactory.newInstance("//configs:c1"),
+            ImmutableMap.of(),
+            ImmutableSet.of(cs1v1.getBuildTarget()));
+    nonCompatibleConfigSetting =
+        new ConfigSettingRule(
+            BuildTargetFactory.newInstance("//configs:c2"),
+            ImmutableMap.of(),
+            ImmutableSet.of(cs1v2.getBuildTarget()));
     PlatformResolver platformResolver =
         buildTarget -> {
-          if (buildTarget.toString().equals(compatiblePlatform.toString())) {
-            return compatiblePlatform;
-          }
-          if (buildTarget.toString().equals(nonCompatiblePlatform.toString())) {
-            return nonCompatiblePlatform;
-          }
           throw new IllegalArgumentException("Unknown platform: " + buildTarget);
+        };
+    ConfigurationRuleResolver configurationRuleResolver =
+        buildTarget -> {
+          if (buildTarget.toString().equals(compatibleConfigSetting.getBuildTarget().toString())) {
+            return compatibleConfigSetting;
+          }
+          if (buildTarget
+              .toString()
+              .equals(nonCompatibleConfigSetting.getBuildTarget().toString())) {
+            return nonCompatibleConfigSetting;
+          }
+          throw new RuntimeException("Unknown configuration rule: " + buildTarget);
         };
     configurationRuleRegistry =
         new ImmutableConfigurationRuleRegistry(
-            DummyConfigurationRule::of,
+            configurationRuleResolver,
             constraintResolver,
             platformResolver,
             configuration -> DefaultPlatform.INSTANCE);
@@ -153,8 +164,8 @@ public class TargetCompatibilityCheckerTest {
     ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
-                "targetCompatiblePlatforms",
-                ImmutableList.of(nonCompatiblePlatform.toString()),
+                "compatibleWith",
+                ImmutableList.of(nonCompatibleConfigSetting.getBuildTarget().toString()),
                 "targetCompatibleWith",
                 ImmutableList.of(cs1v2.getBuildTarget().getFullyQualifiedName())));
     assertFalse(
@@ -168,8 +179,8 @@ public class TargetCompatibilityCheckerTest {
     ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
-                "targetCompatiblePlatforms",
-                ImmutableList.of(nonCompatiblePlatform.toString()),
+                "compatibleWith",
+                ImmutableList.of(nonCompatibleConfigSetting.getBuildTarget().toString()),
                 "targetCompatibleWith",
                 ImmutableList.of(cs1v1.getBuildTarget().getFullyQualifiedName())));
     assertFalse(
@@ -183,8 +194,8 @@ public class TargetCompatibilityCheckerTest {
     ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
-                "targetCompatiblePlatforms",
-                ImmutableList.of(compatiblePlatform.toString()),
+                "compatibleWith",
+                ImmutableList.of(compatibleConfigSetting.getBuildTarget().toString()),
                 "targetCompatibleWith",
                 ImmutableList.of(cs1v2.getBuildTarget().getFullyQualifiedName())));
     assertFalse(
@@ -197,7 +208,8 @@ public class TargetCompatibilityCheckerTest {
     ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
-                "targetCompatiblePlatforms", ImmutableList.of(nonCompatiblePlatform.toString())));
+                "compatibleWith",
+                ImmutableList.of(nonCompatibleConfigSetting.getBuildTarget().toString())));
     assertFalse(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
             configurationRuleRegistry, targetNodeArg, platform));
@@ -208,8 +220,10 @@ public class TargetCompatibilityCheckerTest {
     ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
-                "targetCompatiblePlatforms",
-                ImmutableList.of(compatiblePlatform.toString(), nonCompatiblePlatform.toString())));
+                "compatibleWith",
+                ImmutableList.of(
+                    compatibleConfigSetting.getBuildTarget().toString(),
+                    nonCompatibleConfigSetting.getBuildTarget().toString())));
     assertTrue(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
             configurationRuleRegistry, targetNodeArg, platform));
@@ -221,8 +235,8 @@ public class TargetCompatibilityCheckerTest {
     ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
-                "targetCompatiblePlatforms",
-                ImmutableList.of(compatiblePlatform.toString()),
+                "compatibleWith",
+                ImmutableList.of(compatibleConfigSetting.getBuildTarget().toString()),
                 "targetCompatibleWith",
                 ImmutableList.of(cs1v1.getBuildTarget().getFullyQualifiedName())));
     assertTrue(

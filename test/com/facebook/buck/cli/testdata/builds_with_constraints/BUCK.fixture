@@ -38,21 +38,21 @@ genrule(
 )
 
 java_library(
-    name = "dep_with_compatible_platform",
+    name = "dep_with_compatible_with",
     srcs = [
         "A.java",
     ],
-    target_compatible_platforms = [
-        "//config:linux_x86-64",
+    compatible_with = [
+        "//config:linux_config",
     ],
 )
 
 java_library(
-    name = "lib_with_compatible_platform",
+    name = "lib_with_compatible_with",
     srcs = [
         "B.java",
     ],
     deps = [
-        ":dep_with_compatible_platform",
+        ":dep_with_compatible_with",
     ],
 )

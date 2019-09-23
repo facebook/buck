@@ -210,7 +210,7 @@ public class BuckUnconfiguredQueryTest {
 
     sortOutputLinesAndCompare(
         processResult.getStdout(),
-        "//compatible:incompatible_platforms\n//compatible:incompatible_with\n");
+        "//compatible:incompatible_with_config\n//compatible:incompatible_with_constraints\n");
   }
 
   private void assertBehavesLikeConfiguredQuery(String target) {

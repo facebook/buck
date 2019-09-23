@@ -205,11 +205,6 @@ public class CxxConstructorArgTest {
     }
 
     @Override
-    public ImmutableList<UnconfiguredBuildTargetView> getTargetCompatiblePlatforms() {
-      return ImmutableList.of();
-    }
-
-    @Override
     public ImmutableList<UnconfiguredBuildTargetView> getCompatibleWith() {
       return ImmutableList.of();
     }

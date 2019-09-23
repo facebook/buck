@@ -436,8 +436,7 @@ public class BuildCommandIntegrationTest {
         result.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
             "Build target //:dep is restricted to constraints "
-                + "in \"target_compatible_with\", \"compatible_with\" "
-                + "and \"target_compatible_platforms\" "
+                + "in \"target_compatible_with\" and \"compatible_with\" "
                 + "that do not match the target platform //config:osx_x86-64.\n"
                 + "Target constraints:\nbuck//config/constraints:linux"));
   }
@@ -451,19 +450,15 @@ public class BuildCommandIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand(
-            "build",
-            "--target-platforms",
-            "//config:osx_x86-64",
-            "//:lib_with_compatible_platform");
+            "build", "--target-platforms", "//config:osx_x86-64", "//:lib_with_compatible_with");
     result.assertFailure();
     MatcherAssert.assertThat(
         result.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
-            "Build target //:dep_with_compatible_platform is restricted to constraints "
-                + "in \"target_compatible_with\", \"compatible_with\" "
-                + "and \"target_compatible_platforms\" "
+            "Build target //:dep_with_compatible_with is restricted to constraints "
+                + "in \"target_compatible_with\" and \"compatible_with\" "
                 + "that do not match the target platform //config:osx_x86-64.\n"
-                + "Target compatible with platforms:\n//config:linux_x86-64"));
+                + "Target compatible with configurations:\n//config:linux_config"));
   }
 
   @Test
@@ -492,7 +487,7 @@ public class BuildCommandIntegrationTest {
     MatcherAssert.assertThat(
         result.getStderr(),
         Matchers.containsString(
-            "//invalid:lib: attribute 'targetCompatiblePlatforms' cannot be configured using select"));
+            "//invalid:lib: attribute 'compatibleWith' cannot be configured using select"));
   }
 
   @Test
