@@ -45,11 +45,13 @@ Rules that support string parameter macros are:
 <li>{call buck.genrule /}</li>
 <li>{call buck.apk_genrule /}</li>
 <li>{call buck.cxx_genrule /}</li>
+<li>{call buck.command_alias /}</li>
 </ul>
 
 <p>
-Note that {call buck.cxx_genrule /} supports only 
-the <code>$(exe ...)</code> and <code>$(location ...)</code> macros. 
+Note that {call buck.cxx_genrule /} and {call buck.command_alias /}{sp}
+support only the <code>$(exe ...)</code> and <code>$(location ...)</code>{sp}
+macros. 
 </p>
 
 <h3>Format</h3>
