@@ -4,7 +4,7 @@ java_immutables_library(
     name = "lib",
     srcs = glob(["*.java"]),
     exported_deps = [
-        "//src/com/facebook/buck/core/rules/actions:actions",
+        "//src/com/facebook/buck/core/artifact:artifact",
         "//src/com/facebook/buck/core/rules/providers/impl:impl",
     ],
     tests = [

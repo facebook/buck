@@ -48,8 +48,7 @@ public class SkylarkDependencyTest {
         new SkylarkDependency(
             BuildTargetFactory.newInstance("//foo:bar"),
             ProviderInfoCollectionImpl.builder()
-                .put(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of()))
-                .build());
+                .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of())));
 
     try (TestMutableEnv env = env(dep)) {
       boolean labelString =
@@ -66,8 +65,7 @@ public class SkylarkDependencyTest {
         new SkylarkDependency(
             BuildTargetFactory.newInstance("//foo:bar"),
             ProviderInfoCollectionImpl.builder()
-                .put(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of()))
-                .build());
+                .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of())));
 
     assertEquals("<dependency //foo:bar>", Printer.repr(dep));
   }
@@ -79,8 +77,7 @@ public class SkylarkDependencyTest {
         new SkylarkDependency(
             BuildTargetFactory.newInstance("//foo:bar"),
             ProviderInfoCollectionImpl.builder()
-                .put(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of()))
-                .build());
+                .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of())));
 
     try (TestMutableEnv env = env(dep)) {
       boolean presentProvider =
@@ -97,8 +94,7 @@ public class SkylarkDependencyTest {
         new SkylarkDependency(
             BuildTargetFactory.newInstance("//foo:bar"),
             ProviderInfoCollectionImpl.builder()
-                .put(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of()))
-                .build());
+                .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of())));
 
     try (TestMutableEnv env = env(dep)) {
       boolean presentProvider = (boolean) BuildFileAST.eval(env.getEnv(), "DefaultInfo in dep");

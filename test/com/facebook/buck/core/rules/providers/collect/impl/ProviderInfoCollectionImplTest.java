@@ -25,10 +25,14 @@ import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
+import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
+import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.StarlarkContext;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,36 +44,43 @@ public class ProviderInfoCollectionImplTest {
 
   StarlarkContext ctx = new StarlarkContext() {};
 
+  private static final DefaultInfo DEFAULT_INFO =
+      new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of());
+
   @Test
   public void getIndexThrowsWhenKeyNotProvider() throws EvalException {
     expectedException.expect(EvalException.class);
-    ProviderInfoCollection providerInfoCollection = ProviderInfoCollectionImpl.builder().build();
+    ProviderInfoCollection providerInfoCollection =
+        ProviderInfoCollectionImpl.builder().build(DEFAULT_INFO);
     providerInfoCollection.getIndex(new Object(), Location.BUILTIN, ctx);
   }
 
   @Test
   public void containsKeyThrowsWhenKeyNotProvider() throws EvalException {
     expectedException.expect(EvalException.class);
-    ProviderInfoCollection providerInfoCollection = ProviderInfoCollectionImpl.builder().build();
+    ProviderInfoCollection providerInfoCollection =
+        ProviderInfoCollectionImpl.builder().build(DEFAULT_INFO);
     providerInfoCollection.containsKey(new Object(), Location.BUILTIN, ctx);
   }
 
   @Test
   public void getProviderWhenPresentReturnsInfo() throws EvalException {
-    Provider<FakeInfo> provider = new FakeBuiltInProvider("fake");
-    ProviderInfo<?> info = new FakeInfo(provider);
     ProviderInfoCollection providerInfoCollection =
-        ProviderInfoCollectionImpl.builder().put(info).build();
+        ProviderInfoCollectionImpl.builder().build(DEFAULT_INFO);
 
-    assertTrue(providerInfoCollection.containsKey(provider, Location.BUILTIN, ctx));
-    assertEquals(Optional.of(info), providerInfoCollection.get(provider));
-    assertSame(info, providerInfoCollection.getIndex(provider, Location.BUILTIN, ctx));
+    assertTrue(
+        providerInfoCollection.containsKey(DEFAULT_INFO.getProvider(), Location.BUILTIN, ctx));
+    assertEquals(Optional.of(DEFAULT_INFO), providerInfoCollection.get(DEFAULT_INFO.getProvider()));
+    assertSame(
+        DEFAULT_INFO,
+        providerInfoCollection.getIndex(DEFAULT_INFO.getProvider(), Location.BUILTIN, ctx));
   }
 
   @Test
   public void getProviderWhenNotPresentReturnsEmpty() throws EvalException {
     Provider<?> provider = new FakeBuiltInProvider("fake");
-    ProviderInfoCollection providerInfoCollection = ProviderInfoCollectionImpl.builder().build();
+    ProviderInfoCollection providerInfoCollection =
+        ProviderInfoCollectionImpl.builder().build(DEFAULT_INFO);
 
     assertFalse(providerInfoCollection.containsKey(provider, Location.BUILTIN, ctx));
     assertEquals(Optional.empty(), providerInfoCollection.get(provider));
@@ -85,8 +96,7 @@ public class ProviderInfoCollectionImplTest {
     FakeInfo fakeInfo2 = new FakeInfo(builtInProvider2);
 
     ProviderInfoCollection providerInfoCollection =
-        ProviderInfoCollectionImpl.builder().put(fakeInfo1).put(fakeInfo2).build();
-
+        ProviderInfoCollectionImpl.builder().put(fakeInfo1).put(fakeInfo2).build(DEFAULT_INFO);
     assertEquals(Optional.of(fakeInfo1), providerInfoCollection.get(builtinProvider1));
     assertEquals(Optional.of(fakeInfo2), providerInfoCollection.get(builtInProvider2));
 
@@ -102,9 +112,10 @@ public class ProviderInfoCollectionImplTest {
     Provider<FakeInfo> missingProvider = new FakeBuiltInProvider("fake");
     ProviderInfo<?> info = new FakeInfo(provider);
     ProviderInfoCollection providerInfoCollection =
-        ProviderInfoCollectionImpl.builder().put(info).build();
+        ProviderInfoCollectionImpl.builder().put(info).build(DEFAULT_INFO);
 
     assertTrue(providerInfoCollection.contains(provider));
+    assertTrue(providerInfoCollection.contains(DEFAULT_INFO.getProvider()));
     assertFalse(providerInfoCollection.contains(missingProvider));
   }
 
@@ -116,7 +127,7 @@ public class ProviderInfoCollectionImplTest {
     FakeBuiltInProvider builtinProvider2 = new FakeBuiltInProvider("fake2");
 
     ProviderInfoCollection providerInfoCollection =
-        ProviderInfoCollectionImpl.builder().put(fakeInfo1).build();
+        ProviderInfoCollectionImpl.builder().put(fakeInfo1).build(DEFAULT_INFO);
 
     assertEquals(
         fakeInfo1, providerInfoCollection.getIndex(builtinProvider1, Location.BUILTIN, ctx));

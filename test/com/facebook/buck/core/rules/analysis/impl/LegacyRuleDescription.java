@@ -158,8 +158,7 @@ public class LegacyRuleDescription implements DescriptionWithTargetGraph<LegacyR
     Artifact artifact = BuildTargetSourcePathToArtifactConverter.convert(filesystem, sourcePath);
 
     return ProviderInfoCollectionImpl.builder()
-        .put(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableSet.of(artifact)))
-        .build();
+        .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableSet.of(artifact)));
   }
 
   @BuckStyleImmutable

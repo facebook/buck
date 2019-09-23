@@ -104,8 +104,7 @@ public class BasicRuleDescription implements RuleDescription<BasicRuleDescriptio
         ImmutableSet.of(artifact),
         actionExecution);
     return ProviderInfoCollectionImpl.builder()
-        .put(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableSet.of(artifact)))
-        .build();
+        .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableSet.of(artifact)));
   }
 
   @Override

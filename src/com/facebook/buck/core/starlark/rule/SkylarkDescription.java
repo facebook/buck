@@ -44,6 +44,7 @@ import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import java.util.HashMap;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * Description for User Defined Rules. This Description runs user-supplied implementation functions
@@ -108,26 +109,27 @@ public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg
 
     ProviderInfoCollectionImpl.Builder infos = ProviderInfoCollectionImpl.builder();
 
-    boolean foundDefaultInfo = false;
+    @Nullable DefaultInfo suppliedDefaultInfo = null;
     for (SkylarkProviderInfo skylarkInfo : implResult) {
       ProviderInfo<?> info = skylarkInfo.getProviderInfo();
-      if (DefaultInfo.PROVIDER.equals(info.getProvider())) {
-        foundDefaultInfo = true;
+      if (DefaultInfo.PROVIDER.equals(info.getProvider()) && suppliedDefaultInfo == null) {
+        suppliedDefaultInfo = (DefaultInfo) info;
+      } else {
+        infos.put(info);
       }
-      infos.put(info);
     }
-    if (!foundDefaultInfo) {
+    if (suppliedDefaultInfo == null) {
       // TODO: If we have output params set, use those artifacts
       ImmutableSet<Artifact> outputs = declaredOutputs;
       if (outputs.isEmpty()) {
         outputs = ctx.getOutputs();
       }
 
-      infos.put(new ImmutableDefaultInfo(SkylarkDict.empty(), outputs));
+      suppliedDefaultInfo = new ImmutableDefaultInfo(SkylarkDict.empty(), outputs);
     }
 
     try {
-      return infos.build();
+      return infos.build(suppliedDefaultInfo);
     } catch (IllegalArgumentException e) {
       throw new EvalException(
           implementation.getLocation(),

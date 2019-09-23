@@ -30,7 +30,9 @@ import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
 import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.collect.impl.LegacyProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -181,7 +183,7 @@ public class SourceListAttributeTest {
             coerced,
             ImmutableMap.of(
                 BuildTargetFactory.newInstance("//foo:bar"),
-                ProviderInfoCollectionImpl.builder().build()));
+                LegacyProviderInfoCollectionImpl.of()));
   }
 
   @Test
@@ -208,7 +210,7 @@ public class SourceListAttributeTest {
             coerced,
             ImmutableMap.of(
                 BuildTargetFactory.newInstance("//foo:bar"),
-                ProviderInfoCollectionImpl.builder().put(info).build()));
+                TestProviderInfoCollectionImpl.builder().put(info).build()));
   }
 
   @Test
@@ -224,7 +226,7 @@ public class SourceListAttributeTest {
             SkylarkDict.empty(), ImmutableList.of(buildArtifact1, buildArtifact2));
 
     ImmutableMap<BuildTarget, ProviderInfoCollection> deps =
-        ImmutableMap.of(target, ProviderInfoCollectionImpl.builder().put(defaultInfo).build());
+        ImmutableMap.of(target, ProviderInfoCollectionImpl.builder().build(defaultInfo));
 
     ImmutableList<SourcePath> coerced =
         attr.getValue(

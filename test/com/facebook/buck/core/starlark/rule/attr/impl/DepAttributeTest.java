@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
 import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.starlark.rule.data.SkylarkDependency;
@@ -130,7 +131,7 @@ public class DepAttributeTest {
             coerced,
             ImmutableMap.of(
                 BuildTargetFactory.newInstance("//foo:bar"),
-                ProviderInfoCollectionImpl.builder().put(info).build()));
+                TestProviderInfoCollectionImpl.builder().put(info).build()));
   }
 
   @Test
@@ -142,7 +143,7 @@ public class DepAttributeTest {
         new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of(buildArtifact));
 
     ImmutableMap<BuildTarget, ProviderInfoCollection> deps =
-        ImmutableMap.of(target, ProviderInfoCollectionImpl.builder().put(defaultInfo).build());
+        ImmutableMap.of(target, ProviderInfoCollectionImpl.builder().build(defaultInfo));
 
     BuildTarget coerced =
         attr.getValue(

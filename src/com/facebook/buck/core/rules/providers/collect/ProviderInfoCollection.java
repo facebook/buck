@@ -17,6 +17,7 @@ package com.facebook.buck.core.rules.providers.collect;
 
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfo;
+import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.google.devtools.build.lib.syntax.SkylarkIndexable;
 import java.util.Optional;
 
@@ -49,11 +50,12 @@ public interface ProviderInfoCollection extends SkylarkIndexable {
     Builder put(ProviderInfo<?> info);
 
     /**
-     * Build the {@link ProviderInfoCollection}
+     * Build the {@link ProviderInfoCollection}. The {@link
+     * com.facebook.buck.core.rules.providers.lib.DefaultInfo} must be specified here.
      *
      * @throws IllegalArgumentException if a two or more {@link ProviderInfo}s have the same {@link
      *     Provider.Key}
      */
-    ProviderInfoCollection build();
+    ProviderInfoCollection build(DefaultInfo info);
   }
 }

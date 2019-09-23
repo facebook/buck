@@ -29,7 +29,9 @@ import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
 import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.collect.impl.LegacyProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -147,7 +149,7 @@ public class SourceAttributeTest {
             coerced,
             ImmutableMap.of(
                 BuildTargetFactory.newInstance("//foo:bar"),
-                ProviderInfoCollectionImpl.builder().build()));
+                LegacyProviderInfoCollectionImpl.of()));
   }
 
   @Test
@@ -157,7 +159,7 @@ public class SourceAttributeTest {
         new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of());
 
     ImmutableMap<BuildTarget, ProviderInfoCollection> deps =
-        ImmutableMap.of(target, ProviderInfoCollectionImpl.builder().put(defaultInfo).build());
+        ImmutableMap.of(target, ProviderInfoCollectionImpl.builder().build(defaultInfo));
 
     SourcePath coercedTarget =
         attr.getValue(
@@ -178,7 +180,7 @@ public class SourceAttributeTest {
         new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of(artifact1, artifact2));
 
     ImmutableMap<BuildTarget, ProviderInfoCollection> deps =
-        ImmutableMap.of(target, ProviderInfoCollectionImpl.builder().put(defaultInfo).build());
+        ImmutableMap.of(target, ProviderInfoCollectionImpl.builder().build(defaultInfo));
 
     SourcePath coercedTarget =
         attr.getValue(
@@ -208,7 +210,7 @@ public class SourceAttributeTest {
             coerced,
             ImmutableMap.of(
                 BuildTargetFactory.newInstance("//foo:bar"),
-                ProviderInfoCollectionImpl.builder().put(info).build()));
+                TestProviderInfoCollectionImpl.builder().put(info).build()));
   }
 
   @Test
@@ -222,7 +224,7 @@ public class SourceAttributeTest {
         new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of(buildArtifact1));
 
     ImmutableMap<BuildTarget, ProviderInfoCollection> deps =
-        ImmutableMap.of(target, ProviderInfoCollectionImpl.builder().put(defaultInfo).build());
+        ImmutableMap.of(target, ProviderInfoCollectionImpl.builder().build(defaultInfo));
 
     SourcePath coercedSource =
         attr.getValue(

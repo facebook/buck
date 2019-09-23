@@ -18,7 +18,6 @@ package com.facebook.buck.core.rules.providers.collect.impl;
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
-import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -35,11 +34,11 @@ public class TestProviderInfoCollectionImpl extends ProviderInfoCollectionImpl {
     super(infoMap);
   }
 
-  public static ProviderInfoCollectionImpl.Builder builder() {
+  public static Builder builder() {
     return new Builder();
   }
 
-  public static ProviderInfoCollectionImpl.Builder builderWithExpectedSize(int expectedSize) {
+  public static Builder builderWithExpectedSize(int expectedSize) {
     return new Builder(expectedSize);
   }
 
@@ -52,17 +51,13 @@ public class TestProviderInfoCollectionImpl extends ProviderInfoCollectionImpl {
     }
 
     @Override
+    public Builder put(ProviderInfo<?> info) {
+      super.put(info);
+      return this;
+    }
+
     public ProviderInfoCollection build() {
-      ImmutableMap<Provider.Key<?>, ProviderInfo<?>> providerMap = mapBuilder.build();
-      if (!providerMap.containsKey(DefaultInfo.PROVIDER.getKey())) {
-        providerMap =
-            mapBuilder
-                .put(
-                    DefaultInfo.PROVIDER.getKey(),
-                    new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of()))
-                .build();
-      }
-      return new TestProviderInfoCollectionImpl(providerMap);
+      return super.build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of()));
     }
   }
 }

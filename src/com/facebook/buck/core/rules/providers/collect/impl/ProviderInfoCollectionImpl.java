@@ -18,6 +18,7 @@ package com.facebook.buck.core.rules.providers.collect.impl;
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.events.Location;
@@ -101,7 +102,8 @@ public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
     }
 
     @Override
-    public ProviderInfoCollection build() {
+    public ProviderInfoCollection build(DefaultInfo info) {
+      put(info);
       return new ProviderInfoCollectionImpl(mapBuilder.build());
     }
   }
