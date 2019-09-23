@@ -143,7 +143,7 @@ public class SourceListAttributeTest {
 
   @Test
   public void failsTransformIfInvalidElementInList() {
-    thrown.expect(IllegalArgumentException.class);
+    thrown.expect(IllegalStateException.class);
 
     attr.getPostCoercionTransform()
         .postCoercionTransform(ImmutableList.of("invalid"), ImmutableMap.of());
@@ -159,7 +159,7 @@ public class SourceListAttributeTest {
             EmptyTargetConfiguration.INSTANCE,
             ImmutableList.of("//foo:bar", "src/main.cpp"));
 
-    thrown.expect(IllegalArgumentException.class);
+    thrown.expect(IllegalStateException.class);
     attr.getPostCoercionTransform().postCoercionTransform(coerced, ImmutableMap.of());
   }
 
@@ -173,7 +173,7 @@ public class SourceListAttributeTest {
             EmptyTargetConfiguration.INSTANCE,
             ImmutableList.of("//foo:bar", "src/main.cpp"));
 
-    thrown.expect(IllegalArgumentException.class);
+    thrown.expect(IllegalStateException.class);
     attr.getPostCoercionTransform()
         .postCoercionTransform(
             coerced,

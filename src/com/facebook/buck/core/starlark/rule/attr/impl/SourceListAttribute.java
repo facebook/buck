@@ -16,13 +16,9 @@
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
-import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
-import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
@@ -102,27 +98,7 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
     ImmutableList.Builder<Artifact> builder =
         ImmutableList.builderWithExpectedSize(listValue.size());
     for (Object src : listValue) {
-      if (src instanceof BuildTargetSourcePath) {
-        BuildTarget target = ((BuildTargetSourcePath) src).getTarget();
-        ProviderInfoCollection providerInfos = deps.get(target);
-        if (providerInfos == null) {
-          throw new IllegalArgumentException(
-              String.format("Deps %s did not contain %s", deps, src));
-        }
-        builder.addAll(
-            providerInfos
-                .get(DefaultInfo.PROVIDER)
-                .map(DefaultInfo::defaultOutputs)
-                .orElseThrow(
-                    () ->
-                        new IllegalArgumentException(
-                            String.format("List element %s did not provide DefaultInfo", src))));
-      } else if (src instanceof PathSourcePath) {
-        builder.add(ImmutableSourceArtifactImpl.of((PathSourcePath) src));
-      } else {
-        throw new IllegalArgumentException(
-            String.format("List element %s must either be an Artifact, or a BuildTarget", src));
-      }
+      builder.addAll(SourceArtifactResolver.getArtifactsFromSrcs(src, deps));
     }
     return builder.build();
   }

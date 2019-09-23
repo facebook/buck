@@ -16,13 +16,9 @@
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
-import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
-import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
@@ -35,8 +31,8 @@ import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import java.util.Collection;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 /**
  * Represents a single source file, whether on disk or another build target
@@ -82,33 +78,13 @@ public abstract class SourceAttribute extends Attribute<SourcePath> {
   private Artifact postCoercionTransform(
       Object src, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
 
-    if (src instanceof BuildTargetSourcePath) {
-      BuildTarget target = ((BuildTargetSourcePath) src).getTarget();
-      ProviderInfoCollection providerInfos = deps.get(target);
-      if (providerInfos == null) {
-        throw new IllegalStateException(String.format("Deps %s did not contain %s", deps, src));
-      }
-      Set<Artifact> outputs =
-          providerInfos
-              .get(DefaultInfo.PROVIDER)
-              .map(DefaultInfo::defaultOutputs)
-              .orElseThrow(
-                  () ->
-                      new IllegalStateException(
-                          String.format("%s did not provide DefaultInfo", src)));
-      try {
-        return Iterables.getOnlyElement(outputs);
-      } catch (NoSuchElementException | IllegalArgumentException e) {
-        throw new IllegalStateException(
-            String.format(
-                "%s must have exactly one output, but had %s outputs", src, outputs.size()));
-      }
-
-    } else if (src instanceof PathSourcePath) {
-      return ImmutableSourceArtifactImpl.of((PathSourcePath) src);
-    } else {
+    Collection<Artifact> outputs = SourceArtifactResolver.getArtifactsFromSrcs(src, deps);
+    try {
+      return Iterables.getOnlyElement(outputs);
+    } catch (NoSuchElementException | IllegalArgumentException e) {
       throw new IllegalStateException(
-          String.format("%s must either be a source file, or a BuildTarget", src));
+          String.format(
+              "%s must have exactly one output, but had %s outputs", src, outputs.size()));
     }
   }
 }
