@@ -44,9 +44,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/** A helper class for {@link RobolectricTest} */
+/** A helper class for {@link RobolectricTest} and {@link RobolectricTestX} */
 class RobolectricTestHelper {
-
   private static final Logger LOG = Logger.get(RobolectricTestHelper.class);
 
   /**

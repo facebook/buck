@@ -19,13 +19,18 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.test.rule.HasTestRunner;
+import com.facebook.buck.core.test.rule.TestRunnerSpec;
+import com.facebook.buck.core.test.rule.coercer.TestRunnerSpecCoercer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -35,10 +40,13 @@ import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.JavaBinary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
+import com.facebook.buck.jvm.java.JavaTestRunner;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
@@ -55,6 +63,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -213,15 +222,80 @@ public class RobolectricTestDescription
                 .setJavacOptions(javacOptions)
                 .build()
                 .buildLibrary());
-
+    params = params.copyAppendingExtraDeps(ImmutableSortedSet.of(testsLibrary));
     AndroidPlatformTarget androidPlatformTarget =
         toolchainProvider.getByName(
             AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
 
+    Optional<BuildTarget> runner = args.getRunner();
+    Optional<TestRunnerSpec> runnerSpecs = args.getSpecs();
+    if (runnerSpecs.isPresent()) {
+      JavaTestRunner testRunner;
+      if (runner.isPresent()) {
+        BuildRule runnerRule = graphBuilder.requireRule(runner.get());
+        if (!(runnerRule instanceof JavaTestRunner)) {
+          throw new HumanReadableException(
+              "Robolectric tests should have a java_test_runner as the runner for test protocol");
+        }
+        testRunner = (JavaTestRunner) runnerRule;
+
+      } else {
+        throw new HumanReadableException(
+            "Robolectric test should have a java_test_runner as the runner for test protocol");
+      }
+
+      params = params.copyAppendingExtraDeps(testRunner.getCompiledTestsLibrary());
+
+      // Construct the build rule to build the binary JAR.
+      ImmutableSet<JavaLibrary> transitiveClasspathDeps =
+          JavaLibraryClasspathProvider.getClasspathDeps(params.getBuildDeps());
+      ImmutableSet<SourcePath> transitiveClasspaths =
+          JavaLibraryClasspathProvider.getClasspathsFromLibraries(transitiveClasspathDeps);
+      JavaBinary javaBinary =
+          new JavaBinary(
+              buildTarget.withFlavors(InternalFlavor.of("bin")),
+              projectFilesystem,
+              params.copyAppendingExtraDeps(transitiveClasspathDeps),
+              javaOptionsForTests
+                  .get()
+                  .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+              testRunner.getMainClass(),
+              args.getManifestFile().orElse(null),
+              true,
+              false,
+              null,
+              ImmutableSet.of(),
+              transitiveClasspathDeps,
+              transitiveClasspaths,
+              javaBuckConfig.shouldCacheBinaries(),
+              javaBuckConfig.getDuplicatesLogLevel());
+
+      graphBuilder.addToIndex(javaBinary);
+
+      return new RobolectricTestX(
+          buildTarget,
+          projectFilesystem,
+          params.copyAppendingExtraDeps(javaBinary),
+          javaBinary,
+          testsLibrary,
+          args.getLabels(),
+          args.getContacts(),
+          TestRunnerSpecCoercer.coerce(args.getSpecs().get(), macrosConverter),
+          vmArgs,
+          dummyRDotJava,
+          args.getUnbundledResourcesRoot(),
+          args.getRobolectricRuntimeDependency(),
+          javaBuckConfig
+              .getDelegate()
+              .getBooleanValue("test", "pass_robolectric_directories_in_file", false));
+    } else if (runner.isPresent()) {
+      throw new HumanReadableException("Should not have runner set when no specs are set");
+    }
+
     return new RobolectricTest(
         buildTarget,
         projectFilesystem,
-        params.copyAppendingExtraDeps(ImmutableSortedSet.of(testsLibrary)),
+        params,
         androidPlatformTarget,
         testsLibrary,
         args.getLabels(),
@@ -275,7 +349,7 @@ public class RobolectricTestDescription
   @BuckStyleImmutable
   @Value.Immutable(copy = true)
   interface AbstractRobolectricTestDescriptionArg
-      extends JavaTestDescription.CoreArg, AndroidKotlinCoreArg {
+      extends JavaTestDescription.CoreArg, AndroidKotlinCoreArg, HasTestRunner {
 
     Optional<SourcePath> getRobolectricRuntimeDependency();
 
