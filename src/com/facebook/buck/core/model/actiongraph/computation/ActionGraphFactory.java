@@ -109,6 +109,9 @@ public class ActionGraphFactory {
     }
 
     ActionGraphBuilderDecorator graphBuilderDecorator;
+    eventBus.post(
+        new ExperimentEvent(
+            "rule_analysis", ruleAnalysisComputationMode.toString(), "", null, null));
     if (ruleAnalysisComputationMode == RuleAnalysisComputationMode.COMPATIBLE) {
       graphBuilderDecorator =
           builderConstructor -> {

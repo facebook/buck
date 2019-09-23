@@ -304,6 +304,7 @@ public class ActionGraphProviderTest {
       experimentEvents =
           RichStream.from(trackedEvents.stream())
               .filter(ExperimentEvent.class)
+              .filter(ev -> !ev.getTag().equals("rule_analysis"))
               .collect(Collectors.toList());
       assertThat(
           "No experiment event is logged if not in experiment mode", experimentEvents, empty());
@@ -325,6 +326,7 @@ public class ActionGraphProviderTest {
     experimentEvents =
         RichStream.from(trackedEvents.stream())
             .filter(ExperimentEvent.class)
+            .filter(ev -> !ev.getTag().equals("rule_analysis"))
             .collect(Collectors.toList());
     assertThat(
         "EXPERIMENT mode should log either enabled or disabled.",
