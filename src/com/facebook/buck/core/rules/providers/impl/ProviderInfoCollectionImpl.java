@@ -32,7 +32,7 @@ public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
 
   private final ImmutableMap<Provider.Key<?>, ? extends ProviderInfo<?>> infoMap;
 
-  private ProviderInfoCollectionImpl(
+  protected ProviderInfoCollectionImpl(
       ImmutableMap<Provider.Key<?>, ? extends ProviderInfo<?>> infoMap) {
     this.infoMap = infoMap;
   }
@@ -84,13 +84,13 @@ public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
 
   public static class Builder implements ProviderInfoCollection.Builder {
 
-    private final ImmutableMap.Builder<Provider.Key<?>, ProviderInfo<?>> mapBuilder;
+    protected final ImmutableMap.Builder<Provider.Key<?>, ProviderInfo<?>> mapBuilder;
 
-    private Builder() {
+    protected Builder() {
       mapBuilder = ImmutableMap.builder();
     }
 
-    private Builder(int expectedSize) {
+    protected Builder(int expectedSize) {
       mapBuilder = ImmutableMap.builderWithExpectedSize(expectedSize);
     }
 

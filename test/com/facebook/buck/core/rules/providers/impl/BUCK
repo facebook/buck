@@ -1,9 +1,23 @@
 load("//tools/build_rules:java_rules.bzl", "java_test")
 
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    exported_deps = ["//src/com/facebook/buck/core/rules/providers/impl:impl"],
+    visibility = ["//test/..."],
+    deps = [
+        "//src/com/facebook/buck/core/rules/providers/lib:lib",
+        "//third-party/java/guava:guava",
+    ],
+)
+
 java_test(
     name = "impl",
     srcs = glob(
-        ["*.java"],
+        ["*Test.java"],
     ),
     has_immutable_types = True,
     deps = [

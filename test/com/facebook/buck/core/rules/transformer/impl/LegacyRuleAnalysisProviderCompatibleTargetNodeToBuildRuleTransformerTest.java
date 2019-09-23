@@ -53,7 +53,7 @@ import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegist
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
-import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -88,7 +88,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
 
     BuildRule rule = new FakeBuildRule(target);
     ProviderInfoCollection expectedProviderInfoCollection =
-        ProviderInfoCollectionImpl.builder()
+        TestProviderInfoCollectionImpl.builder()
             .put(new FakeInfo(new FakeBuiltInProvider("blah")))
             .build();
 
@@ -145,7 +145,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
           @Override
           public ProviderInfoCollection ruleImpl(
               RuleAnalysisContext context, BuildTarget target, FakeTargetNodeArg args) {
-            return ProviderInfoCollectionImpl.builder().build();
+            return TestProviderInfoCollectionImpl.builder().build();
           }
 
           @Override
@@ -194,7 +194,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
               assertSame(target, ruleAnalysisKey.getBuildTarget());
               return ImmutableFakeRuleAnalysisResultImpl.of(
                   target,
-                  ProviderInfoCollectionImpl.builder().build(),
+                  TestProviderInfoCollectionImpl.builder().build(),
                   fakeActionAnalysisRegistry.getRegistered().entrySet().stream()
                       .collect(
                           ImmutableMap.toImmutableMap(

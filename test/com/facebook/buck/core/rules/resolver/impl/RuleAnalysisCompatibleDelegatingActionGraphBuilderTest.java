@@ -47,7 +47,7 @@ import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegist
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
-import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -94,7 +94,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
                 key -> {
                   fail("should not call RuleAnalysisComputation");
                   return ImmutableFakeRuleAnalysisResultImpl.of(
-                      target, ProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
+                      target, TestProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
                 }));
 
     assertSame(expectedRule, builder.requireRule(target));
@@ -109,7 +109,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
           @Override
           public ProviderInfoCollection ruleImpl(
               RuleAnalysisContext context, BuildTarget target, FakeRuleDescriptionArg args) {
-            return ProviderInfoCollectionImpl.builder().build();
+            return TestProviderInfoCollectionImpl.builder().build();
           }
 
           @Override
@@ -178,7 +178,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
 
                   return ImmutableFakeRuleAnalysisResultImpl.of(
                       target,
-                      ProviderInfoCollectionImpl.builder().build(),
+                      TestProviderInfoCollectionImpl.builder().build(),
                       ImmutableMap.of(actionAnalysisData.getKey().getID(), actionAnalysisData));
                 }));
 
@@ -195,7 +195,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
 
     RuleAnalysisResult ruleAnalysisResult =
         ImmutableFakeRuleAnalysisResultImpl.of(
-            target, ProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
+            target, TestProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
 
     RuleAnalysisCompatibleDelegatingActionGraphBuilder builder =
         new RuleAnalysisCompatibleDelegatingActionGraphBuilder(

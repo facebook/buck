@@ -47,7 +47,7 @@ import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
 import com.facebook.buck.core.rules.analysis.impl.ImmutableFakeRuleAnalysisResultImpl;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
-import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -148,7 +148,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
         actionRegistry, ImmutableSet.of(depArtifact), ImmutableSet.of(artifact), actionFunction);
 
     ProviderInfoCollection providerInfoCollection =
-        ProviderInfoCollectionImpl.builder()
+        TestProviderInfoCollectionImpl.builder()
             .put(new FakeInfo(new FakeBuiltInProvider("foo")))
             .build();
 

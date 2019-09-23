@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData.ID;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
-import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -66,7 +66,7 @@ public class RuleAnalysisContextImplTest {
     deps =
         ImmutableMap.of(
             BuildTargetFactory.newInstance("//my:foo"),
-            ProviderInfoCollectionImpl.builder().build());
+            TestProviderInfoCollectionImpl.builder().build());
     assertSame(deps, new RuleAnalysisContextImpl(target, deps, fakeFilesystem, eventBus).deps());
   }
 

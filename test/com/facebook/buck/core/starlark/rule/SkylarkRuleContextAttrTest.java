@@ -22,7 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
-import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
@@ -98,7 +98,7 @@ public class SkylarkRuleContextAttrTest {
   @Test
   public void performsPostCoercionTransformsOnFieldsIfRequested() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    ProviderInfoCollection providerInfos = ProviderInfoCollectionImpl.builder().build();
+    ProviderInfoCollection providerInfos = TestProviderInfoCollectionImpl.builder().build();
     TestAttribute attr = new TestAttribute();
     SkylarkRuleContextAttr ctxAttr =
         new SkylarkRuleContextAttr(

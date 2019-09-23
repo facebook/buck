@@ -37,7 +37,7 @@ import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.cache.RuleAnalysisCache;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
-import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -77,7 +77,7 @@ public class RuleAnalysisGraphImplTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:target");
 
     ProviderInfoCollection expectedProviders =
-        ProviderInfoCollectionImpl.builder()
+        TestProviderInfoCollectionImpl.builder()
             .put(new FakeInfo(new FakeBuiltInProvider("myprovider")))
             .build();
 
@@ -131,7 +131,7 @@ public class RuleAnalysisGraphImplTest {
     BuildTarget buildTarget2 = BuildTargetFactory.newInstance("//my:target2");
 
     ProviderInfoCollection expectedProviders =
-        ProviderInfoCollectionImpl.builder()
+        TestProviderInfoCollectionImpl.builder()
             .put(new FakeInfo(new FakeBuiltInProvider("myprovider")))
             .build();
 
@@ -213,7 +213,7 @@ public class RuleAnalysisGraphImplTest {
     BuildTarget buildTarget2 = BuildTargetFactory.newInstance("//my:target2");
 
     ProviderInfoCollection expectedProviders =
-        ProviderInfoCollectionImpl.builder()
+        TestProviderInfoCollectionImpl.builder()
             .put(new FakeInfo(new FakeBuiltInProvider("myprovider")))
             .build();
 

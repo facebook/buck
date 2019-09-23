@@ -33,7 +33,7 @@ import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisException;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
-import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -62,7 +62,7 @@ public class RuleAnalysisComputationTest {
           @Override
           public ProviderInfoCollection ruleImpl(
               RuleAnalysisContext context, BuildTarget target, FakeRuleDescriptionArg args) {
-            return ProviderInfoCollectionImpl.builder().build();
+            return TestProviderInfoCollectionImpl.builder().build();
           }
 
           @Override
@@ -104,7 +104,7 @@ public class RuleAnalysisComputationTest {
           @Override
           public ProviderInfoCollection ruleImpl(
               RuleAnalysisContext context, BuildTarget target, FakeRuleDescriptionArg args) {
-            return ProviderInfoCollectionImpl.builder().build();
+            return TestProviderInfoCollectionImpl.builder().build();
           }
 
           @Override
@@ -167,7 +167,7 @@ public class RuleAnalysisComputationTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:target");
 
     ProviderInfoCollection expectedProviders =
-        ProviderInfoCollectionImpl.builder()
+        TestProviderInfoCollectionImpl.builder()
             .put(new FakeInfo(new FakeBuiltInProvider("myprovider")))
             .build();
 
@@ -223,7 +223,7 @@ public class RuleAnalysisComputationTest {
     BuildTarget buildTarget2 = BuildTargetFactory.newInstance("//my:target2");
 
     ProviderInfoCollection expectedProviders =
-        ProviderInfoCollectionImpl.builder()
+        TestProviderInfoCollectionImpl.builder()
             .put(new FakeInfo(new FakeBuiltInProvider("myprovider")))
             .build();
 

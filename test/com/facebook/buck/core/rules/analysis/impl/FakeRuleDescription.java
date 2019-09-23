@@ -25,7 +25,7 @@ import com.facebook.buck.core.rules.actions.ImmutableActionExecutionFailure;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
-import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -63,7 +63,7 @@ public class FakeRuleDescription implements RuleDescription<FakeRuleDescriptionA
 
     new FakeAction(
         context.actionRegistry(), ImmutableSet.of(), ImmutableSet.of(artifact), actionExecution);
-    return ProviderInfoCollectionImpl.builder().build();
+    return TestProviderInfoCollectionImpl.builder().build();
   }
 
   @Override
