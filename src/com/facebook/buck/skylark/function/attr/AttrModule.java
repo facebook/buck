@@ -85,28 +85,17 @@ public class AttrModule implements AttrModuleApi {
 
   @Override
   public AttributeHolder sourceListAttribute(
-      SkylarkList<String> defaultValue,
-      String doc,
-      boolean mandatory,
-      boolean allowEmpty,
-      SkylarkList<Provider<?>> providers)
+      SkylarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException {
     List<String> validatedDefaultValues = defaultValue.getContents(String.class, null);
-    ImmutableList<Provider<?>> validatedProviders =
-        BuckSkylarkTypes.toJavaList(providers, Provider.class, null);
 
-    return new ImmutableSourceListAttribute(
-        validatedDefaultValues, doc, mandatory, allowEmpty, validatedProviders);
+    return new ImmutableSourceListAttribute(validatedDefaultValues, doc, mandatory, allowEmpty);
   }
 
   @Override
-  public AttributeHolder sourceAttribute(
-      Object defaultValue, String doc, boolean mandatory, SkylarkList<Provider<?>> providers)
+  public AttributeHolder sourceAttribute(Object defaultValue, String doc, boolean mandatory)
       throws EvalException {
-    ImmutableList<Provider<?>> validatedProviders =
-        BuckSkylarkTypes.toJavaList(providers, Provider.class, null);
-
-    return new ImmutableSourceAttribute(defaultValue, doc, mandatory, validatedProviders);
+    return new ImmutableSourceAttribute(defaultValue, doc, mandatory);
   }
 
   @Override

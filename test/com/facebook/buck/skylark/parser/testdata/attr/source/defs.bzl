@@ -18,7 +18,3 @@ def well_formed():
 def malformed_default():
     """ Function docstring """
     _a = attr.source(mandatory=True, doc="Some source", default=3)
-
-def malformed_providers():
-    """ Function docstring """
-    _a = attr.source(mandatory=True, doc="Some source", default="BUCK", providers=[1])

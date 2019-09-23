@@ -26,19 +26,15 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
-import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
-import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.LegacyProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectionImpl;
-import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.Runtime;
@@ -53,8 +49,7 @@ public class SourceAttributeTest {
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
   private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
 
-  private final SourceAttribute attr =
-      new ImmutableSourceAttribute(Runtime.NONE, "", true, ImmutableList.of());
+  private final SourceAttribute attr = new ImmutableSourceAttribute(Runtime.NONE, "", true);
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -189,28 +184,6 @@ public class SourceAttributeTest {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage("must have exactly one output");
     attr.getPostCoercionTransform().postCoercionTransform(coercedTarget, deps);
-  }
-
-  @Test
-  public void failsTransformIfMissingRequiredProvider() throws CoerceFailedException {
-    FakeBuiltInProvider expectedProvider = new FakeBuiltInProvider("expected");
-    SourceAttribute attr =
-        new ImmutableSourceAttribute(Runtime.NONE, "", true, ImmutableList.of(expectedProvider));
-    FakeBuiltInProvider presentProvider = new FakeBuiltInProvider("present");
-
-    FakeInfo info = new FakeInfo(presentProvider);
-
-    SourcePath coerced =
-        attr.getValue(
-            cellRoots, filesystem, Paths.get(""), EmptyTargetConfiguration.INSTANCE, "//foo:bar");
-
-    thrown.expect(VerifyException.class);
-    attr.getPostCoercionTransform()
-        .postCoercionTransform(
-            coerced,
-            ImmutableMap.of(
-                BuildTargetFactory.newInstance("//foo:bar"),
-                TestProviderInfoCollectionImpl.builder().put(info).build()));
   }
 
   @Test

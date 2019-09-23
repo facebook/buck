@@ -227,21 +227,6 @@ public class SkylarkUserDefinedRulesParserTest {
   }
 
   @Test
-  public void attrsSourceListThrowsExceptionOnInvalidProvidersType()
-      throws IOException, InterruptedException {
-
-    setupWorkspace("attr");
-
-    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
-    Path buildFile =
-        projectFilesystem.resolve("source_list").resolve("malformed_providers").resolve("BUCK");
-
-    parser = createParser(eventCollector);
-
-    assertParserFails(eventCollector, parser, buildFile, "expected type 'Provider'");
-  }
-
-  @Test
   public void enablesAttrsSourceIfConfigured() throws IOException, InterruptedException {
     setupWorkspace("attr");
     Path buildFile = projectFilesystem.resolve("source").resolve("well_formed").resolve("BUCK");
@@ -274,21 +259,6 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(eventCollector);
 
     assertParserFails(eventCollector, parser, buildFile, "expected value of type 'string");
-  }
-
-  @Test
-  public void attrsSourceThrowsExceptionOnInvalidProvidersType()
-      throws IOException, InterruptedException {
-
-    setupWorkspace("attr");
-
-    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
-    Path buildFile =
-        projectFilesystem.resolve("source").resolve("malformed_providers").resolve("BUCK");
-
-    parser = createParser(eventCollector);
-
-    assertParserFails(eventCollector, parser, buildFile, "expected type 'Provider'");
   }
 
   @Test

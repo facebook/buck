@@ -271,22 +271,10 @@ public interface AttrModuleApi extends SkylarkValue {
             defaultValue = "False",
             positional = false,
             named = true,
-            type = Boolean.class),
-        @Param(
-            name = "providers",
-            doc = "If non-empty, all specified build targets must have these providers",
-            defaultValue = "[]",
-            positional = false,
-            named = true,
-            type = SkylarkList.class,
-            generic1 = Provider.class)
+            type = Boolean.class)
       })
   AttributeHolder sourceListAttribute(
-      SkylarkList<String> defaultValue,
-      String doc,
-      boolean mandatory,
-      boolean allowEmpty,
-      SkylarkList<Provider<?>> providers)
+      SkylarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException;
 
   @SkylarkCallable(
@@ -324,18 +312,9 @@ public interface AttrModuleApi extends SkylarkValue {
             noneable = false,
             positional = false,
             named = true,
-            type = Boolean.class),
-        @Param(
-            name = "providers",
-            doc = "If non-empty, all specified build targets must have these providers",
-            defaultValue = "[]",
-            positional = false,
-            named = true,
-            type = SkylarkList.class,
-            generic1 = Provider.class)
+            type = Boolean.class)
       })
-  AttributeHolder sourceAttribute(
-      Object defaultValue, String doc, boolean mandatory, SkylarkList<Provider<?>> providers)
+  AttributeHolder sourceAttribute(Object defaultValue, String doc, boolean mandatory)
       throws EvalException;
 
   @SkylarkCallable(

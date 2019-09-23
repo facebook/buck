@@ -27,19 +27,15 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
-import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
-import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.LegacyProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectionImpl;
-import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
@@ -53,7 +49,7 @@ public class SourceListAttributeTest {
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
   private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
   private final SourceListAttribute attr =
-      new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true, ImmutableList.of());
+      new ImmutableSourceListAttribute(ImmutableList.of(), "", true, true);
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -101,7 +97,7 @@ public class SourceListAttributeTest {
     thrown.expectMessage("may not be empty");
 
     SourceListAttribute attr =
-        new ImmutableSourceListAttribute(ImmutableList.of(), "", true, false, ImmutableList.of());
+        new ImmutableSourceListAttribute(ImmutableList.of(), "", true, false);
 
     attr.getValue(
         cellRoots,
@@ -184,33 +180,6 @@ public class SourceListAttributeTest {
             ImmutableMap.of(
                 BuildTargetFactory.newInstance("//foo:bar"),
                 LegacyProviderInfoCollectionImpl.of()));
-  }
-
-  @Test
-  public void failsTransformIfMissingRequiredProvider() throws CoerceFailedException {
-    FakeBuiltInProvider expectedProvider = new FakeBuiltInProvider("expected");
-    SourceListAttribute attr =
-        new ImmutableSourceListAttribute(
-            ImmutableList.of(), "", true, true, ImmutableList.of(expectedProvider));
-    FakeBuiltInProvider presentProvider = new FakeBuiltInProvider("present");
-
-    FakeInfo info = new FakeInfo(presentProvider);
-
-    ImmutableList<SourcePath> coerced =
-        attr.getValue(
-            cellRoots,
-            filesystem,
-            Paths.get(""),
-            EmptyTargetConfiguration.INSTANCE,
-            ImmutableList.of("//foo:bar", "src/main.cpp"));
-
-    thrown.expect(VerifyException.class);
-    attr.getPostCoercionTransform()
-        .postCoercionTransform(
-            coerced,
-            ImmutableMap.of(
-                BuildTargetFactory.newInstance("//foo:bar"),
-                TestProviderInfoCollectionImpl.builder().put(info).build()));
   }
 
   @Test

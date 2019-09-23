@@ -19,7 +19,6 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -69,8 +68,6 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
   /** Whether or not the list can be empty */
   public abstract boolean getAllowEmpty();
 
-  public abstract ImmutableList<Provider<?>> getProviders();
-
   @Override
   public void repr(SkylarkPrinter printer) {
     printer.append("<attr.source_list>");
@@ -112,7 +109,6 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
           throw new IllegalArgumentException(
               String.format("Deps %s did not contain %s", deps, src));
         }
-        validateProvidersPresent(getProviders(), target, providerInfos);
         builder.addAll(
             providerInfos
                 .get(DefaultInfo.PROVIDER)

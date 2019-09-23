@@ -14,14 +14,7 @@ def well_formed():
     a = attr.source_list(mandatory=True, doc="Some source_list", default=["BUCK"], allow_empty=False)
     if repr(a) != "<attr.source_list>":
         fail("Expected attr.source_list instance")
-    a = attr.source_list(mandatory=True, doc="Some source_list", default=["BUCK"], allow_empty=False, providers=[DefaultInfo])
-    if repr(a) != "<attr.source_list>":
-        fail("Expected attr.source_list instance")
 
 def malformed_default():
     """ Function docstring """
     _a = attr.source_list(mandatory=True, doc="Some source_list", default=3, allow_empty=True)
-
-def malformed_providers():
-    """ Function docstring """
-    _a = attr.source_list(mandatory=True, doc="Some source_list", default=[], allow_empty=True, providers=[1])
