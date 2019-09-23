@@ -29,7 +29,7 @@ third-party/java/eclipse/org.eclipse.core.runtime_3.14.0.v20180417-0825.jar
 third-party/java/eclipse/org.eclipse.equinox.common_3.10.0.v20180412-1130.jar
 third-party/java/eclipse/org.eclipse.equinox.preferences_3.7.100.v20180510-1129.jar
 third-party/java/eclipse/org.eclipse.jdt.core.prefs
-third-party/java/eclipse/org.eclipse.jdt.core_3.14.0.v20180528-0519.jar
+third-party/java/eclipse/org.eclipse.jdt.core_3.16.0.v20181130-1748.jar
 third-party/java/eclipse/org.eclipse.osgi_3.13.0.v20180409-1500.jar
 third-party/java/errorprone/error_prone_annotations-2.0.19.jar
 third-party/java/fastutil/fastutil-7.2.0.jar
