@@ -38,19 +38,17 @@ public abstract class InferConfig implements ConfigView<BuckConfig> {
 
   @Value.Lazy
   public Optional<ToolProvider> getBinary() {
-    return getDelegate()
-        .getView(ToolConfig.class)
-        .getToolProvider(INFER_CONFIG_SECTION, "infer_bin");
+    return getDelegate().getView(ToolConfig.class).getToolProvider(INFER_CONFIG_SECTION, "binary");
   }
 
   @Value.Lazy
   public Optional<String> getVersion() {
-    return getDelegate().getValue(INFER_CONFIG_SECTION, "infer_version");
+    return getDelegate().getValue(INFER_CONFIG_SECTION, "version");
   }
 
   @Value.Lazy
   public Optional<SourcePath> getConfigFile(TargetConfiguration targetConfiguration) {
-    return getDelegate().getSourcePath(INFER_CONFIG_SECTION, "infer_config", targetConfiguration);
+    return getDelegate().getSourcePath(INFER_CONFIG_SECTION, "config_file", targetConfiguration);
   }
 
   @Value.Lazy
