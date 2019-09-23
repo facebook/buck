@@ -28,6 +28,8 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -202,10 +204,7 @@ public class BuckUnconfiguredQueryTest {
     // Explicitly test that unconfigured query does not filter targets
     ProcessResult processResult =
         workspace.runBuckCommand(
-            "uquery",
-            "--target-platforms=//compatible/config:banana-platform",
-            "--exclude-incompatible-targets",
-            "//compatible:");
+            "uquery", "--target-platforms=//compatible/config:banana-platform", "//compatible:");
     processResult.assertSuccess();
 
     sortOutputLinesAndCompare(
@@ -267,5 +266,22 @@ public class BuckUnconfiguredQueryTest {
     } else {
       throw new IllegalArgumentException("Unexpected node type: " + node);
     }
+  }
+
+  @Test
+  public void ownerShouldIncludeIncompatibleTargets() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "query_command_with_incompatible_targets", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "uquery", "owner('A.java')", "--target-platforms", "//:linux_platform");
+
+    result.assertSuccess();
+    assertEquals(
+        Joiner.on(System.lineSeparator()).join(ImmutableList.of("//:lib_linux", "//:lib_osx")),
+        result.getStdout().trim());
   }
 }

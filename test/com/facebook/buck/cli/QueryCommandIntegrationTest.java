@@ -48,7 +48,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -1445,21 +1444,13 @@ public class QueryCommandIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand(
-            "query",
-            "kind(genrule, //:)",
-            "--target-platforms",
-            "//:linux_platform",
-            "--exclude-incompatible-targets");
+            "query", "kind(genrule, //:)", "--target-platforms", "//:linux_platform");
     result.assertSuccess();
     assertThat(result.getStdout(), is(equalToIgnoringPlatformNewlines("//:a\n")));
 
     result =
         workspace.runBuckCommand(
-            "query",
-            "kind(genrule, //:)",
-            "--target-platforms",
-            "//:osx_platform",
-            "--exclude-incompatible-targets");
+            "query", "kind(genrule, //:)", "--target-platforms", "//:osx_platform");
     result.assertSuccess();
     assertThat(result.getStdout(), is(equalToIgnoringPlatformNewlines("//:b\n")));
   }
@@ -1473,11 +1464,7 @@ public class QueryCommandIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand(
-            "query",
-            "owner(lib/A.java)",
-            "--target-platforms",
-            "//:linux_platform",
-            "--exclude-incompatible-targets");
+            "query", "owner(lib/A.java)", "--target-platforms", "//:linux_platform");
     result.assertSuccess();
     assertThat(result.getStdout(), is(equalToIgnoringPlatformNewlines("//lib:libA\n")));
   }
@@ -1491,31 +1478,10 @@ public class QueryCommandIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand(
-            "query",
-            "owner('A.java')",
-            "--target-platforms",
-            "//:linux_platform",
-            "--exclude-incompatible-targets");
-
-    result.assertSuccess();
-    assertEquals("//:lib_linux", result.getStdout().trim());
-  }
-
-  @Test
-  public void ownerShouldIncludeIncompatibleTargets() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "query_command_with_incompatible_targets", tmp);
-    workspace.setUp();
-
-    ProcessResult result =
-        workspace.runBuckCommand(
             "query", "owner('A.java')", "--target-platforms", "//:linux_platform");
 
     result.assertSuccess();
-    assertEquals(
-        Joiner.on(System.lineSeparator()).join(ImmutableList.of("//:lib_linux", "//:lib_osx")),
-        result.getStdout().trim());
+    assertEquals("//:lib_linux", result.getStdout().trim());
   }
 
   @Test
