@@ -17,7 +17,7 @@ package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;

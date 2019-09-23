@@ -17,7 +17,7 @@ package com.facebook.buck.core.rules.analysis;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
-import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.event.BuckEventBus;
 import com.google.common.collect.ImmutableMap;
 

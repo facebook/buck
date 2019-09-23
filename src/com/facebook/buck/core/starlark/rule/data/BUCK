@@ -5,7 +5,7 @@ java_library(
     ),
     exported_deps = [
         "//src/com/facebook/buck/core/model:model",
-        "//src/com/facebook/buck/core/rules/providers:providers",
+        "//src/com/facebook/buck/core/rules/providers/collect:collect",
         "//third-party/java/bazel:bazel",
     ],
     tests = [

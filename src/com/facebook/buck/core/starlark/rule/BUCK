@@ -13,7 +13,7 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/core/description:description",
         "//src/com/facebook/buck/core/rules/actions/lib:lib",
-        "//src/com/facebook/buck/core/rules/providers/impl:impl",
+        "//src/com/facebook/buck/core/rules/providers/collect/impl:impl",
         "//src/com/facebook/buck/core/rules/providers/lib:lib",
         "//src/com/facebook/buck/core/starlark/coercer:coercer",
         "//src/com/facebook/buck/core/starlark/eventhandler:eventhandler",

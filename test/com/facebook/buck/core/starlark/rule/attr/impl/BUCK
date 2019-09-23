@@ -6,6 +6,7 @@ java_test(
         ["*Test.java"],
     ),
     deps = [
+        "//src/com/facebook/buck/core/rules/providers/collect/impl:impl",
         "//src/com/facebook/buck/core/starlark/rule/attr/impl:impl",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//test/com/facebook/buck/core/cell:testutil",

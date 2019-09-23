@@ -18,6 +18,7 @@ package com.facebook.buck.core.starlark.rule.attr;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
 
@@ -27,10 +28,10 @@ import java.nio.file.Path;
  *
  * <p>This is not done by the type coercer and {@link Attribute#getValue(CellPathResolver,
  * ProjectFilesystem, Path, TargetConfiguration, Object)} for two reasons. The first is that some
- * information (like {@link com.facebook.buck.core.rules.providers.ProviderInfoCollection} for
- * dependencies) is not available until the analysis phase, rather than the parsing / coercion /
- * configuration phases. Secondly is for speed. If we do not need to do a transformation on a given
- * attribute, it's better to skip the function call.
+ * information (like {@link ProviderInfoCollection} for dependencies) is not available until the
+ * analysis phase, rather than the parsing / coercion / configuration phases. Secondly is for speed.
+ * If we do not need to do a transformation on a given attribute, it's better to skip the function
+ * call.
  */
 @FunctionalInterface
 public interface PostCoercionTransform<AdditionalDataType, PostTransformType> {
@@ -40,8 +41,7 @@ public interface PostCoercionTransform<AdditionalDataType, PostTransformType> {
    *
    * <p>This is often done to transform attributes for a build target into something more useful to
    * users in their impelementation functions. e.g. a list of dependencies that are represented as
-   * {@link BuildTarget}s into a list of associated {@link
-   * com.facebook.buck.core.rules.providers.ProviderInfoCollection}s
+   * {@link BuildTarget}s into a list of associated {@link ProviderInfoCollection}s
    *
    * @param coercedValue the value that has been coerced by {@link Attribute#getTypeCoercer()}
    * @param additionalData additional data that is used to perform the transformation of the coerced

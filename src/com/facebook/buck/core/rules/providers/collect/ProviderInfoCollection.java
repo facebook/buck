@@ -13,8 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.core.rules.providers;
+package com.facebook.buck.core.rules.providers.collect;
 
+import com.facebook.buck.core.rules.providers.Provider;
+import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.google.devtools.build.lib.syntax.SkylarkIndexable;
 import java.util.Optional;
 
