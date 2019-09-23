@@ -166,12 +166,6 @@ class StubJarClassEntry extends StubJarEntry {
       return true;
     }
 
-    if (path.toString().contains("$sam$i")) {
-      // These classes are created when we have a Single Abstract Method (SAM) interface that is
-      // used within an inline function.
-      return true;
-    }
-
     final List<String> inlineFunctions = inlineFunctionsMap.get(outerClass);
     if (inlineFunctions == null) {
       return false;
