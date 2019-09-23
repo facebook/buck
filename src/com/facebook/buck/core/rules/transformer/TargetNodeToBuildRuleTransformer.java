@@ -25,7 +25,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.ProviderCreationContext;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
-import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.impl.LegacyProviderInfoCollectionImpl;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 
 public interface TargetNodeToBuildRuleTransformer {
@@ -43,7 +43,7 @@ public interface TargetNodeToBuildRuleTransformer {
         configurationRuleRegistry,
         graphBuilder,
         targetNode,
-        ProviderInfoCollectionImpl.builder().build());
+        LegacyProviderInfoCollectionImpl.of());
   }
 
   /**

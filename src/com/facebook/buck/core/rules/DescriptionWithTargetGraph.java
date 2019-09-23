@@ -21,7 +21,7 @@ import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
-import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.impl.LegacyProviderInfoCollectionImpl;
 
 /**
  * The Source of Truth about a {@link BuildRule}, providing mechanisms to expose the arguments that
@@ -56,7 +56,7 @@ public interface DescriptionWithTargetGraph<T extends ConstructorArg> extends De
    */
   default ProviderInfoCollection createProviders(
       ProviderCreationContext context, BuildTarget buildTarget, T args) {
-    return ProviderInfoCollectionImpl.builder().build();
+    return LegacyProviderInfoCollectionImpl.of();
   }
 
   /**

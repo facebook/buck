@@ -34,7 +34,7 @@ import com.facebook.buck.core.rules.analysis.impl.LegacyProviderRuleAnalysisResu
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
-import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.impl.LegacyProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.google.common.base.Verify;
@@ -76,7 +76,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
       Verify.verify(result instanceof LegacyProviderRuleAnalysisResult);
       providerInfos = result.getProviderInfos();
     } else {
-      providerInfos = ProviderInfoCollectionImpl.builder().build();
+      providerInfos = LegacyProviderInfoCollectionImpl.of();
     }
 
     return transform(
