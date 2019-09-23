@@ -22,6 +22,8 @@ java_test(
     has_immutable_types = True,
     deps = [
         "//src/com/facebook/buck/core/rules/providers/impl:impl",
+        "//src/com/facebook/buck/core/rules/providers/lib:lib",
+        "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/rules/analysis/impl:testutil",
         "//test/com/facebook/buck/core/starlark/compatible:testutil",
         "//third-party/java/guava:guava",
