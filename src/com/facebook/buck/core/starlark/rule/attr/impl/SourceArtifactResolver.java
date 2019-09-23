@@ -19,7 +19,6 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
-import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.google.common.collect.ImmutableMap;
@@ -44,12 +43,7 @@ class SourceArtifactResolver {
       if (providerInfos == null) {
         throw new IllegalStateException(String.format("Deps %s did not contain %s", deps, src));
       }
-      return providerInfos
-          .get(DefaultInfo.PROVIDER)
-          .map(DefaultInfo::defaultOutputs)
-          .orElseThrow(
-              () ->
-                  new IllegalStateException(String.format("%s did not provide DefaultInfo", src)));
+      return providerInfos.getDefaultInfo().defaultOutputs();
     } else if (src instanceof PathSourcePath) {
       return ImmutableSet.of(ImmutableSourceArtifactImpl.of((PathSourcePath) src));
     } else {
