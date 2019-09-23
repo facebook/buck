@@ -142,7 +142,7 @@ to allow for extra warnings, etc.
 {/template}
 
 /***/
-{template .env}
+{template .env_arg}
 {call buck.arg}
   {param name : 'env' /}
   {{param default : '{}' /}}
@@ -156,7 +156,7 @@ to allow for extra warnings, etc.
 {/template}
 
 /***/
-{template .mapped_srcs}
+{template .mapped_srcs_arg}
 {call buck.arg}
   {param name : 'mapped_srcs' /}
   {{param default : '{}' /}}
@@ -175,7 +175,7 @@ to allow for extra warnings, etc.
 {/template}
 
 /***/
-{template .named_deps}
+{template .named_deps_arg}
 {call buck.arg}
   {param name : 'named_deps' /}
   {{param default : '{}' /}}
