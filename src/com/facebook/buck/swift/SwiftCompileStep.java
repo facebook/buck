@@ -52,18 +52,26 @@ class SwiftCompileStep implements Step {
     return "swift compile";
   }
 
-  private ProcessExecutorParams makeProcessExecutorParams() {
+  private ProcessExecutorParams makeProcessExecutorParams(ExecutionContext context) {
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
     builder.setDirectory(compilerCwd.toAbsolutePath());
     builder.setEnvironment(compilerEnvironment);
-    builder.setCommand(compilerCommand);
+    builder.setCommand(
+        ImmutableList.<String>builder()
+            .addAll(compilerCommand)
+            .addAll(getColorArguments(context.getAnsi().isAnsiTerminal()))
+            .build());
     return builder.build();
+  }
+
+  private Iterable<String> getColorArguments(boolean allowColorInDiagnostics) {
+    return allowColorInDiagnostics ? ImmutableList.of("-color-diagnostics") : ImmutableList.of();
   }
 
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    ProcessExecutorParams params = makeProcessExecutorParams();
+    ProcessExecutorParams params = makeProcessExecutorParams(context);
 
     // TODO(markwang): parse the output, print build failure errors, etc.
     LOG.debug("%s", compilerCommand);
