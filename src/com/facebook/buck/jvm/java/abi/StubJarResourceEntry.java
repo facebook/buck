@@ -17,6 +17,8 @@
 package com.facebook.buck.jvm.java.abi;
 
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 
 class StubJarResourceEntry extends StubJarEntry {
   private final LibraryReader input;
@@ -34,5 +36,10 @@ class StubJarResourceEntry extends StubJarEntry {
   @Override
   public void write(StubJarWriter writer) {
     writer.writeEntry(path, () -> input.openResourceFile(path));
+  }
+
+  @Override
+  public List<String> getInlineMethods() {
+    return Collections.emptyList();
   }
 }

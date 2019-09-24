@@ -555,6 +555,608 @@ public class StubJarTest {
   }
 
   @Test
+  public void kotlinClassWithInlineExtensionMethodUsingLambda() throws IOException {
+    if (!isValidForKotlin()) {
+      return;
+    }
+
+    if (testingMode.equals(MODE_SOURCE_BASED)) {
+      // TODO T53836707 the methods in the synthetic class are wrongly stripped, preventing
+      //  compilation
+      return;
+    }
+
+    tester = new Tester(Language.KOTLIN);
+    tester
+        .setSourceFile(
+            "A.kt",
+            "package com.example.buck",
+            "open class A {",
+            "  fun post(function: (String) -> String): String {",
+            "    return function(\"test\")",
+            "  }",
+            "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "B.kt",
+            "package com.example.buck",
+            "inline fun A.getString(): String { ",
+            "  return post { x -> x }",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/BKt",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x31",
+            "public final class com/example/buck/BKt {",
+            "",
+            "  // compiled from: B.kt",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=2, d1={\"\\u0000\\n\\n\\u0000\\n\\u0002\\u0010\\u000e\\n\\u0002\\u0018\\u0002\\u001a\\r\\u0010\\u0000\\u001a\\u00020\\u0001*\\u00020\\u0002H\\u0086\\u0008\"}, d2={\"getString\", \"\", \"Lcom/example/buck/A;\"})",
+            "",
+            "  // access flags 0x19",
+            "  public final static getString(Lcom/example/buck/A;)Ljava/lang/String;",
+            "  @Lorg/jetbrains/annotations/NotNull;() // invisible",
+            "    // annotable parameter count: 1 (invisible)",
+            "    @Lorg/jetbrains/annotations/NotNull;() // invisible, parameter 0",
+            "   L0",
+            "    LDC 0",
+            "    ISTORE 1",
+            "   L1",
+            "    ALOAD 0",
+            "    LDC \"$this$getString\"",
+            "    INVOKESTATIC kotlin/jvm/internal/Intrinsics.checkParameterIsNotNull (Ljava/lang/Object;Ljava/lang/String;)V",
+            "   L2",
+            "    LINENUMBER 3 L2",
+            "    ALOAD 0",
+            "    GETSTATIC com/example/buck/BKt$getString$1.INSTANCE : Lcom/example/buck/BKt$getString$1;",
+            "    CHECKCAST kotlin/jvm/functions/Function1",
+            "    INVOKEVIRTUAL com/example/buck/A.post (Lkotlin/jvm/functions/Function1;)Ljava/lang/String;",
+            "    ARETURN",
+            "   L3",
+            "    LOCALVARIABLE $this$getString Lcom/example/buck/A; L0 L3 0",
+            "    LOCALVARIABLE $i$f$getString I L1 L3 1",
+            "    MAXSTACK = 2",
+            "    MAXLOCALS = 2",
+            "",
+            "  // access flags 0x2",
+            "  private <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/BKt$getString$1",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x31",
+            "// signature Lkotlin/jvm/internal/Lambda;Lkotlin/jvm/functions/Function1<Ljava/lang/String;Ljava/lang/String;>;",
+            "// declaration: com/example/buck/BKt$getString$1 extends kotlin.jvm.internal.Lambda implements kotlin.jvm.functions.Function1<java.lang.String, java.lang.String>",
+            "public final class com/example/buck/BKt$getString$1 extends kotlin/jvm/internal/Lambda implements kotlin/jvm/functions/Function1 {",
+            "",
+            "  // compiled from: B.kt",
+            "  // debug info: SMAP",
+            "B.kt",
+            "Kotlin",
+            "*S Kotlin",
+            "*F",
+            "+ 1 B.kt",
+            "com/example/buck/BKt$getString$1",
+            "*L",
+            "1#1,5:1",
+            "*E",
+            "",
+            "  OUTERCLASS com/example/buck/BKt getString (Lcom/example/buck/A;)Ljava/lang/String;",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=3, d1={\"\\u0000\\n\\n\\u0000\\n\\u0002\\u0010\\u000e\\n\\u0002\\u0008\\u0002\\u0010\\u0000\\u001a\\u00020\\u00012\\u0006\\u0010\\u0002\\u001a\\u00020\\u0001H\\n\\u00a2\\u0006\\u0002\\u0008\\u0003\"}, d2={\"<anonymous>\", \"\", \"x\", \"invoke\"})",
+            "  // access flags 0x19",
+            "  public final static INNERCLASS com/example/buck/BKt$getString$1 null null",
+            "",
+            "  // access flags 0x19",
+            "  public final static Lcom/example/buck/BKt$getString$1; INSTANCE",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge invoke(Ljava/lang/Object;)Ljava/lang/Object;",
+            "    ALOAD 0",
+            "    ALOAD 1",
+            "    CHECKCAST java/lang/String",
+            "    INVOKEVIRTUAL com/example/buck/BKt$getString$1.invoke (Ljava/lang/String;)Ljava/lang/String;",
+            "    ARETURN",
+            "    MAXSTACK = 2",
+            "    MAXLOCALS = 2",
+            "",
+            "  // access flags 0x11",
+            "  public final invoke(Ljava/lang/String;)Ljava/lang/String;",
+            "  @Lorg/jetbrains/annotations/NotNull;() // invisible",
+            "    // annotable parameter count: 1 (invisible)",
+            "    @Lorg/jetbrains/annotations/NotNull;() // invisible, parameter 0",
+            "   L0",
+            "    ALOAD 1",
+            "    LDC \"x\"",
+            "    INVOKESTATIC kotlin/jvm/internal/Intrinsics.checkParameterIsNotNull (Ljava/lang/Object;Ljava/lang/String;)V",
+            "   L1",
+            "    LINENUMBER 3 L1",
+            "    ALOAD 1",
+            "    ARETURN",
+            "   L2",
+            "    LOCALVARIABLE this Lcom/example/buck/BKt$getString$1; L0 L2 0",
+            "    LOCALVARIABLE x Ljava/lang/String; L0 L2 1",
+            "    MAXSTACK = 2",
+            "    MAXLOCALS = 2",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "    ALOAD 0",
+            "    ICONST_1",
+            "    INVOKESPECIAL kotlin/jvm/internal/Lambda.<init> (I)V",
+            "    RETURN",
+            "    MAXSTACK = 2",
+            "    MAXLOCALS = 1",
+            "",
+            "  // access flags 0x8",
+            "  static <clinit>()V",
+            "    NEW com/example/buck/BKt$getString$1",
+            "    DUP",
+            "    INVOKESPECIAL com/example/buck/BKt$getString$1.<init> ()V",
+            "    PUTSTATIC com/example/buck/BKt$getString$1.INSTANCE : Lcom/example/buck/BKt$getString$1;",
+            "    RETURN",
+            "    MAXSTACK = 2",
+            "    MAXLOCALS = 0",
+            "}")
+        .createAndCheckStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "C.kt",
+            "package com.example.buck",
+            "class C: A() {",
+            "fun useInlineExtension(): String { return getString() }",
+            "}")
+        .testCanCompile();
+  }
+
+  @Test
+  public void kotlinClassWithInlineExtensionMethodThatImplementsInterface() throws IOException {
+    if (!isValidForKotlin()) {
+      return;
+    }
+
+    if (testingMode.equals(MODE_SOURCE_BASED)) {
+      // TODO T53836707 the methods in the synthetic class are wrongly stripped, preventing
+      //  compilation
+      return;
+    }
+
+    tester = new Tester(Language.KOTLIN);
+    tester
+        .setSourceFile(
+            "A.kt",
+            "package com.example.buck",
+            "open class A {",
+            "  interface SomeInterface {",
+            "    fun someMethod()",
+            "  }",
+            "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "B.kt",
+            "package com.example.buck",
+            "inline fun A.useSomeInterface() {",
+            "  object : A.SomeInterface {",
+            "    override fun someMethod() {",
+            "      // something here",
+            "    }",
+            "  }",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/BKt",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x31",
+            "public final class com/example/buck/BKt {",
+            "",
+            "  // compiled from: B.kt",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=2, d1={\"\\u0000\\n\\n\\u0000\\n\\u0002\\u0010\\u0002\\n\\u0002\\u0018\\u0002\\u001a\\r\\u0010\\u0000\\u001a\\u00020\\u0001*\\u00020\\u0002H\\u0086\\u0008\"}, d2={\"useSomeInterface\", \"\", \"Lcom/example/buck/A;\"})",
+            "",
+            "  // access flags 0x19",
+            "  public final static useSomeInterface(Lcom/example/buck/A;)V",
+            "    // annotable parameter count: 1 (invisible)",
+            "    @Lorg/jetbrains/annotations/NotNull;() // invisible, parameter 0",
+            "   L0",
+            "    LDC 0",
+            "    ISTORE 1",
+            "   L1",
+            "    ALOAD 0",
+            "    LDC \"$this$useSomeInterface\"",
+            "    INVOKESTATIC kotlin/jvm/internal/Intrinsics.checkParameterIsNotNull (Ljava/lang/Object;Ljava/lang/String;)V",
+            "   L2",
+            "    LINENUMBER 3 L2",
+            "    NEW com/example/buck/BKt$useSomeInterface$1",
+            "    DUP",
+            "    INVOKESPECIAL com/example/buck/BKt$useSomeInterface$1.<init> ()V",
+            "    POP",
+            "   L3",
+            "    LINENUMBER 8 L3",
+            "    RETURN",
+            "   L4",
+            "    LOCALVARIABLE $this$useSomeInterface Lcom/example/buck/A; L0 L4 0",
+            "    LOCALVARIABLE $i$f$useSomeInterface I L1 L4 1",
+            "    MAXSTACK = 2",
+            "    MAXLOCALS = 2",
+            "",
+            "  // access flags 0x2",
+            "  private <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/BKt$useSomeInterface$1",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x31",
+            "public final class com/example/buck/BKt$useSomeInterface$1 implements com/example/buck/A$SomeInterface {",
+            "",
+            "  // compiled from: B.kt",
+            "  // debug info: SMAP",
+            "B.kt",
+            "Kotlin",
+            "*S Kotlin",
+            "*F",
+            "+ 1 B.kt",
+            "com/example/buck/BKt$useSomeInterface$1",
+            "*L",
+            "1#1,9:1",
+            "*E",
+            "",
+            "  OUTERCLASS com/example/buck/BKt useSomeInterface (Lcom/example/buck/A;)V",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u000f\\n\\u0000\\n\\u0002\\u0018\\u0002\\n\\u0000\\n\\u0002\\u0010\\u0002*\\u0001\\u0000\\u0008\\n\\u0018\\u00002\\u00020\\u0001J\\u0008\\u0010\\u0002\\u001a\\u00020\\u0003H\\u0016\"}, d2={\"com/example/buck/BKt$useSomeInterface$1\", \"Lcom/example/buck/A$SomeInterface;\", \"someMethod\", \"\"})",
+            "  // access flags 0x19",
+            "  public final static INNERCLASS com/example/buck/BKt$useSomeInterface$1 null null",
+            "",
+            "  // access flags 0x1",
+            "  public someMethod()V",
+            "   L0",
+            "    LINENUMBER 6 L0",
+            "    RETURN",
+            "   L1",
+            "    LOCALVARIABLE this Lcom/example/buck/BKt$useSomeInterface$1; L0 L1 0",
+            "    MAXSTACK = 0",
+            "    MAXLOCALS = 1",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "   L0",
+            "    LINENUMBER 3 L0",
+            "    ALOAD 0",
+            "    INVOKESPECIAL java/lang/Object.<init> ()V",
+            "    RETURN",
+            "   L1",
+            "    LOCALVARIABLE this Lcom/example/buck/BKt$useSomeInterface$1; L0 L1 0",
+            "    MAXSTACK = 1",
+            "    MAXLOCALS = 1",
+            "}")
+        .createAndCheckStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "C.kt",
+            "package com.example.buck",
+            "class C: A() {",
+            "fun useInlineExtension() { useSomeInterface() }",
+            "}")
+        .testCanCompile();
+  }
+
+  @Test
+  public void kotlinClassWithInlineExtensionMethodFromInnerClassThatImplementsInterface()
+      throws IOException {
+    if (!isValidForKotlin()) {
+      return;
+    }
+
+    if (testingMode.equals(MODE_SOURCE_BASED)) {
+      // TODO T53836707 the methods in the synthetic class are wrongly stripped, preventing
+      //  compilation
+      return;
+    }
+
+    tester = new Tester(Language.KOTLIN);
+    tester
+        .setSourceFile(
+            "A.kt",
+            "package com.example.buck",
+            "open class A {",
+            "  interface SomeInterface {",
+            "    fun someMethod()",
+            "  }",
+            "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "B.kt",
+            "package com.example.buck",
+            "open class B {",
+            "  open class C {",
+            "    inline fun useSomeInterface() {",
+            "      object : A.SomeInterface {",
+            "        override fun someMethod() {",
+            "          // something here",
+            "        }",
+            "      }",
+            "    }",
+            "  }",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/B",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x21",
+            "public class com/example/buck/B {",
+            "",
+            "  // compiled from: B.kt",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u000c\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\u0008\\u0002\\u0008\\u0016\\u0018\\u00002\\u00020\\u0001:\\u0001\\u0003B\\u0005\\u00a2\\u0006\\u0002\\u0010\\u0002\"}, d2={\"Lcom/example/buck/B;\", \"\", \"()V\", \"C\"})",
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/B$C com/example/buck/B C",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/B$C",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x21",
+            "public class com/example/buck/B$C {",
+            "",
+            "  // compiled from: B.kt",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u0010\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\u0008\\u0002\\n\\u0002\\u0010\\u0002\\u0008\\u0016\\u0018\\u00002\\u00020\\u0001B\\u0005\\u00a2\\u0006\\u0002\\u0010\\u0002J\\u0009\\u0010\\u0003\\u001a\\u00020\\u0004H\\u0086\\u0008\"}, d2={\"Lcom/example/buck/B$C;\", \"\", \"()V\", \"useSomeInterface\", \"\"})",
+            "  // access flags 0x9",
+            "  public static INNERCLASS com/example/buck/B$C com/example/buck/B C",
+            "",
+            "  // access flags 0x11",
+            "  public final useSomeInterface()V",
+            "   L0",
+            "    LDC 0",
+            "    ISTORE 1",
+            "   L1",
+            "    LINENUMBER 5 L1",
+            "    NEW com/example/buck/B$C$useSomeInterface$1",
+            "    DUP",
+            "    INVOKESPECIAL com/example/buck/B$C$useSomeInterface$1.<init> ()V",
+            "    POP",
+            "   L2",
+            "    LINENUMBER 10 L2",
+            "    RETURN",
+            "   L3",
+            "    LOCALVARIABLE this Lcom/example/buck/B$C; L0 L3 0",
+            "    LOCALVARIABLE $i$f$useSomeInterface I L1 L3 1",
+            "    MAXSTACK = 2",
+            "    MAXLOCALS = 2",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/B$C$useSomeInterface$1",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x31",
+            "public final class com/example/buck/B$C$useSomeInterface$1 implements com/example/buck/A$SomeInterface {",
+            "",
+            "  // compiled from: B.kt",
+            "  // debug info: SMAP",
+            "B.kt",
+            "Kotlin",
+            "*S Kotlin",
+            "*F",
+            "+ 1 B.kt",
+            "com/example/buck/B$C$useSomeInterface$1",
+            "*L",
+            "1#1,13:1",
+            "*E",
+            "",
+            "  OUTERCLASS com/example/buck/B$C useSomeInterface ()V",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u000f\\n\\u0000\\n\\u0002\\u0018\\u0002\\n\\u0000\\n\\u0002\\u0010\\u0002*\\u0001\\u0000\\u0008\\n\\u0018\\u00002\\u00020\\u0001J\\u0008\\u0010\\u0002\\u001a\\u00020\\u0003H\\u0016\"}, d2={\"com/example/buck/B$C$useSomeInterface$1\", \"Lcom/example/buck/A$SomeInterface;\", \"someMethod\", \"\"})",
+            "  // access flags 0x19",
+            "  public final static INNERCLASS com/example/buck/B$C$useSomeInterface$1 null null",
+            "",
+            "  // access flags 0x1",
+            "  public someMethod()V",
+            "   L0",
+            "    LINENUMBER 8 L0",
+            "    RETURN",
+            "   L1",
+            "    LOCALVARIABLE this Lcom/example/buck/B$C$useSomeInterface$1; L0 L1 0",
+            "    MAXSTACK = 0",
+            "    MAXLOCALS = 1",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "   L0",
+            "    LINENUMBER 5 L0",
+            "    ALOAD 0",
+            "    INVOKESPECIAL java/lang/Object.<init> ()V",
+            "    RETURN",
+            "   L1",
+            "    LOCALVARIABLE this Lcom/example/buck/B$C$useSomeInterface$1; L0 L1 0",
+            "    MAXSTACK = 1",
+            "    MAXLOCALS = 1",
+            "}")
+        .createAndCheckStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "C.kt",
+            "package com.example.buck",
+            "class C {",
+            "fun useInlineExtension() { B.C().useSomeInterface() }",
+            "}")
+        .testCanCompile();
+  }
+
+  @Test
+  public void kotlinClassWithInlineExtensionMethodThatImplementsInterfaceWithCrossInlineParam()
+      throws IOException {
+    if (!isValidForKotlin()) {
+      return;
+    }
+
+    if (testingMode.equals(MODE_SOURCE_BASED)) {
+      // TODO T53836707 the methods in the synthetic class are wrongly stripped, preventing
+      //  compilation
+      return;
+    }
+
+    tester = new Tester(Language.KOTLIN);
+    tester
+        .setSourceFile(
+            "A.kt",
+            "package com.example.buck",
+            "open class A {",
+            "  interface SomeInterface {",
+            "    fun someMethod(a: A, value: Int)",
+            "  }",
+            "}")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "B.kt",
+            "package com.example.buck",
+            "inline fun useSomeInterface(crossinline param: A.(int: Int) -> Unit) {\n"
+                + "  object : A.SomeInterface {\n"
+                + "    override fun someMethod(a: A, value: Int) = a.param(value)\n"
+                + "  }\n"
+                + "}\n"
+                + "\n")
+        .createStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "C.kt",
+            "package com.example.buck",
+            "class C {",
+            "  fun useInlineExtension() = useSomeInterface { value -> value }",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/C",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x31",
+            "public final class com/example/buck/C {",
+            "",
+            "  // compiled from: C.kt",
+            "  // debug info: SMAP",
+            "C.kt",
+            "Kotlin",
+            "*S Kotlin",
+            "*F",
+            "+ 1 C.kt",
+            "com/example/buck/C",
+            "+ 2 B.kt",
+            "com/example/buck/BKt",
+            "*L",
+            "1#1,5:1",
+            "3#2,4:6",
+            "*E",
+            "*S KotlinDebug",
+            "*F",
+            "+ 1 C.kt",
+            "com/example/buck/C",
+            "*L",
+            "3#1,4:6",
+            "*E",
+            "",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u0010\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\u0008\\u0002\\n\\u0002\\u0010\\u0002\\u0018\\u00002\\u00020\\u0001B\\u0005\\u00a2\\u0006\\u0002\\u0010\\u0002J\\u0006\\u0010\\u0003\\u001a\\u00020\\u0004\"}, d2={\"Lcom/example/buck/C;\", \"\", \"()V\", \"useInlineExtension\", \"\"})",
+            "",
+            "  // access flags 0x11",
+            "  public final useInlineExtension()V",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/C$useInlineExtension$$inlined$useSomeInterface$1",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x31",
+            "public final class com/example/buck/C$useInlineExtension$$inlined$useSomeInterface$1 implements com/example/buck/A$SomeInterface {",
+            "",
+            "  // compiled from: B.kt",
+            "  // debug info: SMAP",
+            "B.kt",
+            "Kotlin",
+            "*S Kotlin",
+            "*F",
+            "+ 1 B.kt",
+            "com/example/buck/BKt$useSomeInterface$1",
+            "+ 2 C.kt",
+            "com/example/buck/C",
+            "*L",
+            "1#1,9:1",
+            "3#2:10",
+            "*E",
+            "",
+            "  OUTERCLASS com/example/buck/C useInlineExtension ()V",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u001b\\n\\u0000\\n\\u0002\\u0018\\u0002\\n\\u0000\\n\\u0002\\u0010\\u0002\\n\\u0000\\n\\u0002\\u0018\\u0002\\n\\u0000\\n\\u0002\\u0010\\u0008*\\u0001\\u0000\\u0008\\n\\u0018\\u00002\\u00020\\u0001J\\u0018\\u0010\\u0002\\u001a\\u00020\\u00032\\u0006\\u0010\\u0004\\u001a\\u00020\\u00052\\u0006\\u0010\\u0006\\u001a\\u00020\\u0007H\\u0016\\u00b8\\u0006\\u0000\"}, d2={\"com/example/buck/BKt$useSomeInterface$1\", \"Lcom/example/buck/A$SomeInterface;\", \"someMethod\", \"\", \"a\", \"Lcom/example/buck/A;\", \"value\", \"\"})",
+            "  // access flags 0x19",
+            "  public final static INNERCLASS com/example/buck/C$useInlineExtension$$inlined$useSomeInterface$1 null null",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "   L0",
+            "    LINENUMBER 3 L0",
+            "    ALOAD 0",
+            "    INVOKESPECIAL java/lang/Object.<init> ()V",
+            "    RETURN",
+            "   L1",
+            "    LOCALVARIABLE this Lcom/example/buck/C$useInlineExtension$$inlined$useSomeInterface$1; L0 L1 0",
+            "    MAXSTACK = 1",
+            "    MAXLOCALS = 1",
+            "",
+            "  // access flags 0x1",
+            "  public someMethod(Lcom/example/buck/A;I)V",
+            "    // annotable parameter count: 2 (invisible)",
+            "    @Lorg/jetbrains/annotations/NotNull;() // invisible, parameter 0",
+            "   L0",
+            "    ALOAD 1",
+            "    LDC \"a\"",
+            "    INVOKESTATIC kotlin/jvm/internal/Intrinsics.checkParameterIsNotNull (Ljava/lang/Object;Ljava/lang/String;)V",
+            "   L1",
+            "    LINENUMBER 4 L1",
+            "    ALOAD 1",
+            "    ILOAD 2",
+            "    ISTORE 3",
+            "    ASTORE 4",
+            "   L2",
+            "    ICONST_0",
+            "    ISTORE 5",
+            "   L3",
+            "    LINENUMBER 10 L3",
+            "    NOP",
+            "   L4",
+            "    RETURN",
+            "   L5",
+            "    LOCALVARIABLE $this$useSomeInterface Lcom/example/buck/A; L2 L4 4",
+            "    LOCALVARIABLE value I L2 L4 3",
+            "    LOCALVARIABLE $i$a$-useSomeInterface-C$useInlineExtension$1 I L3 L4 5",
+            "    LOCALVARIABLE this Lcom/example/buck/C$useInlineExtension$$inlined$useSomeInterface$1; L0 L5 0",
+            "    LOCALVARIABLE a Lcom/example/buck/A; L0 L5 1",
+            "    LOCALVARIABLE value I L0 L5 2",
+            "    MAXSTACK = 2",
+            "    MAXLOCALS = 6",
+            "}")
+        .createAndCheckStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "D.kt",
+            "package com.example.buck",
+            "class D {",
+            "  fun useMethod() = C().useInlineExtension()",
+            "}")
+        .testCanCompile();
+  }
+
+  @Test
   public void stubsOverloadedMethods() throws IOException {
     tester
         .setSourceFile(

@@ -22,7 +22,9 @@ import com.facebook.buck.util.zip.JarBuilder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -97,13 +99,17 @@ public class StubJar {
     List<Path> paths =
         relativePaths.stream().sorted(visitOuterClassesFirst).collect(Collectors.toList());
 
+    Map<String, List<String>> inlineFunctions = new HashMap<>();
+
     boolean isKotlinModule = isKotlinModule(relativePaths);
     for (Path path : paths) {
-      StubJarEntry entry = StubJarEntry.of(input, path, compatibilityMode, isKotlinModule);
+      StubJarEntry entry =
+          StubJarEntry.of(input, path, compatibilityMode, isKotlinModule, inlineFunctions);
       if (entry == null) {
         continue;
       }
       entry.write(writer);
+      inlineFunctions.put(pathWithoutClassSuffix(path), entry.getInlineMethods());
     }
   }
 
