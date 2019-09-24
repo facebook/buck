@@ -30,6 +30,7 @@ import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
@@ -106,20 +107,7 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
             .build();
 
     if (args.getArgs().isLeft()) {
-      builder.addArg(
-          new ProxyArg(macrosConverter.convert(args.getArgs().getLeft())) {
-            @Override
-            public void appendToCommandLine(
-                Consumer<String> consumer, SourcePathResolver pathResolver) {
-              ImmutableList.Builder<String> subBuilder = ImmutableList.builder();
-              super.appendToCommandLine(subBuilder::add, pathResolver);
-              for (String arg : subBuilder.build()) {
-                for (String splitArg : arg.split("\\s+")) {
-                  consumer.accept(splitArg);
-                }
-              }
-            }
-          });
+      builder.addArg(new SingleStringMacroArg(macrosConverter.convert(args.getArgs().getLeft())));
     } else {
       for (StringWithMacros arg : args.getArgs().getRight()) {
         builder.addArg(macrosConverter.convert(arg));
@@ -161,6 +149,28 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
         maxWorkers,
         args.getPersistent()
             .orElse(buckConfig.getBooleanValue(CONFIG_SECTION, CONFIG_PERSISTENT_KEY, false)));
+  }
+
+  /**
+   * ProxyArg representing a single string retrieved from a macro invocation. Unlike a normal Arg,
+   * this class splits its command-line arguments by space separators before appending them to a
+   * command line.
+   */
+  private static class SingleStringMacroArg extends ProxyArg {
+    public SingleStringMacroArg(Arg arg) {
+      super(arg);
+    }
+
+    @Override
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+      ImmutableList.Builder<String> subBuilder = ImmutableList.builder();
+      super.appendToCommandLine(subBuilder::add, pathResolver);
+      for (String arg : subBuilder.build()) {
+        for (String splitArg : arg.split("\\s+")) {
+          consumer.accept(splitArg);
+        }
+      }
+    }
   }
 
   @BuckStyleImmutable
