@@ -46,8 +46,9 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
   private BuiltInProvider(
       Class<? extends T> infoClass,
       Constructor<? extends T> infoConstructor,
-      List<String> infoApiFields) {
-    super(infoClass.getSimpleName(), infoConstructor, infoApiFields);
+      List<String> infoApiFields,
+      List<String> defaultSkylarkValues) {
+    super(infoClass.getSimpleName(), infoConstructor, infoApiFields, defaultSkylarkValues);
     this.key = ImmutableBuiltInKey.of(infoClass);
     this.infoConstructor = infoConstructor;
     this.infoConstructor.setAccessible(true);
@@ -81,7 +82,10 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
 
     try {
       return new BuiltInProvider<>(
-          infoApiClass, findConstructor(infoClass, types), ImmutableList.copyOf(info.args()));
+          infoApiClass,
+          findConstructor(infoClass, types),
+          ImmutableList.copyOf(info.args()),
+          ImmutableList.copyOf(info.defaultSkylarkValues()));
     } catch (NoSuchMethodException e) {
       throw new IllegalArgumentException(
           String.format(

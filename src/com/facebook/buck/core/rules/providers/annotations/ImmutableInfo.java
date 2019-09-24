@@ -47,4 +47,10 @@ public @interface ImmutableInfo {
    *     declared methods. This should be in the lower underscore naming convention for python.
    */
   String[] args();
+
+  /**
+   * @return an array of string representations of default values to use in the Starlark interpreter
+   *     if a kwarg is not provided.
+   */
+  String[] defaultSkylarkValues();
 }

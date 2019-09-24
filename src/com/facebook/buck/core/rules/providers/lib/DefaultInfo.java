@@ -26,7 +26,9 @@ import java.util.Set;
 /**
  * The standard default information that all rules should be propagating via {@link ProviderInfo}.
  */
-@ImmutableInfo(args = {"named_outputs", "default_outputs"})
+@ImmutableInfo(
+    args = {"named_outputs", "default_outputs"},
+    defaultSkylarkValues = {"{}", "[]"})
 public abstract class DefaultInfo extends BuiltInProviderInfo<DefaultInfo> {
 
   public static final BuiltInProvider<DefaultInfo> PROVIDER =

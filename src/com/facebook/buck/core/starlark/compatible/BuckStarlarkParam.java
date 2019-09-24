@@ -29,14 +29,16 @@ import javax.annotation.Nullable;
 @SuppressWarnings("all")
 class BuckStarlarkParam implements Param {
 
-  public static final BuckStarlarkParam NONE = new BuckStarlarkParam("", Object.class);
+  public static final BuckStarlarkParam NONE = new BuckStarlarkParam("", Object.class, "");
 
   private final String name;
   private final Class<?> type;
+  private final String defaultSkylarkValue;
 
-  private BuckStarlarkParam(String name, Class<?> type) {
+  private BuckStarlarkParam(String name, Class<?> type, String defaultSkylarkValue) {
     this.name = name;
     this.type = type;
+    this.defaultSkylarkValue = defaultSkylarkValue;
   }
 
   /**
@@ -45,15 +47,19 @@ class BuckStarlarkParam implements Param {
    * @return an instance of the skylark annotation representing a parameter of the given type and
    *     name
    */
-  static BuckStarlarkParam fromParam(Class<?> parameter, @Nullable String namedParameter) {
+  static BuckStarlarkParam fromParam(
+      Class<?> parameter, @Nullable String namedParameter, @Nullable String defaultSkylarkValue) {
     if (namedParameter == null) {
       namedParameter = "";
+    }
+    if (defaultSkylarkValue == null) {
+      defaultSkylarkValue = "";
     }
     Class<?> type = parameter;
     if (type.isPrimitive()) {
       type = Primitives.wrap(type);
     }
-    return new BuckStarlarkParam(namedParameter, type);
+    return new BuckStarlarkParam(namedParameter, type, defaultSkylarkValue);
   }
 
   @Override
@@ -88,7 +94,7 @@ class BuckStarlarkParam implements Param {
 
   @Override
   public String defaultValue() {
-    return "";
+    return defaultSkylarkValue;
   }
 
   @Override

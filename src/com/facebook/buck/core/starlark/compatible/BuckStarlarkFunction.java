@@ -64,13 +64,17 @@ public abstract class BuckStarlarkFunction
    * @param namedParams a list of named parameters for skylark. The names are mapped in order to the
    */
   public BuckStarlarkFunction(
-      String methodName, Constructor<?> constructor, List<String> namedParams) {
+      String methodName,
+      Constructor<?> constructor,
+      List<String> namedParams,
+      List<String> defaultSkylarkValues) {
     try {
       this.method = lookup.unreflectConstructor(constructor);
     } catch (IllegalAccessException e) {
       throw new IllegalStateException("Unable to access the supplied constructor", e);
     }
-    this.methodDescriptor = inferMethodDescriptor(methodName, method, namedParams);
+    this.methodDescriptor =
+        inferMethodDescriptor(methodName, method, namedParams, defaultSkylarkValues);
   }
 
   /**
@@ -83,9 +87,14 @@ public abstract class BuckStarlarkFunction
    *     end of the parameters of the actual method.
    */
   @VisibleForTesting
-  BuckStarlarkFunction(String methodName, ImmutableList<String> namedParams) throws Throwable {
+  BuckStarlarkFunction(
+      String methodName,
+      ImmutableList<String> namedParams,
+      ImmutableList<String> defaultSkylarkValues)
+      throws Throwable {
     this.method = lookup.unreflect(findMethod(methodName)).bindTo(this);
-    this.methodDescriptor = inferMethodDescriptor(methodName, method, namedParams);
+    this.methodDescriptor =
+        inferMethodDescriptor(methodName, method, namedParams, defaultSkylarkValues);
   }
 
   /**
@@ -93,7 +102,10 @@ public abstract class BuckStarlarkFunction
    * in skylark
    */
   private MethodDescriptor inferMethodDescriptor(
-      String methodName, MethodHandle method, List<String> namedParams) {
+      String methodName,
+      MethodHandle method,
+      List<String> namedParams,
+      List<String> defaultSkylarkValues) {
 
     try {
       return MethodDescriptor.of(
@@ -102,7 +114,8 @@ public abstract class BuckStarlarkFunction
                        piggy back off skylark's parameter handling. We don't actually have a
                        Method object to use in many cases (e.g. if the MethodHandle is a
                        constructor). */
-          inferSkylarkCallableAnnotationFromMethod(methodName, method, namedParams),
+          inferSkylarkCallableAnnotationFromMethod(
+              methodName, method, namedParams, defaultSkylarkValues),
           StarlarkSemantics.DEFAULT_SEMANTICS);
     } catch (NoSuchMethodException e) {
       throw new IllegalStateException();
@@ -208,8 +221,11 @@ public abstract class BuckStarlarkFunction
   }
 
   private SkylarkCallable inferSkylarkCallableAnnotationFromMethod(
-      String methodName, MethodHandle method, List<String> namedParams) {
-    return BuckStarlarkCallable.fromMethod(methodName, method, namedParams);
+      String methodName,
+      MethodHandle method,
+      List<String> namedParams,
+      List<String> defaultSkylarkValues) {
+    return BuckStarlarkCallable.fromMethod(methodName, method, namedParams, defaultSkylarkValues);
   }
 
   // a fake method to hand to the MethodDescriptor that this uses.
