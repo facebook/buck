@@ -70,7 +70,7 @@ public class QueryPathsMacroExpander extends QueryMacroExpander<QueryPathsMacro>
             .filter(Objects::nonNull));
   }
 
-  private class QueriedPathsArg implements Arg {
+  private static class QueriedPathsArg implements Arg {
     @AddToRuleKey private final ImmutableList<SourcePath> queriedPaths;
 
     public QueriedPathsArg(Stream<SourcePath> queriedPaths) {

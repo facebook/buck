@@ -69,7 +69,7 @@ public class QueryTargetsMacroExpander extends QueryMacroExpander<QueryTargetsMa
             .collect(ImmutableList.toImmutableList()));
   }
 
-  private class QueriedTargetsArg implements Arg {
+  private static class QueriedTargetsArg implements Arg {
     @AddToRuleKey private final ImmutableList<BuildTarget> queriedTargets;
 
     public QueriedTargetsArg(ImmutableList<BuildTarget> queriedTargets) {

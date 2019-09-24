@@ -83,7 +83,7 @@ public class QueryTargetsAndOutputsMacroExpander
         input.getSeparator());
   }
 
-  private class QueriedTargestAndOutputsArg implements Arg {
+  private static class QueriedTargestAndOutputsArg implements Arg {
     @AddToRuleKey private final ImmutableList<BuildTarget> targets;
     @AddToRuleKey private final ImmutableList<SourcePath> outputs;
     @AddToRuleKey private final String separator;

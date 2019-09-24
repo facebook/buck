@@ -62,7 +62,7 @@ public class ClasspathMacroExpander extends BuildTargetMacroExpander<ClasspathMa
             .collect(ImmutableList.toImmutableList()));
   }
 
-  private class ClasspathArg implements Arg {
+  private static class ClasspathArg implements Arg {
     @AddToRuleKey private final ImmutableList<SourcePath> classpath;
 
     public ClasspathArg(ImmutableList<SourcePath> collect) {

@@ -110,7 +110,7 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
     return new AbiJarPathArg(jarPaths);
   }
 
-  private class AbiJarPathArg implements Arg {
+  private static class AbiJarPathArg implements Arg {
 
     @AddToRuleKey private final ImmutableList<SourcePath> classpath;
 
