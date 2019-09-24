@@ -26,8 +26,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
@@ -67,28 +65,10 @@ public abstract class DepAttribute extends Attribute<BuildTarget> {
     return this::postCoercionTransform;
   }
 
-  /**
-   * Gets the {@link SkylarkDependency} for a specific dependency, or throws if the target is
-   * invalid
-   *
-   * @param target A post-coercion object that should be a {@link BuildTarget}
-   * @param deps The map to lookup the provided build target in
-   * @return The {@link SkylarkDependency} for the target given in {@code target}
-   * @throws com.google.common.base.VerifyException if {@code target} is not a {@link BuildTarget}
-   * @throws NullPointerException if provider information could not be found for the given target
-   */
-  static SkylarkDependency getDependencyForTargetFromDeps(
-      Object target, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
-    Verify.verify(target instanceof BuildTarget, "%s must be a BuildTarget", target);
-
-    return new SkylarkDependency(
-        (BuildTarget) target,
-        Preconditions.checkNotNull(deps.get(target), "Deps %s did not contain %s", deps, target));
-  }
-
   private SkylarkDependency postCoercionTransform(
       Object dep, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
-    SkylarkDependency dependency = getDependencyForTargetFromDeps(dep, deps);
+    SkylarkDependency dependency =
+        SkylarkDependencyResolver.getDependencyForTargetFromDeps(dep, deps);
     validateProvidersPresent(getProviders(), (BuildTarget) dep, dependency.getProviderInfos());
     return dependency;
   }

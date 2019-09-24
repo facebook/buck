@@ -91,9 +91,10 @@ public abstract class DepListAttribute extends Attribute<ImmutableList<BuildTarg
     ImmutableList.Builder<SkylarkDependency> builder =
         ImmutableList.builderWithExpectedSize(listValue.size());
     for (Object target : listValue) {
-      SkylarkDependency dependency = DepAttribute.getDependencyForTargetFromDeps(target, deps);
+      SkylarkDependency dependency =
+          SkylarkDependencyResolver.getDependencyForTargetFromDeps(target, deps);
       validateProvidersPresent(getProviders(), (BuildTarget) target, dependency.getProviderInfos());
-      builder.add(DepAttribute.getDependencyForTargetFromDeps(target, deps));
+      builder.add(SkylarkDependencyResolver.getDependencyForTargetFromDeps(target, deps));
     }
     return builder.build();
   }
