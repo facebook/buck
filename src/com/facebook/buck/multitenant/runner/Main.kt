@@ -21,7 +21,7 @@ import com.facebook.buck.multitenant.service.FsChanges
 import com.facebook.buck.multitenant.service.IndexComponents
 import com.facebook.buck.multitenant.service.IndexFactory
 import com.facebook.buck.multitenant.service.InputSource
-import com.facebook.buck.multitenant.service.buckJsonToBuildPackageParser
+import com.facebook.buck.multitenant.service.multitenantJsonToBuildPackageParser
 import com.facebook.buck.multitenant.service.populateIndexFromStream
 import java.io.InputStream
 import java.net.URI
@@ -173,7 +173,7 @@ private fun output(data: List<String>, where: String) {
  */
 private fun createIndex(stream: InputStream): IndexComponents {
     val (index, appender) = IndexFactory.createIndex()
-    populateIndexFromStream(appender, stream, ::buckJsonToBuildPackageParser)
+    populateIndexFromStream(appender, stream, ::multitenantJsonToBuildPackageParser)
 
     return IndexComponents(index, appender, mapOf("" to "BUCK"))
 }

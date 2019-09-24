@@ -17,75 +17,49 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.AbstractRuleType
-import com.facebook.buck.core.model.ImmutableCanonicalCellName
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget
 import com.facebook.buck.core.model.RuleType
+import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
 import com.google.common.collect.ImmutableMap
-import com.google.common.collect.ImmutableSortedSet
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.util.Optional
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class BuildPackageTest {
     @Test fun canSerializeAndDeserializeBuildPackage() {
-        val buildPackage = BuildPackage(
-            buildFileDirectory = FsAgnosticPath.of("foo/bar"),
-            rules = setOf(
-                RawBuildRule(
-                    targetNode = ServiceRawTargetNode(
-                        buildTarget = ImmutableUnconfiguredBuildTarget.of(
-                            ImmutableCanonicalCellName.of(Optional.of("cell")),
-                            "//foo/bar",
-                            "baz",
-                            ImmutableSortedSet.of()
-                        ),
-                        ruleType = RuleType.of("java_library", AbstractRuleType.Kind.BUILD),
-                        attributes = ImmutableMap.of("attr1", "va1", "attr2", "val2")
-                    ),
-                    deps = setOf(
-                        ImmutableUnconfiguredBuildTarget.of(
-                            ImmutableCanonicalCellName.of(
-                                Optional.of("cell")),
-                            "//foo/bar",
-                                "baz_lib",
-                                ImmutableSortedSet.of()
-                        )
-                    )
-                )
-            ),
-            errors = listOf(BuildPackageParsingError(
-                    message = "parsing error",
-                    stacktrace = listOf("stack line 1", "stack line 2")
-                ))
-        )
+        val buildPackage = BuildPackage(buildFileDirectory = FsAgnosticPath.of("foo/bar"),
+            rules = setOf(RawBuildRule(targetNode = ServiceRawTargetNode(
+                buildTarget = UnconfiguredBuildTargetParser.parse("cell//foo/bar:baz", true),
+                ruleType = RuleType.of("java_library", AbstractRuleType.Kind.BUILD),
+                attributes = ImmutableMap.of("attr1", "va1", "attr2", "val2")),
+                deps = setOf(UnconfiguredBuildTargetParser.parse("cell//foo/bar:baz_lib", true)))),
+            errors = listOf(BuildPackageParsingError(message = "parsing error",
+                stacktrace = listOf("stack line 1", "stack line 2"))))
 
         val stream = ByteArrayOutputStream()
 
         serializePackagesToStream(listOf(buildPackage), stream)
 
-        val deserializedPackages = parsePackagesFromStream(
-            ByteArrayInputStream(stream.toByteArray()), ::multitenantJsonToBuildPackageParser)
+        val deserializedPackages =
+            parsePackagesFromStream(ByteArrayInputStream(stream.toByteArray()),
+                ::multitenantJsonToBuildPackageParser)
 
         assertEquals(1, deserializedPackages.size)
         assertEquals(buildPackage, deserializedPackages.first())
     }
 
     @Test fun canSerializeAndDeserializeBuildPackageWithEmptyPath() {
-        val buildPackage = BuildPackage(
-            buildFileDirectory = FsAgnosticPath.of(""),
-            rules = setOf(),
-            errors = listOf()
-        )
+        val buildPackage = BuildPackage(buildFileDirectory = FsAgnosticPath.of(""), rules = setOf(),
+            errors = listOf())
 
         val stream = ByteArrayOutputStream()
 
         serializePackagesToStream(listOf(buildPackage), stream)
 
-        val deserializedPackages = parsePackagesFromStream(
-            ByteArrayInputStream(stream.toByteArray()), ::multitenantJsonToBuildPackageParser)
+        val deserializedPackages =
+            parsePackagesFromStream(ByteArrayInputStream(stream.toByteArray()),
+                ::multitenantJsonToBuildPackageParser)
 
         assertEquals(1, deserializedPackages.size)
         assertEquals(buildPackage, deserializedPackages.first())

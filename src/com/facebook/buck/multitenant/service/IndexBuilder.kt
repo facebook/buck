@@ -146,7 +146,7 @@ private fun parsePackages(
  * Convert Json produced by multitenant service to [BuildPackage]
  */
 fun multitenantJsonToBuildPackageParser(nodes: JsonNode): BuildPackage {
-    return ObjectMappers.READER.forType(BuildPackage::class.java).readValue(nodes)
+    return ObjectMappers.READER_INTERNED.forType(BuildPackage::class.java).readValue(nodes)
 }
 
 /**
