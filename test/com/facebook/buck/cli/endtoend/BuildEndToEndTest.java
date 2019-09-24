@@ -19,7 +19,9 @@ package com.facebook.buck.cli.endtoend;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.doctor.BuildLogHelper;
@@ -43,7 +45,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -114,7 +115,7 @@ public class BuildEndToEndTest {
 
     ProcessResult result = workspace.runBuckCommand(test);
     result.assertExitCode(ExitCode.PARSE_ERROR);
-    Assert.assertTrue(
+    assertTrue(
         String.format("'%s' was not contained in '%s'", expected.pattern(), result.getStderr()),
         expected.matcher(result.getStderr()).find());
   }
@@ -137,7 +138,7 @@ public class BuildEndToEndTest {
 
     ProcessResult result = workspace.runBuckCommand(test);
     result.assertFailure();
-    Assert.assertTrue(
+    assertTrue(
         String.format("'%s' was not contained in '%s'", expected.pattern(), result.getStderr()),
         expected.matcher(result.getStderr()).find());
   }
@@ -190,10 +191,10 @@ public class BuildEndToEndTest {
             .getDestPath()
             .resolve(Paths.get("buck-out", "dev", "gen", "main_bin", "main_bin"));
 
-    Assert.assertTrue(Files.exists(optVersion));
-    Assert.assertTrue(Files.exists(devVersion));
-    Assert.assertTrue(Files.exists(optBin));
-    Assert.assertTrue(Files.exists(devBin));
+    assertTrue(Files.exists(optVersion));
+    assertTrue(Files.exists(devVersion));
+    assertTrue(Files.exists(optBin));
+    assertTrue(Files.exists(devBin));
 
     Files.delete(optBin);
     Files.delete(devBin);
@@ -281,9 +282,9 @@ public class BuildEndToEndTest {
                       && args.get().containsAll(ImmutableList.of("query", "//:query"));
                 })
             .findFirst();
-    Assert.assertTrue("Build command was not found in logs", buildCommand.isPresent());
-    Assert.assertTrue("Query command was not found in logs", queryCommand.isPresent());
+    assertTrue("Build command was not found in logs", buildCommand.isPresent());
+    assertTrue("Query command was not found in logs", queryCommand.isPresent());
     assertEquals(Optional.of(new BuildId("1234-5678")), buildCommand.get().getBuildId());
-    Assert.assertNotEquals(Optional.of(new BuildId("1234-5678")), queryCommand.get().getBuildId());
+    assertNotEquals(Optional.of(new BuildId("1234-5678")), queryCommand.get().getBuildId());
   }
 }
