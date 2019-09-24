@@ -51,6 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -5724,6 +5725,16 @@ public class StubJarTest {
             "  public foo()V",
             "}")
         .createAndCheckStubJar();
+  }
+
+  @Test
+  public void doNotStripClassSuffixIfItDoesNotExist() {
+    assertEquals("A.aut", StubJar.pathWithoutClassSuffix(Paths.get("A.aut")));
+  }
+
+  @Test
+  public void stripClassSuffixIfItExists() {
+    assertEquals("A", StubJar.pathWithoutClassSuffix(Paths.get("A.class")));
   }
 
   private Path createStubJar(Path fullJar) throws IOException {
