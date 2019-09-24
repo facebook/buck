@@ -9,6 +9,9 @@
   <property name="build.successful.file" value="${build.dir}/successful-build" />
   <property name="classes.dir.name" value="classes" />
   <property name="classes.dir" value="${build.dir}/${classes.dir.name}" />
+  <property name="kotlin.src.dir" value="${basedir}/src/com/facebook/buck/jvm/java/abi/kotlin" />
+  <property name="kotlin.classes.dir.name" value="kotlin_classes" />
+  <property name="kotlin.classes.dir" value="${build.dir}/kotlin/${kotlin.classes.dir.name}" />
   <property name="buck.modules.classes.dir.name" value="buck-modules-classes" />
   <property name="buck.modules.classes.dir" value="${build.dir}/${buck.modules.classes.dir.name}" />
   <property name="buck.modules.annotation.processor.src.dir" value="com/facebook/buck/core/module/annotationprocessor" />
@@ -69,6 +72,8 @@
 
   <property name="devbuild" value="0" />
 
+  <property name="kotlin.lib" value="${third-party.dir}/java/kotlin" />
+
   <condition property="eclipse.jdt.core.prefs.file"
     value="org.eclipse.jdt.core.prefs"
     else="org.eclipse.jdt.core.prefs-dev"
@@ -124,7 +129,7 @@
     <include name="jackson/jackson-datatype-jdk8-2.9.7.jar" />
     <include name="jackson/jackson-datatype-guava-2.9.7.jar" />
     <include name="jackson/jackson-module-kotlin-2.9.9.jar" />
-    <include name="kotlin/kotlin-reflect-1.3.41.jar" />
+    <include name="kotlin/kotlin-reflect.jar" />
     <include name="android/sdklib-25.3.0.jar" />
     <include name="nailgun/nailgun-server-1.0.0.jar" />
     <include name="jna/jna-4.5.1.jar" />
@@ -250,6 +255,7 @@
     <fileset refid="third-party.jars" />
     <path refid="provided.jars" />
     <pathelement location="${classes.dir}" />
+    <pathelement location="${kotlin.classes.dir}" />
     <pathelement location="${dx.classes.dir}" />
     <pathelement location="${bootstrapper.jar}" />
     <pathelement location="${manual.gensrc.classes.dir}" />
@@ -575,7 +581,7 @@
   <target name="compile"
           depends="compile-buck-modules-annotation-processor, compile-testrunner, compile-aosp,
                    compile-manual-gen-src, bootstrapper, buckfilesystem, package-resources,
-                   tracing-api, dx"
+                   tracing-api, dx, compile-kotlin"
           description="compile Java source code">
     <mkdir dir="${classes.dir}" />
 
@@ -604,6 +610,14 @@
         </patternset>
       </javac-params>
     </compiler>
+  </target>
+
+  <typedef resource="org/jetbrains/kotlin/ant/antlib.xml" classpath="${kotlin.lib}/kotlin-ant.jar"/>
+  <target name="compile-kotlin">
+      <mkdir dir="${kotlin.classes.dir}" />
+      <kotlinc output="${kotlin.classes.dir}" classpathref="classpath-no-src" noStdlib="true" nowarn="true">
+          <src path="${kotlin.src.dir}" />
+      </kotlinc>
   </target>
 
   <target name="compile-buck-modules-annotation-processor">
@@ -982,6 +996,7 @@
     </copy>
     <union id="all.classpath.jars">
       <string value="${classes.dir}" />
+      <string value="${kotlin.classes.dir}" />
       <string value="${manual.gensrc.classes.dir}" />
       <string value="${android.annotations.classes.dir}" />
       <string value="${aosp.classes.dir}" />
@@ -1004,6 +1019,7 @@
     <checksum todir="${build.dir}/checksums" totalproperty="buck.hash.value">
       <fileset dir="${build.dir}">
         <include name="${classes.dir.name}/**"/>
+        <include name="${kotlin.classes.dir.name}/**"/>
         <include name="${manual.gensrc.classes.dir.name}/**"/>
         <include name="${android.annotations.classes.dir.name}/**"/>
         <include name="${aosp.classes.dir.name}/**"/>

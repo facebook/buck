@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-import com.facebook.buck.jvm.java.abi.kotlin.KotlinMetadataReader;
+import com.facebook.buck.jvm.java.abi.kotlin.KotlinMetadataReaderKt;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -72,7 +72,8 @@ class StubJarClassEntry extends StubJarEntry {
                   .map(methodNode -> methodNode.name)
                   .collect(Collectors.toList());
         } else {
-          methodBodiesToRetain = KotlinMetadataReader.getInlineFunctions(kotlinMetadataAnnotation);
+          methodBodiesToRetain =
+              KotlinMetadataReaderKt.getInlineFunctions(kotlinMetadataAnnotation);
         }
       }
     }

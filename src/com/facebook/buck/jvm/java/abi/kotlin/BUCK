@@ -1,7 +1,7 @@
-java_library(
+kotlin_library(
     name = "kotlin",
     srcs = glob(
-        ["*.java"],
+        ["*.kt"],
     ),
     tests = [
         "//test/com/facebook/buck/jvm/java/abi:abi",

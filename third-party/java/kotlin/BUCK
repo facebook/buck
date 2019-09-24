@@ -1,6 +1,6 @@
 prebuilt_jar(
     name = "annotations",
-    binary_jar = "annotations.jar",
+    binary_jar = "annotations-13.0.jar",
     visibility = [
         "PUBLIC",
     ],
@@ -34,8 +34,8 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "kotlin-reflect",
-    binary_jar = "kotlin-reflect-1.3.41.jar",
-    source_jar = "kotlin-reflect-1.3.41-sources.jar",
+    binary_jar = "kotlin-reflect.jar",
+    source_jar = "kotlin-reflect-sources.jar",
     visibility = [
         "PUBLIC",
     ],
