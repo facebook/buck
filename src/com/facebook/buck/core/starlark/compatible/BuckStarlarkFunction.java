@@ -30,7 +30,6 @@ import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.MethodDescriptor;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Runtime;
-import com.google.devtools.build.lib.syntax.StarlarkSemantics;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.WrongMethodTypeException;
@@ -116,7 +115,7 @@ public abstract class BuckStarlarkFunction
                        constructor). */
           inferSkylarkCallableAnnotationFromMethod(
               methodName, method, namedParams, defaultSkylarkValues),
-          StarlarkSemantics.DEFAULT_SEMANTICS);
+          BuckStarlark.BUCK_STARLARK_SEMANTICS);
     } catch (NoSuchMethodException e) {
       throw new IllegalStateException();
     }

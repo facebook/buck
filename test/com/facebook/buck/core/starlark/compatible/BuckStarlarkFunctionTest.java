@@ -98,7 +98,7 @@ public class BuckStarlarkFunctionTest {
     Mutability mutability = Mutability.create("test");
     Environment env =
         Environment.builder(mutability)
-            .useDefaultSemantics()
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .setGlobals(
                 Environment.GlobalFrame.createForBuiltins(
                     ImmutableMap.of(function.getMethodDescriptor().getName(), function)))

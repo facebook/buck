@@ -18,6 +18,7 @@ java_library(
         exclude = ["*Test.java"],
     ),
     exported_deps = [
+        "//src/com/facebook/buck/core/starlark/compatible:compatible",
         "//third-party/java/bazel:bazel",
         "//third-party/java/guava:guava",
     ],

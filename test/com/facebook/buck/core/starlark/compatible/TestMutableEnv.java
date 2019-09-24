@@ -39,7 +39,7 @@ public class TestMutableEnv implements AutoCloseable {
     env =
         Environment.builder(mutability)
             .setGlobals(Environment.GlobalFrame.createForBuiltins(builder.build()))
-            .useDefaultSemantics()
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .build();
   }
 

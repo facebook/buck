@@ -16,6 +16,7 @@
 
 package com.facebook.buck.skylark.parser;
 
+import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
@@ -70,7 +71,6 @@ import com.google.devtools.build.lib.syntax.ParserInputSource;
 import com.google.devtools.build.lib.syntax.SkylarkImport;
 import com.google.devtools.build.lib.syntax.SkylarkUtils;
 import com.google.devtools.build.lib.syntax.SkylarkUtils.Phase;
-import com.google.devtools.build.lib.syntax.StarlarkSemantics;
 import com.google.devtools.build.lib.syntax.Statement;
 import com.google.devtools.build.lib.vfs.FileSystem;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
@@ -362,7 +362,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         Environment.builder(mutability)
             .setImportedExtensions(importMap)
             .setGlobals(buckGlobals.getBuckBuildFileContextGlobals())
-            .setSemantics(StarlarkSemantics.DEFAULT_SEMANTICS)
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .setEventHandler(eventHandler)
             .build();
     SkylarkUtils.setPhase(env, Phase.LOADING);
@@ -766,7 +766,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
       // Create this extension.
       Environment extensionEnv =
-          envBuilder.setSemantics(StarlarkSemantics.DEFAULT_SEMANTICS).build();
+          envBuilder.setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS).build();
       SkylarkUtils.setPhase(extensionEnv, Phase.LOADING);
 
       BuildFileAST ast = load.getAST();

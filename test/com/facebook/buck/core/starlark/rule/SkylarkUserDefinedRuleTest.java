@@ -19,6 +19,7 @@ import static com.facebook.buck.skylark.function.SkylarkRuleFunctions.IMPLICIT_A
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.starlark.coercer.SkylarkParamInfo;
+import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableIntAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
@@ -99,7 +100,7 @@ public class SkylarkUserDefinedRuleTest {
     Environment env =
         Environment.builder(mutability)
             .setGlobals(BazelLibrary.GLOBALS)
-            .useDefaultSemantics()
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .build();
     parseContext.setup(env);
     return env;

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
+import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -103,7 +104,7 @@ public class BuiltInProviderInfoTest {
     Mutability mutability = Mutability.create("providertest");
     Environment env =
         Environment.builder(mutability)
-            .useDefaultSemantics()
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .setGlobals(
                 Environment.GlobalFrame.createForBuiltins(
                     ImmutableMap.of(SomeInfo.PROVIDER.getName(), SomeInfo.PROVIDER)))
@@ -171,7 +172,7 @@ public class BuiltInProviderInfoTest {
     Mutability mutability = Mutability.create("test");
     Environment env =
         Environment.builder(mutability)
-            .useDefaultSemantics()
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .setGlobals(
                 Environment.GlobalFrame.createForBuiltins(
                     ImmutableMap.of(

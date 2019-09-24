@@ -29,6 +29,7 @@ import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
+import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.eventhandler.ConsoleEventHandler;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -74,7 +75,7 @@ public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg
 
       Environment env =
           Environment.builder(mutability)
-              .useDefaultSemantics()
+              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setEventHandler(
                   new ConsoleEventHandler(
                       context.getEventBus(),
