@@ -117,7 +117,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
         new DexProducedFromJavaLibrary(
             buildTarget, filesystem, graphBuilder, androidPlatformTarget, javaLibraryRule);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
-    steps = steps.subList(5, steps.size());
+    steps = steps.subList(4, steps.size());
 
     ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
 

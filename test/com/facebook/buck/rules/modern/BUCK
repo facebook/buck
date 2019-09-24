@@ -47,6 +47,7 @@ java_test(
         "//src/com/facebook/buck/util/console:console",
         "//src/com/facebook/buck/util/env:env",
         "//test/com/facebook/buck/core/build/buildable/context:testutil",
+        "//test/com/facebook/buck/core/build/context:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/io/file:testutil",

@@ -18,19 +18,26 @@ package com.facebook.buck.rules.modern;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.ErrorLogger.DeconstructedException;
 import com.google.common.collect.ImmutableList;
@@ -58,6 +65,65 @@ public class ModernBuildRuleTest {
           deconstructed.getMessage(true),
           containsString("PublicOutputPath should not be inside rule temporary directory"));
     }
+  }
+
+  @Test
+  public void testBuildRuleStepsCreatesRootPathExactlyOnce() {
+    ActionGraphBuilder actionGraphBuilder = new TestActionGraphBuilder();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    NoOpModernBuildRule rule = new NoOpModernBuildRule(target, filesystem, actionGraphBuilder);
+
+    BuildContext buildContext =
+        FakeBuildContext.withSourcePathResolver(actionGraphBuilder.getSourcePathResolver());
+    BuildableContext buildableContext = new FakeBuildableContext();
+    ImmutableList<Step> steps = rule.getBuildSteps(buildContext, buildableContext);
+    MoreAsserts.assertStepsNames(
+        "The root directory should be remote and created exactly once",
+        ImmutableList.of("rm", "mkdir", "rm", "mkdir"),
+        steps);
+    assertEquals(
+        RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    filesystem,
+                    filesystem
+                        .getBuckPaths()
+                        .getGenDir()
+                        .resolve(filesystem.getPath("foo", "bar__"))))
+            .withRecursive(true),
+        steps.get(0));
+
+    assertEquals(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(),
+                filesystem,
+                filesystem.getBuckPaths().getGenDir().resolve(filesystem.getPath("foo", "bar__")))),
+        steps.get(1));
+
+    assertEquals(
+        RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    filesystem,
+                    filesystem
+                        .getBuckPaths()
+                        .getScratchDir()
+                        .resolve(filesystem.getPath("foo", "bar__"))))
+            .withRecursive(true),
+        steps.get(2));
+
+    assertEquals(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(),
+                filesystem,
+                filesystem
+                    .getBuckPaths()
+                    .getScratchDir()
+                    .resolve(filesystem.getPath("foo", "bar__")))),
+        steps.get(3));
   }
 
   static class InvalidPublicOutputPathBuildRule

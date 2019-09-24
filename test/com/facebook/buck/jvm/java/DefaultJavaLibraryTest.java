@@ -1460,7 +1460,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
             new FakeBuildableContext());
 
-    assertEquals(26, steps.size());
+    assertEquals(25, steps.size());
     JavacStep javac = getJavacStep(steps);
     assertTrue(javac.getJavac() instanceof Jsr199Javac);
   }
@@ -1491,7 +1491,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         buildable.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
             new FakeBuildableContext());
-    assertEquals(26, steps.size());
+    assertEquals(25, steps.size());
     JavacStep javacStep = getJavacStep(steps);
     assertTrue(javacStep.getJavac() instanceof Jsr199Javac);
     JarBackedJavac jsrJavac = ((JarBackedJavac) javacStep.getJavac());

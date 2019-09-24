@@ -46,7 +46,7 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.rules.modern.ModernBuildRule;
-import com.facebook.buck.rules.modern.impl.NoOpModernBuildRule;
+import com.facebook.buck.rules.modern.NoOpModernBuildRule;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;

@@ -13,16 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.rules.modern.impl;
+package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
-import com.facebook.buck.rules.modern.Buildable;
-import com.facebook.buck.rules.modern.ModernBuildRule;
-import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 

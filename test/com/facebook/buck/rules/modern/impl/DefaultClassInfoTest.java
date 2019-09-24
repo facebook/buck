@@ -44,6 +44,7 @@ import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.InputRuleResolver;
+import com.facebook.buck.rules.modern.NoOpModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
