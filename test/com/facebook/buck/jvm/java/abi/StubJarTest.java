@@ -296,6 +296,63 @@ public class StubJarTest {
   }
 
   @Test
+  public void kotlinClassWithInlineMethodAndJvmName() throws IOException {
+    if (!isValidForKotlin()) {
+      return;
+    }
+
+    tester = new Tester(Language.KOTLIN);
+    tester
+        .setSourceFile(
+            "A.kt",
+            "package com.example.buck",
+            "open class A {",
+            "  @JvmName(\"someOtherName\")",
+            "  inline fun getString(): String { return \"test\" }",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "  // compiled from: A.kt",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u0012\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\u0008\\u0002\\n\\u0002\\u0010\\u000e\\n\\u0000\\u0008\\u0016\\u0018\\u00002\\u00020\\u0001B\\u0005\\u00a2\\u0006\\u0002\\u0010\\u0002J\\u000e\\u0010\\u0003\\u001a\\u00020\\u0004H\\u0087\\u0008\\u00a2\\u0006\\u0002\\u0008\\u0005\"}, d2={\"Lcom/example/buck/A;\", \"\", \"()V\", \"getString\", \"\", \"someOtherName\"})",
+            "",
+            "  // access flags 0x11",
+            "  public final someOtherName()Ljava/lang/String;",
+            "  @Lkotlin/jvm/JvmName;(name=\"someOtherName\") // invisible",
+            "  @Lorg/jetbrains/annotations/NotNull;() // invisible",
+            "   L0",
+            "    LDC 0",
+            "    ISTORE 1",
+            "   L1",
+            "    LINENUMBER 4 L1",
+            "    LDC \"test\"",
+            "    ARETURN",
+            "   L2",
+            "    LOCALVARIABLE this Lcom/example/buck/A; L0 L2 0",
+            "    LOCALVARIABLE $i$f$someOtherName I L1 L2 1",
+            "    MAXSTACK = 1",
+            "    MAXLOCALS = 2",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .createAndCheckStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "B.kt",
+            "package com.example.buck",
+            "class B {",
+            "  fun useInline(): String { return A().getString() }",
+            "}")
+        .testCanCompile();
+  }
+
+  @Test
   public void kotlinClassWithInlineMethodUsingDefaultParam() throws IOException {
     if (!isValidForKotlin()) {
       return;

@@ -20,6 +20,9 @@ import kotlinx.metadata.Flag
 import kotlinx.metadata.KmDeclarationContainer
 import kotlinx.metadata.jvm.KotlinClassHeader
 import kotlinx.metadata.jvm.KotlinClassMetadata
+import kotlinx.metadata.jvm.getterSignature
+import kotlinx.metadata.jvm.setterSignature
+import kotlinx.metadata.jvm.signature
 import org.objectweb.asm.tree.AnnotationNode
 
 /**
@@ -40,42 +43,22 @@ fun getInlineFunctions(annotationNode: AnnotationNode): List<String> {
         return emptyList()
     }
 
-    val inlineFunctions =
-        container.functions.filter { Flag.Function.IS_INLINE(it.flags) }.map { it.name }
+    val inlineFunctions = container.functions.filter { Flag.Function.IS_INLINE(it.flags) }
+        .mapNotNull { it.signature?.name }
 
     val inlineProperties =
         container.properties.filter { Flag.PropertyAccessor.IS_INLINE(it.flags) }.map { it.name }
 
     val inlineGetters =
         container.properties.filter { Flag.PropertyAccessor.IS_INLINE(it.getterFlags) }
-            .map { getPropertyGetterName(it.name) }
+            .mapNotNull { it.getterSignature?.name }
 
     val inlineSetters =
         container.properties.filter { Flag.PropertyAccessor.IS_INLINE(it.setterFlags) }
-            .map { getPropertySetterName(it.name) }
+            .mapNotNull { it.setterSignature?.name }
 
     return inlineFunctions.union(inlineProperties).union(inlineGetters).union(inlineSetters)
         .toList()
-}
-
-private fun getPropertyGetterName(propertyName: String): String {
-    return if (propertyName.startsWith("is")) {
-        propertyName
-    } else {
-        "get" + capitalize(propertyName)
-    }
-}
-
-private fun getPropertySetterName(propertyName: String): String {
-    return if (propertyName.startsWith("is")) {
-        "set" + propertyName.substring(2)
-    } else {
-        "set" + capitalize(propertyName)
-    }
-}
-
-private fun capitalize(name: String): String {
-    return name.substring(0, 1).toUpperCase() + name.substring(1)
 }
 
 /**
