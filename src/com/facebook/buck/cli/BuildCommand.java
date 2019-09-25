@@ -191,7 +191,7 @@ public class BuildCommand extends AbstractCommand {
   private boolean showRuleKey;
 
   @Option(name = LOCAL_BUILD_LONG_ARG, usage = "Disable distributed build.")
-  private boolean forceDisableDistributedBuild = false;
+  private boolean forceDisableRemoteExecution = false;
 
   private boolean useDistributedBuild = false; // Must be accessed via the getter method.
 
@@ -270,13 +270,17 @@ public class BuildCommand extends AbstractCommand {
     this.keepGoing = keepGoing;
   }
 
-  public void forceDisableDistributedBuild() {
-    forceDisableDistributedBuild = true;
+  public void forceDisableRemoteExecution() {
+    forceDisableRemoteExecution = true;
+  }
+
+  public boolean isRemoteExecutionForceDisabled() {
+    return forceDisableRemoteExecution;
   }
 
   /** Whether this build is using stampede or not. */
   public boolean isUsingDistributedBuild() {
-    if (forceDisableDistributedBuild) {
+    if (forceDisableRemoteExecution) {
       useDistributedBuild = false;
     }
 
@@ -303,7 +307,7 @@ public class BuildCommand extends AbstractCommand {
    * @return true if the build was converted to stampede.
    */
   public boolean tryConvertingToStampede(DistBuildConfig config) {
-    if (forceDisableDistributedBuild) {
+    if (forceDisableRemoteExecution) {
       LOG.info(
           "Distributed build was forcefully disabled. Will not auto-convert build to stampede.");
 
@@ -801,7 +805,8 @@ public class BuildCommand extends AbstractCommand {
             params.getUnconfiguredBuildTargetFactory(),
             params.getTargetConfiguration(),
             params.getTargetConfigurationSerializer(),
-            remoteExecutionAutoEnabled);
+            remoteExecutionAutoEnabled,
+            isRemoteExecutionForceDisabled());
     // TODO(buck_team): use try-with-resources instead
     try {
       buildReference.set(builder.getBuild());

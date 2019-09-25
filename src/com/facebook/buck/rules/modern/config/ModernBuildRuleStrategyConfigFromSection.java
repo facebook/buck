@@ -34,7 +34,12 @@ public class ModernBuildRuleStrategyConfigFromSection implements ModernBuildRule
   }
 
   @Override
-  public ModernBuildRuleBuildStrategy getBuildStrategy(boolean remoteExecutionAutoEnabled) {
+  public ModernBuildRuleBuildStrategy getBuildStrategy(
+      boolean remoteExecutionAutoEnabled, boolean forceDisableRemoteExecution) {
+    if (forceDisableRemoteExecution) {
+      return ModernBuildRuleBuildStrategy.NONE;
+    }
+
     return delegate
         .getEnum(section, "strategy", ModernBuildRuleBuildStrategy.class)
         // If Remote Execution was auto enabled, and no explicit strategy was set, then use the

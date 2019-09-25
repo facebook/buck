@@ -644,7 +644,8 @@ public class DistBuildCommandDelegate {
             params.getUnconfiguredBuildTargetFactory(),
             params.getTargetConfiguration(),
             params.getTargetConfigurationSerializer(),
-            false);
+            false,
+            true);
     localRuleKeyCalculator.set(builder.getCachingBuildEngine().getRuleKeyCalculator());
     builder.shutdown();
   }

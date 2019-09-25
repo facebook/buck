@@ -18,7 +18,8 @@ package com.facebook.buck.rules.modern.config;
 
 /** Configuration for modern_build_rule.strategy. */
 public interface ModernBuildRuleStrategyConfig {
-  ModernBuildRuleBuildStrategy getBuildStrategy(boolean remoteExecutionAutoEnabled);
+  ModernBuildRuleBuildStrategy getBuildStrategy(
+      boolean remoteExecutionAutoEnabled, boolean forceDisableRemoteExecution);
 
   HybridLocalBuildStrategyConfig getHybridLocalConfig();
 }

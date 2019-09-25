@@ -752,7 +752,7 @@ public final class MainRunner {
               "Remote Execution is enabled. Deprecated distributed build will not be used.";
           LOG.warn(msg);
           printWarnMessage(msg);
-          subcommand.forceDisableDistributedBuild();
+          subcommand.forceDisableRemoteExecution();
           isUsingDistributedBuild = false;
         } else if (!isUsingDistributedBuild && shouldUseDistributedBuild) {
           isUsingDistributedBuild = subcommand.tryConvertingToStampede(distBuildConfig);
@@ -1660,6 +1660,10 @@ public final class MainRunner {
   private boolean isRemoteExecutionAutoEnabled(
       BuckCommand command, BuckConfig config, String username) {
     BuildCommand subcommand = (BuildCommand) command.getSubcommand().get();
+    if (subcommand.isRemoteExecutionForceDisabled()) {
+      return false;
+    }
+
     return config
         .getView(RemoteExecutionConfig.class)
         .isRemoteExecutionAutoEnabled(username, subcommand.getArguments());
@@ -1667,7 +1671,8 @@ public final class MainRunner {
 
   private boolean isRemoteExecutionBuild(BuckCommand command, BuckConfig config, String username) {
     if (!command.getSubcommand().isPresent()
-        || !(command.getSubcommand().get() instanceof BuildCommand)) {
+        || !(command.getSubcommand().get() instanceof BuildCommand)
+        || ((BuildCommand) command.getSubcommand().get()).isRemoteExecutionForceDisabled()) {
       return false;
     }
 
@@ -1675,11 +1680,11 @@ public final class MainRunner {
 
     ModernBuildRuleStrategyConfig strategyConfig =
         config.getView(ModernBuildRuleConfig.class).getDefaultStrategyConfig();
-    while (strategyConfig.getBuildStrategy(remoteExecutionAutoEnabled)
+    while (strategyConfig.getBuildStrategy(remoteExecutionAutoEnabled, false)
         == ModernBuildRuleBuildStrategy.HYBRID_LOCAL) {
       strategyConfig = strategyConfig.getHybridLocalConfig().getDelegateConfig();
     }
-    return strategyConfig.getBuildStrategy(remoteExecutionAutoEnabled)
+    return strategyConfig.getBuildStrategy(remoteExecutionAutoEnabled, false)
         == ModernBuildRuleBuildStrategy.REMOTE;
   }
 

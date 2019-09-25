@@ -34,8 +34,10 @@ abstract class AbstractModernBuildRuleConfig
   }
 
   @Override
-  public ModernBuildRuleBuildStrategy getBuildStrategy(boolean remoteExecutionAutoEnabled) {
-    return getDefaultStrategyConfig().getBuildStrategy(remoteExecutionAutoEnabled);
+  public ModernBuildRuleBuildStrategy getBuildStrategy(
+      boolean remoteExecutionAutoEnabled, boolean forceDisableRemoteExecution) {
+    return getDefaultStrategyConfig()
+        .getBuildStrategy(remoteExecutionAutoEnabled, forceDisableRemoteExecution);
   }
 
   @Override
