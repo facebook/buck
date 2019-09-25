@@ -119,4 +119,5 @@ trap "rm -rf $BUCK_TMP_ROOT" EXIT HUP INT TERM
   done
 )
 
-BUCK_PROJECT_ROOT="$BUCK_TMP_ROOT/__default__" "$BUCK_TMP_ROOT/__default__/$SCRIPT_TO_RUN" "$@"
+export BUCK_PROJECT_ROOT="$BUCK_TMP_ROOT/__default__"
+exec "$BUCK_TMP_ROOT/__default__/$SCRIPT_TO_RUN" "$@"
