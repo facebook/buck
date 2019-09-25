@@ -55,10 +55,12 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.args.ToolArg;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.CcFlagsMacro;
 import com.facebook.buck.rules.macros.CcMacro;
@@ -447,35 +449,48 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       return new CxxPreprocessorFlagsArg(
           getPreprocessorFlags(getCxxPreprocessorInput(graphBuilder, rules)),
           CxxSourceTypes.getPreprocessor(cxxPlatform, sourceType)
-              .resolve(graphBuilder, targetConfiguration));
+              .resolve(graphBuilder, targetConfiguration),
+          CxxDescriptionEnhancer.frameworkPathToSearchPath(
+              cxxPlatform, graphBuilder.getSourcePathResolver()));
+    }
+  }
+
+  /**
+   * Argument type for C++ compiler preprocessor args. In addition to holding the flags themselves,
+   * this type also holds a rule-keyable function mapping framework paths to search paths.
+   */
+  private static class CxxPreprocessorFlagsArg implements Arg {
+    @AddToRuleKey private final PreprocessorFlags ppFlags;
+    @AddToRuleKey private final Preprocessor preprocessor;
+
+    @AddToRuleKey
+    private final AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath;
+
+    CxxPreprocessorFlagsArg(
+        PreprocessorFlags ppFlags,
+        Preprocessor preprocessor,
+        AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath) {
+      this.ppFlags = ppFlags;
+      this.preprocessor = preprocessor;
+      this.frameworkPathToSearchPath = frameworkPathToSearchPath;
     }
 
-    private class CxxPreprocessorFlagsArg implements Arg {
-      @AddToRuleKey private final PreprocessorFlags ppFlags;
-      @AddToRuleKey private final Preprocessor preprocessor;
-
-      CxxPreprocessorFlagsArg(PreprocessorFlags ppFlags, Preprocessor preprocessor) {
-        this.ppFlags = ppFlags;
-        this.preprocessor = preprocessor;
-      }
-
-      @Override
-      public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
-        consumer.accept(
-            Arg.stringify(
-                    ppFlags
-                        .toToolFlags(
-                            resolver,
-                            PathShortener.identity(),
-                            CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver),
-                            preprocessor,
-                            /* pch */ Optional.empty())
-                        .getAllFlags(),
-                    resolver)
-                .stream()
-                .map(Escaper.SHELL_ESCAPER)
-                .collect(Collectors.joining(" ")));
-      }
+    @Override
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
+      consumer.accept(
+          Arg.stringify(
+                  ppFlags
+                      .toToolFlags(
+                          resolver,
+                          PathShortener.identity(),
+                          frameworkPathToSearchPath,
+                          preprocessor,
+                          /* pch */ Optional.empty())
+                      .getAllFlags(),
+                  resolver)
+              .stream()
+              .map(Escaper.SHELL_ESCAPER)
+              .collect(Collectors.joining(" ")));
     }
   }
 

@@ -158,7 +158,8 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
       Preconditions.checkArgument(
           !outerClazz.isAnonymousClass()
               && !outerClazz.isMemberClass()
-              && !outerClazz.isLocalClass());
+              && !outerClazz.isLocalClass(),
+          "Buildables must not be doubly-nested classes, consider extracting the nested class");
       for (final Field field : outerClazz.getDeclaredFields()) {
         field.setAccessible(true);
         if (!Modifier.isStatic(field.getModifiers())) {
