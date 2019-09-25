@@ -23,7 +23,7 @@ import java.util.Objects;
 public class EmptyTargetConfiguration implements TargetConfiguration {
   public static final EmptyTargetConfiguration INSTANCE = new EmptyTargetConfiguration();
 
-  private final int hashCode = Objects.hash(EmptyTargetConfiguration.class);
+  private final int hashCode = Objects.hash(EmptyTargetConfiguration.class.getName());
 
   private EmptyTargetConfiguration() {}
 

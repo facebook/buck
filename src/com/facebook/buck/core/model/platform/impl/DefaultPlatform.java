@@ -30,7 +30,7 @@ public class DefaultPlatform implements Platform {
 
   public static final DefaultPlatform INSTANCE = new DefaultPlatform();
 
-  private final int hashCode = Objects.hash(DefaultPlatform.class);
+  private final int hashCode = Objects.hash(DefaultPlatform.class.getName());
 
   private DefaultPlatform() {}
 

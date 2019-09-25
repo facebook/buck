@@ -26,7 +26,7 @@ public class ConfigurationForConfigurationTargets implements TargetConfiguration
   public static final ConfigurationForConfigurationTargets INSTANCE =
       new ConfigurationForConfigurationTargets();
 
-  private final int hashCode = Objects.hash(ConfigurationForConfigurationTargets.class);
+  private final int hashCode = Objects.hash(ConfigurationForConfigurationTargets.class.getName());
 
   private ConfigurationForConfigurationTargets() {}
 
