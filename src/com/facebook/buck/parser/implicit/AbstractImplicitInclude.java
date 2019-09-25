@@ -22,8 +22,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.SkylarkImport;
-import com.google.devtools.build.lib.syntax.SkylarkImports;
-import com.google.devtools.build.lib.syntax.SkylarkImports.SkylarkImportSyntaxException;
 import java.util.Arrays;
 import org.immutables.value.Value;
 
@@ -54,8 +52,8 @@ public abstract class AbstractImplicitInclude {
   public SkylarkImport getLoadPath() {
     String label = getRawImportLabel();
     try {
-      return SkylarkImports.create(label);
-    } catch (SkylarkImportSyntaxException e) {
+      return SkylarkImport.create(label);
+    } catch (SkylarkImport.SkylarkImportSyntaxException e) {
       throw new HumanReadableException(e, "Invalid implicit label provided: %s", label);
     }
   }

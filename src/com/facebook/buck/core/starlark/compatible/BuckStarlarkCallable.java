@@ -134,7 +134,7 @@ class BuckStarlarkCallable implements SkylarkCallable {
   }
 
   @Override
-  public boolean useSkylarkSemantics() {
+  public boolean useStarlarkSemantics() {
     return false;
   }
 

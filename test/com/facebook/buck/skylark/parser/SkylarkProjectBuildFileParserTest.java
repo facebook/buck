@@ -854,7 +854,7 @@ public class SkylarkProjectBuildFileParserTest {
     Files.write(buildFile, Collections.singletonList("foo()"));
 
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Cannot evaluate build file " + buildFile);
+    thrown.expectMessage("Cannot parse build file " + buildFile);
 
     parser.getBuildFileManifest(buildFile);
   }
@@ -1124,7 +1124,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     parser = createParserWithOptions(eventCollector, options);
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Cannot evaluate build file");
+    thrown.expectMessage("Cannot parse build file");
 
     try {
       parser.getBuildFileManifest(projectFilesystem.resolve(buildFile));

@@ -72,6 +72,7 @@ import com.google.devtools.build.lib.syntax.SkylarkImport;
 import com.google.devtools.build.lib.syntax.SkylarkUtils;
 import com.google.devtools.build.lib.syntax.SkylarkUtils.Phase;
 import com.google.devtools.build.lib.syntax.Statement;
+import com.google.devtools.build.lib.syntax.ValidationEnvironment;
 import com.google.devtools.build.lib.vfs.FileSystem;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.PathFragment;
@@ -296,6 +297,11 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
               mutability,
               parseContext,
               implicitLoad.getExtensionData());
+      if (!ValidationEnvironment.checkBuildSyntax(
+          buildFileAst.getStatements(), eventHandler, envData.getEnvironment())) {
+        throw BuildFileParseException.createForUnknownParseError(
+            "Cannot parse build file " + buildFile);
+      }
       boolean exec = buildFileAst.exec(envData.getEnvironment(), eventHandler);
       if (!exec) {
         // buildFileAst.exec reports extended error information to console with eventHandler
@@ -326,13 +332,13 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private BuildFileAST parseBuildFile(
       com.google.devtools.build.lib.vfs.Path buildFilePath, Label containingLabel)
       throws IOException {
-    BuildFileAST buildFileAst =
-        parseSkylarkFile(buildFilePath, containingLabel).validateBuildFile(eventHandler);
+    BuildFileAST buildFileAst = parseSkylarkFile(buildFilePath, containingLabel, FileKind.BUCK);
 
     if (buildFileAst.containsErrors()) {
       throw BuildFileParseException.createForUnknownParseError(
           "Cannot parse build file %s", buildFilePath);
     }
+
     return buildFileAst;
   }
 
@@ -425,6 +431,12 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     return loadedPathsBuilder.build();
   }
 
+  /** {@code BUCK} or {@code .bzl} file, which have slight different syntax */
+  protected enum FileKind {
+    BUCK,
+    BZL,
+  }
+
   /**
    * Reads file and returns abstract syntax tree for that file.
    *
@@ -432,21 +444,28 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * @return abstract syntax tree; does not handle any errors.
    */
   @VisibleForTesting
-  protected BuildFileAST readSkylarkAST(com.google.devtools.build.lib.vfs.Path path)
-      throws IOException {
-    return BuildFileAST.parseSkylarkFile(
+  protected BuildFileAST readSkylarkAST(
+      com.google.devtools.build.lib.vfs.Path path, FileKind fileKind) throws IOException {
+    ParserInputSource input =
         ParserInputSource.create(
-            FileSystemUtils.readContent(path, StandardCharsets.UTF_8), path.asFragment()),
-        eventHandler);
+            FileSystemUtils.readContent(path, StandardCharsets.UTF_8), path.asFragment());
+    switch (fileKind) {
+      case BUCK:
+        return BuildFileAST.parseBuildFile(input, eventHandler);
+      case BZL:
+        return BuildFileAST.parseSkylarkFile(input, eventHandler);
+      default:
+        throw new AssertionError("unreachable");
+    }
   }
 
   private BuildFileAST parseSkylarkFile(
-      com.google.devtools.build.lib.vfs.Path path, Label containingLabel)
+      com.google.devtools.build.lib.vfs.Path path, Label containingLabel, FileKind fileKind)
       throws BuildFileParseException, IOException {
     BuildFileAST result = astCache.getIfPresent(path);
     if (result == null) {
       try {
-        result = readSkylarkAST(path);
+        result = readSkylarkAST(path, fileKind);
       } catch (FileNotFoundException e) {
         throw BuildFileParseException.createForUnknownParseError(
             "%s cannot be loaded because it does not exist. It was referenced from %s",
@@ -471,7 +490,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     Label label = loadImport.getLabel();
     com.google.devtools.build.lib.vfs.Path filePath = getImportPath(label, loadImport.getImport());
 
-    BuildFileAST fileAst = parseSkylarkFile(filePath, loadImport.getContainingLabel());
+    BuildFileAST fileAst =
+        parseSkylarkFile(filePath, loadImport.getContainingLabel(), FileKind.BZL);
 
     ImmutableList<IncludesData> dependencies =
         fileAst.getImports().isEmpty()
@@ -712,7 +732,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     if (load.haveAST()) {
       return false;
     }
-    load.setAST(parseSkylarkFile(load.getPath(), load.getParentLabel()));
+    load.setAST(parseSkylarkFile(load.getPath(), load.getParentLabel(), FileKind.BZL));
     return true;
   }
 
@@ -812,7 +832,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    */
   private void ensureExportedIfExportable(Environment extensionEnv, AssignmentStatement stmt)
       throws BuildFileParseException, EvalException {
-    ImmutableSet<Identifier> identifiers = stmt.getLValue().boundIdentifiers();
+    ImmutableSet<Identifier> identifiers = ValidationEnvironment.boundIdentifiers(stmt.getLHS());
     if (identifiers.size() != 1) {
       return;
     }

@@ -77,6 +77,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.CmdLineException;
@@ -281,9 +282,13 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
                 outputStream,
                 Format.JSON_TRACE_FILE_FORMAT,
                 "Buck profile for " + skylarkProfile + " at " + LocalDate.now(),
+                "buck",
+                UUID.nameUUIDFromBytes(new byte[0]),
                 false,
                 clock,
                 clock.nanoTime(),
+                false,
+                false,
                 false);
       } catch (IOException e) {
         throw new HumanReadableException(

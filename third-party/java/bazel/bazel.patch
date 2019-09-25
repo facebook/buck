@@ -1,15 +1,13 @@
 diff --git a/src/main/java/com/google/devtools/build/lib/BUILD b/src/main/java/com/google/devtools/build/lib/BUILD
-index 3c2b25a2d4..34b86b7bfc 100644
+index 3a0101855e..251233b431 100644
 --- a/src/main/java/com/google/devtools/build/lib/BUILD
 +++ b/src/main/java/com/google/devtools/build/lib/BUILD
-@@ -360,16 +360,58 @@ java_library(
- #
- # IMPORTANT:  NOT A PUBLIC INTERFACE. TARGETS SHOULDN'T DEPEND ON THIS.
- #
--java_library(
--    name = "skylark-lang",
--    visibility = ["//visibility:public"],
--    exports = [
+@@ -1551,3 +1551,61 @@ java_library(
+         "analysis/BuildInfo.java",
+     ],
+ )
++
++
 +java_binary(
 +    name = "bazel-jar",
 +    srcs = glob([
@@ -35,26 +33,26 @@ index 3c2b25a2d4..34b86b7bfc 100644
 +        "packages/StructProvider.java",
 +    ],
 +    deps = [
-         ":events",
++        ":events",
 +        ":io",
 +        ":os_util",
 +        ":out-err",
-         ":skylarkinterface",
--        ":syntax",
++        ":skylarkinterface",
 +        ":unix",
 +        ":util",
 +        "//src/main/java/com/google/devtools/build/lib/clock",
 +        "//src/main/java/com/google/devtools/build/lib/cmdline",
 +        "//src/main/java/com/google/devtools/build/lib/collect",
++        "//src/main/java/com/google/devtools/build/lib/collect/compacthashset",
 +        "//src/main/java/com/google/devtools/build/lib/collect/nestedset",
 +        "//src/main/java/com/google/devtools/build/lib/concurrent",
 +        "//src/main/java/com/google/devtools/build/lib/profiler",
 +        "//src/main/java/com/google/devtools/build/lib/skyframe/serialization",
 +        "//src/main/java/com/google/devtools/build/lib/skyframe/serialization/autocodec:autocodec-annotation",
 +        "//src/main/java/com/google/devtools/build/lib/skylarkbuildapi",
-         "//src/main/java/com/google/devtools/build/lib/vfs",
-         "//src/main/java/com/google/devtools/build/lib/vfs:pathfragment",
-         "//src/main/java/com/google/devtools/build/lib/vfs/inmemoryfs",
++        "//src/main/java/com/google/devtools/build/lib/vfs",
++        "//src/main/java/com/google/devtools/build/lib/vfs:pathfragment",
++        "//src/main/java/com/google/devtools/build/lib/vfs/inmemoryfs",
 +        "//src/main/java/com/google/devtools/common/options",
 +        "//third_party:asm",
 +        "//third_party:asm-commons",
@@ -63,11 +61,11 @@ index 3c2b25a2d4..34b86b7bfc 100644
 +        "//third_party:guava",
 +        "//third_party:jsr305",
 +        "//third_party/protobuf:protobuf_java",
-     ],
- )
- 
++    ],
++)
++
 diff --git a/src/main/java/com/google/devtools/build/lib/cmdline/Label.java b/src/main/java/com/google/devtools/build/lib/cmdline/Label.java
-index 0cd3dc94df..be68970072 100644
+index c9204b3f63..b790bfd277 100644
 --- a/src/main/java/com/google/devtools/build/lib/cmdline/Label.java
 +++ b/src/main/java/com/google/devtools/build/lib/cmdline/Label.java
 @@ -19,7 +19,6 @@ import com.google.common.collect.ImmutableMap;
@@ -120,10 +118,10 @@ index d15b0bd817..7b0f971036 100644
          "//third_party:jsr305",
          "//third_party/protobuf:protobuf_java",
 diff --git a/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java b/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java
-index 11d3fafb92..e3f01dbbaa 100644
+index 028abbbfab..54e8242d6f 100644
 --- a/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java
 +++ b/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java
-@@ -19,7 +19,6 @@ import com.google.common.base.Function;
+@@ -18,7 +18,6 @@ import static java.util.stream.Collectors.joining;
  import com.google.common.base.Preconditions;
  import com.google.common.collect.ImmutableList;
  import com.google.common.collect.ImmutableSet;
@@ -131,7 +129,7 @@ index 11d3fafb92..e3f01dbbaa 100644
  import com.google.common.util.concurrent.Futures;
  import com.google.common.util.concurrent.ListenableFuture;
  import com.google.devtools.build.lib.bugreport.BugReport;
-@@ -47,8 +46,6 @@ import javax.annotation.Nullable;
+@@ -45,8 +44,6 @@ import javax.annotation.Nullable;
  @SuppressWarnings("unchecked")
  @AutoCodec
  public final class NestedSet<E> implements Iterable<E> {
@@ -140,7 +138,7 @@ index 11d3fafb92..e3f01dbbaa 100644
    /**
     * Order and size of set packed into one int.
     *
-@@ -382,7 +379,6 @@ public final class NestedSet<E> implements Iterable<E> {
+@@ -368,7 +365,6 @@ public final class NestedSet<E> implements Iterable<E> {
          try {
            return Arrays.toString(Futures.getDone(future));
          } catch (ExecutionException e) {
@@ -149,10 +147,10 @@ index 11d3fafb92..e3f01dbbaa 100644
            return "Future " + future + " with error: " + e.getCause().getMessage();
          }
 diff --git a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-index 87dd882d59..321c106326 100644
+index 0f7cfe35b2..321c106326 100644
 --- a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
 +++ b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-@@ -14,2391 +14,13 @@
+@@ -14,2275 +14,13 @@
  
  package com.google.devtools.build.lib.packages;
  
@@ -173,18 +171,14 @@ index 87dd882d59..321c106326 100644
 -import com.google.common.collect.Ordering;
 -import com.google.common.collect.Sets;
 -import com.google.devtools.build.lib.analysis.TransitiveInfoProvider;
--import com.google.devtools.build.lib.analysis.config.transitions.ConfigurationTransition;
 -import com.google.devtools.build.lib.analysis.config.transitions.NoTransition;
--import com.google.devtools.build.lib.analysis.config.transitions.PatchTransition;
--import com.google.devtools.build.lib.analysis.config.transitions.SplitTransition;
+-import com.google.devtools.build.lib.analysis.config.transitions.TransitionFactory;
 -import com.google.devtools.build.lib.cmdline.Label;
 -import com.google.devtools.build.lib.events.EventHandler;
 -import com.google.devtools.build.lib.events.Location;
 -import com.google.devtools.build.lib.packages.RuleClass.Builder.RuleClassNamePredicate;
 -import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec;
 -import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec.VisibleForSerialization;
--import com.google.devtools.build.lib.skylarkbuildapi.SplitTransitionProviderApi;
--import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 -import com.google.devtools.build.lib.syntax.ClassObject;
 -import com.google.devtools.build.lib.syntax.EvalException;
 -import com.google.devtools.build.lib.syntax.EvalUtils;
@@ -217,12 +211,11 @@ index 87dd882d59..321c106326 100644
 - * </code> may share many attributes in common).
 - */
 -@Immutable
--@AutoCodec
 -public final class Attribute implements Comparable<Attribute> {
 -
 -  public static final RuleClassNamePredicate ANY_RULE = RuleClassNamePredicate.unspecified();
 -
--  public static final RuleClassNamePredicate NO_RULE = RuleClassNamePredicate.only();
+-  private static final RuleClassNamePredicate NO_RULE = RuleClassNamePredicate.only();
 -
 -  /** Wraps the information necessary to construct an Aspect. */
 -  @VisibleForSerialization
@@ -230,7 +223,7 @@ index 87dd882d59..321c106326 100644
 -    protected final C aspectClass;
 -    protected final Function<Rule, AspectParameters> parametersExtractor;
 -
--    protected RuleAspect(C aspectClass, Function<Rule, AspectParameters> parametersExtractor) {
+-    private RuleAspect(C aspectClass, Function<Rule, AspectParameters> parametersExtractor) {
 -      this.aspectClass = aspectClass;
 -      this.parametersExtractor = parametersExtractor;
 -    }
@@ -251,8 +244,8 @@ index 87dd882d59..321c106326 100644
 -  }
 -
 -  private static class NativeRuleAspect extends RuleAspect<NativeAspectClass> {
--    public NativeRuleAspect(NativeAspectClass aspectClass,
--        Function<Rule, AspectParameters> parametersExtractor) {
+-    NativeRuleAspect(
+-        NativeAspectClass aspectClass, Function<Rule, AspectParameters> parametersExtractor) {
 -      super(aspectClass, parametersExtractor);
 -    }
 -
@@ -263,11 +256,13 @@ index 87dd882d59..321c106326 100644
 -    }
 -  }
 -
+-  @VisibleForSerialization
 -  @AutoCodec
 -  static class SkylarkRuleAspect extends RuleAspect<SkylarkAspectClass> {
 -    private final SkylarkDefinedAspect aspect;
 -
--    public SkylarkRuleAspect(SkylarkDefinedAspect aspect) {
+-    @VisibleForSerialization
+-    SkylarkRuleAspect(SkylarkDefinedAspect aspect) {
 -      super(aspect.getAspectClass(), aspect.getDefaultParametersExtractor());
 -      this.aspect = aspect;
 -    }
@@ -288,7 +283,7 @@ index 87dd882d59..321c106326 100644
 -  private static class PredefinedRuleAspect extends RuleAspect<AspectClass> {
 -    private final Aspect aspect;
 -
--    public PredefinedRuleAspect(Aspect aspect) {
+-    PredefinedRuleAspect(Aspect aspect) {
 -      super(aspect.getAspectClass(), null);
 -      this.aspect = aspect;
 -    }
@@ -299,8 +294,7 @@ index 87dd882d59..321c106326 100644
 -    }
 -  }
 -
--  @VisibleForSerialization
--  enum PropertyFlag {
+-  private enum PropertyFlag {
 -    MANDATORY,
 -    EXECUTABLE,
 -    UNDOCUMENTED,
@@ -420,55 +414,9 @@ index 87dd882d59..321c106326 100644
 -    String checkValid(Rule from, Rule to);
 -  }
 -
--  @AutoCodec
--  public static final ValidityPredicate ANY_EDGE =
--      new ValidityPredicate() {
--        @Override
--        public String checkValid(Rule from, Rule to) {
--          return null;
--        }
--      };
--
--  /**
--   * Provides a {@link SplitTransition} given the originating target {@link Rule}. The split
--   * transition may be constant for all instances of the originating rule, or it may differ
--   * based on attributes of that rule. For instance, a split transition on a rule's deps may differ
--   * depending on the 'platform' attribute of the rule.
--   */
--  public interface SplitTransitionProvider extends SplitTransitionProviderApi {
--    /**
--     * Returns the {@link SplitTransition} given the attribute mapper of the originating rule.
--     */
--    SplitTransition apply(AttributeMap attributeMap);
--  }
--
--  /**
--   * Implementation of {@link SplitTransitionProvider} that returns a single {@link SplitTransition}
--   * regardless of the originating rule.
--   */
--  @AutoCodec.VisibleForSerialization
--  @AutoCodec
--  static class BasicSplitTransitionProvider implements SplitTransitionProvider {
--    private final SplitTransition splitTransition;
--
--    @AutoCodec.VisibleForSerialization
--    BasicSplitTransitionProvider(SplitTransition splitTransition) {
--      this.splitTransition = splitTransition;
--    }
--
--    @Override
--    public SplitTransition apply(AttributeMap attributeMap) {
--      return splitTransition;
--    }
--
--    @Override
--    public void repr(SkylarkPrinter printer) {
--      printer.append("<transition object>");
--    }
--  }
+-  @AutoCodec public static final ValidityPredicate ANY_EDGE = (from, to) -> null;
 -
 -  /** A predicate class to check if the value of the attribute comes from a predefined set. */
--  @AutoCodec
 -  public static class AllowedValueSet implements PredicateWithMessage<Object> {
 -
 -    private final Set<Object> allowedValues;
@@ -481,12 +429,6 @@ index 87dd882d59..321c106326 100644
 -      Preconditions.checkNotNull(values);
 -      Preconditions.checkArgument(!Iterables.isEmpty(values));
 -      allowedValues = ImmutableSet.copyOf(values);
--    }
--
--    @AutoCodec.Instantiator
--    @VisibleForSerialization
--    AllowedValueSet(Set<Object> allowedValues) {
--      this.allowedValues = allowedValues;
 -    }
 -
 -    @Override
@@ -528,14 +470,12 @@ index 87dd882d59..321c106326 100644
 -  }
 -
 -  /** A factory to generate {@link Attribute} instances. */
--  @AutoCodec
 -  public static class ImmutableAttributeFactory {
 -    private final Type<?> type;
 -    private final String doc;
--    private final ConfigurationTransition configTransition;
+-    private final TransitionFactory<AttributeTransitionData> transitionFactory;
 -    private final RuleClassNamePredicate allowedRuleClassesForLabels;
 -    private final RuleClassNamePredicate allowedRuleClassesForLabelsWarning;
--    private final SplitTransitionProvider splitTransitionProvider;
 -    private final FileTypeSet allowedFileTypesForLabels;
 -    private final ValidityPredicate validityPredicate;
 -    private final Object value;
@@ -547,16 +487,14 @@ index 87dd882d59..321c106326 100644
 -    private final RequiredProviders requiredProviders;
 -    private final ImmutableList<RuleAspect<?>> aspects;
 -
--    @AutoCodec.VisibleForSerialization
--    ImmutableAttributeFactory(
+-    private ImmutableAttributeFactory(
 -        Type<?> type,
 -        String doc,
 -        ImmutableSet<PropertyFlag> propertyFlags,
 -        Object value,
--        ConfigurationTransition configTransition,
+-        TransitionFactory<AttributeTransitionData> transitionFactory,
 -        RuleClassNamePredicate allowedRuleClassesForLabels,
 -        RuleClassNamePredicate allowedRuleClassesForLabelsWarning,
--        SplitTransitionProvider splitTransitionProvider,
 -        FileTypeSet allowedFileTypesForLabels,
 -        ValidityPredicate validityPredicate,
 -        AttributeValueSource valueSource,
@@ -567,10 +505,9 @@ index 87dd882d59..321c106326 100644
 -        ImmutableList<RuleAspect<?>> aspects) {
 -      this.type = type;
 -      this.doc = doc;
--      this.configTransition = configTransition;
+-      this.transitionFactory = transitionFactory;
 -      this.allowedRuleClassesForLabels = allowedRuleClassesForLabels;
 -      this.allowedRuleClassesForLabelsWarning = allowedRuleClassesForLabelsWarning;
--      this.splitTransitionProvider = splitTransitionProvider;
 -      this.allowedFileTypesForLabels = allowedFileTypesForLabels;
 -      this.validityPredicate = validityPredicate;
 -      this.value = value;
@@ -595,7 +532,7 @@ index 87dd882d59..321c106326 100644
 -      Preconditions.checkState(!name.isEmpty(), "name has not been set");
 -      if (valueSource == AttributeValueSource.LATE_BOUND) {
 -        Preconditions.checkState(isLateBound(name));
--        Preconditions.checkState(splitTransitionProvider == null);
+-        Preconditions.checkState(!transitionFactory.isSplit());
 -      }
 -      // TODO(bazel-team): Set the default to be no file type, then remove this check, and also
 -      // remove all allowedFileTypes() calls without parameters.
@@ -621,8 +558,7 @@ index 87dd882d59..321c106326 100644
 -          type,
 -          propertyFlags,
 -          value,
--          configTransition,
--          splitTransitionProvider,
+-          transitionFactory,
 -          allowedRuleClassesForLabels,
 -          allowedRuleClassesForLabelsWarning,
 -          allowedFileTypesForLabels,
@@ -643,10 +579,10 @@ index 87dd882d59..321c106326 100644
 -  public static class Builder <TYPE> {
 -    private final String name;
 -    private final Type<TYPE> type;
--    private ConfigurationTransition configTransition = NoTransition.INSTANCE;
+-    private TransitionFactory<AttributeTransitionData> transitionFactory =
+-        NoTransition.createFactory();
 -    private RuleClassNamePredicate allowedRuleClassesForLabels = ANY_RULE;
 -    private RuleClassNamePredicate allowedRuleClassesForLabelsWarning = NO_RULE;
--    private SplitTransitionProvider splitTransitionProvider;
 -    private FileTypeSet allowedFileTypesForLabels;
 -    private ValidityPredicate validityPredicate = ANY_EDGE;
 -    private Object value;
@@ -779,31 +715,14 @@ index 87dd882d59..321c106326 100644
 -          "analysis-test split transition");
 -    }
 -
--    /**
--     * Defines the configuration transition for this attribute.
--     */
--    public Builder<TYPE> cfg(SplitTransitionProvider splitTransitionProvider) {
--      Preconditions.checkState(this.configTransition == NoTransition.INSTANCE,
+-    /** Defines the configuration transition for this attribute. */
+-    public Builder<TYPE> cfg(TransitionFactory<AttributeTransitionData> transitionFactory) {
+-      Preconditions.checkNotNull(transitionFactory);
+-      Preconditions.checkState(
+-          NoTransition.isInstance(this.transitionFactory),
 -          "the configuration transition is already set");
--
--      this.splitTransitionProvider = Preconditions.checkNotNull(splitTransitionProvider);
+-      this.transitionFactory = transitionFactory;
 -      return this;
--    }
--
--    /**
--     * Defines the configuration transition for this attribute (e.g. a {@link PatchTransition} or
--     * {@link SplitTransition}). Defaults to {@code NONE}.
--     */
--    public Builder<TYPE> cfg(ConfigurationTransition configTransition) {
--      Preconditions.checkNotNull(configTransition);
--      Preconditions.checkState(this.configTransition == NoTransition.INSTANCE,
--          "the configuration transition is already set");
--      if (configTransition instanceof SplitTransition) {
--        return cfg(new BasicSplitTransitionProvider((SplitTransition) configTransition));
--      } else {
--        this.configTransition = configTransition;
--        return this;
--      }
 -    }
 -
 -    /**
@@ -1014,16 +933,16 @@ index 87dd882d59..321c106326 100644
 -     * If this is a label or label-list attribute, then this sets the allowed rule types for the
 -     * labels occurring in the attribute.
 -     *
--     * <p>If the attribute contains Labels of any other rule type, then if they're in
--     * {@link #allowedRuleClassesForLabelsWarning}, the build continues with a warning. Else if
--     * they fulfill {@link #getMandatoryNativeProvidersList()}, the build continues without error.
--     * Else the build fails during analysis.
+-     * <p>If the attribute contains Labels of any other rule type, then if they're in {@link
+-     * #allowedRuleClassesForLabelsWarning}, the build continues with a warning. Else if they
+-     * fulfill {@link #mandatoryNativeProvidersList}, the build continues without error. Else the
+-     * build fails during analysis.
 -     *
 -     * <p>If neither this nor {@link #allowedRuleClassesForLabelsWarning} is set, only rules that
--     * fulfill {@link #getMandatoryNativeProvidersList()} build without error.
+-     * fulfill {@link #mandatoryNativeProvidersList} build without error.
 -     *
--     * <p>This only works on a per-target basis, not on a per-file basis; with other words, it
--     * works for 'deps' attributes, but not 'srcs' attributes.
+-     * <p>This only works on a per-target basis, not on a per-file basis; with other words, it works
+-     * for 'deps' attributes, but not 'srcs' attributes.
 -     */
 -    public Builder<TYPE> allowedRuleClasses(Iterable<String> allowedRuleClasses) {
 -      return allowedRuleClasses(
@@ -1034,16 +953,16 @@ index 87dd882d59..321c106326 100644
 -     * If this is a label or label-list attribute, then this sets the allowed rule types for the
 -     * labels occurring in the attribute.
 -     *
--     * <p>If the attribute contains Labels of any other rule type, then if they're in
--     * {@link #allowedRuleClassesForLabelsWarning}, the build continues with a warning. Else if
--     * they fulfill {@link #getMandatoryNativeProvidersList()}, the build continues without error.
--     * Else the build fails during analysis.
+-     * <p>If the attribute contains Labels of any other rule type, then if they're in {@link
+-     * #allowedRuleClassesForLabelsWarning}, the build continues with a warning. Else if they
+-     * fulfill {@link #mandatoryNativeProvidersList}, the build continues without error. Else the
+-     * build fails during analysis.
 -     *
 -     * <p>If neither this nor {@link #allowedRuleClassesForLabelsWarning} is set, only rules that
--     * fulfill {@link #getMandatoryNativeProvidersList()} build without error.
+-     * fulfill {@link #mandatoryNativeProvidersList} build without error.
 -     *
--     * <p>This only works on a per-target basis, not on a per-file basis; with other words, it
--     * works for 'deps' attributes, but not 'srcs' attributes.
+-     * <p>This only works on a per-target basis, not on a per-file basis; with other words, it works
+-     * for 'deps' attributes, but not 'srcs' attributes.
 -     */
 -    public Builder<TYPE> allowedRuleClasses(RuleClassNamePredicate allowedRuleClasses) {
 -      Preconditions.checkState(type.getLabelClass() == LabelClass.DEPENDENCY,
@@ -1057,16 +976,16 @@ index 87dd882d59..321c106326 100644
 -     * If this is a label or label-list attribute, then this sets the allowed rule types for the
 -     * labels occurring in the attribute.
 -     *
--     * <p>If the attribute contains Labels of any other rule type, then if they're in
--     * {@link #allowedRuleClassesForLabelsWarning}, the build continues with a warning. Else if
--     * they fulfill {@link #getMandatoryNativeProvidersList()}, the build continues without error.
--     * Else the build fails during analysis.
+-     * <p>If the attribute contains Labels of any other rule type, then if they're in {@link
+-     * #allowedRuleClassesForLabelsWarning}, the build continues with a warning. Else if they
+-     * fulfill {@link #mandatoryNativeProvidersList}, the build continues without error. Else the
+-     * build fails during analysis.
 -     *
 -     * <p>If neither this nor {@link #allowedRuleClassesForLabelsWarning} is set, only rules that
--     * fulfill {@link #getMandatoryNativeProvidersList()} build without error.
+-     * fulfill {@link #mandatoryNativeProvidersList} build without error.
 -     *
--     * <p>This only works on a per-target basis, not on a per-file basis; with other words, it
--     * works for 'deps' attributes, but not 'srcs' attributes.
+-     * <p>This only works on a per-target basis, not on a per-file basis; with other words, it works
+-     * for 'deps' attributes, but not 'srcs' attributes.
 -     */
 -    public Builder<TYPE> allowedRuleClasses(String... allowedRuleClasses) {
 -      return allowedRuleClasses(ImmutableSet.copyOf(allowedRuleClasses));
@@ -1339,10 +1258,9 @@ index 87dd882d59..321c106326 100644
 -          doc,
 -          Sets.immutableEnumSet(propertyFlags),
 -          valueSet ? value : type.getDefaultValue(),
--          configTransition,
+-          transitionFactory,
 -          allowedRuleClassesForLabels,
 -          allowedRuleClassesForLabelsWarning,
--          splitTransitionProvider,
 -          allowedFileTypesForLabels,
 -          validityPredicate,
 -          valueSource,
@@ -1604,7 +1522,6 @@ index 87dd882d59..321c106326 100644
 -   * calling {@link #computePossibleValues}, which returns a {@link SkylarkComputedDefault} that
 -   * contains a lookup table.
 -   */
--  @AutoCodec
 -  public static final class SkylarkComputedDefaultTemplate {
 -    private final Type<?> type;
 -    private final SkylarkCallbackFunction callback;
@@ -1748,7 +1665,6 @@ index 87dd882d59..321c106326 100644
 -   * {@link #getPossibleValues(Type, Rule)} and {@link #getDefault(AttributeMap)} do lookups in that
 -   * table.
 -   */
--  @AutoCodec
 -  static final class SkylarkComputedDefault extends ComputedDefault {
 -
 -    private final List<Type<?>> dependencyTypes;
@@ -1802,10 +1718,9 @@ index 87dd882d59..321c106326 100644
 -    }
 -  }
 -
--  @AutoCodec.VisibleForSerialization
 -  static class SimpleLateBoundDefault<FragmentT, ValueT>
 -      extends LateBoundDefault<FragmentT, ValueT> {
--    @AutoCodec.VisibleForSerialization protected final Resolver<FragmentT, ValueT> resolver;
+-    private final Resolver<FragmentT, ValueT> resolver;
 -
 -    private SimpleLateBoundDefault(boolean useHostConfiguration,
 -        Class<FragmentT> fragmentClass,
@@ -1937,7 +1852,9 @@ index 87dd882d59..321c106326 100644
 -    }
 -  }
 -
--  private static class AlwaysNullLateBoundDefault extends SimpleLateBoundDefault<Void, Void> {
+-  @AutoCodec.VisibleForSerialization
+-  static class AlwaysNullLateBoundDefault extends SimpleLateBoundDefault<Void, Void> {
+-    @AutoCodec @AutoCodec.VisibleForSerialization
 -    static final AlwaysNullLateBoundDefault INSTANCE = new AlwaysNullLateBoundDefault();
 -
 -    private AlwaysNullLateBoundDefault() {
@@ -1946,10 +1863,9 @@ index 87dd882d59..321c106326 100644
 -  }
 -
 -  /** A {@link LateBoundDefault} for a {@link Label}. */
--  @AutoCodec
 -  public static class LabelLateBoundDefault<FragmentT>
 -      extends SimpleLateBoundDefault<FragmentT, Label> {
--    @AutoCodec.VisibleForSerialization
+-    @VisibleForTesting
 -    protected LabelLateBoundDefault(
 -        boolean useHostConfiguration,
 -        Class<FragmentT> fragmentClass,
@@ -2033,11 +1949,9 @@ index 87dd882d59..321c106326 100644
 -  }
 -
 -  /** A {@link LateBoundDefault} for a {@link List} of {@link Label} objects. */
--  @AutoCodec
 -  public static class LabelListLateBoundDefault<FragmentT>
 -      extends SimpleLateBoundDefault<FragmentT, List<Label>> {
--    @AutoCodec.VisibleForSerialization
--    LabelListLateBoundDefault(
+-    private LabelListLateBoundDefault(
 -        boolean useHostConfiguration,
 -        Class<FragmentT> fragmentClass,
 -        Resolver<FragmentT, List<Label>> resolver) {
@@ -2091,9 +2005,7 @@ index 87dd882d59..321c106326 100644
 -  // (We assume a hypothetical Type.isValid(Object) predicate.)
 -  private final Object defaultValue;
 -
--  private final ConfigurationTransition configTransition;
--
--  private final SplitTransitionProvider splitTransitionProvider;
+-  private final TransitionFactory<AttributeTransitionData> transitionFactory;
 -
 -  /**
 -   * For label or label-list attributes, this predicate returns which rule
@@ -2140,18 +2052,16 @@ index 87dd882d59..321c106326 100644
 -   *     declaration in the BUILD file. Must be null, or of type "type". May be an instance of
 -   *     ComputedDefault, in which case its getDefault() method must return an instance of "type",
 -   *     or null. Must be immutable.
--   * @param configTransition the configuration transition for this attribute (which must be of type
+-   * @param transitionFactory the configuration transition for this attribute (which must be of type
 -   *     LABEL, LABEL_LIST, NODEP_LABEL or NODEP_LABEL_LIST).
 -   */
--  @VisibleForSerialization
 -  Attribute(
 -      String name,
 -      String doc,
 -      Type<?> type,
 -      Set<PropertyFlag> propertyFlags,
 -      Object defaultValue,
--      ConfigurationTransition configTransition,
--      SplitTransitionProvider splitTransitionProvider,
+-      TransitionFactory<AttributeTransitionData> transitionFactory,
 -      RuleClassNamePredicate allowedRuleClassesForLabels,
 -      RuleClassNamePredicate allowedRuleClassesForLabelsWarning,
 -      FileTypeSet allowedFileTypesForLabels,
@@ -2160,11 +2070,10 @@ index 87dd882d59..321c106326 100644
 -      PredicateWithMessage<Object> allowedValues,
 -      RequiredProviders requiredProviders,
 -      ImmutableList<RuleAspect<?>> aspects) {
--    Preconditions.checkNotNull(configTransition);
 -    Preconditions.checkArgument(
--        (configTransition == NoTransition.INSTANCE)
--        || type.getLabelClass() == LabelClass.DEPENDENCY
--        || type.getLabelClass() == LabelClass.NONDEP_REFERENCE,
+-        (NoTransition.isInstance(transitionFactory))
+-            || type.getLabelClass() == LabelClass.DEPENDENCY
+-            || type.getLabelClass() == LabelClass.NONDEP_REFERENCE,
 -        "Configuration transitions can only be specified for label or label list attributes");
 -    Preconditions.checkArgument(
 -        isLateBound(name) == (defaultValue instanceof LateBoundDefault),
@@ -2172,8 +2081,8 @@ index 87dd882d59..321c106326 100644
 -        name);
 -    if (isLateBound(name)) {
 -      LateBoundDefault<?, ?> lateBoundDefault = (LateBoundDefault<?, ?>) defaultValue;
--      Preconditions.checkArgument(!lateBoundDefault.useHostConfiguration()
--          || (configTransition.isHostTransition()),
+-      Preconditions.checkArgument(
+-          !lateBoundDefault.useHostConfiguration() || transitionFactory.isHost(),
 -          "a late bound default value using the host configuration must use the host transition");
 -    }
 -
@@ -2182,8 +2091,7 @@ index 87dd882d59..321c106326 100644
 -    this.type = type;
 -    this.propertyFlags = propertyFlags;
 -    this.defaultValue = defaultValue;
--    this.configTransition = configTransition;
--    this.splitTransitionProvider = splitTransitionProvider;
+-    this.transitionFactory = transitionFactory;
 -    this.allowedRuleClassesForLabels = allowedRuleClassesForLabels;
 -    this.allowedRuleClassesForLabelsWarning = allowedRuleClassesForLabelsWarning;
 -    this.allowedFileTypesForLabels = allowedFileTypesForLabels;
@@ -2199,8 +2107,7 @@ index 87dd882d59..321c106326 100644
 -            type,
 -            propertyFlags,
 -            defaultValue,
--            configTransition,
--            splitTransitionProvider,
+-            transitionFactory,
 -            allowedRuleClassesForLabels,
 -            allowedRuleClassesForLabelsWarning,
 -            allowedFileTypesForLabels,
@@ -2297,8 +2204,8 @@ index 87dd882d59..321c106326 100644
 -
 -  /**
 -   * Returns true if this attribute uses a starlark-defined, non analysis-test configuration
--   * transition. See {@link FunctionSplitTransitionProvider}. Starlark-defined analysis-test
--   * configuration transitions are handled separately. See {@link #hasAnalysisTestTransition}.
+-   * transition. Starlark-defined analysis-test configuration transitions are handled separately.
+-   * See {@link #hasAnalysisTestTransition}.
 -   */
 -  public boolean hasStarlarkDefinedTransition() {
 -    return getPropertyFlag(PropertyFlag.HAS_STARLARK_DEFINED_TRANSITION);
@@ -2313,36 +2220,11 @@ index 87dd882d59..321c106326 100644
 -  }
 -
 -  /**
--   * Returns the configuration transition for this attribute for label or label
--   * list attributes. For other attributes it will always return {@code NONE}.
+-   * Returns the configuration transition factory for this attribute for label or label list
+-   * attributes. For other attributes it will always return {@code NONE}.
 -   */
--  public ConfigurationTransition getConfigurationTransition() {
--    return configTransition;
--  }
--
--  /**
--   * Returns the split configuration transition for this attribute.
--   *
--   * @param attributeMapper the attribute mapper of the current {@link Rule}
--   * @return a SplitTransition<BuildOptions> object
--   * @throws IllegalStateException if {@link #hasSplitConfigurationTransition} is not true
--   */
--  public SplitTransition getSplitTransition(AttributeMap attributeMapper) {
--    Preconditions.checkState(hasSplitConfigurationTransition());
--    return splitTransitionProvider.apply(attributeMapper);
--  }
--
--  @VisibleForTesting
--  public SplitTransitionProvider getSplitTransitionProviderForTesting() {
--    return splitTransitionProvider;
--  }
--
--  /**
--   * Returns true if this attribute transitions on a split transition.
--   * See {@link SplitTransition}.
--   */
--  public boolean hasSplitConfigurationTransition() {
--    return (splitTransitionProvider != null);
+-  public TransitionFactory<AttributeTransitionData> getTransitionFactory() {
+-    return transitionFactory;
 -  }
 -
 -  /**
@@ -2421,11 +2303,11 @@ index 87dd882d59..321c106326 100644
 -  }
 -
 -  /**
--   * Returns a predicate that evaluates to true for rule classes that are
--   * allowed labels in this attribute. If this is not a label or label-list
--   * attribute, the returned predicate always evaluates to true.
+-   * Returns a predicate that evaluates to true for rule classes that are allowed labels in this
+-   * attribute. If this is not a label or label-list attribute, the returned predicate always
+-   * evaluates to true.
 -   */
--  // TODO(b/69917891) Remove these methods once checkbuilddeps no longer depends on them.
+-  // TODO(b/69917891): Remove these methods once checkbuilddeps no longer depends on them.
 -  public Predicate<String> getAllowedRuleClassNamesPredicate() {
 -    return allowedRuleClassesForLabels.asPredicateOfRuleClassName();
 -  }
@@ -2551,7 +2433,7 @@ index 87dd882d59..321c106326 100644
  
    /**
     * Returns if an attribute with the given name is an implicit dependency according to the
-@@ -2408,14 +30,6 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2292,14 +30,6 @@ public final class Attribute implements Comparable<Attribute> {
      return name.startsWith("$");
    }
  
@@ -2566,7 +2448,7 @@ index 87dd882d59..321c106326 100644
    /**
     * Returns if an attribute with the given name is late-bound according to the naming policy
     * that designates late-bound attributes.
-@@ -2440,78 +54,4 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2324,76 +54,4 @@ public final class Attribute implements Comparable<Attribute> {
      }
      return nativeAttrName;
    }
@@ -2596,8 +2478,7 @@ index 87dd882d59..321c106326 100644
 -        && Objects.equals(type, attribute.type)
 -        && Objects.equals(propertyFlags, attribute.propertyFlags)
 -        && Objects.equals(defaultValue, attribute.defaultValue)
--        && Objects.equals(configTransition, attribute.configTransition)
--        && Objects.equals(splitTransitionProvider, attribute.splitTransitionProvider)
+-        && Objects.equals(transitionFactory, attribute.transitionFactory)
 -        && Objects.equals(allowedRuleClassesForLabels, attribute.allowedRuleClassesForLabels)
 -        && Objects.equals(
 -            allowedRuleClassesForLabelsWarning, attribute.allowedRuleClassesForLabelsWarning)
@@ -2627,8 +2508,7 @@ index 87dd882d59..321c106326 100644
 -    builder.requiredProvidersBuilder = requiredProviders.copyAsBuilder();
 -    builder.validityPredicate = validityPredicate;
 -    builder.condition = condition;
--    builder.configTransition = configTransition;
--    builder.splitTransitionProvider = splitTransitionProvider;
+-    builder.transitionFactory = transitionFactory;
 -    builder.propertyFlags = newEnumSet(propertyFlags, PropertyFlag.class);
 -    builder.value = defaultValue;
 -    builder.valueSet = false;

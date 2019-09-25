@@ -53,9 +53,9 @@ public class SkylarkProjectBuildFileParserTestUtils {
     }
 
     @Override
-    public BuildFileAST readSkylarkAST(Path path) throws IOException {
+    public BuildFileAST readSkylarkAST(Path path, FileKind fileKind) throws IOException {
       readCounts.compute(path, (k, v) -> v == null ? 1 : v + 1);
-      return super.readSkylarkAST(path);
+      return super.readSkylarkAST(path, fileKind);
     }
 
     @Override
