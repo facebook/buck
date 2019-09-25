@@ -296,6 +296,70 @@ public class StubJarTest {
   }
 
   @Test
+  public void kotlinClassWithInlineMethodThatUsesInternalMethodWithPublishedApi()
+      throws IOException {
+    if (!isValidForKotlin()) {
+      return;
+    }
+
+    tester = new Tester(Language.KOTLIN);
+    tester
+        .setSourceFile(
+            "A.kt",
+            "package com.example.buck",
+            "open class A {",
+            "  inline fun getString(): String { return getPublishedString() }",
+            "  @PublishedApi",
+            "  internal fun getPublishedString(): String { return \"test\" }",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "JDK8:// class version 50.0 (50)",
+            "JDK11:// class version 55.0 (55)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "  // compiled from: A.kt",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u0012\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\u0008\\u0002\\n\\u0002\\u0010\\u000e\\n\\u0000\\u0008\\u0016\\u0018\\u00002\\u00020\\u0001B\\u0005\\u00a2\\u0006\\u0002\\u0010\\u0002J\\u0008\\u0010\\u0003\\u001a\\u00020\\u0004H\\u0001J\\u0009\\u0010\\u0005\\u001a\\u00020\\u0004H\\u0086\\u0008\"}, d2={\"Lcom/example/buck/A;\", \"\", \"()V\", \"getPublishedString\", \"\", \"getString\"})",
+            "",
+            "  // access flags 0x11",
+            "  public final getString()Ljava/lang/String;",
+            "  @Lorg/jetbrains/annotations/NotNull;() // invisible",
+            "   L0",
+            "    LDC 0",
+            "    ISTORE 1",
+            "   L1",
+            "    LINENUMBER 3 L1",
+            "    ALOAD 0",
+            "    INVOKEVIRTUAL com/example/buck/A.getPublishedString ()Ljava/lang/String;",
+            "    ARETURN",
+            "   L2",
+            "    LOCALVARIABLE this Lcom/example/buck/A; L0 L2 0",
+            "    LOCALVARIABLE $i$f$getString I L1 L2 1",
+            "    MAXSTACK = 1",
+            "    MAXLOCALS = 2",
+            "",
+            "  // access flags 0x11",
+            "  public final getPublishedString()Ljava/lang/String;",
+            "  @Lkotlin/PublishedApi;() // invisible",
+            "  @Lorg/jetbrains/annotations/NotNull;() // invisible",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .createAndCheckStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "B.kt",
+            "package com.example.buck",
+            "class B {",
+            "fun useInline(): String { return A().getString() }",
+            "}")
+        .testCanCompile();
+  }
+
+  @Test
   public void kotlinClassWithInlineMethodAndJvmName() throws IOException {
     if (!isValidForKotlin()) {
       return;
