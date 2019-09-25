@@ -76,6 +76,7 @@ public class IdbRunTestsStep implements Step {
 
   private final Path idbPath;
   private final ProjectFilesystem filesystem;
+  private final String sdkName;
   private final Path outputPath;
   private final Optional<? extends StdoutReadingCallback> stdoutReadingCallback;
   private final TestSelectorList testSelectorList;
@@ -93,6 +94,7 @@ public class IdbRunTestsStep implements Step {
   public IdbRunTestsStep(
       Path idbPath,
       ProjectFilesystem filesystem,
+      String sdkName,
       Path outputPath,
       Optional<? extends StdoutReadingCallback> stdoutReadingCallback,
       TestSelectorList testSelectorList,
@@ -106,6 +108,7 @@ public class IdbRunTestsStep implements Step {
       Optional<String> deviceUdid) {
     this.idbPath = idbPath;
     this.filesystem = filesystem;
+    this.sdkName = sdkName;
     this.outputPath = outputPath;
     this.stdoutReadingCallback = stdoutReadingCallback;
     this.testSelectorList = testSelectorList;
@@ -160,6 +163,7 @@ public class IdbRunTestsStep implements Step {
   public static ImmutableList<IdbRunTestsStep> createCommands(
       Path idbPath,
       ProjectFilesystem filesystem,
+      String sdkName,
       AppleBundle testBundle,
       Path outputPath,
       Optional<? extends StdoutReadingCallback> stdoutReadingCallback,
@@ -177,6 +181,7 @@ public class IdbRunTestsStep implements Step {
           new IdbRunTestsStep(
               idbPath,
               filesystem,
+              sdkName,
               outputPath,
               stdoutReadingCallback,
               testSelectorList,
@@ -195,6 +200,7 @@ public class IdbRunTestsStep implements Step {
           new IdbRunTestsStep(
               idbPath,
               filesystem,
+              sdkName,
               outputPath,
               stdoutReadingCallback,
               testSelectorList,
@@ -215,6 +221,7 @@ public class IdbRunTestsStep implements Step {
             new IdbRunTestsStep(
                 idbPath,
                 filesystem,
+                sdkName,
                 outputPath,
                 stdoutReadingCallback,
                 testSelectorList,
@@ -264,10 +271,10 @@ public class IdbRunTestsStep implements Step {
       return StepExecutionResults.ERROR;
     }
 
-    // Booting the simulator for the test
+    // Booting the simulator for the test (if not mac)
     AppleDeviceController appleDeviceController =
         new AppleDeviceController(context.getProcessExecutor(), idbPath);
-    if (deviceUdid.isPresent()) {
+    if (deviceUdid.isPresent() && sdkName.contains("iphone")) {
       appleDeviceController.bootSimulator(deviceUdid.get());
     }
 

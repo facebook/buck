@@ -388,11 +388,17 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         idbStdoutReader = Optional.of(new AppleTestIdbStdoutReader(testReportingCallback));
         AppleDeviceController appleDeviceController =
             new AppleDeviceController(context.getProcessExecutor(), idbPath);
-        Optional<String> deviceUdid = appleDeviceController.getSimulatorUdidForTest();
+        Optional<String> deviceUdid;
+        if (platformName.contains("mac")) {
+          deviceUdid = Optional.of("mac");
+        } else {
+          deviceUdid = appleDeviceController.getSimulatorUdidForTest();
+        }
         ImmutableList<IdbRunTestsStep> idbSteps =
             IdbRunTestsStep.createCommands(
                 idbPath,
                 getProjectFilesystem(),
+                platformName,
                 testBundle,
                 resolvedTestOutputPath,
                 idbStdoutReader,
