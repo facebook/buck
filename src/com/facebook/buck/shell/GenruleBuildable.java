@@ -172,18 +172,13 @@ public class GenruleBuildable implements Buildable {
     this.androidTools = androidTools;
     this.outputPath = new OutputPath(filesystem.getPath(out));
 
-    // TODO(swgillespie) - This used to be here when this code was in Genrule, but it doesn't make
-    // sense for it to be here any longer; the output is an OutputPath and is generally opaque to
-    // us.
-    //
-    // Perhaps we should do some sort of more sound legality check here or in one of our callers?
-    /*
-    if (!pathToOutFile.startsWith(outputPath) || pathToOutFile.equals(outputPath)) {
+    // Sanity check for the output path.
+    Path resolvedOutputPath = filesystem.getPath(out);
+    if (resolvedOutputPath.isAbsolute() || out.isEmpty()) {
       throw new HumanReadableException(
-        "The 'out' parameter of genrule %s is '%s', which is not a valid file name.",
-        buildTarget, out);
+          "The 'out' parameter of genrule %s is '%s', which is not a valid file name.",
+          buildTarget, out);
     }
-     */
   }
 
   public final OutputPath getOutput() {

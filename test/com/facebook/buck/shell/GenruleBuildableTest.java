@@ -24,6 +24,7 @@ import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -44,13 +45,16 @@ import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class GenruleBuildableTest {
   private ProjectFilesystem filesystem;
@@ -260,5 +264,42 @@ public class GenruleBuildableTest {
         builder);
 
     assertEquals("1", builder.build().get("NO_BUCKD"));
+  }
+
+  @Rule public ExpectedException humanReadableExceptionRule = ExpectedException.none();
+
+  @Test
+  public void shouldThrowIfOutPathIsEmpty() {
+    humanReadableExceptionRule.expect(HumanReadableException.class);
+    humanReadableExceptionRule.expectMessage(
+        "The 'out' parameter of genrule //example:genrule is '', which is not a valid file name.");
+    BuildTarget target =
+        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//example:genrule");
+    GenruleBuildableBuilder.builder()
+        .setBuildTarget(target)
+        .setFilesystem(filesystem)
+        .setOut("")
+        .build()
+        .toBuildable();
+  }
+
+  @Test
+  public void shouldThrowIfOutPathIsAbsolute() {
+    humanReadableExceptionRule.expect(HumanReadableException.class);
+    if (Platform.detect() == Platform.WINDOWS) {
+      humanReadableExceptionRule.expectMessage(
+          "The 'out' parameter of genrule //example:genrule is 'C:\\opt\\src\\buck\\opt\\stuff', which is not a valid file name.");
+    } else {
+      humanReadableExceptionRule.expectMessage(
+          "The 'out' parameter of genrule //example:genrule is '/opt/src/buck/opt/stuff', which is not a valid file name.");
+    }
+    BuildTarget target =
+        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//example:genrule");
+    GenruleBuildableBuilder.builder()
+        .setBuildTarget(target)
+        .setFilesystem(filesystem)
+        .setOut(filesystem.getPathForRelativePath(filesystem.getPath("opt", "stuff")).toString())
+        .build()
+        .toBuildable();
   }
 }
