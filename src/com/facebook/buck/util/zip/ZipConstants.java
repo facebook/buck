@@ -23,6 +23,7 @@ public class ZipConstants {
 
   // The fake time we use: 12:00:00 AM February 1, 1985
   public static final int DOS_FAKE_TIME = 172032000;
+  public static final long UNIX_FAKE_TIME = 476064000000L;
 
   private ZipConstants() {}
 
@@ -40,8 +41,7 @@ public class ZipConstants {
     // Date methods that depend on the current timezone.
     // Finally 1980.01.01 doesn't work across all timezones across Java 1.7 and 1.8. Fun times.
     Calendar c = Calendar.getInstance();
-    c.setTimeZone(TimeZone.getTimeZone("UTC"));
-    c.set(1985, Calendar.FEBRUARY, 1, 0, 0, 0);
+    c.setTimeInMillis(UNIX_FAKE_TIME);
     return c.getTimeInMillis();
   }
 }
