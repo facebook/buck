@@ -259,6 +259,8 @@ public class GoTestDescription
 
     Path packageName = getGoPackageName(graphBuilder, buildTarget, args);
 
+    params = params.copyAppendingExtraDeps(extraDeps.build());
+
     GoBinary testMain;
     GoTestMain generatedTestMain;
     if (args.getSpecs().isPresent()) {
@@ -271,6 +273,7 @@ public class GoTestDescription
           runner instanceof GoTestRunner, "runner should be a go_test_runner for go_test");
       GoTestRunner testRunner = (GoTestRunner) runner;
 
+      BuildRuleParams generatorParams = params.withoutDeclaredDeps().withoutExtraDeps();
       GoBinary testMainGeneratorRule =
           (GoBinary)
               graphBuilder.computeIfAbsent(
@@ -279,7 +282,7 @@ public class GoTestDescription
                       GoDescriptors.createGoBinaryRule(
                           target,
                           projectFilesystem,
-                          params.withoutDeclaredDeps(),
+                          generatorParams,
                           graphBuilder,
                           goBuckConfig,
                           Linker.LinkableDepType.STATIC_PIC,
@@ -327,7 +330,7 @@ public class GoTestDescription
         createTestMainRule(
             buildTarget,
             projectFilesystem,
-            params.copyAppendingExtraDeps(extraDeps.build()),
+            params,
             graphBuilder,
             args,
             platform,
