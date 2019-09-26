@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
@@ -40,17 +41,21 @@ import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
+import com.facebook.buck.rules.modern.DefaultBuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.DefaultOutputPathResolver;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -301,5 +306,43 @@ public class GenruleBuildableTest {
         .setOut(filesystem.getPathForRelativePath(filesystem.getPath("opt", "stuff")).toString())
         .build()
         .toBuildable();
+  }
+
+  /**
+   * Tests that GenruleBuildable emits a zip-scrub step if the output file is a zipfile and that it
+   * uses an absolute path to the output file as an input to the zip-scrub step.
+   */
+  @Test
+  public void shouldUseAnAbsolutePathForZipScrubberStep() {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    BuildTarget target =
+        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//example:genrule");
+
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(filesystem)
+            .setBash("echo something > $OUT")
+            .setOut("output.zip")
+            .build()
+            .toBuildable();
+
+    BuildContext buildContext =
+        FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver(), filesystem);
+
+    OutputPathResolver outputPathResolver = new DefaultOutputPathResolver(filesystem, target);
+    BuildCellRelativePathFactory buildCellRelativePathFactory =
+        new DefaultBuildCellRelativePathFactory(
+            buildContext.getBuildCellRootPath(), filesystem, Optional.of(outputPathResolver));
+    ImmutableList<Step> steps =
+        buildable.getBuildSteps(
+            buildContext, filesystem, outputPathResolver, buildCellRelativePathFactory);
+
+    Optional<Step> scrubberStep =
+        steps.stream().filter(step -> step instanceof ZipScrubberStep).findFirst();
+    assertTrue("GenruleBuildable didn't generate ZipScrubber", scrubberStep.isPresent());
+
+    ZipScrubberStep zipScrubberStep = (ZipScrubberStep) scrubberStep.get();
+    assertTrue(zipScrubberStep.getZipAbsolutePath().isAbsolute());
   }
 }

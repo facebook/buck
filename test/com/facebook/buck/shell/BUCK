@@ -235,6 +235,7 @@ standard_java_test(
         "//test/com/facebook/buck/core/toolchain/tool/impl/testutil:testutil",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/jvm/java:fakepackagefinder",
         "//test/com/facebook/buck/jvm/java:testutil",
         "//test/com/facebook/buck/rules/keys:testutil",
         "//test/com/facebook/buck/rules/macros:testutil",

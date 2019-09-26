@@ -215,7 +215,9 @@ public class GenruleBuildable implements Buildable {
           createGenruleStep(buildContext, outputPathResolver, filesystem, srcPath, tmpPath));
     }
 
-    Path pathToOutFile = outputPathResolver.resolvePath(outputPath);
+    // ZipScrubberStep requires that its argument path be absolute.
+    Path pathToOutFile =
+        filesystem.getPathForRelativePath(outputPathResolver.resolvePath(outputPath));
     if (MorePaths.getFileExtension(pathToOutFile).equals("zip")) {
       commands.add(ZipScrubberStep.of(pathToOutFile));
     }

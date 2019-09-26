@@ -21,6 +21,7 @@ import static org.easymock.EasyMock.createMock;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 
@@ -43,6 +44,21 @@ public class FakeBuildContext {
         .setJavaPackageFinder(new FakeJavaPackageFinder())
         .setEventBus(BuckEventBusForTests.newInstance())
         .setBuildCellRootPath(new FakeProjectFilesystem().getRootPath())
+        .setShouldDeleteTemporaries(false)
+        .build();
+  }
+
+  /**
+   * Same as {@link #withSourcePathResolver(SourcePathResolver)}, except that the returned context
+   * uses the given filesystem's root path as the build cell root path.
+   */
+  public static BuildContext withSourcePathResolver(
+      SourcePathResolver pathResolver, ProjectFilesystem filesystem) {
+    return BuildContext.builder()
+        .setSourcePathResolver(pathResolver)
+        .setJavaPackageFinder(new FakeJavaPackageFinder())
+        .setEventBus(BuckEventBusForTests.newInstance())
+        .setBuildCellRootPath(filesystem.getRootPath())
         .setShouldDeleteTemporaries(false)
         .build();
   }
