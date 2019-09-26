@@ -263,4 +263,17 @@ public class ShBinaryRuleIntegrationTest {
 
     workspace.buildAndReturnOutput("//:run_example");
   }
+
+  @Test
+  public void testShBinaryWithTest() throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_with_test", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult buildResult = workspace.runBuckCommand("test", "//:hello");
+    buildResult.assertSuccess();
+  }
 }
