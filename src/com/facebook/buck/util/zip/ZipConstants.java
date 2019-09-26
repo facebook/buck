@@ -17,6 +17,7 @@
 package com.facebook.buck.util.zip;
 
 import java.util.Calendar;
+import java.util.TimeZone;
 
 public class ZipConstants {
 
@@ -39,6 +40,7 @@ public class ZipConstants {
     // Date methods that depend on the current timezone.
     // Finally 1980.01.01 doesn't work across all timezones across Java 1.7 and 1.8. Fun times.
     Calendar c = Calendar.getInstance();
+    c.setTimeZone(TimeZone.getTimeZone("UTC"));
     c.set(1985, Calendar.FEBRUARY, 1, 0, 0, 0);
     return c.getTimeInMillis();
   }
