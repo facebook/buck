@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -46,11 +47,13 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -60,7 +63,7 @@ import javax.annotation.Nullable;
  * <p>It cannot be run via buck's internal runners
  */
 public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements TestXRule, HasRuntimeDeps, ExternalTestRunnerRule {
+    implements TestXRule, HasRuntimeDeps, ExternalTestRunnerRule, ExportDependencies {
 
   private final JavaBinary compiledTestsBinary;
   private final JavaLibrary compiledTestsLibrary;
@@ -164,6 +167,16 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
             return StepExecutionResults.SUCCESS;
           }
         });
+  }
+
+  @Override
+  public SortedSet<BuildRule> getExportedDeps() {
+    return ImmutableSortedSet.of(compiledTestsLibrary);
+  }
+
+  @Override
+  public SortedSet<BuildRule> getExportedProvidedDeps() {
+    return ImmutableSortedSet.of();
   }
 
   @Nullable
