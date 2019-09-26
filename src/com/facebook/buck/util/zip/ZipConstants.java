@@ -17,7 +17,6 @@
 package com.facebook.buck.util.zip;
 
 import java.util.Calendar;
-import java.util.TimeZone;
 
 public class ZipConstants {
 
