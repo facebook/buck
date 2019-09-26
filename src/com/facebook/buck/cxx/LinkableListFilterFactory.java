@@ -26,8 +26,10 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.LinkableListFilter;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -80,7 +82,8 @@ public class LinkableListFilterFactory {
     }
 
     Map<BuildTarget, String> buildTargetToLinkGroupMap =
-        makeBuildTargetToLinkGroupMap(mapping, targetGraph);
+        makeBuildTargetToLinkGroupMap(
+            mapping, targetGraph, cxxBuckConfig.getLinkGroupCuttingGenruleBranchEnabled());
 
     LinkableListFilter filter =
         (ImmutableList<? extends NativeLinkable> allLinkables,
@@ -126,7 +129,9 @@ public class LinkableListFilterFactory {
    */
   @Nonnull
   private static Map<BuildTarget, String> makeBuildTargetToLinkGroupMap(
-      ImmutableList<CxxLinkGroupMapping> mapping, TargetGraph targetGraph) {
+      ImmutableList<CxxLinkGroupMapping> mapping,
+      TargetGraph targetGraph,
+      Boolean enableTraversalForAppleLibraryOnly) {
     Map<BuildTarget, String> buildTargetToLinkGroupMap = new HashMap<>();
     for (CxxLinkGroupMapping groupMapping : mapping) {
       String currentLinkGroup = groupMapping.getLinkGroup();
@@ -143,7 +148,15 @@ public class LinkableListFilterFactory {
                   public Iterable<TargetNode<?>> visit(TargetNode<?> node) {
                     addBuildTargetToLinkGroup(
                         node.getBuildTarget(), currentLinkGroup, buildTargetToLinkGroupMap);
-                    return targetGraph.getOutgoingNodesFor(node);
+                    if (enableTraversalForAppleLibraryOnly
+                        && node.getDescription()
+                            .getConstructorArgType()
+                            .equals(GenruleDescriptionArg.class)) {
+                      // cut the branch if the node type is genrule
+                      return Collections.emptySet();
+                    } else {
+                      return targetGraph.getOutgoingNodesFor(node);
+                    }
                   }
                 };
             treeTraversal.start();
