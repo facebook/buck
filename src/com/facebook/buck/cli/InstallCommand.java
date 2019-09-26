@@ -551,7 +551,7 @@ public class InstallCommand extends BuildCommand {
           .getConsole()
           .printBuildFailure(
               String.format(
-                  "Cannot install %s (could not install bundle %s in simulator %s)",
+                  "Cannot install %s (could not install bundle %s in physical device %s)",
                   appleBundle.getFullyQualifiedName(),
                   pathResolver.getAbsolutePath(appleBundle.getSourcePathToOutput()),
                   chosenDevice.getName()));
@@ -807,8 +807,11 @@ public class InstallCommand extends BuildCommand {
           .getConsole()
           .printBuildFailure(
               String.format(
-                  "Cannot install %s (no appropriate simulator found)",
-                  appleBundle.getFullyQualifiedName()));
+                  "Cannot install %s (there are no simulators booted or could not find the given simulator %s or could not find the default simulator %s)",
+                  appleBundle.getFullyQualifiedName(),
+                  deviceOptions.getSerialNumber().orElse("")
+                      + deviceOptions.getSimulatorName().orElse(""),
+                  DEFAULT_APPLE_SIMULATOR_NAME));
       return FAILURE;
     }
 
@@ -1154,8 +1157,7 @@ public class InstallCommand extends BuildCommand {
    * @return the chosen simulator
    */
   private Optional<ImmutableAppleDevice> getAppleSimulatorForBundleIdb(
-      AppleBundle appleBundle, ProcessExecutor processExecutor, Path idbPath)
-      throws IOException, InterruptedException {
+      AppleBundle appleBundle, ProcessExecutor processExecutor, Path idbPath) {
     LOG.debug("Choosing simulator for %s", appleBundle);
 
     Optional<ImmutableAppleDevice> simulatorByUdid = Optional.empty();
