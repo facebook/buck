@@ -406,7 +406,8 @@ public abstract class DefaultJavaLibraryRules {
     UnusedDependenciesAction unusedDependenciesAction = getUnusedDependenciesAction();
     Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory = Optional.empty();
 
-    if (unusedDependenciesAction != UnusedDependenciesAction.IGNORE) {
+    if (unusedDependenciesAction != UnusedDependenciesAction.IGNORE
+        && getConfiguredCompilerFactory().trackClassUsage(getJavacOptions())) {
       ProjectFilesystem projectFilesystem = getProjectFilesystem();
       BuildTarget buildTarget = getLibraryTarget();
       SourcePathResolver sourcePathResolver = getSourcePathResolver();

@@ -167,4 +167,18 @@ public class UnusedDependenciesFinderIntegrationTest {
 
     processResult.assertSuccess();
   }
+
+  @Test
+  public void testDoNotFailWithClassUsageTurnedOff() {
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "build",
+            "-c",
+            "java.unused_dependencies_action=fail",
+            "-c",
+            "java.track_class_usage=false",
+            ":bar_with_dep");
+
+    processResult.assertSuccess();
+  }
 }
