@@ -101,7 +101,8 @@ public class RemoteExecutionStrategyTest {
         RemoteExecutionActionInfo.of(
             protocol.computeDigest(new byte[] {1}),
             ImmutableList.of(
-                UploadDataSupplier.of(missingDigest, () -> new ByteArrayInputStream(missingData))),
+                UploadDataSupplier.of(
+                    "data", missingDigest, () -> new ByteArrayInputStream(missingData))),
             missingData.length,
             ImmutableList.of());
 

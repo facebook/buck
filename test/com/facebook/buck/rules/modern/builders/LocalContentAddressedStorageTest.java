@@ -65,7 +65,8 @@ public class LocalContentAddressedStorageTest {
     Digest digest = protocol.newDigest("myhashcode", data.length);
     Futures.getUnchecked(
         storage.addMissing(
-            ImmutableList.of(UploadDataSupplier.of(digest, () -> new ByteArrayInputStream(data)))));
+            ImmutableList.of(
+                UploadDataSupplier.of("data", digest, () -> new ByteArrayInputStream(data)))));
     assertDataEquals(data, getBytes(digest));
   }
 
@@ -87,11 +88,13 @@ public class LocalContentAddressedStorageTest {
     Digest digest = protocol.newDigest("myhashcode", data.length);
     Futures.getUnchecked(
         storage.addMissing(
-            ImmutableList.of(UploadDataSupplier.of(digest, () -> new ByteArrayInputStream(data)))));
+            ImmutableList.of(
+                UploadDataSupplier.of("data", digest, () -> new ByteArrayInputStream(data)))));
     Futures.getUnchecked(
         storage.addMissing(
             ImmutableList.of(
                 UploadDataSupplier.of(
+                    "data",
                     digest,
                     () -> {
                       throw new RuntimeException();
@@ -116,15 +119,20 @@ public class LocalContentAddressedStorageTest {
 
     requiredData.add(
         UploadDataSupplier.of(
-            protocol.computeDigest(someData), () -> new ByteArrayInputStream(someData)));
+            "someData",
+            protocol.computeDigest(someData),
+            () -> new ByteArrayInputStream(someData)));
     requiredData.add(
         UploadDataSupplier.of(
-            protocol.computeDigest(otherData), () -> new ByteArrayInputStream(otherData)));
+            "otherData",
+            protocol.computeDigest(otherData),
+            () -> new ByteArrayInputStream(otherData)));
     nodeCache.forAllData(
         node,
         data ->
             requiredData.add(
                 UploadDataSupplier.of(
+                    "data",
                     data.getDigest(),
                     () -> new ByteArrayInputStream(protocol.toByteArray(data.getDirectory())))));
 

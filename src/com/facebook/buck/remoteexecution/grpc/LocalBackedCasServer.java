@@ -107,6 +107,7 @@ class LocalBackedCasServer extends ContentAddressableStorageImplBase {
                   .map(
                       blobRequest ->
                           UploadDataSupplier.of(
+                              blobRequest.toString(),
                               new GrpcDigest(blobRequest.getDigest()),
                               () -> new ByteArrayInputStream(blobRequest.getData().toByteArray())))
                   .collect(ImmutableList.toImmutableList()));

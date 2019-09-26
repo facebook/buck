@@ -188,7 +188,9 @@ public class OutputsCollector {
             (file, fileNode) ->
                 requiredDataBuilder.add(
                     UploadDataSupplier.of(
-                        fileNode.getDigest(), () -> delegate.getInputStream(path.resolve(file)))));
+                        file.getFileName().toString(),
+                        fileNode.getDigest(),
+                        () -> delegate.getInputStream(path.resolve(file)))));
 
         List<Directory> directories = new ArrayList<>();
         merkleTreeCache.forAllData(node, data -> directories.add(data.getDirectory()));
@@ -200,14 +202,15 @@ public class OutputsCollector {
 
         outputDirectoriesBuilder.add(protocol.newOutputDirectory(output, treeDigest));
         requiredDataBuilder.add(
-            UploadDataSupplier.of(treeDigest, () -> new ByteArrayInputStream(treeData)));
+            UploadDataSupplier.of("tree", treeDigest, () -> new ByteArrayInputStream(treeData)));
       } else {
         long size = delegate.size(path);
         boolean isExecutable = delegate.isExecutable(path);
         Digest digest = protocol.newDigest(hashFile(path).toString(), (int) size);
 
         UploadDataSupplier dataSupplier =
-            UploadDataSupplier.of(digest, () -> delegate.getInputStream(path));
+            UploadDataSupplier.of(
+                path.getFileName().toString(), digest, () -> delegate.getInputStream(path));
         outputFilesBuilder.add(protocol.newOutputFile(output, digest, isExecutable));
         requiredDataBuilder.add(dataSupplier);
       }

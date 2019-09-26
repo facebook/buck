@@ -422,6 +422,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
             if (requiredDataPredicate.test(childData.getDigest())) {
               requiredDataBuilder.add(
                   UploadDataSupplier.of(
+                      childData.getDirectory().toString(),
                       childData.getDigest(),
                       () ->
                           new ByteArrayInputStream(
@@ -435,13 +436,15 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
       byte[] commandData = protocol.toByteArray(actionCommand);
       Digest commandDigest = protocol.computeDigest(commandData);
       requiredDataBuilder.add(
-          UploadDataSupplier.of(commandDigest, () -> new ByteArrayInputStream(commandData)));
+          UploadDataSupplier.of(
+              "command", commandDigest, () -> new ByteArrayInputStream(commandData)));
 
       Protocol.Action action = protocol.newAction(commandDigest, inputsRootDigest);
       byte[] actionData = protocol.toByteArray(action);
       Digest actionDigest = protocol.computeDigest(actionData);
       requiredDataBuilder.add(
-          UploadDataSupplier.of(actionDigest, () -> new ByteArrayInputStream(actionData)));
+          UploadDataSupplier.of(
+              "action", actionDigest, () -> new ByteArrayInputStream(actionData)));
 
       return RemoteExecutionActionInfo.of(
           actionDigest, requiredDataBuilder.build(), data.getTotalSize(), outputs);
@@ -748,7 +751,10 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                   new RequiredFile(
                       relative,
                       protocol.newFileNode(digest, path.getFileName().toString(), false),
-                      UploadDataSupplier.of(digest, () -> new FileInputStream(path.toFile()))));
+                      UploadDataSupplier.of(
+                          path.getFileName().toString(),
+                          digest,
+                          () -> new FileInputStream(path.toFile()))));
             } else {
               pathsBuilder.add(path);
             }

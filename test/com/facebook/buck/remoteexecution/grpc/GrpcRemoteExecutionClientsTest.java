@@ -175,13 +175,13 @@ public class GrpcRemoteExecutionClientsTest {
     Digest digest1 = protocol.computeDigest(data1.getBytes(Charsets.UTF_8));
     requiredData.add(
         UploadDataSupplier.of(
-            digest1, () -> new ByteArrayInputStream(data1.getBytes(Charsets.UTF_8))));
+            "data1", digest1, () -> new ByteArrayInputStream(data1.getBytes(Charsets.UTF_8))));
 
     String data2 = "data2";
     Digest digest2 = protocol.computeDigest(data2.getBytes(Charsets.UTF_8));
     requiredData.add(
         UploadDataSupplier.of(
-            digest2, () -> new ByteArrayInputStream(data2.getBytes(Charsets.UTF_8))));
+            "data2", digest2, () -> new ByteArrayInputStream(data2.getBytes(Charsets.UTF_8))));
 
     clients.getContentAddressedStorage().addMissing(requiredData).get();
 
