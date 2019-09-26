@@ -71,10 +71,9 @@ public class WorkspaceUpdater {
     Document workspaceDocument = null;
     Path workspacePath = getWorkspacePath();
     if (filesystem.exists(workspacePath)) {
-      try {
+      try (InputStream workspaceFile = filesystem.newFileInputStream(workspacePath)) {
         LOG.debug("Trying to update existing workspace.");
 
-        InputStream workspaceFile = filesystem.newFileInputStream(workspacePath);
         workspaceDocument = updateExistingWorkspace(workspaceFile);
         workspaceUpdated = true;
       } catch (ParserConfigurationException | SAXException | XPathExpressionException e) {
@@ -96,9 +95,8 @@ public class WorkspaceUpdater {
       }
     }
 
-    try {
-      writeDocument(
-          Objects.requireNonNull(workspaceDocument), filesystem.newFileOutputStream(workspacePath));
+    try (OutputStream workspaceFile = filesystem.newFileOutputStream(workspacePath)) {
+      writeDocument(Objects.requireNonNull(workspaceDocument), workspaceFile);
     } catch (TransformerException e) {
       LOG.error(e, "Cannot create workspace in %s", filesystem.resolve(workspacePath));
     }
