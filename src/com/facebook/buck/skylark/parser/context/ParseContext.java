@@ -55,8 +55,17 @@ public class ParseContext {
   /** Records the parsed {@code rawRule}. */
   public void recordRule(ImmutableMap<String, Object> rawRule, FuncallExpression ast)
       throws EvalException {
-    String name =
-        Objects.requireNonNull((String) rawRule.get("name"), "Every target must have a name.");
+    Object nameObject =
+        Objects.requireNonNull(rawRule.get("name"), "Every target must have a name.");
+    if (!(nameObject instanceof String)) {
+      throw new IllegalArgumentException(
+          "Targe name must be string, it is "
+              + nameObject
+              + " ("
+              + nameObject.getClass().getName()
+              + ")");
+    }
+    String name = (String) nameObject;
     if (rawRules.containsKey(name)) {
       throw new EvalException(
           ast.getLocation(),
