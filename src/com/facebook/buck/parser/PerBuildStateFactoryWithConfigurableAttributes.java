@@ -164,16 +164,17 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
     // deadlocks happening when too many node are requested from targetNodeParsePipeline.
     // That pipeline does blocking calls to get nodes from nonResolvingTargetNodeParsePipeline
     // which can lead to deadlocks.
-    ParsePipeline<TargetNode<?>, BuildTarget> nonResolvingTargetNodeParsePipeline =
-        new RawTargetNodeToTargetNodeParsePipeline(
-            daemonicParserState.getOrCreateNodeCacheForConfigurationTargets(
-                DaemonicParserState.TARGET_NODE_CACHE_TYPE),
-            MoreExecutors.newDirectExecutorService(),
-            rawTargetNodePipeline,
-            eventBus,
-            "nonresolving_raw_target_node_parse_pipeline",
-            enableSpeculativeParsing,
-            nonResolvingRawTargetNodeToTargetNodeFactory);
+    ConvertingPipeline<RawTargetNode, TargetNode<?>, BuildTarget>
+        nonResolvingTargetNodeParsePipeline =
+            new RawTargetNodeToTargetNodeParsePipeline(
+                daemonicParserState.getOrCreateNodeCacheForConfigurationTargets(
+                    DaemonicParserState.TARGET_NODE_CACHE_TYPE),
+                MoreExecutors.newDirectExecutorService(),
+                rawTargetNodePipeline,
+                eventBus,
+                "nonresolving_raw_target_node_parse_pipeline",
+                enableSpeculativeParsing,
+                nonResolvingRawTargetNodeToTargetNodeFactory);
 
     ConfigurationRuleRegistry configurationRuleRegistry =
         ConfigurationRuleRegistryFactory.createRegistry(

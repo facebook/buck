@@ -15,26 +15,36 @@
  */
 package com.facebook.buck.parser;
 
+import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
+import static com.google.common.base.Throwables.throwIfInstanceOf;
+
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
 /**
@@ -44,8 +54,10 @@ import java.util.function.Function;
  * @param <T> Type to convert to (TargetNode, for example)
  * @param <K> Cache key
  */
-public abstract class ConvertingPipeline<F, T, K> extends ParsePipeline<T, K> {
+public abstract class ConvertingPipeline<F, T, K> implements AutoCloseable {
   private static final Logger LOG = Logger.get(ConvertingPipeline.class);
+
+  private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
 
   private final BuckEventBus eventBus;
   private final PipelineNodeCache<K, T> cache;
@@ -78,7 +90,6 @@ public abstract class ConvertingPipeline<F, T, K> extends ParsePipeline<T, K> {
     this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 10;
   }
 
-  @Override
   public ListenableFuture<ImmutableList<T>> getAllNodesJob(
       Cell cell, Path buildFile, TargetConfiguration targetConfiguration) {
     SettableFuture<ImmutableList<T>> future = SettableFuture.create();
@@ -125,7 +136,30 @@ public abstract class ConvertingPipeline<F, T, K> extends ParsePipeline<T, K> {
     return future;
   }
 
-  @Override
+  /**
+   * Obtain all {@link TargetNode}s from a build file. This may block if the file is not cached.
+   *
+   * @param cell the {@link Cell} that the build file belongs to.
+   * @param buildFile absolute path to the file to process.
+   * @param targetConfiguration the configuration of targets.
+   * @return all targets from the file
+   * @throws BuildFileParseException for syntax errors.
+   */
+  public final ImmutableList<T> getAllNodes(
+      Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
+      throws BuildFileParseException {
+    Preconditions.checkState(!shuttingDown.get());
+
+    try {
+      return getAllNodesJob(cell, buildFile, targetConfiguration).get();
+    } catch (Exception e) {
+      propagateCauseIfInstanceOf(e, BuildFileParseException.class);
+      propagateCauseIfInstanceOf(e, ExecutionException.class);
+      propagateCauseIfInstanceOf(e, UncheckedExecutionException.class);
+      throw new RuntimeException(e);
+    }
+  }
+
   public ListenableFuture<T> getNodeJob(Cell cell, K buildTarget) throws BuildTargetException {
     return cache.getJobWithCacheLookup(
         cell,
@@ -136,6 +170,34 @@ public abstract class ConvertingPipeline<F, T, K> extends ParsePipeline<T, K> {
                 from -> dispatchComputeNode(cell, buildTarget, from),
                 executorService),
         eventBus);
+  }
+
+  /**
+   * Obtain a {@link TargetNode}. This may block if the node is not cached.
+   *
+   * @param cell the {@link Cell} that the {@link BuildTarget} belongs to.
+   * @param buildTarget name of the node we're looking for. The build file path is derived from it.
+   * @return the node
+   * @throws BuildFileParseException for syntax errors in the build file.
+   * @throws BuildTargetException if the buildTarget is malformed
+   */
+  public final T getNode(Cell cell, K buildTarget)
+      throws BuildFileParseException, BuildTargetException {
+    Preconditions.checkState(!shuttingDown.get());
+
+    try {
+      return getNodeJob(cell, buildTarget).get();
+    } catch (Exception e) {
+      if (e.getCause() != null) {
+        throwIfInstanceOf(e.getCause(), BuildFileParseException.class);
+        throwIfInstanceOf(e.getCause(), BuildTargetException.class);
+      }
+      throwIfInstanceOf(e, BuildFileParseException.class);
+      throwIfInstanceOf(e, BuildTargetException.class);
+      propagateCauseIfInstanceOf(e, ExecutionException.class);
+      propagateCauseIfInstanceOf(e, UncheckedExecutionException.class);
+      throw new RuntimeException(e);
+    }
   }
 
   protected abstract K getBuildTarget(
@@ -186,6 +248,20 @@ public abstract class ConvertingPipeline<F, T, K> extends ParsePipeline<T, K> {
   @Override
   public void close() {
     perfEventScope.close();
-    super.close();
+    shuttingDown.set(true);
+
+    // At this point external callers should not schedule more work, internally job creation
+    // should also stop. Any scheduled futures should eventually cancel themselves (all of the
+    // AsyncFunctions that interact with the Cache are wired to early-out if `shuttingDown` is
+    // true).
+    // We could block here waiting for all ongoing work to complete, however the user has already
+    // gotten everything they want out of the pipeline, so the only interesting thing that could
+    // happen here are exceptions thrown by the ProjectBuildFileParser as its shutting down. These
+    // aren't critical enough to warrant bringing down the entire process, as they don't affect the
+    // state that has already been extracted from the parser.
+  }
+
+  protected final boolean shuttingDown() {
+    return shuttingDown.get();
   }
 }
