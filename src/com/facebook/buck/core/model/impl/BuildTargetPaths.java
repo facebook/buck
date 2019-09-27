@@ -22,7 +22,14 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 
-/** Static helpers for working with build targets. */
+/**
+ * Static helpers for working with build targets.
+ *
+ * @deprecated use {@link BuildPaths} instead, which handles flavoured and unflavoured {@link
+ *     BuildTarget}s in the paths the same way as RE/{@link
+ *     com.facebook.buck.rules.modern.ModernBuildRule}s do.
+ */
+@Deprecated
 public class BuildTargetPaths {
 
   /** Utility class: do not instantiate. */
