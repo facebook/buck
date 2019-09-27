@@ -179,14 +179,14 @@ public class RealAndroidDevice implements AndroidDevice {
 
     String pmPath = null;
     for (String line : lines) {
-      // Ignore silly linker warnings about non-PIC code on emulators
-      if (!line.startsWith("WARNING: linker: ")) {
+      // Ignore warnings/other info that may come before the pm path output
+      if (line.startsWith(pmPathPrefix)) {
         pmPath = line;
         break;
       }
     }
 
-    if (pmPath == null || !pmPath.startsWith(pmPathPrefix)) {
+    if (pmPath == null || !pmPath.contains(packageName)) {
       LOG.warn("unable to locate package path for [" + packageName + "]");
       return Optional.empty();
     }
