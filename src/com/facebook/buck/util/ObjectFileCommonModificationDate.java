@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.cxx.toolchain.objectfile;
+package com.facebook.buck.util;
 
 public class ObjectFileCommonModificationDate {
   private ObjectFileCommonModificationDate() {}
