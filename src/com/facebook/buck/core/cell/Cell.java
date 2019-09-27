@@ -38,7 +38,7 @@ import java.util.Optional;
  */
 public interface Cell {
 
-  ImmutableSortedSet<Path> getKnownRoots();
+  ImmutableSortedSet<Path> getKnownRootsOfAllCells();
 
   CanonicalCellName getCanonicalName();
 

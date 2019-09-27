@@ -175,7 +175,7 @@ public class BuckGlobalStateFactory {
   /** @return Path of the topmost cell's path that roots all other cells */
   private static Path getSuperRootPath(Cell cell) {
     Path cellRoot = cell.getRoot();
-    ImmutableSortedSet<Path> allRoots = cell.getKnownRoots();
+    ImmutableSortedSet<Path> allRoots = cell.getKnownRootsOfAllCells();
     Path path = cellRoot.getRoot();
 
     // check if supercell is a root folder, like '/' or 'C:\'

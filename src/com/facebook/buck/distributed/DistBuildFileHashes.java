@@ -90,7 +90,7 @@ public class DistBuildFileHashes {
               Path fsRootPath = originalCache.getFilesystem().getRootPath();
               RecordedFileHashes fileHashes =
                   getRemoteFileHashes(cellIndexer.getCellIndex(fsRootPath));
-              if (rootCell.getKnownRoots().contains(fsRootPath)) {
+              if (rootCell.getKnownRootsOfAllCells().contains(fsRootPath)) {
                 Cell cell = rootCell.getCell(fsRootPath);
                 return RecordingProjectFileHashCache.createForCellRoot(
                     originalCache,

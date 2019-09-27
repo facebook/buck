@@ -215,7 +215,7 @@ public class DistBuildFileHashesIntegrationTest {
     allCaches.add(
         DefaultFileHashCache.createDefaultFileHashCache(
             rootCell.getFilesystem(), FileHashCacheMode.DEFAULT));
-    for (Path cellPath : rootCell.getKnownRoots()) {
+    for (Path cellPath : rootCell.getKnownRootsOfAllCells()) {
       Cell cell = rootCell.getCell(cellPath);
       allCaches.add(
           DefaultFileHashCache.createDefaultFileHashCache(

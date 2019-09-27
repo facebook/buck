@@ -49,7 +49,7 @@ abstract class AbstractImmutableCell implements Cell {
 
   @Override
   @Value.Auxiliary
-  public abstract ImmutableSortedSet<Path> getKnownRoots();
+  public abstract ImmutableSortedSet<Path> getKnownRootsOfAllCells();
 
   @Override
   @Value.Auxiliary
@@ -68,7 +68,7 @@ abstract class AbstractImmutableCell implements Cell {
         ImmutableSet.builderWithExpectedSize(filesystem.getBlacklistedPaths().size() + 1);
     ignores.addAll(filesystem.getBlacklistedPaths());
     ignores.add(RecursiveFileMatcher.of(filesystem.getBuckPaths().getBuckOut()));
-    for (Path subCellRoots : getKnownRoots()) {
+    for (Path subCellRoots : getKnownRootsOfAllCells()) {
       if (!subCellRoots.equals(getRoot())) {
         ignores.add(RecursiveFileMatcher.of(filesystem.relativize(subCellRoots)));
       }
@@ -105,10 +105,10 @@ abstract class AbstractImmutableCell implements Cell {
 
   @Override
   public Cell getCell(Path cellPath) {
-    if (!getKnownRoots().contains(cellPath)) {
+    if (!getKnownRootsOfAllCells().contains(cellPath)) {
       throw new HumanReadableException(
           "Unable to find repository rooted at %s. Known roots are:\n  %s",
-          cellPath, Joiner.on(",\n  ").join(getKnownRoots()));
+          cellPath, Joiner.on(",\n  ").join(getKnownRootsOfAllCells()));
     }
     return getCellIgnoringVisibilityCheck(cellPath);
   }
@@ -131,7 +131,7 @@ abstract class AbstractImmutableCell implements Cell {
 
   @Override
   public Optional<Cell> getCellIfKnown(UnconfiguredBuildTargetView target) {
-    if (getKnownRoots().contains(target.getCellPath())) {
+    if (getKnownRootsOfAllCells().contains(target.getCellPath())) {
       return Optional.of(getCell(target));
     }
     return Optional.empty();
@@ -139,7 +139,7 @@ abstract class AbstractImmutableCell implements Cell {
 
   @Override
   public ImmutableList<Cell> getAllCells() {
-    return RichStream.from(getKnownRoots())
+    return RichStream.from(getKnownRootsOfAllCells())
         .concat(RichStream.of(getRoot()))
         .distinct()
         .map(getCellProvider()::getCellByPath)

@@ -66,7 +66,8 @@ public class DistBuildCellIndexer {
   /** @return Cell index for given path */
   public synchronized Integer getCellIndex(Path input) {
     // Non-cell Paths are just stored in the root cell data marked as absolute paths.
-    Integer i = rootCell.getKnownRoots().contains(input) ? index.get(input) : ROOT_CELL_INDEX;
+    Integer i =
+        rootCell.getKnownRootsOfAllCells().contains(input) ? index.get(input) : ROOT_CELL_INDEX;
     if (i == null) {
       i = index.size();
       index.put(input, i);

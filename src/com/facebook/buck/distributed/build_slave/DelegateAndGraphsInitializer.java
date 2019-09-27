@@ -186,7 +186,7 @@ public class DelegateAndGraphsInitializer {
     BuildBuckConfig buildBuckConfig = rootCell.getBuckConfig().getView(BuildBuckConfig.class);
 
     // 1. Add all cells (including the root cell).
-    for (Path cellPath : rootCell.getKnownRoots()) {
+    for (Path cellPath : rootCell.getKnownRootsOfAllCells()) {
       Cell cell = rootCell.getCell(cellPath);
       allCachesBuilder.add(
           DefaultFileHashCache.createDefaultFileHashCache(
