@@ -574,11 +574,7 @@ public class InstallCommand extends BuildCommand {
 
       // Launching
       if (!appleDeviceController.launchInstalledBundle(
-          chosenDevice.getUdid(),
-          appleBundleId.get(),
-          waitForDebugger
-              ? AppleDeviceController.LaunchBehavior.WAIT_FOR_DEBUGGER
-              : AppleDeviceController.LaunchBehavior.DO_NOT_WAIT_FOR_DEBUGGER)) {
+          chosenDevice.getUdid(), appleBundleId.get())) {
         params
             .getConsole()
             .printBuildFailure(
@@ -607,7 +603,7 @@ public class InstallCommand extends BuildCommand {
                       .getConsole()
                       .getAnsi()
                       .asHighlightedSuccessText(
-                          "Successfully installed %s. (Use `buck install -r %s` to run.)"),
+                          "Successfully installed %s. (Use `buck install -r %s` to run and -w to have the app waiting for debugger.)"),
                   getArguments().get(0),
                   getArguments().get(0)));
     }
@@ -872,20 +868,30 @@ public class InstallCommand extends BuildCommand {
       }
 
       // Launching
-      if (!appleDeviceController.launchInstalledBundle(
-          simulator.get().getUdid(),
-          appleBundleId.get(),
-          waitForDebugger
-              ? AppleDeviceController.LaunchBehavior.WAIT_FOR_DEBUGGER
-              : AppleDeviceController.LaunchBehavior.DO_NOT_WAIT_FOR_DEBUGGER)) {
-        params
-            .getConsole()
-            .printBuildFailure(
-                String.format(
-                    "Cannot launch %s (failed to launch bundle ID %s)",
-                    appleBundle.getFullyQualifiedName(), appleBundleId.get()));
-        return FAILURE;
+      Optional<String> debugCommand = Optional.empty();
+      if (waitForDebugger) {
+        debugCommand =
+            appleDeviceController.startDebugServer(simulator.get().getUdid(), appleBundleId.get());
+        if (!debugCommand.isPresent()) {
+          LOG.error("Could not start the debugserver");
+          return FAILURE;
+        }
+      } else {
+        if (!appleDeviceController.launchInstalledBundle(
+            simulator.get().getUdid(), appleBundleId.get())) {
+          params
+              .getConsole()
+              .printBuildFailure(
+                  String.format(
+                      "Cannot launch %s (failed to launch bundle ID %s)",
+                      appleBundle.getFullyQualifiedName(), appleBundleId.get()));
+          return FAILURE;
+        }
       }
+      String debugOptionMessage =
+          "(waiting for debugger) Run lldb and then "
+              + debugCommand.get()
+              + " to run the debugger.";
       params
           .getBuckEventBus()
           .post(
@@ -893,10 +899,9 @@ public class InstallCommand extends BuildCommand {
                   params
                       .getConsole()
                       .getAnsi()
-                      .asHighlightedSuccessText(
-                          "Successfully launched %s%s. To debug, run: lldb -p"),
+                      .asHighlightedSuccessText("Successfully launched %s. %s"),
                   getArguments().get(0),
-                  waitForDebugger ? " (waiting for debugger)" : ""));
+                  waitForDebugger ? debugOptionMessage : ""));
     } else {
       params
           .getBuckEventBus()

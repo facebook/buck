@@ -293,15 +293,10 @@ public class AppleDeviceController {
    *
    * @return true if it was able to launch and false otherwise
    */
-  public boolean launchInstalledBundle(
-      String deviceUdid, String bundleID, LaunchBehavior launchBehavior)
+  public boolean launchInstalledBundle(String deviceUdid, String bundleID)
       throws IOException, InterruptedException {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
-    commandBuilder.add(idbPath.toString(), "launch", bundleID);
-    if (launchBehavior == LaunchBehavior.WAIT_FOR_DEBUGGER) {
-      commandBuilder.add("-w");
-    }
-    commandBuilder.add("--udid", deviceUdid);
+    commandBuilder.add(idbPath.toString(), "launch", bundleID, "--udid", deviceUdid);
     ImmutableList<String> command = commandBuilder.build();
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder().setCommand(command).build();
@@ -317,6 +312,38 @@ public class AppleDeviceController {
       return false;
     }
     return true;
+  }
+
+  /**
+   * Starts the debugserver of the installed app
+   *
+   * @return the command to be run in lldb
+   */
+  public Optional<String> startDebugServer(String deviceUdid, String bundleID)
+      throws IOException, InterruptedException {
+    ImmutableList<String> command =
+        ImmutableList.of(
+            idbPath.toString(), "debugserver", "start", bundleID, "--udid", deviceUdid);
+    LOG.debug("Starting the debug server with the command %s", command);
+    ProcessExecutorParams processExecutorParams =
+        ProcessExecutorParams.builder().setCommand(command).build();
+    Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
+    ProcessExecutor.Result result =
+        processExecutor.launchAndExecute(
+            processExecutorParams,
+            options,
+            /* stdin */ Optional.empty(),
+            /* timeOutMs */ Optional.empty(),
+            /* timeOutHandler */ Optional.empty());
+    if (result.getExitCode() != 0) {
+      LOG.error("Could not start debug server");
+      return Optional.empty();
+    }
+    if (!result.getStdout().isPresent()) {
+      LOG.error("Could not get debug server command from idb");
+      return Optional.empty();
+    }
+    return result.getStdout();
   }
 
   /**
