@@ -109,3 +109,18 @@ internal data class InternalChanges(
     val modifiedBuildPackages: List<InternalBuildPackage>,
     val removedBuildPackages: List<FsAgnosticPath>
 )
+
+/**
+ * Metadata for the commit loaded into index
+ */
+data class CommitData(
+    /**
+     * Hash of the commit
+     */
+    val commit: Commit,
+
+    /**
+     * Timestamp, in milliseconds since Unix epoch, when commit was loaded into an index
+     */
+    val timestampLoadedMillies: Long
+)

@@ -34,9 +34,17 @@ interface IndexAppender {
     fun getLatestCommit(): Commit?
 
     /**
-    * Tests whether a commit exists.
+     * Tests whether a commit exists.
      */
     fun commitExists(commit: Commit): Boolean
+
+    /**
+     * @start_commit If not null, use it as lower boundary for the commit range returned, inclusive
+     * @end_commit If not null, use it as upper boundary for the commit range returned, inclusive
+     * @return List of commits along with metadata loaded into an index in natural order, i.e.
+     * from least recent commit to most recent commit
+     */
+    fun getCommits(startCommit: Commit?, endCommit: Commit?): List<CommitData>
 
     /**
      * Currently, the caller is responsible for ensuring that addCommitData() is invoked
