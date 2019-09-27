@@ -739,6 +739,7 @@ public final class MainRunner {
       // Remote Execution is in use. All RE builds should not use distributed build.
       final boolean isRemoteExecutionBuild =
           isRemoteExecutionBuild(command, buckConfig, executionEnvironment.getUsername());
+      ImmutableMap<String, String> environment = clientEnvironment;
       Optional<String> projectPrefix = Optional.empty();
       if (command.subcommand instanceof BuildCommand) {
         BuildCommand subcommand = (BuildCommand) command.subcommand;
@@ -823,7 +824,7 @@ public final class MainRunner {
 
       ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
       Watchman watchman =
-          buildWatchman(context, parserConfig, projectWatchList, clientEnvironment, console, clock);
+          buildWatchman(context, parserConfig, projectWatchList, environment, console, clock);
 
       ImmutableList<ConfigurationRuleDescription<?>> knownConfigurationDescriptions =
           PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager);
@@ -850,7 +851,7 @@ public final class MainRunner {
       ToolchainProviderFactory toolchainProviderFactory =
           new DefaultToolchainProviderFactory(
               pluginManager,
-              clientEnvironment,
+              environment,
               processExecutor,
               executableFinder,
               targetConfigurationSupplier);
@@ -1422,7 +1423,7 @@ public final class MainRunner {
                         parserAndCaches.getParser(),
                         buildEventBus,
                         platform,
-                        clientEnvironment,
+                        environment,
                         rootCell
                             .getBuckConfig()
                             .getView(JavaBuckConfig.class)
@@ -1470,7 +1471,7 @@ public final class MainRunner {
             handleAutoFix(
                 filesystem,
                 console,
-                clientEnvironment,
+                environment,
                 command,
                 buckConfig,
                 buildId,

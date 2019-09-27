@@ -137,6 +137,9 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   public static final String DEFAULT_AUTO_RE_EXPERIMENT_PROPERTY = "remote_execution_beta_test";
 
+  public static final String DISABLE_DISTCC_IF_REMOTE_EXECUTION_ENABLED_EXPERIMENT_PROPERTY =
+      "disable_distcc_if_remote_execution_enabled";
+
   private String getAutoReExperimentPropertyKey() {
     return getValue(AUTO_RE_EXPERIMENT_PROPERTY_KEY).orElse(DEFAULT_AUTO_RE_EXPERIMENT_PROPERTY);
   }
@@ -144,6 +147,12 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   @VisibleForTesting
   boolean isExperimentEnabled() {
     return getDelegate().getBooleanValue("experiments", getAutoReExperimentPropertyKey(), false);
+  }
+
+  public boolean shouldDisableDistccIfRemoteExecutionEnabled() {
+    return getDelegate()
+        .getBooleanValue(
+            "experiments", DISABLE_DISTCC_IF_REMOTE_EXECUTION_ENABLED_EXPERIMENT_PROPERTY, true);
   }
 
   public boolean isRemoteExecutionAutoEnabled(String username, List<String> commandArguments) {
