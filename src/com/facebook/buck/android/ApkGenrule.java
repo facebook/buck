@@ -30,7 +30,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
-import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.LegacyGenrule;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
@@ -53,7 +53,7 @@ import java.util.stream.Stream;
  * )
  * </pre>
  */
-public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntimeDeps {
+public class ApkGenrule extends LegacyGenrule implements HasInstallableApk, HasRuntimeDeps {
 
   @AddToRuleKey private final BuildTargetSourcePath apk;
   private final HasInstallableApk hasInstallableApk;

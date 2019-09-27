@@ -33,7 +33,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
-import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.LegacyGenrule;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -45,7 +45,7 @@ import java.util.OptionalInt;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class JsBundleGenrule extends Genrule
+public class JsBundleGenrule extends LegacyGenrule
     implements AndroidPackageable, HasRuntimeDeps, JsBundleOutputs, JsDependenciesOutputs {
 
   @AddToRuleKey final SourcePath jsBundleSourcePath;
@@ -201,7 +201,6 @@ public class JsBundleGenrule extends Genrule
       SourcePath dependenciesFilePath = getSourcePathToDepsFile();
       buildableContext.recordArtifact(sourcePathResolver.getRelativePath(dependenciesFilePath));
     }
-
     // Last, we add all remaining genrule commands after the last RmStep
     return builder.addAll(buildSteps.subList(lastRmStep.getAsInt() + 1, buildSteps.size())).build();
   }

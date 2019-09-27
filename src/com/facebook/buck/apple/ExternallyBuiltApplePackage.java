@@ -33,7 +33,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
-import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.LegacyGenrule;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -41,7 +41,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Rule for generating an apple package via external script. */
-public class ExternallyBuiltApplePackage extends Genrule {
+public class ExternallyBuiltApplePackage extends LegacyGenrule {
   @AddToRuleKey private String sdkVersion;
   @AddToRuleKey private Optional<String> platformBuildVersion;
 
