@@ -415,7 +415,7 @@ class CachingBuildRuleBuilder {
             thrown -> {
               String message = String.format("Building rule [%s] failed.", rule.getBuildTarget());
               BuildRuleFailedException failedException = getFailedException(thrown);
-              LOG.debug(failedException, message);
+              LOG.warn(failedException, message);
               if (consoleLogBuildFailuresInline) {
                 // TODO(cjhopman): This probably shouldn't be a thing. Why can't we just rely on the
                 // propagated failure being printed?
