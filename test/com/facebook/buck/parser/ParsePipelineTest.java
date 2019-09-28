@@ -30,6 +30,7 @@ import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -458,7 +459,8 @@ public class ParsePipelineTest {
               this.eventBus,
               "raw_target_node_parse_pipeline",
               speculativeParsing == SpeculativeParsing.ENABLED,
-              rawTargetNodeToTargetNodeFactory);
+              rawTargetNodeToTargetNodeFactory,
+              new ParsingUnconfiguredBuildTargetViewFactory());
     }
 
     public RawTargetNodeToTargetNodeParsePipeline getTargetNodeParsePipeline() {

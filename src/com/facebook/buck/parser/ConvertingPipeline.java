@@ -136,30 +136,6 @@ public abstract class ConvertingPipeline<F, T, K> implements AutoCloseable {
     return future;
   }
 
-  /**
-   * Obtain all {@link TargetNode}s from a build file. This may block if the file is not cached.
-   *
-   * @param cell the {@link Cell} that the build file belongs to.
-   * @param buildFile absolute path to the file to process.
-   * @param targetConfiguration the configuration of targets.
-   * @return all targets from the file
-   * @throws BuildFileParseException for syntax errors.
-   */
-  public final ImmutableList<T> getAllNodes(
-      Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
-      throws BuildFileParseException {
-    Preconditions.checkState(!shuttingDown.get());
-
-    try {
-      return getAllNodesJob(cell, buildFile, targetConfiguration).get();
-    } catch (Exception e) {
-      propagateCauseIfInstanceOf(e, BuildFileParseException.class);
-      propagateCauseIfInstanceOf(e, ExecutionException.class);
-      propagateCauseIfInstanceOf(e, UncheckedExecutionException.class);
-      throw new RuntimeException(e);
-    }
-  }
-
   public ListenableFuture<T> getNodeJob(Cell cell, K buildTarget) throws BuildTargetException {
     return cache.getJobWithCacheLookup(
         cell,
@@ -217,7 +193,8 @@ public abstract class ConvertingPipeline<F, T, K> implements AutoCloseable {
   protected abstract ListenableFuture<F> getItemToConvert(Cell cell, K buildTarget)
       throws BuildTargetException;
 
-  private T computeNode(Cell cell, K buildTarget, F rawNode) throws BuildTargetException {
+  /** Do the conversion from input type to output type. */
+  protected T computeNode(Cell cell, K buildTarget, F rawNode) throws BuildTargetException {
 
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scopeIgnoringShortEvents(
