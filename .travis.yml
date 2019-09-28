@@ -263,7 +263,7 @@ before_install:
   - if \[ ${TRAVIS_OS_NAME} == "osx" \]; then brew install ant watchman; fi
   # Limit Ant's and Buck's memory usage to avoid the OOM killer.
   - export ANT_OPTS='-Xmx1000m'
-  - echo '-Xmx500m' > .buckjavaargs.local
+  - echo '-Xmx750m' > .buckjavaargs.local
   # Set up the Android environment. Only for Linux.
   - if \[ ${TRAVIS_OS_NAME} == "linux" \] && \[ "${CI_ACTION}" == "heavy_integration" \]; then
       export NDK_HOME="${HOME}/android-ndk-linux" ;
