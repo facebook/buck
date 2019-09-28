@@ -25,6 +25,7 @@ import org.immutables.value.Value;
 
 /** Common arguments for build rules (but not configuration rules) */
 public interface CommonDescriptionArg extends ConstructorArg, HasTargetCompatibleWith {
+  @Hint(isConfigurable = false)
   String getName();
 
   ImmutableSet<SourcePath> getLicenses();
