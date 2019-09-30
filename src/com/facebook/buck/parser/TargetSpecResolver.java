@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellProvider;
+import com.facebook.buck.core.exceptions.HumanReadableExceptions;
 import com.facebook.buck.core.files.DirectoryListCache;
 import com.facebook.buck.core.files.DirectoryListComputation;
 import com.facebook.buck.core.files.FileTreeCache;
@@ -44,7 +45,6 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.util.MoreThrowables;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.base.Verify;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -293,7 +293,7 @@ public class TargetSpecResolver implements AutoCloseable {
       }
     } catch (ExecutionException e) {
       MoreThrowables.throwIfAnyCauseInstanceOf(e, InterruptedException.class);
-      Throwables.throwIfUnchecked(e.getCause());
+      HumanReadableExceptions.throwIfHumanReadableUnchecked(e.getCause());
       throw new RuntimeException(e);
     }
     // Finally, pull out the final build target results in input target spec order, and place them
