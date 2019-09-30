@@ -50,19 +50,33 @@ public class CodeSignIdentityStoreFactoryTest {
                 + "\"iPhone Developer: Foo Bar (12345ABCDE)\" (CSSMERR_TP_CERT_EXPIRED)\n"
                 + "  3) BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB "
                 + "\"iPhone Developer: Foo Bar (54321EDCBA)\"\n"
-                + "     3 valid identities found\n",
+                + "  4) CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC "
+                + "\"Apple Development: Fizz Buzz (12345AAAAA)\"\n"
+                + "  5) DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD "
+                + "\"Apple Development: Fizz Buzz (AAAAA12345)\" (CSSMERR_TP_CERT_REVOKED)\n"
+                + "  6) FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF "
+                + "\"Apple Development: Fizz Buzz (54321BBBBB)\" (CSSMERR_TP_CERT_EXPIRED)\n"
+                + "     6 valid identities found\n",
             "");
+
     FakeProcessExecutor processExecutor =
         new FakeProcessExecutor(ImmutableMap.of(processExecutorParams, process));
     CodeSignIdentityStore store =
         CodeSignIdentityStoreFactory.fromSystem(processExecutor, ImmutableList.of("unused"));
+
     ImmutableList<CodeSignIdentity> expected =
         ImmutableList.of(
             CodeSignIdentity.builder()
                 .setFingerprint(
                     CodeSignIdentity.toFingerprint("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"))
                 .setSubjectCommonName("iPhone Developer: Foo Bar (54321EDCBA)")
+                .build(),
+            CodeSignIdentity.builder()
+                .setFingerprint(
+                    CodeSignIdentity.toFingerprint("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"))
+                .setSubjectCommonName("Apple Development: Fizz Buzz (12345AAAAA)")
                 .build());
+
     assertThat(store.getIdentitiesSupplier().get(), equalTo(expected));
   }
 
