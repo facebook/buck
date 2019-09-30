@@ -110,7 +110,7 @@ public class UnusedDependenciesFinderIntegrationTest {
   }
 
   @Test
-  public void testOverridenTargetOptionShowsWarning() {
+  public void testOverriddenTargetOptionShowsWarning() {
     ProcessResult processResult =
         workspace.runBuckCommand(
             "build", "-c", "java.unused_dependencies_action=fail", ":bar_with_dep_and_warn_option");
@@ -122,6 +122,106 @@ public class UnusedDependenciesFinderIntegrationTest {
             Matchers.containsString(
                 "Target //:bar_with_dep_and_warn_option is declared with unused targets in deps:"),
             Matchers.containsString("buck//third-party/java/jsr:jsr305")));
+  }
+
+  @Test
+  public void testOverriddenTargetOptionFailsBuild() {
+    ProcessResult processResult =
+        workspace.runBuckCommand("build", ":bar_with_dep_and_fail_option");
+
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        Matchers.allOf(
+            Matchers.containsString(
+                "Target //:bar_with_dep_and_fail_option is declared with unused targets in deps:"),
+            Matchers.containsString("buck//third-party/java/jsr:jsr305")));
+  }
+
+  @Test
+  public void testAlwaysIgnoreOverridesTargetWarningOption() {
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "build",
+            "-c",
+            "java.unused_dependencies_action=ignore_always",
+            ":bar_with_dep_and_warn_option");
+
+    processResult.assertSuccess();
+    assertThat(
+        processResult.getStderr(),
+        Matchers.allOf(
+            Matchers.not(
+                Matchers.containsString(
+                    "Target //:bar_with_dep_and_warn_option is declared with unused targets in deps:"))));
+  }
+
+  @Test
+  public void testAlwaysIgnoreOverridesTargetFailOption() {
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "build",
+            "-c",
+            "java.unused_dependencies_action=ignore_always",
+            ":bar_with_dep_and_fail_option");
+
+    processResult.assertSuccess();
+    assertThat(
+        processResult.getStderr(),
+        Matchers.not(
+            Matchers.containsString(
+                "Target //:bar_with_dep_and_warn_option is declared with unused targets in deps:")));
+  }
+
+  @Test
+  public void testWarnIfFailDowngradesTargetFailOption() {
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "build",
+            "-c",
+            "java.unused_dependencies_action=warn_if_fail",
+            ":bar_with_dep_and_fail_option");
+
+    processResult.assertSuccess();
+    assertThat(
+        processResult.getStderr(),
+        Matchers.allOf(
+            Matchers.containsString(
+                "Target //:bar_with_dep_and_fail_option is declared with unused targets in deps:"),
+            Matchers.containsString("buck//third-party/java/jsr:jsr305")));
+  }
+
+  @Test
+  public void testWarnIfFailWithWarningOnTarget() {
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "build",
+            "-c",
+            "java.unused_dependencies_action=warn_if_fail",
+            ":bar_with_dep_and_warn_option");
+
+    processResult.assertSuccess();
+    assertThat(
+        processResult.getStderr(),
+        Matchers.allOf(
+            Matchers.containsString(
+                "Target //:bar_with_dep_and_warn_option is declared with unused targets in deps:"),
+            Matchers.containsString("buck//third-party/java/jsr:jsr305")));
+  }
+
+  @Test
+  public void testWarnIfFailDoesNoCheckByDefault() {
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "build", "-c", "java.unused_dependencies_action=ignore_always", ":bar_with_dep");
+
+    processResult.assertSuccess();
+    processResult.assertSuccess();
+    assertThat(
+        processResult.getStderr(),
+        Matchers.not(
+            Matchers.containsString(
+                "Target //:bar_with_dep is declared with unused targets in deps:")));
   }
 
   @Test

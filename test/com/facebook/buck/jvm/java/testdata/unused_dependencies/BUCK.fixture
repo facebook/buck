@@ -97,6 +97,18 @@ java_library(
 )
 
 java_library(
+    name = "bar_with_dep_and_fail_option",
+    srcs = ["Bar.java"],
+    on_unused_dependencies = "fail",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "buck//third-party/java/jsr:jsr305",
+    ],
+)
+
+java_library(
     name = "bar_with_exported_provided_dep",
     srcs = ["Bar.java"],
     exported_provided_deps = [
