@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright 2019-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -22,14 +22,18 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.function.Function;
 
-/** Creates {@link TargetNode} instances for the parser. */
-public interface ParserTargetNodeFactory<T> {
+/**
+ * Creates {@link TargetNode} instances from raw attribute map returned by the parser. This is a
+ * legacy interface which is used only for configuration targets, and should be removed.
+ */
+public interface ParserTargetNodeFromAttrMapFactory {
   TargetNode<?> createTargetNode(
       Cell cell,
       Path buildFile,
       BuildTarget target,
-      T rawNode,
+      Map<String, Object> rawNode,
       Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope);
 }

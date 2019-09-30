@@ -35,7 +35,7 @@ import com.facebook.buck.distributed.thrift.BuildJobStateTargetGraph;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetNode;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.parser.ParserTargetNodeFactory;
+import com.facebook.buck.parser.ParserTargetNodeFromAttrMapFactory;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -65,13 +65,13 @@ public class DistBuildTargetGraphCodec {
   private static final Logger LOG = Logger.get(DistBuildTargetGraphCodec.class);
 
   private ListeningExecutorService cpuExecutor;
-  private final ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory;
+  private final ParserTargetNodeFromAttrMapFactory parserTargetNodeFactory;
   private final Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode;
   private Set<String> topLevelTargets;
 
   public DistBuildTargetGraphCodec(
       ListeningExecutorService cpuExecutor,
-      ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory,
+      ParserTargetNodeFromAttrMapFactory parserTargetNodeFactory,
       Function<? super TargetNode<?>, ? extends Map<String, Object>> nodeToRawNode,
       Set<String> topLevelTargets) {
     this.cpuExecutor = cpuExecutor;

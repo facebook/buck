@@ -32,7 +32,7 @@ import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
-import com.facebook.buck.parser.ParserTargetNodeFactory;
+import com.facebook.buck.parser.ParserTargetNodeFromAttrMapFactory;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
@@ -52,7 +52,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Objects;
 
 /** Initializes the build engine delegate, the target graph and the action graph. */
@@ -212,7 +211,7 @@ public class DelegateAndGraphsInitializer {
     // state, and hence they're not pre-loaded. So even when we pre-load the files, we need this
     // hack so that the coercer does not check for existence of these unrecorded files.
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =
+    ParserTargetNodeFromAttrMapFactory parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             typeCoercerFactory,
             args.getKnownRuleTypesProvider(),

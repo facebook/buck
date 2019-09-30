@@ -150,7 +150,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
     PackageBoundaryChecker packageBoundaryChecker =
         new ThrowingPackageBoundaryChecker(daemonicParserState.getBuildFileTrees());
 
-    ParserTargetNodeFactory<RawTargetNode> nonResolvingRawTargetNodeToTargetNodeFactory =
+    ParserTargetNodeFromRawTargetNodeFactory nonResolvingRawTargetNodeToTargetNodeFactory =
         new NonResolvingRawTargetNodeToTargetNodeFactory(
             DefaultParserTargetNodeFactory.createForParser(
                 typeCoercerFactory,

@@ -52,8 +52,7 @@ import java.util.function.Function;
  * Creates {@link TargetNode} instances from raw data coming in form the {@link
  * ProjectBuildFileParser}.
  */
-public class DefaultParserTargetNodeFactory
-    implements ParserTargetNodeFactory<Map<String, Object>> {
+public class DefaultParserTargetNodeFactory implements ParserTargetNodeFromAttrMapFactory {
 
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final ConstructorArgMarshaller marshaller;
@@ -80,7 +79,8 @@ public class DefaultParserTargetNodeFactory
     this.typeCoercerFactory = typeCoercerFactory;
   }
 
-  public static ParserTargetNodeFactory<Map<String, Object>> createForParser(
+  /** Create node factory for regular Buck parser */
+  public static ParserTargetNodeFromAttrMapFactory createForParser(
       TypeCoercerFactory typeCoercerFactory,
       KnownRuleTypesProvider knownRuleTypesProvider,
       ConstructorArgMarshaller marshaller,
@@ -97,7 +97,8 @@ public class DefaultParserTargetNodeFactory
         new BuiltTargetVerifier());
   }
 
-  public static ParserTargetNodeFactory<Map<String, Object>> createForDistributedBuild(
+  /** Create node factory for (not defunct) distributed build */
+  public static ParserTargetNodeFromAttrMapFactory createForDistributedBuild(
       TypeCoercerFactory typeCoercerFactory,
       KnownRuleTypesProvider knownRuleTypesProvider,
       ConstructorArgMarshaller marshaller,

@@ -58,7 +58,7 @@ public class RawTargetNodeToTargetNodeParsePipeline
 
   private final boolean speculativeDepsTraversal;
   private final RawTargetNodePipeline rawTargetNodePipeline;
-  private final ParserTargetNodeFactory<RawTargetNode> rawTargetNodeToTargetNodeFactory;
+  private final ParserTargetNodeFromRawTargetNodeFactory rawTargetNodeToTargetNodeFactory;
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory;
 
   /** Create new pipeline for parsing Buck files. */
@@ -69,7 +69,7 @@ public class RawTargetNodeToTargetNodeParsePipeline
       BuckEventBus eventBus,
       String pipelineName,
       boolean speculativeDepsTraversal,
-      ParserTargetNodeFactory<RawTargetNode> rawTargetNodeToTargetNodeFactory,
+      ParserTargetNodeFromRawTargetNodeFactory rawTargetNodeToTargetNodeFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory) {
     super(
         executorService,

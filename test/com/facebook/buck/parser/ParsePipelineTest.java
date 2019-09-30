@@ -29,7 +29,6 @@ import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -442,7 +441,7 @@ public class ParsePipelineTest {
               buildFileRawNodeParsePipeline,
               buildTargetRawNodeParsePipeline,
               new DefaultRawTargetNodeFactory(knownRuleTypesProvider, new BuiltTargetVerifier()));
-      ParserTargetNodeFactory<RawTargetNode> rawTargetNodeToTargetNodeFactory =
+      ParserTargetNodeFromRawTargetNodeFactory rawTargetNodeToTargetNodeFactory =
           new NonResolvingRawTargetNodeToTargetNodeFactory(
               DefaultParserTargetNodeFactory.createForParser(
                   coercerFactory,

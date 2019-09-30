@@ -31,7 +31,7 @@ import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.RemoteCommand;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
-import com.facebook.buck.parser.ParserTargetNodeFactory;
+import com.facebook.buck.parser.ParserTargetNodeFromAttrMapFactory;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -42,7 +42,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -88,7 +87,7 @@ public class AsyncJobStateFactory {
         graphsAndBuildTargets.getGraphs().getTargetGraphForDistributedBuild();
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =
+    ParserTargetNodeFromAttrMapFactory parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             typeCoercerFactory,
             params.getKnownRuleTypesProvider(),
