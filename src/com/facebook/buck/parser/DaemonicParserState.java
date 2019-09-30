@@ -251,16 +251,12 @@ public class DaemonicParserState {
    */
   private class DaemonicCacheViewWithTrackingBuildFiles<K, T> extends DaemonicCacheView<K, T> {
 
-    private final Set<Path> buildFiles;
-
     /**
      * Creates a view that accumulates the paths of build files that contain targets accessed
      * through this view.
      */
-    private DaemonicCacheViewWithTrackingBuildFiles(
-        DaemonicCellState.CellCacheType<K, T> type, Set<Path> buildFiles) {
+    private DaemonicCacheViewWithTrackingBuildFiles(DaemonicCellState.CellCacheType<K, T> type) {
       super(type);
-      this.buildFiles = buildFiles;
     }
 
     @Override
@@ -270,7 +266,7 @@ public class DaemonicParserState {
           cell.getBuckConfigView(ParserConfig.class)
               .getAbsolutePathToBuildFileUnsafe(
                   cell, type.convertToUnconfiguredBuildTargetView(target));
-      buildFiles.add(buildFile);
+      configurationBuildFiles.add(buildFile);
       return super.putComputedNodeIfNotPresent(cell, target, targetNode, eventBus);
     }
   }
@@ -311,13 +307,12 @@ public class DaemonicParserState {
    */
   private final DaemonicCacheViewWithTrackingBuildFiles<BuildTarget, TargetNode<?>>
       targetNodeCacheWithTrackingConfigurationBuildFiles =
-          new DaemonicCacheViewWithTrackingBuildFiles<>(
-              DaemonicCellState.TARGET_NODE_CACHE_TYPE, configurationBuildFiles);
+          new DaemonicCacheViewWithTrackingBuildFiles<>(DaemonicCellState.TARGET_NODE_CACHE_TYPE);
 
   private final DaemonicCacheViewWithTrackingBuildFiles<UnconfiguredBuildTargetView, RawTargetNode>
       rawTargetCacheWithTrackingConfigurationBuildFiles =
           new DaemonicCacheViewWithTrackingBuildFiles<>(
-              DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE, configurationBuildFiles);
+              DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
 
   private final DaemonicRawCacheView rawNodeCache;
 
