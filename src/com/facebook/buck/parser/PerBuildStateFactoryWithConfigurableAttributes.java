@@ -175,8 +175,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
                 eventBus,
                 "nonresolving_raw_target_node_parse_pipeline",
                 enableSpeculativeParsing,
-                nonResolvingRawTargetNodeToTargetNodeFactory,
-                unconfiguredBuildTargetFactory);
+                nonResolvingRawTargetNodeToTargetNodeFactory);
 
     ConfigurationRuleRegistry configurationRuleRegistry =
         ConfigurationRuleRegistryFactory.createRegistry(
@@ -220,8 +219,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             eventBus,
             "configured_raw_target_node_parse_pipeline",
             enableSpeculativeParsing,
-            rawTargetNodeToTargetNodeFactory,
-            unconfiguredBuildTargetFactory) {
+            rawTargetNodeToTargetNodeFactory) {
           @Override
           public void close() {
             super.close();

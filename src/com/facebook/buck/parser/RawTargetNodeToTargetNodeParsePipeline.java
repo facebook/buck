@@ -16,20 +16,13 @@
 
 package com.facebook.buck.parser;
 
-import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
-
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
-import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
@@ -37,17 +30,11 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
 import com.facebook.buck.parser.config.ParserConfig;
-import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
 public class RawTargetNodeToTargetNodeParsePipeline
@@ -58,7 +45,6 @@ public class RawTargetNodeToTargetNodeParsePipeline
   private final boolean speculativeDepsTraversal;
   private final RawTargetNodePipeline rawTargetNodePipeline;
   private final ParserTargetNodeFromRawTargetNodeFactory rawTargetNodeToTargetNodeFactory;
-  private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory;
 
   /** Create new pipeline for parsing Buck files. */
   public RawTargetNodeToTargetNodeParsePipeline(
@@ -68,8 +54,7 @@ public class RawTargetNodeToTargetNodeParsePipeline
       BuckEventBus eventBus,
       String pipelineName,
       boolean speculativeDepsTraversal,
-      ParserTargetNodeFromRawTargetNodeFactory rawTargetNodeToTargetNodeFactory,
-      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory) {
+      ParserTargetNodeFromRawTargetNodeFactory rawTargetNodeToTargetNodeFactory) {
     super(
         executorService,
         cache,
@@ -79,7 +64,6 @@ public class RawTargetNodeToTargetNodeParsePipeline
     this.rawTargetNodePipeline = rawTargetNodePipeline;
     this.speculativeDepsTraversal = speculativeDepsTraversal;
     this.rawTargetNodeToTargetNodeFactory = rawTargetNodeToTargetNodeFactory;
-    this.unconfiguredBuildTargetViewFactory = unconfiguredBuildTargetViewFactory;
   }
 
   @Override
@@ -104,7 +88,8 @@ public class RawTargetNodeToTargetNodeParsePipeline
     TargetNode<?> targetNode =
         rawTargetNodeToTargetNodeFactory.createTargetNode(
             cell,
-            targetFilePath(cell, buildTarget.getUnconfiguredBuildTargetView()),
+            cell.getBuckConfigView(ParserConfig.class)
+                .getAbsolutePathToBuildFile(cell, buildTarget.getUnconfiguredBuildTargetView()),
             buildTarget,
             rawNode,
             perfEventScopeFunction);
@@ -130,43 +115,6 @@ public class RawTargetNodeToTargetNodeParsePipeline
     return targetNode;
   }
 
-  /**
-   * Use {@code default_target_platform} to configure target. Note we use default target platform
-   * only for targets explicitly requested by user, but not to dependencies of them hence the method
-   * name.
-   */
-  private TargetNode<?> configureRequestedTarget(
-      Cell cell,
-      UnconfiguredBuildTargetView unconfiguredTarget,
-      TargetConfiguration globalTargetConfiguration,
-      RawTargetNode rawTargetNode) {
-    TargetConfiguration targetConfiguration = globalTargetConfiguration;
-    if (globalTargetConfiguration.getConfigurationTargets().isEmpty()) {
-      // We use `default_target_platform` only when global platform is not specified
-      String defaultTargetPlatform =
-          (String)
-              rawTargetNode
-                  .getAttributes()
-                  .get(CommonDescriptionArg.DEFAULT_TARGET_PLATFORM_PARAM_NAME);
-      if (defaultTargetPlatform != null && !defaultTargetPlatform.isEmpty()) {
-        UnconfiguredBuildTargetView configurationTarget =
-            unconfiguredBuildTargetViewFactory.createForBaseName(
-                cell.getCellPathResolver(),
-                unconfiguredTarget.getBaseName(),
-                defaultTargetPlatform);
-        targetConfiguration =
-            ImmutableDefaultTargetConfiguration.of(
-                ConfigurationBuildTargets.convert(configurationTarget));
-      }
-    }
-    BuildTarget configuredTarget = unconfiguredTarget.configure(targetConfiguration);
-    return computeNode(cell, configuredTarget, rawTargetNode);
-  }
-
-  private static Path targetFilePath(Cell cell, UnconfiguredBuildTargetView target) {
-    return cell.getBuckConfigView(ParserConfig.class).getAbsolutePathToBuildFile(cell, target);
-  }
-
   @Override
   protected ListenableFuture<ImmutableList<RawTargetNode>> getItemsToConvert(
       Cell cell, Path buildFile) throws BuildTargetException {
@@ -178,65 +126,5 @@ public class RawTargetNodeToTargetNodeParsePipeline
   protected ListenableFuture<RawTargetNode> getItemToConvert(Cell cell, BuildTarget buildTarget)
       throws BuildTargetException {
     return rawTargetNodePipeline.getNodeJob(cell, buildTarget.getUnconfiguredBuildTargetView());
-  }
-
-  ListenableFuture<TargetNode<?>> getRequestedTargetNodeJob(
-      Cell cell,
-      UnconfiguredBuildTargetView unconfiguredTarget,
-      TargetConfiguration globalTargetConfiguration) {
-    ListenableFuture<RawTargetNode> rawTargetNodeFuture =
-        rawTargetNodePipeline.getNodeJob(cell, unconfiguredTarget);
-    return Futures.transform(
-        rawTargetNodeFuture,
-        rawTargetNode ->
-            configureRequestedTarget(
-                cell, unconfiguredTarget, globalTargetConfiguration, rawTargetNode),
-        MoreExecutors.directExecutor());
-  }
-
-  /**
-   * Obtain all {@link TargetNode}s from a build file. This may block if the file is not cached.
-   *
-   * @param cell the {@link Cell} that the build file belongs to.
-   * @param buildFile absolute path to the file to process.
-   * @param targetConfiguration the configuration of targets.
-   * @return all targets from the file
-   * @throws BuildFileParseException for syntax errors.
-   */
-  public final ImmutableList<TargetNode<?>> getAllNodes(
-      Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
-      throws BuildFileParseException {
-    Preconditions.checkState(!shuttingDown());
-
-    try {
-      return getAllNodesJob(cell, buildFile, targetConfiguration).get();
-    } catch (Exception e) {
-      propagateCauseIfInstanceOf(e, BuildFileParseException.class);
-      propagateCauseIfInstanceOf(e, ExecutionException.class);
-      propagateCauseIfInstanceOf(e, UncheckedExecutionException.class);
-      throw new RuntimeException(e);
-    }
-  }
-
-  ListenableFuture<ImmutableList<TargetNode<?>>> getAllRequestedTargetNodesJob(
-      Cell cell, Path buildFile, TargetConfiguration globalTargetConfiguration) {
-    ListenableFuture<ImmutableList<RawTargetNode>> rawTargetNodesFuture =
-        getItemsToConvert(cell, buildFile);
-
-    return Futures.transform(
-        rawTargetNodesFuture,
-        rawTargetNodes -> {
-          ImmutableList.Builder<TargetNode<?>> targetNodes = ImmutableList.builder();
-          for (RawTargetNode rawTargetNode : rawTargetNodes) {
-            UnconfiguredBuildTargetView unconfiguredTarget =
-                ImmutableUnconfiguredBuildTargetView.of(
-                    cell.getRoot(), rawTargetNode.getBuildTarget());
-            targetNodes.add(
-                configureRequestedTarget(
-                    cell, unconfiguredTarget, globalTargetConfiguration, rawTargetNode));
-          }
-          return targetNodes.build();
-        },
-        executorService);
   }
 }

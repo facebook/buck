@@ -18,28 +18,6 @@ java_library(
     ],
 )
 
-java_library(
-    name = "lib-with-default-target-platform",
-    srcs = [
-        "B.java",
-    ],
-    default_target_platform = "//config:linux_x86-64",
-    deps = [
-        ":dep",
-    ],
-)
-
-java_library(
-    name = "lib-with-default-target-platform-useless",
-    srcs = [
-        "B.java",
-    ],
-    default_target_platform = "//config:macos_x86-64",
-    deps = [
-        ":dep",
-    ],
-)
-
 genrule(
     name = "platform_dependent_genrule",
     out = "out",

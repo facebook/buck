@@ -253,8 +253,8 @@ public class TargetSpecResolver implements AutoCloseable {
       BuildTargetSpec buildTargetSpec = (BuildTargetSpec) spec;
       targetFutures.add(
           Futures.transform(
-              perBuildState.getRequestedTargetNodeJob(
-                  buildTargetSpec.getUnconfiguredBuildTargetView(), targetConfiguration),
+              perBuildState.getTargetNodeJob(
+                  buildTargetSpec.getUnconfiguredBuildTargetView().configure(targetConfiguration)),
               node -> {
                 ImmutableSet<BuildTarget> buildTargets =
                     applySpecFilter(spec, ImmutableList.of(node), flavorEnhancer, targetNodeFilter);
@@ -270,7 +270,7 @@ public class TargetSpecResolver implements AutoCloseable {
       // Build up a list of all target nodes from the build file.
       targetFutures.add(
           Futures.transform(
-              perBuildState.getRequestedTargetNodesJob(cell, buildFile, targetConfiguration),
+              perBuildState.getAllTargetNodesJob(cell, buildFile, targetConfiguration),
               nodes ->
                   new AbstractMap.SimpleEntry<>(
                       index, applySpecFilter(spec, nodes, flavorEnhancer, targetNodeFilter)),

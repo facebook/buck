@@ -566,47 +566,6 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
-  public void defaultTargetPlatformIsAppliedWhenNoTargetPlatformSpecified() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
-    workspace.setUp();
-
-    workspace.runBuckCommand("build", "//:lib-with-default-target-platform").assertSuccess();
-  }
-
-  @Test
-  public void targetPlatformOverridesDefaultTargetPlatform() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
-    workspace.setUp();
-
-    workspace
-        .runBuckCommand(
-            "build",
-            "--target-platforms",
-            "//config:linux_x86-64",
-            "//:lib-with-default-target-platform-useless")
-        .assertSuccess();
-  }
-
-  @Test
-  public void defaultTargetPlatformAppliesOnlyToRequestedTargets() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
-    workspace.setUp();
-
-    ProcessResult result = workspace.runBuckCommand("build", "//default_platform_only_leaf:leaf");
-    result.assertFailure();
-
-    // TODO(nga): Error is correctly produced by "dep" compatibility check
-    // but the error message is incorrect.
-    assertThat(
-        result.getStderr(),
-        Matchers.containsString(
-            "Cannot use select() expression when target platform is not specified"));
-  }
-
-  @Test
   public void changesInConfigurationRulesAreDetected() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
