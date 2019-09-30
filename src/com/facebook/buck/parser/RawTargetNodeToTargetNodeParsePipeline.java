@@ -23,7 +23,6 @@ import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
@@ -52,7 +51,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
 public class RawTargetNodeToTargetNodeParsePipeline
-    extends ConvertingPipeline<RawTargetNode, TargetNode<?>, BuildTarget> {
+    extends ConvertingPipeline<RawTargetNode, TargetNode<?>, BuildTarget, TargetConfiguration> {
 
   private static final Logger LOG = Logger.get(RawTargetNodeToTargetNodeParsePipeline.class);
 
@@ -171,7 +170,8 @@ public class RawTargetNodeToTargetNodeParsePipeline
   @Override
   protected ListenableFuture<ImmutableList<RawTargetNode>> getItemsToConvert(
       Cell cell, Path buildFile) throws BuildTargetException {
-    return rawTargetNodePipeline.getAllNodesJob(cell, buildFile, EmptyTargetConfiguration.INSTANCE);
+    return rawTargetNodePipeline.getAllNodesJob(
+        cell, buildFile, RawTargetNodePipeline.NoConfiguration.INSTANCE);
   }
 
   @Override

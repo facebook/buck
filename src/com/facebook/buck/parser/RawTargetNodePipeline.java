@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.CanonicalCellName;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
@@ -40,7 +39,19 @@ import java.util.function.Function;
 
 /** Converts nodes in a raw form (taken from build file parsers) into {@link RawTargetNode}. */
 public class RawTargetNodePipeline
-    extends ConvertingPipeline<Map<String, Object>, RawTargetNode, UnconfiguredBuildTargetView> {
+    extends ConvertingPipeline<
+        Map<String, Object>,
+        RawTargetNode,
+        UnconfiguredBuildTargetView,
+        RawTargetNodePipeline.NoConfiguration> {
+
+  /**
+   * Marker type for this pipeline indicating that {@link RawTargetNode} doesn't have a
+   * configuration
+   */
+  enum NoConfiguration {
+    INSTANCE
+  }
 
   private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
   private final BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline;
@@ -69,7 +80,7 @@ public class RawTargetNodePipeline
       Path root,
       CanonicalCellName cellName,
       Path buildFile,
-      TargetConfiguration targetConfiguration,
+      NoConfiguration targetConfiguration,
       Map<String, Object> from) {
     return ImmutableUnconfiguredBuildTargetView.of(
         UnflavoredBuildTargetFactory.createFromRawNode(root, cellName, from, buildFile));

@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -164,7 +165,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
     // deadlocks happening when too many node are requested from targetNodeParsePipeline.
     // That pipeline does blocking calls to get nodes from nonResolvingTargetNodeParsePipeline
     // which can lead to deadlocks.
-    ConvertingPipeline<RawTargetNode, TargetNode<?>, BuildTarget>
+    ConvertingPipeline<RawTargetNode, TargetNode<?>, BuildTarget, TargetConfiguration>
         nonResolvingTargetNodeParsePipeline =
             new RawTargetNodeToTargetNodeParsePipeline(
                 daemonicParserState.getOrCreateNodeCacheForConfigurationTargets(

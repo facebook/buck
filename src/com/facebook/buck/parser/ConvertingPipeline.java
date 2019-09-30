@@ -21,7 +21,6 @@ import static com.google.common.base.Throwables.throwIfInstanceOf;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CanonicalCellName;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -53,17 +52,16 @@ import java.util.function.Function;
  * @param <F> Type to convert from (raw nodes, for example)
  * @param <T> Type to convert to (TargetNode, for example)
  * @param <K> Cache key
+ * @param <C> Cache key used in pair with path for per-path caching
  */
-public abstract class ConvertingPipeline<F, T, K> implements AutoCloseable {
+public abstract class ConvertingPipeline<F, T, K, C> implements AutoCloseable {
   private static final Logger LOG = Logger.get(ConvertingPipeline.class);
 
   private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
 
   private final BuckEventBus eventBus;
   private final PipelineNodeCache<K, T> cache;
-  private final ConcurrentHashMap<
-          Pair<Path, TargetConfiguration>, ListenableFuture<ImmutableList<T>>>
-      allNodeCache;
+  private final ConcurrentHashMap<Pair<Path, C>, ListenableFuture<ImmutableList<T>>> allNodeCache;
   protected final ListeningExecutorService executorService;
   private final SimplePerfEvent.Scope perfEventScope;
   private final PerfEventId perfEventId;
@@ -91,9 +89,9 @@ public abstract class ConvertingPipeline<F, T, K> implements AutoCloseable {
   }
 
   public ListenableFuture<ImmutableList<T>> getAllNodesJob(
-      Cell cell, Path buildFile, TargetConfiguration targetConfiguration) {
+      Cell cell, Path buildFile, C targetConfiguration) {
     SettableFuture<ImmutableList<T>> future = SettableFuture.create();
-    Pair<Path, TargetConfiguration> pathCacheKey = new Pair<>(buildFile, targetConfiguration);
+    Pair<Path, C> pathCacheKey = new Pair<>(buildFile, targetConfiguration);
     ListenableFuture<ImmutableList<T>> cachedFuture =
         allNodeCache.putIfAbsent(pathCacheKey, future);
 
@@ -177,11 +175,7 @@ public abstract class ConvertingPipeline<F, T, K> implements AutoCloseable {
   }
 
   protected abstract K getBuildTarget(
-      Path root,
-      CanonicalCellName cellName,
-      Path buildFile,
-      TargetConfiguration targetConfiguration,
-      F from);
+      Path root, CanonicalCellName cellName, Path buildFile, C targetConfiguration, F from);
 
   protected abstract T computeNodeInScope(
       Cell cell, K buildTarget, F rawNode, Function<PerfEventId, Scope> perfEventScopeFunction)
