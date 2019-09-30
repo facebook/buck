@@ -59,6 +59,9 @@ public class TestRunnerSpecCoercer {
       return ImmutableCoercedTestRunnerSpec.of(
           converter.convert((StringWithMacros) spec.getData()));
     }
+    if (spec.getData() instanceof Number) {
+      return ImmutableCoercedTestRunnerSpec.of(spec.getData());
+    }
     throw new IllegalStateException();
   }
 }

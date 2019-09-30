@@ -407,6 +407,8 @@ public class JavaTestIntegrationTest {
     assertTrue(other.isArray());
     assertTrue(other.has(0));
     assertEquals("stuff", other.get(0).get("complicated").textValue());
+    assertEquals(1, other.get(0).get("integer").intValue());
+    assertEquals(1.2, other.get(0).get("double").doubleValue(), 0);
 
     String cmd = spec.get("cmd").textValue();
     DefaultProcessExecutor processExecutor =
@@ -439,6 +441,8 @@ public class JavaTestIntegrationTest {
     assertTrue(other.isArray());
     assertTrue(other.has(0));
     assertEquals("stuff", other.get(0).get("complicated").textValue());
+    assertEquals(1, other.get(0).get("integer").intValue());
+    assertEquals(1.2, other.get(0).get("double").doubleValue(), 0);
 
     String cmd = spec.get("cmd").textValue();
     DefaultProcessExecutor processExecutor =

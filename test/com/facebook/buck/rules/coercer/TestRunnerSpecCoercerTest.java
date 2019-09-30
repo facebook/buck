@@ -115,6 +115,26 @@ public class TestRunnerSpecCoercerTest {
   }
 
   @Test
+  public void coerceNumbers() throws CoerceFailedException {
+    TestRunnerSpec spec =
+        coercer.coerce(
+            cellPathResolver,
+            filesystem,
+            basePath,
+            EmptyTargetConfiguration.INSTANCE,
+            ImmutableMap.of("a", 1.0, "b", 2));
+
+    assertEquals(
+        ImmutableTestRunnerSpec.of(
+            ImmutableMap.of(
+                StringWithMacrosUtils.format("a"),
+                ImmutableTestRunnerSpec.of(1.0),
+                StringWithMacrosUtils.format("b"),
+                ImmutableTestRunnerSpec.of(2))),
+        spec);
+  }
+
+  @Test
   public void coerceFailsWhenMapKeysNotStringWithMacros() throws CoerceFailedException {
     expectedException.expect(CoerceFailedException.class);
 

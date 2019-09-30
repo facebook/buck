@@ -77,7 +77,11 @@ public class TestRunnerSpecCoercionSerializationTest {
                                     StringWithMacrosUtils.format(
                                         "nested %s", AbsoluteOutputMacro.of("bar"))))))),
                 StringWithMacrosUtils.format("some %s", AbsoluteOutputMacro.of("foo")),
-                ImmutableTestRunnerSpec.of(StringWithMacrosUtils.format("faz"))));
+                ImmutableTestRunnerSpec.of(StringWithMacrosUtils.format("faz")),
+                StringWithMacrosUtils.format("int"),
+                ImmutableTestRunnerSpec.of(1),
+                StringWithMacrosUtils.format("double"),
+                ImmutableTestRunnerSpec.of(2.4)));
 
     CoercedTestRunnerSpec coercedSpec =
         TestRunnerSpecCoercer.coerce(spec, getConverter(graphBuilder, rule));
@@ -96,7 +100,11 @@ public class TestRunnerSpecCoercionSerializationTest {
                 + graphBuilder
                     .getSourcePathResolver()
                     .getAbsolutePath(rule.getSourcePathToSupplementaryOutput("foo")),
-            "faz");
+            "faz",
+            "int",
+            1,
+            "double",
+            2.4);
 
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     JsonGenerator generator = ObjectMappers.createGenerator(outputStream).useDefaultPrettyPrinter();

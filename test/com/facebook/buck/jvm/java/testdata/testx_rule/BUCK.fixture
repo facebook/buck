@@ -13,6 +13,8 @@ java_test(
         "other": [
             {
                 "complicated": "stuff",
+                "integer": 1,
+                "double": 1.2,
             },
         ],
         "cmd": "java -jar $(abs_output testbin) $(abs_output classnames)",
@@ -31,6 +33,8 @@ java_test(
         "other": [
             {
                 "complicated": "stuff",
+                "integer": 1,
+                "double": 1.2,
             },
         ],
         "cmd": "cat $(abs_output jvm-args)",

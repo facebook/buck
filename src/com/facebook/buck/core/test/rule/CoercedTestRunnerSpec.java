@@ -36,10 +36,13 @@ public abstract class CoercedTestRunnerSpec {
 
   @Value.Check
   protected void check() {
-    // the json should be a map, iterable, or a single Arg
+    // the json should be a map, iterable, a single Arg, or a Number
     Object object = getData();
     Preconditions.checkState(
-        object instanceof Map || object instanceof Iterable || object instanceof Arg);
+        object instanceof Map
+            || object instanceof Iterable
+            || object instanceof Arg
+            || object instanceof Number);
   }
 
   /**
@@ -69,6 +72,10 @@ public abstract class CoercedTestRunnerSpec {
       jsonGenerator.writeEndArray();
     } else if (getData() instanceof Arg) {
       jsonGenerator.writeString(Arg.stringify((Arg) getData(), sourcePathResolver));
+    } else if (getData() instanceof Number) {
+      jsonGenerator.writeObject(getData());
+    } else {
+      throw new IllegalStateException("Unexpected data type");
     }
   }
 }

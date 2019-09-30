@@ -83,6 +83,9 @@ public class TestRunnerSpecCoercer implements TypeCoercer<TestRunnerSpec> {
       return listTypeCoercer.coerce(
           cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object);
     }
+    if (object instanceof Number) {
+      return object;
+    }
     return macrosTypeCoercer.coerce(
         cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object);
   };

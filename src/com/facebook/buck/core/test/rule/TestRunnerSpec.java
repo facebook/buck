@@ -35,9 +35,12 @@ public abstract class TestRunnerSpec {
 
   @Value.Check
   protected void check() {
-    // the json should be a map, iterable, or a single stringwithmacros
+    // the json should be a map, iterable, a single stringwithmacros, or a Number
     Object object = getData();
     Preconditions.checkState(
-        object instanceof Map || object instanceof Iterable || object instanceof StringWithMacros);
+        object instanceof Map
+            || object instanceof Iterable
+            || object instanceof StringWithMacros
+            || object instanceof Number);
   }
 }
