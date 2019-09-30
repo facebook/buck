@@ -442,7 +442,7 @@ public class AppleBinaryIntegrationTest {
         containsString("executable"));
   }
 
-  @Test
+  @Test(timeout = 120000)
   public void testAppleBinaryWithLibraryDependencyWithSwiftSourcesBuildsSomething()
       throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
