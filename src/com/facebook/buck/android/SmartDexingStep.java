@@ -295,7 +295,7 @@ public class SmartDexingStep implements Step {
   public String getDescription(ExecutionContext context) {
     StringBuilder b = new StringBuilder();
     b.append(getShortName());
-
+    minSdkVersion.ifPresent(minSdk -> b.append("--min-sdk-version ").append(minSdk));
     Multimap<Path, Path> outputToInputs = outputToInputsSupplier.get();
     for (Path output : outputToInputs.keySet()) {
       b.append(" -out ");
