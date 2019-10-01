@@ -45,6 +45,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
@@ -95,7 +96,7 @@ public class PreBuildPhase {
   // TODO(shivanker): Add unit-tests for this class (decoupled from DistBuildControllerTest).
 
   /** Run all steps required before the build. */
-  public Pair<StampedeId, ListenableFuture<Void>> runPreDistBuildLocalStepsAsync(
+  public Pair<StampedeId, ListenableFuture<Unit>> runPreDistBuildLocalStepsAsync(
       ListeningExecutorService networkExecutorService,
       ProjectFilesystem projectFilesystem,
       FileHashLoader fileHashLoader,
@@ -218,7 +219,7 @@ public class PreBuildPhase {
               networkExecutorService));
     }
 
-    ListenableFuture<Void> asyncPrep =
+    ListenableFuture<Unit> asyncPrep =
         Futures.transform(
             Futures.allAsList(asyncJobs),
             results -> {
@@ -232,6 +233,6 @@ public class PreBuildPhase {
             },
             MoreExecutors.directExecutor());
 
-    return new Pair<StampedeId, ListenableFuture<Void>>(stampedeId, asyncPrep);
+    return new Pair<StampedeId, ListenableFuture<Unit>>(stampedeId, asyncPrep);
   }
 }

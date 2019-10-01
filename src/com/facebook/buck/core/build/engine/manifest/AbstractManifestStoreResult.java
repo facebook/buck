@@ -17,6 +17,7 @@
 package com.facebook.buck.core.build.engine.manifest;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.Optional;
@@ -46,5 +47,5 @@ interface AbstractManifestStoreResult {
   Optional<String> getManifestLoadError();
 
   /** @return a future wrapping the asynchronous cache upload. */
-  Optional<ListenableFuture<Void>> getStoreFuture();
+  Optional<ListenableFuture<Unit>> getStoreFuture();
 }

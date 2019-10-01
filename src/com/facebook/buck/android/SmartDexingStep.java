@@ -33,6 +33,7 @@ import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipScrubberStep;
@@ -242,16 +243,16 @@ public class SmartDexingStep implements Step {
     // itself to be CPU (and not I/O) bound making it a good candidate for parallelization.
     Stream<ImmutableList<Step>> dxSteps = generateDxCommands(filesystem, outputToInputs);
 
-    ImmutableList<Callable<Void>> callables =
+    ImmutableList<Callable<Unit>> callables =
         dxSteps
             .map(
                 steps ->
-                    (Callable<Void>)
+                    (Callable<Unit>)
                         () -> {
                           for (Step step : steps) {
                             StepRunner.runStep(context, step, Optional.of(buildTarget));
                           }
-                          return null;
+                          return Unit.UNIT;
                         })
             .collect(ImmutableList.toImmutableList());
 

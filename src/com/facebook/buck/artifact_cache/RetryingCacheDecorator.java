@@ -27,6 +27,7 @@ import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.slb.NoHealthyServersException;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -110,12 +111,12 @@ public class RetryingCacheDecorator implements ArtifactCache, CacheDecorator {
   }
 
   @Override
-  public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+  public ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
     return delegate.store(info, output);
   }
 
   @Override
-  public ListenableFuture<Void> store(ImmutableList<Pair<ArtifactInfo, BorrowablePath>> artifacts) {
+  public ListenableFuture<Unit> store(ImmutableList<Pair<ArtifactInfo, BorrowablePath>> artifacts) {
     return delegate.store(artifacts);
   }
 

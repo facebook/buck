@@ -34,6 +34,7 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.hashing.FileHashLoader;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Functions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -159,7 +160,7 @@ public class DistBuildFileHashes {
   }
 
   private static ListenableFuture<ImmutableList<RecordedFileHashes>> fileHashesComputation(
-      ListenableFuture<Void> ruleKeyComputationForSideEffect,
+      ListenableFuture<Unit> ruleKeyComputationForSideEffect,
       ImmutableList<RecordedFileHashes> remoteFileHashes,
       ListeningExecutorService executorService) {
     ListenableFuture<ImmutableList<RecordedFileHashes>> asyncHashes =

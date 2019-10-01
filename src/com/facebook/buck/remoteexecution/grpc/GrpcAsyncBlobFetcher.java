@@ -27,6 +27,7 @@ import com.facebook.buck.remoteexecution.event.CasBlobDownloadEvent;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.util.Scope;
+import com.facebook.buck.util.types.Unit;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -98,7 +99,7 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
   }
 
   @Override
-  public ListenableFuture<Void> fetchToStream(Protocol.Digest digest, WritableByteChannel channel) {
+  public ListenableFuture<Unit> fetchToStream(Protocol.Digest digest, WritableByteChannel channel) {
     return closeScopeWhenFutureCompletes(
         CasBlobDownloadEvent.sendEvent(buckEventBus, 1, digest.getSize()),
         GrpcRemoteExecutionClients.readByteStream(
@@ -114,9 +115,9 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
   }
 
   @Override
-  public ListenableFuture<Void> batchFetchBlobs(
+  public ListenableFuture<Unit> batchFetchBlobs(
       ImmutableMultimap<Protocol.Digest, Callable<WritableByteChannel>> requests,
-      ImmutableMultimap<Protocol.Digest, SettableFuture<Void>> futures) {
+      ImmutableMultimap<Protocol.Digest, SettableFuture<Unit>> futures) {
     Scope scope =
         CasBlobDownloadEvent.sendEvent(
             buckEventBus,

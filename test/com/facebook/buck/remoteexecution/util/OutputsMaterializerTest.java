@@ -30,6 +30,7 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
 import com.facebook.buck.remoteexecution.util.OutputsCollector.CollectedOutputs;
 import com.facebook.buck.remoteexecution.util.OutputsCollector.Delegate;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -405,7 +406,7 @@ public class OutputsMaterializerTest {
     }
 
     @Override
-    public ListenableFuture<Void> fetchToStream(Digest digest, WritableByteChannel channel) {
+    public ListenableFuture<Unit> fetchToStream(Digest digest, WritableByteChannel channel) {
       return Futures.transform(
           fetch(digest),
           buf -> {
@@ -419,9 +420,9 @@ public class OutputsMaterializerTest {
     }
 
     @Override
-    public ListenableFuture<Void> batchFetchBlobs(
+    public ListenableFuture<Unit> batchFetchBlobs(
         ImmutableMultimap<Digest, Callable<WritableByteChannel>> requests,
-        ImmutableMultimap<Digest, SettableFuture<Void>> futures)
+        ImmutableMultimap<Digest, SettableFuture<Unit>> futures)
         throws IOException {
       for (Digest digest : requests.keySet()) {
         try {

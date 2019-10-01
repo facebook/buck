@@ -52,6 +52,7 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.AssertScopeExclusiveAccess;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.util.types.Unit;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.google.common.annotations.VisibleForTesting;
@@ -121,7 +122,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   private boolean isInitialized;
   private boolean isClosed;
 
-  @Nullable private FutureTask<Void> stderrConsumerTerminationFuture;
+  @Nullable private FutureTask<Unit> stderrConsumerTerminationFuture;
   @Nullable private Thread stderrConsumerThread;
 
   private AtomicReference<Path> currentBuildFile = new AtomicReference<Path>();

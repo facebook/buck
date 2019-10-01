@@ -22,6 +22,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -274,8 +275,8 @@ public class DefaultProcessExecutor implements ProcessExecutor {
                 ansi));
 
     // Consume the streams so they do not deadlock.
-    Future<Void> stdOutTerminationFuture = THREAD_POOL.submit(stdOut);
-    Future<Void> stdErrTerminationFuture = THREAD_POOL.submit(stdErr);
+    Future<Unit> stdOutTerminationFuture = THREAD_POOL.submit(stdOut);
+    Future<Unit> stdErrTerminationFuture = THREAD_POOL.submit(stdErr);
 
     boolean timedOut = false;
 

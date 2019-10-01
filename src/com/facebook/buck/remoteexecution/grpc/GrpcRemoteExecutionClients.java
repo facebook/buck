@@ -31,6 +31,7 @@ import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.util.function.ThrowingConsumer;
+import com.facebook.buck.util.types.Unit;
 import com.google.bytestream.ByteStreamGrpc;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
 import com.google.bytestream.ByteStreamProto.ReadRequest;
@@ -97,14 +98,14 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
   }
 
   /** Reads a ByteStream onto the arg consumer. */
-  public static ListenableFuture<Void> readByteStream(
+  public static ListenableFuture<Unit> readByteStream(
       String instanceName,
       Protocol.Digest digest,
       ByteStreamStub byteStreamStub,
       ThrowingConsumer<ByteString, IOException> dataConsumer,
       int casDeadline) {
     String name = getResourceName(instanceName, digest);
-    SettableFuture<Void> future = SettableFuture.create();
+    SettableFuture<Unit> future = SettableFuture.create();
     byteStreamStub
         .withDeadlineAfter(casDeadline, TimeUnit.SECONDS)
         .read(

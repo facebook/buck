@@ -60,6 +60,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -579,7 +580,7 @@ class NativeLibraryMergeEnhancer {
       Function<NativeLinkable, Iterable<? extends NativeLinkable>> depType,
       Map<NativeLinkable, MergedLibNativeLinkable> alreadyMerged) {
     // Using IdentityHashMap as a hash set.
-    Map<MergedLibNativeLinkable, Void> structuralDeps = new HashMap<>();
+    Map<MergedLibNativeLinkable, Unit> structuralDeps = new HashMap<>();
     for (NativeLinkable linkable : constituents.getLinkables()) {
       for (NativeLinkable dep : depType.apply(linkable)) {
         MergedLibNativeLinkable mappedDep = alreadyMerged.get(dep);
@@ -591,7 +592,7 @@ class NativeLibraryMergeEnhancer {
           throw new RuntimeException(
               "Can't find mapped dep of " + dep + " for " + linkable + ".  This is a bug.");
         }
-        structuralDeps.put(mappedDep, null);
+        structuralDeps.put(mappedDep, Unit.UNIT);
       }
     }
     // Sort here to ensure consistent ordering, because the build target depends on the order.

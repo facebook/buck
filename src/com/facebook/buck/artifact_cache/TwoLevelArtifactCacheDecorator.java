@@ -31,6 +31,7 @@ import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
@@ -190,7 +191,7 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
   }
 
   @Override
-  public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+  public ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
 
     return Futures.transformAsync(
         attemptTwoLevelStore(info, output),

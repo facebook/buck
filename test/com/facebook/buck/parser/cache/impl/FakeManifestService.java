@@ -18,6 +18,7 @@ package com.facebook.buck.parser.cache.impl;
 
 import com.facebook.buck.artifact_cache.thrift.Manifest;
 import com.facebook.buck.manifestservice.ManifestService;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -33,7 +34,7 @@ public class FakeManifestService implements ManifestService {
 
   /** Appends one more entry to the manifest. Creates a new one if it does not already exist. */
   @Override
-  public ListenableFuture<Void> appendToManifest(Manifest manifest) {
+  public ListenableFuture<Unit> appendToManifest(Manifest manifest) {
     return addToManifestBackingCollection(manifest);
   }
 
@@ -53,18 +54,18 @@ public class FakeManifestService implements ManifestService {
 
   /** Deletes an existing Manifest. */
   @Override
-  public ListenableFuture<Void> deleteManifest(String manifestKey) {
+  public ListenableFuture<Unit> deleteManifest(String manifestKey) {
     fingerprints.remove(manifestKey);
     return Futures.immediateFuture(null);
   }
 
   /** Sets the Manifest for key. Overwrites existing one if it already exists. */
   @Override
-  public ListenableFuture<Void> setManifest(Manifest manifest) {
+  public ListenableFuture<Unit> setManifest(Manifest manifest) {
     return addToManifestBackingCollection(manifest);
   }
 
-  private ListenableFuture<Void> addToManifestBackingCollection(Manifest manifest) {
+  private ListenableFuture<Unit> addToManifestBackingCollection(Manifest manifest) {
     String key = manifest.key;
     ArrayList<ByteBuffer> fingerprintsForKey = fingerprints.get(key);
     if (fingerprintsForKey == null) {

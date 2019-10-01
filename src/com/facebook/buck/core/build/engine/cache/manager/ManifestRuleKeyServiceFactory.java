@@ -23,6 +23,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.manifestservice.ManifestService;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.nio.file.Path;
 
@@ -38,7 +39,7 @@ public abstract class ManifestRuleKeyServiceFactory {
       final ArtifactCache artifactCache) {
     return new ManifestRuleKeyService() {
       @Override
-      public ListenableFuture<Void> storeManifest(
+      public ListenableFuture<Unit> storeManifest(
           RuleKey manifestKey, Path manifestToUpload, long artifactBuildTimeMs) {
         return artifactCache.store(
             ArtifactInfo.builder()

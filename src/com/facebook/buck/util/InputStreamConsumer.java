@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.StandardSystemProperty;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -25,7 +26,8 @@ import java.io.PrintStream;
 import java.io.Reader;
 import java.util.concurrent.Callable;
 
-public final class InputStreamConsumer implements Callable<Void> {
+/** An utility to process input stream with a list of line-by-line consumers */
+public final class InputStreamConsumer implements Callable<Unit> {
 
   /** Interface to handle a line of input from the stream. */
   public interface Handler {
@@ -45,14 +47,14 @@ public final class InputStreamConsumer implements Callable<Void> {
   }
 
   @Override
-  public Void call() throws IOException {
+  public Unit call() throws IOException {
     String line;
     while ((line = inputReader.readLine()) != null) {
       for (Handler handler : handlers) {
         handler.handleLine(line);
       }
     }
-    return null;
+    return Unit.UNIT;
   }
 
   public static Handler createAnsiHighlightingHandler(

@@ -29,6 +29,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.CloseableHolder;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.NamedTemporaryFile;
+import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -59,7 +60,8 @@ import org.apache.commons.compress.compressors.zstandard.ZstdCompressorOutputStr
 public class ArtifactUploader {
   private static final Logger LOG = Logger.get(ArtifactUploader.class);
 
-  public static ListenableFuture<Void> performUploadToArtifactCache(
+  /** As method name says */
+  public static ListenableFuture<Unit> performUploadToArtifactCache(
       ImmutableSet<RuleKey> ruleKeys,
       ArtifactCache artifactCache,
       BuckEventBus eventBus,
@@ -80,7 +82,7 @@ public class ArtifactUploader {
     }
 
     // Store the artifact, including any additional metadata.
-    ListenableFuture<Void> storeFuture =
+    ListenableFuture<Unit> storeFuture =
         artifactCache.store(
             ArtifactInfo.builder()
                 .setRuleKeys(ruleKeys)
@@ -91,9 +93,9 @@ public class ArtifactUploader {
             BorrowablePath.borrowablePath(archive.get()));
     Futures.addCallback(
         storeFuture,
-        new FutureCallback<Void>() {
+        new FutureCallback<Unit>() {
           @Override
-          public void onSuccess(Void result) {
+          public void onSuccess(Unit result) {
             onCompletion();
           }
 

@@ -23,6 +23,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.manifestservice.ManifestService;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -60,7 +61,7 @@ import java.nio.file.Path;
   }
 
   @Override
-  public ListenableFuture<Void> storeManifest(
+  public ListenableFuture<Unit> storeManifest(
       RuleKey manifestKey, Path manifestToUpload, long artifactBuildTimeMs) {
     String key = toManifestServiceKey(manifestKey);
     Manifest manifest = new Manifest();

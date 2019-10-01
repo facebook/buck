@@ -19,6 +19,7 @@ package com.facebook.buck.support.bgtasks;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.util.concurrent.SettableFuture;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -36,7 +37,7 @@ class ManagedBackgroundTask<T> {
   private final BackgroundTask<T> task;
   private final TaskId id;
   private volatile boolean toCancel;
-  private final SettableFuture<Void> future;
+  private final SettableFuture<Unit> future;
 
   protected ManagedBackgroundTask(BackgroundTask<T> task, BuildId buildId) {
     this.task = task;
@@ -89,7 +90,7 @@ class ManagedBackgroundTask<T> {
     return task.getShouldCancelOnRepeat();
   }
 
-  SettableFuture<Void> getFuture() {
+  SettableFuture<Unit> getFuture() {
     return future;
   }
 

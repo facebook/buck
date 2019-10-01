@@ -29,6 +29,7 @@ import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -291,7 +292,7 @@ public class MultiArtifactCacheTest {
     }
 
     @Override
-    public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+    public ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
       if (output.canBorrow()) {
         try {
           filesystem.deleteFileAtPath(output.getPath());
@@ -300,7 +301,7 @@ public class MultiArtifactCacheTest {
         }
       }
       storedKey.set(Iterables.getFirst(info.getRuleKeys(), null));
-      return Futures.immediateFuture(null);
+      return Futures.immediateFuture(Unit.UNIT);
     }
 
     @Override
@@ -375,7 +376,7 @@ public class MultiArtifactCacheTest {
     InMemoryArtifactCache cache2 =
         new InMemoryArtifactCache() {
           @Override
-          public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+          public ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
             // The second cache shouldn't receive a store call.
             throw new RuntimeException();
           }
@@ -405,7 +406,7 @@ public class MultiArtifactCacheTest {
     InMemoryArtifactCache cache2 =
         new InMemoryArtifactCache() {
           @Override
-          public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+          public ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
             // The second cache shouldn't receive a store call.
             throw new RuntimeException();
           }

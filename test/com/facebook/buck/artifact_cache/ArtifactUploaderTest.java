@@ -32,6 +32,7 @@ import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TarInspector;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -87,7 +88,7 @@ public class ArtifactUploaderTest {
           }
 
           @Override
-          public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+          public ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
             stored.set(true);
 
             // Verify the build metadata.
@@ -103,7 +104,7 @@ public class ArtifactUploaderTest {
               archiveContents = TarInspector.readTarZst(output.getPath());
             } catch (IOException | CompressorException e) {
               fail(e.getMessage());
-              return Futures.immediateFuture(null);
+              return Futures.immediateFuture(Unit.UNIT);
             }
 
             // Verify archive contents.
@@ -118,7 +119,7 @@ public class ArtifactUploaderTest {
             assertArrayEquals(contents, archiveContents.get("dir/file"));
             assertArrayEquals(
                 contents, archiveContents.get("buck-out/bin/foo/.bar/metadata/artifact/metadata"));
-            return Futures.immediateFuture(null);
+            return Futures.immediateFuture(Unit.UNIT);
           }
         };
 

@@ -43,6 +43,7 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.FakeClock;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -125,7 +126,7 @@ public class RemoteManifestServiceCacheStorageTest {
 
     /** Appends one more entry to the manifest. Creates a new one if it does not already exist. */
     @Override
-    public ListenableFuture<Void> appendToManifest(Manifest manifest) {
+    public ListenableFuture<Unit> appendToManifest(Manifest manifest) {
       return addToManifestBackingCollection(manifest);
     }
 
@@ -147,18 +148,18 @@ public class RemoteManifestServiceCacheStorageTest {
 
     /** Deletes an existing Manifest. */
     @Override
-    public ListenableFuture<Void> deleteManifest(String manifestKey) {
+    public ListenableFuture<Unit> deleteManifest(String manifestKey) {
       fingerprints.remove(manifestKey);
       return Futures.immediateFuture(null);
     }
 
     /** Sets the Manifest for key. Overwrites existing one if it already exists. */
     @Override
-    public ListenableFuture<Void> setManifest(Manifest manifest) {
+    public ListenableFuture<Unit> setManifest(Manifest manifest) {
       return addToManifestBackingCollection(manifest);
     }
 
-    private ListenableFuture<Void> addToManifestBackingCollection(Manifest manifest) {
+    private ListenableFuture<Unit> addToManifestBackingCollection(Manifest manifest) {
       String key = manifest.key;
       ArrayList fingerprintsForKey = fingerprints.get(key);
       if (fingerprintsForKey == null) {
@@ -170,7 +171,7 @@ public class RemoteManifestServiceCacheStorageTest {
         fingerprintsForKey.add(bytes);
       }
 
-      return Futures.immediateFuture(null);
+      return Futures.immediateFuture(Unit.UNIT);
     }
 
     @Override

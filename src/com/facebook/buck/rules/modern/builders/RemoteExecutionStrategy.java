@@ -56,6 +56,7 @@ import com.facebook.buck.util.concurrent.JobLimiter;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.buck.util.types.Either;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
@@ -332,7 +333,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     Digest actionDigest = actionInfo.getActionDigest();
     Scope uploadingInputsScope =
         guardContext.enterState(State.UPLOADING_INPUTS, Optional.of(actionDigest));
-    ListenableFuture<Void> inputsUploadedFuture =
+    ListenableFuture<Unit> inputsUploadedFuture =
         executionClients.getContentAddressedStorage().addMissing(actionInfo.getRequiredData());
     inputsUploadedFuture.addListener(uploadingInputsScope::close, MoreExecutors.directExecutor());
     return Futures.transform(
@@ -361,7 +362,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     Scope uploadingInputsScope =
         guardContext.enterState(State.UPLOADING_ACTION, Optional.of(actionDigest));
 
-    ListenableFuture<Void> inputsUploadedFuture =
+    ListenableFuture<Unit> inputsUploadedFuture =
         executionClients.getContentAddressedStorage().addMissing(actionInfo.getRequiredData());
     inputsUploadedFuture.addListener(uploadingInputsScope::close, MoreExecutors.directExecutor());
     return Futures.transformAsync(
@@ -526,8 +527,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         guardContext.enterState(State.MATERIALIZING_OUTPUTS, Optional.of(actionDigest));
 
     List<Protocol.OutputFile> files = new ArrayList<>();
-    ListenableFuture<Void> metadata = stripMetadata(result.getOutputFiles(), files, buildRule);
-    ListenableFuture<Void> materializationFuture =
+    ListenableFuture<Unit> metadata = stripMetadata(result.getOutputFiles(), files, buildRule);
+    ListenableFuture<Unit> materializationFuture =
         executionClients
             .getContentAddressedStorage()
             .materializeOutputs(
@@ -539,7 +540,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         .call(() -> Optional.of(result), MoreExecutors.directExecutor());
   }
 
-  private ListenableFuture<Void> stripMetadata(
+  private ListenableFuture<Unit> stripMetadata(
       List<Protocol.OutputFile> outputFiles, List<Protocol.OutputFile> files, BuildRule buildRule) {
     Digest metadataDigest = null;
     for (Protocol.OutputFile file : outputFiles) {

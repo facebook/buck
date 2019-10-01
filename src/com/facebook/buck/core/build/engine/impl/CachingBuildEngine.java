@@ -57,6 +57,7 @@ import com.facebook.buck.util.collect.SortedSets;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -99,7 +100,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   static final String BUILD_RULE_TYPE_CONTEXT_KEY = "build_rule_type";
   static final String STEP_TYPE_CONTEXT_KEY = "step_type";
-  private final ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks;
+  private final ConcurrentLinkedQueue<ListenableFuture<Unit>> asyncCallbacks;
 
   enum StepType {
     BUILD_STEP,
@@ -554,7 +555,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
 
     @Override
-    public void addAsyncCallback(ListenableFuture<Void> callback) {
+    public void addAsyncCallback(ListenableFuture<Unit> callback) {
       cachingBuildEngine.asyncCallbacks.add(callback);
     }
 

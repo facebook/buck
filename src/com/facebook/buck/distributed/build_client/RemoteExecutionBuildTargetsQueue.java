@@ -20,6 +20,7 @@ import com.facebook.buck.distributed.build_slave.BuildTargetsQueue;
 import com.facebook.buck.distributed.build_slave.DistributableBuildGraph;
 import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.distributed.thrift.WorkUnit;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
@@ -45,7 +46,7 @@ public class RemoteExecutionBuildTargetsQueue implements BuildTargetsQueue {
 
   private static class TargetToBuild {
     private final String targetName;
-    private final SettableFuture<Void> completionFuture;
+    private final SettableFuture<Unit> completionFuture;
 
     private TargetToBuild(String targetName) {
       this.targetName = targetName;
@@ -56,7 +57,7 @@ public class RemoteExecutionBuildTargetsQueue implements BuildTargetsQueue {
       return targetName;
     }
 
-    public SettableFuture<Void> getCompletionFuture() {
+    public SettableFuture<Unit> getCompletionFuture() {
       return completionFuture;
     }
 

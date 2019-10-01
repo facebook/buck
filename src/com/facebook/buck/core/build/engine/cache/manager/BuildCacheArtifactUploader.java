@@ -26,6 +26,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -71,7 +72,7 @@ public class BuildCacheArtifactUploader {
    * @param success outcome of a build rule
    * @param buildTimeMs time it took to actually build a rule
    */
-  public ListenableFuture<Void> uploadToCache(BuildRuleSuccessType success, long buildTimeMs)
+  public ListenableFuture<Unit> uploadToCache(BuildRuleSuccessType success, long buildTimeMs)
       throws IOException {
     // Collect up all the rule keys we have index the artifact in the cache with.
     Set<RuleKey> ruleKeys = new HashSet<>();

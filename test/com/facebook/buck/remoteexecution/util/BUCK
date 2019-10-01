@@ -15,6 +15,7 @@ java_test(
         "//src/com/facebook/buck/remoteexecution:remoteexecution",
         "//src/com/facebook/buck/remoteexecution/grpc:grpc",
         "//src/com/facebook/buck/remoteexecution/util:util",
+        "//src/com/facebook/buck/util/types:types",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/easymock:easymock",

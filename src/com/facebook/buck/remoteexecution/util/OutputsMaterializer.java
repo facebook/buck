@@ -29,6 +29,7 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.FileNode;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Tree;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
@@ -113,14 +114,14 @@ public class OutputsMaterializer {
     public final Digest digest;
     public final boolean isExecutable;
     public final Path path;
-    public final SettableFuture<Void> future;
+    public final SettableFuture<Unit> future;
 
     PendingMaterialization(
         FileMaterializer materializer,
         Digest digest,
         boolean isExecutable,
         Path path,
-        SettableFuture<Void> future) {
+        SettableFuture<Unit> future) {
       this.materializer = materializer;
       this.digest = digest;
       this.isExecutable = isExecutable;
@@ -143,12 +144,12 @@ public class OutputsMaterializer {
   }
 
   /** Materialize the outputs of an action into a directory. */
-  public ListenableFuture<Void> materialize(
+  public ListenableFuture<Unit> materialize(
       Collection<OutputDirectory> outputDirectories,
       Collection<OutputFile> outputFiles,
       FileMaterializer materializer)
       throws IOException {
-    ImmutableList.Builder<ListenableFuture<Void>> pending = ImmutableList.builder();
+    ImmutableList.Builder<ListenableFuture<Unit>> pending = ImmutableList.builder();
 
     for (OutputFile file : outputFiles) {
       Path filePath = Paths.get(file.getPath());
@@ -156,7 +157,7 @@ public class OutputsMaterializer {
       if (parent != null) {
         materializer.makeDirectories(parent);
       }
-      SettableFuture<Void> future = SettableFuture.create();
+      SettableFuture<Unit> future = SettableFuture.create();
       waitingMaterialization.add(
           new PendingMaterialization(
               materializer, file.getDigest(), file.getIsExecutable(), filePath, future));
@@ -180,7 +181,7 @@ public class OutputsMaterializer {
                   Digest digest = protocol.computeDigest(child);
                   childMap.put(digest, child);
                 }
-                ImmutableList.Builder<ListenableFuture<Void>> pendingFilesBuilder =
+                ImmutableList.Builder<ListenableFuture<Unit>> pendingFilesBuilder =
                     ImmutableList.builder();
                 materializeDirectory(
                     materializer, childMap, tree.getRoot(), dirRoot, pendingFilesBuilder::add);
@@ -198,7 +199,7 @@ public class OutputsMaterializer {
       Map<Digest, Directory> childMap,
       Directory directory,
       Path root,
-      Consumer<ListenableFuture<Void>> pendingWorkConsumer)
+      Consumer<ListenableFuture<Unit>> pendingWorkConsumer)
       throws IOException {
     materializer.makeDirectories(root);
     for (Protocol.DirectoryNode childNode : directory.getDirectoriesList()) {
@@ -213,7 +214,7 @@ public class OutputsMaterializer {
     }
 
     for (FileNode file : directory.getFilesList()) {
-      SettableFuture<Void> future = SettableFuture.create();
+      SettableFuture<Unit> future = SettableFuture.create();
       waitingMaterialization.add(
           new PendingMaterialization(
               materializer,
@@ -262,7 +263,7 @@ public class OutputsMaterializer {
           // Download large files as a stream
           WritableByteChannel channel =
               large.materializer.getOutputChannel(large.path, large.isExecutable);
-          ListenableFuture<Void> fetchToStream = fetcher.fetchToStream(large.digest, channel);
+          ListenableFuture<Unit> fetchToStream = fetcher.fetchToStream(large.digest, channel);
           try {
             // Wait for the stream to finish downloading before picking up more work
             large.future.setFuture(fetchToStream);
@@ -275,7 +276,7 @@ public class OutputsMaterializer {
           // Download batches of small objects
           ImmutableMultimap.Builder<Digest, Callable<WritableByteChannel>> digestMap =
               ImmutableMultimap.builder();
-          ImmutableMultimap.Builder<Digest, SettableFuture<Void>> futureMap =
+          ImmutableMultimap.Builder<Digest, SettableFuture<Unit>> futureMap =
               ImmutableMultimap.builder();
           for (PendingMaterialization p : pending) {
             digestMap.put(p.digest, () -> p.materializer.getOutputChannel(p.path, p.isExecutable));
@@ -283,7 +284,7 @@ public class OutputsMaterializer {
           }
 
           ImmutableMultimap<Digest, Callable<WritableByteChannel>> batch = digestMap.build();
-          ImmutableMultimap<Digest, SettableFuture<Void>> futures = futureMap.build();
+          ImmutableMultimap<Digest, SettableFuture<Unit>> futures = futureMap.build();
           fetcher.batchFetchBlobs(batch, futures).get();
         }
         LOG.debug("Finished materializing: " + pending.size() + " requests, size: " + size);

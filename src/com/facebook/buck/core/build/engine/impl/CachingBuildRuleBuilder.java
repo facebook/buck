@@ -99,6 +99,7 @@ import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
@@ -185,7 +186,7 @@ class CachingBuildRuleBuilder {
 
   // These fields contain data that may be computed during a build.
 
-  private volatile ListenableFuture<Void> uploadCompleteFuture = Futures.immediateFuture(null);
+  private volatile ListenableFuture<Unit> uploadCompleteFuture = Futures.immediateFuture(Unit.UNIT);
   private volatile boolean depsAreAvailable;
   private final Optional<BuildRuleStrategy> customBuildRuleStrategy;
 
@@ -1483,7 +1484,7 @@ class CachingBuildRuleBuilder {
     ListenableFuture<List<BuildResult>> getDepResults(
         BuildRule rule, ExecutionContext executionContext);
 
-    void addAsyncCallback(ListenableFuture<Void> callback);
+    void addAsyncCallback(ListenableFuture<Unit> callback);
 
     void onRuleAboutToBeBuilt(BuildRule rule);
   }

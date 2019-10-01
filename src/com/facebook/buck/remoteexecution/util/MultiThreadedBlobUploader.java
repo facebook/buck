@@ -24,6 +24,7 @@ import com.facebook.buck.remoteexecution.CasBlobUploader.UploadResult;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.util.concurrent.MoreFutures;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -61,7 +62,7 @@ public class MultiThreadedBlobUploader {
   private final int missingCheckLimit;
   private final int uploadSizeLimit;
 
-  private final ConcurrentHashMap<String, ListenableFuture<Void>> pendingUploads =
+  private final ConcurrentHashMap<String, ListenableFuture<Unit>> pendingUploads =
       new ConcurrentHashMap<>();
 
   private final Set<String> containedHashes = Sets.newConcurrentHashSet();
@@ -74,9 +75,9 @@ public class MultiThreadedBlobUploader {
 
   private static class PendingUpload {
     private final UploadDataSupplier uploadData;
-    private final SettableFuture<Void> future;
+    private final SettableFuture<Unit> future;
 
-    PendingUpload(UploadDataSupplier uploadData, SettableFuture<Void> future) {
+    PendingUpload(UploadDataSupplier uploadData, SettableFuture<Unit> future) {
       this.uploadData = uploadData;
       this.future = future;
     }
@@ -110,7 +111,7 @@ public class MultiThreadedBlobUploader {
   }
 
   /** Uploads missing items to the CAS. */
-  public ListenableFuture<Void> addMissing(Stream<UploadDataSupplier> dataSupplier) {
+  public ListenableFuture<Unit> addMissing(Stream<UploadDataSupplier> dataSupplier) {
     ImmutableList<UploadDataSupplier> data =
         dataSupplier
             // We don't trust the caller to have applied filtering. This means that
@@ -124,18 +125,18 @@ public class MultiThreadedBlobUploader {
     return enqueue(data);
   }
 
-  private ListenableFuture<Void> enqueue(ImmutableList<UploadDataSupplier> dataSupplier) {
-    Builder<ListenableFuture<Void>> futures = ImmutableList.builder();
+  private ListenableFuture<Unit> enqueue(ImmutableList<UploadDataSupplier> dataSupplier) {
+    Builder<ListenableFuture<Unit>> futures = ImmutableList.builder();
     for (UploadDataSupplier data : dataSupplier) {
       Digest digest = data.getDigest();
-      SettableFuture<Void> future = SettableFuture.create();
-      ListenableFuture<Void> pendingFuture = pendingUploads.putIfAbsent(digest.getHash(), future);
+      SettableFuture<Unit> future = SettableFuture.create();
+      ListenableFuture<Unit> pendingFuture = pendingUploads.putIfAbsent(digest.getHash(), future);
       if (pendingFuture == null) {
         pendingFuture = future;
         if (containsDigest(digest)) {
           future.set(null);
         } else {
-          SettableFuture<Void> innerFuture = SettableFuture.create();
+          SettableFuture<Unit> innerFuture = SettableFuture.create();
           waitingMissingCheck.add(new PendingUpload(data, innerFuture));
           future.setFuture(
               Futures.transform(

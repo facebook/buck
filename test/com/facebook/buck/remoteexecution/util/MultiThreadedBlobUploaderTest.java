@@ -21,6 +21,7 @@ import com.facebook.buck.remoteexecution.CasBlobUploader.UploadResult;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -72,7 +73,7 @@ public class MultiThreadedBlobUploaderTest {
     EasyMock.replay(casBlobUploader);
 
     // Run the test case.
-    ListenableFuture<Void> failedFuture = uploader.addMissing(data.values().stream());
+    ListenableFuture<Unit> failedFuture = uploader.addMissing(data.values().stream());
 
     try {
       // Must throw.
@@ -82,7 +83,7 @@ public class MultiThreadedBlobUploaderTest {
       Assert.assertEquals(StatusRuntimeException.class, e.getCause().getClass());
     }
     // Does not throw.
-    ListenableFuture<Void> successfulFuture = uploader.addMissing(data.values().stream());
+    ListenableFuture<Unit> successfulFuture = uploader.addMissing(data.values().stream());
     successfulFuture.get();
 
     // Make sure all calls were exactly correctly.
@@ -118,8 +119,8 @@ public class MultiThreadedBlobUploaderTest {
     EasyMock.replay(casBlobUploader);
 
     // Run the test case.
-    ListenableFuture<Void> firstFuture = uploader.addMissing(data.values().stream());
-    ListenableFuture<Void> secondFuture = uploader.addMissing(data.values().stream());
+    ListenableFuture<Unit> firstFuture = uploader.addMissing(data.values().stream());
+    ListenableFuture<Unit> secondFuture = uploader.addMissing(data.values().stream());
 
     // Ensure secondFuture is still waiting
     Assert.assertFalse(firstFuture.isDone());

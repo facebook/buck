@@ -19,6 +19,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.CharStreams;
@@ -115,7 +116,7 @@ public class Symbols {
         resolver,
         lib,
         ImmutableList.of(symbolFlag),
-        new LineProcessor<Void>() {
+        new LineProcessor<Unit>() {
           @Override
           public boolean processLine(String line) {
             SymbolInfo si = extractSymbolInfo(line);
@@ -132,8 +133,8 @@ public class Symbols {
           }
 
           @Override
-          public Void getResult() {
-            return null;
+          public Unit getResult() {
+            return Unit.UNIT;
           }
         });
 
@@ -153,7 +154,7 @@ public class Symbols {
         resolver,
         lib,
         ImmutableList.of("-p"),
-        new LineProcessor<Void>() {
+        new LineProcessor<Unit>() {
           @Override
           public boolean processLine(String line) {
             Matcher m = re.matcher(line);
@@ -165,8 +166,8 @@ public class Symbols {
           }
 
           @Override
-          public Void getResult() {
-            return null;
+          public Unit getResult() {
+            return Unit.UNIT;
           }
         });
 
@@ -179,7 +180,7 @@ public class Symbols {
       SourcePathResolver resolver,
       Path lib,
       ImmutableList<String> flags,
-      LineProcessor<Void> lineProcessor)
+      LineProcessor<Unit> lineProcessor)
       throws IOException, InterruptedException {
     ImmutableList<String> args =
         ImmutableList.<String>builder()

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright 2019-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,19 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+package com.facebook.buck.util.types;
 
-package com.facebook.buck.util.network;
-
-import com.facebook.buck.util.types.Unit;
-import com.google.common.util.concurrent.ListenableFuture;
-import java.io.Closeable;
-import java.util.Optional;
-
-public abstract class ScribeLogger implements Closeable {
-  public ListenableFuture<Unit> log(String category, Iterable<String> lines) {
-    return log(category, lines, Optional.empty());
-  }
-
-  public abstract ListenableFuture<Unit> log(
-      String category, Iterable<String> lines, Optional<Integer> bucket);
+/**
+ * Unit type.
+ *
+ * <p>It is similar to {@link Void} types, except that {@link Void} types cannot be instantiated.
+ * This type can be used in generic code, for example, when generic code is not meant to return
+ * anything, but {@code null} is not desirable or not allowed.
+ */
+public enum Unit {
+  UNIT
 }

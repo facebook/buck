@@ -67,6 +67,7 @@ import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.types.Either;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -324,7 +325,7 @@ public class TestRunning {
     List<TestResults> completedResults = new ArrayList<>();
 
     ListeningExecutorService directExecutorService = MoreExecutors.newDirectExecutorService();
-    ListenableFuture<Void> uberFuture =
+    ListenableFuture<Unit> uberFuture =
         MoreFutures.addListenableCallback(
             parallelTestStepsFuture,
             new FutureCallback<List<TestResults>>() {

@@ -30,6 +30,7 @@ import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.util.concurrent.FakeListeningExecutorService;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -132,7 +133,7 @@ public class AbstractNetworkCacheTest {
     for (int bytes : artifactBytes) {
       Path path = filesystem.getPathForRelativePath("topspin_" + this.getClass().getName());
       filesystem.writeBytesToPath(new byte[bytes], path);
-      ListenableFuture<Void> future =
+      ListenableFuture<Unit> future =
           cache.store(ArtifactInfo.builder().build(), BorrowablePath.notBorrowablePath(path));
       future.get();
     }

@@ -28,6 +28,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.util.network.AbstractBatchingLogger;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.util.concurrent.Futures;
@@ -52,19 +53,19 @@ public class HttpArtifactCacheEventListenerTest {
     }
 
     @Override
-    public Optional<ListenableFuture<Void>> log(String logLine) {
+    public Optional<ListenableFuture<Unit>> log(String logLine) {
       logEntries.add(logLine);
       return super.log(logLine);
     }
 
     @Override
-    protected ListenableFuture<Void> logMultiple(
+    protected ListenableFuture<Unit> logMultiple(
         ImmutableCollection<AbstractBatchingLogger.BatchEntry> data) {
       return Futures.immediateFuture(null);
     }
 
     @Override
-    public ListenableFuture<Void> forceFlush() {
+    public ListenableFuture<Unit> forceFlush() {
       return Futures.immediateFuture(null);
     }
   }

@@ -25,6 +25,7 @@ import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.watchman.WatchmanEvent.Type;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -201,7 +202,7 @@ public class WatchmanWatcher {
     buckEventBus.post(WatchmanStatusEvent.started());
 
     try {
-      List<Callable<Void>> watchmanQueries = new ArrayList<>();
+      List<Callable<Unit>> watchmanQueries = new ArrayList<>();
       for (Path cellPath : queries.keySet()) {
         watchmanQueries.add(
             () -> {
@@ -226,14 +227,14 @@ public class WatchmanWatcher {
                       perfEvent);
                 }
               }
-              return null;
+              return Unit.UNIT;
             });
       }
 
       // Run all of the Watchman queries in parallel. This can be significant if you have a lot of
       // cells.
-      List<Future<Void>> futures = executorService.invokeAll(watchmanQueries);
-      for (Future<Void> future : futures) {
+      List<Future<Unit>> futures = executorService.invokeAll(watchmanQueries);
+      for (Future<Unit> future : futures) {
         try {
           future.get();
         } catch (ExecutionException e) {

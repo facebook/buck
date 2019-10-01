@@ -18,6 +18,7 @@ package com.facebook.buck.support.bgtasks;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.Futures;
 import java.util.LinkedList;
@@ -131,7 +132,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
   }
 
   @Override
-  Future<Void> schedule(ManagedBackgroundTask<?> task) {
+  Future<Unit> schedule(ManagedBackgroundTask<?> task) {
     if (!schedulingOpen.get()) {
       LOG.warn("Manager is not accepting new tasks; newly scheduled tasks will not be run.");
       return Futures.immediateCancelledFuture();

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.network;
 
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -75,7 +76,7 @@ public abstract class AbstractBatchingLogger implements BatchingLogger {
   }
 
   @Override
-  public Optional<ListenableFuture<Void>> log(String logLine) {
+  public Optional<ListenableFuture<Unit>> log(String logLine) {
     batch.add(new BatchEntry(logLine));
     currentBatchSize += logLine.length();
     if (currentBatchSize >= minBatchSize) {
@@ -85,20 +86,20 @@ public abstract class AbstractBatchingLogger implements BatchingLogger {
   }
 
   @Override
-  public ListenableFuture<Void> forceFlush() {
+  public ListenableFuture<Unit> forceFlush() {
     return sendBatch();
   }
 
-  private ListenableFuture<Void> sendBatch() {
+  private ListenableFuture<Unit> sendBatch() {
     ImmutableList<BatchEntry> toSend = batch.build();
     batch = ImmutableList.builder();
     currentBatchSize = 0;
     if (toSend.isEmpty()) {
-      return Futures.immediateFuture(null);
+      return Futures.immediateFuture(Unit.UNIT);
     } else {
       return logMultiple(toSend);
     }
   }
 
-  protected abstract ListenableFuture<Void> logMultiple(ImmutableCollection<BatchEntry> data);
+  protected abstract ListenableFuture<Unit> logMultiple(ImmutableCollection<BatchEntry> data);
 }

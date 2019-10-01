@@ -21,6 +21,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
@@ -62,11 +63,11 @@ public class LoggingArtifactCacheDecorator implements ArtifactCache, CacheDecora
   }
 
   @Override
-  public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+  public ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
     ArtifactCacheEvent.Started started =
         eventFactory.newStoreStartedEvent(info.getRuleKeys(), info.getMetadata());
     eventBus.post(started);
-    ListenableFuture<Void> storeFuture = delegate.store(info, output);
+    ListenableFuture<Unit> storeFuture = delegate.store(info, output);
     eventBus.post(eventFactory.newStoreFinishedEvent(started));
     return storeFuture;
   }

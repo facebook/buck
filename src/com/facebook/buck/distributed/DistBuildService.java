@@ -81,6 +81,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
 import com.facebook.buck.util.hashing.FileHashLoader;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
@@ -179,7 +180,8 @@ public class DistBuildService implements Closeable {
     // No response expected.
   }
 
-  public ListenableFuture<Void> uploadMissingFilesAsync(
+  /** Upload missing files */
+  public ListenableFuture<Unit> uploadMissingFilesAsync(
       Map<Integer, ProjectFilesystem> localFilesystemsByCell,
       List<BuildJobStateFileHashes> fileHashes,
       ClientStatsTracker distBuildClientStats,
@@ -508,7 +510,8 @@ public class DistBuildService implements Closeable {
     makeRequestChecked(request);
   }
 
-  public ListenableFuture<Void> uploadBuckDotFilesAsync(
+  /** Upload dot-files */
+  public ListenableFuture<Unit> uploadBuckDotFilesAsync(
       StampedeId id,
       ProjectFilesystem filesystem,
       FileHashLoader fileHashLoader,
@@ -533,7 +536,7 @@ public class DistBuildService implements Closeable {
               return buckDotFilesExceptConfig;
             });
 
-    ListenableFuture<Void> setFilesFuture =
+    ListenableFuture<Unit> setFilesFuture =
         Futures.transformAsync(
             pathsFuture,
             paths -> {
@@ -566,7 +569,7 @@ public class DistBuildService implements Closeable {
             },
             executorService);
 
-    ListenableFuture<Void> resultFuture =
+    ListenableFuture<Unit> resultFuture =
         Futures.transform(
             Futures.allAsList(ImmutableList.of(setFilesFuture, uploadFilesFuture)),
             input -> null,

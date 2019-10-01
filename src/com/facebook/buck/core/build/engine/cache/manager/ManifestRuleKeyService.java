@@ -19,13 +19,14 @@ package com.facebook.buck.core.build.engine.cache.manager;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.LazyPath;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.nio.file.Path;
 
 /** Service in charge of persisting (fetch/store) the manifest for ManifestRuleKeys. */
 public interface ManifestRuleKeyService {
   /** Writes the manifest used the ManifestRuleKey into some persistent storage. */
-  ListenableFuture<Void> storeManifest(
+  ListenableFuture<Unit> storeManifest(
       RuleKey manifestKey, Path manifestToUpload, long artifactBuildTimeMs);
 
   /** Reads the manifest used the ManifestRuleKey from some persistent storage. */

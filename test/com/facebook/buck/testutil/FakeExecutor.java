@@ -16,6 +16,7 @@
 
 package com.facebook.buck.testutil;
 
+import com.facebook.buck.util.types.Unit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -82,8 +83,8 @@ public class FakeExecutor implements ScheduledExecutorService {
     };
   }
 
-  private Callable<Void> toCallable(Runnable runnable) {
-    return toCallable(new AnnotatedRunnable(runnable), null);
+  private Callable<Unit> toCallable(Runnable runnable) {
+    return toCallable(new AnnotatedRunnable(runnable), Unit.UNIT);
   }
 
   @Override
@@ -113,8 +114,8 @@ public class FakeExecutor implements ScheduledExecutorService {
 
     runnableList.add(runnable);
 
-    FakeScheduledFuture<Void> future =
-        new FakeScheduledFuture<Void>(Executors.callable(runnable, null));
+    FakeScheduledFuture<Unit> future =
+        new FakeScheduledFuture<Unit>(Executors.callable(runnable, null));
 
     runnable.setFuture(future);
     outstandingTasks.put(future, future);
@@ -132,8 +133,8 @@ public class FakeExecutor implements ScheduledExecutorService {
 
     runnableList.add(runnable);
 
-    FakeScheduledFuture<Void> future =
-        new FakeScheduledFuture<Void>(Executors.callable(runnable, null));
+    FakeScheduledFuture<Unit> future =
+        new FakeScheduledFuture<Unit>(Executors.callable(runnable, null));
 
     runnable.setFuture(future);
     outstandingTasks.put(future, future);
@@ -203,7 +204,7 @@ public class FakeExecutor implements ScheduledExecutorService {
   public Future<?> submit(Runnable task) {
     runnableList.add(new AnnotatedRunnable(task));
 
-    return new FakeScheduledFuture<Void>(toCallable(task));
+    return new FakeScheduledFuture<Unit>(toCallable(task));
   }
 
   @Override
@@ -249,8 +250,8 @@ public class FakeExecutor implements ScheduledExecutorService {
     }
 
     for (AnnotatedRunnable runnable : rescheduleList) {
-      FakeScheduledFuture<Void> future =
-          new FakeScheduledFuture<Void>(Executors.callable(runnable, null));
+      FakeScheduledFuture<Unit> future =
+          new FakeScheduledFuture<Unit>(Executors.callable(runnable, null));
       runnable.setFuture(future);
       runnableList.add(runnable);
       outstandingTasks.put(runnable.getFuture(), runnable.getFuture());

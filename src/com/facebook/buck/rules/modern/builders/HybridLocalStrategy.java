@@ -26,6 +26,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.remoteexecution.WorkerRequirementsProvider;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.util.Scope;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Verify;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -176,7 +177,7 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
     ListenableFuture<?> scheduleLocally() {
       synchronized (this) {
         if (future.isDone()) {
-          return Futures.immediateFuture(null);
+          return Futures.immediateFuture(Unit.UNIT);
         }
 
         ListenableFuture<Optional<BuildResult>> localFuture =

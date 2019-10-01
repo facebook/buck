@@ -29,6 +29,7 @@ import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.remoteexecution.util.MultiThreadedBlobUploader;
 import com.facebook.buck.remoteexecution.util.OutputsMaterializer;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.types.Unit;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
@@ -84,12 +85,12 @@ public class GrpcContentAddressableStorageClient implements ContentAddressedStor
   }
 
   @Override
-  public ListenableFuture<Void> addMissing(Collection<UploadDataSupplier> data) throws IOException {
+  public ListenableFuture<Unit> addMissing(Collection<UploadDataSupplier> data) throws IOException {
     return uploader.addMissing(data.stream());
   }
 
   @Override
-  public ListenableFuture<Void> materializeOutputs(
+  public ListenableFuture<Unit> materializeOutputs(
       List<OutputDirectory> outputDirectories,
       List<OutputFile> outputFiles,
       FileMaterializer materializer)

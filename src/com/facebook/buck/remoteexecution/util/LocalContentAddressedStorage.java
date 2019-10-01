@@ -34,6 +34,7 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.SymlinkNode;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -124,7 +125,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
           }
 
           @Override
-          public ListenableFuture<Void> fetchToStream(Digest digest, WritableByteChannel channel) {
+          public ListenableFuture<Unit> fetchToStream(Digest digest, WritableByteChannel channel) {
             try (FileInputStream stream = getFileInputStream(digest)) {
               FileChannel input = stream.getChannel();
               input.transferTo(0, input.size(), channel);
@@ -135,9 +136,9 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
           }
 
           @Override
-          public ListenableFuture<Void> batchFetchBlobs(
+          public ListenableFuture<Unit> batchFetchBlobs(
               ImmutableMultimap<Digest, Callable<WritableByteChannel>> requests,
-              ImmutableMultimap<Digest, SettableFuture<Void>> futures)
+              ImmutableMultimap<Digest, SettableFuture<Unit>> futures)
               throws IOException {
             for (Digest digest : requests.keySet()) {
               FileInputStream stream = getFileInputStream(digest);
@@ -229,7 +230,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
   }
 
   @Override
-  public ListenableFuture<Void> addMissing(Collection<UploadDataSupplier> data) throws IOException {
+  public ListenableFuture<Unit> addMissing(Collection<UploadDataSupplier> data) throws IOException {
     return uploader.addMissing(data.stream());
   }
 
@@ -247,7 +248,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
    * Materializes the outputs into the build root. All required data must be present (or inlined).
    */
   @Override
-  public ListenableFuture<Void> materializeOutputs(
+  public ListenableFuture<Unit> materializeOutputs(
       List<OutputDirectory> outputDirectories,
       List<OutputFile> outputFiles,
       FileMaterializer materializer)
