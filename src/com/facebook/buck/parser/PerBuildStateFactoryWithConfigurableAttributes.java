@@ -18,12 +18,9 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rules.config.impl.ConfigurationRuleSelectableResolver;
@@ -165,17 +162,15 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
     // deadlocks happening when too many node are requested from targetNodeParsePipeline.
     // That pipeline does blocking calls to get nodes from nonResolvingTargetNodeParsePipeline
     // which can lead to deadlocks.
-    ConvertingPipeline<RawTargetNode, TargetNode<?>, BuildTarget, TargetConfiguration>
-        nonResolvingTargetNodeParsePipeline =
-            new RawTargetNodeToTargetNodeParsePipeline(
-                daemonicParserState.getOrCreateNodeCache(
-                    DaemonicParserState.TARGET_NODE_CACHE_TYPE),
-                MoreExecutors.newDirectExecutorService(),
-                rawTargetNodePipeline,
-                eventBus,
-                "nonresolving_raw_target_node_parse_pipeline",
-                enableSpeculativeParsing,
-                nonResolvingRawTargetNodeToTargetNodeFactory);
+    RawTargetNodeToTargetNodeParsePipeline nonResolvingTargetNodeParsePipeline =
+        new RawTargetNodeToTargetNodeParsePipeline(
+            daemonicParserState.getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE),
+            MoreExecutors.newDirectExecutorService(),
+            rawTargetNodePipeline,
+            eventBus,
+            "nonresolving_raw_target_node_parse_pipeline",
+            enableSpeculativeParsing,
+            nonResolvingRawTargetNodeToTargetNodeFactory);
 
     ConfigurationRuleRegistry configurationRuleRegistry =
         ConfigurationRuleRegistryFactory.createRegistry(
