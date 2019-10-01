@@ -152,7 +152,7 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public boolean shouldDisableDistccIfRemoteExecutionEnabled() {
     return getDelegate()
         .getBooleanValue(
-            "experiments", DISABLE_DISTCC_IF_REMOTE_EXECUTION_ENABLED_EXPERIMENT_PROPERTY, true);
+            "experiments", DISABLE_DISTCC_IF_REMOTE_EXECUTION_ENABLED_EXPERIMENT_PROPERTY, false);
   }
 
   public boolean isRemoteExecutionAutoEnabled(String username, List<String> commandArguments) {
