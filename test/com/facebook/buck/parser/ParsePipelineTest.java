@@ -229,7 +229,6 @@ public class ParsePipelineTest {
                   ImmutableMap.of("bar", ImmutableMap.of("name", "bar"))),
               false,
               eventBus);
-      expectedException.expect(IllegalStateException.class);
       expectedException.expectMessage("malformed raw data");
       fixture
           .getTargetNodeParsePipeline()
@@ -253,7 +252,6 @@ public class ParsePipelineTest {
       fixture
           .getRawNodeParsePipelineCache()
           .putComputedNodeIfNotPresent(cell, aBuildFilePath, rootRawNodes.get(), false, eventBus);
-      expectedException.expect(IllegalStateException.class);
       expectedException.expectMessage(
           "Raw data claims to come from [], but we tried rooting it at [a].");
       fixture
@@ -281,7 +279,6 @@ public class ParsePipelineTest {
       fixture
           .getRawNodeParsePipelineCache()
           .putComputedNodeIfNotPresent(cell, aBuildFilePath, rootRawNodes.get(), false, eventBus);
-      expectedException.expect(IllegalStateException.class);
       expectedException.expectMessage(
           "Raw data claims to come from [], but we tried rooting it at [a].");
       fixture

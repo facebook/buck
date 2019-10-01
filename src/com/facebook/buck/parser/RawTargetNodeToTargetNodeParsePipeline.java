@@ -16,10 +16,8 @@
 
 package com.facebook.buck.parser;
 
-import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
-import static com.google.common.base.Throwables.throwIfInstanceOf;
-
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.HumanReadableExceptions;
 import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -42,7 +40,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -224,10 +221,7 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
     try {
       return getAllNodesJob(cell, buildFile, targetConfiguration).get();
     } catch (Exception e) {
-      propagateCauseIfInstanceOf(e, BuildFileParseException.class);
-      propagateCauseIfInstanceOf(e, ExecutionException.class);
-      propagateCauseIfInstanceOf(e, UncheckedExecutionException.class);
-      throw new RuntimeException(e);
+      throw handleFutureGetException(e);
     }
   }
 
@@ -262,16 +256,16 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
     try {
       return getNodeJob(cell, buildTarget).get();
     } catch (Exception e) {
-      if (e.getCause() != null) {
-        throwIfInstanceOf(e.getCause(), BuildFileParseException.class);
-        throwIfInstanceOf(e.getCause(), BuildTargetException.class);
-      }
-      throwIfInstanceOf(e, BuildFileParseException.class);
-      throwIfInstanceOf(e, BuildTargetException.class);
-      propagateCauseIfInstanceOf(e, ExecutionException.class);
-      propagateCauseIfInstanceOf(e, UncheckedExecutionException.class);
-      throw new RuntimeException(e);
+      throw handleFutureGetException(e);
     }
+  }
+
+  private static RuntimeException handleFutureGetException(Exception e) {
+    if (e instanceof ExecutionException) {
+      HumanReadableExceptions.throwIfHumanReadableUnchecked(e.getCause());
+    }
+    HumanReadableExceptions.throwIfHumanReadableUnchecked(e);
+    throw new RuntimeException(e);
   }
 
   @Override
