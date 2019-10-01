@@ -227,6 +227,7 @@ public class ParsePipelineTest {
               rootBuildFilePath,
               BuildFileManifestFactory.create(
                   ImmutableMap.of("bar", ImmutableMap.of("name", "bar"))),
+              false,
               eventBus);
       expectedException.expect(IllegalStateException.class);
       expectedException.expectMessage("malformed raw data");
@@ -251,7 +252,7 @@ public class ParsePipelineTest {
               .lookupComputedNode(cell, rootBuildFilePath, eventBus);
       fixture
           .getRawNodeParsePipelineCache()
-          .putComputedNodeIfNotPresent(cell, aBuildFilePath, rootRawNodes.get(), eventBus);
+          .putComputedNodeIfNotPresent(cell, aBuildFilePath, rootRawNodes.get(), false, eventBus);
       expectedException.expect(IllegalStateException.class);
       expectedException.expectMessage(
           "Raw data claims to come from [], but we tried rooting it at [a].");
@@ -279,7 +280,7 @@ public class ParsePipelineTest {
               .lookupComputedNode(cell, rootBuildFilePath, eventBus);
       fixture
           .getRawNodeParsePipelineCache()
-          .putComputedNodeIfNotPresent(cell, aBuildFilePath, rootRawNodes.get(), eventBus);
+          .putComputedNodeIfNotPresent(cell, aBuildFilePath, rootRawNodes.get(), false, eventBus);
       expectedException.expect(IllegalStateException.class);
       expectedException.expectMessage(
           "Raw data claims to come from [], but we tried rooting it at [a].");
@@ -325,7 +326,7 @@ public class ParsePipelineTest {
 
     @Override
     public synchronized V putComputedNodeIfNotPresent(
-        Cell cell, K key, V value, BuckEventBus eventBus) {
+        Cell cell, K key, V value, boolean targetIsConfiguration, BuckEventBus eventBus) {
       if (!nodeMap.containsKey(key)) {
         nodeMap.put(key, value);
       }
@@ -421,7 +422,7 @@ public class ParsePipelineTest {
                   });
       buildFileRawNodeParsePipeline =
           new BuildFileRawNodeParsePipeline(
-              new PipelineNodeCache<>(rawNodeParsePipelineCache),
+              new PipelineNodeCache<>(rawNodeParsePipelineCache, n -> false),
               projectBuildFileParserPool,
               executorService,
               eventBus,

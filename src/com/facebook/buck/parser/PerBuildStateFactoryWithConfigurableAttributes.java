@@ -122,7 +122,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
 
     BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline =
         new BuildFileRawNodeParsePipeline(
-            new PipelineNodeCache<>(daemonicParserState.getRawNodeCache()),
+            new PipelineNodeCache<>(daemonicParserState.getRawNodeCache(), n -> false),
             projectBuildFileParserPool,
             executorService,
             eventBus,
@@ -168,7 +168,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
     ConvertingPipeline<RawTargetNode, TargetNode<?>, BuildTarget, TargetConfiguration>
         nonResolvingTargetNodeParsePipeline =
             new RawTargetNodeToTargetNodeParsePipeline(
-                daemonicParserState.getOrCreateNodeCacheForConfigurationTargets(
+                daemonicParserState.getOrCreateNodeCache(
                     DaemonicParserState.TARGET_NODE_CACHE_TYPE),
                 MoreExecutors.newDirectExecutorService(),
                 rawTargetNodePipeline,

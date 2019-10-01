@@ -25,12 +25,15 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Predicate;
 
 class PipelineNodeCache<K, T> {
   private final Cache<K, T> cache;
   protected final ConcurrentMap<K, ListenableFuture<T>> jobsCache;
+  private final Predicate<T> targetNodeIsConfiguration;
 
-  public PipelineNodeCache(Cache<K, T> cache) {
+  public PipelineNodeCache(Cache<K, T> cache, Predicate<T> targetNodeIsConfiguration) {
+    this.targetNodeIsConfiguration = targetNodeIsConfiguration;
     this.jobsCache = new ConcurrentHashMap<>();
     this.cache = cache;
   }
@@ -66,9 +69,12 @@ class PipelineNodeCache<K, T> {
         ListenableFuture<T> cacheJob =
             Futures.transformAsync(
                 job,
-                input ->
-                    Futures.immediateFuture(
-                        cache.putComputedNodeIfNotPresent(cell, key, input, eventBus)),
+                input -> {
+                  boolean targetNodeIsConfiguration = this.targetNodeIsConfiguration.test(input);
+                  return Futures.immediateFuture(
+                      cache.putComputedNodeIfNotPresent(
+                          cell, key, input, targetNodeIsConfiguration, eventBus));
+                },
                 MoreExecutors.directExecutor());
         resultFuture.setFuture(cacheJob);
       }
@@ -93,9 +99,11 @@ class PipelineNodeCache<K, T> {
      * @param cell cell
      * @param target target of the node
      * @param targetNode node to insert
+     * @param targetIsConfiguration target is configuration target
      * @return previous node for the target if the cache contained it, new one otherwise.
      */
-    V putComputedNodeIfNotPresent(Cell cell, K target, V targetNode, BuckEventBus eventBus)
+    V putComputedNodeIfNotPresent(
+        Cell cell, K target, V targetNode, boolean targetIsConfiguration, BuckEventBus eventBus)
         throws BuildTargetException;
   }
 }

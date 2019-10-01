@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
@@ -73,6 +74,11 @@ public class RawTargetNodePipeline
     this.buildFileRawNodeParsePipeline = buildFileRawNodeParsePipeline;
     this.buildTargetRawNodeParsePipeline = buildTargetRawNodeParsePipeline;
     this.rawTargetNodeFactory = rawTargetNodeFactory;
+  }
+
+  @Override
+  protected boolean targetNodeIsConfiguration(RawTargetNode targetNode) {
+    return targetNode.getRuleType().getKind() == AbstractRuleType.Kind.CONFIGURATION;
   }
 
   @Override

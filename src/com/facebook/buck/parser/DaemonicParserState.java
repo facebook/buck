@@ -127,7 +127,8 @@ public class DaemonicParserState {
     }
 
     @Override
-    public T putComputedNodeIfNotPresent(Cell cell, K target, T targetNode, BuckEventBus eventBus)
+    public T putComputedNodeIfNotPresent(
+        Cell cell, K target, T targetNode, boolean targetIsConfiguration, BuckEventBus eventBus)
         throws BuildTargetException {
 
       // Verify we don't invalidate the build file at this point, as, at this point, we should have
@@ -146,6 +147,10 @@ public class DaemonicParserState {
           "Unexpected invalidation due to config/env change for %s %s",
           cell.getRoot(),
           target);
+
+      if (targetIsConfiguration) {
+        configurationBuildFiles.add(buildFile);
+      }
 
       return getOrCreateCache(cell).putComputedNodeIfNotPresent(target, targetNode);
     }
@@ -191,7 +196,11 @@ public class DaemonicParserState {
      */
     @Override
     public BuildFileManifest putComputedNodeIfNotPresent(
-        Cell cell, Path buildFile, BuildFileManifest manifest, BuckEventBus eventBus)
+        Cell cell,
+        Path buildFile,
+        BuildFileManifest manifest,
+        boolean targetIsConfiguration,
+        BuckEventBus eventBus)
         throws BuildTargetException {
       Preconditions.checkState(buildFile.isAbsolute());
       // Technically this leads to inconsistent state if the state change happens after rawNodes
@@ -244,33 +253,6 @@ public class DaemonicParserState {
     }
   }
 
-  /**
-   * An extension to {@link DaemonicCacheView} that keeps track of all processed build files.
-   *
-   * <p>This is used to collect build files that contain configuration targets.
-   */
-  private class DaemonicCacheViewWithTrackingBuildFiles<K, T> extends DaemonicCacheView<K, T> {
-
-    /**
-     * Creates a view that accumulates the paths of build files that contain targets accessed
-     * through this view.
-     */
-    private DaemonicCacheViewWithTrackingBuildFiles(DaemonicCellState.CellCacheType<K, T> type) {
-      super(type);
-    }
-
-    @Override
-    public T putComputedNodeIfNotPresent(Cell cell, K target, T targetNode, BuckEventBus eventBus)
-        throws BuildTargetException {
-      Path buildFile =
-          cell.getBuckConfigView(ParserConfig.class)
-              .getAbsolutePathToBuildFileUnsafe(
-                  cell, type.convertToUnconfiguredBuildTargetView(target));
-      configurationBuildFiles.add(buildFile);
-      return super.putComputedNodeIfNotPresent(cell, target, targetNode, eventBus);
-    }
-  }
-
   private final TagSetCounter cacheInvalidatedByEnvironmentVariableChangeCounter;
   private final IntegerCounter cacheInvalidatedByDefaultIncludesChangeCounter;
   private final IntegerCounter cacheInvalidatedByWatchOverflowCounter;
@@ -295,24 +277,15 @@ public class DaemonicParserState {
   /**
    * Build files that contain configuration targets.
    *
-   * <p>These files are used to invalidate parser state when there is a change in a build file.
+   * <p>Changes in configuration targets are handled differently from the changes in build targets.
+   * Whenever there is a change in configuration targets the state in all cells is reset. Parser
+   * state doesn't provide information about dependencies among build rules and configuration rules
+   * and changes in configuration rules can affect build targets (including build targets in other
+   * cells).
    */
   // TODO: remove logic around this field when proper tracking of dependencies on
   // configuration rules is implemented
   private final Set<Path> configurationBuildFiles = ConcurrentHashMap.newKeySet();
-
-  /**
-   * Cache similar to {@link #targetNodeCache}, but keeping information about all accessed build
-   * files in {@link #configurationBuildFiles}.
-   */
-  private final DaemonicCacheViewWithTrackingBuildFiles<BuildTarget, TargetNode<?>>
-      targetNodeCacheWithTrackingConfigurationBuildFiles =
-          new DaemonicCacheViewWithTrackingBuildFiles<>(DaemonicCellState.TARGET_NODE_CACHE_TYPE);
-
-  private final DaemonicCacheViewWithTrackingBuildFiles<UnconfiguredBuildTargetView, RawTargetNode>
-      rawTargetCacheWithTrackingConfigurationBuildFiles =
-          new DaemonicCacheViewWithTrackingBuildFiles<>(
-              DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
 
   private final DaemonicRawCacheView rawNodeCache;
 
@@ -382,27 +355,16 @@ public class DaemonicParserState {
   /** Type-safe accessor to one of state caches */
   static final class CacheType<K, T> {
     private final Function<DaemonicParserState, DaemonicCacheView<K, T>> getCacheView;
-    private final Function<DaemonicParserState, DaemonicCacheViewWithTrackingBuildFiles<K, T>>
-        getCacheViewWithTrackingBuildFiles;
 
-    public CacheType(
-        Function<DaemonicParserState, DaemonicCacheView<K, T>> getCacheView,
-        Function<DaemonicParserState, DaemonicCacheViewWithTrackingBuildFiles<K, T>>
-            getCacheViewWithTrackingBuildFiles) {
+    public CacheType(Function<DaemonicParserState, DaemonicCacheView<K, T>> getCacheView) {
       this.getCacheView = getCacheView;
-      this.getCacheViewWithTrackingBuildFiles = getCacheViewWithTrackingBuildFiles;
     }
   }
 
   public static final CacheType<BuildTarget, TargetNode<?>> TARGET_NODE_CACHE_TYPE =
-      new CacheType<>(
-          state -> state.targetNodeCache,
-          state -> state.targetNodeCacheWithTrackingConfigurationBuildFiles);
+      new CacheType<>(state -> state.targetNodeCache);
   public static final CacheType<UnconfiguredBuildTargetView, RawTargetNode>
-      RAW_TARGET_NODE_CACHE_TYPE =
-          new CacheType<>(
-              state -> state.rawTargetNodeCache,
-              state -> state.rawTargetCacheWithTrackingConfigurationBuildFiles);
+      RAW_TARGET_NODE_CACHE_TYPE = new CacheType<>(state -> state.rawTargetNodeCache);
 
   /**
    * Retrieve the cache view for caching a particular type.
@@ -412,23 +374,6 @@ public class DaemonicParserState {
    */
   public <K, T> PipelineNodeCache.Cache<K, T> getOrCreateNodeCache(CacheType<K, T> cacheType) {
     return cacheType.getCacheView.apply(this);
-  }
-
-  /**
-   * Retrieve the cache view to cache configuration targets.
-   *
-   * <p>Changes in configuration targets are handled differently from the changes in build targets.
-   * Whenever there is a change in configuration targets the state in all cells is reset. Parser
-   * state doesn't provide information about dependencies among build rules and configuration rules
-   * and changes in configuration rules can affect build targets (including build targets in other
-   * cells).
-   *
-   * <p>Note that the output type is not constrained to the type of the Class object to allow for
-   * types with generics. Care should be taken to ensure that the correct class object is passed in.
-   */
-  public <K, T> PipelineNodeCache.Cache<K, T> getOrCreateNodeCacheForConfigurationTargets(
-      CacheType<K, T> cacheType) {
-    return cacheType.getCacheViewWithTrackingBuildFiles.apply(this);
   }
 
   public PipelineNodeCache.Cache<Path, BuildFileManifest> getRawNodeCache() {

@@ -80,7 +80,7 @@ public abstract class ConvertingPipeline<F, T, K, C> implements AutoCloseable {
       Scope perfEventScope,
       PerfEventId perfEventId) {
     this.eventBus = eventBus;
-    this.cache = new PipelineNodeCache<>(cache);
+    this.cache = new PipelineNodeCache<>(cache, this::targetNodeIsConfiguration);
     this.allNodeCache = new ConcurrentHashMap<>();
     this.executorService = executorService;
     this.perfEventScope = perfEventScope;
@@ -196,6 +196,12 @@ public abstract class ConvertingPipeline<F, T, K, C> implements AutoCloseable {
       throw new RuntimeException(e);
     }
   }
+
+  /**
+   * When target node is configuration, most caches are invalidated completely on node changes. This
+   * is a work around not yet implemented proper configuration dependency tracking.
+   */
+  protected abstract boolean targetNodeIsConfiguration(T targetNode);
 
   protected abstract K getBuildTarget(
       Path root, CanonicalCellName cellName, Path buildFile, C targetConfiguration, F from);
