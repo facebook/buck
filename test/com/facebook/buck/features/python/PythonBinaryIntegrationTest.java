@@ -542,4 +542,36 @@ public class PythonBinaryIntegrationTest {
       assertThat(ret.getStdout().orElse(""), equalTo(test.getSecond()));
     }
   }
+
+  @Test
+  public void inplaceBinaryUsesInterpreterFlags() throws IOException {
+    assumeThat(
+        packageStyle,
+        Matchers.in(ImmutableList.of(PackageStyle.INPLACE, PackageStyle.INPLACE_LITE)));
+
+    workspace.addBuckConfigLocalOption("python", "inplace_interpreter_flags", "-EsB");
+    workspace.runBuckCommand("run", "//:bin").assertSuccess();
+
+    ImmutableList<Path> pycFiles =
+        Files.find(
+                tmp.getRoot(),
+                Integer.MAX_VALUE,
+                (path, attr) -> path.getFileName().toString().endsWith(".pyc"))
+            .map(path -> tmp.getRoot().relativize(path))
+            .collect(ImmutableList.toImmutableList());
+    Assert.assertEquals(ImmutableList.of(), pycFiles);
+
+    workspace.removeBuckConfigLocalOption("python", "inplace_interpreter_flags");
+    workspace.runBuckCommand("run", "//:bin").assertSuccess();
+
+    // Fall back to using the defaults (-Es), which should write out bytecode
+    pycFiles =
+        Files.find(
+                tmp.getRoot(),
+                Integer.MAX_VALUE,
+                (path, attr) -> path.getFileName().toString().endsWith(".pyc"))
+            .map(path -> tmp.getRoot().relativize(path))
+            .collect(ImmutableList.toImmutableList());
+    Assert.assertEquals(3, pycFiles.size());
+  }
 }
