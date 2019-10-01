@@ -20,7 +20,6 @@ import static com.facebook.buck.distributed.ClientStatsTracker.DistBuildClientSt
 import com.facebook.buck.cli.BuildCommand.GraphsAndBuildTargets;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
-import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.ClientStatsTracker;
@@ -30,20 +29,12 @@ import com.facebook.buck.distributed.DistBuildState;
 import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.RemoteCommand;
-import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
-import com.facebook.buck.parser.ParserTargetNodeFromAttrMapFactory;
-import com.facebook.buck.parser.ParsingContext;
-import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
-import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.PathTypeCoercer;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 public class AsyncJobStateFactory {
@@ -86,30 +77,7 @@ public class AsyncJobStateFactory {
     TargetGraphCreationResult targetGraphCreationResult =
         graphsAndBuildTargets.getGraphs().getTargetGraphForDistributedBuild();
 
-    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    ParserTargetNodeFromAttrMapFactory parserTargetNodeFactory =
-        DefaultParserTargetNodeFactory.createForDistributedBuild(
-            typeCoercerFactory,
-            params.getKnownRuleTypesProvider(),
-            new DefaultConstructorArgMarshaller(typeCoercerFactory),
-            new TargetNodeFactory(
-                typeCoercerFactory, PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY));
-    DistBuildTargetGraphCodec targetGraphCodec =
-        new DistBuildTargetGraphCodec(
-            executorService,
-            parserTargetNodeFactory,
-            input -> {
-              return params
-                  .getParser()
-                  .getTargetNodeRawAttributes(
-                      ParsingContext.builder(
-                              params.getCell().getCell(input.getBuildTarget()), executorService)
-                          .build(),
-                      input);
-            },
-            targetGraphCreationResult.getBuildTargets().stream()
-                .map(t -> t.getFullyQualifiedName())
-                .collect(Collectors.toSet()));
+    DistBuildTargetGraphCodec targetGraphCodec = null;
 
     ListenableFuture<BuildJobState> asyncJobState =
         executorService.submit(

@@ -26,7 +26,6 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.util.log.Logger;
@@ -272,12 +271,6 @@ public class DistBuildState {
 
   public Cell getRootCell() {
     return Objects.requireNonNull(cells.get(DistBuildCellIndexer.ROOT_CELL_INDEX));
-  }
-
-  public TargetGraphCreationResult createTargetGraph(DistBuildTargetGraphCodec codec)
-      throws InterruptedException {
-    return codec.createTargetGraph(
-        remoteState.getTargetGraph(), key -> Objects.requireNonNull(cells.get(key)));
   }
 
   public ProjectFileHashCache createRemoteFileHashCache(ProjectFileHashCache decoratedCache) {

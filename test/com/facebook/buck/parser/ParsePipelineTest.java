@@ -443,11 +443,11 @@ public class ParsePipelineTest {
               new DefaultRawTargetNodeFactory(knownRuleTypesProvider, new BuiltTargetVerifier()));
       ParserTargetNodeFromRawTargetNodeFactory rawTargetNodeToTargetNodeFactory =
           new NonResolvingRawTargetNodeToTargetNodeFactory(
-              DefaultParserTargetNodeFactory.createForParser(
+              new DefaultParserTargetNodeFactory(
                   coercerFactory,
                   knownRuleTypesProvider,
                   constructorArgMarshaller,
-                  buildFileTrees,
+                  new ThrowingPackageBoundaryChecker(buildFileTrees),
                   nodeListener,
                   new TargetNodeFactory(coercerFactory)));
       this.targetNodeParsePipeline =

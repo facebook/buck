@@ -466,10 +466,6 @@ public class BuildCommand extends AbstractCommand {
 
   private void checkSingleBuildTargetSpecifiedForOutBuildMode(
       TargetGraphCreationResult targetGraphAndBuildTargets) {
-    // Ideally, we would error out of this before we build the entire graph, but it is possible
-    // that `getArguments().size()` is 1 but `targetGraphAndBuildTargets.getBuildTargets().size()`
-    // is greater than 1 if the lone argument is a wildcard build target that ends in "...".
-    // As such, we have to get the result of createTargetGraph() before we can do this check.
     if (outputPathForSingleBuildTarget != null
         && targetGraphAndBuildTargets.getBuildTargets().size() != 1) {
       throw new CommandLineException(

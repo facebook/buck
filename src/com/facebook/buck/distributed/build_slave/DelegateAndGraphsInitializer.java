@@ -23,35 +23,24 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
-import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.DistBuildCachingEngineDelegate;
 import com.facebook.buck.distributed.DistBuildConfig;
-import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker.SlaveEvents;
-import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
-import com.facebook.buck.parser.ParserTargetNodeFromAttrMapFactory;
-import com.facebook.buck.parser.ParsingContext;
-import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.PathTypeCoercer;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.Objects;
 
 /** Initializes the build engine delegate, the target graph and the action graph. */
@@ -109,14 +98,8 @@ public class DelegateAndGraphsInitializer {
   private TargetGraphCreationResult createTargetGraph() throws InterruptedException {
     args.getTimingStatsTracker().startTimer(SlaveEvents.TARGET_GRAPH_DESERIALIZATION_TIME);
     try {
-      TargetGraphCreationResult targetGraph = null;
-      DistBuildTargetGraphCodec codec = createGraphCodec();
-      ImmutableMap<Integer, Cell> cells = args.getState().getCells();
-      TargetGraphCreationResult targetGraphCreationResult =
-          Objects.requireNonNull(
-              codec.createTargetGraph(
-                  args.getState().getRemoteState().getTargetGraph(),
-                  key -> Objects.requireNonNull(cells.get(key))));
+      TargetGraphCreationResult targetGraph;
+      TargetGraphCreationResult targetGraphCreationResult = null;
 
       try {
         if (args.getState()
@@ -201,41 +184,6 @@ public class DelegateAndGraphsInitializer {
             args.getProjectFilesystemFactory(), buildBuckConfig.getFileHashCacheMode()));
 
     return new StackedFileHashCache(allCachesBuilder.build());
-  }
-
-  private DistBuildTargetGraphCodec createGraphCodec() {
-    // Note: This is a hack. Do not confuse this hack with the other hack where we 'pre-load' all
-    // files so that file existence checks in TG -> AG transformation pass (which is a bigger bug).
-    // We need this hack in addition to the other one, because some source file dependencies get
-    // shaved off in the versioned target graph, and so they don't get recorded in the distributed
-    // state, and hence they're not pre-loaded. So even when we pre-load the files, we need this
-    // hack so that the coercer does not check for existence of these unrecorded files.
-    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    ParserTargetNodeFromAttrMapFactory parserTargetNodeFactory =
-        DefaultParserTargetNodeFactory.createForDistributedBuild(
-            typeCoercerFactory,
-            args.getKnownRuleTypesProvider(),
-            new DefaultConstructorArgMarshaller(typeCoercerFactory),
-            new TargetNodeFactory(
-                typeCoercerFactory, PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY));
-
-    return new DistBuildTargetGraphCodec(
-        Objects.requireNonNull(args.getExecutorService()),
-        parserTargetNodeFactory,
-        input -> {
-          try {
-            return args.getParser()
-                .getTargetNodeRawAttributes(
-                    ParsingContext.builder(
-                            args.getState().getRootCell().getCell(input.getBuildTarget()),
-                            args.getExecutorService())
-                        .build(),
-                    input);
-          } catch (BuildFileParseException e) {
-            throw new RuntimeException(e);
-          }
-        },
-        new HashSet<>(args.getState().getRemoteState().getTopLevelTargets()));
   }
 
   private static class StackedFileHashCaches {
