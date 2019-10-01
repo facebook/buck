@@ -29,7 +29,6 @@ import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
-import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.impl.DefaultPlatform;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
@@ -102,10 +101,6 @@ public class TargetCompatibilityCheckerTest {
             BuildTargetFactory.newInstance("//configs:c2"),
             ImmutableMap.of(),
             ImmutableSet.of(cs1v2.getBuildTarget()));
-    PlatformResolver platformResolver =
-        buildTarget -> {
-          throw new IllegalArgumentException("Unknown platform: " + buildTarget);
-        };
     ConfigurationRuleResolver configurationRuleResolver =
         buildTarget -> {
           if (buildTarget.toString().equals(compatibleConfigSetting.getBuildTarget().toString())) {
@@ -122,7 +117,6 @@ public class TargetCompatibilityCheckerTest {
         new ImmutableConfigurationRuleRegistry(
             configurationRuleResolver,
             constraintResolver,
-            platformResolver,
             configuration -> DefaultPlatform.INSTANCE);
   }
 

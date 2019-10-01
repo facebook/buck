@@ -16,7 +16,6 @@
 package com.facebook.buck.core.rules.config.registry;
 
 import com.facebook.buck.core.model.platform.ConstraintResolver;
-import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -33,9 +32,6 @@ public interface ConfigurationRuleRegistry {
    * {@code constraint_value} rules.
    */
   ConstraintResolver getConstraintResolver();
-
-  /** Allows to get access to configuration rules that represent {@code platform} rules. */
-  PlatformResolver getPlatformResolver();
 
   /** Resolves target configuration to a platform. */
   TargetPlatformResolver getTargetPlatformResolver();
