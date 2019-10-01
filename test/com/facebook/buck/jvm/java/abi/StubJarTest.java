@@ -147,8 +147,7 @@ public class StubJarTest {
         .setSourceFile("A.kt", "package com.example.buck open class A {}")
         .addExpectedStub(
             "com/example/buck/A",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
@@ -253,8 +252,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/A",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
@@ -314,8 +312,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/A",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
@@ -376,8 +373,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/A",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
@@ -432,8 +428,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/A",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
@@ -544,8 +539,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/A",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
@@ -587,8 +581,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/A",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
@@ -707,8 +700,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/BKt",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x31",
             "public final class com/example/buck/BKt {",
             "",
@@ -746,8 +738,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/BKt$getString$1",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x31",
             "// signature Lkotlin/jvm/internal/Lambda;Lkotlin/jvm/functions/Function1<Ljava/lang/String;Ljava/lang/String;>;",
             "// declaration: com/example/buck/BKt$getString$1 extends kotlin.jvm.internal.Lambda implements kotlin.jvm.functions.Function1<java.lang.String, java.lang.String>",
@@ -869,8 +860,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/BKt",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x31",
             "public final class com/example/buck/BKt {",
             "",
@@ -909,8 +899,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/BKt$useSomeInterface$1",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x31",
             "public final class com/example/buck/BKt$useSomeInterface$1 implements com/example/buck/A$SomeInterface {",
             "",
@@ -1006,8 +995,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/B",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x21",
             "public class com/example/buck/B {",
             "",
@@ -1022,8 +1010,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/B$C",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x21",
             "public class com/example/buck/B$C {",
             "",
@@ -1058,8 +1045,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/B$C$useSomeInterface$1",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x31",
             "public final class com/example/buck/B$C$useSomeInterface$1 implements com/example/buck/A$SomeInterface {",
             "",
@@ -1158,8 +1144,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/C",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x31",
             "public final class com/example/buck/C {",
             "",
@@ -1196,8 +1181,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/C$useInlineExtension$$inlined$useSomeInterface$1",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x31",
             "public final class com/example/buck/C$useInlineExtension$$inlined$useSomeInterface$1 implements com/example/buck/A$SomeInterface {",
             "",
@@ -1310,8 +1294,7 @@ public class StubJarTest {
             "fun A.postDelayedNotInlined(delay: Long, block: () -> Unit) { postDelayed(block, delay) }")
         .addExpectedStub(
             "com/example/buck/BKt",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x31",
             "public final class com/example/buck/BKt {",
             "",
@@ -1371,8 +1354,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/BKt$sam$i$java_lang_Runnable$0",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x31",
             "public final class com/example/buck/BKt$sam$i$java_lang_Runnable$0 implements java/lang/Runnable {",
             "",
@@ -1409,8 +1391,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/BKt$sam$java_lang_Runnable$0",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x30",
             "final class com/example/buck/BKt$sam$java_lang_Runnable$0 implements java/lang/Runnable {",
             "",
@@ -3419,8 +3400,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/A$B",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x30",
             "final class com/example/buck/A$B {",
             "",
@@ -3441,8 +3421,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/A",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
@@ -4785,8 +4764,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/A",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
@@ -4884,8 +4862,7 @@ public class StubJarTest {
             "}")
         .addExpectedStub(
             "com/example/buck/A",
-            "JDK8:// class version 50.0 (50)",
-            "JDK11:// class version 55.0 (55)",
+            "// class version 50.0 (50)",
             "// access flags 0x21",
             "public class com/example/buck/A {",
             "",
