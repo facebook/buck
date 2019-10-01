@@ -17,6 +17,7 @@ install:
   - cmd: python --version
   - cmd: java -version
   - cmd: ant -version
+  - cmd: echo -Djna.nosys=true > .buckjavaargs.local
 
 # to disable automatic builds by MsBuild
 build: off
