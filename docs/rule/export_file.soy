@@ -29,8 +29,8 @@
 {call buck.rule}
 {param status: 'UNFROZEN' /}
 {param overview}
-  <p><b>Warning:</b> this build rule is deprecated.
-  Use {call buck.ruleLink}{param name : 'filegroup' /}{/call} instead.</p>
+  <p><b>Warning:</b> this build rule is deprecated for folders.
+  Use {call buck.ruleLink}{param name : 'filegroup' /}{/call} instead. It is still supported for individual files.</p>
   <p>An <code>export_file()</code> takes a single file or folder and exposes it so other rules can
   use it.</p>
 {/param}
