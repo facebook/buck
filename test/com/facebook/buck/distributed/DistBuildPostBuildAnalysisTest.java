@@ -18,7 +18,6 @@ package com.facebook.buck.distributed;
 import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_BUILD_RULE_FINISHED;
 
 import com.facebook.buck.artifact_cache.CacheResult;
-import com.facebook.buck.cli.DistBuildCommand;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
@@ -205,7 +204,7 @@ public class DistBuildPostBuildAnalysisTest {
             stampedeId,
             filesystem.resolve(tmpPath.getRoot()),
             ImmutableList.of(buildSlaveRunId1, buildSlaveRunId2),
-            DistBuildCommand.class.getSimpleName().toLowerCase());
+            "distbuildcommand");
     Assert.assertEquals(
         analysis.dumpResultsToLogFile(analysis.runAnalysis()),
         tmpPath.getRoot().resolve(BuckConstant.DIST_BUILD_ANALYSIS_FILE_NAME));

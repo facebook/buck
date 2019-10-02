@@ -70,7 +70,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.counters.CounterBuckConfig;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
-import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.distributed.DistBuildUtil;
 import com.facebook.buck.doctor.DefaultDefectReporter;
 import com.facebook.buck.doctor.config.ImmutableDoctorConfig;
@@ -729,9 +728,6 @@ public final class MainRunner {
       // Setup the console.
       console = makeCustomConsole(context, verbosity, buckConfig);
 
-      DistBuildConfig distBuildConfig = new DistBuildConfig(buckConfig);
-      boolean isUsingDistributedBuild = false;
-
       ExecutionEnvironment executionEnvironment =
           new DefaultExecutionEnvironment(clientEnvironment, System.getProperties());
 
@@ -743,30 +739,9 @@ public final class MainRunner {
       Optional<String> projectPrefix = Optional.empty();
       if (command.subcommand instanceof BuildCommand) {
         BuildCommand subcommand = (BuildCommand) command.subcommand;
-        isUsingDistributedBuild = subcommand.isUsingDistributedBuild();
-        boolean shouldUseDistributedBuild =
-            distBuildConfig.shouldUseDistributedBuild(
-                buildId, executionEnvironment.getUsername(), subcommand.getArguments());
-
-        if (isRemoteExecutionBuild && (isUsingDistributedBuild || shouldUseDistributedBuild)) {
-          String msg =
-              "Remote Execution is enabled. Deprecated distributed build will not be used.";
-          LOG.warn(msg);
-          printWarnMessage(msg);
-          subcommand.forceDisableRemoteExecution();
-          isUsingDistributedBuild = false;
-        } else if (!isUsingDistributedBuild && shouldUseDistributedBuild) {
-          isUsingDistributedBuild = subcommand.tryConvertingToStampede(distBuildConfig);
-        }
+        executionEnvironment.getUsername();
 
         projectPrefix = DistBuildUtil.getCommonProjectPrefix(subcommand.getArguments(), buckConfig);
-      }
-
-      // Switch to async file logging, if configured. A few log samples will have already gone
-      // via the regular file logger, but that's OK.
-      boolean isDistBuildCommand = command.subcommand instanceof DistBuildCommand;
-      if (isDistBuildCommand) {
-        LogConfig.setUseAsyncFileLogging(distBuildConfig.isAsyncLoggingEnabled());
       }
 
       RuleKeyConfiguration ruleKeyConfiguration =
@@ -1022,7 +997,7 @@ public final class MainRunner {
             ThrowingCloseableWrapper<ListeningExecutorService, InterruptedException>
                 httpWriteExecutorService =
                     getExecutorWrapper(
-                        getHttpWriteExecutorService(cacheBuckConfig, isUsingDistributedBuild),
+                        getHttpWriteExecutorService(cacheBuckConfig),
                         "HTTP Write",
                         cacheBuckConfig.getHttpWriterShutdownTimeout());
             ThrowingCloseableWrapper<ListeningExecutorService, InterruptedException>
@@ -1303,8 +1278,7 @@ public final class MainRunner {
                       buckConfig.getEnvironment()),
                   vcBuckConfig.getPregeneratedVersionControlStats());
           if ((vcBuckConfig.shouldGenerateStatistics() || shouldUploadBuildReport)
-              && command.subcommand instanceof AbstractCommand
-              && !(command.subcommand instanceof DistBuildCommand)) {
+              && command.subcommand instanceof AbstractCommand) {
             AbstractCommand subcommand = (AbstractCommand) command.subcommand;
             if (!commandMode.equals(CommandMode.TEST)) {
 
@@ -1982,8 +1956,8 @@ public final class MainRunner {
   }
 
   private static ListeningExecutorService getHttpWriteExecutorService(
-      ArtifactCacheBuckConfig buckConfig, boolean isUsingDistributedBuild) {
-    if (isUsingDistributedBuild || buckConfig.hasAtLeastOneWriteableRemoteCache()) {
+      ArtifactCacheBuckConfig buckConfig) {
+    if (buckConfig.hasAtLeastOneWriteableRemoteCache()) {
       // Distributed builds need to upload from the local cache to the remote cache.
       ExecutorService executorService =
           MostExecutors.newMultiThreadExecutor(

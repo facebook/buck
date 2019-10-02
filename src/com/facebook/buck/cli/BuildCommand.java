@@ -40,8 +40,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.distributed.DistBuildConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.listener.FileSerializationOutputRuleDepsListener;
@@ -99,8 +97,6 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 public class BuildCommand extends AbstractCommand {
-
-  private static final Logger LOG = Logger.get(BuildCommand.class);
 
   private static final String KEEP_GOING_LONG_ARG = "--keep-going";
   private static final String BUILD_REPORT_LONG_ARG = "--build-report";
@@ -193,15 +189,6 @@ public class BuildCommand extends AbstractCommand {
   @Option(name = LOCAL_BUILD_LONG_ARG, usage = "Disable distributed build.")
   private boolean forceDisableRemoteExecution = false;
 
-  private boolean useDistributedBuild = false; // Must be accessed via the getter method.
-
-  @Nullable
-  @Option(
-      name = DistBuildRunCommand.BUILD_STATE_FILE_ARG_NAME,
-      usage = DistBuildRunCommand.BUILD_STATE_FILE_ARG_USAGE,
-      hidden = true)
-  private String distributedBuildStateFile = null;
-
   @Nullable
   @Option(
       name = BUCK_BINARY_STRING_ARG,
@@ -221,8 +208,6 @@ public class BuildCommand extends AbstractCommand {
   private boolean outputRuleDeps = false;
 
   @Argument private List<String> arguments = new ArrayList<>();
-
-  @Nullable private DistBuildCommandDelegate distBuildCommandDelegate;
 
   public List<String> getArguments() {
     return arguments;
@@ -276,50 +261,6 @@ public class BuildCommand extends AbstractCommand {
 
   public boolean isRemoteExecutionForceDisabled() {
     return forceDisableRemoteExecution;
-  }
-
-  /** Whether this build is using stampede or not. */
-  public boolean isUsingDistributedBuild() {
-    if (forceDisableRemoteExecution) {
-      useDistributedBuild = false;
-    }
-
-    return useDistributedBuild;
-  }
-
-  @Nullable
-  public DistBuildCommandDelegate getDistBuildCommandDelegate() {
-    if (isUsingDistributedBuild()) {
-      if (distBuildCommandDelegate == null) {
-        distBuildCommandDelegate =
-            new DistBuildCommandDelegate(
-                distributedBuildStateFile, buckBinary, localRuleKeyCalculator, keepGoing);
-      }
-      return distBuildCommandDelegate;
-    }
-    return null;
-  }
-
-  /**
-   * Mark this build as being automatically converted to stampede.
-   *
-   * @param config to retrieve the message (if any) to be shown to the user.
-   * @return true if the build was converted to stampede.
-   */
-  public boolean tryConvertingToStampede(DistBuildConfig config) {
-    if (forceDisableRemoteExecution) {
-      LOG.info(
-          "Distributed build was forcefully disabled. Will not auto-convert build to stampede.");
-
-      useDistributedBuild = false; // Make sure
-      return false;
-    }
-
-    useDistributedBuild = true;
-
-    Objects.requireNonNull(getDistBuildCommandDelegate()).tryConvertingToStampede(config);
-
-    return true;
   }
 
   /** @return an absolute path or {@link Optional#empty()}. */
@@ -482,44 +423,39 @@ public class BuildCommand extends AbstractCommand {
       throws Exception {
     ExitCode exitCode;
     GraphsAndBuildTargets graphsAndBuildTargets;
-    if (isUsingDistributedBuild()) {
-      return Objects.requireNonNull(getDistBuildCommandDelegate())
-          .executeBuildAndProcessResult(params, commandThreadManager, this);
-    } else {
-      try (ThriftRuleKeyLogger ruleKeyLogger = createRuleKeyLogger().orElse(null)) {
-        Optional<ThriftRuleKeyLogger> optionalRuleKeyLogger = Optional.ofNullable(ruleKeyLogger);
-        graphsAndBuildTargets =
-            createGraphsAndTargets(
+    try (ThriftRuleKeyLogger ruleKeyLogger = createRuleKeyLogger().orElse(null)) {
+      Optional<ThriftRuleKeyLogger> optionalRuleKeyLogger = Optional.ofNullable(ruleKeyLogger);
+      graphsAndBuildTargets =
+          createGraphsAndTargets(
+              params,
+              commandThreadManager.getListeningExecutorService(),
+              targetNodeSpecEnhancer,
+              optionalRuleKeyLogger);
+
+      if (outputRuleDeps) {
+        ActionGraphBuilder actionGraphBuilder =
+            graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
+        ImmutableSet<BuildTarget> buildTargets = graphsAndBuildTargets.getBuildTargets();
+        Path outputPath = getLogDirectoryPath(params).resolve(ACTION_GRAPH_FILE_NAME);
+        new ActionGraphSerializer(actionGraphBuilder, buildTargets, outputPath).serialize();
+      }
+
+      try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
+          getDefaultRuleKeyCacheScope(
+              params, graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder())) {
+        exitCode =
+            executeLocalBuild(
                 params,
-                commandThreadManager.getListeningExecutorService(),
-                targetNodeSpecEnhancer,
-                optionalRuleKeyLogger);
-
-        if (outputRuleDeps) {
-          ActionGraphBuilder actionGraphBuilder =
-              graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
-          ImmutableSet<BuildTarget> buildTargets = graphsAndBuildTargets.getBuildTargets();
-          Path outputPath = getLogDirectoryPath(params).resolve(ACTION_GRAPH_FILE_NAME);
-          new ActionGraphSerializer(actionGraphBuilder, buildTargets, outputPath).serialize();
-        }
-
-        try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
-            getDefaultRuleKeyCacheScope(
-                params, graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder())) {
-          exitCode =
-              executeLocalBuild(
-                  params,
-                  graphsAndBuildTargets,
-                  commandThreadManager.getWeightedListeningExecutorService(),
-                  optionalRuleKeyLogger,
-                  new NoOpRemoteBuildRuleCompletionWaiter(),
-                  false,
-                  Optional.empty(),
-                  ruleKeyCacheScope,
-                  lastBuild);
-          if (exitCode == ExitCode.SUCCESS) {
-            exitCode = processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
-          }
+                graphsAndBuildTargets,
+                commandThreadManager.getWeightedListeningExecutorService(),
+                optionalRuleKeyLogger,
+                new NoOpRemoteBuildRuleCompletionWaiter(),
+                false,
+                Optional.empty(),
+                ruleKeyCacheScope,
+                lastBuild);
+        if (exitCode == ExitCode.SUCCESS) {
+          exitCode = processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
         }
       }
     }
@@ -791,7 +727,7 @@ public class BuildCommand extends AbstractCommand {
             new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
             executor,
             isKeepGoing(),
-            isUsingDistributedBuild(),
+            false,
             isDownloadHeavyBuild,
             ruleKeyCacheScope,
             getBuildEngineMode(),
@@ -870,11 +806,7 @@ public class BuildCommand extends AbstractCommand {
   public Iterable<BuckEventListener> getEventListeners(
       Map<ExecutorPool, ListeningExecutorService> executorPool,
       ScheduledExecutorService scheduledExecutorService) {
-    if (isUsingDistributedBuild()) {
-      return Objects.requireNonNull(getDistBuildCommandDelegate()).getEventListeners();
-    } else {
-      return ImmutableList.of();
-    }
+    return ImmutableList.of();
   }
 
   public static class ActionGraphCreationException extends Exception {
