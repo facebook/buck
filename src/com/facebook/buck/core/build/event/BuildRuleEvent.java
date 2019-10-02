@@ -513,6 +513,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     protected String getValueString() {
       return rule.toString();
     }
+
+    @JsonView(JsonViews.MachineReadableLog.class)
+    public BuildRule getRule() {
+      return rule;
+    }
   }
 
   public static Scope ruleKeyCalculationScope(

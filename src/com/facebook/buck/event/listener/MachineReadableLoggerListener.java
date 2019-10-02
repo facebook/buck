@@ -160,6 +160,36 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   @Subscribe
+  public void buildRuleEventStarted(BuildRuleEvent.Started event) {
+    writeToLog("BuildRuleEvent.Started", event);
+  }
+
+  @Subscribe
+  public void buildRuleEventResumed(BuildRuleEvent.Resumed event) {
+    writeToLog("BuildRuleEvent.Resumed", event);
+  }
+
+  @Subscribe
+  public void buildRuleEventSuspended(BuildRuleEvent.Suspended event) {
+    writeToLog("BuildRuleEvent.Suspended", event);
+  }
+
+  @Subscribe
+  public void buildRuleEventStartedRuleCalc(BuildRuleEvent.StartedRuleKeyCalc event) {
+    writeToLog("BuildRuleEvent.StartedRuleKeyCalc", event);
+  }
+
+  @Subscribe
+  public void buildRuleEventFinishedRuleCalc(BuildRuleEvent.FinishedRuleKeyCalc event) {
+    writeToLog("BuildRuleEvent.StartedRuleKeyCalc", event);
+  }
+
+  @Subscribe
+  public void buildRuleEventWillBuildLocally(BuildRuleEvent.WillBuildLocally event) {
+    writeToLog("BuildRuleEvent.WillBuildLocally", event);
+  }
+
+  @Subscribe
   public void buildRuleEventFinished(BuildRuleEvent.Finished event) {
     writeToLog(PREFIX_BUILD_RULE_FINISHED, event);
 
