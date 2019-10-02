@@ -40,8 +40,13 @@ interface BuildPackageParser {
 
 /**
  * Parses packages by invoking Buck from command line
- */
-class BuckShellBuildPackageParser(private val root: Path) : BuildPackageParser {
+ * @param root Path to a folder that is a root of the cell being parsed
+ * @param daemon Whether to run Buck as daemon or not. Running with daemon may help improve
+ * performance if checkout is reused for other commands sharing the same build graph. This parameter
+ * is ignored if NO_BUCKD environmental variable is set explicitly
+  */
+class BuckShellBuildPackageParser(private val root: Path, private val daemon: Boolean = true) :
+    BuildPackageParser {
     override fun parsePackages(packagePaths: List<FsAgnosticPath>): List<BuildPackage> {
         return if (packagePaths.isEmpty()) listOf() else parse(packagePaths)
     }
@@ -81,15 +86,18 @@ class BuckShellBuildPackageParser(private val root: Path) : BuildPackageParser {
 
     private fun execBuck(patternsFile: Path, outputFile: Path) {
         val builder = ProcessBuilder("buck", "targets", "--show-parse-state",
-            "@" + patternsFile.toString()).redirectOutput(outputFile.toFile())
+            "@" + patternsFile.toString()).redirectOutput(outputFile.toFile()).redirectError(
+                ProcessBuilder.Redirect.INHERIT)
             .directory(root.toFile())
         builder.environment().putIfAbsent("BUCK_EXTRA_JAVA_ARGS", "-Xmx24G")
+        if (!daemon) {
+            builder.environment().putIfAbsent("NO_BUCKD", "1")
+        }
         val process = builder.start()
         val exitCode = process.waitFor()
         if (exitCode != 0) {
             throw IllegalStateException(
-                "Buck exited with status $exitCode:" + System.lineSeparator() +
-                        process.errorStream.bufferedReader().lineSequence().joinToString(System.lineSeparator()))
+                "Buck exited with status $exitCode")
         }
     }
 }
