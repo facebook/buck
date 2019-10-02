@@ -275,7 +275,8 @@ public class CacheCommandTest {
             false,
             Optional.empty(),
             ImmutableSet.of(),
-            ImmutableList.of());
+            ImmutableList.of(),
+            /* maxConcurrentReExecutions= */ 0);
     listener.register(eventBus);
     return listener;
   }

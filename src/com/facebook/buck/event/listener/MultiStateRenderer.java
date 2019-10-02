@@ -23,7 +23,7 @@ public interface MultiStateRenderer {
 
   int getExecutorCount();
 
-  ImmutableList<Long> getSortedExecutorIds(boolean sortByTime);
+  ImmutableList<Long> getSortedIds(boolean sortByTime);
 
   String renderStatusLine(long executorID, StringBuilder lineBuilder);
 

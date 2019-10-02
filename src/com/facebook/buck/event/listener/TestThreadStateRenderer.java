@@ -103,7 +103,7 @@ public class TestThreadStateRenderer implements MultiStateRenderer {
   }
 
   @Override
-  public ImmutableList<Long> getSortedExecutorIds(boolean sortByTime) {
+  public ImmutableList<Long> getSortedIds(boolean sortByTime) {
     return commonThreadStateRenderer.getSortedThreadIds(sortByTime);
   }
 

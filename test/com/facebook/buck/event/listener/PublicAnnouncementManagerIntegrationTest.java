@@ -148,7 +148,8 @@ public class PublicAnnouncementManagerIntegrationTest {
               false,
               Optional.empty(),
               ImmutableSet.of(),
-              ImmutableList.of());
+              ImmutableList.of(),
+              /* maxConcurrentReExecutions */ 0);
       eventBus.register(listener);
 
       PublicAnnouncementManager manager =

@@ -87,7 +87,7 @@ public class DistBuildSlaveStateRenderer implements MultiStateRenderer {
   }
 
   @Override
-  public ImmutableList<Long> getSortedExecutorIds(boolean sortByTime) {
+  public ImmutableList<Long> getSortedIds(boolean sortByTime) {
     return IntStream.range(0, slaveStatuses.size())
         .boxed()
         .map(i -> new Pair<>(i, slaveStatuses.get(i)))

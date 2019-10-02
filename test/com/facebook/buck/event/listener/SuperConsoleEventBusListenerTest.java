@@ -2322,7 +2322,8 @@ public class SuperConsoleEventBusListenerTest {
             false,
             Optional.empty(),
             ImmutableSet.of(),
-            ImmutableList.of());
+            ImmutableList.of(),
+            /* maxConcurrentReExecutions */ 0);
     listener.register(eventBus);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
@@ -3091,7 +3092,7 @@ public class SuperConsoleEventBusListenerTest {
       compareOutput(listener, fakeRenderer, fullOutput, 5);
 
       lines = ImmutableList.builder();
-      listener.renderLines(fakeRenderer, lines, 4, false);
+      listener.renderLinesWithMaybeCompression(fakeRenderer, lines, 4, false);
       assertThat(
           lines.build(),
           equalTo(
@@ -3103,14 +3104,14 @@ public class SuperConsoleEventBusListenerTest {
       assertThat(fakeRenderer.lastSortWasByTime(), is(true));
 
       lines = ImmutableList.builder();
-      listener.renderLines(fakeRenderer, lines, 2, false);
+      listener.renderLinesWithMaybeCompression(fakeRenderer, lines, 2, false);
       assertThat(
           lines.build(),
           equalTo(ImmutableList.of(" - Status of thread 2", " - 4 MORE THREADS: t1 t4 t8 t5")));
       assertThat(fakeRenderer.lastSortWasByTime(), is(true));
 
       lines = ImmutableList.builder();
-      listener.renderLines(fakeRenderer, lines, 1, false);
+      listener.renderLinesWithMaybeCompression(fakeRenderer, lines, 1, false);
       assertThat(lines.build(), equalTo(ImmutableList.of(" - 5 THREADS: t2 t1 t4 t8 t5")));
       assertThat(fakeRenderer.lastSortWasByTime(), is(true));
     }
@@ -3279,7 +3280,8 @@ public class SuperConsoleEventBusListenerTest {
             printBuildId,
             buildDetailsTemplate,
             buildDetailsCommands,
-            ImmutableList.of());
+            ImmutableList.of(),
+            /* maxConcurrentReExecutions */ 0);
     listener.register(eventBus);
     return listener;
   }
@@ -3295,7 +3297,7 @@ public class SuperConsoleEventBusListenerTest {
       int maxLines) {
     ImmutableList.Builder<String> lines;
     lines = ImmutableList.builder();
-    listener.renderLines(fakeRenderer, lines, maxLines, false);
+    listener.renderLinesWithMaybeCompression(fakeRenderer, lines, maxLines, false);
     MoreAsserts.assertIterablesEquals(fullOutput, lines.build());
     assertThat(fakeRenderer.lastSortWasByTime(), is(false));
   }

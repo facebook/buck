@@ -1082,11 +1082,8 @@ public final class MainRunner {
                     logBuckConfig.getBuildDetailsCommands(),
                     createAdditionalConsoleLinesProviders(
                         remoteExecutionListener, remoteExecutionConfig, metadataProvider),
-                    isRemoteExecutionBuild
-                        ? Optional.of(
-                            remoteExecutionConfig.getDebugURLString(
-                                metadataProvider.get().getReSessionId()))
-                        : Optional.empty());
+                    isRemoteExecutionBuild ? Optional.of(remoteExecutionConfig) : Optional.empty(),
+                    metadataProvider);
             // This makes calls to LOG.error(...) post to the EventBus, instead of writing to
             // stderr.
             Closeable logErrorToEventBus =
@@ -2224,7 +2221,8 @@ public final class MainRunner {
       Optional<String> buildDetailsTemplate,
       ImmutableSet<String> buildDetailsCommands,
       ImmutableList<AdditionalConsoleLineProvider> additionalConsoleLineProviders,
-      Optional<String> reSessionIDInfo) {
+      Optional<RemoteExecutionConfig> remoteExecutionConfig,
+      MetadataProvider metadataProvider) {
     RenderingConsole renderingConsole = new RenderingConsole(clock, console);
     if (config.isEnabled(console.getAnsi(), console.getVerbosity())) {
       return new SuperConsoleEventBusListener(
@@ -2239,7 +2237,10 @@ public final class MainRunner {
           printBuildId,
           buildDetailsTemplate,
           buildDetailsCommands,
-          additionalConsoleLineProviders);
+          additionalConsoleLineProviders,
+          remoteExecutionConfig.isPresent()
+              ? remoteExecutionConfig.get().getStrategyConfig().getMaxConcurrentExecutions()
+              : 0);
     }
     if (renderingConsole.getVerbosity().isSilent()) {
       return new SilentConsoleEventBusListener(
@@ -2259,7 +2260,12 @@ public final class MainRunner {
         printBuildId,
         buildDetailsTemplate,
         buildDetailsCommands,
-        reSessionIDInfo,
+        remoteExecutionConfig.isPresent()
+            ? Optional.of(
+                remoteExecutionConfig
+                    .get()
+                    .getDebugURLString(metadataProvider.get().getReSessionId()))
+            : Optional.empty(),
         additionalConsoleLineProviders);
   }
 

@@ -37,7 +37,7 @@ public class FakeMultiStateRenderer implements MultiStateRenderer {
   }
 
   @Override
-  public ImmutableList<Long> getSortedExecutorIds(boolean sortByTime) {
+  public ImmutableList<Long> getSortedIds(boolean sortByTime) {
     lastSortWasByTime = sortByTime;
     return threadIds;
   }
