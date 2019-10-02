@@ -538,7 +538,17 @@ public class BuildCommand extends AbstractCommand {
             pathResolver, rule, buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink());
     if (outputPath.isPresent()) {
       Path absolutePath = outputPath.get();
-      Path destPath = lastOutputDirPath.relativize(absolutePath);
+      Path destPath;
+      try {
+        destPath = lastOutputDirPath.relativize(absolutePath);
+      } catch (IllegalArgumentException e) {
+        // Troubleshooting a potential issue with windows relativizing things
+        String msg =
+            String.format(
+                "Could not relativize %s to %s: %s",
+                absolutePath, lastOutputDirPath, e.getMessage());
+        throw new IllegalArgumentException(msg, e);
+      }
       Path linkPath = lastOutputDirPath.resolve(absolutePath.getFileName());
       // Don't overwrite existing symlink in case there are duplicate names.
       if (!Files.exists(linkPath, LinkOption.NOFOLLOW_LINKS)) {

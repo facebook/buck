@@ -371,12 +371,23 @@ public class MorePaths {
    */
   public static void createSymLink(@Nullable WindowsFS winFS, Path symLink, Path target)
       throws IOException {
-    if (Platform.detect() == Platform.WINDOWS) {
-      Objects.requireNonNull(winFS);
-      target = MorePaths.normalize(symLink.getParent().resolve(target));
-      winFS.createSymbolicLink(symLink, target, isDirectory(target));
-    } else {
-      Files.createSymbolicLink(symLink, target);
+    try {
+      if (Platform.detect() == Platform.WINDOWS) {
+        Objects.requireNonNull(winFS);
+        target = MorePaths.normalize(symLink.getParent().resolve(target));
+        winFS.createSymbolicLink(symLink, target, isDirectory(target));
+      } else {
+        Files.createSymbolicLink(symLink, target);
+      }
+    } catch (IllegalArgumentException e) {
+      // On windows, if one creates a symlink on a different filesystem, the error is not
+      // particularly useful. ("'other' has different root"). Add some extra context
+      if (e.getMessage().endsWith("has different root")) {
+        String msg = String.format("Could not link %s to %s: %s", target, symLink, e.getMessage());
+        throw new IllegalArgumentException(msg, e);
+      } else {
+        throw e;
+      }
     }
   }
 
