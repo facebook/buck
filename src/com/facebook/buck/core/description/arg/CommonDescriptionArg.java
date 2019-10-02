@@ -33,6 +33,21 @@ public interface CommonDescriptionArg extends ConstructorArg, HasTargetCompatibl
   @Value.NaturalOrder
   ImmutableSortedSet<String> getLabels();
 
+  String DEFAULT_TARGET_PLATFORM_PARAM_NAME = "defaultTargetPlatform";
+
+  /**
+   * The name of build target default "new" platform: it is used when a platform is not specified
+   * either globally or in a target which used this target as a dependency.
+   *
+   * <p>The value is a build target, but we specify it as string, because this function is not
+   * actually called, but the attr is fetched by name from the raw (unconfigured) target node.
+   */
+  @Hint(isDep = false, isConfigurable = false)
+  @Value.Default
+  default String getDefaultTargetPlatform() {
+    return "";
+  }
+
   @Value.Derived
   default boolean labelsContainsAnyOf(Set<String> labels) {
     return !Sets.intersection(this.getLabels(), labels).isEmpty();

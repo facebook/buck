@@ -17,13 +17,18 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.exceptions.HumanReadableExceptions;
 import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
@@ -42,6 +47,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -57,6 +63,7 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
   private final boolean speculativeDepsTraversal;
   private final RawTargetNodePipeline rawTargetNodePipeline;
   private final ParserTargetNodeFromRawTargetNodeFactory rawTargetNodeToTargetNodeFactory;
+  private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory;
   private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
   private final BuckEventBus eventBus;
   private final PipelineNodeCache<BuildTarget, TargetNode<?>> cache;
@@ -80,7 +87,8 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
       BuckEventBus eventBus,
       String pipelineName,
       boolean speculativeDepsTraversal,
-      ParserTargetNodeFromRawTargetNodeFactory rawTargetNodeToTargetNodeFactory) {
+      ParserTargetNodeFromRawTargetNodeFactory rawTargetNodeToTargetNodeFactory,
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory) {
     this.executorService = executorService;
     this.rawTargetNodePipeline = rawTargetNodePipeline;
     this.speculativeDepsTraversal = speculativeDepsTraversal;
@@ -92,6 +100,7 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
     this.cache =
         new PipelineNodeCache<>(
             cache, RawTargetNodeToTargetNodeParsePipeline::targetNodeIsConfiguration);
+    this.unconfiguredBuildTargetViewFactory = unconfiguredBuildTargetViewFactory;
   }
 
   private static boolean targetNodeIsConfiguration(TargetNode<?> targetNode) {
@@ -140,8 +149,10 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();
     }
-    TargetNode<?> result;
+    return Futures.immediateFuture(computeNode(cell, buildTarget, from));
+  }
 
+  private TargetNode<?> computeNode(Cell cell, BuildTarget buildTarget, RawTargetNode from) {
     try (Scope scope =
         SimplePerfEvent.scopeIgnoringShortEvents(
             eventBus,
@@ -156,16 +167,36 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
               SimplePerfEvent.scopeIgnoringShortEvents(
                   eventBus, perfEventId1, scope, minimumPerfEventTimeMs, TimeUnit.MILLISECONDS);
 
-      result = computeNodeInScope(cell, buildTarget, from, perfEventScopeFunction);
+      return computeNodeInScope(cell, buildTarget, from, perfEventScopeFunction);
     }
-    return Futures.immediateFuture(result);
   }
 
-  /** Get or load all raw target nodes from a build file */
-  public ListenableFuture<ImmutableList<TargetNode<?>>> getAllNodesJob(
-      Cell cell, Path buildFile, TargetConfiguration targetConfiguration) {
+  /**
+   * Get or load a target node from a build file configuring it with global platform configuration
+   * or {@code default_target_platform} rule arg
+   */
+  ListenableFuture<TargetNode<?>> getRequestedTargetNodeJob(
+      Cell cell,
+      UnconfiguredBuildTargetView unconfiguredTarget,
+      TargetConfiguration globalTargetConfiguration) {
+    ListenableFuture<RawTargetNode> rawTargetNodeFuture =
+        rawTargetNodePipeline.getNodeJob(cell, unconfiguredTarget);
+    return Futures.transformAsync(
+        rawTargetNodeFuture,
+        rawTargetNode ->
+            configureRequestedTarget(
+                cell, unconfiguredTarget, globalTargetConfiguration, rawTargetNode),
+        executorService);
+  }
+
+  /**
+   * Get or load all target nodes from a build file configuring it with global platform
+   * configuration or {@code default_target_platform} rule arg
+   */
+  ListenableFuture<ImmutableList<TargetNode<?>>> getAllRequestedTargetNodesJob(
+      Cell cell, Path buildFile, TargetConfiguration globalTargetConfiguration) {
     SettableFuture<ImmutableList<TargetNode<?>>> future = SettableFuture.create();
-    Pair<Path, TargetConfiguration> pathCacheKey = new Pair<>(buildFile, targetConfiguration);
+    Pair<Path, TargetConfiguration> pathCacheKey = new Pair<>(buildFile, globalTargetConfiguration);
     ListenableFuture<ImmutableList<TargetNode<?>>> cachedFuture =
         allNodeCache.putIfAbsent(pathCacheKey, future);
 
@@ -186,12 +217,13 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
                     ImmutableList.builderWithExpectedSize(allToConvert.size());
 
                 for (RawTargetNode from : allToConvert) {
-                  BuildTarget target =
-                      ImmutableUnconfiguredBuildTargetView.of(cell.getRoot(), from.getBuildTarget())
-                          .configure(targetConfiguration);
-                  allNodeJobs.add(
-                      cache.getJobWithCacheLookup(
-                          cell, target, () -> dispatchComputeNode(cell, target, from), eventBus));
+                  UnconfiguredBuildTargetView unconfiguredTarget =
+                      ImmutableUnconfiguredBuildTargetView.of(
+                          cell.getRoot(), from.getBuildTarget());
+                  ListenableFuture<TargetNode<?>> targetNode =
+                      configureRequestedTarget(
+                          cell, unconfiguredTarget, globalTargetConfiguration, from);
+                  allNodeJobs.add(targetNode);
                 }
 
                 return Futures.allAsList(allNodeJobs.build());
@@ -209,34 +241,79 @@ public class RawTargetNodeToTargetNodeParsePipeline implements AutoCloseable {
    *
    * @param cell the {@link Cell} that the build file belongs to.
    * @param buildFile absolute path to the file to process.
-   * @param targetConfiguration the configuration of targets.
+   * @param globalTargetConfiguration global target platform
    * @return all targets from the file
    * @throws BuildFileParseException for syntax errors.
    */
-  public ImmutableList<TargetNode<?>> getAllNodes(
-      Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
-      throws BuildFileParseException {
+  ImmutableList<TargetNode<?>> getAllRequestedTargetNodes(
+      Cell cell, Path buildFile, TargetConfiguration globalTargetConfiguration) {
     Preconditions.checkState(!shuttingDown.get());
 
     try {
-      return getAllNodesJob(cell, buildFile, targetConfiguration).get();
+      return getAllRequestedTargetNodesJob(cell, buildFile, globalTargetConfiguration).get();
     } catch (Exception e) {
       throw handleFutureGetException(e);
     }
   }
 
+  /**
+   * Use {@code default_target_platform} to configure target. Note we use default target platform
+   * only for targets explicitly requested by user, but not to dependencies of them hence the method
+   * name.
+   */
+  private ListenableFuture<TargetNode<?>> configureRequestedTarget(
+      Cell cell,
+      UnconfiguredBuildTargetView unconfiguredTarget,
+      TargetConfiguration globalTargetConfiguration,
+      RawTargetNode rawTargetNode) {
+    TargetConfiguration targetConfiguration = globalTargetConfiguration;
+    if (globalTargetConfiguration.getConfigurationTargets().isEmpty()) {
+      // We use `default_target_platform` only when global platform is not specified
+      String defaultTargetPlatform =
+          (String)
+              rawTargetNode
+                  .getAttributes()
+                  .get(CommonDescriptionArg.DEFAULT_TARGET_PLATFORM_PARAM_NAME);
+      if (defaultTargetPlatform != null && !defaultTargetPlatform.isEmpty()) {
+        UnconfiguredBuildTargetView configurationTarget =
+            unconfiguredBuildTargetViewFactory.createForBaseName(
+                cell.getCellPathResolver(),
+                unconfiguredTarget.getBaseName(),
+                defaultTargetPlatform);
+        targetConfiguration =
+            ImmutableDefaultTargetConfiguration.of(
+                ConfigurationBuildTargets.convert(configurationTarget));
+      }
+    }
+    BuildTarget configuredTarget = unconfiguredTarget.configure(targetConfiguration);
+    return getNodeJobWithRawNode(cell, configuredTarget, Optional.of(rawTargetNode));
+  }
+
   /** Get build target by name, load if necessary */
   public ListenableFuture<TargetNode<?>> getNodeJob(Cell cell, BuildTarget buildTarget)
+      throws BuildTargetException {
+    return getNodeJobWithRawNode(cell, buildTarget, Optional.empty());
+  }
+
+  private ListenableFuture<TargetNode<?>> getNodeJobWithRawNode(
+      Cell cell, BuildTarget buildTarget, Optional<RawTargetNode> rawNodeIfKnown)
       throws BuildTargetException {
     return cache.getJobWithCacheLookup(
         cell,
         buildTarget,
-        () ->
-            Futures.transformAsync(
+        () -> {
+          if (rawNodeIfKnown.isPresent()) {
+            return Futures.submitAsync(
+                () -> dispatchComputeNode(cell, buildTarget, rawNodeIfKnown.get()),
+                executorService);
+          } else {
+            return Futures.transformAsync(
                 rawTargetNodePipeline.getNodeJob(
                     cell, buildTarget.getUnconfiguredBuildTargetView()),
                 from -> dispatchComputeNode(cell, buildTarget, from),
-                executorService),
+                executorService);
+          }
+        },
         eventBus);
   }
 

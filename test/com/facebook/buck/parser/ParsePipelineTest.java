@@ -29,6 +29,7 @@ import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -146,7 +147,7 @@ public class ParsePipelineTest {
     ImmutableList<TargetNode<?>> libTargetNodes =
         fixture
             .getTargetNodeParsePipeline()
-            .getAllNodes(
+            .getAllRequestedTargetNodes(
                 cell,
                 fixture.getCell().getFilesystem().resolve("BUCK"),
                 EmptyTargetConfiguration.INSTANCE);
@@ -184,7 +185,7 @@ public class ParsePipelineTest {
           stringContainsInOrder("Buck wasn't able to parse", "No such file or directory"));
       fixture
           .getTargetNodeParsePipeline()
-          .getAllNodes(
+          .getAllRequestedTargetNodes(
               cell,
               cell.getFilesystem().resolve("no/such/file/BUCK"),
               EmptyTargetConfiguration.INSTANCE);
@@ -232,7 +233,7 @@ public class ParsePipelineTest {
       expectedException.expectMessage("malformed raw data");
       fixture
           .getTargetNodeParsePipeline()
-          .getAllNodes(cell, rootBuildFilePath, EmptyTargetConfiguration.INSTANCE);
+          .getAllRequestedTargetNodes(cell, rootBuildFilePath, EmptyTargetConfiguration.INSTANCE);
     }
   }
 
@@ -244,7 +245,7 @@ public class ParsePipelineTest {
       Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
       fixture
           .getTargetNodeParsePipeline()
-          .getAllNodes(cell, rootBuildFilePath, EmptyTargetConfiguration.INSTANCE);
+          .getAllRequestedTargetNodes(cell, rootBuildFilePath, EmptyTargetConfiguration.INSTANCE);
       Optional<BuildFileManifest> rootRawNodes =
           fixture
               .getRawNodeParsePipelineCache()
@@ -256,7 +257,7 @@ public class ParsePipelineTest {
           "Raw data claims to come from [], but we tried rooting it at [a].");
       fixture
           .getTargetNodeParsePipeline()
-          .getAllNodes(cell, aBuildFilePath, EmptyTargetConfiguration.INSTANCE);
+          .getAllRequestedTargetNodes(cell, aBuildFilePath, EmptyTargetConfiguration.INSTANCE);
     }
   }
 
@@ -271,7 +272,7 @@ public class ParsePipelineTest {
       Path aBuildFilePath = cell.getFilesystem().resolve("a/BUCK");
       fixture
           .getTargetNodeParsePipeline()
-          .getAllNodes(cell, rootBuildFilePath, EmptyTargetConfiguration.INSTANCE);
+          .getAllRequestedTargetNodes(cell, rootBuildFilePath, EmptyTargetConfiguration.INSTANCE);
       Optional<BuildFileManifest> rootRawNodes =
           fixture
               .getRawNodeParsePipelineCache()
@@ -455,7 +456,8 @@ public class ParsePipelineTest {
               this.eventBus,
               "raw_target_node_parse_pipeline",
               speculativeParsing == SpeculativeParsing.ENABLED,
-              rawTargetNodeToTargetNodeFactory);
+              rawTargetNodeToTargetNodeFactory,
+              new ParsingUnconfiguredBuildTargetViewFactory());
     }
 
     public RawTargetNodeToTargetNodeParsePipeline getTargetNodeParsePipeline() {

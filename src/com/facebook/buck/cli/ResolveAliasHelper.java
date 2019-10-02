@@ -87,6 +87,7 @@ public class ResolveAliasHelper {
     }
 
     // Get all valid targets in our target directory by reading the build file.
+    // TODO(nga): fetch unconfigured nodes
     ImmutableList<TargetNode<?>> targetNodes =
         params
             .getParser()
